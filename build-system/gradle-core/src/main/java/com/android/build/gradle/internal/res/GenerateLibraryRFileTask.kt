@@ -286,7 +286,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
             creationConfig.operations.setTaskInputToFinalProduct(
-                ArtifactTypes.MERGED_MANIFESTS, task.mergedManifestFiles)
+                InternalArtifactType.MERGED_MANIFESTS, task.mergedManifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit()
 

@@ -92,6 +92,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":extractProguardFiles",
             ":mergeMinifiedResources",
             ":packageMinified",
+            ":processMinifiedMainManifest",
             ":processMinifiedManifest",
             ":processMinifiedResources"
         ).plus(

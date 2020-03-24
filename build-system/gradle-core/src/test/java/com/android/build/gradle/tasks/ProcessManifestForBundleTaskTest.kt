@@ -22,6 +22,7 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -70,7 +71,7 @@ class ProcessManifestForBundleTaskTest {
         val sourceManifest = File(sourceManifestFolder, "AndroidManifest.xml")
         sourceManifest.writeText("Some content")
         BuiltArtifactsImpl(
-            artifactType = ArtifactTypes.MERGED_MANIFESTS,
+            artifactType = InternalArtifactType.MERGED_MANIFESTS,
             applicationId = "appId",
             variantName = "debug",
             elements = listOf(
@@ -112,7 +113,7 @@ class ProcessManifestForBundleTaskTest {
         )
 
         BuiltArtifactsImpl(
-            artifactType = ArtifactTypes.MERGED_MANIFESTS,
+            artifactType = InternalArtifactType.MERGED_MANIFESTS,
             applicationId = "appId",
             variantName = "debug",
             elements = listOf(

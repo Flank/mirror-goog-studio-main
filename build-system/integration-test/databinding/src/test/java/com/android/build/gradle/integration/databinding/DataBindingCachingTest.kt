@@ -71,6 +71,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
+        ":processDebugMainManifest" to DID_WORK,
         ":processDebugManifest" to DID_WORK,
         ":processDebugManifestForPackage" to FROM_CACHE,
         ":processDebugResources" to DID_WORK

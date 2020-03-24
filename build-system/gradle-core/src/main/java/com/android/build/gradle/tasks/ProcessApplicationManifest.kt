@@ -17,12 +17,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTypes
-import com.android.build.api.variant.BuiltArtifact
-import com.android.build.api.variant.impl.BuiltArtifactImpl
-import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -31,7 +26,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -42,7 +36,6 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.Invoker
-import com.android.manifmerger.ManifestMerger2.COMPATIBLE_SCREENS_SUB_MANIFEST
 import com.android.manifmerger.ManifestMerger2.WEAR_APP_SUB_MANIFEST
 import com.android.manifmerger.ManifestProvider
 import com.android.utils.FileUtils
@@ -52,7 +45,6 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -66,7 +58,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -76,7 +68,6 @@ import java.io.IOException
 import java.io.UncheckedIOException
 import java.util.ArrayList
 import java.util.EnumSet
-import java.util.function.Consumer
 import java.util.stream.Collectors
 
 /** A task that processes the manifest  */
@@ -87,8 +78,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     private var featureManifests: ArtifactCollection? = null
 
     /** The merged Manifests files folder.  */
-    @get:OutputDirectory
-    abstract val mergedManifestOutputDirectory: DirectoryProperty
+    @get:OutputFile
+    abstract val mergedManifest: RegularFileProperty
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
@@ -137,12 +128,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
-        // read the output of the compatible screen manifest.
-        val compatibleScreenManifests =
-            BuiltArtifactsLoaderImpl().load(compatibleScreensManifest!!)
-                ?: throw RuntimeException(
-                    "Cannot find generated compatible screen manifests, file a bug"
-                )
         if (baseModuleDebuggable.isPresent) {
             val isDebuggable = optionalFeatures.get()
                 .contains(Invoker.Feature.DEBUGGABLE)
@@ -164,57 +149,32 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 throw InvalidUserDataException(errorMessage)
             }
         }
-        var compatibleScreenManifestForSplit: BuiltArtifactImpl?
-        val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val navJsons = navigationJsons?.files ?: setOf()
 
-        // FIX ME : multi threading.
-        for (variantOutput in variantOutputs.get()) {
-            compatibleScreenManifestForSplit =
-                compatibleScreenManifests.getBuiltArtifact(variantOutput)
-            val dirName = variantOutput.dirName()
-            val mergedManifestOutputFile = File(
-                mergedManifestOutputDirectory.get().asFile,
-                FileUtils.join(
-                    dirName,
-                    SdkConstants.ANDROID_MANIFEST_XML
-                )
-            )
-            val mergingReport = mergeManifestsForApplication(
-                mainManifest.get(),
-                manifestOverlays.get(),
-                computeFullProviderList(compatibleScreenManifestForSplit),
-                navJsons,
-                featureName.orNull,
-                packageOverride.get(),
-                if (baseModuleVersionCode.isPresent) baseModuleVersionCode.orNull else variantOutput.versionCode.orNull,
-                if (baseModuleVersionName.isPresent
-                    && !baseModuleVersionName.get().isNullOrEmpty()
-                ) baseModuleVersionName.orNull else variantOutput.versionName.orNull,
-                minSdkVersion.orNull,
-                targetSdkVersion.orNull,
-                maxSdkVersion.orNull,
-                mergedManifestOutputFile.absolutePath,
-                null /* aaptFriendlyManifestOutputFile */,
-                ManifestMerger2.MergeType.APPLICATION,
-                manifestPlaceholders.get(),
-                optionalFeatures.get(),
-                dependencyFeatureNames,
-                reportFile.get().asFile,
-                LoggerWrapper.getLogger(ProcessApplicationManifest::class.java)
-            )
-            outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
-            mergedManifestOutputs.add(
-                variantOutput.toBuiltArtifact(mergedManifestOutputFile)
-            )
-        }
-        BuiltArtifactsImpl(
-            artifactType = ArtifactTypes.MERGED_MANIFESTS,
-            applicationId = applicationId.get(),
-            variantName = variantName,
-            elements = mergedManifestOutputs.toList()
+        val mergingReport = mergeManifestsForApplication(
+            mainManifest.get(),
+            manifestOverlays.get(),
+            computeFullProviderList(),
+            navJsons,
+            featureName.orNull,
+            packageOverride.get(),
+            if (baseModuleVersionCode.isPresent) baseModuleVersionCode.orNull else variantOutput.get().versionCode.orNull,
+            if (baseModuleVersionName.isPresent
+                && !baseModuleVersionName.get().isNullOrEmpty()
+            ) baseModuleVersionName.orNull else variantOutput.get().versionName.orNull,
+            minSdkVersion.orNull,
+            targetSdkVersion.orNull,
+            maxSdkVersion.orNull,
+            mergedManifest.get().asFile.absolutePath,
+            null /* aaptFriendlyManifestOutputFile */,
+            ManifestMerger2.MergeType.APPLICATION,
+            manifestPlaceholders.get(),
+            optionalFeatures.get(),
+            dependencyFeatureNames,
+            reportFile.get().asFile,
+            LoggerWrapper.getLogger(ProcessApplicationManifest::class.java)
         )
-            .save(mergedManifestOutputDirectory.get())
+        outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
     }
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -227,9 +187,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
      *
      * @return the list of providers.
      */
-    private fun computeFullProviderList(
-        compatibleScreenManifestForSplit: BuiltArtifact?
-    ): List<ManifestProvider> {
+    private fun computeFullProviderList(): List<ManifestProvider> {
         val artifacts = manifests!!.artifacts
         val providers = mutableListOf<ManifestProvider>()
         for (artifact in artifacts) {
@@ -252,14 +210,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     )
                 )
             }
-        }
-        if (compatibleScreenManifestForSplit != null) {
-            providers.add(
-                ManifestProviderImpl(
-                    File(compatibleScreenManifestForSplit.outputFile),
-                    COMPATIBLE_SCREENS_SUB_MANIFEST
-                )
-            )
         }
         if (featureManifests != null) {
             providers.addAll(computeProviders(featureManifests!!.artifacts))
@@ -329,11 +279,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         } else featureManifests!!.artifactFiles
     }
 
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:Optional
-    @get:InputFiles
-    abstract val compatibleScreensManifest: DirectoryProperty?
-
     @get:Optional
     @get:Input
     abstract val featureName: Property<String>
@@ -345,7 +290,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val projectBuildFile: RegularFileProperty
 
     @get:Nested
-    abstract val variantOutputs: ListProperty<VariantOutputImpl>
+    abstract val variantOutput: Property<VariantOutputImpl>
 
     class CreationAction(
         creationConfig: ApkCreationConfig,
@@ -353,7 +298,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         private val isAdvancedProfilingOn: Boolean
     ) : VariantTaskCreationAction<ProcessApplicationManifest, ApkCreationConfig>(creationConfig) {
         override val name: String
-            get() = computeTaskName("process", "Manifest")
+            get() = computeTaskName("process", "MainManifest")
 
         override val type: Class<ProcessApplicationManifest>
             get() = ProcessApplicationManifest::class.java
@@ -375,12 +320,14 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             taskProvider: TaskProvider<out ProcessApplicationManifest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.taskContainer.processManifestTask = taskProvider
             val operations = creationConfig.operations
             operations.setInitialProvider(
                 taskProvider,
-                ProcessApplicationManifest::mergedManifestOutputDirectory
-            ).on(ArtifactTypes.MERGED_MANIFESTS)
+                ProcessApplicationManifest::mergedManifest
+            )
+                .withName(SdkConstants.ANDROID_MANIFEST_XML)
+                .on(ArtifactTypes.MERGED_MANIFEST)
+
             operations.setInitialProvider(
                 taskProvider,
                 ManifestProcessorTask::mergeBlameFile
@@ -425,12 +372,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             ) {
                 task.microApkManifest = project.files(creationConfig.paths.microApkManifestFile)
             }
-            creationConfig
-                .operations
-                .setTaskInputToFinalProduct(
-                    COMPATIBLE_SCREEN_MANIFEST,
-                    task.compatibleScreensManifest!!
-                )
             task.applicationId.set(creationConfig.applicationId)
             task.applicationId.disallowChanges()
             task.variantType.set(creationConfig.variantType.toString())
@@ -459,13 +400,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     }
                 )
             task.optionalFeatures.disallowChanges()
-            creationConfig
-                .outputs
-                .getEnabledVariantOutputs()
-                .forEach(Consumer { t: VariantOutputImpl ->
-                    task.variantOutputs.add(t)
-                })
-            task.variantOutputs.disallowChanges()
+            task.variantOutput.setDisallowChanges(
+                creationConfig.outputs.getMainSplit()
+            )
             // set optional inputs per module type
             if (variantType.isBaseModule) {
                 task.featureManifests = creationConfig

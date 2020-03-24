@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.ArtifactTypes
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -247,6 +248,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object CHECK_MANIFEST_RESULT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
+    // multi-apk aware manifests that are used to create package, bundle and instant app manifests
+    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // manifests that end up being packaged in the aar or the apk file formats.
     object PACKAGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable

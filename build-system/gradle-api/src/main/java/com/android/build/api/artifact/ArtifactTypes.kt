@@ -19,6 +19,7 @@ package com.android.build.api.artifact
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
 
 /**
  * Public [ArtifactType] for Android Gradle Plugin.
@@ -38,8 +39,10 @@ sealed class ArtifactTypes<T : FileSystemLocation>(kind: ArtifactKind<T>)
     object APK: ArtifactTypes<Directory>(DIRECTORY), Replaceable
 
     /**
-     * Merged manifests file that will be used in the APK, Bundle and InstantApp packages.
+     * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.
      */
-    object MERGED_MANIFESTS: ArtifactTypes<Directory>(DIRECTORY), Replaceable, ContainsMany
+    @Incubating
+    object MERGED_MANIFEST: ArtifactTypes<RegularFile>(FILE), Replaceable, Transformable
+
 
 }

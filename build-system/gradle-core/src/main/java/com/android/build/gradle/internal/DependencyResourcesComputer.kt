@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.builder.core.BuilderConstants

@@ -81,6 +81,7 @@ class CacheabilityTest {
                     ":app:mergeExtDexDebug",
                     ":app:packageDebugUnitTestForUnitTest",
                     ":app:parseDebugIntegrityConfig",
+                    ":app:processDebugMainManifest",
                     ":app:processDebugManifest",
                     ":app:processDebugManifestForPackage",
                     ":app:testDebugUnitTest",

@@ -33,6 +33,7 @@ com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactTypes extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable
+com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$Transformable
 com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactTypes.isPublic: boolean ()
 com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType

@@ -191,6 +191,7 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessManifestForBundleTask;
 import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask;
 import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask;
+import com.android.build.gradle.tasks.ProcessMultiApkApplicationManifest;
 import com.android.build.gradle.tasks.ProcessPackagedManifestTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -980,12 +981,14 @@ public abstract class TaskManager<
         taskFactory.register(new ProcessManifestForInstantAppTask.CreationAction(creationConfig));
         taskFactory.register(new ProcessPackagedManifestTask.CreationAction(creationConfig));
 
-        return taskFactory.register(
+        taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
                         creationConfig,
                         !getAdvancedProfilingTransforms(
                                         creationConfig.getServices().getProjectOptions())
                                 .isEmpty()));
+        return taskFactory.register(
+                new ProcessMultiApkApplicationManifest.CreationAction(creationConfig));
     }
 
     protected void createProcessTestManifestTask(

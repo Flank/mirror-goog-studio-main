@@ -131,7 +131,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.operations.use(taskProvider)
                 .toRead(
-                    ArtifactTypes.MERGED_MANIFESTS,
+                    InternalArtifactType.MERGED_MANIFESTS,
                     ProcessPackagedManifestTask::mergedManifests
                 )
                 .andWrite(

@@ -39,7 +39,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /**
- * Task that consumes [ArtifactTypes.MERGED_MANIFESTS] to produce a unique Android Manifest
+ * Task that consumes [InternalArtifactType.MERGED_MANIFESTS] to produce a unique Android Manifest
  * file suitable for the bundle tool.
  *
  * The bundle tool manifest must have the android:splitName to all activities in case the
@@ -96,7 +96,7 @@ abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
         override fun configure(task: ProcessManifestForBundleTask) {
             super.configure(task)
             creationConfig.operations.setTaskInputToFinalProduct(
-                ArtifactTypes.MERGED_MANIFESTS,
+                InternalArtifactType.MERGED_MANIFESTS,
                 task.applicationMergedManifests
             )
             task.mainSplit.setDisallowChanges(creationConfig.outputs.getMainSplit())

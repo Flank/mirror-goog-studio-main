@@ -435,7 +435,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
             creationConfig.operations.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
             creationConfig.operations.setTaskInputToFinalProduct(
-                ArtifactTypes.MERGED_MANIFESTS,
+                InternalArtifactType.MERGED_MANIFESTS,
                 task.mergedManifestFiles
             )
 
