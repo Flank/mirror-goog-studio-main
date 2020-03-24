@@ -436,6 +436,14 @@ abstract class BaseExtension protected constructor(
         action.execute(composeOptions)
     }
 
+    open fun compileSdkVersion(version: String) {
+        this.compileSdkVersion = version
+    }
+
+    open fun compileSdkVersion(apiLevel: Int) {
+        compileSdkVersion("android-$apiLevel")
+    }
+
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
     abstract override val flavorDimensionList: MutableList<String>
 
@@ -464,8 +472,6 @@ abstract class BaseExtension protected constructor(
     abstract override val compileOptions: CompileOptions
 
     abstract override var compileSdkVersion: String?
-    abstract fun compileSdkVersion(version: String)
-    abstract fun compileSdkVersion(apiLevel: Int)
 
     abstract override val defaultConfig: DefaultConfig
     abstract fun defaultConfig(action: Action<DefaultConfig>)

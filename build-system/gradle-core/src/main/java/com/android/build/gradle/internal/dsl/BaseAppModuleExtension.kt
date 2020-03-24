@@ -110,4 +110,10 @@ open class BaseAppModuleExtension(
 
     override val libraryRequests: MutableCollection<LibraryRequest>
         get() = publicExtensionImpl.libraryRequests
+
+    override var compileSdkVersion: String?
+        get() = publicExtensionImpl.compileSdkPreview
+        set(value) {
+            publicExtensionImpl.compileSdkPreview = value
+        }
 }
