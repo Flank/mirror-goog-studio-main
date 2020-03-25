@@ -48,7 +48,7 @@ class XmlProcessorTest {
 
     Truth.assertThat(processTest(input)).isNotNull()
 
-    val collectedIds = processor.createdIds
+    val collectedIds = processor.primaryFile.exportedSymbols
     Truth.assertThat(collectedIds).hasSize(3)
 
     Truth.assertThat(collectedIds[0]).isEqualTo(SourcedResourceName(parseNameOrFail("id/bar"), 3))
@@ -60,7 +60,7 @@ class XmlProcessorTest {
   fun testNoCollectNonIds() {
     Truth.assertThat(processTest("""<View foo="@+string/foo"/>""")).isNotNull()
 
-    Truth.assertThat(processor.createdIds).isEmpty()
+    Truth.assertThat(processor.primaryFile.exportedSymbols).isEmpty()
 
     val input = """
       <View xmlns:android="http://schemas.android.com/apk/res/android"
@@ -69,8 +69,8 @@ class XmlProcessorTest {
     """.trimIndent()
     Truth.assertThat(processTest(input)).isNotNull()
 
-    Truth.assertThat(processor.createdIds).hasSize(1)
-    Truth.assertThat(processor.createdIds[0])
+    Truth.assertThat(processor.primaryFile.exportedSymbols).hasSize(1)
+    Truth.assertThat(processor.primaryFile.exportedSymbols[0])
       .isEqualTo(SourcedResourceName(parseNameOrFail("id/foo"), 3))
   }
 
