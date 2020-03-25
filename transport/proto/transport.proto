@@ -195,7 +195,7 @@ message DaemonConfig {
     // Waiting time in Seconds for ART when stopping the ongoing ART profiling.
     int32 art_stop_timeout_sec = 1;
     // equivalent to StudioFlags.PROFILER_USE_PERFETTO
-    bool use_perfetto = 2;
+    bool use_perfetto = 2 [deprecated = true];
   }
   CommonConfig common = 1;
   CpuConfig cpu = 2;

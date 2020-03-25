@@ -132,10 +132,6 @@ class TraceManager final {
   PerfettoManager* perfetto_manager() { return perfetto_manager_.get(); }
 
  private:
-  // Helper function for testing the config and device level to determine
-  // if we should use perfetto when capturing an atrace.
-  bool UsePerfetto();
-
   Clock* clock_;
   const proto::DaemonConfig::CpuConfig cpu_config_;
   ActivityManager* activity_manager_;

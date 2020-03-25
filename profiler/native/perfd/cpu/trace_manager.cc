@@ -24,11 +24,6 @@ namespace profiler {
 
 static const int64_t kTraceRecordBufferSize = 10;
 
-bool TraceManager::UsePerfetto() {
-  return DeviceInfo::feature_level() >= DeviceInfo::P &&
-         cpu_config_.use_perfetto();
-}
-
 ProfilingApp* TraceManager::StartProfiling(
     int64_t request_timestamp_ns,
     const proto::CpuTraceConfiguration& configuration,
@@ -68,23 +63,20 @@ ProfilingApp* TraceManager::StartProfiling(
           user_options.sampling_interval_us(), configuration.temp_path(),
           &error_message, startup_profiling);
     } else if (user_options.trace_type() == proto::CpuTraceType::ATRACE) {
-      // TODO report back the acquired buffer size. Currently it is not used.
       int acquired_buffer_size_kb = 0;
-      if (UsePerfetto()) {
-        // Perfetto always acquires the proper buffer size.
-        acquired_buffer_size_kb = kPerfettoBufferSizeInMb * 1024;
-        // TODO: We may want to pass this in from studio for a more flexible
-        // config.
-        perfetto::protos::TraceConfig config =
-            PerfettoManager::BuildFtraceConfig(app_name, acquired_buffer_size_kb);
-        success = perfetto_manager_->StartProfiling(
-            app_name, configuration.abi_cpu_arch(), config,
-            configuration.temp_path(), &error_message);
-      } else {
-        success = atrace_manager_->StartProfiling(
-            app_name, kAtraceBufferSizeInMb, &acquired_buffer_size_kb,
-            configuration.temp_path(), &error_message);
-      }
+      success = atrace_manager_->StartProfiling(
+          app_name, kAtraceBufferSizeInMb, &acquired_buffer_size_kb,
+          configuration.temp_path(), &error_message);
+    } else if (user_options.trace_type() == proto::CpuTraceType::PERFETTO) {
+      // Perfetto always acquires the proper buffer size.
+      int acquired_buffer_size_kb = kPerfettoBufferSizeInMb * 1024;
+      // TODO: We may want to pass this in from studio for a more flexible
+      // config.
+      perfetto::protos::TraceConfig config =
+          PerfettoManager::BuildFtraceConfig(app_name, acquired_buffer_size_kb);
+      success = perfetto_manager_->StartProfiling(
+          app_name, configuration.abi_cpu_arch(), config,
+          configuration.temp_path(), &error_message);
     } else {
       auto mode = user_options.trace_mode() == proto::CpuTraceMode::INSTRUMENTED
                       ? ActivityManager::INSTRUMENTED
@@ -141,12 +133,10 @@ ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
       stop_status = simpleperf_manager_->StopProfiling(app_name, need_trace,
                                                        &error_message);
     } else if (trace_type == proto::CpuTraceType::ATRACE) {
-      if (UsePerfetto()) {
-        stop_status = perfetto_manager_->StopProfiling(&error_message);
-      } else {
-        stop_status = atrace_manager_->StopProfiling(app_name, need_trace,
-                                                     &error_message);
-      }
+      stop_status =
+          atrace_manager_->StopProfiling(app_name, need_trace, &error_message);
+    } else if (trace_type == proto::CpuTraceType::PERFETTO) {
+      stop_status = perfetto_manager_->StopProfiling(&error_message);
     } else {  // Profiler is ART
       stop_status = activity_manager_->StopProfiling(
           app_name, need_trace, &error_message,

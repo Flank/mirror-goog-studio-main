@@ -69,7 +69,6 @@ class CpuTraceCommandsTest : public testing::Test {
     proto::DaemonConfig config_proto = proto::DaemonConfig::default_instance();
     profiler::proto::DaemonConfig::CpuConfig* cpu_config =
         config_proto.mutable_cpu();
-    cpu_config->set_use_perfetto(true);
     DaemonConfig config(config_proto);
 
     DeviceInfoHelper::SetDeviceInfo(DeviceInfo::P);
@@ -86,7 +85,7 @@ class CpuTraceCommandsTest : public testing::Test {
     // Execute the start command
     trace_config_.set_app_name("fake_app");
     auto* user_options = trace_config_.mutable_user_options();
-    user_options->set_trace_type(CpuTraceType::ATRACE);
+    user_options->set_trace_type(CpuTraceType::PERFETTO);
 
     // Start the event writer to listen for incoming events on a separate
     // thread.

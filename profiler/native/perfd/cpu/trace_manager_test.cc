@@ -116,14 +116,10 @@ struct TraceManagerTest : testing::Test {
   }
 
   // Helper function to run atrace test.
-  // TODO: Update function to validate perfetto is run on Q instead of atrace
-  // with perfetto flag enabled.
-  void RunAtraceTest(int feature_level, bool enable_perfetto,
-                     bool expect_perfetto) {
+  void RunAtraceTest(int feature_level) {
     DeviceInfoHelper::SetDeviceInfo(feature_level);
 
     profiler::proto::DaemonConfig::CpuConfig config;
-    config.set_use_perfetto(enable_perfetto);
     std::unique_ptr<TraceManager> trace_manager =
         ConfigureDefaultTraceManager(config);
     // Start an atrace recording.
@@ -143,9 +139,7 @@ struct TraceManagerTest : testing::Test {
     EXPECT_EQ(start_status.error_message(), "");
 
     // Validate state.
-    EXPECT_EQ(trace_manager->atrace_manager()->IsProfiling(), !expect_perfetto);
-    EXPECT_EQ(trace_manager->perfetto_manager()->IsProfiling(),
-              expect_perfetto);
+    EXPECT_TRUE(trace_manager->atrace_manager()->IsProfiling());
 
     // Stop profiling.
     // Test does not validate trace output so we don't need to wait for trace
@@ -158,6 +152,48 @@ struct TraceManagerTest : testing::Test {
 
     // Validate state.
     EXPECT_FALSE(trace_manager->atrace_manager()->IsProfiling());
+
+    // This needs to happen otherwise the termination handler attempts to call
+    // shutdown on the TraceManager which causes a segfault.
+    termination_service_.reset(nullptr);
+  }
+
+  // Helper function to run perfetto tests.
+  void RunPerfettoTest(int feature_level) {
+    DeviceInfoHelper::SetDeviceInfo(feature_level);
+
+    profiler::proto::DaemonConfig::CpuConfig config;
+    std::unique_ptr<TraceManager> trace_manager =
+        ConfigureDefaultTraceManager(config);
+    // Start a perfetto recording.
+    CpuTraceConfiguration configuration;
+    configuration.set_app_name("fake_app");
+    auto user_options = configuration.mutable_user_options();
+    user_options->set_trace_type(CpuTraceType::PERFETTO);
+    user_options->set_buffer_size_in_mb(8);
+
+    TraceStartStatus start_status;
+    auto* capture =
+        trace_manager->StartProfiling(0, configuration, &start_status);
+
+    // Expect a success result.
+    EXPECT_NE(capture, nullptr);
+    EXPECT_EQ(start_status.status(), TraceStartStatus::SUCCESS);
+    EXPECT_EQ(start_status.error_message(), "");
+
+    // Validate state.
+    EXPECT_TRUE(trace_manager->perfetto_manager()->IsProfiling());
+
+    // Stop profiling.
+    // Test does not validate trace output so we don't need to wait for trace
+    // file.
+    TraceStopStatus stop_status;
+    capture = trace_manager->StopProfiling(1, "fake_app", false, &stop_status);
+    EXPECT_NE(capture, nullptr);
+    EXPECT_EQ(stop_status.status(), TraceStopStatus::SUCCESS);
+    EXPECT_EQ(stop_status.error_message(), "");
+
+    // Validate state.
     EXPECT_FALSE(trace_manager->perfetto_manager()->IsProfiling());
 
     // This needs to happen otherwise the termination handler attempts to call
@@ -330,8 +366,8 @@ TEST_F(TraceManagerTest, AlwaysUseFixedSizeForPerfetto) {
   CpuTraceConfiguration configuration;
   configuration.set_app_name("fake_app");
   auto user_options = configuration.mutable_user_options();
-  user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
-  user_options->set_trace_type(CpuTraceType::ATRACE);
+  user_options->set_trace_mode(CpuTraceMode::SAMPLED);
+  user_options->set_trace_type(CpuTraceType::PERFETTO);
 
   user_options->set_buffer_size_in_mb(21);  // set an unexpected number.
 
@@ -348,25 +384,13 @@ TEST_F(TraceManagerTest, AlwaysUseFixedSizeForPerfetto) {
   termination_service_.reset(nullptr);
 }
 
-TEST_F(TraceManagerTest, AtraceRunsOnOWithPerfettoEnabled) {
-  RunAtraceTest(DeviceInfo::O, true, false);
-}
+TEST_F(TraceManagerTest, AtraceRunsOnO) { RunAtraceTest(DeviceInfo::O); }
 
-TEST_F(TraceManagerTest, AtraceRunsOnOWithPerfettoDisabled) {
-  RunAtraceTest(DeviceInfo::O, false, false);
-}
+TEST_F(TraceManagerTest, AtraceRunsOnP) { RunAtraceTest(DeviceInfo::P); }
 
-TEST_F(TraceManagerTest, PerfettoRunsOnPWithPerfettoEnabled) {
-  RunAtraceTest(DeviceInfo::P, true, true);
-}
+TEST_F(TraceManagerTest, PerfettoRunsOnP) { RunPerfettoTest(DeviceInfo::P); }
 
-TEST_F(TraceManagerTest, AtraceRunsOnQWithPerfettoDisabled) {
-  RunAtraceTest(DeviceInfo::Q, false, false);
-}
-
-TEST_F(TraceManagerTest, PerfettoRunsOnQWithPerfettoEnabled) {
-  RunAtraceTest(DeviceInfo::Q, true, true);
-}
+TEST_F(TraceManagerTest, PerfettoRunsOnQ) { RunPerfettoTest(DeviceInfo::Q); }
 
 TEST_F(TraceManagerTest, CannotStartMultipleTracesOnSameApp) {
   profiler::proto::DaemonConfig::CpuConfig config;
