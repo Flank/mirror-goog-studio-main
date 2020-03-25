@@ -154,4 +154,111 @@ class AssetNameConverterTest {
     val c = AssetNameConverter(Type.CLASS_NAME, "")
     assertThat(c.getValue(Type.ACTIVITY)).isEqualTo("MainActivity")
   }
+
+  @Test
+  fun additionalActivityToLayoutTest() {
+    val data = mapOf(
+      "FooActivity" to "activity_foo",
+      "FooActiv" to "activity_foo",
+      "FooActivityActivity" to "activity_foo_activity",
+      "Foo" to "activity_foo",
+      "Activity" to "activity_",
+      "ActivityActivity" to "activity_activity",
+      "MainActivityTest1" to "activity_main_test1",
+      "" to "",
+      "x" to "activity_x",
+      "X" to "activity_x",
+      "Ac" to "activity_",
+      "ac" to "activity_ac",
+      "FooActivity2" to "activity_foo2",
+      "FooActivity200" to "activity_foo200",
+      "Activity200" to "activity_200"
+      // TODO(qumeric):
+      //check("MainActivity", "simple", "simple_main");
+      //check("BaseNameActivityActiv", "activity", "activity_base_name_activity");
+      //check("FullScreenActivity", "content", "content_full_screen");
+    )
+    for ((activity, layout) in data) {
+      assertThat(activityToLayout(activity)).isEqualTo(layout)
+    }
+  }
+
+  @Test
+  fun additionalLayoutToActivityTest() {
+    val data = mapOf(
+      "foo" to "FooActivity",
+      "activity_foo" to "FooActivity",
+      "activity_" to "MainActivity",
+      "activ" to "ActivActivity",
+      "" to "MainActivity",
+      "activity_foo2" to "Foo2Activity",
+      "activity_foo200" to "Foo200Activity",
+      "activity_200" to "MainActivity"
+    )
+    for ((layout, activity) in data) {
+      assertThat(layoutToActivity(layout)).isEqualTo(activity)
+    }
+  }
+
+  @Test
+  fun additionalLayoutToFragmentTest() {
+    val data = mapOf(
+      "foo" to "FooFragment",
+      "fragment_foo" to "FooFragment",
+      "fragment_" to "MainFragment",
+      "fragmen" to "FragmenFragment",
+      "" to "MainFragment",
+      "fragment_foo2" to "Foo2Fragment",
+      "fragment_foo200" to "Foo200Fragment",
+      "fragment_200" to "MainFragment"
+    )
+    for ((layout, fragment) in data) {
+      assertThat(layoutToFragment(layout)).isEqualTo(fragment)
+    }
+  }
+
+  @Test
+  fun additionalFragmentToLayoutTest() {
+    val data = mapOf(
+      "FooFragment" to "fragment_foo",
+      "FooFragm" to "fragment_foo",
+      "FooFragmentFragment" to "fragment_foo_fragment",
+      "Foo" to "fragment_foo",
+      "Fragment" to "fragment_",
+      "FragmentFragment" to "fragment_fragment",
+      "MainFragmentTest1" to "fragment_main_test1",
+      "" to "",
+      "x" to "fragment_x",
+      "X" to "fragment_x",
+      "Fr" to "fragment_",
+      "fr" to "fragment_fr",
+      "FooFragment2" to "fragment_foo2",
+      "FooFragment200" to "fragment_foo200",
+      "Fragment200" to "fragment_200"
+      // TODO(qumeric):
+      // check("BaseNameFragmentFragm", "fragment", "fragment_base_name_fragment")
+      // check("MainFragment", "simple", "simple_main")
+      // check("FullScreenFragment", "content", "content_full_screen")
+    )
+    for ((fragment, layout) in data) {
+      assertThat(fragmentToLayout(fragment)).isEqualTo(layout)
+    }
+  }
+
+  @Test
+  fun additionalClassNameToResourceTest() {
+    val data = mapOf(
+      "FooActivity" to "foo",
+      "FooActiv" to "foo",
+      "Foo" to "foo",
+      "FooBar" to "foo_bar",
+      "" to "",
+      "FooFragment" to "foo",
+      "FooService" to "foo",
+      "FooProvider" to "foo"
+    )
+    for ((className, resource) in data) {
+      assertThat(classToResource(className)).isEqualTo(resource)
+    }
+  }
 }
