@@ -92,6 +92,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="platform_core_proto" level="project" />
+    <orderEntry type="library" name="utp-core-proto" level="project" />
   </component>
 </module>
