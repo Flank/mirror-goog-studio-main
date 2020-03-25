@@ -35,17 +35,18 @@ class SdkCommandLineToolsPackagingTest(private val platform: AndroidSdkCommandLi
 
         val suffix = platform.binarySuffix
 
-        val expectedNonLibEntries = listOf(
+        val expectedNonLibEntries = listOfNotNull(
             "tools/bin/apkanalyzer$suffix",
             "tools/bin/avdmanager$suffix",
-	    // b/135688047
+            // b/135688047
             // "tools/bin/jobb$suffix",
             "tools/bin/lint$suffix",
             "tools/bin/screenshot2$suffix",
             "tools/bin/sdkmanager$suffix",
             "tools/NOTICE.txt",
             "tools/source.properties",
-            "tools/lib/README"
+            "tools/lib/README",
+            "_codesign/filelist".takeIf { platform == AndroidSdkCommandLineToolsPlatform.MAC }
         )
 
         assertThat(entries.filter { !(it.startsWith("tools/lib/") && it.endsWith(".jar")) })
