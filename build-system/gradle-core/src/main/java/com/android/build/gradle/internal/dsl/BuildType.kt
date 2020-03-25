@@ -25,7 +25,6 @@ import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.CodeShrinker
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 import org.gradle.api.Action
 import org.gradle.api.Incubating
@@ -203,21 +202,8 @@ open class BuildType @Inject constructor(
         return this === o
     }
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
-    /**
-     * Adds a new field to the generated BuildConfig class.
-     *
-     *
-     * The field is generated as: `<type> <name> = <value>;`
-     *
-     *
-     * This means each of these must have valid Java content. If the type is a String, then the
-     * value should include quotes.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    fun buildConfigField(
+
+    override fun buildConfigField(
         type: String,
         name: String,
         value: String
@@ -236,20 +222,7 @@ open class BuildType @Inject constructor(
         addBuildConfigField(ClassFieldImpl(type, name, value))
     }
 
-    /**
-     * Adds a new generated resource.
-     *
-     *
-     * This is equivalent to specifying a resource in res/values.
-     *
-     *
-     * See [Resource Types](http://developer.android.com/guide/topics/resources/available-resources.html).
-     *
-     * @param type the type of the resource
-     * @param name the name of the resource
-     * @param value the value of the resource
-     */
-    fun resValue(
+    override fun resValue(
         type: String,
         name: String,
         value: String
@@ -510,15 +483,6 @@ open class BuildType @Inject constructor(
         isUseProguard = useProguard
     }
 
-    /**
-     * Whether to crunch PNGs.
-     *
-     * Setting this property to `true` reduces of PNG resources that are not already
-     * optimally compressed. However, this process increases build times.
-     *
-     * PNG crunching is enabled by default in the release build type and disabled by default in
-     * the debug build type.
-     */
     override var isCrunchPngs: Boolean? = null
 
     /** This DSL is incubating and subject to change.  */
