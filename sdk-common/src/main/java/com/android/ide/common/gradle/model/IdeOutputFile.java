@@ -63,19 +63,29 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
         myFilters = IdeModel.copy(file.getFilters(), modelCache, data -> new IdeFilterData(data));
         myOutputFile = file.getOutputFile();
-        myMainOutputFile =
-                file == file.getMainOutputFile()
-                        ? this
-                        : IdeModel.copyNewProperty(
-                                modelCache,
-                                file::getMainOutputFile,
-                                outputFile -> new IdeOutputFile(outputFile, modelCache),
-                                null);
+        myMainOutputFile = copyMainOutputFile(file, modelCache);
         //noinspection deprecation
         myOutputs = copyOutputs(file, modelCache);
         myVersionCode = IdeModel.copyNewProperty(file::getVersionCode, null);
 
         myHashCode = calculateHashCode();
+    }
+
+    @Nullable
+    private IdeOutputFile copyMainOutputFile(
+            @NonNull OutputFile file, @NonNull ModelCache modelCache) {
+        try {
+            if (file == file.getMainOutputFile()) {
+                return this;
+            }
+        } catch (UnsupportedOperationException ignored) {
+            // getMainOutputFile is supported in AGP 3.0+.
+        }
+        return IdeModel.copyNewProperty(
+                modelCache,
+                file::getMainOutputFile,
+                outputFile -> new IdeOutputFile(outputFile, modelCache),
+                null);
     }
 
     @NonNull
