@@ -17,35 +17,30 @@ package com.android.tools.idea.wizard.template
 
 import com.google.common.truth.Truth.assertThat
 import com.android.tools.idea.wizard.template.AssetNameConverter.Type
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class AssetNameConverterTest {
+  @Test
+  fun `Strip suffix from empty string`() {
+    assertThat("").isEqualTo("".stripSuffix("", false))
+    assertThat("").isEqualTo("".stripSuffix("foo", false))
+  }
 
-  @Nested
-  inner class StripSuffixTest {
-    @Test
-    fun `No-op test`() {
-      assertThat("").isEqualTo("".stripSuffix("", false))
-      assertThat("").isEqualTo( "".stripSuffix("foo", false))
-    }
+  @Test
+  fun `Strip with whole string suffix`() {
+    assertThat("").isEqualTo("foo".stripSuffix("foo", false))
+  }
 
-    @Test
-    fun `Whole string test`() {
-      assertThat("").isEqualTo( "foo".stripSuffix("foo", false))
-    }
+  @Test
+  fun `Strip with normal suffix`() {
+    assertThat("Foo").isEqualTo( "FooBar".stripSuffix("Bar", false))
+    assertThat("Foo").isEqualTo( "FooBar".stripSuffix("Bar", false))
+  }
 
-    @Test
-    fun `Suffix test`() {
-      assertThat("Foo").isEqualTo( "FooBar".stripSuffix("Bar", false))
-      assertThat("Foo").isEqualTo( "FooBar".stripSuffix("Bar", false))
-    }
-
-    @Test
-    fun `Double Suffix test`() {
-      assertThat("Foo").isEqualTo( "FooBarBar".stripSuffix("Bar", true))
-      assertThat("FooBar").isEqualTo( "FooBarBar".stripSuffix( "Bar", false))
-    }
+  @Test
+  fun `Strip with double suffix`() {
+    assertThat("Foo").isEqualTo( "FooBarBar".stripSuffix("Bar", true))
+    assertThat("FooBar").isEqualTo( "FooBarBar".stripSuffix( "Bar", false))
   }
 
   @Test
