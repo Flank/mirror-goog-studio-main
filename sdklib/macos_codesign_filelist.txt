@@ -1,0 +1,3 @@
+# List of files containing native libraries that need to be unpacked then
+# codesigned. The paths here indicate the paths in the built SDK package.
+tools/lib/external/lint-psi/intellij-core/intellij-core-all.jar
