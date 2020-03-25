@@ -305,14 +305,14 @@ class SymbolTablePartialRMergeTest {
 
         Files.write(writtenResources.toPath(), expectedLines, StandardCharsets.UTF_8)
 
-        val expected = SymbolIo.readFromPartialRFile(writtenResources, "com.boop.beep")
+        val expected = SymbolIo().readFromPartialRFile(writtenResources, "com.boop.beep")
         assertThat(result).isEqualTo(expected)
 
         // Assert that saving the expected symbol table as a file will equal the result.
         val generatedPartialRFile = mTemporaryFolder.newFile("result-partial-r.txt")
         SymbolIo.writePartialR(expected, generatedPartialRFile.toPath())
         assertThat(result).isEqualTo(
-                SymbolIo.readFromPartialRFile(generatedPartialRFile, "com.boop.beep")
+                SymbolIo().readFromPartialRFile(generatedPartialRFile, "com.boop.beep")
         )
     }
 

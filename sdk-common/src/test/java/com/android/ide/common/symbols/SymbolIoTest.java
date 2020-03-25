@@ -32,7 +32,9 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.io.Files;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -47,6 +49,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -55,6 +58,13 @@ public class SymbolIoTest {
 
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
+
+    private SymbolIo symbolIo;
+
+    @Before
+    public void initSymbolIo() {
+        symbolIo = new SymbolIo();
+    }
 
     @Test
     public void testSingleInt() throws Exception {
@@ -720,7 +730,7 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(content);
 
-        SymbolTable table = SymbolIo.readSymbolListWithPackageName(file.toPath());
+        SymbolTable table = symbolIo.readSymbolListWithPackageName(file.toPath());
 
         assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
         assertThat(table.getSymbols().values())
@@ -767,7 +777,7 @@ public class SymbolIoTest {
                         "styleable LimitedSizeLinearLayout max_width max_height")
                 .inOrder();
 
-        SymbolTable result = SymbolIo.readSymbolListWithPackageName(output);
+        SymbolTable result = symbolIo.readSymbolListWithPackageName(output);
         for (ResourceType type : ResourceType.values()) {
             assertThat(result.getSymbols().row(type).keySet())
                     .named(type.getName() + " resources in table " + result)
@@ -820,7 +830,7 @@ public class SymbolIoTest {
         FileSubject.assertThat(file).exists();
 
         try {
-            SymbolIo.readSymbolListWithPackageName(file.toPath());
+            symbolIo.readSymbolListWithPackageName(file.toPath());
             fail();
         } catch (IOException e) {
             assertThat(e.getMessage())
@@ -846,7 +856,7 @@ public class SymbolIoTest {
         Path output = fs.getPath("package-aware-r.txt");
         SymbolIo.writeSymbolListWithPackageName(misordered, manifest, output);
 
-        SymbolTable symbolTable = SymbolIo.readSymbolListWithPackageName(output);
+        SymbolTable symbolTable = symbolIo.readSymbolListWithPackageName(output);
         Symbol symbol = symbolTable.getSymbols().get(ResourceType.STYLEABLE, "AlertDialog");
 
         assertThat(symbol)
@@ -980,7 +990,7 @@ public class SymbolIoTest {
                         "public int transition t"),
                 StandardCharsets.UTF_8);
 
-        SymbolTable table = SymbolIo.readFromPartialRFile(partialR, "foo.bar.com");
+        SymbolTable table = symbolIo.readFromPartialRFile(partialR, "foo.bar.com");
 
         assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
         assertThat(table.getSymbols().values())
@@ -1071,7 +1081,7 @@ public class SymbolIoTest {
 
         SymbolIo.writeRDef(originalTable, rDefFile);
 
-        SymbolTable tableLoadedFromFile = SymbolIo.readRDef(rDefFile);
+        SymbolTable tableLoadedFromFile = symbolIo.readRDef(rDefFile);
 
         assertThat(tableLoadedFromFile).isEqualTo(originalTable);
     }
@@ -1081,7 +1091,7 @@ public class SymbolIoTest {
         Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();
         java.nio.file.Files.write(rDefFile, ImmutableList.of("not an RDef file should fail"));
         try {
-            SymbolIo.readRDef(rDefFile);
+            symbolIo.readRDef(rDefFile);
             fail("Expected failure");
         } catch (IOException e) {
             assertThat(e).hasMessageThat().contains("Invalid symbol file");
@@ -1163,5 +1173,38 @@ public class SymbolIoTest {
         File rClass = FileUtils.join(rSources, "foo", "bar", "R.java");
         FileSubject.assertThat(rClass).exists();
         FileSubject.assertThat(rClass).contains("e_ë = 0x0");
+    }
+
+    @Test
+    public void checkInterning() throws IOException {
+        // Given
+        String libContent =
+                "com.example.lib\n"
+                        + "drawable foobar\n"
+                        + "styleable LimitedSizeLinearLayout child_1 child_2\n";
+        File libFile = mTemporaryFolder.newFile();
+        Files.asCharSink(libFile, Charsets.UTF_8).write(libContent);
+        String lib2Content =
+                "com.example.lib2\n"
+                        + "drawable foobar\n"
+                        + "styleable LimitedSizeLinearLayout child_1 child_2\n";
+        File lib2File = mTemporaryFolder.newFile();
+        Files.asCharSink(lib2File, Charsets.UTF_8).write(lib2Content);
+
+        // When loading dependency tables symbols should be interned.
+        ImmutableSet<SymbolTable> symbolTables =
+                symbolIo.loadDependenciesSymbolTables(ImmutableList.of(libFile, lib2File));
+
+        assertThat(symbolTables).hasSize(2);
+
+        UnmodifiableIterator<SymbolTable> iterator = symbolTables.iterator();
+        SymbolTable lib = iterator.next();
+        SymbolTable lib2 = iterator.next();
+
+        assertThat(lib2.getSymbols().get(ResourceType.DRAWABLE, "foobar"))
+                .isSameAs(lib.getSymbols().get(ResourceType.DRAWABLE, "foobar"));
+
+        assertThat(lib2.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout"))
+                .isSameAs(lib.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout"));
     }
 }

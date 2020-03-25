@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableTable
+import com.google.common.collect.Interner
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Table
@@ -388,7 +389,7 @@ abstract class SymbolTable protected constructor() {
     /**
      * A builder that creates a symbol table. Use this class instead of [Builder], if possible.
      */
-    class FastBuilder {
+    class FastBuilder(private val symbolInterner: Interner<Symbol>) {
 
         private var tablePackage = ""
 
@@ -402,7 +403,7 @@ abstract class SymbolTable protected constructor() {
          * @param symbol the symbol to add
          */
         fun add(symbol: Symbol) {
-            symbols.put(symbol.resourceType, symbol.canonicalName, symbol)
+            symbols.put(symbol.resourceType, symbol.canonicalName, symbolInterner.intern(symbol))
         }
 
         /**
@@ -484,6 +485,7 @@ abstract class SymbolTable protected constructor() {
          * @param packageName the package name for the merged symbol table.
          */
         @JvmStatic fun mergePartialTables(tables: List<File>, packageName: String): SymbolTable {
+            val symbolIo = SymbolIo()
             val builder = SymbolTable.builder()
             builder.tablePackage(packageName)
 
@@ -501,13 +503,13 @@ abstract class SymbolTable protected constructor() {
                             // If we haven't encountered a file with this name yet, remember it and
                             // process the partial R file.
                             visitedFiles.add(it.name)
-                            builder.addFromPartial(SymbolIo.readFromPartialRFile(it, null))
+                            builder.addFromPartial(symbolIo.readFromPartialRFile(it, null))
                         }
                     } else {
                         // Partial R files for values XML files and non-XML files need to be parsed
                         // always. The order matters for declare-styleables and for resource
                         // accessibility.
-                        builder.addFromPartial(SymbolIo.readFromPartialRFile(it, null))
+                        builder.addFromPartial(symbolIo.readFromPartialRFile(it, null))
                     }
                 }
             } catch (e: Exception) {

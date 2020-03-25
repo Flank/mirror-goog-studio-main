@@ -193,11 +193,7 @@ fun mergeAndRenumberSymbols(
  */
 @Throws(IOException::class)
 fun loadDependenciesSymbolTables(libraries: Iterable<File>): ImmutableSet<SymbolTable> {
-    return ImmutableSet.builder<SymbolTable>().apply {
-        for (dependency in libraries) {
-            add(SymbolIo.readSymbolListWithPackageName(dependency.toPath()))
-        }
-    }.build()
+    return SymbolIo().loadDependenciesSymbolTables(libraries)
 }
 
 /**
