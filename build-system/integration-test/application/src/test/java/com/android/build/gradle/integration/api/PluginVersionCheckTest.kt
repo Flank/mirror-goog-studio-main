@@ -23,8 +23,6 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
-import com.android.builder.model.SyncIssue.SEVERITY_ERROR
-import com.android.builder.model.SyncIssue.TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -59,8 +57,8 @@ class PluginVersionCheckTest {
         assertThat(syncIssues).hasSize(1)
         val syncIssue = syncIssues.single()
 
-        assertThat(syncIssue.type).isEqualTo(TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD)
-        assertThat(syncIssue.severity).isEqualTo(SEVERITY_ERROR)
+        assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD)
+        assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_ERROR)
         val expected = "The Android Gradle plugin supports only Butterknife Gradle " +
                 "plugin version 9.0.0-rc2 and higher.\n" +
                 "The following dependencies do not satisfy the required version:\n" +

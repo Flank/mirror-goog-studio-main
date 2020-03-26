@@ -20,7 +20,6 @@ import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.builder.model.SyncIssue
-import com.android.builder.model.SyncIssue.TYPE_SDK_NOT_SET
 import com.google.api.client.repackaged.com.google.common.base.Throwables.getRootCause
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -50,7 +49,7 @@ class MissingSdkTest {
             testProject.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
         assertThat(syncIssues.size).isEqualTo(1)
         val syncIssue = syncIssues.first()
-        assertThat(syncIssue.type).isEqualTo(TYPE_SDK_NOT_SET)
+        assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_SDK_NOT_SET)
         assertThat(syncIssue.data).isEqualTo(localPropertiesPath)
         assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_ERROR)
     }
