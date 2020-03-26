@@ -51,7 +51,11 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         get() {
             return this.externalNativeBuild
         }
-
+    override var maxSdk: Int?
+        get() = maxSdkVersion
+        set(value) {
+            maxSdkVersion = value
+        }
     override var minSdk: Int?
         get() = minSdkVersion?.apiLevel
         set(value) {

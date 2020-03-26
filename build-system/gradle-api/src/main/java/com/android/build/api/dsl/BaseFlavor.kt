@@ -98,7 +98,7 @@ interface BaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    var maxSdkVersion: Int?
+    var maxSdk: Int?
 
     /**
      * The renderscript target api, or null if not specified. This is only the value set on this
