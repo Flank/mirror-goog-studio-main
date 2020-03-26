@@ -131,7 +131,7 @@ public class VersionChecks {
                 return true;
             }
 
-            if (node.equals(endElement)) {
+            if (node == endElement) {
                 done = true;
             }
 

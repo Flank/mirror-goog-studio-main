@@ -6671,6 +6671,29 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings");
     }
 
+    public void test150198810() {
+        // Regression test for https://issuetracker.google.com/150198810
+        lint().files(
+                manifest().minSdk(21),
+                kotlin(""
+                        + "package test.pkg\n"
+                        + "\n"
+                        + "import android.os.Build\n"
+                        + "import android.telephony.SmsManager\n"
+                        + "import android.util.Log\n"
+                        + "\n"
+                        + "fun test() {\n"
+                        + "    val defaultSmsManager = SmsManager.getDefault()\n"
+                        + "    if (Build.VERSION.SDK_INT < 22) {\n"
+                        + "        return\n"
+                        + "    }\n"
+                        + "    val subscriptionId = defaultSmsManager.subscriptionId\n"
+                        + "    Log.d(\"AppLog\", \"subscriptionId:$subscriptionId\")\n"
+                        + "}"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
