@@ -158,7 +158,7 @@ public class DesugaringClassAnalyzer {
         @NonNull private final Set<String> dependencies = Sets.newHashSet();
 
         public Visitor(@NonNull Path path) {
-            super(Opcodes.ASM5);
+            super(Opcodes.ASM7);
             this.path = path;
         }
 
