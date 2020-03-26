@@ -179,19 +179,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         set(value) { super.setSigningConfig(value) }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
-    /**
-     * Adds a new field to the generated BuildConfig class.
-     *
-     * The field is generated as: `<type> <name> = <value>;`
-     *
-     * This means each of these must have valid Java content. If the type is a String, then the
-     * value should include quotes.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    fun buildConfigField(
+    override fun buildConfigField(
         type: String,
         name: String,
         value: String
@@ -222,19 +210,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         addBuildConfigField(ClassFieldImpl(type, name, value))
     }
 
-    /**
-     * Adds a new generated resource.
-     *
-     * This is equivalent to specifying a resource in res/values.
-     *
-     * See [Resource
- * Types](http://developer.android.com/guide/topics/resources/available-resources.html).
-     *
-     * @param type the type of the resource
-     * @param name the name of the resource
-     * @param value the value of the resource
-     */
-    fun resValue(type: String, name: String, value: String) {
+    override fun resValue(type: String, name: String, value: String) {
         val alreadyPresent = resValues[name]
         if (alreadyPresent != null) {
             val flavorName = getName()

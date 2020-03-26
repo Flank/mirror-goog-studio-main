@@ -189,6 +189,7 @@ com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.f
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
 com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.BaseFlavor.getApplicationId: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.dsl.BaseFlavor.getMinSdk: java.lang.Integer ()
@@ -210,6 +211,7 @@ com.android.build.api.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.d
 com.android.build.api.dsl.BaseFlavor.getVersionCode: java.lang.Integer ()
 com.android.build.api.dsl.BaseFlavor.getVersionName: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getWearAppUnbundled: java.lang.Boolean ()
+com.android.build.api.dsl.BaseFlavor.resValue: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setApplicationId: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setMaxSdkVersion: void (java.lang.Integer)
 com.android.build.api.dsl.BaseFlavor.setMinSdk: void (java.lang.Integer)
