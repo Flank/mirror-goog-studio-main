@@ -342,6 +342,14 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
 
     builder.add("--no-proguard-location-reference")
 
+    if (config.emitStableIdsFile != null) {
+        builder.add("--emit-ids", config.emitStableIdsFile.absolutePath)
+    }
+
+    if (config.consumeStableIdsFile != null) {
+        builder.add("--stable-ids", config.consumeStableIdsFile.absolutePath)
+    }
+
     return builder.build()
 }
 

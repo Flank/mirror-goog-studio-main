@@ -1333,6 +1333,7 @@ public abstract class TaskManager<
                 artifacts.republish(PROCESSED_RES.INSTANCE, packageOutputType);
             }
 
+            // TODO: also support stable IDs for the bundle (does it matter?)
             // create the task that creates the aapt output for the bundle.
             if (componentProperties instanceof ApkCreationConfig
                     && !componentProperties.getVariantType().isForTesting()) {
