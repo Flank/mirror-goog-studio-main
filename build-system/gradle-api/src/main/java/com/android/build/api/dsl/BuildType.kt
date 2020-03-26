@@ -23,7 +23,8 @@ import org.gradle.api.Named
 @Incubating
 interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> : Named,
-    VariantDimension<AnnotationProcessorOptionsT> {
+    VariantDimension<AnnotationProcessorOptionsT,
+            SigningConfigT> {
     /** Whether this build type should generate a debuggable apk. */
     var isDebuggable: Boolean
 
@@ -115,9 +116,6 @@ interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
      */
     var isEmbedMicroApp: Boolean
 
-    /** The associated signing config or null if none are set on the build type. */
-    var signingConfig: SigningConfigT?
-
     /** Whether this product flavor should be selected in Studio by default  */
     var isDefault: Boolean
 
@@ -187,35 +185,4 @@ interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
      * the debug build type.
      */
     var isCrunchPngs: Boolean?
-
-    /**
-     * Adds a new field to the generated BuildConfig class.
-     *
-     *
-     * The field is generated as: `<type> <name> = <value>;`
-     *
-     *
-     * This means each of these must have valid Java content. If the type is a String, then the
-     * value should include quotes.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    fun buildConfigField(type: String, name: String, value: String)
-
-    /**
-     * Adds a new generated resource.
-     *
-     *
-     * This is equivalent to specifying a resource in res/values.
-     *
-     *
-     * See [Resource Types](http://developer.android.com/guide/topics/resources/available-resources.html).
-     *
-     * @param type the type of the resource
-     * @param name the name of the resource
-     * @param value the value of the resource
-     */
-    fun resValue(type: String, name: String, value: String)
 }

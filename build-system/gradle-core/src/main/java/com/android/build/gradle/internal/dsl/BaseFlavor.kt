@@ -34,7 +34,7 @@ import java.io.File
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     AbstractProductFlavor(name),
     CoreProductFlavor,
-    com.android.build.api.dsl.BaseFlavor<AnnotationProcessorOptions> {
+    com.android.build.api.dsl.BaseFlavor<AnnotationProcessorOptions, SigningConfig> {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
