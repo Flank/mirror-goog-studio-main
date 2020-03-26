@@ -468,7 +468,7 @@ class UastTest : TestCase() {
 
                 public final class Test : android.app.Activity {
                     public fun Test() = UastEmptyExpression
-                    fun setUi() : void {
+                    fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int) : void {
                         var z: int = x + y
                     }
                 }
@@ -482,7 +482,11 @@ class UastTest : TestCase() {
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
                         UMethod (name = Test) [public fun Test() = UastEmptyExpression]
-                        UMethod (name = setUi) [fun setUi() : void {...}]
+                        UMethod (name = setUi) [fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int) : void {...}]
+                            UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UParameter (name = y) [@org.jetbrains.annotations.NotNull var y: int]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                             UBlockExpression [{...}] : PsiType:void
                                 UDeclarationsExpression [var z: int = x + y]
                                     ULocalVariable (name = z) [var z: int = x + y]
@@ -529,30 +533,30 @@ class UastTest : TestCase() {
                     public static final fun function2(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function3() : void {
+                    static fun function3(@org.jetbrains.annotations.Nullable t: T) : void {
                     }
-                    fun function4() : T {
+                    static fun function4(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function5() : int {
+                    static fun function5(@org.jetbrains.annotations.Nullable t: T) : int {
                         return 42
                     }
-                    fun function6() : T {
+                    static fun function6(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function6: T, @org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function7() : T {
+                    static fun function7(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function8() : T {
+                    static fun function8(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function9() : T {
+                    static fun function9(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function10() : T {
+                    static fun function10(@org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
-                    fun function11() : T {
+                    static fun function11(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function11: T, @org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
                 }
@@ -642,7 +646,7 @@ class UastTest : TestCase() {
                         try {
                             catches()
                         }
-                        catch (e) {
+                        catch (@org.jetbrains.annotations.NotNull @java.lang.SuppressWarnings(value = "Something") var e: java.lang.Throwable) {
                         }
                     }
                     public final fun throws() : void {
