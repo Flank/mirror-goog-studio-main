@@ -227,6 +227,8 @@ public class DeviceState {
      */
     public enum DeviceStatus {
         BOOTLOADER("bootloader"), //$NON-NLS-1$
+        /** bootloader mode with is-userspace = true though `adb reboot fastboot` */
+        FASTBOOTD("fastbootd"), //$NON-NLS-1$
         OFFLINE("offline"), //$NON-NLS-1$
         ONLINE("device"), //$NON-NLS-1$
         RECOVERY("recovery"), //$NON-NLS-1$
