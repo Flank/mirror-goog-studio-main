@@ -141,8 +141,15 @@ public class VersionChecks {
 
         @Override
         public boolean visitIfExpression(@NonNull UIfExpression ifStatement) {
+            super.visitIfExpression(ifStatement);
 
             if (done) {
+                return true;
+            }
+
+            if (UastUtils.isUastChildOf(endElement, ifStatement, true)) {
+                // Even if there is an unconditional exit, endElement will occur before it!
+                done = true;
                 return true;
             }
 
