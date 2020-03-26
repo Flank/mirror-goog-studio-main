@@ -15,10 +15,10 @@
  *
  */
 #include "perfetto.h"
-#include "utils/current_process.h"
 
 #include <fcntl.h>  // library for fcntl function
 #include <unistd.h>
+
 #include <memory>
 #include <sstream>
 
@@ -100,7 +100,7 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
     // Perfetto only has write access to the |kFixedPerfettoTracePath| folder.
     // As such we take the expected file name and tell perfetto to write to a
     // file with that name in the |kFixedPerfettoTracePath| folder. For Q this
-    // folder is readonly by shell, for R+ this folder is read/write.
+    // folder is readonly by shell, for R+ this folder is read/delete.
     perfettoPath = string(kSystemPerfettoExecutable);
     perfetto_trace_path_ = string(kFixedPerfettoTracePath);
     // Find the filename of the expected output file and use that
@@ -122,12 +122,8 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
   // the config in via the stdin. However since this is currently the way
   // we launch/communicate with perfetto there is little need to change it.
   // The alternative is chagne "-c -" to "-c /path/to/config"
-  const char *args[] = {perfettoPath.c_str(),
-                        "-c",
-                        "-",
-                        "-o",
-                        perfetto_trace_path_.c_str(),
-                        nullptr};
+  const char *args[] = {perfettoPath.c_str(),         "-c",   "-", "-o",
+                        perfetto_trace_path_.c_str(), nullptr};
 
   // If we sideload perfetto we need to tell it how to connect to the probes
   // socks if we are not sideloading perfetto passing this information will
@@ -157,23 +153,19 @@ void Perfetto::Stop() {
     command_.release();
   }
 
-  // For Q+ we don't use the sideloaded perfetto we use the one built into the
-  // system.  In Q perfetto writes to a directory that is readonly by shell so
-  // we copy the file out, R+ shell can also write to that directory as such we
-  // move the file to the expected location.
-  if (DeviceInfo::feature_level() == DeviceInfo::Q) {
-    // The directory that perfetto copies traces to is readonly in Q as such
-    // we copy the file to the expected output path so the rest of the
-    // pipeline can continue normally.
-    // This primarily acts as a compatibility with the other cpu tracing.
+  if (perfetto_trace_path_.compare(expected_output_path_) != 0) {
+    // For Q+ we don't use the sideloaded perfetto but the one built into the
+    // OS. The directory that the OS built-in perfetto copies traces to is
+    // readonly as such we copy the file to the expected output path so the
+    // rest of the pipeline can continue normally. This primarily acts as a
+    // compatibility with the other cpu tracing.
     DiskFileSystem disk;
     if (disk.HasFile(perfetto_trace_path_)) {
       disk.CopyFile(perfetto_trace_path_, expected_output_path_);
-    }
-  } else if (DeviceInfo::feature_level() > DeviceInfo::Q) {
-    DiskFileSystem disk;
-    if (disk.HasFile(perfetto_trace_path_)) {
-      disk.MoveFile(perfetto_trace_path_, expected_output_path_);
+      // Attempt to clean up after the copy.
+      // After QQ2A.191031.001, shell has delete access to the folder so this
+      // will work. For early Q builds, it will just fail silently.
+      disk.DeleteFile(perfetto_trace_path_);
     }
   }
 
