@@ -20,7 +20,9 @@ import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -32,6 +34,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 
 /**
  * Tests for [BaseAppModuleExtension]
@@ -41,7 +44,12 @@ class BaseAppModuleExtensionTest {
     @Suppress("UNCHECKED_CAST")
     @Before
     fun setUp() {
-        val dslServices = createDslServices()
+        val sdkComponents = Mockito.mock(SdkComponents::class.java)
+        `when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
+        `when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
+        `when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
+
+        val dslServices = createDslServices(sdkComponents = sdkComponents)
 
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
@@ -65,7 +73,8 @@ class BaseAppModuleExtensionTest {
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,
             variantInputModel.sourceSetManager,
             Mockito.mock(ExtraModelInfo::class.java),
-            extension)
+            extension
+        )
     }
 
     @Test

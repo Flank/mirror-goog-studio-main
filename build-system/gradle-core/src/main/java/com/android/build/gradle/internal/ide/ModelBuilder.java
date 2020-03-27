@@ -273,11 +273,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<String> bootClasspath;
         if (globalScope.getSdkComponents().getSdkSetupCorrectly().get()) {
             bootClasspath =
-                    globalScope
-                            .getFilteredBootClasspath()
-                            .getFiles()
-                            .stream()
-                            .map(File::getAbsolutePath)
+                    globalScope.getFilteredBootClasspath().get().stream()
+                            .map(it -> it.getAsFile().getAbsolutePath())
                             .collect(Collectors.toList());
         } else {
             // SDK not set up, error will be reported as a sync issue.

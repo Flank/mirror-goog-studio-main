@@ -699,4 +699,6 @@ interface CommonExtension<
      *     the library is not required.
      */
     fun useLibrary(name: String, required: Boolean)
+
+    val sdkComponents: SdkComponents
 }

@@ -17,6 +17,7 @@
 @file:JvmName("FakeServices")
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
@@ -59,9 +60,10 @@ fun createProjectServices(
 @JvmOverloads
 fun createDslServices(
     projectServices: ProjectServices = createProjectServices(),
-    dslVariableFactory: DslVariableFactory = DslVariableFactory(projectServices.issueReporter)
+    dslVariableFactory: DslVariableFactory = DslVariableFactory(projectServices.issueReporter),
+    sdkComponents: SdkComponents? = null
 ): DslServices {
-    return DslServicesImpl(projectServices, dslVariableFactory)
+    return DslServicesImpl(projectServices, dslVariableFactory, sdkComponents)
 }
 
 @JvmOverloads

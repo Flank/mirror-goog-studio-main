@@ -16,23 +16,26 @@
 
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import java.io.File
 import kotlin.properties.ReadWriteProperty
 
-class DslServicesImpl(
+class DslServicesImpl @JvmOverloads constructor(
     projectServices: ProjectServices,
-    val variableFactory: DslVariableFactory
-) : BaseServicesImpl(projectServices),
-    DslServices {
+    val variableFactory: DslVariableFactory,
+    sdkComponents: SdkComponents? = null
+) : BaseServicesImpl(projectServices), DslServices {
+    private val _sdkComponents: SdkComponents? = sdkComponents
+
+    override val sdkComponents: SdkComponents
+        get() = _sdkComponents!!
 
     override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> =
         projectServices.objectFactory.domainObjectSet(type)

@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -63,7 +64,7 @@ import org.gradle.process.ExecOperations;
  */
 public abstract class InstallVariantTask extends NonIncrementalTask {
 
-    private Provider<File> adbExecutableProvider;
+    private Provider<RegularFile> adbExecutableProvider;
 
     private int timeOutInMs = 0;
 
@@ -88,7 +89,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     protected void doTaskAction() throws DeviceException, ExecutionException {
         final ILogger iLogger = new LoggerWrapper(getLogger());
         DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
+                new ConnectedDeviceProvider(adbExecutableProvider, getTimeOutInMs(), iLogger);
         deviceProvider.use(
                 () -> {
                     BuiltArtifacts builtArtifacts =
@@ -176,7 +177,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
     @InputFile
     @PathSensitive(PathSensitivity.NAME_ONLY)
-    public Provider<File> getAdbExe() {
+    public Provider<RegularFile> getAdbExe() {
         return adbExecutableProvider;
     }
 

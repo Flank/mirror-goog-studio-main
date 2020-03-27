@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
 
 /**
  * DeviceProvider for locally connected devices. Basically returns the list of devices that
@@ -67,12 +69,17 @@ public class ConnectedDeviceProvider extends DeviceProvider {
 
     @Nullable private LogAdapter logAdapter;
 
-    /**
-     * @param timeOutInMs The time out for each adb command, where 0 means wait forever.
-     */
-    public ConnectedDeviceProvider(@NonNull File adbLocation, int timeOutInMs,
-            @NonNull ILogger logger) {
+    /** @param timeOutInMs The time out for each adb command, where 0 means wait forever. */
+    public ConnectedDeviceProvider(
+            @NonNull File adbLocation, int timeOutInMs, @NonNull ILogger logger) {
         this(Suppliers.ofInstance(adbLocation), timeOutInMs, logger);
+    }
+
+    public ConnectedDeviceProvider(
+            @NonNull Provider<RegularFile> adbLocationProvider,
+            int timeOutInMs,
+            @NonNull ILogger logger) {
+        this(() -> adbLocationProvider.get().getAsFile(), timeOutInMs, logger);
     }
 
     /**

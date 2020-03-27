@@ -16,21 +16,21 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.sdklib.AndroidVersion
-import com.android.testutils.MockitoKt.any
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
-import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
@@ -51,8 +51,7 @@ class BootClasspathBuilderTest {
 
     @Before
     fun setupProject() {
-        Mockito.`when`(project!!.files(any(Any::class.java)))
-            .thenAnswer { FakeConfigurableFileCollection(it.arguments[0]) }
+        `when`(project!!.objects).thenReturn(FakeObjectFactory.factory)
     }
 
     @After
@@ -71,11 +70,14 @@ class BootClasspathBuilderTest {
         val androidQClasspath = getClasspath(AndroidVersion(28, "Q"), androidQ)
 
         // Check that preview and final versions are not mixed.
-        assertThat(android28Classpath.files.single().name).isEqualTo("android-28.jar")
-        assertThat(androidQClasspath.files.single().name).isEqualTo("android-Q.jar")
+        assertThat(android28Classpath.get().single().asFile.name).isEqualTo("android-28.jar")
+        assertThat(androidQClasspath.get().single().asFile.name).isEqualTo("android-Q.jar")
     }
 
-    private fun getClasspath(androidVersion: AndroidVersion, androidJar: File): FileCollection {
+    private fun getClasspath(
+        androidVersion: AndroidVersion,
+        androidJar: File
+    ): Provider<List<RegularFile>> {
         return BootClasspathBuilder.computeClasspath(
             project = project!!,
             issueReporter = issueReporter,

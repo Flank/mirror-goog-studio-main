@@ -2015,11 +2015,7 @@ public abstract class TaskManager<
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 androidTestProperties,
                                 new ConnectedDeviceProvider(
-                                        () ->
-                                                globalScope
-                                                        .getSdkComponents()
-                                                        .getAdbExecutableProvider()
-                                                        .get(),
+                                        globalScope.getSdkComponents().getAdbExecutableProvider(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(logger)),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type

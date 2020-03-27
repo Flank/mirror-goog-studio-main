@@ -318,7 +318,8 @@ public abstract class BasePlugin<
         project.getPlugins().apply(JavaBasePlugin.class);
 
         dslServices =
-                new DslServicesImpl(projectServices, new DslVariableFactory(syncIssueReporter));
+                new DslServicesImpl(
+                        projectServices, new DslVariableFactory(syncIssueReporter), sdkComponents);
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(

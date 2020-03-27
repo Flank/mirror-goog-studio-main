@@ -25,9 +25,9 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.utils.ILogger;
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -43,7 +43,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
     private Provider<String> applicationId;
 
     private int mTimeOutInMs = 0;
-    private Provider<File> adbExecutableProvider;
+    private Provider<RegularFile> adbExecutableProvider;
 
     public UninstallTask() {
         this.getOutputs().upToDateWhen(task -> {
@@ -60,7 +60,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
 
         final ILogger iLogger = new LoggerWrapper(getLogger());
         final DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
+                new ConnectedDeviceProvider(adbExecutableProvider, getTimeOutInMs(), iLogger);
 
         deviceProvider.use(
                 () -> {
@@ -90,7 +90,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
 
     @InputFile
     @PathSensitive(PathSensitivity.NAME_ONLY)
-    public File getAdbExe() {
+    public RegularFile getAdbExe() {
         return adbExecutableProvider.get();
     }
 

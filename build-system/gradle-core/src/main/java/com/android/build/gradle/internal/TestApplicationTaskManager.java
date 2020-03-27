@@ -107,11 +107,7 @@ public class TestApplicationTaskManager
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 testVariantProperties,
                                 new ConnectedDeviceProvider(
-                                        () ->
-                                                globalScope
-                                                        .getSdkComponents()
-                                                        .getAdbExecutableProvider()
-                                                        .get(),
+                                        globalScope.getSdkComponents().getAdbExecutableProvider(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(getLogger())),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type

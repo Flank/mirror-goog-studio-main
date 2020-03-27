@@ -344,6 +344,7 @@ com.android.build.api.dsl.CommonExtension.getOnVariants: com.android.build.api.c
 com.android.build.api.dsl.CommonExtension.getPackagingOptions: PackagingOptionsT ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getResourcePrefix: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
 com.android.build.api.dsl.CommonExtension.getSourceSets: org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT> ()
 com.android.build.api.dsl.CommonExtension.getSplits: SplitsT ()
@@ -585,6 +586,10 @@ com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.ProductFlavor.setDimension: void (java.lang.String)
 com.android.build.api.dsl.ProductFlavor.setMatchingFallbacks: void (java.util.List<java.lang.String>)
+com.android.build.api.dsl.SdkComponents
+com.android.build.api.dsl.SdkComponents.getAdb: org.gradle.api.provider.Provider<org.gradle.api.file.RegularFile> ()
+com.android.build.api.dsl.SdkComponents.getNdkDirectory: org.gradle.api.provider.Provider<org.gradle.api.file.Directory> ()
+com.android.build.api.dsl.SdkComponents.getSdkDirectory: org.gradle.api.provider.Provider<org.gradle.api.file.Directory> ()
 com.android.build.api.dsl.Shaders
 com.android.build.api.dsl.Shaders.getGlslcArgs: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.Shaders.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()

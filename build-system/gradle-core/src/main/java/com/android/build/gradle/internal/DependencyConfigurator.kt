@@ -649,7 +649,7 @@ class DependencyConfigurator(
                 artifactConfiguration.registerTransform(
                     globalScope.project.name,
                     dependencies,
-                    globalScope.bootClasspath,
+                    project.files(globalScope.bootClasspath),
                     getDesugarLibConfig(globalScope.project),
                     SyncOptions.getErrorFormatMode(globalScope.projectOptions),
                     globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)

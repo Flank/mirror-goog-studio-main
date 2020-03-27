@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -31,6 +30,7 @@ import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -59,7 +59,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE) // We care about the binary itself, not where it is.
-    lateinit var adbExecutableProvider: Provider<File>
+    lateinit var adbExecutableProvider: Provider<RegularFile>
         private set
 
     @get:InputFile
@@ -75,7 +75,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
             it.submit(
                 InstallRunnable::class.java,
                 Params(
-                    adbExecutableProvider.get(),
+                    adbExecutableProvider.get().asFile,
                     apkBundle.get().asFile,
                     timeOutInMs,
                     installOptions,

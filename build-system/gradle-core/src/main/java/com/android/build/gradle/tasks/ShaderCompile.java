@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.inject.Inject;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -83,7 +84,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         return buildToolInfoRevisionProvider.get().toString();
     }
 
-    private Provider<File> ndkLocation;
+    private Provider<Directory> ndkLocation;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -124,7 +125,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                     destinationDir,
                     defaultArgs,
                     scopedArgs,
-                    () -> ndkLocation.get(),
+                    () -> ndkLocation.get().getAsFile(),
                     new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
                     workers);
         }
@@ -237,7 +238,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
             task.ndkLocation =
-                    creationConfig.getGlobalScope().getSdkComponents().getNdkFolderProvider();
+                    creationConfig.getGlobalScope().getSdkComponents().getNdkDirectoryProvider();
             creationConfig
                     .getOperations()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());

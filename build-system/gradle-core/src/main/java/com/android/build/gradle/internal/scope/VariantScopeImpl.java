@@ -704,7 +704,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getBootClasspath() {
-        return globalScope.getBootClasspath();
+        return globalScope.getProject().files(globalScope.getBootClasspath());
     }
 
     @NonNull

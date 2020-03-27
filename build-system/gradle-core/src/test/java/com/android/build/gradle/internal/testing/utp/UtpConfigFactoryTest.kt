@@ -24,6 +24,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.junit.Before
 import org.junit.Rule
@@ -44,20 +45,36 @@ class UtpConfigFactoryTest {
 
     @Mock lateinit var mockConfigurationContainer: ConfigurationContainer
     @Mock lateinit var mockSdkComponents: SdkComponents
-    @Mock lateinit var mockTestData: StaticTestData
-    @Mock lateinit var mockAppApk: File
-    @Mock lateinit var mockTestApk: File
-    @Mock lateinit var mockHelperApk: File
-    @Mock lateinit var mockDevice: DeviceConnector
-    @Mock lateinit var mockOutputDir: File
-    @Mock lateinit var mockTmpDir: File
-    @Mock lateinit var mockTestLogDir: File
-    @Mock lateinit var mockRunLogDir: File
-    @Mock lateinit var mockSdkDir: File
-    @Mock lateinit var mockAdb: File
-    @Mock lateinit var mockAdbProvider: Provider<File>
-    @Mock lateinit var mockBuildToolInfo: BuildToolInfo
-    @Mock lateinit var mockBuildToolInfoProvider: Provider<BuildToolInfo>
+    @Mock
+    lateinit var mockTestData: StaticTestData
+    @Mock
+    lateinit var mockAppApk: File
+    @Mock
+    lateinit var mockTestApk: File
+    @Mock
+    lateinit var mockHelperApk: File
+    @Mock
+    lateinit var mockDevice: DeviceConnector
+    @Mock
+    lateinit var mockOutputDir: File
+    @Mock
+    lateinit var mockTmpDir: File
+    @Mock
+    lateinit var mockTestLogDir: File
+    @Mock
+    lateinit var mockRunLogDir: File
+    @Mock
+    lateinit var mockSdkDir: File
+    @Mock
+    lateinit var mockAdb: RegularFile
+    @Mock
+    lateinit var mockAdbFile: File
+    @Mock
+    lateinit var mockAdbProvider: Provider<RegularFile>
+    @Mock
+    lateinit var mockBuildToolInfo: BuildToolInfo
+    @Mock
+    lateinit var mockBuildToolInfoProvider: Provider<BuildToolInfo>
 
     @Before
     fun setupMocks() {
@@ -90,11 +107,12 @@ class UtpConfigFactoryTest {
         `when`(mockSdkDir.absolutePath).thenReturn("mockSdkDirPath")
         `when`(mockSdkComponents.adbExecutableProvider).thenReturn(mockAdbProvider)
         `when`(mockAdbProvider.get()).thenReturn(mockAdb)
-        `when`(mockAdb.absolutePath).thenReturn("mockAdbPath")
+        `when`(mockAdb.asFile).thenReturn(mockAdbFile)
+        `when`(mockAdbFile.absolutePath).thenReturn("mockAdbPath")
         `when`(mockSdkComponents.buildToolInfoProvider).thenReturn(mockBuildToolInfoProvider)
         `when`(mockBuildToolInfoProvider.get()).thenReturn(mockBuildToolInfo)
         `when`(mockBuildToolInfo.getPath(ArgumentMatchers.any())).then {
-            when(it.getArgument<BuildToolInfo.PathId>(0)) {
+            when (it.getArgument<BuildToolInfo.PathId>(0)) {
                 BuildToolInfo.PathId.AAPT -> "mockAaptPath"
                 BuildToolInfo.PathId.DEXDUMP -> "mockDexdumpPath"
                 else -> null
