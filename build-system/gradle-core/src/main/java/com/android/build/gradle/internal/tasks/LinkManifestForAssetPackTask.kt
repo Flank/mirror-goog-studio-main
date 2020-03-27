@@ -92,7 +92,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             )
 
             val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-                aapt2FromMaven = aapt2FromMaven,
+                aapt2FromMaven = aapt2FromMaven.singleFile,
                 logger = LoggerWrapper(logger)
             )
 

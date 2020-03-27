@@ -211,7 +211,7 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             jarOutputs(outputRClassesJar, rewrittenRClasses)
 
             val aapt2ServiceKey = aapt2DaemonBuildService.get()
-                .registerAaptService(aapt2FromMaven, logger = LoggerWrapper(logger))
+                .registerAaptService(aapt2FromMaven.singleFile, logger = LoggerWrapper(logger))
 
             val outputCompiledResources = File(intermediateDirectory, "compiled_namespaced_res")
             // compile the rewritten resources
