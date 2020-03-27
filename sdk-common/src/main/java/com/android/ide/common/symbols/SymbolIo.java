@@ -373,7 +373,7 @@ public final class SymbolIo {
 
                         if (data.resourceType == ResourceType.ATTR) {
                             table.add(
-                                    new Symbol.AttributeSymbol(
+                                    Symbol.attributeSymbol(
                                             data.name,
                                             value,
                                             data.maybeDefinition,
@@ -381,7 +381,7 @@ public final class SymbolIo {
                                             canonicalName));
                         } else {
                             table.add(
-                                    new Symbol.NormalSymbol(
+                                    Symbol.normalSymbol(
                                             data.resourceType,
                                             data.name,
                                             value,
@@ -411,7 +411,7 @@ public final class SymbolIo {
                                 ? SymbolUtils.canonicalizeValueResourceName(data.name)
                                 : data.name;
                 table.add(
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 data.name,
                                 ImmutableList.of(),
                                 data.children,
@@ -471,7 +471,7 @@ public final class SymbolIo {
                             ? SymbolUtils.canonicalizeValueResourceName(data.name)
                             : data.name;
             table.add(
-                    new Symbol.StyleableSymbol(
+                    Symbol.styleableSymbol(
                             canonicalName, values, childNames, data.accessibility, data.name));
         }
 

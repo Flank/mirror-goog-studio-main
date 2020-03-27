@@ -386,7 +386,7 @@ private fun parseAttr(
         // We already have the attribute, but it was defined under a declare-styleable. Replace it
         // with a real definition. Keep the ID of the previous definition.
         val old = builder.remove(newAttr.resourceType, newAttr.canonicalName)!!
-        builder.add(Symbol.AttributeSymbol(newAttr.canonicalName, old.intValue, false))
+        builder.add(Symbol.attributeSymbol(newAttr.canonicalName, old.intValue, false))
     }
 
     // Otherwise use existing attribute.

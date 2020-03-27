@@ -66,19 +66,19 @@ class SymbolTablePartialRMergeTest {
 
         assertThat(result.symbols.values()).hasSize(3)
         assertThat(result.symbols.values()).containsExactly(
-            Symbol.NormalSymbol(
+            Symbol.normalSymbol(
                 ResourceType.STRING,
                 "s1",
                 0,
                 ResourceVisibility.PRIVATE_XML_ONLY
             ),
-            Symbol.NormalSymbol(
+            Symbol.normalSymbol(
                 ResourceType.STRING,
                 "s2",
                 0,
                 ResourceVisibility.PRIVATE
             ),
-            Symbol.NormalSymbol(
+            Symbol.normalSymbol(
                 ResourceType.STRING,
                 "s3",
                 0,
@@ -130,12 +130,12 @@ class SymbolTablePartialRMergeTest {
         var result = SymbolTable.mergePartialTables(list(layoutA, layoutB), "")
         assertThat(result.symbols.values()).hasSize(2)
         assertThat(result.symbols.values()).containsExactly(
-                Symbol.NormalSymbol(
+                Symbol.normalSymbol(
                         ResourceType.ID,
                         "idB",
                         0,
                     ResourceVisibility.PRIVATE_XML_ONLY),
-            Symbol.NormalSymbol(
+            Symbol.normalSymbol(
                         ResourceType.LAYOUT,
                         "layout",
                         0,
@@ -144,13 +144,13 @@ class SymbolTablePartialRMergeTest {
         result = SymbolTable.mergePartialTables(list(layoutB, layoutA), "")
         assertThat(result.symbols.values()).hasSize(2)
         assertThat(result.symbols.values()).containsExactly(
-            Symbol.NormalSymbol(
+            Symbol.normalSymbol(
                 ResourceType.ID,
                 "idA",
                 0,
                 ResourceVisibility.PRIVATE_XML_ONLY
             ),
-            Symbol.NormalSymbol(
+            Symbol.normalSymbol(
                 ResourceType.LAYOUT,
                 "layout",
                 0,
@@ -358,11 +358,11 @@ class SymbolTablePartialRMergeTest {
 
         val expected = SymbolTable.builder()
             .tablePackage("com.boop.beep")
-            .add(Symbol.AttributeSymbol("a1", 0, false, ResourceVisibility.PUBLIC))
-            .add(Symbol.AttributeSymbol("a2", 0, false, ResourceVisibility.PRIVATE))
-            .add(Symbol.AttributeSymbol("a3", 0, false, ResourceVisibility.PRIVATE_XML_ONLY))
+            .add(Symbol.attributeSymbol("a1", 0, false, ResourceVisibility.PUBLIC))
+            .add(Symbol.attributeSymbol("a2", 0, false, ResourceVisibility.PRIVATE))
+            .add(Symbol.attributeSymbol("a3", 0, false, ResourceVisibility.PRIVATE_XML_ONLY))
             .add(
-                Symbol.StyleableSymbol(
+                Symbol.styleableSymbol(
                     "s1",
                     ImmutableList.of(),
                     ImmutableList.of("a1", "a2", "a3", "android:name"),

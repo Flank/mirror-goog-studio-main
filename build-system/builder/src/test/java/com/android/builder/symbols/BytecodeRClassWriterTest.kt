@@ -52,16 +52,16 @@ class BytecodeRClassWriterTest {
 
         val symbols = SymbolTable.builder()
                 .tablePackage("com.example.foo")
-                .add(Symbol.NormalSymbol(ResourceType.ID, "foo", 0x0))
+                .add(Symbol.normalSymbol(ResourceType.ID, "foo", 0x0))
                 .add(
-                    Symbol.NormalSymbol(
+                    Symbol.normalSymbol(
                                 ResourceType.DRAWABLE,
                                 "bar",
                                 0x1))
-                .add(Symbol.AttributeSymbol("beep", 0x3))
-                .add(Symbol.AttributeSymbol("boop", 0x5))
+                .add(Symbol.attributeSymbol("beep", 0x3))
+                .add(Symbol.attributeSymbol("boop", 0x5))
                 .add(
-                    Symbol.StyleableSymbol(
+                    Symbol.styleableSymbol(
                                 "styles",
                                 ImmutableList.of(0x2, 0x4),
                                 ImmutableList.of("style1", "style2")))
@@ -87,12 +87,12 @@ class BytecodeRClassWriterTest {
 
         val symbolTable1 = SymbolTable.builder()
             .tablePackage("com.example.foo")
-            .add(Symbol.NormalSymbol(ResourceType.ID, "foo", 0x0))
+            .add(Symbol.normalSymbol(ResourceType.ID, "foo", 0x0))
             .build()
 
         val symbolTable2 = SymbolTable.builder()
             .tablePackage("com.example.foo")
-            .add(Symbol.NormalSymbol(ResourceType.ID, "bar", 0x1))
+            .add(Symbol.normalSymbol(ResourceType.ID, "bar", 0x1))
             .build()
 
         exportToCompiledJava(listOf(symbolTable1, symbolTable2), rJar.toPath())
@@ -119,26 +119,26 @@ class BytecodeRClassWriterTest {
 
         val appSymbols = SymbolTable.builder()
                 .tablePackage("com.example.foo.app")
-                .add(Symbol.AttributeSymbol("beep", 0x1))
-                .add(Symbol.AttributeSymbol("boop", 0x3))
+                .add(Symbol.attributeSymbol("beep", 0x1))
+                .add(Symbol.attributeSymbol("boop", 0x3))
                 .add(
-                    Symbol.StyleableSymbol(
+                    Symbol.styleableSymbol(
                                 "styles",
                         ImmutableList.of(0x1004, 0x1002),
                                 ImmutableList.of("styles_boop", "styles_beep")))
                 .add(
                     // number of children is > Byte.MAX_VALUE as a regression test for
                     // https://issuetracker.google.com/142467886
-                    Symbol.StyleableSymbol(
+                    Symbol.styleableSymbol(
                         "styleable_with_many_children",
                         ImmutableList.copyOf(1..200),
                         ImmutableList.copyOf((1..200).map { "child_$it" })))
-                .add(Symbol.NormalSymbol(ResourceType.STRING, "libstring", 0x4))
+                .add(Symbol.normalSymbol(ResourceType.STRING, "libstring", 0x4))
                 .build()
 
         val librarySymbols = SymbolTable.builder()
                 .tablePackage("com.example.foo.lib")
-                .add(Symbol.NormalSymbol(ResourceType.STRING, "libstring",0x4))
+                .add(Symbol.normalSymbol(ResourceType.STRING, "libstring",0x4))
                 .build()
 
         // The existing path: Symbol table --com.android.builder.symbols.exportToJava--> R.java --javac--> R classes
