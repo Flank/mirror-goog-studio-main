@@ -110,6 +110,16 @@ public class SymbolIoTest {
                                         "xml", "authenticator", "int", "0x7f040000"))
                         .build();
         assertEquals(expected, table);
+        assertCanonicalizationDoesNotProduceDuplicateStrings(table);
+    }
+
+    /** Check that cannonicalization doesn't produce duplicate strings. */
+    private static void assertCanonicalizationDoesNotProduceDuplicateStrings(SymbolTable table) {
+        for (Symbol symbol : table.getSymbols().values()) {
+            if (symbol.getCanonicalName().equals(symbol.getName())) {
+                assertThat(symbol.getCanonicalName()).isSameAs(symbol.getName());
+            }
+        }
     }
 
     @Test
@@ -138,6 +148,7 @@ public class SymbolIoTest {
                                         "xml", "authenticator", "int", "0x7f040000"))
                         .build();
         assertEquals(expected, table);
+        assertCanonicalizationDoesNotProduceDuplicateStrings(table);
     }
 
     @Test
@@ -1011,6 +1022,8 @@ public class SymbolIoTest {
                                 ResourceVisibility.PRIVATE_XML_ONLY),
                         new Symbol.NormalSymbol(
                                 ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC));
+
+        assertCanonicalizationDoesNotProduceDuplicateStrings(table);
     }
 
     @Test
@@ -1088,6 +1101,7 @@ public class SymbolIoTest {
         SymbolTable tableLoadedFromFile = symbolIo.readRDef(rDefFile);
 
         assertThat(tableLoadedFromFile).isEqualTo(originalTable);
+        assertCanonicalizationDoesNotProduceDuplicateStrings(tableLoadedFromFile);
     }
 
     @Test
@@ -1203,12 +1217,16 @@ public class SymbolIoTest {
 
         UnmodifiableIterator<SymbolTable> iterator = symbolTables.iterator();
         SymbolTable lib = iterator.next();
+        Symbol drawable = lib.getSymbols().get(ResourceType.DRAWABLE, "foobar");
+        Symbol layout = lib.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout");
         SymbolTable lib2 = iterator.next();
 
-        assertThat(lib2.getSymbols().get(ResourceType.DRAWABLE, "foobar"))
-                .isSameAs(lib.getSymbols().get(ResourceType.DRAWABLE, "foobar"));
+        assertThat(lib2.getSymbols().get(ResourceType.DRAWABLE, "foobar")).isSameAs(drawable);
 
         assertThat(lib2.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout"))
-                .isSameAs(lib.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout"));
+                .isSameAs(layout);
+
+        assertThat(drawable.getCanonicalName()).isSameAs(drawable.getName());
+        assertThat(layout.getCanonicalName()).isSameAs(layout.getName());
     }
 }
