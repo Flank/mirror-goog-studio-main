@@ -41,7 +41,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import java.io.IOException
-import java.util.function.Function
 
 /**
  * CMake JSON generation logic. This is separated from the corresponding CMake task so that JSON can
@@ -98,7 +97,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
     @Throws(IOException::class, ProcessException::class)
     abstract fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: (Action<in ExecSpec?>) -> ExecResult): String
 
-    public override fun executeProcess(abi: CxxAbiModel, execOperation: (Action<in ExecSpec?>) -> ExecResult): String {
+    override fun executeProcess(abi: CxxAbiModel, execOperation: (Action<in ExecSpec?>) -> ExecResult): String {
         val output = executeProcessAndGetOutput(abi, execOperation)
         return makeCmakeMessagePathsAbsolute(output, makefile.parentFile)
     }

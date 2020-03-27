@@ -61,7 +61,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Strings
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
-import com.google.common.collect.Sets
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -78,7 +77,6 @@ import java.nio.file.Paths
 import java.util.ArrayList
 import java.util.Collections
 import java.util.HashMap
-import java.util.function.Function
 
 /**
  * This strategy uses the Vanilla-CMake that supports Cmake server version 1.0 to configure the
@@ -105,7 +103,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         PassThroughPrintWriterLoggingEnvironment(
             PrintWriter(cmakeServerLogFile, "UTF-8"),
             CMAKE_SERVER_LOG_PREFIX
-        ).use { ignore ->
+        ).use {
             // Create a new cmake server for the given Cmake and configure the given project.
             val serverReceiver = ServerReceiver()
                 .setMessageReceiver { message: InteractiveMessage ->
@@ -153,7 +151,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 doHandshake(
                     arguments.getGenerator()!!,
                     variant.module.makeFile.parentFile,
-                    File(arguments.getBuildRootFolder()),
+                    File(arguments.getBuildRootFolder()!!),
                     cmakeServer
                 )
 
@@ -497,8 +495,8 @@ internal class CmakeServerExternalNativeJsonGenerator(
             // have a title that says if it's an error or warning, we check that first before checking
             // the prefix of the message string). Hence we would need to parse the output message to
             // figure out if we need to log them as error or warning.
-            val CMAKE_ERROR_PREFIX = "CMake Error"
-            val CMAKE_WARNING_PREFIX = "CMake Warning"
+            val cmakeErrorPrefix = "CMake Error"
+            val cmakeWarningPrefix = "CMake Warning"
 
             // If the final message received is of type error, log and error and throw an exception.
             // Note: This is not the same as a message with type "message" with error information, that
@@ -510,13 +508,13 @@ internal class CmakeServerExternalNativeJsonGenerator(
             val correctedMessage =
                 makeCmakeMessagePathsAbsolute(message.message, makeFileDirectory)
             if (message.title != null && message.title == "Error"
-                || message.message.startsWith(CMAKE_ERROR_PREFIX)
+                || message.message.startsWith(cmakeErrorPrefix)
             ) {
                 errorln(correctedMessage)
                 return
             }
             if (message.title != null && message.title == "Warning"
-                || message.message.startsWith(CMAKE_WARNING_PREFIX)
+                || message.message.startsWith(cmakeWarningPrefix)
             ) {
                 warnln(correctedMessage)
                 return
@@ -587,7 +585,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             nativeLibraryValue.buildType = if (isDebuggable) "debug" else "release"
             // If the target type is an OBJECT_LIBRARY, it does not build any output that we care.
             if ("OBJECT_LIBRARY" != target.type // artifacts of an object library could be null. See example in b/144938511
-                && target.artifacts != null && target.artifacts.size > 0
+                && target.artifacts != null && target.artifacts.isNotEmpty()
             ) {
                 // We'll have only one output, so get the first one.
                 nativeLibraryValue.output = File(target.artifacts[0])
@@ -687,7 +685,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             }
             if (fileGroup.includePath != null) {
                 for (includePath in fileGroup.includePath) {
-                    if (includePath == null || includePath.path == null) {
+                    if (includePath?.path == null) {
                         continue
                     }
                     if (includePath.isSystem != null && includePath.isSystem) {
@@ -760,10 +758,10 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 cppCompilerExecutable = cppCompilerExecutable1
                 cCompilerExecutable = cCompilerExecutable1
             } else {
-                if (!cmakeServer.cCompilerExecutable.isEmpty()) {
+                if (cmakeServer.cCompilerExecutable.isNotEmpty()) {
                     cCompilerExecutable = File(cmakeServer.cCompilerExecutable)
                 }
-                if (!cmakeServer.cppCompilerExecutable.isEmpty()) {
+                if (cmakeServer.cppCompilerExecutable.isNotEmpty()) {
                     cppCompilerExecutable = File(cmakeServer.cppCompilerExecutable)
                 }
             }

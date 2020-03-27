@@ -32,7 +32,6 @@ import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
-import com.google.common.base.Preconditions
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.gson.GsonBuilder
@@ -44,7 +43,6 @@ import org.gradle.process.ExecSpec
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-import java.util.function.Function
 
 /**
  * ndk-build JSON generation logic. This is separated from the corresponding ndk-build task so that
@@ -104,9 +102,6 @@ internal class NdkBuildExternalNativeJsonGenerator(
             .build()
         if (applicationMk.exists()) {
             infoln("found application make file %s", applicationMk.absolutePath)
-            Preconditions.checkNotNull(
-                buildConfig.buildFiles
-            )
             buildConfig.buildFiles!!.add(applicationMk)
         }
         val actualResult = GsonBuilder()
@@ -171,7 +166,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
 
     /** Get the path of the ndk-build script.  */
     private val ndkBuild: String
-        private get() {
+        get() {
             var tool = "ndk-build"
             if (isWindows) {
                 tool += ".cmd"
@@ -197,7 +192,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
      * If the make file is a directory then get the implied file, otherwise return the path.
      */
     private val makeFile: File
-        private get() = if (makefile.isDirectory) {
+        get() = if (makefile.isDirectory) {
             File(makefile, "Android.mk")
         } else makefile
 
@@ -213,7 +208,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
             // NDK_APPLICATION_MK specifies the Application.mk file.
             result.add("NDK_APPLICATION_MK=" + applicationMk.absolutePath)
         }
-        if (!abi.variant.prefabPackageDirectoryList.isEmpty()) {
+        if (abi.variant.prefabPackageDirectoryList.isNotEmpty()) {
             if (abi.variant.module.ndkVersion.major < 21) {
                 // These cannot be automatically imported prior to NDK r21 which started handling
                 // NDK_GRADLE_INJECTED_IMPORT_PATH, but the user can add that search path explicitly

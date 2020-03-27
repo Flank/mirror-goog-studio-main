@@ -111,7 +111,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         // directories, so added/removed files will also trigger a re-run.
         for (pkgDir in variant.prefabPackageDirectoryList) {
             Files.walk(pkgDir.toPath())
-                .forEach { it: Path ->
+                .forEach {
                     result.add(it.toFile())
                 }
         }
@@ -176,7 +176,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         execOperation: (Action<in ExecSpec?>) -> ExecResult,
         javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
     ): Void? {
-        IssueReporterLoggingEnvironment(abi.variant.module.issueReporter()).use { ignore ->
+        IssueReporterLoggingEnvironment(abi.variant.module.issueReporter()).use {
             try {
                 buildForOneConfiguration(
                     forceJsonGeneration, abi, execOperation, javaExecOperation
@@ -464,7 +464,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     @Throws(IOException::class)
     fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {
-        IssueReporterLoggingEnvironment(variant.module.issueReporter()).use { ignore ->
+        IssueReporterLoggingEnvironment(variant.module.issueReporter()).use {
             val files = nativeBuildConfigurationsJsons
             infoln("streaming %s JSON files", files.size)
             for (file in nativeBuildConfigurationsJsons) {
@@ -624,26 +624,13 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 expectedSoFiles.add(output.toPath())
             }
             Files.walk(expectedOutputFolder.toPath()).use { paths ->
-                paths.filter { path: Path? ->
-                    Files.isRegularFile(
-                        path
-                    )
-                }
-                    .filter { path: Path ->
-                        path.toString().endsWith(".so")
-                    }
-                    .filter { path: Path ->
-                        !expectedSoFiles.contains(
-                            path
-                        )
-                    }
-                    .forEach { path: Path ->
-                        if (path.toFile().delete()) {
-                            infoln(
-                                "deleted unexpected build output %s in incremental "
-                                        + "regenerate",
-                                path
-                            )
+                paths
+                    .filter { Files.isRegularFile(it) }
+                    .filter { it.toString().endsWith(".so") }
+                    .filter { !expectedSoFiles.contains(it) }
+                    .forEach {
+                        if (it.toFile().delete()) {
+                            infoln("deleted unexpected build output $it in incremental regenerate")
                         }
                     }
             }
@@ -716,7 +703,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         cxxBuildModel, variant, abis, stats
                     )
                 }
-                else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")
             }
         }
     }
