@@ -207,15 +207,19 @@ sealed class Symbol {
         override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
         override val canonicalName: String = canonicalizeValueResourceName(name)
     ) : Symbol() {
-        override val resourceType: ResourceType = ResourceType.ATTR
-        override val javaType: SymbolJavaType = SymbolJavaType.INT
+        override val resourceType: ResourceType
+            get() = ResourceType.ATTR
+        override val javaType: SymbolJavaType
+            get() = SymbolJavaType.INT
+
         override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
         override val children: ImmutableList<String>
             get() = throw UnsupportedOperationException("Attributes cannot have children.")
 
-        private val typeWithMaybeDef = "$resourceType${if (isMaybeDefinition) "?" else ""}"
-        override fun toString(): String =
-            "$resourceVisibility $typeWithMaybeDef $canonicalName = 0x${intValue.toString(16)}"
+        override fun toString(): String {
+            val maybeSuffix = if (isMaybeDefinition) "?" else ""
+            return "$resourceVisibility $resourceType$maybeSuffix $canonicalName = 0x${intValue.toString(16)}"
+        }
     }
 
     data class StyleableSymbol @JvmOverloads constructor(
