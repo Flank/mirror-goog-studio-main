@@ -18,13 +18,14 @@ package com.android.ide.common.attribution
 
 import com.android.SdkConstants
 import com.android.utils.FileUtils
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
+import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import java.io.FileReader
+import java.io.FileWriter
 import java.io.Serializable
 
 data class AndroidGradlePluginAttributionData(
@@ -54,8 +55,8 @@ data class AndroidGradlePluginAttributionData(
                 SdkConstants.FN_AGP_ATTRIBUTION_DATA
             )
             file.parentFile.mkdirs()
-            ObjectOutputStream(BufferedOutputStream(FileOutputStream(file))).use {
-                it.writeObject(attributionData)
+            BufferedWriter(FileWriter(file)).use {
+                it.write(AttributionDataAdapter.toJson(attributionData))
             }
         }
 
@@ -66,14 +67,123 @@ data class AndroidGradlePluginAttributionData(
                 SdkConstants.FN_AGP_ATTRIBUTION_DATA
             )
             try {
-                ObjectInputStream(BufferedInputStream(FileInputStream(file))).use {
-                    return it.readObject() as AndroidGradlePluginAttributionData
+                BufferedReader(FileReader(file)).use {
+                    return AttributionDataAdapter.fromJson(it)
                 }
             } catch (e: Exception) {
                 return null
             } finally {
                 FileUtils.deleteRecursivelyIfExists(file.parentFile)
             }
+        }
+    }
+
+    internal object AttributionDataAdapter : TypeAdapter<AndroidGradlePluginAttributionData>() {
+        override fun write(writer: JsonWriter, data: AndroidGradlePluginAttributionData) {
+            writer.beginObject()
+            writer.name("taskNameToClassNameMap").beginArray()
+            data.taskNameToClassNameMap.forEach { (taskName, className) ->
+                writer.beginObject()
+                writer.name("taskName").value(taskName)
+                writer.name("className").value(className)
+                writer.endObject()
+            }
+            writer.endArray()
+
+            writer.name("tasksSharingOutput").beginArray()
+            data.tasksSharingOutput.forEach { (filePath, tasksList) ->
+                writer.beginObject()
+                writer.name("filePath").value(filePath)
+                writer.name("tasksList").beginArray()
+                tasksList.forEach { taskName ->
+                    writer.value(taskName)
+                }
+                writer.endArray()
+                writer.endObject()
+            }
+            writer.endArray()
+            writer.endObject()
+        }
+
+        override fun read(reader: JsonReader): AndroidGradlePluginAttributionData {
+            val taskNameToClassNameMap = HashMap<String, String>()
+            val tasksSharingOutput = HashMap<String, List<String>>()
+            val garbageCollectionData = HashMap<String, Long>()
+            reader.beginObject()
+
+            while (reader.hasNext()) {
+                when (reader.nextName()) {
+                    "taskNameToClassNameMap" -> {
+                        reader.beginArray()
+                        while (reader.hasNext()) {
+                            reader.beginObject()
+                            var taskName: String? = null
+                            var className: String? = null
+                            while (reader.hasNext()) {
+                                when (reader.nextName()) {
+                                    "taskName" -> taskName = reader.nextString()
+                                    "className" -> className = reader.nextString()
+                                }
+                            }
+                            taskNameToClassNameMap[taskName!!] = className!!
+                            reader.endObject()
+                        }
+                        reader.endArray()
+                    }
+
+                    "tasksSharingOutput" -> {
+                        reader.beginArray()
+                        while (reader.hasNext()) {
+                            reader.beginObject()
+                            var filePath: String? = null
+                            val tasksList = ArrayList<String>()
+                            while (reader.hasNext()) {
+                                when (reader.nextName()) {
+                                    "filePath" -> filePath = reader.nextString()
+                                    "tasksList" -> {
+                                        reader.beginArray()
+                                        while (reader.hasNext()) {
+                                            tasksList.add(reader.nextString())
+                                        }
+                                        reader.endArray()
+                                    }
+                                }
+                            }
+                            tasksSharingOutput[filePath!!] = tasksList
+                            reader.endObject()
+                        }
+                        reader.endArray()
+                    }
+
+                    "garbageCollectionData" -> {
+                        reader.beginArray()
+                        while (reader.hasNext()) {
+                            reader.beginObject()
+                            var gcName: String? = null
+                            var duration: Long? = null
+                            while (reader.hasNext()) {
+                                when (reader.nextName()) {
+                                    "gcName" -> gcName = reader.nextString()
+                                    "duration" -> duration = reader.nextLong()
+                                }
+                            }
+                            garbageCollectionData[gcName!!] = duration!!
+                            reader.endObject()
+                        }
+                        reader.endArray()
+                    }
+                    else -> {
+                        reader.skipValue()
+                    }
+                }
+            }
+
+            reader.endObject()
+
+            return AndroidGradlePluginAttributionData(
+                taskNameToClassNameMap = taskNameToClassNameMap,
+                tasksSharingOutput = tasksSharingOutput
+            )
         }
     }
 }

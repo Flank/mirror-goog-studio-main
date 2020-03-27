@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.BuildCommandException
@@ -69,7 +69,7 @@ import kotlin.streams.toList
  * It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-abstract class ExternalNativeBuildTask : NonIncrementalTask() {
+abstract class ExternalNativeBuildTask : UnsafeOutputsTask() {
 
     private lateinit var generator: Provider<ExternalNativeJsonGenerator>
 

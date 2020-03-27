@@ -16,14 +16,26 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.utils.FileUtils
-import org.gradle.api.Task
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Base non-incremental task.
+ * Base class for tasks that don't use gradle's up-to-date checks.
+ *
+ * Be careful using this class, strongly prefer extending [NonIncrementalTask].
+ *
+ * Such tasks always run when in the task graph, and rely on the task implementation to handle
+ * up-to-date checks e.g. the external native build tasks, where the underlying external build
+ * system handles those checks.
+ *
+ * Unlike [NonIncrementalTask], this task does **not** clean up its outputs before the task is run.
+ * This means that the task implementation is responsible for ensuring that the outputs are correct
+ * in that case.
  */
-abstract class NonIncrementalTask : AndroidVariantTask() {
+abstract class UnsafeOutputsTask : AndroidVariantTask() {
+
+    init {
+        outputs.upToDateWhen { false }
+    }
 
     @Throws(Exception::class)
     protected abstract fun doTaskAction()
@@ -31,26 +43,8 @@ abstract class NonIncrementalTask : AndroidVariantTask() {
     @TaskAction
     fun taskAction() {
         recordTaskAction {
-            cleanUpTaskOutputs()
             doTaskAction()
         }
     }
 }
 
-/**
- * Used to ensure task outputs are deleted before a task is run
- * non-incrementally.
- *
- * To avoid issues such as http://issuetracker.google.com/150274427#comment17
- * where the current workaround is for users to delete build directories manually after AGP updates,
- */
-fun Task.cleanUpTaskOutputs() {
-    for (file in outputs.files) {
-        if (file.isDirectory) {
-            // Only clear output directory contents, keep the directory.
-            FileUtils.deleteDirectoryContents(file)
-        } else {
-            FileUtils.deletePath(file)
-        }
-    }
-}
