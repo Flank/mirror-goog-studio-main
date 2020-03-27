@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeb
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getFloatArrayString
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorBuilderName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
@@ -31,14 +32,28 @@ class ImagePostprocessorInitInjector : CodeBlockInjector() {
             getProcessorBuilderName(tensorInfo),
             ClassNames.IMAGE_PROCESSOR
         )
-        val quantizationParams =
-            tensorInfo.quantizationParams
+        val quantizationParams = tensorInfo.quantizationParams
         methodBuilder.addCode(
-            "  .add(new \$T((float)\$L, (float)\$L));\n",
+            "  .add(new \$T((float)\$L, (float)\$L))\n",
             ClassNames.DEQUANTIZE_OP,
             quantizationParams.zeroPoint,
             quantizationParams.scale
         )
+
+        val normalizationParams = tensorInfo.normalizationParams
+        methodBuilder.addCode(
+            "  .add(new \$T(\$L, \$L))\n",
+            ClassNames.NORMALIZE_OP,
+            getFloatArrayString(normalizationParams.mean),
+            getFloatArrayString(normalizationParams.std)
+        )
+
+        methodBuilder.addCode(
+            "  .add(new \$T(\$T.UINT8));\n",
+            ClassNames.CAST_OP,
+            ClassNames.DATA_TYPE
+        )
+
         methodBuilder.addStatement(
             "\$L = \$L.build()",
             getProcessorName(tensorInfo),

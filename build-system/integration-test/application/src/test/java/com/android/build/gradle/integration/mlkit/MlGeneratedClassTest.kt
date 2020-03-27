@@ -187,7 +187,7 @@ class MlGeneratedClassTest {
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
-                    "getStyledImageAsTensorBuffer", TENSOR_BUFFER
+                    "getStyledImageAsTensorImage", TENSOR_IMAGE
                 )
             )
         verifyModelClass("style_transfer_quant_metadata.tflite", modelMethods, outputsMethods)

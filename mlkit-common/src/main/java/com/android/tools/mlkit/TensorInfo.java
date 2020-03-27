@@ -16,6 +16,7 @@
 
 package com.android.tools.mlkit;
 
+import com.android.annotations.Nullable;
 import java.nio.FloatBuffer;
 import org.tensorflow.lite.schema.Tensor;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
@@ -40,7 +41,7 @@ public class TensorInfo {
         UINT8(3),
         INT64(4);
 
-        private int id;
+        private final int id;
 
         DataType(int id) {
             this.id = id;
@@ -114,6 +115,7 @@ public class TensorInfo {
     private boolean metadataExisted;
     private MetadataExtractor.NormalizationParams normalizationParams;
     private MetadataExtractor.QuantizationParams quantizationParams;
+    @Nullable private ImageProperties imageProperties;
 
     public String getName() {
         return name;
@@ -147,6 +149,11 @@ public class TensorInfo {
         return description;
     }
 
+    @Nullable
+    public ImageProperties getImageProperties() {
+        return imageProperties;
+    }
+
     public boolean isMetadataExisted() {
         return metadataExisted;
     }
@@ -171,6 +178,7 @@ public class TensorInfo {
         private boolean metadataExisted;
         private MetadataExtractor.NormalizationParams normalizationParams;
         private MetadataExtractor.QuantizationParams quantizationParams;
+        @Nullable private ImageProperties imageProperties;
 
         public Builder setName(String name) {
             this.name = name;
@@ -224,6 +232,11 @@ public class TensorInfo {
             return this;
         }
 
+        public Builder setImageProperties(ImageProperties imageProperties) {
+            this.imageProperties = imageProperties;
+            return this;
+        }
+
         public Builder setSource(Source source) {
             this.source = source;
             return this;
@@ -242,6 +255,7 @@ public class TensorInfo {
             tensorInfo.metadataExisted = metadataExisted;
             tensorInfo.normalizationParams = normalizationParams;
             tensorInfo.quantizationParams = quantizationParams;
+            tensorInfo.imageProperties = imageProperties;
 
             return tensorInfo;
         }
@@ -287,6 +301,19 @@ public class TensorInfo {
             builder.setName(name == null ? getDefaultName(source, index) : name);
             builder.setDescription(tensorMetadata.description());
             builder.setQuantizationParams(MetadataExtractor.getQuantizationParams(tensor));
+
+            if (builder.contentType == ContentType.IMAGE) {
+                org.tensorflow.lite.support.metadata.schema.ImageProperties properties =
+                        (org.tensorflow.lite.support.metadata.schema.ImageProperties)
+                                tensorMetadata
+                                        .content()
+                                        .contentProperties(
+                                                new org.tensorflow.lite.support.metadata.schema
+                                                        .ImageProperties());
+                builder.setImageProperties(
+                        new ImageProperties(
+                                ImageProperties.ColorSpaceType.fromByte(properties.colorSpace())));
+            }
 
             NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
 
@@ -341,5 +368,34 @@ public class TensorInfo {
         }
 
         return null;
+    }
+
+    public static class ImageProperties {
+        public enum ColorSpaceType {
+            UNKNOWN(0),
+            RGB(1),
+            GRAYSCALE(2);
+
+            private final int id;
+
+            ColorSpaceType(int id) {
+                this.id = id;
+            }
+
+            public static ColorSpaceType fromByte(byte id) {
+                for (ColorSpaceType type : values()) {
+                    if (type.id == id) {
+                        return type;
+                    }
+                }
+                return UNKNOWN;
+            }
+        }
+
+        public final ColorSpaceType colorSpaceType;
+
+        public ImageProperties(ColorSpaceType colorSpaceType) {
+            this.colorSpaceType = colorSpaceType;
+        }
     }
 }
