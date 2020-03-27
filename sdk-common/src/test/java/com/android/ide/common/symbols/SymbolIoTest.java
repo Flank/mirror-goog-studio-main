@@ -17,6 +17,7 @@
 package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -1199,6 +1200,7 @@ public class SymbolIoTest {
         String libContent =
                 "com.example.lib\n"
                         + "drawable foobar\n"
+                        + "attr myattr\n"
                         + "styleable LimitedSizeLinearLayout child_1 child_2\n";
         File libFile = mTemporaryFolder.newFile();
         Files.asCharSink(libFile, Charsets.UTF_8).write(libContent);
@@ -1228,5 +1230,12 @@ public class SymbolIoTest {
 
         assertThat(drawable.getCanonicalName()).isSameAs(drawable.getName());
         assertThat(layout.getCanonicalName()).isSameAs(layout.getName());
+
+        for (Symbol symbol : lib.getSymbols().values()) {
+            assertWithMessage(
+                            "Symbols loaded from the symbol list with package name use basic impl classes to optimize memory use")
+                    .that(symbol.getClass().getSimpleName())
+                    .startsWith("Basic");
+        }
     }
 }
