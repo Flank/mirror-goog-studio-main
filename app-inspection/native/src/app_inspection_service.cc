@@ -58,6 +58,30 @@ AppInspectionService* AppInspectionService::create(JNIEnv* env) {
 
 AppInspectionService::AppInspectionService(jvmtiEnv* jvmti) : jvmti_(jvmti) {}
 
+// Used on devices with API level < 29
+// Names of HeapIterationCallback and HeapObjectCallback are unfortunately
+// similar, but they mirror names in jvmti APIs
+static jint JNICALL HeapIterationCallback(jlong class_tag, jlong size,
+                                          jlong* tag_ptr, jint length,
+                                          void* user_data) {
+  jlong tag = *(reinterpret_cast<jlong*>(user_data));
+  *tag_ptr = tag;
+  return 0;
+}
+
+bool AppInspectionService::tagClassInstancesO(jclass clazz, jlong tag) {
+  jvmtiHeapCallbacks heap_callbacks;
+  memset(&heap_callbacks, 0, sizeof(heap_callbacks));
+  heap_callbacks.heap_iteration_callback =
+      reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
+          HeapIterationCallback);
+  return CheckJvmtiError(
+      jvmti_, jvmti_->IterateThroughHeap(0, clazz, &heap_callbacks, &tag));
+}
+
+// Used on devices with API level >= 29
+// Names of HeapIterationCallback and HeapObjectCallback are unfortunately
+// similar, but they mirror names in jvmti APIs
 static jvmtiIterationControl JNICALL HeapObjectCallback(jlong class_tag,
                                                         jlong size,
                                                         jlong* tag_ptr,
@@ -65,6 +89,12 @@ static jvmtiIterationControl JNICALL HeapObjectCallback(jlong class_tag,
   jlong tag = *(reinterpret_cast<jlong*>(user_data));
   *tag_ptr = tag;
   return JVMTI_ITERATION_CONTINUE;
+}
+
+bool AppInspectionService::tagClassInstancesQ(jclass clazz, jlong tag) {
+  return CheckJvmtiError(
+      jvmti_, jvmti_->IterateOverInstancesOfClass(
+                  clazz, JVMTI_HEAP_OBJECT_EITHER, HeapObjectCallback, &tag));
 }
 
 jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
@@ -88,16 +118,15 @@ jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
     return result;
   }
 
-  jvmtiPhase phase_ptr;
-  jvmti_->GetPhase(&phase_ptr);
+  jlong tag = nextTag++;
 
-  jlong tag = nextTag;
-  if (CheckJvmtiError(jvmti_, jvmti_->IterateOverInstancesOfClass(
-                                  clazz, JVMTI_HEAP_OBJECT_EITHER,
-                                  HeapObjectCallback, &tag))) {
+  bool error = DeviceInfo::feature_level() < DeviceInfo::Q
+                   ? tagClassInstancesO(clazz, tag)
+                   : tagClassInstancesQ(clazz, tag);
+
+  if (error) {
     return jni->NewObjectArray(0, clazz, NULL);
   }
-  nextTag++;
 
   jint count;
   jobject* instances;

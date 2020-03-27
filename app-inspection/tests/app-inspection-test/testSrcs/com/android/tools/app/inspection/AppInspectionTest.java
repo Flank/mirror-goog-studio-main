@@ -44,7 +44,8 @@ public final class AppInspectionTest {
     @Parameterized.Parameters
     public static Collection<SdkLevel> parameters() {
         // Enter/exit hook implementation slightly changes between O and P
-        return Lists.newArrayList(SdkLevel.O, SdkLevel.P);
+        // findInstances has different implementation in Q
+        return Lists.newArrayList(SdkLevel.O, SdkLevel.P, SdkLevel.Q);
     }
 
     private static final String TODO_ACTIVITY = "com.activity.todo.TodoActivity";
