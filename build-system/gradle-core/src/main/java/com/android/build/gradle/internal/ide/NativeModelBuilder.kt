@@ -127,7 +127,7 @@ class NativeModelBuilder(
         generator: ExternalNativeJsonGenerator
     ) {
         builder.addBuildSystem(generator.nativeBuildSystem.tag)
-        val abis = generator.abis.map { it.tag }
+        val abis = generator.abis.map { it.abi.tag }
         val buildFolders = generator.nativeBuildConfigurationsJsons.map { it.parentFile }
         builder.addVariantInfo(
             generator.variantName,
@@ -213,7 +213,7 @@ class NativeModelBuilder(
             val cpuCores = Runtime.getRuntime().availableProcessors()
             val threadNumber = Math.min(cpuCores, 8)
             val nativeJsonGenExecutor = Executors.newFixedThreadPool(threadNumber)
-            val buildSteps = ArrayList<Callable<Void>>()
+            val buildSteps = ArrayList<Callable<Void?>>()
             for (component in (variantModel.variants + variantModel.testComponents)) {
                 val generator = component
                     .taskContainer

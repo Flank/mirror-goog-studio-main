@@ -104,7 +104,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
     abstract val execOperations: ExecOperations
 
     private val stlSharedObjectFiles: Map<Abi, File>
-        get() = generator.get().stlSharedObjectFiles
+        get() = generator.get().getStlSharedObjectFiles()
 
     private val stats: GradleBuildVariant.Builder
         get() = generator.get().stats

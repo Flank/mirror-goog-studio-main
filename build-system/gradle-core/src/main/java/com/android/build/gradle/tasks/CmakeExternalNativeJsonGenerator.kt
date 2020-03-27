@@ -96,14 +96,14 @@ internal abstract class CmakeExternalNativeJsonGenerator(
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
     @Throws(IOException::class, ProcessException::class)
-    abstract fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: Function<Action<in ExecSpec>, ExecResult>): String
+    abstract fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: (Action<in ExecSpec?>) -> ExecResult): String
 
-    public override fun executeProcess(abi: CxxAbiModel, execOperation: Function<Action<in ExecSpec>, ExecResult>): String {
+    public override fun executeProcess(abi: CxxAbiModel, execOperation: (Action<in ExecSpec?>) -> ExecResult): String {
         val output = executeProcessAndGetOutput(abi, execOperation)
         return makeCmakeMessagePathsAbsolute(output, makefile.parentFile)
     }
 
-    override fun processBuildOutput(buildOutput: String, abi: CxxAbiModel) {}
+    override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {}
 
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
@@ -115,9 +115,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
         return builder
     }
 
-    override fun getNativeBuildSystem(): NativeBuildSystem {
-        return NativeBuildSystem.CMAKE
-    }
+    override val nativeBuildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE
 
     override fun getStlSharedObjectFiles(): Map<Abi, File> {
         // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
@@ -145,7 +143,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
             mapOf()
         } else {
             variant.module.stlSharedObjectMap.getValue(stl)
-                .filter { e -> getAbis().contains(e.key) }
+                .filter { e -> abis.map { it.abi }.contains(e.key) }
         }
 
     }

@@ -50,7 +50,7 @@ class ProcessOutputJunction(
     outputBaseName: String,
     private val logPrefix: String,
     private val lifecycle: (String) -> Unit,
-    private val execute: (ProcessInfo, ProcessOutputHandler, (Action<in BaseExecSpec>) -> ExecResult) -> ProcessResult
+    private val execute: (ProcessInfo, ProcessOutputHandler, (Action<in BaseExecSpec?>) -> ExecResult) -> ProcessResult
 ) {
     private var logErrorToInfo: Boolean = false
     private var logOutputToInfo: Boolean = false
@@ -74,7 +74,7 @@ class ProcessOutputJunction(
         return this
     }
 
-    fun execute(processHandler: DefaultProcessOutputHandler, execOperations: (Action<in BaseExecSpec>) -> ExecResult) {
+    fun execute(processHandler: DefaultProcessOutputHandler, execOperations: (Action<in BaseExecSpec?>) -> ExecResult) {
         commandFile.parentFile.mkdirs()
         commandFile.delete()
         infoln(process.toString())
@@ -103,7 +103,7 @@ class ProcessOutputJunction(
      * should use execute() instead.
      */
     @Throws(BuildCommandException::class, IOException::class)
-    fun executeAndReturnStdoutString(execOperations: (Action<in ExecSpec>) -> ExecResult): String {
+    fun executeAndReturnStdoutString(execOperations: (Action<in ExecSpec?>) -> ExecResult): String {
         val handler = DefaultProcessOutputHandler(
             stderrFile,
             stdoutFile,
@@ -120,7 +120,7 @@ class ProcessOutputJunction(
      * Execute the process.
      */
     @Throws(BuildCommandException::class, IOException::class)
-    fun execute(execOperations: (Action<in BaseExecSpec>) -> ExecResult) {
+    fun execute(execOperations: (Action<in BaseExecSpec?>) -> ExecResult) {
         val handler = DefaultProcessOutputHandler(
             stderrFile,
             stdoutFile,
