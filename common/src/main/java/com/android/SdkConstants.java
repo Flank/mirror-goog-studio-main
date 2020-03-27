@@ -965,6 +965,8 @@ public final class SdkConstants {
     public static final String FD_RES_NAVIGATION = "navigation"; //$NON-NLS-1$
     /** Default values resource folder name, i.e. "values" */
     public static final String FD_RES_VALUES = "values"; //$NON-NLS-1$
+    /** Default values resource folder name for the dark theme, i.e. "values-night" */
+    public static final String FD_RES_VALUES_NIGHT = "values-night"; // $NON-NLS-1$
     /** Default xml resource folder name, i.e. "xml" */
     public static final String FD_RES_XML = "xml"; //$NON-NLS-1$
     /** Default raw resource folder name, i.e. "raw" */
