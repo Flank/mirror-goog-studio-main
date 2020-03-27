@@ -299,7 +299,7 @@ abstract class SymbolTable protected constructor() {
                         this.symbols.put(
                                 it.resourceType,
                                 it.canonicalName,
-                                Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         it.canonicalName,
                                         ImmutableList.of(),
                                         children,

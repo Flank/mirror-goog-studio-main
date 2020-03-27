@@ -110,12 +110,12 @@ sealed class Symbol {
                 isMaybeDefinition: Boolean = false): Symbol {
             validateSymbol(name, resourceType)
             return if (resourceType == ResourceType.ATTR) {
-                AttributeSymbol(
+                attributeSymbol(
                     name = name,
                     intValue = value,
                     isMaybeDefinition = isMaybeDefinition)
             } else {
-                NormalSymbol(
+                normalSymbol(
                     resourceType = resourceType,
                     name = name,
                     intValue = value
@@ -147,7 +147,7 @@ sealed class Symbol {
             values: ImmutableList<Int>,
             children: List<String> = ImmutableList.of()): StyleableSymbol {
             validateSymbol(name, ResourceType.STYLEABLE)
-            return StyleableSymbol(
+            return styleableSymbol(
                 name = name,
                 canonicalName = canonicalizeValueResourceName(name),
                 values = values,
@@ -171,6 +171,42 @@ sealed class Symbol {
                     e)
             }
 
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun normalSymbol(
+            resourceType: ResourceType,
+            name: String,
+            intValue: Int = 0,
+            resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+            canonicalName: String = canonicalizeValueResourceName(name)
+        ) : NormalSymbol {
+            return NormalSymbol(resourceType, name, intValue, resourceVisibility, canonicalName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun attributeSymbol(
+            name: String,
+            intValue: Int = 0,
+            isMaybeDefinition: Boolean = false,
+            resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+            canonicalName: String = canonicalizeValueResourceName(name)
+        ): AttributeSymbol {
+            return AttributeSymbol(name, intValue, isMaybeDefinition, resourceVisibility, canonicalName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun styleableSymbol(
+            name: String,
+            values: ImmutableList<Int> = ImmutableList.of(),
+            children: ImmutableList<String>,
+            resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+            canonicalName: String = canonicalizeValueResourceName(name)
+        ): StyleableSymbol {
+            return StyleableSymbol(name, values, children, resourceVisibility, canonicalName)
         }
     }
 

@@ -217,7 +217,7 @@ class NamespaceRewriterTest {
         val libASymbols = SymbolTable.builder()
             .tablePackage("lib.A")
             .add(
-                Symbol.StyleableSymbol(
+                Symbol.styleableSymbol(
                     "s2",
                     ImmutableList.of(),
                     ImmutableList.of("attr1", "attr2", "attr3", "attr4")))
@@ -228,7 +228,7 @@ class NamespaceRewriterTest {
             .build()
         val libBSymbols = SymbolTable.builder()
             .tablePackage("lib.B")
-            .add(Symbol.StyleableSymbol(
+            .add(Symbol.styleableSymbol(
                 "s1",
                 ImmutableList.of(),
                 ImmutableList.of("attr1", "attr2")))
@@ -298,12 +298,12 @@ class NamespaceRewriterTest {
         val libANotNamespacedSymbols = SymbolTable.builder()
             .tablePackage("lib.A")
             .add(
-                Symbol.StyleableSymbol(
+                Symbol.styleableSymbol(
                     "s1",
                     ImmutableList.of(),
                     ImmutableList.of("attr1", "attr2")))
             .add(
-                Symbol.StyleableSymbol(
+                Symbol.styleableSymbol(
                     "s2",
                     ImmutableList.of(),
                     ImmutableList.of("attr1", "attr2", "attr3", "attr4")))
@@ -1190,19 +1190,19 @@ class NamespaceRewriterTest {
         // - children that are remote and need to be rewritten to contain a package
         val oldTable = SymbolTable.builder()
             .tablePackage("com.local")
-            .add(Symbol.StyleableSymbol(
+            .add(Symbol.styleableSymbol(
                 "styleable_no_children",
                 ImmutableList.of(), ImmutableList.of()))
-            .add(Symbol.StyleableSymbol(
+            .add(Symbol.styleableSymbol(
                 "styleable_unchanged_remote_children",
                 ImmutableList.of(), ImmutableList.of("android:color", "android:font")))
-            .add(Symbol.StyleableSymbol(
+            .add(Symbol.styleableSymbol(
                 "styleable_unchanged_local_children",
                 ImmutableList.of(), ImmutableList.of("local_real_attr", "local_maybe_attr")))
-            .add(Symbol.StyleableSymbol(
+            .add(Symbol.styleableSymbol(
                 "styleable_changed_remote_children",
                 ImmutableList.of(), ImmutableList.of("remote_real_attr")))
-            .add(Symbol.StyleableSymbol(
+            .add(Symbol.styleableSymbol(
                 "styleable_mixed",
                 ImmutableList.of(),
                 ImmutableList.of("android:color", "local_maybe_attr", "remote_real_attr")))

@@ -234,10 +234,10 @@ public class SymbolIoTest {
                 .isEqualTo(
                         SymbolTable.builder()
                                 .add(
-                                        new Symbol.StyleableSymbol(
+                                        Symbol.styleableSymbol(
                                                 "a", ImmutableList.of(0x1), ImmutableList.of("b")))
                                 .add(
-                                        new Symbol.StyleableSymbol(
+                                        Symbol.styleableSymbol(
                                                 "a_c",
                                                 ImmutableList.of(0x2),
                                                 ImmutableList.of("d")))
@@ -604,8 +604,8 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.readFromAapt(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
-                        new Symbol.StyleableSymbol(
+                        Symbol.normalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
+                        Symbol.styleableSymbol(
                                 "LimitedSizeLinearLayout",
                                 ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("max_width", "max_height")));
@@ -657,7 +657,7 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.readFromAapt(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "LimitedSizeLinearLayout",
                                 ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("android:max_width", "android:max_height")));
@@ -747,12 +747,12 @@ public class SymbolIoTest {
         assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0),
-                        new Symbol.StyleableSymbol(
+                        Symbol.normalSymbol(ResourceType.DRAWABLE, "foobar", 0),
+                        Symbol.styleableSymbol(
                                 "LimitedSizeLinearLayout",
                                 ImmutableList.of(),
                                 ImmutableList.of("child_1", "child_2")),
-                        new Symbol.StyleableSymbol("S2", ImmutableList.of(), ImmutableList.of()));
+                        Symbol.styleableSymbol("S2", ImmutableList.of(), ImmutableList.of()));
     }
 
     @Test
@@ -762,9 +762,9 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("com.example.lib")
-                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000))
+                        .add(Symbol.normalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000))
                         .add(
-                                new Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         "LimitedSizeLinearLayout",
                                         ImmutableList.of(0x7f010000, 0x7f010001),
                                         ImmutableList.of("max_width", "max_height")))
@@ -873,7 +873,7 @@ public class SymbolIoTest {
 
         assertThat(symbol)
                 .isEqualTo(
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "AlertDialog",
                                 ImmutableList.of(),
                                 ImmutableList.of(),
@@ -947,26 +947,26 @@ public class SymbolIoTest {
         SymbolTable sampleSymbolTable =
                 SymbolTable.builder()
                         .tablePackage("foo.bar")
-                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
-                        .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
+                        .add(Symbol.normalSymbol(ResourceType.DRAWABLE, "img", 0))
+                        .add(Symbol.normalSymbol(ResourceType.ID, "bar", 0))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.STRING,
                                         "be.ep",
                                         0,
                                         ResourceVisibility.UNDEFINED,
                                         "be_ep"))
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
+                        .add(Symbol.normalSymbol(ResourceType.STRING, "foo", 0))
                         .add(
-                                new Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         "A.B",
                                         ImmutableList.of(),
                                         ImmutableList.of("a1", "a2.f"),
                                         ResourceVisibility.UNDEFINED,
                                         "A_B"))
-                        .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
-                        .add(new Symbol.AttributeSymbol("maybeAttr", 0, true))
-                        .add(new Symbol.AttributeSymbol("realAttr", 0, false))
+                        .add(Symbol.normalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .add(Symbol.attributeSymbol("maybeAttr", 0, true))
+                        .add(Symbol.attributeSymbol("realAttr", 0, false))
                         .build();
 
         SymbolIo.writePartialR(sampleSymbolTable, partialR.toPath());
@@ -1007,20 +1007,20 @@ public class SymbolIoTest {
         assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.DRAWABLE, "img", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.ID, "bar", 0, ResourceVisibility.PRIVATE_XML_ONLY),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.STRING, "beep", 0, ResourceVisibility.PRIVATE),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.STRING, "foo", 0, ResourceVisibility.PRIVATE_XML_ONLY),
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "s1",
                                 ImmutableList.of(),
                                 ImmutableList.of("a1", "a2"),
                                 ResourceVisibility.PRIVATE_XML_ONLY),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC));
 
         assertCanonicalizationDoesNotProduceDuplicateStrings(table);
@@ -1054,13 +1054,13 @@ public class SymbolIoTest {
 
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.AttributeSymbol("color", 0, false, ResourceVisibility.PUBLIC),
-                        new Symbol.AttributeSymbol("size", 0, false, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
+                        Symbol.attributeSymbol("color", 0, false, ResourceVisibility.PUBLIC),
+                        Symbol.attributeSymbol("size", 0, false, ResourceVisibility.PUBLIC),
+                        Symbol.normalSymbol(
                                 ResourceType.STRING, "publicString", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.INTEGER, "value", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "myStyleable",
                                 ImmutableList.of(),
                                 ImmutableList.of(),
@@ -1072,26 +1072,26 @@ public class SymbolIoTest {
         SymbolTable originalTable =
                 SymbolTable.builder()
                         .tablePackage("foo.bar")
-                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
-                        .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
+                        .add(Symbol.normalSymbol(ResourceType.DRAWABLE, "img", 0))
+                        .add(Symbol.normalSymbol(ResourceType.ID, "bar", 0))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.STRING,
                                         "be.ep",
                                         0,
                                         ResourceVisibility.UNDEFINED,
                                         "be_ep"))
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
+                        .add(Symbol.normalSymbol(ResourceType.STRING, "foo", 0))
                         .add(
-                                new Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         "A.B",
                                         ImmutableList.of(),
                                         ImmutableList.of("a1", "a2.f"),
                                         ResourceVisibility.UNDEFINED,
                                         "A_B"))
-                        .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
-                        .add(new Symbol.AttributeSymbol("maybeAttr", 0, true))
-                        .add(new Symbol.AttributeSymbol("realAttr", 0, false))
+                        .add(Symbol.normalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .add(Symbol.attributeSymbol("maybeAttr", 0, true))
+                        .add(Symbol.attributeSymbol("realAttr", 0, false))
                         .build();
 
         Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();
@@ -1168,7 +1168,7 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("foo.bar")
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "e_ë", 0))
+                        .add(Symbol.normalSymbol(ResourceType.STRING, "e_ë", 0))
                         .build();
 
         // Sanity check.
