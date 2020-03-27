@@ -49,6 +49,7 @@ class LibraryCacheabilityTest {
          */
         private val EXPECTED_TASK_STATES =
             mapOf(
+                // Sort by alphabetical order for easier searching
                 UP_TO_DATE to setOf(
                     ":app:clean",
                     ":lib:clean",
@@ -90,11 +91,11 @@ class LibraryCacheabilityTest {
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
                 ),
                 SKIPPED to setOf(
-                    ":lib:packageReleaseRenderscript",
                     ":lib:assembleRelease",
                     ":lib:compileReleaseAidl",
                     ":lib:compileReleaseRenderscript",
                     ":lib:compileReleaseShaders",
+                    ":lib:packageReleaseRenderscript",
                     ":lib:processReleaseJavaRes",
                     ":lib:stripReleaseDebugSymbols"
                 ),

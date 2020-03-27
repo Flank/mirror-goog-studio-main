@@ -32,7 +32,6 @@ class DisabledSrcResGenTest {
     @get:Rule
     val rootProject = GradleTestProject.builder()
         .fromTestProject("applibtest")
-        .withoutNdk()
         .create()
 
     private lateinit var appProject: GradleTestProject

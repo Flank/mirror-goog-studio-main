@@ -78,16 +78,12 @@ import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -293,14 +289,10 @@ public class LibraryTaskManager
         taskFactory.register(
                 new BundleLibraryClassesJar.CreationAction(
                         libVariantProperties,
-                        AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
-                        excludeDataBindingClassesIfNecessary(libVariantProperties)));
+                        AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS));
 
         // Also create a directory containing the same classes for incremental dexing
-        taskFactory.register(
-                new BundleLibraryClassesDir.CreationAction(
-                        libVariantProperties,
-                        excludeDataBindingClassesIfNecessary(libVariantProperties)));
+        taskFactory.register(new BundleLibraryClassesDir.CreationAction(libVariantProperties));
 
         taskFactory.register(new BundleLibraryJavaRes.CreationAction(libVariantProperties));
 
@@ -333,10 +325,7 @@ public class LibraryTaskManager
         // into the main and secondary jar files that goes in the AAR.
         // This is used for building the AAR.
 
-        taskFactory.register(
-                new LibraryAarJarsTask.CreationAction(
-                        libVariantProperties,
-                        excludeDataBindingClassesIfNecessary(libVariantProperties)));
+        taskFactory.register(new LibraryAarJarsTask.CreationAction(libVariantProperties));
 
         // now add a task that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT
@@ -524,41 +513,7 @@ public class LibraryTaskManager
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
                 new BundleLibraryClassesJar.CreationAction(
-                        componentProperties,
-                        AndroidArtifacts.PublishedConfigType.API_ELEMENTS,
-                        excludeDataBindingClassesIfNecessary(componentProperties)));
-    }
-
-    @NonNull
-    private Supplier<List<String>> excludeDataBindingClassesIfNecessary(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        if (!componentProperties.getBuildFeatures().getDataBinding()) {
-            return Collections::emptyList;
-        }
-
-        return () -> {
-            FileSystemLocation exportClassListLocation =
-                    componentProperties
-                            .getArtifacts()
-                            .getFinalProduct(
-                                    InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST.INSTANCE)
-                            .getOrNull();
-            File exportClassListFile =
-                    exportClassListLocation != null ? exportClassListLocation.getAsFile() : null;
-            File dependencyArtifactsDir =
-                    componentProperties
-                            .getArtifacts()
-                            .getFinalProduct(
-                                    InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS.INSTANCE)
-                            .get()
-                            .getAsFile();
-            return globalScope
-                    .getDataBindingBuilder()
-                    .getJarExcludeList(
-                            componentProperties.getLayoutXmlProcessor(),
-                            exportClassListFile,
-                            dependencyArtifactsDir);
-        };
+                        componentProperties, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
     }
 
     public void createLibraryAssetsTask(@NonNull VariantPropertiesImpl variantProperties) {

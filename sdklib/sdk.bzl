@@ -155,16 +155,21 @@ def sdk_package(name, binaries, sourceprops, visibility):
     )
     combine_licenses(name = name + "_combined_licenses", out = "NOTICE.txt", deps = binaries)
     for platform in platforms:
+        others = {
+            "source.properties": "tools/source.properties",
+            name + "_combined_licenses": "tools/NOTICE.txt",
+            "README.libs": "tools/lib/README",
+        }
+
+        if platform == "mac":
+            others["macos_codesign_filelist.txt"] = "_codesign/filelist"
+
         package_component(
             name = "%s_%s" % (name, platform),
             bins = [bin + "_wrapper_" + platform for bin in binaries],
             java_libs = binaries,
             other_libs = [bin + "-classpath.jar" for bin in binaries],
-            others = {
-                "source.properties": "tools/source.properties",
-                name + "_combined_licenses": "tools/NOTICE.txt",
-                "README.libs": "tools/lib/README",
-            },
+            others = others,
             visibility = visibility,
         )
     native.filegroup(

@@ -91,4 +91,22 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
 
     override val needAssetPackTasks: Property<Boolean> =
         variantPropertiesApiServices.propertyOf(Boolean::class.java, false)
+
+    // ---------------------------------------------------------------------------------------------
+    // Private stuff
+    // ---------------------------------------------------------------------------------------------
+
+    override fun createVersionNameProperty(): Property<String?> =
+        internalServices.newNullablePropertyBackingDeprecatedApi(
+            String::class.java,
+            variantDslInfo.versionName,
+            "$name::versionName"
+        )
+
+    override fun createVersionCodeProperty() : Property<Int?> =
+        internalServices.newNullablePropertyBackingDeprecatedApi(
+            Int::class.java,
+            variantDslInfo.versionCode,
+            "$name::versionCode"
+        )
 }

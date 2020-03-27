@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl

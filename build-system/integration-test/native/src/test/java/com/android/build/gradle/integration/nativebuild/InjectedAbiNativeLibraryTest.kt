@@ -51,6 +51,7 @@ class InjectedAbiNativeLibraryTest {
         project.getSubproject(":lib").buildFile.appendText(
                 """
 android {
+    ndkPath "${project.ndkPath}"
     defaultConfig {
         ndk {
             abiFilters "x86"

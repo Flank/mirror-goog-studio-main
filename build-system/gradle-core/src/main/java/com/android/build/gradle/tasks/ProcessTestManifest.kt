@@ -16,10 +16,8 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromDirectory
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
@@ -30,7 +28,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.BuiltArtifactProperty
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -85,8 +82,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     @get:OutputDirectory
     abstract val packagedManifestOutputDirectory: DirectoryProperty
 
-    /** Whether there's just a single APK with both test and tested code.  */
-    private var onlyTestApk = false
     @get:Internal
     var tmpDir: File? = null
 
@@ -133,8 +128,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             variantName,
             listOf(
                 apkData.get().toBuiltArtifact(
-                    manifestOutputFile,
-                    mapOf()
+                    manifestOutputFile
                 )
             )
         )
@@ -345,9 +339,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         }
         logger.verbose("Merged manifest saved to $outFile")
     }
-
-    override val aaptFriendlyManifestOutputFile: File?
-        get() = null
 
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)

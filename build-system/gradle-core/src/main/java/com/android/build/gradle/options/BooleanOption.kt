@@ -95,7 +95,7 @@ enum class BooleanOption(
     ENABLE_PROFILE_JSON("android.enableProfileJson", false, FeatureStage.Experimental),
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn", false, FeatureStage.Experimental),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow", false, FeatureStage.Experimental),
-    ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM("android.androidTest.useUnifiedTestPlatform", false, FeatureStage.Experimental),
+    ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM("android.experimental.androidTest.useUnifiedTestPlatform", false, FeatureStage.Experimental),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices", false, FeatureStage.Experimental),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck", false, FeatureStage.Experimental),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck", false, FeatureStage.Experimental),
@@ -112,7 +112,6 @@ enum class BooleanOption(
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, FeatureStage.Experimental),
-    ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true, FeatureStage.Experimental),
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", false, FeatureStage.Experimental),
@@ -180,6 +179,16 @@ enum class BooleanOption(
     /* -----------------
      * ENFORCED FEATURES
      */
+    @Suppress("unused")
+    ENABLE_SIDE_BY_SIDE_NDK(
+        "android.enableSideBySideNdk",
+        true,
+        FeatureStage.Enforced(
+            VERSION_4_1,
+            "The android.enableSideBySideNdk property does not have any effect. " +
+                    "Side-by-side NDK is always enabled."
+        )
+    ),
 
     @Suppress("unused")
     ENABLE_IMPROVED_DEPENDENCY_RESOLUTION(

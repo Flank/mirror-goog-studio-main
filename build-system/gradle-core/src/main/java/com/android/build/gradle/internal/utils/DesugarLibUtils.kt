@@ -42,9 +42,9 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.util.Collections
 import java.util.zip.ZipInputStream
 
 // The name of desugar config json file
@@ -102,23 +102,28 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
 }
 
 /**
- * Returns a collection of files with desugared APIs provided by desugar lib configuration jar.
+ * Returns desugared APIs provided by desugar lib configuration jar.
  */
-fun getDesugarLibLintFiles(
+fun getDesugaredMethods(
     project: Project,
     coreLibraryDesugaringEnabled: Boolean,
     minSdkVersion: AndroidVersion,
     compileSdkVersion: String?
-): Collection<File> {
+): List<String> {
     val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
 
     if (compileSdkVersion == null || !coreLibraryDesugaringEnabled || configuration.dependencies.isEmpty())
-        return setOf()
+        return Collections.emptyList()
 
     val minSdk = minSdkVersion.featureLevel
     val compileSdk = AndroidTargetHash.getPlatformVersion(compileSdkVersion)!!.featureLevel
     registerDesugarLibLintTransform(project, minSdk, compileSdk)
-    return getDesugarLibLintFromTransform(configuration, minSdk, compileSdk ).files
+    val files = getDesugarLibLintFromTransform(configuration, minSdk, compileSdk ).files
+    val methods = mutableListOf<String>()
+    files.forEach {
+        methods.addAll(it.readLines())
+    }
+    return methods
 }
 
 /**

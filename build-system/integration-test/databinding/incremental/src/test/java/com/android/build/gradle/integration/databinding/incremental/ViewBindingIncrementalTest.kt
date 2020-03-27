@@ -46,7 +46,7 @@ class ViewBindingIncrementalTest {
                     ":app:dataBindingMergeGenClassesDebug" to DID_WORK,
                     ":app:mergeDebugResources" to DID_WORK, // Regression test for bug 140955511
                     ":app:dataBindingGenBaseClassesDebug" to DID_WORK,
-                    ":app:processDebugManifest" to DID_WORK,
+                    ":app:processDebugMainManifest" to DID_WORK,
                     ":app:processDebugResources" to DID_WORK,
                     ":app:compileDebugJavaWithJavac" to DID_WORK
                 )

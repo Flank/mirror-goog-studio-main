@@ -52,7 +52,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
-
+    ndkPath "${project.ndkPath}"
     defaultConfig {
         ndk {
             abiFilters "x86"

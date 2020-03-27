@@ -64,6 +64,7 @@ android {
 
 import javax.inject.Inject
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
@@ -109,7 +110,6 @@ abstract class ProducerTask extends DefaultTask {
       writer.close()
       return new BuiltArtifactImpl(
         outputFile.getAbsolutePath(),
-        new HashMap<String, String>(),
         123,
         "123",
         new VariantOutputConfigurationImpl(false,

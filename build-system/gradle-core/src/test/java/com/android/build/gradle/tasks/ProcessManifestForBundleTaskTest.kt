@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
@@ -23,12 +24,8 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth
-import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
@@ -49,9 +46,6 @@ class ProcessManifestForBundleTaskTest {
     lateinit var mainSplit: VariantOutputImpl
 
     @Mock
-    lateinit var variantOutputConfiguration: VariantOutputConfigurationImpl
-
-    @Mock
     lateinit var workers: WorkerExecutor
 
     private lateinit var task: ProcessManifestForBundleTask
@@ -65,10 +59,9 @@ class ProcessManifestForBundleTaskTest {
         val taskProvider = project.tasks.register("testManifestForBundle", ProcessManifestForBundleTask::class.java)
         task = taskProvider.get()
         sourceManifestFolder = temporaryFolder.newFolder("source_manifest")
-        Mockito.`when`(mainSplit.variantOutputConfiguration).thenReturn(variantOutputConfiguration)
-        Mockito.`when`(variantOutputConfiguration.outputType).thenReturn(
+        Mockito.`when`(mainSplit.outputType).thenReturn(
             VariantOutputConfiguration.OutputType.SINGLE)
-        Mockito.`when`(variantOutputConfiguration.filters).thenReturn(listOf())
+        Mockito.`when`(mainSplit.filters).thenReturn(listOf())
         task.mainSplit.set(mainSplit)
     }
 

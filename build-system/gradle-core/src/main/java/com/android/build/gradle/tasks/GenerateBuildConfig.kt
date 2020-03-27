@@ -16,6 +16,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -79,6 +80,14 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     @get:Input
     @get:Optional
     abstract val versionCode: Property<Int?>
+
+    // just to know whether to set versionCode/Name in the build config field.
+    // For apps we want to put it whether the info is there or not because it might be set
+    // in release but not in debug but you need the code to compile in both variants.
+    // And we cannot rely on Provider.isPresent as it does not disambiguate between missing value
+    // and null value.
+    @get:Internal
+    abstract val hasVersionInfo: Property<Boolean>
 
     val itemValues: List<String>
         @Input
@@ -155,17 +164,6 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             }
         }
 
-        versionCode.orNull?.let {
-            generator.addField("int", "VERSION_CODE", it.toString())
-        }
-        generator
-            .addField(
-                "String",
-                "VERSION_NAME",
-                """"${versionName.getOrElse("")}""""
-            )
-            .addItems(items.get())
-
         val flavors = flavorNamesWithDimensionNames.get()
         val count = flavors.size
         if (count > 1) {
@@ -179,6 +177,19 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 i += 2
             }
         }
+
+        if (hasVersionInfo.get()) {
+            generator.addField("int", "VERSION_CODE", versionCode.getOrElse(1).toString())
+            generator
+                .addField(
+                    "String",
+                    "VERSION_NAME",
+                    """"${versionName.getOrElse("")}""""
+                )
+        }
+
+        // user generated items
+        generator.addItems(items.get())
 
         generator.generate()
     }
@@ -222,11 +233,16 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 task.appPackageName.setDisallowChanges(creationConfig.applicationId)
             }
 
-            val mainSplit = creationConfig.outputs.getMainSplit()
-            // check the variant API property first (if there is one) in case the variant
-            // output version has been overridden, otherwise use the variant configuration
-            task.versionCode.setDisallowChanges(mainSplit.versionCode)
-            task.versionName.setDisallowChanges(mainSplit.versionName)
+            if (creationConfig is ApplicationCreationConfig) {
+                val mainSplit = creationConfig.outputs.getMainSplit()
+                // check the variant API property first (if there is one) in case the variant
+                // output version has been overridden, otherwise use the variant configuration
+                task.versionCode.setDisallowChanges(mainSplit.versionCode)
+                task.versionName.setDisallowChanges(mainSplit.versionName)
+                task.hasVersionInfo.setDisallowChanges(true)
+            } else {
+                task.hasVersionInfo.setDisallowChanges(false)
+            }
 
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 

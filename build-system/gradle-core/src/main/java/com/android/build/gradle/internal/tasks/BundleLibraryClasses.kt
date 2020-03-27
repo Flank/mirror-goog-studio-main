@@ -19,6 +19,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
+import com.android.build.gradle.internal.databinding.LayoutXmlProcessorDelegate
+import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.dependency.getClassesDirFormat
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
@@ -38,13 +41,13 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -72,8 +75,9 @@ interface BundleLibraryClassesInputs {
     @get:Input
     val packageRClass: Property<Boolean>
 
-    @get:Input
-    val toIgnoreRegExps: ListProperty<String>
+    @get:Nested
+    @get:Optional
+    val dataBindingExcludeDelegate: Property<DataBindingExcludeDelegate>
 
     @get:Input
     val jarCreatorType: Property<JarCreatorType>
@@ -82,19 +86,17 @@ interface BundleLibraryClassesInputs {
 private fun BundleLibraryClassesInputs.configure(
     component: ComponentPropertiesImpl,
     inputs: FileCollection,
-    packageRClass: Boolean,
-    toIgnoreRegExps: Supplier<List<String>>
+    packageRClass: Boolean
 ) {
     packageName.setDisallowChanges(component.variantDslInfo.packageFromManifest)
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {
-
         classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_R_CLASS_JAR))
     }
-    // FIXME pass this as List<TextResources>
-    this.toIgnoreRegExps.set(component.globalScope.project.provider(toIgnoreRegExps::get))
     jarCreatorType.set(component.variantScope.jarCreatorType)
+
+    dataBindingExcludeDelegate.configureFrom(component)
 }
 
 private fun BundleLibraryClassesInputs.getWorkerActionParams(
@@ -107,7 +109,7 @@ private fun BundleLibraryClassesInputs.getWorkerActionParams(
     }
     return BundleLibraryClassesRunnable.Params(
         packageName = packageName.get(),
-        toIgnore = toIgnoreRegExps.get(),
+        toIgnore = dataBindingExcludeDelegate.orNull?.excludedClassList ?: listOf(),
         output = output,
         // Ignore non-existent files (without this, ResourceNamespaceTest would fail).
         input = classes.files.filter { file -> file.exists() }.toSet(),
@@ -139,8 +141,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
-        private val toIgnoreRegExps: Supplier<List<String>> = Supplier { emptyList<String>() }
+        componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<BundleLibraryClassesDir, ComponentPropertiesImpl>(
         componentProperties
     ) {
@@ -170,7 +171,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
 
         override fun configure(task: BundleLibraryClassesDir) {
             super.configure(task)
-            task.configure(creationConfig, inputs, false, toIgnoreRegExps)
+            task.configure(creationConfig, inputs, false)
         }
     }
 }
@@ -193,8 +194,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
-        private val publishedType: PublishedConfigType,
-        private val toIgnoreRegExps: Supplier<List<String>> = Supplier { emptyList<String>() }
+        private val publishedType: PublishedConfigType
     ) : VariantTaskCreationAction<BundleLibraryClassesJar, ComponentPropertiesImpl>(
         componentProperties
     ) {
@@ -252,7 +252,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
                 creationConfig.services.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
                         creationConfig.buildFeatures.androidResources
-            task.configure(creationConfig, inputs, packageRClass, toIgnoreRegExps)
+            task.configure(creationConfig, inputs, packageRClass)
         }
     }
 }

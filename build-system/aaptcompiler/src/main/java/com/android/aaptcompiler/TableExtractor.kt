@@ -1932,33 +1932,4 @@ class TableExtractor(
     }
     return !error
   }
-
-  /**
-   * Polls the {@code eventReader} till the reader is after the corresponding end element of
-   * {@code element}.
-   *
-   * <p> It is assumed that {@code element} is the last startElement read from
-   * the reader.
-   *
-   * @param element The start of the element to which we want to reach the end of.
-   * @param eventReader The eventReader to be moved to the end of the corresponding
-   *   {@code EndElement}.
-   */
-  private fun walkToEndOfElement(element: StartElement, eventReader: XMLEventReader) {
-    var depth = 1
-    while (eventReader.hasNext()) {
-      val event = eventReader.nextEvent()
-
-      if (event.isStartElement) {
-        ++depth
-      } else if (event.isEndElement) {
-        --depth
-        if (depth == 0) {
-          // Sanity check.
-          assert(event.asEndElement().name.localPart == element.name.localPart)
-          break
-        }
-      }
-    }
-  }
 }

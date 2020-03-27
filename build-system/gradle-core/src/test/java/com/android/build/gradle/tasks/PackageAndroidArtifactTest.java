@@ -113,13 +113,11 @@ public class PackageAndroidArtifactTest {
                 ImmutableList.of(
                         BuiltArtifactImpl.make(
                                 "/tmp/file_main.out",
-                                ImmutableMap.of(),
                                 -1,
                                 "version_name",
                                 new VariantOutputConfigurationImpl(false, ImmutableList.of())),
                         BuiltArtifactImpl.make(
                                 "/tmp/file_xxhdpi.out",
-                                ImmutableMap.of(),
                                 -1,
                                 "version_name",
                                 new VariantOutputConfigurationImpl(
@@ -130,7 +128,6 @@ public class PackageAndroidArtifactTest {
                                                         "xxhdpi")))),
                         BuiltArtifactImpl.make(
                                 "/tmp/filefr.out",
-                                ImmutableMap.of(),
                                 -1,
                                 "version_name",
                                 new VariantOutputConfigurationImpl(
@@ -141,7 +138,6 @@ public class PackageAndroidArtifactTest {
                                                         "fr")))),
                         BuiltArtifactImpl.make(
                                 "/tmp/fileen.out",
-                                ImmutableMap.of(),
                                 -1,
                                 "version_name",
                                 new VariantOutputConfigurationImpl(
@@ -165,7 +161,6 @@ public class PackageAndroidArtifactTest {
                 ImmutableList.of(
                         BuiltArtifactImpl.make(
                                 "/tmp/file.out",
-                                ImmutableMap.of(),
                                 -1,
                                 "version_name",
                                 new VariantOutputConfigurationImpl(
@@ -176,7 +171,6 @@ public class PackageAndroidArtifactTest {
                                                         "fr")))),
                         BuiltArtifactImpl.make(
                                 "/tmp/file.out",
-                                ImmutableMap.of(),
                                 -1,
                                 "version_name",
                                 new VariantOutputConfigurationImpl(

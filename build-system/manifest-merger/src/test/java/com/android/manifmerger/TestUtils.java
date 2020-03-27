@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -71,7 +70,7 @@ public class TestUtils {
                 location,
                 input,
                 XmlDocument.Type.MAIN,
-                Optional.<String>absent(), /* mainManifestPackageName */
+                null, /* mainManifestPackageName */
                 model);
     }
 
@@ -84,7 +83,7 @@ public class TestUtils {
                 location,
                 input,
                 XmlDocument.Type.LIBRARY,
-                Optional.<String>absent(), /* mainManifestPackageName */
+                null, /* mainManifestPackageName */
                 model);
     }
 
@@ -92,7 +91,7 @@ public class TestUtils {
             SourceFile location,
             String input,
             XmlDocument.Type type,
-            Optional<String> mainManifestPackageName,
+            String mainManifestPackageName,
             ManifestModel model)
             throws IOException, SAXException, ParserConfigurationException {
 
@@ -119,7 +118,7 @@ public class TestUtils {
                 location,
                 input,
                 XmlDocument.Type.LIBRARY,
-                Optional.<String>absent(), /* mainManifestPackageName */
+                null, /* mainManifestPackageName */
                 model);
     }
 

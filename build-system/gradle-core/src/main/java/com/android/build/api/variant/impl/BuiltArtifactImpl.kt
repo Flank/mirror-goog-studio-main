@@ -36,7 +36,6 @@ import java.nio.file.Path
 @Suppress("DataClassPrivateConstructor")
 data class BuiltArtifactImpl private constructor(
     override val outputFile: String,
-    override val properties: Map<String, String> = mapOf(),
     override val versionCode: Int?,
     override val versionName: String?,
     val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
@@ -45,7 +44,6 @@ data class BuiltArtifactImpl private constructor(
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
         return make(
             outputFile = newOutputFile.toString(),
-            properties = properties,
             versionCode = versionCode,
             versionName = versionName,
             variantOutputConfiguration = variantOutputConfiguration
@@ -60,13 +58,11 @@ data class BuiltArtifactImpl private constructor(
         @JvmStatic
         fun make(
             outputFile: String,
-            properties: Map<String, String> = mapOf(),
             versionCode: Int? = null,
             versionName: String? = null,
             variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
         )
                     = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
-                properties,
                 versionCode,
                 versionName,
                 variantOutputConfiguration
@@ -101,12 +97,10 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                 }
             },
             { outputFile: String,
-                properties: Map<String, String>,
                 versionCode: Int,
                 versionName: String ->
                 BuiltArtifactImpl.make(
                     outputFile = outputFile,
-                    properties = properties,
                     versionCode = versionCode,
                     versionName = versionName,
                     variantOutputConfiguration =

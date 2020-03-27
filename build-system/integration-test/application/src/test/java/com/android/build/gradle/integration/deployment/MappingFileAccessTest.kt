@@ -29,7 +29,6 @@ class MappingFileAccessTest {
     @JvmField @Rule
     var project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("basic")
-        .withoutNdk()
         .create()
 
     @Before

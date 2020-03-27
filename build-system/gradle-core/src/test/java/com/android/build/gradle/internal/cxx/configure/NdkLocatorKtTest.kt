@@ -19,7 +19,10 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
+import com.android.build.gradle.internal.cxx.logging.LoggingLevel
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -27,9 +30,18 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class NdkLocatorKtTest {
+    class TestLoggingEnvironment() : ThreadLoggingEnvironment() {
+        val messages = mutableListOf<LoggingMessage>()
+        override fun log(message: LoggingMessage) {
+            messages.add(message)
+        }
+        fun errors() = messages.filter { it -> it.level == LoggingLevel.ERROR }
+        fun warnings() = messages.filter { it -> it.level == LoggingLevel.WARN }
+    }
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+    val log = TestLoggingEnvironment()
 
     private fun String.toSlash(): String {
         return replace("/", File.separator)
@@ -39,14 +51,16 @@ class NdkLocatorKtTest {
 
     private fun findNdkPath(
         ndkVersionFromDsl: String?,
-        ndkDirProperty: String?,
+        ndkPathFromDsl: String?,
         sdkFolder: File?,
         getNdkVersionedFolderNames: (File) -> List<String>,
-        getNdkSourceProperties: (File) -> SdkSourceProperties?
+        getNdkSourceProperties: (File) -> SdkSourceProperties?,
+        ndkDirProperty: String? = null
     ) =
         CachingEnvironment(temporaryFolder.newFolder()).use {
             findNdkPathImpl(
                 ndkVersionFromDsl,
+                ndkPathFromDsl,
                 ndkDirProperty,
                 sdkFolder,
                 getNdkVersionedFolderNames,
@@ -81,11 +95,11 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun `non-existing ndk dir without NDK version in DSL (bug 129789776)`() {
+    fun `non-existing ndkPath without NDK version in DSL (bug 129789776)`() {
         val path =
             findNdkPath(
                 ndkVersionFromDsl = null,
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
+                ndkPathFromDsl = "/my/ndk/folder".toSlash(),
                 sdkFolder = null,
                 getNdkVersionedFolderNames = { listOf() },
                 getNdkSourceProperties = { path ->
@@ -103,11 +117,11 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun `non-existing ndk dir without NDK version in DSL and with side-by-side versions available (bug 129789776)`() {
+    fun `non-existing ndkPath without NDK version in DSL and with side-by-side versions available (bug 129789776)`() {
         val path =
             findNdkPath(
                 ndkVersionFromDsl = null,
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
+                ndkPathFromDsl = "/my/ndk/folder".toSlash(),
                 sdkFolder = "/my/sdk/folder".toSlashFile(),
                 getNdkVersionedFolderNames = { listOf("18.1.00000", "18.1.23456") },
                 getNdkSourceProperties = { path ->
@@ -132,7 +146,7 @@ class NdkLocatorKtTest {
     fun `same version in legacy folder and side-by-side folder (bug 129488603)`() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.00000", "18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -157,18 +171,19 @@ class NdkLocatorKtTest {
     fun ndkNotConfigured() {
         findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
+        assertThat(log.errors()).hasSize(0) // Only expect a warning
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExist() {
+    fun ndkPathPropertyLocationDoesntExist() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
@@ -177,42 +192,10 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevision() {
+    fun ndkPathPropertyLocationExists() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevision() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(SDK_PKG_REVISION.key to "bob"))
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExists() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
@@ -229,9 +212,30 @@ class NdkLocatorKtTest {
     }
 
     @Test
+    fun `ndkPath properties has -rc2 in version`() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = "21.0.6011959-rc2",
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
+            sdkFolder = null,
+            getNdkVersionedFolderNames = { listOf() },
+            getNdkSourceProperties = { path ->
+                when (path.path) {
+                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                        mapOf(
+                            SDK_PKG_REVISION.key to "21.0.6011959-rc2"
+                        )
+                    )
+                    else -> throw RuntimeException(path.path)
+                }
+            })
+        assertThat(path).isNull() // It's an error to have android.ndkPath and android.ndkVersion
+    }
+
+    @Test
     fun `ndk dir properties has -rc2 in version`() {
         val path = findNdkPath(
             ndkVersionFromDsl = "21.0.6011959-rc2",
+            ndkPathFromDsl = null,
             ndkDirProperty = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
@@ -249,10 +253,10 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun nonExistingNdkDirWithNdkVersionInDsl() {
+    fun nonExistingNdkPathWithNdkVersionInDsl() {
         findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
@@ -272,7 +276,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExists() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
@@ -282,29 +286,81 @@ class NdkLocatorKtTest {
                             SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
                         )
                     )
-                    else -> throw RuntimeException(path.path)
+                    else -> null
                 }
             })
         assertThat(path).isEqualTo("/my/sdk/folder/ndk-bundle".toSlashFile())
     }
 
     @Test
+    fun `no version specified by user and only old ndk available (bug 148189425)`() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = null,
+            ndkPathFromDsl = null,
+            sdkFolder = "/my/sdk/folder".toSlashFile(),
+            getNdkVersionedFolderNames = { listOf("18.1.23456") },
+            getNdkSourceProperties = { path ->
+                when (path.path) {
+                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                        mapOf(SDK_PKG_REVISION.key to "18.1.23456")
+                    )
+                    else -> null
+                }
+            }
+        )
+        assertThat(path).isEqualTo(null)
+        assertThat(log.errors()).hasSize(0)
+        assertThat(log.warnings()).hasSize(1)
+        assertThat(log.warnings()[0].message).isEqualTo(
+            "No version of NDK matched the required version " +
+                    "$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION. Versions available " +
+                    "locally: 18.1.23456"
+        )
+    }
+
+    @Test
+    fun `version specified by user and only old ndk available (bug 148189425)`() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = "18.9.99999",
+            ndkPathFromDsl = null,
+            sdkFolder = "/my/sdk/folder".toSlashFile(),
+            getNdkVersionedFolderNames = { listOf("18.1.23456") },
+            getNdkSourceProperties = { path ->
+                when (path.path) {
+                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                        mapOf(SDK_PKG_REVISION.key to "18.1.23456")
+                    )
+                    else -> null
+                }
+            }
+        )
+        assertThat(path).isEqualTo(null)
+        assertThat(log.errors()).hasSize(0)
+        assertThat(log.warnings()).hasSize(1)
+        assertThat(log.warnings()[0].message).isEqualTo(
+            "No version of NDK matched the required version 18.9.99999. Versions " +
+                    "available locally: 18.1.23456"
+        )
+    }
+
+    @Test
     fun ndkNotConfiguredWithDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(0) // Only expect a warning
     }
 
     @Test
     fun `ndk rc configured with space-rc1 version in DSL`() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456 rc1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -324,7 +380,7 @@ class NdkLocatorKtTest {
     fun `ndk rc configured with dash-rc1 version in DSL`() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456-rc1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -341,10 +397,10 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithDslVersion() {
+    fun ndkPathPropertyLocationDoesntExistWithDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
@@ -353,42 +409,30 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithDslVersion() {
+    fun ndkPathPropertyLocationExistsWithDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
                 when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
+                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                        mapOf(
+                            SDK_PKG_REVISION.key to "18.1.23456"
+                        )
+                    )
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
-
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(SDK_PKG_REVISION.key to "bob"))
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
+        assertThat(path).isEqualTo(null) // android.ndkVersion and android.ndkPath are mutually exclusive
     }
 
     @Test
     fun ndkDirPropertyLocationExistsWithDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
+            ndkPathFromDsl = null,
             ndkDirProperty = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
@@ -402,6 +446,7 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
+        if (log.errors().size != 0) throw Exception(log.errors()[0].toString())
         assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
     }
 
@@ -409,7 +454,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
@@ -419,7 +464,7 @@ class NdkLocatorKtTest {
                             SDK_PKG_REVISION.key to "18.1.23456"
                         )
                     )
-                    else -> throw RuntimeException(path.path)
+                    else -> null
                 }
             })
         assertThat(path).isEqualTo("/my/sdk/folder/ndk-bundle".toSlashFile())
@@ -429,19 +474,20 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) },
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(0) // Only expect a warning
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithVersionedNdk() {
+    fun ndkPathPropertyLocationDoesntExistWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
@@ -450,42 +496,10 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithVersionedNdk() {
+    fun ndkPathPropertyLocationExistsWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(SDK_PKG_REVISION.key to "bob"))
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = null,
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) },
             getNdkSourceProperties = { path ->
@@ -505,7 +519,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = null,
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) },
             getNdkSourceProperties = { path ->
@@ -522,7 +536,20 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
+            sdkFolder = null,
+            getNdkVersionedFolderNames = { listOf("18.1.23456") },
+            getNdkSourceProperties = { null }
+        )
+        assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(0) // Only expect a warning
+    }
+
+    @Test
+    fun ndkPathPropertyLocationDoesntExistWithDslVersionWithVersionedNdk() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = "18.1.23456",
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
@@ -531,57 +558,30 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithDslVersionWithVersionedNdk() {
+    fun ndkPathPropertyLocationExistsWithDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { null }
-        )
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
                 when (path.path) {
                     "/my/ndk/folder".toSlash() -> SdkSourceProperties(
                         mapOf(
-                            SDK_PKG_REVISION.key to "bob"
+                            SDK_PKG_REVISION.key to "18.1.23456"
                         )
                     )
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
+        assertThat(path).isEqualTo(null) // android.ndkVersion and android.ndkPath are mutually exclusive
     }
 
     @Test
     fun ndkDirPropertyLocationExistsWithDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
+            ndkPathFromDsl = null,
             ndkDirProperty = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
@@ -602,7 +602,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -622,7 +622,7 @@ class NdkLocatorKtTest {
     fun multipleMatchingVersions1() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456", "18.1.99999") },
             getNdkSourceProperties = { path ->
@@ -647,7 +647,7 @@ class NdkLocatorKtTest {
     fun multipleMatchingVersions2() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.00000", "18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -672,77 +672,24 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithWrongDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(0) // Only expect a warning
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithWrongDslVersion() {
+    fun ndkPathPropertyLocationDoesntExistWithWrongDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithWrongDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithWrongDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(SDK_PKG_REVISION.key to "bob"))
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithWrongDslVersion() {
-        val path =
-            findNdkPath(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf() },
-                getNdkSourceProperties = { path ->
-                    when (path.path) {
-                        "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                            mapOf(
-                                SDK_PKG_REVISION.key to "18.1.23456"
-                            )
-                        )
-                        else -> throw RuntimeException(path.path)
-                    }
-                })
-
         assertThat(path).isNull()
     }
 
@@ -751,7 +698,7 @@ class NdkLocatorKtTest {
         val path =
             findNdkPath(
                 ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = null,
+                ndkPathFromDsl = null,
                 sdkFolder = "/my/sdk/folder".toSlashFile(),
                 getNdkVersionedFolderNames = { listOf() },
                 getNdkSourceProperties = { path ->
@@ -761,7 +708,7 @@ class NdkLocatorKtTest {
                                 SDK_PKG_REVISION.key to "18.1.23456"
                             )
                         )
-                        else -> throw RuntimeException(path.path)
+                        else -> null
                     }
                 })
         assertThat(path).isNull()
@@ -771,80 +718,24 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithWrongDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(0) // Only expect a warning
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithWrongDslVersionWithVersionedNdk() {
+    fun ndkPathPropertyLocationDoesntExistWithWrongDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithWrongDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithWrongDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "17.1.23456",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "bob"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithWrongDslVersionWithVersionedNdk() {
-        val path =
-            findNdkPath(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf("18.1.23456") },
-                getNdkSourceProperties = { path ->
-                    when (path.path) {
-                        "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                            mapOf(
-                                SDK_PKG_REVISION.key to "18.1.23456"
-                            )
-                        )
-                        else -> throw RuntimeException(path.path)
-                    }
-                })
         assertThat(path).isNull()
     }
 
@@ -853,7 +744,7 @@ class NdkLocatorKtTest {
         val path =
             findNdkPath(
                 ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = null,
+                ndkPathFromDsl = null,
                 sdkFolder = "/my/sdk/folder".toSlashFile(),
                 getNdkVersionedFolderNames = { listOf("18.1.23456") },
                 getNdkSourceProperties = { path ->
@@ -874,7 +765,7 @@ class NdkLocatorKtTest {
         val path =
             findNdkPath(
                 ndkVersionFromDsl = "17.1.unparseable",
-                ndkDirProperty = null,
+                ndkPathFromDsl = null,
                 sdkFolder = "/my/sdk/folder".toSlashFile(),
                 getNdkVersionedFolderNames = { listOf("18.1.23456") },
                 getNdkSourceProperties = { path ->
@@ -888,13 +779,19 @@ class NdkLocatorKtTest {
                     }
                 })
         assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(1)
+        // The test SingleVariantSyncIntegrationTest#testProjectSyncIssuesAreCorrectlyReported
+        // checks for this exact message. If you need to change this here then you'll also
+        // have to change it there
+        assertThat(log.errors().single().message)
+            .isEqualTo("Requested NDK version '17.1.unparseable' could not be parsed")
     }
 
     @Test
     fun ndkNotConfiguredWithTwoPartDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
@@ -903,68 +800,14 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithTwoPartDslVersion() {
+    fun ndkPathPropertyLocationDoesntExistWithTwoPartDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithTwoPartDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithTwoPartDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(SDK_PKG_REVISION.key to "bob")
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithTwoPartDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "18.1"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
         assertThat(path).isNull()
     }
 
@@ -972,7 +815,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithTwoPartDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
@@ -992,7 +835,7 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithTwoPartDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
@@ -1001,70 +844,14 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithTwoPartDslVersionWithVersionedNdk() {
+    fun ndkPathPropertyLocationDoesntExistWithTwoPartDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithTwoPartDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithTwoPartDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "bob"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithTwoPartDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18.1",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "18.1.23456"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
         assertThat(path).isNull()
     }
 
@@ -1072,7 +859,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithTwoPartDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18.1",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -1093,7 +880,7 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithOnePartDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
@@ -1102,70 +889,14 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithOnePartDslVersion() {
+    fun ndkPathPropertyLocationDoesntExistWithOnePartDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithOnePartDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithOnePartDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "bob"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithOnePartDslVersion() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf() },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "18"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
         assertThat(path).isNull()
     }
 
@@ -1173,7 +904,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithOnePartDslVersion() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { path ->
@@ -1193,7 +924,7 @@ class NdkLocatorKtTest {
     fun ndkNotConfiguredWithOnePartDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
@@ -1202,72 +933,15 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun ndkDirPropertyLocationDoesntExistWithOnePartDslVersionWithVersionedNdk() {
+    fun ndkPathPropertyLocationDoesntExistWithOnePartDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             sdkFolder = null,
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsButNoPkgRevisionWithOnePartDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithOnePartDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "bob"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
-        assertThat(path).isNull()
-        assertThat(path).isNull()
-    }
-
-    @Test
-    fun ndkDirPropertyLocationExistsWithOnePartDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
-            ndkVersionFromDsl = "18",
-            ndkDirProperty = "/my/ndk/folder".toSlash(),
-            sdkFolder = null,
-            getNdkVersionedFolderNames = { listOf("18.1.23456") },
-            getNdkSourceProperties = { path ->
-                when (path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                        mapOf(
-                            SDK_PKG_REVISION.key to "18.1.23456"
-                        )
-                    )
-                    else -> throw RuntimeException(path.path)
-                }
-            })
         assertThat(path).isNull()
     }
 
@@ -1275,7 +949,7 @@ class NdkLocatorKtTest {
     fun sdkFolderNdkBundleExistsWithOnePartDslVersionWithVersionedNdk() {
         val path = findNdkPath(
             ndkVersionFromDsl = "18",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -1295,7 +969,7 @@ class NdkLocatorKtTest {
     fun `from fuzz, blank ndkVersionFromDsl`() {
         val path = findNdkPath(
             ndkVersionFromDsl = "",
-            ndkDirProperty = null,
+            ndkPathFromDsl = null,
             sdkFolder = "/my/sdk/folder".toSlashFile(),
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { path ->
@@ -1309,6 +983,7 @@ class NdkLocatorKtTest {
                 }
             })
         assertThat(path).isNull()
+        assertThat(log.errors()).hasSize(0) // No NDK found is supposed to be warning
     }
 
     @Test
@@ -1352,7 +1027,7 @@ class NdkLocatorKtTest {
 
                     findNdkPath(
                         ndkVersionFromDsl = ndkVersion(),
-                        ndkDirProperty = pathToNdk(),
+                        ndkPathFromDsl = pathToNdk(),
                         sdkFolder = pathToSdk().toSlashFile(),
                         getNdkVersionedFolderNames = { ndkVersionList() },
                         getNdkSourceProperties = { path ->

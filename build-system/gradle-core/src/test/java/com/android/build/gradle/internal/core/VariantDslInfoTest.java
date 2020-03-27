@@ -115,11 +115,77 @@ public class VariantDslInfoTest {
     }
 
     @Test
+    public void testGetMinSdk() {
+        initNoDeviceApiInjection();
+
+        ApiVersion minSdkVersion = DefaultApiVersion.create(5);
+        defaultConfig.setMinSdk(5);
+
+        assertThat(defaultConfig.getMinSdk()).isEqualTo(5);
+        assertThat(defaultConfig.getMinSdkPreview()).isNull();
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getMinSdkVersion())
+                .isEqualTo(
+                        new AndroidVersion(
+                                minSdkVersion.getApiLevel(), minSdkVersion.getCodename()));
+    }
+
+    @Test
+    public void testGetMinSdkPreview() {
+        initNoDeviceApiInjection();
+
+        ApiVersion minSdkVersion = DefaultApiVersion.create("O");
+        defaultConfig.setMinSdkPreview("O");
+
+        assertThat(defaultConfig.getMinSdk()).isEqualTo(25);
+        assertThat(defaultConfig.getMinSdkPreview()).isEqualTo("O");
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getMinSdkVersion())
+                .isEqualTo(
+                        new AndroidVersion(
+                                minSdkVersion.getApiLevel(), minSdkVersion.getCodename()));
+    }
+
+    @Test
     public void testGetMinSdkVersionDefault() {
         initNoDeviceApiInjection();
 
         VariantDslInfo variant = getVariant();
         assertThat(variant.getMinSdkVersion()).isEqualTo(new AndroidVersion(1, null));
+    }
+
+    @Test
+    public void testGetTargetSdk() {
+        initNoDeviceApiInjection();
+
+        ApiVersion targetSdkVersion = DefaultApiVersion.create(5);
+        defaultConfig.setTargetSdk(5);
+
+        assertThat(defaultConfig.getTargetSdk()).isEqualTo(5);
+        assertThat(defaultConfig.getTargetSdkPreview()).isNull();
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
+    }
+
+    @Test
+    public void testGetTargetSdkPreview() {
+        initNoDeviceApiInjection();
+
+        ApiVersion targetSdkVersion = DefaultApiVersion.create("O");
+        defaultConfig.setTargetSdkPreview("O");
+
+        assertThat(defaultConfig.getTargetSdk()).isEqualTo(25);
+        assertThat(defaultConfig.getTargetSdkPreview()).isEqualTo("O");
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
     }
 
     @Test

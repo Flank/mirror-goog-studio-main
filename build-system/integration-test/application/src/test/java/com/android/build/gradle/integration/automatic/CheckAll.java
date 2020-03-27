@@ -99,6 +99,12 @@ public class CheckAll {
 
     private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE =
             ImmutableSet.of(
+                    // These require ndk.dir, but that's deprecated
+                    "ndkJniLib",
+                    "vulkan",
+                    "ndkSanAngeles",
+                    "combinedAbiDensitySplits",
+
                     // NDK + Renderscript is currently broken, see http://b.android.com/191791.
                     "ndkRsHelloCompute",
                     "renderscriptNdk",
@@ -111,7 +117,8 @@ public class CheckAll {
                     "ndkSanAngeles2",
                     "ndkVariants",
 
-                    // Data binding projects are tested in tools/base/build-system/integration-test/databinding
+                    // Data binding projects are tested in
+                    // tools/base/build-system/integration-test/databinding
                     "databindingIncremental",
                     "databindingAndDagger",
                     "databinding",
@@ -124,8 +131,10 @@ public class CheckAll {
                     "genFolderApi", // Has a required injectable property
                     "ndkJniPureSplitLib", // Doesn't build until externalNativeBuild {} is added.
                     "duplicateNameImport", // Fails on purpose.
-                    "filteredOutBuildType", // assembleDebug does not exist as debug build type is removed.
-                    "projectWithLocalDeps", // Doesn't have a build.gradle, not much to check anyway.
+                    "filteredOutBuildType", // assembleDebug does not exist as debug build type is
+                    // removed.
+                    "projectWithLocalDeps", // Doesn't have a build.gradle, not much to check
+                    // anyway.
                     "simpleManifestMergingTask", // Not an Android project.
                     "externalBuildPlugin", // Not an Android Project.
                     "lintKotlin", // deliberately contains lint errors (missing baseline file)

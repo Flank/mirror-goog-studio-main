@@ -28,7 +28,6 @@ public class JacocoOnlySubprojectBuildScriptDependency {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("jacocoOnlySubprojectBuildScriptDependency")
-            .withoutNdk()
             .create();
 
     @Test

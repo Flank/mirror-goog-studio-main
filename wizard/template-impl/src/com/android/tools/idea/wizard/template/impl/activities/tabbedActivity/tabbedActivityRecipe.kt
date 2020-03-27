@@ -22,12 +22,12 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
+import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.appBarActivityXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.fragmentSimpleXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values_w820dp.dimensXml as dimensXmlW820dp
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values.stylesXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package.tabsActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package.tabsActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package.ui.main.pageViewModelJava
@@ -45,7 +45,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
   isLauncher: Boolean,
   packageName: String
 ) {
-  val (projectData, srcOut, resOut, _) = moduleData
+  val (projectData, srcOut, resOut) = moduleData
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
@@ -60,9 +60,9 @@ fun RecipeExecutor.tabbedActivityRecipe(
     moduleData, activityClass, activityClass, packageName, isLauncher, true,
     requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
   )
+  generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
 
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
-  mergeXml(stylesXml(), resOut.resolve("values/styles.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(dimensXmlW820dp(), resOut.resolve("values-w820dp/dimens.xml"))
 

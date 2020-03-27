@@ -174,7 +174,7 @@ fun parseAttributeReference(value: String) : ReferenceInfo? {
     return null
   }
 
-  if (trimmedValue.isEmpty() || trimmedValue[0] != '?') {
+  if (trimmedValue[0] != '?') {
     return null
   }
 

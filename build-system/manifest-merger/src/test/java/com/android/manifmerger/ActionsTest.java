@@ -196,7 +196,8 @@ public class ActionsTest extends TestCase {
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
-        Optional<XmlDocument> result = refDocument.merge(firstLibrary, mergingReportBuilder);
+        java.util.Optional<XmlDocument> result =
+                refDocument.merge(firstLibrary, mergingReportBuilder);
         assertTrue(result.isPresent());
         result = result.get().merge(secondLibrary, mergingReportBuilder);
         assertTrue(result.isPresent());

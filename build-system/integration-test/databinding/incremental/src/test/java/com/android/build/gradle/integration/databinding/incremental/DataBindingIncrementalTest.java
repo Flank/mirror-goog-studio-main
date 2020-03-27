@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.databinding.incremental;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTaskKt.DATA_BINDING_TRIGGER_CLASS;
+import static com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTaskKt.DATA_BINDING_TRIGGER_CLASS;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Scanner;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class DataBindingIncrementalTest {
     @Rule
     public GradleTestProject project;
 
-    private static final String EXPORT_INFO_TASK = ":dataBindingExportBuildInfoDebug";
+    private static final String TRIGGER_TASK = ":dataBindingTriggerDebug";
     private static final String COMPILE_JAVA_TASK = ":compileDebugJavaWithJavac";
 
     private static final String MAIN_ACTIVITY_BINDING_CLASS =
@@ -75,6 +76,7 @@ public class DataBindingIncrementalTest {
             = "src/main/java/android/databinding/testapp/MainActivity.java";
     private static final String USER_JAVA = "src/main/java/android/databinding/testapp/User.java";
 
+    private final boolean useAndroidX;
     private final boolean withKotlin;
 
     private final List<String> mainActivityBindingClasses;
@@ -89,6 +91,7 @@ public class DataBindingIncrementalTest {
     }
 
     public DataBindingIncrementalTest(boolean useAndroidX, boolean withKotlin) {
+        this.useAndroidX = useAndroidX;
         this.withKotlin = withKotlin;
         mainActivityBindingClasses =
                 ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
@@ -155,11 +158,11 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void compileWithoutChange() throws Exception {
-        project.executor().run(EXPORT_INFO_TASK);
+        project.executor().run(TRIGGER_TASK);
         File infoClass = getGeneratedInfoClass();
         assertThat(infoClass).exists();
         String contents = FileUtils.readFileToString(infoClass, Charsets.UTF_8);
-        project.executor().run(EXPORT_INFO_TASK);
+        project.executor().run(TRIGGER_TASK);
         assertThat(getGeneratedInfoClass()).hasContents(contents);
     }
 
@@ -193,7 +196,7 @@ public class DataBindingIncrementalTest {
         assertThat(updatedInfoFileContents).isEqualTo(infoFileContents);
         assertThat(updatedSourceFileContents).isEqualTo(sourceFileContents);
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        assertThat(result.getTask(TRIGGER_TASK)).wasUpToDate();
         assertThat(result.getTask(COMPILE_JAVA_TASK)).didWork();
 
         TestUtils.waitForFileSystemTick();
@@ -229,7 +232,7 @@ public class DataBindingIncrementalTest {
         assertThat(updatedInfoFileContents).isEqualTo(infoFileContents);
         assertThat(updatedSourceFileContents).isEqualTo(sourceFileContents);
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        assertThat(result.getTask(TRIGGER_TASK)).wasUpToDate();
         assertThat(result.getTask(COMPILE_JAVA_TASK)).didWork();
 
         TestUtils.waitForFileSystemTick();
@@ -278,7 +281,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void changeVariableName() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<variable name=\"foo\" type=\"String\"/>",
@@ -303,7 +306,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addVariable() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<variable name=\"foo\" type=\"String\"/>",
@@ -322,7 +325,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addIdToView() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<TextView android:text='@{foo + \" \" + foo}'",
@@ -358,7 +361,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addNewLayoutFolderAndFile() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File landscapeActivity = new File(mainActivity
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
@@ -383,7 +386,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addNewLayout() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
@@ -463,5 +466,28 @@ public class DataBindingIncrementalTest {
         String customNameImpl = "Landroid/databinding/testapp/databinding/MyCustomNameImpl;";
         assertThat(project.getApk(DEBUG)).containsClass(customName);
         assertThat(project.getApk(DEBUG)).containsClass(customNameImpl);
+    }
+
+    /** Regression test for bug 151860061. */
+    @Test
+    public void testErrorsDoNotPersistAfterGettingFixed() throws Exception {
+        // Test on one scenario is enough
+        Assume.assumeTrue(useAndroidX && withKotlin);
+
+        // Create a layout file with duplicate IDs, expect the build to fail
+        TestFileUtils.searchAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<TextView android:text='@{foo + \" \" + foo}'",
+                "<TextView android:id=\"@+id/duplicateId\" />\n"
+                        + "<TextView android:id=\"@+id/duplicateId\" />\n"
+                        + "<TextView android:text='@{foo + \" \" + foo}'");
+        project.executor().expectFailure().run(COMPILE_JAVA_TASK);
+
+        // Correct the layout file, expect the build to pass
+        TestFileUtils.searchAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<TextView android:id=\"@+id/duplicateId\" />",
+                "");
+        project.executor().run(COMPILE_JAVA_TASK);
     }
 }

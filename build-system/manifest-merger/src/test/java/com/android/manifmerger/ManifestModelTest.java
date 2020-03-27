@@ -31,9 +31,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.xml.sax.SAXException;
 
-/**
- * Tests for the {@link com.android.manifmerger.ManifestModel} class.
- */
+/** Tests for the {@link ManifestModel} class. */
 public class ManifestModelTest extends TestCase {
 
     private final ManifestModel mModel = new ManifestModel();

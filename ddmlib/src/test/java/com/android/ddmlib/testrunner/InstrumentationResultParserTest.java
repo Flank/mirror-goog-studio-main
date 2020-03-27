@@ -179,7 +179,7 @@ public class InstrumentationResultParserTest extends TestCase {
                 "at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:)");
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
-        Capture<String> capture = new Capture<>();
+        Capture<String> capture = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 0);
         mMockListener.testRunFailed(EasyMock.capture(capture));
         mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
@@ -217,7 +217,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addLine(output, "at stackstack");
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
-        Capture<String> capture = new Capture<>();
+        Capture<String> capture = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 0);
         mMockListener.testRunFailed(EasyMock.capture(capture));
         mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
@@ -250,7 +250,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addTimeStamp(output);
         addSuccessCode(output);
 
-        final Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
+        final Capture<Map<String, String>> captureMetrics = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 1);
         mMockListener.testStarted(TEST_ID);
         mMockListener.testEnded(EasyMock.eq(TEST_ID), EasyMock.capture(captureMetrics));
@@ -289,7 +289,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addTimeStamp(output);
         addSuccessCode(output);
 
-        final Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
+        final Capture<Map<String, String>> captureMetrics = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 1);
         mMockListener.testStarted(TEST_ID);
         mMockListener.testEnded(EasyMock.eq(TEST_ID), EasyMock.capture(captureMetrics));
@@ -512,7 +512,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addTimeStamp(output);
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
-        Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
+        Capture<Map<String, String>> captureMetrics = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 0);
         mMockListener.testRunEnded(EasyMock.anyLong(), EasyMock.capture(captureMetrics));
 

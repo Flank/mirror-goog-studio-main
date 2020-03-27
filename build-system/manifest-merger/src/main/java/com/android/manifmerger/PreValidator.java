@@ -26,13 +26,13 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.xml.AndroidManifest;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.w3c.dom.Attr;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -54,30 +54,29 @@ public class PreValidator {
     }
 
     /**
-     * Validates a loaded {@link com.android.manifmerger.XmlDocument} and return a status of the
-     * merging model.
+     * Validates a loaded {@link XmlDocument} and return a status of the merging model.
      *
-     * Will return one the following status :
+     * <p>Will return one the following status :
+     *
      * <ul>
-     *     <li>{@link com.android.manifmerger.MergingReport.Result#SUCCESS} : the merging model is
-     *     correct, merging should be attempted</li>
-     *     <li>{@link com.android.manifmerger.MergingReport.Result#WARNING} : the merging model
-     *     contains non fatal error, user should be notified, merging can be attempted</li>
-     *     <li>{@link com.android.manifmerger.MergingReport.Result#ERROR} : the merging model
-     *     contains errors, user must be notified, merging should not be attempted</li>
+     *   <li>{@link MergingReport.Result#SUCCESS} : the merging model is correct, merging should be
+     *       attempted
+     *   <li>{@link MergingReport.Result#WARNING} : the merging model contains non fatal error, user
+     *       should be notified, merging can be attempted
+     *   <li>{@link MergingReport.Result#ERROR} : the merging model contains errors, user must be
+     *       notified, merging should not be attempted
      * </ul>
      *
-     * A successful validation does not mean that the merging will be successful, it only means
-     * that the {@link com.android.SdkConstants#TOOLS_URI} instructions are correct and consistent.
+     * A successful validation does not mean that the merging will be successful, it only means that
+     * the {@link SdkConstants#TOOLS_URI} instructions are correct and consistent.
      *
      * @param mergingReport report to log warnings and errors.
      * @param xmlDocument the loaded xml part.
-     * @return one the {@link com.android.manifmerger.MergingReport.Result} value.
+     * @return one the {@link MergingReport.Result} value.
      */
     @NonNull
     public static MergingReport.Result validate(
-            @NonNull MergingReport.Builder mergingReport,
-            @NonNull XmlDocument xmlDocument) {
+            @NonNull MergingReport.Builder mergingReport, @NonNull XmlDocument xmlDocument) {
 
         validateManifestAttribute(
                 mergingReport, xmlDocument.getRootNode(), xmlDocument.getFileType());
@@ -231,12 +230,13 @@ public class PreValidator {
     }
 
     /**
-     * Validate attributes part of the {@link com.android.SdkConstants#ANDROID_URI}
+     * Validate attributes part of the {@link SdkConstants#ANDROID_URI}
+     *
      * @param mergingReport report to log warnings and errors.
      * @param xmlElement xml element to check its attributes.
      */
-    private static void validateAndroidAttributes(@NonNull MergingReport.Builder mergingReport,
-            @NonNull XmlElement xmlElement) {
+    private static void validateAndroidAttributes(
+            @NonNull MergingReport.Builder mergingReport, @NonNull XmlElement xmlElement) {
         for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
             AttributeModel model = xmlAttribute.getModel();
             if (model != null && model.getOnReadValidator() != null) {
@@ -247,13 +247,13 @@ public class PreValidator {
     }
 
     /**
-     * Validates attributes part of the {@link com.android.SdkConstants#TOOLS_URI}
+     * Validates attributes part of the {@link SdkConstants#TOOLS_URI}
+     *
      * @param mergingReport report to log warnings and errors.
      * @param xmlElement xml element to check its attributes.
      */
     private static void validateAttributeInstructions(
-            @NonNull MergingReport.Builder mergingReport,
-            @NonNull XmlElement xmlElement) {
+            @NonNull MergingReport.Builder mergingReport, @NonNull XmlElement xmlElement) {
 
         for (Map.Entry<XmlNode.NodeName, AttributeOperationType> attributeOperationTypeEntry :
                 xmlElement.getAttributeOperations()) {

@@ -34,7 +34,7 @@ public class ModelInfoTest {
         ModelInfo modelInfo =
                 ModelInfo.buildFrom(
                         createExtractorFromModel(
-                                "prebuilts/tools/common/mlkit/testData/mobilenet_quant_metadata.tflite"));
+                                "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
 
         assertEquals(modelInfo.getInputs().size(), 1);
         assertEquals(modelInfo.getOutputs().size(), 1);
@@ -68,7 +68,7 @@ public class ModelInfoTest {
         ModelInfo modelInfo =
                 ModelInfo.buildFrom(
                         createExtractorFromModel(
-                                "prebuilts/tools/common/mlkit/testData/mobilenet_quant_no_metadata.tflite"));
+                                "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_no_metadata.tflite"));
 
         assertEquals(modelInfo.getInputs().size(), 1);
         assertEquals(modelInfo.getOutputs().size(), 1);

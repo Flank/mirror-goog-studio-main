@@ -66,7 +66,6 @@ object GenericBuiltArtifactsLoader {
                 .map { builtArtifact ->
                     GenericBuiltArtifact(
                         outputFile = relativePath.resolve(builtArtifact.outputFile).toString(),
-                        properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
                         outputType = builtArtifact.outputType,

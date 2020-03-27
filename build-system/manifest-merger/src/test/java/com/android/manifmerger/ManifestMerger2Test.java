@@ -25,7 +25,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.Nullable;
 import com.android.utils.StdLogger;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
@@ -38,6 +37,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -46,9 +46,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-/**
- * Tests for the {@link com.android.manifmerger.ManifestMerger2} class
- */
+/** Tests for the {@link ManifestMerger2} class */
 @RunWith(Parameterized.class)
 public class ManifestMerger2Test {
 

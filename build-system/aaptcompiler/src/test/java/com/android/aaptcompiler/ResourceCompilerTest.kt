@@ -472,23 +472,7 @@ class ResourceCompilerTest {
         Truth.assertThat(symbol2.value).isEqualTo(1)
         Truth.assertThat(symbol2.symbol.name).isEqualTo(parseNameOrFail("id/right"))
     }
-
-    @Test
-    fun testCompileXmlResourceNotSupported() {
-        val input = """
-      <LinearLayout/>
-    """.trimIndent()
-
-        try {
-            testXmlFile(AaptResourceType.LAYOUT, input)
-            fail()
-        } catch (e: IllegalStateException) {
-            Truth.assertThat(e.message).contains("XML")
-            Truth.assertThat(e.message).contains("support not yet implemented")
-            // expected
-        }
-    }
-
+    
     @Test
     fun testCompileRawFileSupported() {
         val input = """

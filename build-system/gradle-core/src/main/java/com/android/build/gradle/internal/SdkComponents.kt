@@ -88,8 +88,8 @@ open class SdkComponents(
             val ndkHandlerSupplier = Suppliers.memoize {
                 NdkHandler(
                     issueReporter,
-                    projectOptions.get(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK),
                     extensionSupplier.get()?.ndkVersion,
+                    extensionSupplier.get()?.ndkPath,
                     extensionSupplier.get()!!.compileSdkVersion!!,
                     project.rootDir)
             }

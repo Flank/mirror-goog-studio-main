@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.SdkConstants
-import com.android.SdkConstants.FN_LOCAL_PROPERTIES
-import com.android.build.gradle.internal.SdkLocator
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.findNdkPath
 import com.android.builder.errors.IssueReporter
@@ -83,20 +81,12 @@ sealed class NdkInstallStatus {
  */
 class NdkHandler(
     private val issueReporter: IssueReporter,
-    private val enableSideBySideNdk: Boolean,
     private val ndkVersionFromDsl: String?,
+    private val ndkPathFromDsl: String?,
     private val compileSdkVersion: String,
     private val projectDir: File
 ) {
     private var ndkInstallStatus: NdkInstallStatus? = null
-
-    private fun findNdk(): File? {
-        return if (enableSideBySideNdk) {
-            findNdkPath(issueReporter, ndkVersionFromDsl, projectDir)
-        } else {
-            findNdkDirectory(projectDir, issueReporter)
-        }
-    }
 
     private fun getNdkInfo(ndkDirectory: File, revision: Revision): NdkInfo {
         return when {
@@ -108,7 +98,8 @@ class NdkHandler(
     }
 
     private fun getNdkStatus(): NdkInstallStatus {
-        val ndkDirectory = findNdk()
+        val ndkDirectory =
+            findNdkPath(issueReporter, ndkVersionFromDsl, ndkPathFromDsl, projectDir)
         if (ndkDirectory == null || !ndkDirectory.exists()) {
             return NdkInstallStatus.NotInstalled
         }
@@ -150,12 +141,8 @@ class NdkHandler(
      */
     fun installFromSdk(sdkLoader: SdkLoader, sdkLibData: SdkLibData) {
         try {
-            if (enableSideBySideNdk) {
-                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE +
-                        ";" + downloadNdkVersion())
-            } else {
-                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK)
-            }
+            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE +
+                    ";" + downloadNdkVersion())
         } catch (e: LicenceNotAcceptedException) {
             throw RuntimeException(e)
         } catch (e: InstallFailedException) {
@@ -220,50 +207,6 @@ class NdkHandler(
             } else {
                 FindRevisionResult.Error("Could not parse Pkg.Revision from $sourceProperties")
             }
-        }
-
-        private fun findNdkDirectory(projectDir: File, issueReporter: IssueReporter): File? {
-            val localProperties = File(projectDir, FN_LOCAL_PROPERTIES)
-            var properties = Properties()
-            if (localProperties.isFile) {
-                properties = readProperties(localProperties)
-            }
-
-            return findNdkDirectory(properties, projectDir, issueReporter)
-        }
-
-        /**
-         * Determine the location of the NDK directory.
-         *
-         *
-         * The NDK directory can be set in the local.properties file, using the ANDROID_NDK_HOME
-         * environment variable or come bundled with the SDK.
-         *
-         *
-         * Return null if NDK directory is not found.
-         */
-        private fun findNdkDirectory(
-            properties: Properties,
-            projectDir: File,
-            issueReporter: IssueReporter
-        ): File? {
-            val ndkDirProp = properties.getProperty("ndk.dir")
-            if (ndkDirProp != null) {
-                return File(ndkDirProp)
-            }
-
-            val ndkEnvVar = System.getenv("ANDROID_NDK_HOME")
-            if (ndkEnvVar != null) {
-                return File(ndkEnvVar)
-            }
-
-            val sdkFolder = SdkLocator.getSdkDirectory(projectDir, issueReporter)
-            // Worth checking if the NDK came bundled with the SDK
-            val ndkBundle = File(sdkFolder, SdkConstants.FD_NDK)
-            if (ndkBundle.isDirectory) {
-                return ndkBundle
-            }
-            return null
         }
     }
 }

@@ -69,7 +69,7 @@ import kotlin.streams.toList
  * It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-abstract class ExternalNativeBuildTask : UnsafeOutputsTask() {
+abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Build task is always run as incrementality is left to the external build system.") {
 
     private lateinit var generator: Provider<ExternalNativeJsonGenerator>
 

@@ -87,6 +87,30 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> nullablePropertyOf(type: Class<T>, value: T?, id: String): Property<T?> {
+        return initializeNullableProperty(type, id).also {
+            it.set(value)
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>, id: String): Property<T?> {
+        return initializeNullableProperty(type, id).also {
+            it.set(value)
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
     override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: T, id: String): Property<T> {
         return initializeProperty(type, id).also {
             it.set(value)
@@ -130,7 +154,8 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String): Property<T?> {
+    override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String
+    ): Property<T?> {
         return initializeNullableProperty(type, id).also {
             it.set(value)
             if (!compatibilityMode) {
@@ -205,8 +230,16 @@ class VariantPropertiesApiServicesImpl(
 
     override fun fileTree(): ConfigurableFileTree = projectServices.objectFactory.fileTree()
 
-    override fun fileTree(dir: Any): ConfigurableFileTree =
-        projectServices.objectFactory.fileTree().setDir(dir)
+    override fun fileTree(dir: Any): ConfigurableFileTree {
+        val result = projectServices.objectFactory.fileTree().setDir(dir)
+
+        // workaround issue in Gradle <=6.3 where setDir does not set dependencies
+        // TODO remove when 6.4 ships
+        if (dir is Provider<*>) {
+            result.builtBy(dir)
+        }
+        return result
+    }
 
     override fun lockProperties() {
         for (property in properties) {

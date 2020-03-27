@@ -104,7 +104,8 @@ public class OptimisticApkSwapper {
             request.addModifiedClasses(
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
-                            .setDex(ByteString.copyFrom(clazz.code)));
+                            .setDex(ByteString.copyFrom(clazz.code))
+                            .addAllFields(clazz.variableStates));
         }
 
         for (ApkEntryContent file : swapData.fileOverlays) {

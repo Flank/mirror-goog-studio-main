@@ -33,10 +33,10 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.XmlUtils;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -46,11 +46,10 @@ import org.w3c.dom.NodeList;
 /**
  * Represents a loaded xml document.
  *
- * Has pointers to the root {@link XmlElement} element and provides services to persist the document
- * to an external format. Also provides abilities to be merged with other
- * {@link com.android.manifmerger.XmlDocument} as well as access to the line numbers for all
- * document's xml elements and attributes.
- *
+ * <p>Has pointers to the root {@link XmlElement} element and provides services to persist the
+ * document to an external format. Also provides abilities to be merged with other {@link
+ * XmlDocument} as well as access to the line numbers for all document's xml elements and
+ * attributes.
  */
 public class XmlDocument {
 
@@ -76,8 +75,7 @@ public class XmlDocument {
 
     private final Element mRootElement;
     // this is initialized lazily to avoid un-necessary early parsing.
-    @NonNull
-    private final AtomicReference<XmlElement> mRootNode = new AtomicReference<XmlElement>(null);
+    @NonNull private final AtomicReference<XmlElement> mRootNode = new AtomicReference<>(null);
     @NonNull
     private final SourceFile mSourceFile;
     @NonNull
@@ -86,8 +84,7 @@ public class XmlDocument {
     private final KeyBasedValueResolver<ManifestSystemProperty> mSystemPropertyResolver;
     @NonNull
     private final Type mType;
-    @NonNull
-    private final Optional<String> mMainManifestPackageName;
+    @Nullable private final String mMainManifestPackageName;
     @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
 
     public XmlDocument(
@@ -96,7 +93,7 @@ public class XmlDocument {
             @NonNull KeyBasedValueResolver<ManifestSystemProperty> systemPropertyResolver,
             @NonNull Element element,
             @NonNull Type type,
-            @NonNull Optional<String> mainManifestPackageName,
+            @Nullable String mainManifestPackageName,
             @NonNull DocumentModel<ManifestModel.NodeTypes> model) {
         this.mSourceFile = Preconditions.checkNotNull(sourceLocation);
         this.mRootElement = Preconditions.checkNotNull(element);
@@ -138,10 +135,11 @@ public class XmlDocument {
 
     /**
      * merge this higher priority document with a higher priority document.
+     *
      * @param lowerPriorityDocument the lower priority document to merge in.
      * @param mergingReportBuilder the merging report to record errors and actions.
-     * @return a new merged {@link com.android.manifmerger.XmlDocument} or
-     * {@link Optional#absent()} if there were errors during the merging activities.
+     * @return a new merged {@link XmlDocument} or {@link Optional#empty()} ()} if there were errors
+     *     during the merging activities.
      */
     @NonNull
     public Optional<XmlDocument> merge(
@@ -153,11 +151,12 @@ public class XmlDocument {
 
     /**
      * merge this higher priority document with a higher priority document.
+     *
      * @param lowerPriorityDocument the lower priority document to merge in.
      * @param mergingReportBuilder the merging report to record errors and actions.
      * @param addImplicitPermissions whether to perform implicit permission addition.
-     * @return a new merged {@link com.android.manifmerger.XmlDocument} or
-     * {@link Optional#absent()} if there were errors during the merging activities.
+     * @return a new merged {@link XmlDocument} or {@link Optional#empty()} if there were errors
+     *     during the merging activities.
      */
     @NonNull
     public Optional<XmlDocument> merge(
@@ -176,12 +175,13 @@ public class XmlDocument {
                 lowerPriorityDocument, reparse(), mergingReportBuilder, addImplicitPermissions);
 
         // force re-parsing as new nodes may have appeared.
-        return mergingReportBuilder.hasErrors() ? Optional.absent() : Optional.of(reparse());
+        return mergingReportBuilder.hasErrors() ? Optional.empty() : Optional.of(reparse());
     }
 
     /**
      * Forces a re-parsing of the document
-     * @return a new {@link com.android.manifmerger.XmlDocument} with up to date information.
+     *
+     * @return a new {@link XmlDocument} with up to date information.
      */
     @NonNull
     public XmlDocument reparse() {
@@ -195,18 +195,15 @@ public class XmlDocument {
                 mModel);
     }
 
-    /**
-     * Returns a {@link com.android.manifmerger.KeyResolver} capable of resolving all selectors
-     * types
-     */
+    /** Returns a {@link KeyResolver} capable of resolving all selectors types */
     @NonNull
     public KeyResolver<String> getSelectors() {
         return mSelectors;
     }
 
     /**
-     * Returns the {@link com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver} capable
-     * of resolving all injected {@link ManifestSystemProperty}
+     * Returns the {@link KeyBasedValueResolver} capable of resolving all injected {@link
+     * ManifestSystemProperty}
      */
     @NonNull
     public KeyBasedValueResolver<ManifestSystemProperty> getSystemPropertyResolver() {
@@ -214,12 +211,12 @@ public class XmlDocument {
     }
 
     /**
-     * Compares this document to another {@link com.android.manifmerger.XmlDocument} ignoring all
-     * attributes belonging to the {@link com.android.SdkConstants#TOOLS_URI} namespace.
+     * Compares this document to another {@link XmlDocument} ignoring all attributes belonging to
+     * the {@link SdkConstants#TOOLS_URI} namespace.
      *
      * @param other the other document to compare against.
-     * @return  a {@link String} describing the differences between the two XML elements or
-     * {@link Optional#absent()} if they are equals.
+     * @return a {@link String} describing the differences between the two XML elements or {@link
+     *     Optional#empty()} if they are equals.
      */
     @SuppressWarnings("CovariantCompareTo")
     public Optional<String> compareTo(@NonNull XmlDocument other) {
@@ -234,9 +231,7 @@ public class XmlDocument {
         return getNodePosition(node.getXml());
     }
 
-    /**
-     * Returns the position of the specified {@link org.w3c.dom.Node}.
-     */
+    /** Returns the position of the specified {@link Node}. */
     @NonNull
     static SourcePosition getNodePosition(@NonNull Node xml) {
         return PositionXmlParser.getPosition(xml);
@@ -276,7 +271,9 @@ public class XmlDocument {
      * @return the package name to do partial class names resolution.
      */
     public String getPackageName() {
-        return mMainManifestPackageName.or(mRootElement.getAttribute("package"));
+        return mMainManifestPackageName != null
+                ? mMainManifestPackageName
+                : mRootElement.getAttribute("package");
     }
 
     /**
@@ -299,8 +296,8 @@ public class XmlDocument {
         if (aPackage != null) {
             return aPackage;
         }
-        if (mMainManifestPackageName.isPresent()) {
-            return mMainManifestPackageName.get();
+        if (mMainManifestPackageName != null) {
+            return mMainManifestPackageName;
         }
         throw new RuntimeException("No package present in overlay or main manifest file");
     }
@@ -324,8 +321,7 @@ public class XmlDocument {
      */
     @NonNull
     private String getRawMinSdkVersion() {
-        Optional<XmlElement> usesSdk = getByTypeAndKey(
-                ManifestModel.NodeTypes.USES_SDK, null);
+        Optional<XmlElement> usesSdk = getByTypeAndKey(USES_SDK, null);
         if (usesSdk.isPresent()) {
             Optional<XmlAttribute> minSdkVersion = usesSdk.get()
                     .getAttribute(XmlNode.fromXmlName("android:minSdkVersion"));
@@ -356,8 +352,7 @@ public class XmlDocument {
      */
     @Nullable
     private String getExplicitTargetSdkVersion() {
-        Optional<XmlElement> usesSdk = getByTypeAndKey(
-                ManifestModel.NodeTypes.USES_SDK, null);
+        Optional<XmlElement> usesSdk = getByTypeAndKey(USES_SDK, null);
         if (usesSdk.isPresent()) {
             Optional<XmlAttribute> targetSdkVersion = usesSdk.get()
                     .getAttribute(XmlNode.fromXmlName("android:targetSdkVersion"));
@@ -414,7 +409,6 @@ public class XmlDocument {
      * Add all implicit elements from the passed lower priority document that are required in the
      * target SDK.
      */
-    @SuppressWarnings("unchecked") // compiler confused about varargs and generics.
     private void addImplicitElements(
             @NonNull XmlDocument lowerPriorityDocument,
             @NonNull XmlDocument reparsedXmlDocument,
@@ -423,8 +417,7 @@ public class XmlDocument {
 
         // if this document is an overlay, tolerate the absence of uses-sdk and do not
         // assume implicit minimum versions.
-        Optional<XmlElement> usesSdk = getByTypeAndKey(
-                ManifestModel.NodeTypes.USES_SDK, null);
+        Optional<XmlElement> usesSdk = getByTypeAndKey(USES_SDK, null);
         if (mType == Type.OVERLAY && !usesSdk.isPresent()) {
             return;
         }
@@ -493,7 +486,7 @@ public class XmlDocument {
             }
         }
 
-        if (!checkUsesSdkMinVersion(lowerPriorityDocument, mergingReport)) {
+        if (!checkUsesSdkMinVersion(lowerPriorityDocument)) {
             String error = String.format(
                             "uses-sdk:minSdkVersion %1$s cannot be smaller than version "
                                     + "%2$s declared in library %3$s as the library might be using APIs not available in %1$s\n"
@@ -538,7 +531,6 @@ public class XmlDocument {
             addIfAbsent(
                     reparsedXmlDocument,
                     mergingReport.getActionRecorder(),
-                    USES_PERMISSION,
                     permission("WRITE_EXTERNAL_STORAGE"),
                     lowerPriorityDocument.getPackageName() + " has a targetSdkVersion < 4");
             hasWriteToExternalStoragePermission = true;
@@ -546,7 +538,6 @@ public class XmlDocument {
             addIfAbsent(
                     reparsedXmlDocument,
                     mergingReport.getActionRecorder(),
-                    USES_PERMISSION,
                     permission("READ_PHONE_STATE"),
                     lowerPriorityDocument.getPackageName() + " has a targetSdkVersion < 4");
         }
@@ -560,7 +551,6 @@ public class XmlDocument {
             addIfAbsent(
                     reparsedXmlDocument,
                     mergingReport.getActionRecorder(),
-                    USES_PERMISSION,
                     permission("READ_EXTERNAL_STORAGE"),
                     lowerPriorityDocument.getPackageName() + " requested WRITE_EXTERNAL_STORAGE");
         }
@@ -572,7 +562,6 @@ public class XmlDocument {
                 addIfAbsent(
                         reparsedXmlDocument,
                         mergingReport.getActionRecorder(),
-                        USES_PERMISSION,
                         permission("READ_CALL_LOG"),
                         lowerPriorityDocument.getPackageName()
                                 + " has targetSdkVersion < 16 and requested READ_CONTACTS");
@@ -582,7 +571,6 @@ public class XmlDocument {
                 addIfAbsent(
                         reparsedXmlDocument,
                         mergingReport.getActionRecorder(),
-                        USES_PERMISSION,
                         permission("WRITE_CALL_LOG"),
                         lowerPriorityDocument.getPackageName()
                                 + " has targetSdkVersion < 16 and requested WRITE_CONTACTS");
@@ -594,8 +582,7 @@ public class XmlDocument {
      * Returns true if the minSdkVersion of the application and the library are compatible, false
      * otherwise.
      */
-    private boolean checkUsesSdkMinVersion(@NonNull XmlDocument lowerPriorityDocument,
-            MergingReport.Builder mergingReport) {
+    private boolean checkUsesSdkMinVersion(@NonNull XmlDocument lowerPriorityDocument) {
 
         int thisMinSdk = getApiLevelFromAttribute(getMinSdkVersion());
         int libraryMinSdk = getApiLevelFromAttribute(
@@ -623,36 +610,42 @@ public class XmlDocument {
         return true;
     }
 
+    @NonNull
+    private static String permission(String permissionName) {
+        return "android.permission." + permissionName;
+    }
+
     /**
      * Adds a new element of type nodeType with a specific keyValue if the element is absent in this
      * document. Will also add attributes expressed through key value pairs.
      *
-     * @param reparsedXmlDocument an up-to-date version of this XmlDocument, we use this parameter
+     * @param reParsedXmlDocument an up-to-date version of this XmlDocument, we use this parameter
      *     instead of calling reparse() because reparse() can be expensive
      * @param actionRecorder to records creation actions.
-     * @param nodeType the node type to crete
      * @param keyValue the optional key for the element.
      * @param attributes the optional array of key value pairs for extra element attribute.
-     * @return the Xml element whether it was created or existed or {@link Optional#absent()} if it
-     *     does not exist in this document.
      */
-    private Optional<Element> addIfAbsent(
-            @NonNull XmlDocument reparsedXmlDocument,
+    @SafeVarargs
+    private final void addIfAbsent(
+            @NonNull XmlDocument reParsedXmlDocument,
             @NonNull ActionRecorder actionRecorder,
-            @NonNull ManifestModel.NodeTypes nodeType,
             @Nullable String keyValue,
             @Nullable String reason,
             @Nullable Pair<String, String>... attributes) {
 
         Optional<XmlElement> xmlElementOptional =
-                reparsedXmlDocument.getByTypeAndKey(nodeType, keyValue);
+                reParsedXmlDocument.getByTypeAndKey(
+                        ManifestModel.NodeTypes.USES_PERMISSION, keyValue);
         if (xmlElementOptional.isPresent()) {
-            return Optional.absent();
+            return;
         }
-        Element elementNS = getXml().createElement(mModel.toXmlName(nodeType));
+        Element elementNS =
+                getXml().createElement(mModel.toXmlName(ManifestModel.NodeTypes.USES_PERMISSION));
 
         ImmutableList<String> keyAttributesNames =
-                nodeType.getNodeKeyResolver().getKeyAttributesNames();
+                ManifestModel.NodeTypes.USES_PERMISSION
+                        .getNodeKeyResolver()
+                        .getKeyAttributesNames();
         if (keyAttributesNames.size() == 1) {
             elementNS.setAttributeNS(
                     SdkConstants.ANDROID_URI, "android:" + keyAttributesNames.get(0), keyValue);
@@ -670,12 +663,6 @@ public class XmlDocument {
         actionRecorder.recordImpliedNodeAction(xmlElement, reason);
 
         getRootNode().getXml().appendChild(elementNS);
-        return Optional.of(elementNS);
-    }
-
-    @NonNull
-    private static String permission(String permissionName) {
-        return "android.permission." + permissionName;
     }
 
     /**

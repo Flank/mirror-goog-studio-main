@@ -50,40 +50,42 @@ class CacheabilityTest {
          */
         private val EXPECTED_TASK_STATES =
             mapOf(
+                // Sort by alphabetical order for easier searching
                 UP_TO_DATE to setOf(
                     ":app:clean",
-                    ":app:preBuild",
-                    ":app:generateDebugResources",
                     ":app:generateDebugAssets",
+                    ":app:generateDebugResources",
+                    ":app:preBuild",
                     ":app:preDebugBuild",
                     ":app:preDebugUnitTestBuild"
                 ),
                 FROM_CACHE to setOf(
-                    ":app:generateDebugBuildConfig",
-                    ":app:javaPreCompileDebug",
-                    ":app:generateDebugResValues",
-                    ":app:compileDebugJavaWithJavac",
-                    ":app:checkDebugDuplicateClasses",
-                    ":app:mergeDebugShaders",
-                    ":app:mergeDebugAssets",
-                    ":app:mergeExtDexDebug",
-                    ":app:mergeDebugJniLibFolders",
-                    ":app:processDebugManifest",
-                    ":app:validateSigningDebug",
-                    ":app:createDebugCompatibleScreenManifests",
-                    ":app:javaPreCompileDebugUnitTest",
-                    ":app:generateDebugUnitTestConfig",
-                    ":app:compileDebugUnitTestJavaWithJavac",
-                    ":app:packageDebugUnitTestForUnitTest",
-                    ":app:testDebugUnitTest",
-                    ":app:mergeDebugJavaResource",
-                    ":app:mergeDebugNativeLibs",
-                    ":app:mergeDexDebug",
-                    ":app:extractDeepLinksDebug",
-                    ":app:dexBuilderDebug",
-                    ":app:parseDebugIntegrityConfig",
                     ":app:bundleDebugClasses",
-                    ":app:processDebugManifestForPackage"
+                    ":app:checkDebugDuplicateClasses",
+                    ":app:compileDebugJavaWithJavac",
+                    ":app:compileDebugUnitTestJavaWithJavac",
+                    ":app:createDebugCompatibleScreenManifests",
+                    ":app:dexBuilderDebug",
+                    ":app:extractDeepLinksDebug",
+                    ":app:generateDebugBuildConfig",
+                    ":app:generateDebugResValues",
+                    ":app:generateDebugUnitTestConfig",
+                    ":app:javaPreCompileDebug",
+                    ":app:javaPreCompileDebugUnitTest",
+                    ":app:mergeDebugAssets",
+                    ":app:mergeDebugJavaResource",
+                    ":app:mergeDebugJniLibFolders",
+                    ":app:mergeDebugNativeLibs",
+                    ":app:mergeDebugShaders",
+                    ":app:mergeDexDebug",
+                    ":app:mergeExtDexDebug",
+                    ":app:packageDebugUnitTestForUnitTest",
+                    ":app:parseDebugIntegrityConfig",
+                    ":app:processDebugMainManifest",
+                    ":app:processDebugManifest",
+                    ":app:processDebugManifestForPackage",
+                    ":app:testDebugUnitTest",
+                    ":app:validateSigningDebug"
             ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -92,19 +94,19 @@ class CacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:mergeDebugResources", /* Bug 141301405 */
-                    ":app:processDebugResources", /* Bug 141301405 */
-                    ":app:packageDebug" /* Bug 74595859 */
+                    ":app:packageDebug", /* Bug 74595859 */
+                    ":app:processDebugResources" /* Bug 141301405 */
                 ),
                 SKIPPED to setOf(
+                    ":app:assembleDebug",
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
                     ":app:compileDebugShaders",
-                    ":app:processDebugJavaRes",
-                    ":app:assembleDebug",
-                    ":app:processDebugUnitTestJavaRes",
                     ":app:compileDebugSources",
-                    ":app:stripDebugDebugSymbols",
-                    ":app:mergeDebugNativeDebugMetadata"
+                    ":app:mergeDebugNativeDebugMetadata",
+                    ":app:processDebugJavaRes",
+                    ":app:processDebugUnitTestJavaRes",
+                    ":app:stripDebugDebugSymbols"
                 ),
                 FAILED to setOf()
             )

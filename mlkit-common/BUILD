@@ -16,7 +16,7 @@ iml_module(
         "//tools/idea/.idea/libraries:commons-io[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
-        "//tools/idea/.idea/libraries:Mocks[test]",
+        "//tools/idea/.idea/libraries:Objenesis[test]",
         "//tools/base/common:studio.android.sdktools.common[module]",
     ],
 )

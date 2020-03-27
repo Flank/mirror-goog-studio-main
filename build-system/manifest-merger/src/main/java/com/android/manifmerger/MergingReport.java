@@ -255,15 +255,16 @@ public class MergingReport {
     public static class Builder {
 
         private Map<MergedManifestKind, String> mergedDocuments =
-                new EnumMap<MergedManifestKind, String>(MergedManifestKind.class);
+                new EnumMap<>(MergedManifestKind.class);
         private Map<MergedManifestKind, XmlDocument> mergedXmlDocuments =
-          new EnumMap<MergedManifestKind, XmlDocument>(MergedManifestKind.class);
-
+                new EnumMap<>(MergedManifestKind.class);
 
         @NonNull
-        private ImmutableList.Builder<Record> mRecordBuilder = new ImmutableList.Builder<Record>();
+        private ImmutableList.Builder<Record> mRecordBuilder = new ImmutableList.Builder<>();
+
         @NonNull
-        private ImmutableList.Builder<String> mIntermediaryStages = new ImmutableList.Builder<String>();
+        private ImmutableList.Builder<String> mIntermediaryStages = new ImmutableList.Builder<>();
+
         private boolean mHasWarnings = false;
         private boolean mHasErrors = false;
         @NonNull
@@ -280,8 +281,8 @@ public class MergingReport {
             return this;
         }
 
-        Builder setMergedXmlDocument(@NonNull MergedManifestKind mergedManifestKind, @NonNull XmlDocument mergedDocument) {
-            this.mergedXmlDocuments.put(mergedManifestKind, mergedDocument);
+        Builder setMergedXmlDocument(@NonNull XmlDocument mergedDocument) {
+            this.mergedXmlDocuments.put(MergedManifestKind.MERGED, mergedDocument);
             return this;
         }
 

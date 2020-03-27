@@ -27,7 +27,6 @@ import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,7 +39,7 @@ import java.util.function.Function;
 public final class IdeVariantImpl implements IdeVariant, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final String myName;
     @NonNull private final String myDisplayName;
@@ -53,7 +52,7 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
     private final int myHashCode;
     private final boolean myInstantAppCompatible;
-    @NonNull private final Collection<File> myDesugarLibLintFiles;
+    @NonNull private final List<String> myDesugaredMethods;
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
@@ -68,7 +67,7 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
         myMergedFlavor = new IdeProductFlavor();
         myTestedTargetVariants = Collections.emptyList();
         myInstantAppCompatible = false;
-        myDesugarLibLintFiles = Collections.emptyList();
+        myDesugaredMethods = Collections.emptyList();
 
         myHashCode = 0;
     }
@@ -115,10 +114,10 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 modelVersion != null
                         && modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true)
                         && variant.isInstantAppCompatible();
-        myDesugarLibLintFiles =
+        myDesugaredMethods =
                 ImmutableList.copyOf(
                         IdeModel.copyNewPropertyNonNull(
-                                variant::getDesugarLibLintFiles, Collections.emptyList()));
+                                variant::getDesugaredMethods, Collections.emptyList()));
 
         myHashCode = calculateHashCode();
     }
@@ -244,8 +243,8 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
 
     @NonNull
     @Override
-    public Collection<File> getDesugarLibLintFiles() {
-        return myDesugarLibLintFiles;
+    public List<String> getDesugaredMethods() {
+        return myDesugaredMethods;
     }
 
     @Override
@@ -267,7 +266,7 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 && Objects.equals(myMergedFlavor, variant.myMergedFlavor)
                 && Objects.equals(myTestedTargetVariants, variant.myTestedTargetVariants)
                 && Objects.equals(myInstantAppCompatible, variant.myInstantAppCompatible)
-                && Objects.equals(myDesugarLibLintFiles, variant.myDesugarLibLintFiles);
+                && Objects.equals(myDesugaredMethods, variant.myDesugaredMethods);
     }
 
     @Override
@@ -287,7 +286,7 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 myMergedFlavor,
                 myTestedTargetVariants,
                 myInstantAppCompatible,
-                myDesugarLibLintFiles);
+                myDesugaredMethods);
     }
 
     @Override
@@ -316,8 +315,8 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 + myTestedTargetVariants
                 + ", myInstantAppCompatible="
                 + myInstantAppCompatible
-                + ", myDesugarLibLintFiles="
-                + myDesugarLibLintFiles
+                + ", myDesugaredMethods="
+                + myDesugaredMethods
                 + "}";
     }
 }

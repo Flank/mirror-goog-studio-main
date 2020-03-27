@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
+import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
 import com.google.common.base.MoreObjects;
 import java.io.File;
@@ -43,12 +44,16 @@ import org.gradle.api.Task;
  */
 public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVariantOutput {
 
+    @NonNull private VariantType variantType;
+
     @Inject
     public ApkVariantOutputImpl(
             @NonNull TaskContainer taskContainer,
             @NonNull BaseServices services,
-            @NonNull VariantOutputImpl variantOutput) {
+            @NonNull VariantOutputImpl variantOutput,
+            @NonNull VariantType variantType) {
         super(taskContainer, services, variantOutput);
+        this.variantType = variantType;
     }
 
     @Nullable
@@ -85,7 +90,10 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public void setVersionCodeOverride(int versionCodeOverride) {
-        variantOutput.getVersionCode().set(versionCodeOverride);
+        // only these modules can configure their versionCode
+        if (variantType.isBaseModule()) {
+            variantOutput.getVersionCode().set(versionCodeOverride);
+        }
     }
 
     @Override
@@ -117,7 +125,10 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public void setVersionNameOverride(String versionNameOverride) {
-        variantOutput.getVersionName().set(versionNameOverride);
+        // only these modules can configure their versionName
+        if (variantType.isBaseModule()) {
+            variantOutput.getVersionName().set(versionNameOverride);
+        }
     }
 
     @Nullable

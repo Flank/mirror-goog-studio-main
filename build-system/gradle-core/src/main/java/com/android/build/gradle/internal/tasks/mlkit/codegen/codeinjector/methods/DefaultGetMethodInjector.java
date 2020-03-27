@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods;
 
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.tools.mlkit.MlkitNames;
 import com.android.tools.mlkit.TensorInfo;
@@ -39,6 +40,7 @@ public class DefaultGetMethodInjector extends MethodInjector {
                                         tensorInfo.getName(), returnType.simpleName()))
                         .addModifiers(Modifier.PUBLIC)
                         .returns(returnType)
+                        .addAnnotation(ClassNames.NON_NULL)
                         .addStatement("return $L", tensorInfo.getName())
                         .build();
         classBuilder.addMethod(methodSpec);

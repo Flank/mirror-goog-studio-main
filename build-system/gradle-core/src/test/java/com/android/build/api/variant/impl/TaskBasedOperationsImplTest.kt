@@ -417,7 +417,6 @@ class TaskBasedOperationsImplTest {
     ) =
         BuiltArtifactImpl.make(
             outputFile = File(outputFolder, "$fileName.xml").absolutePath,
-            properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = 12,
             versionName = "12",
             variantOutputConfiguration = VariantOutputConfigurationImpl(

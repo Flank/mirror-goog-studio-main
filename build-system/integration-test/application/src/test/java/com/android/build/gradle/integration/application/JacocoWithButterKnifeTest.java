@@ -34,7 +34,6 @@ public class JacocoWithButterKnifeTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("jacocoWithButterKnife")
-                    .withoutNdk()
                     .create();
 
     @Test

@@ -52,6 +52,30 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             return this.externalNativeBuild
         }
 
+    override var minSdk: Int?
+        get() = minSdkVersion?.apiLevel
+        set(value) {
+            if (value == null) minSdkVersion = null
+            else setMinSdkVersion(value)
+        }
+    override var minSdkPreview: String?
+        get() = minSdkVersion?.codename
+        set(value) {
+            setMinSdkVersion(value)
+        }
+
+    override var targetSdk: Int?
+        get() = targetSdkVersion?.apiLevel
+        set(value) {
+            if (value == null) targetSdkVersion = null
+            else setTargetSdkVersion(value)
+        }
+    override var targetSdkPreview: String?
+        get() = targetSdkVersion?.codename
+        set(value) {
+            setTargetSdkVersion(value)
+        }
+
     fun setMinSdkVersion(minSdkVersion: Int) {
         setMinSdkVersion(DefaultApiVersion(minSdkVersion))
     }

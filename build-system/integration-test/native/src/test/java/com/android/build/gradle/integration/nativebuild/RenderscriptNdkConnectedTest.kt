@@ -92,6 +92,7 @@ class RenderscriptNdkConnectedTest {
             project.buildFile,
             """
             |android {
+            |    ndkPath "${project.ndkPath}"
             |    defaultConfig {
             |        ndk {
             |            abiFilters "x86_64", "$targetAbi"

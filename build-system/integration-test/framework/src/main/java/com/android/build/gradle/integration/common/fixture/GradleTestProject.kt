@@ -94,7 +94,6 @@ class GradleTestProject @JvmOverloads internal constructor(
     val name: String = DEFAULT_TEST_PROJECT_NAME,
     private val testProject: TestProject? = null,
     private val targetGradleVersion: String,
-    private val withoutNdk: Boolean,
     private val withDependencyChecker: Boolean,
     private val gradleProperties: Collection<String>,
     val heapSize: MemoryRequirement,
@@ -453,6 +452,10 @@ apply from: "../commonLocalRepo.gradle"
     val testDir: File
         get() = _testDir ?: throw java.lang.RuntimeException("testDir called before the project was properly initialized.")
 
+    /** Returns a path to NDK suitable for embedding in build.gradle. It has slashes escaped for Windows */
+    val ndkPath: String
+        get() = androidNdkHome.absolutePath.replace("\\", "\\\\")
+
     private var additionalMavenRepoDir: Path? = null
 
     /** \Returns the latest build result.  */
@@ -506,7 +509,6 @@ apply from: "../commonLocalRepo.gradle"
             name = subProject.substring(subProject.lastIndexOf(':') + 1),
             testProject = null,
             targetGradleVersion = rootProject.targetGradleVersion,
-            withoutNdk = rootProject.withoutNdk,
             withDependencyChecker = rootProject.withDependencyChecker,
             gradleProperties = ImmutableList.of(),
             heapSize = rootProject.heapSize,
@@ -1417,11 +1419,6 @@ allprojects { proj ->
         if (withSdk) {
             val androidHome = this.androidHome ?: throw RuntimeException("androidHome is null while withSdk is true")
             localProp.setProperty(ProjectProperties.PROPERTY_SDK, androidHome.absolutePath)
-        }
-        if (!withoutNdk) {
-            localProp.setProperty(
-                ProjectProperties.PROPERTY_NDK, androidNdkHome.absolutePath
-            )
         }
 
         if (withCmakeDirInLocalProp && cmakeVersion != null && cmakeVersion.isNotEmpty()) {

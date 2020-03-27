@@ -23,9 +23,9 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.services.BaseServices;
+import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -37,6 +37,7 @@ public class VariantOutputFactory {
     @NonNull private final Class<? extends BaseVariantOutput> targetClass;
     @NonNull private final BaseServices services;
     @Nullable private final BaseVariantImpl deprecatedVariantPublicApi;
+    @NonNull private VariantType variantType;
     @NonNull private final TaskContainer taskContainer;
     @NonNull private final BaseExtension extension;
 
@@ -45,18 +46,19 @@ public class VariantOutputFactory {
             @NonNull BaseServices services,
             @NonNull BaseExtension extension,
             @Nullable BaseVariantImpl deprecatedVariantPublicApi,
-            @NonNull TaskContainer taskContainer,
-            @NonNull DeprecationReporter deprecationReporter) {
+            @NonNull VariantType variantType,
+            @NonNull TaskContainer taskContainer) {
         this.targetClass = targetClass;
         this.services = services;
         this.deprecatedVariantPublicApi = deprecatedVariantPublicApi;
+        this.variantType = variantType;
         this.taskContainer = taskContainer;
         this.extension = extension;
     }
 
     public VariantOutput create(VariantOutputImpl variantApi) {
         BaseVariantOutput variantOutput =
-                services.newInstance(targetClass, taskContainer, services, variantApi);
+                services.newInstance(targetClass, taskContainer, services, variantApi, variantType);
         extension.getBuildOutputs().add(variantOutput);
         if (deprecatedVariantPublicApi != null) {
             deprecatedVariantPublicApi.addOutputs(ImmutableList.of(variantOutput));

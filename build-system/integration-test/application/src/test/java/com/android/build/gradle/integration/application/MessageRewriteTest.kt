@@ -28,7 +28,7 @@ import org.junit.Test
 class MessageRewriteTest {
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("flavored").withoutNdk().create()
+    val project = GradleTestProject.builder().fromTestProject("flavored").create()
 
     @Test
     fun invalidLayoutFile() {

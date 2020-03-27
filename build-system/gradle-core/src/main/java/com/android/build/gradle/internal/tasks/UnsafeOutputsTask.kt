@@ -25,16 +25,20 @@ import org.gradle.api.tasks.TaskAction
  *
  * Such tasks always run when in the task graph, and rely on the task implementation to handle
  * up-to-date checks e.g. the external native build tasks, where the underlying external build
- * system handles those checks.
+ * system handles those checks. Lint does not use this class, as while it is never up-to-date
+ * currently as it doesn't model its inputs, it should clean its outputs before running.
  *
  * Unlike [NonIncrementalTask], this task does **not** clean up its outputs before the task is run.
  * This means that the task implementation is responsible for ensuring that the outputs are correct
  * in that case.
  */
-abstract class UnsafeOutputsTask : AndroidVariantTask() {
+abstract class UnsafeOutputsTask(reasonToLog: String) : AndroidVariantTask() {
 
     init {
-        outputs.upToDateWhen { false }
+        outputs.upToDateWhen { task ->
+            task.logger.debug(reasonToLog)
+            return@upToDateWhen false
+        }
     }
 
     @Throws(Exception::class)

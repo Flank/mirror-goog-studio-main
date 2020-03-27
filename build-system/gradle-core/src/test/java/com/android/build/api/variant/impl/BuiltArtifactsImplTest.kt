@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.PublicArtifactType
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
@@ -42,13 +42,12 @@ class BuiltArtifactsImplTest {
     fun simpleWriting() {
         val outputFolder = tmpFolder.newFolder("some_folder")
         BuiltArtifactsImpl(
-            artifactType = PublicArtifactType.APK,
+            artifactType = ArtifactTypes.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name"
                 )
@@ -71,7 +70,6 @@ class BuiltArtifactsImplTest {
     {
       "type": "SINGLE",
       "filters": [],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file1.apk"
@@ -85,13 +83,12 @@ class BuiltArtifactsImplTest {
     fun testMultipleOutputWithFilters() {
         val outputFolder = tmpFolder.newFolder("some_folder")
         BuiltArtifactsImpl(
-            artifactType = PublicArtifactType.APK,
+            artifactType = ArtifactTypes.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -102,7 +99,6 @@ class BuiltArtifactsImplTest {
                 ),
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file2.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -113,7 +109,6 @@ class BuiltArtifactsImplTest {
                 ),
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file3.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -146,7 +141,6 @@ class BuiltArtifactsImplTest {
           "value": "xhdpi"
         }
       ],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file1.apk"
@@ -159,7 +153,6 @@ class BuiltArtifactsImplTest {
           "value": "xxhdpi"
         }
       ],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file2.apk"
@@ -172,7 +165,6 @@ class BuiltArtifactsImplTest {
           "value": "xxxhdpi"
         }
       ],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file3.apk"
@@ -212,16 +204,6 @@ class BuiltArtifactsImplTest {
           "value": "xhdpi"
         }
       ],
-      "properties": [
-        {
-          "key": "key1",
-          "value": "value1"
-        },
-        {
-          "key": "key2",
-          "value": "value2"
-        }
-      ],
       "versionCode": 123,
       "versionName": "123",
       "outputFile": "file1.apk"
@@ -255,10 +237,10 @@ class BuiltArtifactsImplTest {
             BuiltArtifacts.METADATA_FILE_VERSION
         )
         Truth.assertThat(builtArtifacts.artifactType.type).isEqualTo(
-            PublicArtifactType.APK.name()
+            ArtifactTypes.APK.name()
         )
         Truth.assertThat(builtArtifacts.artifactType.kind).isEqualTo(
-            PublicArtifactType.APK.kind.dataType().simpleName
+            ArtifactTypes.APK.kind.dataType().simpleName
         )
         Truth.assertThat(builtArtifacts.applicationId).isEqualTo("com.android.test")
         Truth.assertThat(builtArtifacts.version).isEqualTo(
@@ -277,12 +259,6 @@ class BuiltArtifactsImplTest {
             filters.forEach { filter ->
                 Truth.assertThat(filter.filterType).isEqualTo("DENSITY")
                 Truth.assertThat(filter.identifier).isAnyOf("xxhdpi", "xhdpi")
-            }
-            val properties = builtArtifact.properties
-            Truth.assertThat(properties).hasSize(2)
-            properties.forEach {
-                Truth.assertThat(it.key).isAnyOf("key1", "key2")
-                Truth.assertThat(it.value).isAnyOf("value1", "value2")
             }
         }
     }
@@ -315,7 +291,6 @@ class BuiltArtifactsImplTest {
     ) =
         BuiltArtifactImpl.make(
             outputFile = File(outputFolder, "$fileName.apk").absolutePath,
-            properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = versionCode,
             versionName = versionCode.toString(),
             variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -327,7 +302,7 @@ class BuiltArtifactsImplTest {
 
     private fun createBuiltArtifacts(vararg elements: BuiltArtifactImpl) =
         BuiltArtifactsImpl(
-            artifactType = PublicArtifactType.APK,
+            artifactType = ArtifactTypes.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = elements.toList()

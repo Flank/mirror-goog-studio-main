@@ -24,7 +24,6 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.google.common.base.MoreObjects;
-import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +34,7 @@ import java.util.Objects;
  */
 @Immutable
 final class VariantImpl implements Variant, Serializable {
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull
     private final String name;
@@ -58,7 +57,7 @@ final class VariantImpl implements Variant, Serializable {
 
     private final boolean instantAppCompatible;
 
-    @NonNull private final Collection<File> desugarLibLintFiles;
+    @NonNull private final List<String> desugaredMethods;
 
     VariantImpl(
             @NonNull String name,
@@ -71,7 +70,7 @@ final class VariantImpl implements Variant, Serializable {
             @NonNull Collection<JavaArtifact> extraJavaArtifacts,
             @NonNull Collection<TestedTargetVariant> testedTargetVariants,
             boolean instantAppCompatible,
-            @NonNull Collection<File> desugarLibLintFiles) {
+            @NonNull List<String> desugaredMethods) {
         this.name = name;
         this.displayName = displayName;
         this.buildTypeName = buildTypeName;
@@ -82,7 +81,7 @@ final class VariantImpl implements Variant, Serializable {
         this.extraJavaArtifacts = extraJavaArtifacts;
         this.testedTargetVariants = testedTargetVariants;
         this.instantAppCompatible = instantAppCompatible;
-        this.desugarLibLintFiles = desugarLibLintFiles;
+        this.desugaredMethods = desugaredMethods;
     }
 
     @Override
@@ -146,8 +145,8 @@ final class VariantImpl implements Variant, Serializable {
 
     @NonNull
     @Override
-    public Collection<File> getDesugarLibLintFiles() {
-        return desugarLibLintFiles;
+    public List<String> getDesugaredMethods() {
+        return desugaredMethods;
     }
 
     @Override
@@ -169,7 +168,7 @@ final class VariantImpl implements Variant, Serializable {
                 && Objects.equals(extraJavaArtifacts, variant.extraJavaArtifacts)
                 && Objects.equals(testedTargetVariants, variant.testedTargetVariants)
                 && Objects.equals(instantAppCompatible, variant.instantAppCompatible)
-                && Objects.equals(desugarLibLintFiles, variant.desugarLibLintFiles);
+                && Objects.equals(desugaredMethods, variant.desugaredMethods);
     }
 
     @Override
@@ -185,7 +184,7 @@ final class VariantImpl implements Variant, Serializable {
                 extraJavaArtifacts,
                 testedTargetVariants,
                 instantAppCompatible,
-                desugarLibLintFiles);
+                desugaredMethods);
     }
 
     @Override
@@ -201,7 +200,7 @@ final class VariantImpl implements Variant, Serializable {
                 .add("extraJavaArtifacts", extraJavaArtifacts)
                 .add("testedTargetVariants", testedTargetVariants)
                 .add("instantAppCompatible", instantAppCompatible)
-                .add("desugarLibLintFiles", desugarLibLintFiles)
+                .add("desugaredMethods", desugaredMethods)
                 .toString();
     }
 }

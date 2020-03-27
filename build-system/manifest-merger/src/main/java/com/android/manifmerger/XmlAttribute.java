@@ -22,10 +22,10 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 import org.w3c.dom.Attr;
 
 /**
@@ -193,7 +193,7 @@ public class XmlAttribute extends XmlNode {
             AttributeOperationType operationType) {
 
         // check that this XmlAttribute's XmlDocument.Type is mergeable.
-        if (!isMergeableFromLowerPriorityNode()) {
+        if (isNonMergeableFromLowerPriorityNode()) {
             // record rejection and return.
             report.getActionRecorder()
                     .recordAttributeAction(this, Actions.ActionType.REJECTED, null);
@@ -311,7 +311,7 @@ public class XmlAttribute extends XmlNode {
             @NonNull XmlElement implicitNode) {
 
         // check that this XmlAttribute's XmlDocument.Type is mergeable.
-        if (!isMergeableFromLowerPriorityNode()) {
+        if (isNonMergeableFromLowerPriorityNode()) {
             // record rejection and return null.
             mergingReport
                     .getActionRecorder()
@@ -347,9 +347,9 @@ public class XmlAttribute extends XmlNode {
     }
 
     /**
-     * Merge this attribute value with a lower priority node attribute default value.
-     * The attribute is not explicitly set on the implicitNode, yet it exist on this attribute
-     * {@link com.android.manifmerger.XmlElement} higher priority owner.
+     * Merge this attribute value with a lower priority node attribute default value. The attribute
+     * is not explicitly set on the implicitNode, yet it exist on this attribute {@link XmlElement}
+     * higher priority owner.
      *
      * @param mergingReport report to log errors and actions.
      * @param implicitNode the lower priority node where the implicit attribute value resides.
@@ -454,13 +454,13 @@ public class XmlAttribute extends XmlNode {
     }
 
     /** Returns whether this xmlAttribute can be merged from a lower priority node */
-    private boolean isMergeableFromLowerPriorityNode() {
+    private boolean isNonMergeableFromLowerPriorityNode() {
         if (mAttributeModel != null) {
-            return mAttributeModel
+            return !mAttributeModel
                     .getMergingPolicy()
                     .canMergeWithLowerPriority(mOwnerElement.getDocument());
         }
-        return true;
+        return false;
     }
 
     @NonNull

@@ -27,11 +27,11 @@ import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.ExitHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.HeloHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacket;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacketHandler;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -41,8 +41,18 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
 
     private static final String HANDSHAKE_STRING = "JDWP-Handshake";
 
+    private final Map<Integer, JdwpDdmsPacketHandler> packetHandlers = new HashMap<>();
+
     public JdwpCommandHandler() {
         super("jdwp");
+        addPacketHandler(HeloHandler.CHUNK_TYPE, new HeloHandler());
+        addPacketHandler(ExitHandler.CHUNK_TYPE, new ExitHandler());
+    }
+
+    public JdwpCommandHandler addPacketHandler(
+            int chunkType, @NonNull JdwpDdmsPacketHandler packetHandler) {
+        packetHandlers.put(chunkType, packetHandler);
+        return this;
     }
 
     @Override
@@ -101,11 +111,6 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
         } catch (IOException ignored) {
             return;
         }
-
-        Map<Integer, JdwpDdmsPacketHandler> packetHandlers =
-                ImmutableMap.of(
-                        HeloHandler.CHUNK_TYPE, new HeloHandler(),
-                        ExitHandler.CHUNK_TYPE, new ExitHandler());
 
         // default - ignore the packet and keep listening
         JdwpDdmsPacketHandler defaultHandler = (unused, unused2, unused3) -> true;

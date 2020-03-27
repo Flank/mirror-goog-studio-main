@@ -21,9 +21,9 @@ import static org.mockito.Mockito.when;
 import com.android.SdkConstants;
 import com.android.ide.common.blame.SourceFile;
 import com.android.utils.StdLogger;
-import com.google.common.base.Optional;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
 import org.mockito.Mock;
@@ -32,9 +32,7 @@ import org.mockito.MockitoAnnotations;
 import org.w3c.dom.Attr;
 import org.xml.sax.SAXException;
 
-/**
- * Tests for {@link com.android.manifmerger.XmlAttribute} class
- */
+/** Tests for {@link XmlAttribute} class */
 public class XmlAttributeTest extends TestCase {
 
     private final ManifestModel mModel = new ManifestModel();

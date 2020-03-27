@@ -32,7 +32,6 @@ class AppAndLibNoBuildConfigTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("applibtest")
-        .withoutNdk()
         .create()
 
     @Before

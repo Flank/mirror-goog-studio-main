@@ -53,7 +53,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.artifact.ArtifactTypes;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -142,10 +142,10 @@ import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -191,6 +191,7 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessManifestForBundleTask;
 import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask;
 import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask;
+import com.android.build.gradle.tasks.ProcessMultiApkApplicationManifest;
 import com.android.build.gradle.tasks.ProcessPackagedManifestTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -439,7 +440,8 @@ public abstract class TaskManager<
 
         VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
 
-        if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()) {
+        if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()
+                && variantProperties.getVariantType().isApk()) {
             String multiDexDependency =
                     variantProperties
                                     .getServices()
@@ -979,12 +981,14 @@ public abstract class TaskManager<
         taskFactory.register(new ProcessManifestForInstantAppTask.CreationAction(creationConfig));
         taskFactory.register(new ProcessPackagedManifestTask.CreationAction(creationConfig));
 
-        return taskFactory.register(
+        taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
                         creationConfig,
                         !getAdvancedProfilingTransforms(
                                         creationConfig.getServices().getProjectOptions())
                                 .isEmpty()));
+        return taskFactory.register(
+                new ProcessMultiApkApplicationManifest.CreationAction(creationConfig));
     }
 
     protected void createProcessTestManifestTask(
@@ -2513,14 +2517,13 @@ public abstract class TaskManager<
         taskFactory.register(
                 new DataBindingMergeDependencyArtifactsTask.CreationAction(componentProperties));
 
-        globalScope.getDataBindingBuilder().setDebugLogEnabled(getLogger().isDebugEnabled());
+        DataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
         taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(componentProperties));
 
         // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
         if (dataBindingEnabled) {
-            taskFactory.register(
-                    new DataBindingExportBuildInfoTask.CreationAction(componentProperties));
+            taskFactory.register(new DataBindingTriggerTask.CreationAction(componentProperties));
             setDataBindingAnnotationProcessorParams(componentProperties);
         }
     }
@@ -2550,7 +2553,7 @@ public abstract class TaskManager<
                     DataBindingCompilerArguments.createArguments(
                             componentProperties,
                             getLogger().isDebugEnabled(),
-                            globalScope.getDataBindingBuilder().getPrintMachineReadableOutput());
+                            DataBindingBuilder.getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
         } else {
             getLogger()
@@ -2622,7 +2625,7 @@ public abstract class TaskManager<
         // republish APK to the external world.
         creationConfig
                 .getArtifacts()
-                .republish(InternalArtifactType.APK.INSTANCE, PublicArtifactType.APK.INSTANCE);
+                .republish(InternalArtifactType.APK.INSTANCE, ArtifactTypes.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.

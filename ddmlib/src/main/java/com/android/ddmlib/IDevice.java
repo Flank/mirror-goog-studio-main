@@ -68,6 +68,7 @@ public interface IDevice extends IShellEnabledDevice {
         PROCSTATS, // procstats service (dumpsys procstats) available
         ABB_EXEC, // Android Binder Bridge available
         REAL_PKG_NAME, // Reports the real package name, instead of inferring from client description
+        SKIP_VERIFICATION, // Skips verification on installation.
     }
 
     /** Device level hardware features. */
@@ -98,6 +99,8 @@ public interface IDevice extends IShellEnabledDevice {
     /** The state of a device. */
     enum DeviceState {
         BOOTLOADER("bootloader"), //$NON-NLS-1$
+        /** bootloader mode with is-userspace = true though `adb reboot fastboot` */
+        FASTBOOTD("fastbootd"), //$NON-NLS-1$
         OFFLINE("offline"), //$NON-NLS-1$
         ONLINE("device"), //$NON-NLS-1$
         RECOVERY("recovery"), //$NON-NLS-1$

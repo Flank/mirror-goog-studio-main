@@ -34,7 +34,6 @@ public class SimpleCompositeBuildTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("simpleCompositeBuild")
-                    .withoutNdk()
                     .withDependencyChecker(false)
                     .create();
 

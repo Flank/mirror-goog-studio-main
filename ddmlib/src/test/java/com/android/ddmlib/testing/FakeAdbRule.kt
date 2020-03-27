@@ -79,12 +79,13 @@ class FakeAdbRule : ExternalResource() {
                    model: String,
                    release: String,
                    sdk: String,
-                   hostConnectionType: DeviceState.HostConnectionType) {
+                   hostConnectionType: DeviceState.HostConnectionType): DeviceState {
     val startLatch = CountDownLatch(1)
     startingDevices[deviceId] = startLatch
     val device = fakeAdbServer?.connectDevice(deviceId, manufacturer, model, release, sdk, hostConnectionType)?.get()!!
     device.deviceStatus = DeviceState.DeviceStatus.ONLINE
     assertThat(startLatch.await(30, TimeUnit.SECONDS)).isTrue()
+    return device
   }
 
   val fakeAdbServerPort: Int
@@ -114,6 +115,9 @@ class FakeAdbRule : ExternalResource() {
     AndroidDebugBridge.disableFakeAdbServerMode()
     if (closeFakeAdbServerDuringCleanUp) {
       fakeAdbServer?.close()
+      if (fakeAdbServer?.awaitServerTermination(30, TimeUnit.SECONDS) == false) {
+        error("The adbServer didn't terminate in 30 seconds")
+      }
     }
   }
 }

@@ -2568,6 +2568,9 @@ public final class SdkConstants {
     /** The androidx.leanback. package prefix */
     public static final String ANDROIDX_LEANBACK_PKG = "androidx.leanback.";
 
+    /** The androidx.coordinatorlayout. package prefix */
+    public static final String ANDROIDX_COORDINATOR_LAYOUT_PKG = "androidx.coordinatorlayout.";
+
     /** The androidx.core. package prefix */
     public static final String ANDROIDX_CORE_PKG = "androidx.core.";
 
@@ -2767,6 +2770,8 @@ public final class SdkConstants {
     public static final String ANDROIDX_APPCOMPAT_LIB_ARTIFACT = "androidx.appcompat:appcompat";
     public static final String ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT =
             "androidx.constraintlayout:constraintlayout";
+    public static final String ANDROIDX_COORDINATOR_LAYOUT_LIB_ARTIFACT =
+            "androidx.coordinatorlayout:coordinatorlayout";
 
     // Annotations
     public static final AndroidxName SUPPORT_ANNOTATIONS_PREFIX =

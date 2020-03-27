@@ -28,7 +28,7 @@ public class BasicConnectedTest {
 
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("basic").withoutNdk().create();
+            GradleTestProject.builder().fromTestProject("basic").create();
 
     @Test
     public void install() throws Exception {

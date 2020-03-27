@@ -333,6 +333,21 @@ public final class DeviceImpl implements IDevice {
                 return getAdbFeatures().contains("abb_exec");
             case REAL_PKG_NAME:
                 return getVersion().compareTo(AndroidVersion.VersionCodes.Q, "R") >= 0;
+            case SKIP_VERIFICATION:
+                if (getVersion().compareTo(AndroidVersion.VersionCodes.R, null) >= 0) {
+                    return true;
+                } else if (getVersion().compareTo(AndroidVersion.VersionCodes.Q, "R") >= 0) {
+                    String sdkVersionString = getProperty("ro.build.version.preview_sdk");
+                    if (sdkVersionString != null) {
+                        try {
+                            // Only supported on R DP2+.
+                            return Integer.parseInt(sdkVersionString) > 1;
+                        } catch (NumberFormatException e) {
+                            // do nothing and fall through
+                        }
+                    }
+                }
+                return false;
             default:
                 return false;
         }

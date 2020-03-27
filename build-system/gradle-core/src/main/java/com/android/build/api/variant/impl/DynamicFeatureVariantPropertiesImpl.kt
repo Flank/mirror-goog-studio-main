@@ -104,14 +104,6 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
         Boolean::class.java,
         baseModuleMetadata.map { it.debuggable })
 
-    override val baseModuleVersionCode: Provider<Int?> = variantApiServices.nullableProviderOf(
-        Int::class.java,
-        baseModuleMetadata.map { it.versionCode?.toInt() })
-
-    override val baseModuleVersionName: Provider<String?> = variantApiServices.nullableProviderOf(
-        String::class.java,
-        baseModuleMetadata.map { it.versionName })
-
     override val featureName: Provider<String> =
         variantApiServices.providerOf(String::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
@@ -167,4 +159,34 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
             FeatureSetMetadata::class.java,
             artifact.elements.map { FeatureSetMetadata.load(it.single().asFile) })
     }
+
+    // version name is coming from the base module via a published artifact, and therefore
+    // is ready only
+    // The public API does not expose this so this is ok, but it's safer to make it read-only
+    // directly to catch potential errors.
+    // The old API has a check for this type of plugins to avoid calling set() on it.
+    override fun createVersionNameProperty(): Property<String?> =
+        internalServices.nullablePropertyOf(
+            String::class.java,
+            baseModuleMetadata.map { it.versionName },
+            "$name::versionName"
+        ).also {
+            it.disallowChanges()
+            it.finalizeValueOnRead()
+        }
+
+    // version code is coming from the base module via a published artifact, and therefore
+    // is ready only
+    // The public API does not expose this so this is ok, but it's safer to make it read-only
+    // directly to catch potential errors.
+    // The old API has a check for this type of plugins to avoid calling set() on it.
+    override fun createVersionCodeProperty() : Property<Int?> =
+        internalServices.nullablePropertyOf(
+            Int::class.java,
+            baseModuleMetadata.map { it.versionCode?.toInt() },
+            id = "$name::versionCode"
+        ).also {
+            it.disallowChanges()
+            it.finalizeValueOnRead()
+        }
 }

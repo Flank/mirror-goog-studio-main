@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.transform.Format
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -56,6 +55,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.nio.file.Path
 
 /**
  * Task that uses R8 to convert class files to dex. In case of a library variant, this
@@ -159,6 +159,11 @@ abstract class R8Task: ProguardConfigurableTask() {
     @OutputFile
     fun getProguardUsageOutput(): File? =
         mappingFile.orNull?.asFile?.resolveSibling("usage.txt")
+
+    @Optional
+    @OutputFile
+    fun getProguardConfigurationOutput(): File? =
+        mappingFile.orNull?.asFile?.resolveSibling("configuration.txt")
 
     @get:Optional
     @get:OutputFile
@@ -367,7 +372,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                     ProguardOutputFiles(
                         mappingFile.get().asFile.toPath(),
                         getProguardSeedsOutput()!!.toPath(),
-                        getProguardUsageOutput()!!.toPath())
+                        getProguardUsageOutput()!!.toPath(),
+                        getProguardConfigurationOutput()!!.toPath())
                 } else {
                     null
                 },
@@ -410,7 +416,8 @@ abstract class R8Task: ProguardConfigurableTask() {
             libConfiguration: String?,
             outputKeepRulesDir: File?
         ) {
-            LoggerWrapper.getLogger(R8Task::class.java)
+            val logger = LoggerWrapper.getLogger(R8Task::class.java)
+            logger
                 .info(
                     """
                 |R8 is a new Android code shrinker. If you experience any issues, please file a bug at
@@ -468,13 +475,15 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
 
             val outputKeepRulesFile = outputKeepRulesDir?.resolve("output")
+            // When invoking R8 we filter out missing files. E.g. javac output may not exist if
+            // there are no Java sources. See b/151605314 for details.
             runR8(
-                classes.map { it.toPath() },
+                filterMissingFiles(classes, logger),
                 output.toPath(),
-                resources.map { it.toPath() },
+                filterMissingFiles(resources, logger),
                 outputResources.toPath(),
                 bootClasspath.map { it.toPath() },
-                referencedInputs.map { it.toPath() },
+                filterMissingFiles(referencedInputs, logger),
                 toolConfig,
                 proguardConfig,
                 mainDexListConfig,
@@ -485,6 +494,16 @@ abstract class R8Task: ProguardConfigurableTask() {
                 libConfiguration,
                 outputKeepRulesFile?.toPath()
             )
+        }
+
+        private fun filterMissingFiles(files: List<File>, logger: LoggerWrapper): List<Path> {
+            return files.mapNotNull { file ->
+                if (file.exists()) file.toPath()
+                else {
+                    logger.verbose("$file is ignored as it does not exist.")
+                    null
+                }
+            }
         }
     }
 }

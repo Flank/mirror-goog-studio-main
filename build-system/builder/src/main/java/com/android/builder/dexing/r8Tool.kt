@@ -149,6 +149,7 @@ fun runR8(
         Files.deleteIfExists(proguardOutputFiles.proguardMapOutput)
         Files.deleteIfExists(proguardOutputFiles.proguardSeedsOutput)
         Files.deleteIfExists(proguardOutputFiles.proguardUsageOutput)
+        Files.deleteIfExists(proguardOutputFiles.proguardConfigurationOutput)
 
         Files.createDirectories(proguardOutputFiles.proguardMapOutput.parent)
         r8CommandBuilder.setProguardMapOutputPath(proguardOutputFiles.proguardMapOutput)
@@ -156,6 +157,11 @@ fun runR8(
             StringConsumer.FileConsumer(proguardOutputFiles.proguardSeedsOutput))
         r8CommandBuilder.setProguardUsageConsumer(
             StringConsumer.FileConsumer(proguardOutputFiles.proguardUsageOutput))
+        r8CommandBuilder.setProguardConfigurationConsumer(
+            StringConsumer.FileConsumer(
+                proguardOutputFiles.proguardConfigurationOutput
+            )
+        )
     }
 
     val compilationMode =
@@ -286,7 +292,8 @@ data class ProguardConfig(
 data class ProguardOutputFiles(
     val proguardMapOutput: Path,
     val proguardSeedsOutput: Path,
-    val proguardUsageOutput: Path
+    val proguardUsageOutput: Path,
+    val proguardConfigurationOutput: Path
 )
 
 /** Configuration parameters for the R8 tool. */

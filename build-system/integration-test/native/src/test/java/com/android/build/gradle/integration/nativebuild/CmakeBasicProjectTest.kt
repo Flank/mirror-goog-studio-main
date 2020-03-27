@@ -81,6 +81,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         android {
             compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
             buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
+            ndkPath "${project.ndkPath}"
             defaultConfig {
               externalNativeBuild {
                   cmake {
@@ -271,15 +272,11 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
     @Test
     fun `generateJsonModel task always runs`() {
         val generationRecord = project.file(".cxx/cmake/debug/armeabi-v7a/json_generation_record.json")
-        project.executor().with(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK, true).run("assembleDebug")
+        project.executor().run("assembleDebug")
         assertThat(generationRecord).exists()
         var stateModificationTime = generationRecord.lastModified()
+        project.executor().run("assembleDebug")
         assertThat(stateModificationTime).isNotEqualTo(0)
-        project.executor().with(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK, true).run("assembleDebug")
-        assertThat(generationRecord).exists()
-        assertThat(generationRecord.lastModified()).isGreaterThan(stateModificationTime)
-        stateModificationTime = generationRecord.lastModified()
-        project.executor().with(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK, false).run("assembleDebug")
         assertThat(generationRecord).exists()
         assertThat(generationRecord.lastModified()).isGreaterThan(stateModificationTime)
     }

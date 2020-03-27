@@ -64,17 +64,15 @@ data class VariantOutputImpl(
         fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
             BuiltArtifactImpl.make(
                 outputFile = outputFile.absolutePath,
-                properties = properties,
                 versionCode = versionCode,
                 versionName = versionName,
                 variantOutputConfiguration = variantOutputConfiguration
             )
     }
 
-    fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
+    fun toBuiltArtifact(outputFile: File): BuiltArtifactImpl =
         BuiltArtifactImpl.make(
             outputFile = outputFile.absolutePath,
-            properties = properties,
             versionCode = versionCode.orNull,
             versionName = versionName.orNull,
             variantOutputConfiguration = variantOutputConfiguration

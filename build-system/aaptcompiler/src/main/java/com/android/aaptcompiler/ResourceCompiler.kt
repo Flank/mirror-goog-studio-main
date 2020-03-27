@@ -70,9 +70,8 @@ fun canCompileResourceInJvm(file: File, requirePngCrunching: Boolean): Boolean {
   } else {
     val type = ResourceType.fromFolderName(pathData.resourceDirectory) ?: return false
     if (type != ResourceType.RAW) {
-      // neither png or resource xmls are accepted.
       if (pathData.extension == XML_EXTENSION) {
-        return false
+        return true
       } else if (pathData.extension.endsWith(PNG_EXTENSION)) {
         // If we don't need to perform patch9 processing or png crunching we can process.
         return pathData.extension != PATCH_9_EXTENSION && !requirePngCrunching
@@ -209,11 +208,12 @@ private fun compileFile(
   // TODO(b/139297538): Diagnostics
   //logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
   pathData.file.inputStream().use {
-    val resourceFile = ResourceFile()
-    resourceFile.name =
-      ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name)
-    resourceFile.configuration = pathData.config
-    resourceFile.source = pathData.source
+    val resourceFile = ResourceFile(
+      ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name),
+      pathData.config,
+      pathData.source,
+      ResourceFile.Type.Unknown
+    )
 
     val container = Container(outputFile.outputStream(), 1)
     container.addFileEntry(it, resourceFile)
@@ -242,7 +242,28 @@ private fun compileXml(
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   // TODO(b/139297538): Diagnostics
   //logger?.info("Compiling xml file ${pathData.file.absolutePath} to $outputFile")
-  error("XML support not yet implemented.")
+
+  val fileToProcess = ResourceFile(
+    ResourceName("", pathData.type!!, pathData.name),
+    pathData.config,
+    pathData.source,
+    ResourceFile.Type.ProtoXml
+  )
+
+  pathData.file.inputStream().use {
+    val xmlProcessor = XmlProcessor(source = pathData.source)
+    if (!xmlProcessor.process(fileToProcess, it)) {
+      // TODO(b/139297538): diagnostics
+      error("Failure to compile the resource file ${pathData.file.absoluteFile}.")
+    }
+
+    val container =
+      Container(outputFile.outputStream(), xmlProcessor.xmlResources.size)
+
+    for (resource in xmlProcessor.xmlResources) {
+      container.addXmlEntry(resource)
+    }
+  }
 }
 
 /**
