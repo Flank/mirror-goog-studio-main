@@ -56,6 +56,7 @@ import org.jetbrains.jps.model.module.JpsLibraryDependency;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleDependency;
 import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
+import org.jetbrains.jps.model.module.JpsTestModuleProperties;
 import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService;
 import org.jetbrains.jps.model.serialization.JpsProjectLoader;
 
@@ -133,6 +134,18 @@ public class ImlToIr {
 
         for (JpsModule jpsModule : testCompileGraph.getModules()) {
             IrModule module = imlToIr.get(jpsModule);
+
+            // Check if this is a test module with an associated production module that should be
+            // treated as a Kotlin friend. I.e., detect an iml line like this:
+            // <component name="TestModuleProperties" production-module="module.name" />
+            JpsTestModuleProperties testModuleProperties =
+                    JpsJavaExtensionService.getInstance().getTestModuleProperties(jpsModule);
+            if (testModuleProperties != null) {
+                JpsModule jpsFriend = testModuleProperties.getProductionModule();
+                if (jpsFriend != null) {
+                    module.addTestFriend(imlToIr.get(jpsFriend));
+                }
+            }
 
             for (JpsModuleSourceRoot folder : jpsModule.getSourceRoots()) {
                 File root = folder.getFile();

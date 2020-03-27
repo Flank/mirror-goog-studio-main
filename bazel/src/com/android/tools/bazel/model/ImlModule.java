@@ -42,6 +42,7 @@ public class ImlModule extends BazelRule {
     private Map<BazelRule, List<Tag>> dependencyTags = new HashMap<>();
     private Set<BazelRule> runtimeDeps = Sets.newLinkedHashSet();
     private Set<BazelRule> testRuntimeDeps = Sets.newLinkedHashSet();
+    private Set<BazelRule> testFriends = Sets.newLinkedHashSet();
 
     public ImlModule(Package pkg, String name) {
         super(pkg, name);
@@ -66,6 +67,7 @@ public class ImlModule extends BazelRule {
         call.setArgument("package_prefixes", prefixes);
         call.setArgument("runtime_deps", runtimeDeps);
         call.setArgument("test_runtime_deps", testRuntimeDeps);
+        call.setArgument("test_friends", testFriends);
 
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
@@ -77,6 +79,7 @@ public class ImlModule extends BazelRule {
         call.setDoNotSort("deps", reason);
         call.setDoNotSort("runtime_deps", reason);
         call.setDoNotSort("test_runtime_deps", reason);
+        call.setDoNotSort("test_friends", reason);
 
         statement.setIsManaged();
     }
@@ -115,6 +118,10 @@ public class ImlModule extends BazelRule {
             tags.remove(Tag.TEST);
         }
         dependencyTags.put(rule, tags);
+    }
+
+    public void addTestFriend(BazelRule rule) {
+        testFriends.add(rule);
     }
 
     public void addPackagePrefix(String src, String prefix) {
