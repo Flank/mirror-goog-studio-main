@@ -101,7 +101,7 @@ class FakeAdbRule : ExternalResource() {
     if (initAdbBridgeDuringSetup) {
       AndroidDebugBridge.enableFakeAdbServerMode(fakeAdbServer!!.port)
       AndroidDebugBridge.initIfNeeded(true)
-      val bridge = AndroidDebugBridge.createBridge()
+      val bridge = AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) ?: error("Could not create ADB bridge")
       val startTime = System.currentTimeMillis()
       while ((!bridge.isConnected || !bridge.hasInitialDeviceList()) &&
              System.currentTimeMillis() - startTime < TimeUnit.SECONDS.toMillis(10)) {
