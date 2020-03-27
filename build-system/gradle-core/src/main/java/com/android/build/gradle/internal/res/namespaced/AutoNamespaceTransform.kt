@@ -145,7 +145,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         val requestList = ArrayList<CompileResourceRequest>()
         val aapt2ServiceKey: Aapt2DaemonServiceKey =
             parameters.aapt2DaemonBuildService.get().registerAaptService(
-                parameters.aapt2FromMaven,
+                parameters.aapt2FromMaven.singleFile,
                 LoggerWrapper.getLogger(this::class.java)
             )
 
