@@ -61,7 +61,8 @@ public class PostValidator {
         Preconditions.checkNotNull(mergingReport);
         enforceAndroidNamespaceDeclaration(xmlDocument);
         reOrderElements(xmlDocument.getRootNode());
-        validate(xmlDocument.getRootNode(),
+        validate(
+                xmlDocument.getRootNode(),
                 mergingReport.getActionRecorder().build(),
                 mergingReport);
     }
@@ -278,10 +279,12 @@ public class PostValidator {
             @NonNull MergingReport.Builder mergingReport) {
 
         NodeOperationType operationType = xmlElement.getOperationType();
+        boolean ignoreWarning = checkIgnoreWarning(xmlElement);
         switch (operationType) {
             case REPLACE:
                 // we should find at least one rejected twin.
-                if (!isNodeOperationPresent(xmlElement, actions, ActionType.REJECTED)) {
+                if (!ignoreWarning
+                        && !isNodeOperationPresent(xmlElement, actions, ActionType.REJECTED)) {
                     mergingReport.addMessage(
                             xmlElement,
                             MergingReport.Record.Severity.WARNING,
@@ -296,7 +299,8 @@ public class PostValidator {
             case REMOVE:
             case REMOVE_ALL:
                 // we should find at least one rejected twin.
-                if (!isNodeOperationPresent(xmlElement, actions, ActionType.REJECTED)) {
+                if (!ignoreWarning
+                        && !isNodeOperationPresent(xmlElement, actions, ActionType.REJECTED)) {
                     mergingReport.addMessage(
                             xmlElement,
                             MergingReport.Record.Severity.WARNING,
@@ -309,21 +313,19 @@ public class PostValidator {
                 }
                 break;
         }
-        validateAttributes(xmlElement, actions, mergingReport);
+        validateAttributes(xmlElement, actions, mergingReport, ignoreWarning);
         validateAndroidAttributes(xmlElement, mergingReport);
         for (XmlElement child : xmlElement.getMergeableElements()) {
             validate(child, actions, mergingReport);
         }
     }
 
-
-    /**
-     * Verifies that all merging attributes on a passed xml element were applied.
-     */
+    /** Verifies that all merging attributes on a passed xml element were applied. */
     private static void validateAttributes(
             @NonNull XmlElement xmlElement,
             @NonNull Actions actions,
-            @NonNull MergingReport.Builder mergingReport) {
+            @NonNull MergingReport.Builder mergingReport,
+            boolean ignoreWarning) {
 
         @NonNull Collection<Map.Entry<XmlNode.NodeName, AttributeOperationType>> attributeOperations
                 = xmlElement.getAttributeOperations();
@@ -331,8 +333,9 @@ public class PostValidator {
                 attributeOperations) {
             switch (attributeOperation.getValue()) {
                 case REMOVE:
-                    if (!isAttributeOperationPresent(
-                            xmlElement, attributeOperation, actions, ActionType.REJECTED)) {
+                    if (!ignoreWarning
+                            && !isAttributeOperationPresent(
+                                    xmlElement, attributeOperation, actions, ActionType.REJECTED)) {
                         mergingReport.addMessage(
                                 xmlElement,
                                 MergingReport.Record.Severity.WARNING,
@@ -346,8 +349,9 @@ public class PostValidator {
                     }
                     break;
                 case REPLACE:
-                    if (!isAttributeOperationPresent(
-                            xmlElement, attributeOperation, actions, ActionType.REJECTED)) {
+                    if (!ignoreWarning
+                            && !isAttributeOperationPresent(
+                                    xmlElement, attributeOperation, actions, ActionType.REJECTED)) {
                         mergingReport.addMessage(
                                 xmlElement,
                                 MergingReport.Record.Severity.WARNING,
@@ -423,5 +427,27 @@ public class PostValidator {
                 }
             }
         }
+    }
+    /**
+     * check if the tools:ignore_warning is set
+     *
+     * @param xmlElement the current XmlElement
+     * @return whether the ignoreWarning flag is set
+     */
+    @VisibleForTesting
+    static boolean checkIgnoreWarning(@NonNull XmlElement xmlElement) {
+        @NonNull
+        Collection<Map.Entry<XmlNode.NodeName, AttributeOperationType>> attributeOperations =
+                xmlElement.getAttributeOperations();
+        for (Map.Entry<XmlNode.NodeName, AttributeOperationType> attributeOperation :
+                attributeOperations) {
+            if (attributeOperation.getValue() == AttributeOperationType.IGNORE_WARNING) {
+                if (attributeOperation.getKey().toString().equals("tools:true")) {
+                    return true;
+                }
+                return false;
+            }
+        }
+        return false;
     }
 }

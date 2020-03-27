@@ -780,6 +780,98 @@ public class PostValidatorTest extends TestCase {
                         xmlDocument.getRootNode().getXml(), "tools"));
     }
 
+    public void testWithIgnoreWarningAttribute()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <activity android:name=\"activityOne\"/>"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\" android:theme=\"@style/AppTheme\"\n"
+                        + "       tools:replace=\"theme\" tools:ignore_warning=\"true\"/>\n"
+                        + "\n"
+                        + "    <!-- with comments ! -->"
+                        + "    <uses-sdk minSdkVersion=\"14\"/>"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testIgnoreWarningAttribute"), input);
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        PostValidator.validate(xmlDocument, mergingReportBuilder);
+        for (MergingReport.Record record : mergingReportBuilder.build().getLoggingRecords()) {
+            if (record.getSeverity() == MergingReport.Record.Severity.WARNING) {
+                fail("testWithIgnoreWarningAttribute is failed");
+                return;
+            }
+        }
+    }
+
+    public void testWithoutIgnoreWarningAttribute()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <activity android:name=\"activityOne\"/>"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\" android:theme=\"@style/AppTheme\"\n"
+                        + "       tools:replace=\"theme\" tools:ignore_warning=\"false\"/>\n"
+                        + "\n"
+                        + "    <!-- with comments ! -->"
+                        + "    <uses-sdk minSdkVersion=\"14\"/>"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testIgnoreWarningAttribute"), input);
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        PostValidator.validate(xmlDocument, mergingReportBuilder);
+        assertFalse(PostValidator.checkIgnoreWarning(xmlDocument.getRootNode()));
+    }
+
+    public void testIgnoreWarningAttributeWithTwoElements()
+            throws ParserConfigurationException, SAXException, IOException {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <activity android:name=\"activityOne\" tools:replace=\"android:name\" tools:ignore_warning=\"true\"/>"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\" android:theme=\"@style/AppTheme\"\n"
+                        + "       tools:replace=\"theme\" />\n"
+                        + "\n"
+                        + "    <!-- with comments ! -->"
+                        + "    <uses-sdk minSdkVersion=\"14\"/>"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testIgnoreWarningAttribute"), input);
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        PostValidator.validate(xmlDocument, mergingReportBuilder);
+        int warningCount = 0;
+        for (MergingReport.Record record : mergingReportBuilder.build().getLoggingRecords()) {
+            if (record.getSeverity() == MergingReport.Record.Severity.WARNING
+                    && record.toString().contains("application")) {
+                warningCount++;
+            }
+        }
+        assertEquals(warningCount, 1);
+    }
+
     private XmlDocument loadXmlDoc(SourceFile location, String input)
             throws ParserConfigurationException, SAXException, IOException {
         return TestUtils.xmlDocumentFromString(location, input, mModel);
