@@ -218,7 +218,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
      * Add custom no-compress extensions.
      */
     val noCompressList = Objects.requireNonNull(config.options).noCompress
-    if (noCompressList != null) {
+    if (noCompressList != null && noCompressList.isNotEmpty()) {
         if (noCompressList.any { Strings.isNullOrEmpty(it)}) {
             // Do not compress anything.
             builder.add("--no-compress")

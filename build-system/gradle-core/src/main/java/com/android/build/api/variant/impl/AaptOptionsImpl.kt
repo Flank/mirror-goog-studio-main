@@ -24,7 +24,6 @@ import org.gradle.api.provider.Property
 class AaptOptionsImpl(
     override val ignoreAssetsPatterns: ListProperty<String>,
     override val noCompress: ListProperty<String>,
-    override val failOnMissingConfigEntry: Property<Boolean>,
     override val additionalParameters: ListProperty<String>,
     override val namespaced: Property<Boolean>
 ) : AaptOptions
@@ -43,11 +42,6 @@ internal fun initializeAaptOptionsFromDsl(
             String::class.java,
             dslAaptOptions.noCompress,
             "noCompress"
-        ),
-        failOnMissingConfigEntry = variantPropertiesApiServices.propertyOf(
-            Boolean::class.java,
-            dslAaptOptions.failOnMissingConfigEntry,
-            "failOnMissingConfigEntry"
         ),
         additionalParameters = variantPropertiesApiServices.listPropertyOf(
             String::class.java,

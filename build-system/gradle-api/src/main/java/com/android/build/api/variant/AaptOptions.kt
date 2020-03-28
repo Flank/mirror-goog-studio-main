@@ -48,15 +48,6 @@ interface AaptOptions {
     val noCompress: ListProperty<String>
 
     /**
-     * Whether aapt will return an error if it fails to find an entry for a configuration.
-     *
-     * See aapt's --error-on-missing-config-entry flag via `aapt --help`
-     *
-     * This property will be initialized with the corresponding DSL value.
-     */
-    val failOnMissingConfigEntry: Property<Boolean>
-
-    /**
      * The list of additional parameters to pass to aapt.
      *
      * This property will be initialized using the corresponding DSL value.

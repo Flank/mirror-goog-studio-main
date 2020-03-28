@@ -231,13 +231,10 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         if (variantType.isAar()) {
-            if (!globalScope.getProject().getPlugins().hasPlugin("com.android.feature")) {
-                globalScope
-                        .getDslServices()
-                        .getIssueReporter()
-                        .reportError(
-                                Type.GENERIC, "Resource shrinker cannot be used for libraries.");
-            }
+            globalScope
+                    .getDslServices()
+                    .getIssueReporter()
+                    .reportError(Type.GENERIC, "Resource shrinker cannot be used for libraries.");
             return false;
         }
 

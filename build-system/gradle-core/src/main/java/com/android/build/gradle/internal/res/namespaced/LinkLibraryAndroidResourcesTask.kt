@@ -97,7 +97,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         val request = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = manifestFile.get().asFile,
-                options = AaptOptions(null, false, null),
+                options = AaptOptions(),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.get().stream()
                     .map(Directory::getAsFile).iterator()),
                 staticLibrary = true,

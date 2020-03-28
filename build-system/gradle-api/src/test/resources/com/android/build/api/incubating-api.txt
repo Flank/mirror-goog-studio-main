@@ -694,7 +694,6 @@ com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.AaptOptions
 com.android.build.api.variant.AaptOptions.getAdditionalParameters: org.gradle.api.provider.ListProperty<java.lang.String> ()
-com.android.build.api.variant.AaptOptions.getFailOnMissingConfigEntry: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.AaptOptions.getIgnoreAssetsPatterns: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.AaptOptions.getNamespaced: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.AaptOptions.getNoCompress: org.gradle.api.provider.ListProperty<java.lang.String> ()

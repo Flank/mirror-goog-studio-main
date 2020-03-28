@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.res
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
@@ -48,6 +48,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -55,7 +56,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -72,8 +72,6 @@ import java.io.IOException
 abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
     abstract val debuggable: Property<Boolean>
-
-    private lateinit var aaptOptions: AaptOptions
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -144,7 +142,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             androidJarPath = androidJar.get().absolutePath,
             generateProtos = true,
             manifestFile = manifestFile,
-            options = aaptOptions,
+            options = AaptOptions(noCompress.get(), aaptAdditionalParameters.get()),
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
             packageId = resOffset.orNull,
@@ -193,10 +191,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
     lateinit var resConfig: Collection<String> private set
 
-    @Nested
-    fun getAaptOptionsInput(): LinkingTaskInputAaptOptions {
-        return LinkingTaskInputAaptOptions(aaptOptions)
-    }
+    @get:Input
+    abstract val noCompress: ListProperty<String>
+
+    @get:Input
+    abstract val aaptAdditionalParameters: ListProperty<String>
 
     /**
      * Returns a file collection of the directories containing the compiled remote libraries
@@ -213,9 +212,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     var minSdkVersion: Int = 1
         private set
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<LinkAndroidResForBundleTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(apkCreationConfig: ApkCreationConfig) :
+        VariantTaskCreationAction<LinkAndroidResForBundleTask, ApkCreationConfig>(
+            apkCreationConfig
         ) {
 
         override val name: String
@@ -263,7 +262,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             }
 
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
-            task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
+
+            task.noCompress.setDisallowChanges(creationConfig.aaptOptions.noCompress)
+            task.aaptAdditionalParameters.setDisallowChanges(
+                creationConfig.aaptOptions.additionalParameters
+            )
 
             task.excludeResSourcesForReleaseBundles
                 .setDisallowChanges(

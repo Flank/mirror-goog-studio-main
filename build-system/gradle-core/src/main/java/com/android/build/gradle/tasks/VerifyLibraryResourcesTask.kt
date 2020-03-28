@@ -274,7 +274,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 .addResourceDirectories(compiledDependenciesResourcesDirs)
                 .addResourceDir(resDir)
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
-                .setOptions(AaptOptions(failOnMissingConfigEntry = false))
+                .setOptions(AaptOptions())
                 .setVariantType(VariantTypeImpl.LIBRARY)
                 .setAndroidTarget(androidJar)
                 .build()

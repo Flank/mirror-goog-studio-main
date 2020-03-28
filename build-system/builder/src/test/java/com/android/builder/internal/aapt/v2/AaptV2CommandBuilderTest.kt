@@ -44,7 +44,7 @@ class AaptV2CommandBuilderTest {
         val request = AaptPackageConfig(
             androidJarPath = null,
             manifestFile = manifestFile,
-            options = AaptOptions(null, false, null),
+            options = AaptOptions(),
             resourceDirs = ImmutableList.of(resourceDir),
             staticLibrary = true,
             resourceOutputApk = staticLibApk,
@@ -87,7 +87,7 @@ class AaptV2CommandBuilderTest {
         val request = AaptPackageConfig(
             androidJarPath = androidJar.absolutePath,
             manifestFile = manifestFile,
-            options = AaptOptions(noCompress, false, null),
+            options = AaptOptions(noCompress, additionalParameters = null),
             staticLibrary = true,
             resourceOutputApk = staticLibApk,
             variantType = VariantTypeImpl.LIBRARY,
@@ -134,7 +134,7 @@ class AaptV2CommandBuilderTest {
         val request = AaptPackageConfig(
             androidJarPath = androidJar.absolutePath,
             manifestFile = manifestFile,
-            options = AaptOptions(noCompress, false, null),
+            options = AaptOptions(noCompress, additionalParameters = null),
             staticLibrary = true,
             resourceOutputApk = staticLibApk,
             variantType = VariantTypeImpl.LIBRARY,

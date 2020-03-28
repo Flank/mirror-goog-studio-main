@@ -1334,8 +1334,12 @@ public abstract class TaskManager<
             }
 
             // create the task that creates the aapt output for the bundle.
-            taskFactory.register(
-                    new LinkAndroidResForBundleTask.CreationAction(componentProperties));
+            if (componentProperties instanceof ApkCreationConfig
+                    && !componentProperties.getVariantType().isForTesting()) {
+                taskFactory.register(
+                        new LinkAndroidResForBundleTask.CreationAction(
+                                (ApkCreationConfig) componentProperties));
+            }
 
             componentProperties
                     .getArtifacts()
