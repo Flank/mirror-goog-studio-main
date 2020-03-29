@@ -17,11 +17,13 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -33,6 +35,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -92,8 +95,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     abstract val nativeDebugMetadataFiles: ConfigurableFileCollection
 
     @get:Input
-    lateinit var aaptOptionsNoCompress: Collection<String>
-        private set
+    abstract val aaptOptionsNoCompress: ListProperty<String>
 
     @get:Nested
     lateinit var bundleOptions: BundleOptions
@@ -133,7 +135,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     obfuscationMappingFile = if (obsfuscationMappingFile.isPresent) obsfuscationMappingFile.get().asFile else null,
                     integrityConfigFile = if (integrityConfigFile.isPresent) integrityConfigFile.get().asFile else null,
                     nativeDebugMetadataFiles = nativeDebugMetadataFiles.files,
-                    aaptOptionsNoCompress = aaptOptionsNoCompress,
+                    aaptOptionsNoCompress = aaptOptionsNoCompress.get(),
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
                     bundleFile = bundleFile.get().asFile,
@@ -375,8 +377,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 MergeNativeDebugMetadataTask.getNativeDebugMetadataFiles(creationConfig)
             )
 
-            task.aaptOptionsNoCompress =
-                creationConfig.globalScope.extension.aaptOptions.noCompress
+            task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.aaptOptions.noCompress)
 
             task.bundleOptions =
                 ((creationConfig.globalScope.extension as BaseAppModuleExtension).bundle).convert()

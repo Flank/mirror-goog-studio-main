@@ -79,7 +79,25 @@ class AaptOptionsTest {
     }
 
     @Test
-    fun testLinkAndroidResForBundleTaskRunsAfterAaptOptionsChanges() {
+    fun testTasksRunAfterAaptOptionsChanges_bundleDebug() {
+        testTasksRunAfterAaptOptionsChanges(
+            "bundleDebug",
+            listOf(":bundleDebugResources", ":mergeDebugJavaResource", ":packageDebugBundle")
+        )
+    }
+
+    @Test
+    fun testTasksRunAfterAaptOptionsChanges_assembleDebug() {
+        testTasksRunAfterAaptOptionsChanges(
+            "assembleDebug",
+            listOf(":mergeDebugJavaResource", ":packageDebug")
+        )
+    }
+
+    private fun testTasksRunAfterAaptOptionsChanges(
+        assembleTask: String,
+        expectedDidWorkTasks: List<String>
+    ) {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
@@ -95,16 +113,16 @@ class AaptOptionsTest {
                 """.trimIndent()
         )
 
-        project.executor().run("clean", "bundleDebug")
+        project.executor().run("clean", assembleTask)
 
-        // test that task runs when aapt options changed via the DSL
+        // test that tasks run when aapt options changed via the DSL
         TestFileUtils.searchAndReplace(project.buildFile, "foo", "baz")
-        val result1 = project.executor().run("bundleDebug")
-        assertThat(result1.didWorkTasks).containsAtLeastElementsIn(listOf(":bundleDebugResources"))
+        val result1 = project.executor().run(assembleTask)
+        assertThat(result1.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
 
-        // test that task runs when aapt options changed via the variant API
+        // test that tasks run when aapt options changed via the variant API
         TestFileUtils.searchAndReplace(project.buildFile, "bar", "qux")
-        val result2 = project.executor().run("bundleDebug")
-        assertThat(result2.didWorkTasks).containsAtLeastElementsIn(listOf(":bundleDebugResources"))
+        val result2 = project.executor().run(assembleTask)
+        assertThat(result2.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
     }
 }

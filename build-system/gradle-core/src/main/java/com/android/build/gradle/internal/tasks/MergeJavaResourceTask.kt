@@ -24,6 +24,7 @@ import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -32,11 +33,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -95,8 +98,8 @@ abstract class MergeJavaResourceTask
         private set
 
     @get:Input
-    lateinit var noCompress: List<String>
-        private set
+    @get:Optional
+    abstract val noCompress: ListProperty<String>
 
     private lateinit var intermediateDir: File
 
@@ -136,7 +139,7 @@ abstract class MergeJavaResourceTask
                     cacheDir,
                     null,
                     RESOURCES,
-                    noCompress
+                    noCompress.orNull ?: listOf()
                 )
             )
         }
@@ -162,7 +165,7 @@ abstract class MergeJavaResourceTask
                     cacheDir,
                     changedInputs,
                     RESOURCES,
-                    noCompress
+                    noCompress.orNull ?: listOf()
                 )
             )
         }
@@ -259,8 +262,10 @@ abstract class MergeJavaResourceTask
                 creationConfig.paths.getIncrementalDir("${creationConfig.name}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
-            task.noCompress =
-                creationConfig.globalScope.extension.aaptOptions.noCompress.toList().sorted()
+            if (creationConfig is ApkCreationConfig) {
+                task.noCompress.set(creationConfig.aaptOptions.noCompress)
+            }
+            task.noCompress.disallowChanges()
         }
     }
 
