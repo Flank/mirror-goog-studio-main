@@ -17,6 +17,8 @@
 package com.android.tools.mlkit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
 import java.io.File;
@@ -38,7 +40,7 @@ public class ModelInfoTest {
 
         assertEquals(modelInfo.getInputs().size(), 1);
         assertEquals(modelInfo.getOutputs().size(), 1);
-        assertEquals(modelInfo.isMetadataExisted(), true);
+        assertTrue(modelInfo.isMetadataExisted());
 
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
         assertEquals(inputTensorInfo.getContentType(), TensorInfo.ContentType.IMAGE);
@@ -72,12 +74,12 @@ public class ModelInfoTest {
 
         assertEquals(modelInfo.getInputs().size(), 1);
         assertEquals(modelInfo.getOutputs().size(), 1);
-        assertEquals(modelInfo.isMetadataExisted(), false);
+        assertFalse(modelInfo.isMetadataExisted());
         assertEquals(modelInfo.getInputs().get(0).getName(), "inputFeature0");
         assertEquals(modelInfo.getOutputs().get(0).getName(), "outputFeature0");
     }
 
-    private MetadataExtractor createExtractorFromModel(String filePath) throws IOException {
+    private static MetadataExtractor createExtractorFromModel(String filePath) throws IOException {
         File modelFile = TestUtils.getWorkspaceFile(filePath);
         RandomAccessFile f = new RandomAccessFile(modelFile, "r");
         byte[] data = new byte[(int) f.length()];

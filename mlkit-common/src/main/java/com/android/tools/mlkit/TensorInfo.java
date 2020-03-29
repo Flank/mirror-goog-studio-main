@@ -68,7 +68,7 @@ public class TensorInfo {
 
         private int id;
 
-        private FileType(int id) {
+        FileType(int id) {
             this.id = id;
         }
 
@@ -89,7 +89,7 @@ public class TensorInfo {
 
         private int id;
 
-        private ContentType(int id) {
+        ContentType(int id) {
             this.id = id;
         }
 
@@ -288,7 +288,7 @@ public class TensorInfo {
                             ? getDefaultName(source, index)
                             : formatName(tensorMetadata.name()));
             builder.setDescription(tensorMetadata.description());
-            builder.setQuantizationParams(extractor.getQuantizationParams(tensor));
+            builder.setQuantizationParams(MetadataExtractor.getQuantizationParams(tensor));
 
             NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
 

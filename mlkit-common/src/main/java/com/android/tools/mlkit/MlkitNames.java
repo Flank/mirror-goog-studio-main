@@ -35,14 +35,10 @@ public class MlkitNames {
 
     /** Format getter method to getPropertyNameAsType(i.e. getImage1AsTensorImage()). */
     public static String formatGetterName(String propertyName, String type) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-                .append("get")
-                .append(StringHelper.usLocaleCapitalize(propertyName))
-                .append("As")
-                .append(StringHelper.usLocaleCapitalize(type));
-
-        return stringBuilder.toString();
+        return "get"
+                + StringHelper.usLocaleCapitalize(propertyName)
+                + "As"
+                + StringHelper.usLocaleCapitalize(type);
     }
 
     public static String computeModelClassName(File modelFile) {

@@ -26,7 +26,7 @@ public class ModelParsingException extends Exception {
         INVALID_PARAM_NAME,
         UNSUPPORTED_SUBGRAPH,
         UNSUPPORTED_DATA_TYPE,
-        PARAM_NAME_CONFLICT;
+        PARAM_NAME_CONFLICT
     }
 
     private final ErrorType errorType;

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen;
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.InjectorUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.tools.mlkit.MetadataExtractor;
 import com.android.tools.mlkit.MlkitNames;
 import com.android.tools.mlkit.ModelInfo;
 import com.android.tools.mlkit.ModelParsingException;
@@ -44,20 +43,17 @@ import org.gradle.api.logging.Logging;
 public class TfliteModelGenerator implements ModelGenerator {
 
     private static final String FIELD_MODEL = "model";
-    private static final String FIELD_METADATA_EXTRACTOR = "extractor";
 
     private final Logger logger;
     private final String localModelPath;
-    private final MetadataExtractor extractor;
     private final ModelInfo modelInfo;
     private final String className;
     private final String packageName;
 
     public TfliteModelGenerator(File modelFile, String packageName, String localModelPath)
             throws ModelParsingException {
-        this.extractor = ModelUtils.createMetadataExtractor(modelFile);
         this.localModelPath = localModelPath;
-        this.modelInfo = ModelInfo.buildFrom(extractor);
+        this.modelInfo = ModelInfo.buildFrom(ModelUtils.createMetadataExtractor(modelFile));
         this.packageName = packageName;
         this.logger = Logging.getLogger(this.getClass());
         className = MlkitNames.computeModelClassName(modelFile);

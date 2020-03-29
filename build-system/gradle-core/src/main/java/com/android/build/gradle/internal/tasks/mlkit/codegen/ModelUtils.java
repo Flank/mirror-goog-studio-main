@@ -26,12 +26,13 @@ public class ModelUtils {
 
     public static MetadataExtractor createMetadataExtractor(File modelFile) {
         try {
-            RandomAccessFile f = new RandomAccessFile(modelFile, "r");
-            byte[] data = new byte[(int) f.length()];
-            f.readFully(data);
-            f.close();
-            ByteBuffer bb = ByteBuffer.wrap(data);
-            return new MetadataExtractor(bb);
+            try (RandomAccessFile f = new RandomAccessFile(modelFile, "r")) {
+                byte[] data = new byte[(int) f.length()];
+                f.readFully(data);
+                ByteBuffer bb = ByteBuffer.wrap(data);
+                return new MetadataExtractor(bb);
+            }
+
         } catch (IOException e) {
             return null;
         }

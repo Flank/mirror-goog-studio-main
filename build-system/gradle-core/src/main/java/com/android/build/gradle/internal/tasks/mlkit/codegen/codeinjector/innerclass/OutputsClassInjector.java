@@ -74,7 +74,8 @@ public class OutputsClassInjector implements CodeInjector<TypeSpec.Builder, List
         classBuilder.addType(builder.build());
     }
 
-    private void buildGetBufferMethod(TypeSpec.Builder classBuilder, List<TensorInfo> tensorInfos) {
+    private static void buildGetBufferMethod(
+            TypeSpec.Builder classBuilder, List<TensorInfo> tensorInfos) {
         TypeName mapType =
                 ParameterizedTypeName.get(ClassNames.MAP, ClassNames.INTEGER, ClassNames.OBJECT);
         MethodSpec.Builder getterBuilder =

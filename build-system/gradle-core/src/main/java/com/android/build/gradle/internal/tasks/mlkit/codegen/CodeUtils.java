@@ -17,24 +17,11 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen;
 
 import com.android.tools.mlkit.TensorInfo;
-import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 /** Utility methods to generate code. */
 public class CodeUtils {
-
-    private static final Map<TensorInfo.DataType, TypeName> typeToNameMap = new HashMap<>();
-
-    static {
-        typeToNameMap.put(TensorInfo.DataType.UINT8, TypeName.BYTE);
-        typeToNameMap.put(TensorInfo.DataType.FLOAT32, TypeName.FLOAT);
-        typeToNameMap.put(TensorInfo.DataType.INT64, TypeName.LONG);
-        typeToNameMap.put(TensorInfo.DataType.INT32, TypeName.INT);
-    }
 
     public static TypeName getParameterType(TensorInfo tensorInfo) {
         if (tensorInfo.getSource() == TensorInfo.Source.INPUT) {
@@ -69,16 +56,11 @@ public class CodeUtils {
     }
 
     public static String getFloatArrayString(float[] array) {
-        String localArray[] = new String[array.length];
+        String[] localArray = new String[array.length];
         for (int i = 0; i < array.length; i++) {
             localArray[i] = array[i] + "f";
         }
         return getArrayString("float", localArray);
-    }
-
-    public static String getIntArrayString(int[] array) {
-        return getArrayString(
-                "int", Arrays.stream(array).mapToObj(String::valueOf).toArray(String[]::new));
     }
 
     public static String getObjectArrayString(String[] array) {
@@ -89,7 +71,7 @@ public class CodeUtils {
         StringBuilder builder = new StringBuilder();
         builder.append(String.format("new %s[] {", type));
         for (String dim : array) {
-            builder.append(dim + ",");
+            builder.append(dim).append(",");
         }
         builder.deleteCharAt(builder.length() - 1);
         builder.append("}");
@@ -107,9 +89,5 @@ public class CodeUtils {
         } else {
             return ClassNames.TENSOR_BUFFER;
         }
-    }
-
-    public static String getUpperCamelName(String name) {
-        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, name);
     }
 }

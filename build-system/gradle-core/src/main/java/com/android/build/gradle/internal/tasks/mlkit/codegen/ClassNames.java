@@ -24,18 +24,12 @@ public class ClassNames {
     // Basic type
     public static final ClassName STRING = ClassName.get("java.lang", "String");
     public static final ClassName LIST = ClassName.get("java.util", "List");
-    public static final ClassName BITMAP = ClassName.get("android.graphics", "Bitmap");
-    public static final ClassName BYTE_BUFFER = ClassName.get("java.nio", "ByteBuffer");
     public static final ClassName CONTEXT = ClassName.get("android.content", "Context");
     public static final ClassName IO_EXCEPTION = ClassName.get("java.io", "IOException");
     public static final ClassName MAP = ClassName.get("java.util", "Map");
-    public static final ClassName FLOAT = ClassName.get("java.lang", "Float");
     public static final ClassName INTEGER = ClassName.get("java.lang", "Integer");
     public static final ClassName OBJECT = ClassName.get("java.lang", "Object");
     public static final ClassName HASH_MAP = ClassName.get("java.util", "HashMap");
-    public static final ClassName INPUT_STREAM = ClassName.get("java.io", "InputStream");
-    public static final ClassName ZIP_ARCHIVE_ENTRY =
-            ClassName.get("org.apache.commons.compress.archivers.zip", "ZipArchiveEntry");
     public static final ClassName ZIP_FILE =
             ClassName.get("org.apache.commons.compress.archivers.zip", "ZipFile");
     public static final ClassName IO_UTILS =
@@ -70,8 +64,6 @@ public class ClassNames {
             ClassName.get("org.tensorflow.lite.support.image.ops.ResizeOp", "ResizeMethod");
     public static final ClassName TENSOR_LABEL =
             ClassName.get("org.tensorflow.lite.support.label", "TensorLabel");
-    public static final ClassName METADATA_EXTRACTOR =
-            ClassName.get("org.tensorflow.lite.support.metadata", "MetadataExtractor");
     public static final ClassName MODEL =
             ClassName.get("org.tensorflow.lite.support.model", "Model");
     public static final ClassName TENSOR_BUFFER =
