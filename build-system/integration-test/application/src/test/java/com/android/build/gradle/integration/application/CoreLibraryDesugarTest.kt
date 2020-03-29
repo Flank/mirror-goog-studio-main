@@ -77,6 +77,7 @@ class CoreLibraryDesugarTest {
     private lateinit var library: GradleTestProject
 
     private val programClass = "Lcom/example/helloworld/HelloWorld;"
+    private val libraryProgramClass = "Lcom/example/lib/Calendar;"
     private val usedDesugarClass = "Lj$/util/stream/Stream;"
     private val usedDesugarClass2 = "Lj$/time/Month;"
     private val usedDesugarClass3 = "Lj$/time/LocalTime;"
@@ -434,6 +435,31 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
     }
 
+    @Test
+    fun testLibraryNonMinifyAndroidTest() {
+        // make sure library program classes are desugared in non minify debug build
+        project.executor().run(":library:assembleDebugAndroidTest")
+        val debugApk = library.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
+        val debugDex = getDexWithSpecificClass(libraryProgramClass, debugApk.allDexes)
+            ?: fail("Failed to find the dex with class name $libraryProgramClass")
+        DexClassSubject.assertThat(debugDex.classes[libraryProgramClass])
+            .hasMethodThatInvokes("getTime", "Lj$/time/Month;->firstMonthOfQuarter()Lj$/time/Month;")
+        // make sure desugared APIs used in library program classes are kept in non minify release build
+        library.buildFile.appendText("""
+
+            android.testBuildType "release"
+        """.trimIndent())
+        project.executor().run(":library:assembleReleaseAndroidTest")
+        val releaseApk = library.getApk(GradleTestProject.ApkType.of("release", "androidTest", true))
+        val releaseDex = getDexWithSpecificClass(libraryProgramClass, releaseApk.allDexes)
+            ?: fail("Failed to find the dex with class name $libraryProgramClass")
+        DexClassSubject.assertThat(releaseDex.classes[libraryProgramClass])
+            .hasMethodThatInvokes("getTime", "Lj$/time/Month;->firstMonthOfQuarter()Lj$/time/Month;")
+        val desugarDex = getDexWithSpecificClass(usedDesugarClass2, releaseApk.allDexes)
+        DexSubject.assertThat(desugarDex).isNotEqualTo(null)
+        DexSubject.assertThat(desugarDex).doesNotContainClasses(unusedDesugarClass)
+    }
+
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
         project.buildFile.appendText("""
@@ -478,7 +504,7 @@ class CoreLibraryDesugarTest {
             addClass("""
                 public class Calendar {
                     public static Month getTime() {
-                        return Month.JUNE;
+                        return Month.JUNE.firstMonthOfQuarter();
                     }
                 }
             """.trimIndent())

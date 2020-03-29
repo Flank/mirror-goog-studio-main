@@ -23,12 +23,14 @@ import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers.preferWorkers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -40,6 +42,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -79,6 +82,14 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
 
+    @get:Optional
+    @get:Input
+    abstract val coreLibDesugarConfig: Property<String>
+
+    @get:Optional
+    @get:OutputDirectory
+    abstract val coreLibDesugarKeepRules: DirectoryProperty
+
     override fun doTaskAction() {
         preferWorkers(
             projectName,
@@ -87,6 +98,11 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             enableGradleWorkers.get(),
             MoreExecutors.newDirectExecutorService()
         ).use {
+            val coreLibDesugarKeepRules =
+                coreLibDesugarKeepRules.asFile.orNull?.resolve("keepRules")?.also { file ->
+                    FileUtils.mkdirs(file.parentFile)
+                    file.createNewFile()
+                }
             it.submit(
                 DexingRunnable::class.java,
                 DexParams(
@@ -96,7 +112,9 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
                     output.get().asFile,
                     enableDesugaring = enableDesugaring.get(),
                     bootClasspath = bootClasspath.files,
-                    classpath = classpath.files
+                    classpath = classpath.files,
+                    coreLibDesugarConfig = coreLibDesugarConfig.orNull,
+                    coreLibDesugarKeepRules = coreLibDesugarKeepRules
                 )
             )
         }
@@ -113,6 +131,12 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
                 taskProvider,
                 LibraryDexingTask::output
             ).on(MultipleArtifactType.DEX)
+
+            if (variantScope.needsShrinkDesugarLibrary) {
+                variantScope.artifacts.getOperations()
+                    .setInitialProvider(taskProvider, LibraryDexingTask::coreLibDesugarKeepRules)
+                    .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
+            }
         }
 
         override fun configure(task: LibraryDexingTask) {
@@ -142,6 +166,9 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             } else {
                 task.enableDesugaring.set(false)
             }
+            if (scope.isCoreLibraryDesugaringEnabled) {
+                task.coreLibDesugarConfig.set(getDesugarLibConfig(scope.globalScope.project))
+            }
         }
     }
 }
@@ -153,7 +180,9 @@ private class DexParams(
     val output: File,
     val enableDesugaring: Boolean,
     val bootClasspath: Collection<File>,
-    val classpath: Collection<File>
+    val classpath: Collection<File>,
+    val coreLibDesugarConfig: String?,
+    val coreLibDesugarKeepRules: File?
 ) : Serializable
 
 private class DexingRunnable @Inject constructor(val params: DexParams) : Runnable {
@@ -168,8 +197,8 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
                         withDesugaring = params.enableDesugaring,
                         desugarBootclasspath = bootClasspath,
                         desugarClasspath = classpath,
-                        coreLibDesugarConfig = null,
-                        coreLibDesugarOutputKeepRuleFile = null,
+                        coreLibDesugarConfig = params.coreLibDesugarConfig,
+                        coreLibDesugarOutputKeepRuleFile = params.coreLibDesugarKeepRules,
                         messageReceiver = MessageReceiverImpl(
                             params.errorFormatMode,
                             Logging.getLogger(LibraryDexingTask::class.java)
