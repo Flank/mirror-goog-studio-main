@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock;
-
-import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.MethodSpec;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
+import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.MethodSpec
 
 /**
  * Injector to load associated file. It will create code like:
  *
  * <pre>file = FileUtil.loadLabels(getAssociatedFile(fileName))</pre>
  */
-public class AssociatedFileInjector extends CodeBlockInjector {
-
-    @Override
-    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
-        if (tensorInfo.getFileName() != null) {
+class AssociatedFileInjector : CodeBlockInjector() {
+    override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
+        if (tensorInfo.fileName != null) {
             methodBuilder.addStatement(
-                    "$L = $T.loadLabels(getAssociatedFile(context, $S))",
-                    CodeUtils.getFileName(tensorInfo.getFileName()),
-                    ClassNames.FILE_UTIL,
-                    tensorInfo.getFileName());
+                "\$L = \$T.loadLabels(getAssociatedFile(context, \$S))",
+                CodeUtils.getFileName(tensorInfo.fileName),
+                ClassNames.FILE_UTIL,
+                tensorInfo.fileName
+            )
         }
     }
 }

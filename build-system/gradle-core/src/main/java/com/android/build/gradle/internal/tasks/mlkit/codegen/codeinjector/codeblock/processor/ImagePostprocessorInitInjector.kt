@@ -13,38 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
+import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.MethodSpec
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.tools.mlkit.MetadataExtractor;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.MethodSpec;
-
-/** Injector to init a image postprocessor, which does data de-quantization. */
-public class ImagePostprocessorInitInjector extends CodeBlockInjector {
-
-    @Override
-    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
+/** Injector to init a image postprocessor, which does data de-quantization.  */
+class ImagePostprocessorInitInjector : CodeBlockInjector() {
+    override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
         methodBuilder.addCode(
-                "$T.Builder $L = new $T.Builder()\n",
-                ClassNames.IMAGE_PROCESSOR,
-                CodeUtils.getProcessorBuilderName(tensorInfo),
-                ClassNames.IMAGE_PROCESSOR);
-
-        MetadataExtractor.QuantizationParams quantizationParams =
-                tensorInfo.getQuantizationParams();
+            "\$T.Builder \$L = new \$T.Builder()\n",
+            ClassNames.IMAGE_PROCESSOR,
+            CodeUtils.getProcessorBuilderName(tensorInfo),
+            ClassNames.IMAGE_PROCESSOR
+        )
+        val quantizationParams =
+            tensorInfo.quantizationParams
         methodBuilder.addCode(
-                "  .add(new $T((float)$L, (float)$L));\n",
-                ClassNames.DEQUANTIZE_OP,
-                quantizationParams.getZeroPoint(),
-                quantizationParams.getScale());
-
+            "  .add(new \$T((float)\$L, (float)\$L));\n",
+            ClassNames.DEQUANTIZE_OP,
+            quantizationParams.zeroPoint,
+            quantizationParams.scale
+        )
         methodBuilder.addStatement(
-                "$L = $L.build()",
-                CodeUtils.getProcessorName(tensorInfo),
-                CodeUtils.getProcessorBuilderName(tensorInfo));
+            "\$L = \$L.build()",
+            CodeUtils.getProcessorName(tensorInfo),
+            CodeUtils.getProcessorBuilderName(tensorInfo)
+        )
     }
 }

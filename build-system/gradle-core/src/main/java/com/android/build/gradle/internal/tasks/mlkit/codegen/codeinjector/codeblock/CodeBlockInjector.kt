@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.MethodSpec
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.MethodSpec;
-
-/** Injects code block into method based on {@link TensorInfo} */
-public abstract class CodeBlockInjector implements CodeInjector<MethodSpec.Builder, TensorInfo> {
-
-    @Override
-    public abstract void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo);
+/** Injects code block into method based on [TensorInfo]. */
+abstract class CodeBlockInjector : CodeInjector<MethodSpec.Builder, TensorInfo> {
+    abstract override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo)
 }

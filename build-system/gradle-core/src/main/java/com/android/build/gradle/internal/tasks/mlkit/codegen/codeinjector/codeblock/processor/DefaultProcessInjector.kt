@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor;
-
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.MethodSpec;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.MethodSpec
 
 /** Injector to inject default process code, which is just a reassign. */
-public class DefaultProcessInjector extends CodeBlockInjector {
-
-    @Override
-    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
+class DefaultProcessInjector : CodeBlockInjector() {
+    override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
         methodBuilder.addStatement(
-                "$T $L = $L",
-                CodeUtils.getParameterType(tensorInfo),
-                CodeUtils.getProcessedTypeName(tensorInfo),
-                tensorInfo.getName());
+            "\$T \$L = \$L",
+            CodeUtils.getParameterType(tensorInfo),
+            CodeUtils.getProcessedTypeName(tensorInfo),
+            tensorInfo.name
+        )
     }
 }

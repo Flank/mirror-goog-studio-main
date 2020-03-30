@@ -13,38 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
+import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.tools.mlkit.MlkitNames
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.TypeSpec
+import javax.lang.model.element.Modifier
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.MlkitNames;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
-import javax.lang.model.element.Modifier;
-
-/** Inject a get method to get label. */
-public class LabelGetMethodInjector extends MethodInjector {
-
-    @Override
-    public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
-        ClassName returnType = CodeUtils.getOutputParameterType(tensorInfo);
-        MethodSpec methodSpec =
-                MethodSpec.methodBuilder(
-                                MlkitNames.formatGetterName(
-                                        tensorInfo.getName(), returnType.simpleName()))
-                        .addModifiers(Modifier.PUBLIC)
-                        .addAnnotation(ClassNames.NON_NULL)
-                        .returns(returnType)
-                        .addStatement(
-                                "return new $T($L, $L.process($L))",
-                                ClassNames.TENSOR_LABEL,
-                                CodeUtils.getFileName(tensorInfo.getFileName()),
-                                CodeUtils.getProcessorName(tensorInfo),
-                                tensorInfo.getName())
-                        .build();
-        classBuilder.addMethod(methodSpec);
+/** Injects a get method to get label. */
+class LabelGetMethodInjector : MethodInjector() {
+    override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
+        val returnType = CodeUtils.getOutputParameterType(tensorInfo)
+        val methodSpec = MethodSpec.methodBuilder(
+            MlkitNames.formatGetterName(
+                tensorInfo.name, returnType.simpleName()
+            )
+        )
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(ClassNames.NON_NULL)
+            .returns(returnType)
+            .addStatement(
+                "return new \$T(\$L, \$L.process(\$L))",
+                ClassNames.TENSOR_LABEL,
+                CodeUtils.getFileName(tensorInfo.fileName),
+                CodeUtils.getProcessorName(tensorInfo),
+                tensorInfo.name
+            )
+            .build()
+        classBuilder.addMethod(methodSpec)
     }
 }

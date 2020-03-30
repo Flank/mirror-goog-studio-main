@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.TypeSpec
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.TypeSpec;
-
-/** Inject a method for a class */
-public abstract class MethodInjector implements CodeInjector<TypeSpec.Builder, TensorInfo> {
-
-    @Override
-    public abstract void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo);
+/** Inject a method for a class.  */
+abstract class MethodInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
+    abstract override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo)
 }

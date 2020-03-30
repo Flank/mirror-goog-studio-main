@@ -13,27 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.MethodSpec
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
-
-/** Injector to inject image process code. */
-public class ImageProcessInjector extends CodeBlockInjector {
-
-    @Override
-    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
-        TypeName typeName = CodeUtils.getParameterType(tensorInfo);
-        String processedTypeName = CodeUtils.getProcessedTypeName(tensorInfo);
+/** Injector to inject image process code.  */
+class ImageProcessInjector : CodeBlockInjector() {
+    override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
+        val typeName = CodeUtils.getParameterType(tensorInfo)
+        val processedTypeName = CodeUtils.getProcessedTypeName(tensorInfo)
         methodBuilder.addStatement(
-                "$T $L = $L.process($L)",
-                typeName,
-                processedTypeName,
-                CodeUtils.getProcessorName(tensorInfo),
-                tensorInfo.getName());
+            "\$T \$L = \$L.process(\$L)",
+            typeName,
+            processedTypeName,
+            CodeUtils.getProcessorName(tensorInfo),
+            tensorInfo.name
+        )
     }
 }

@@ -14,66 +14,64 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector;
+@file:JvmName("InjectorUtils")
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.AssociatedFileInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPostprocessorInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPreprocessorInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultProcessInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePostprocessorInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePreprocessorInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImageProcessInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.OutputsClassInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultGetMethodInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.LabelGetMethodInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector;
-import com.android.tools.mlkit.TensorInfo;
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 
-/** Utils to select injector based on {@link TensorInfo} */
-public class InjectorUtils {
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.AssociatedFileInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPostprocessorInitInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPreprocessorInitInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultProcessInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePostprocessorInitInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePreprocessorInitInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImageProcessInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.OutputsClassInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultGetMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.LabelGetMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector
+import com.android.tools.mlkit.TensorInfo
 
-    public static FieldInjector getFieldInjector() {
-        return new FieldInjector();
+fun getFieldInjector(): FieldInjector {
+    return FieldInjector()
+}
+
+fun getOutputsClassInjector(): OutputsClassInjector {
+    return OutputsClassInjector()
+}
+
+fun getAssociatedFileInjector(): AssociatedFileInjector {
+    return AssociatedFileInjector()
+}
+
+fun getGetterMethodInjector(tensorInfo: TensorInfo): MethodInjector {
+    return if (tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
+        LabelGetMethodInjector()
+    } else {
+        DefaultGetMethodInjector()
     }
+}
 
-    public static OutputsClassInjector getOutputsClassInjector() {
-        return new OutputsClassInjector();
+fun getInputProcessorInjector(tensorInfo: TensorInfo): CodeBlockInjector {
+    return if (tensorInfo.contentType == TensorInfo.ContentType.IMAGE) {
+        ImagePreprocessorInitInjector()
+    } else {
+        DefaultPreprocessorInitInjector()
     }
+}
 
-    public static AssociatedFileInjector getAssociatedFileInjector() {
-        return new AssociatedFileInjector();
+fun getProcessInjector(tensorInfo: TensorInfo): CodeBlockInjector {
+    return if (tensorInfo.contentType == TensorInfo.ContentType.IMAGE) {
+        ImageProcessInjector()
+    } else {
+        DefaultProcessInjector()
     }
+}
 
-    public static MethodInjector getGetterMethodInjector(TensorInfo tensorInfo) {
-        if (tensorInfo.getFileType() == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
-            return new LabelGetMethodInjector();
-        } else {
-            return new DefaultGetMethodInjector();
-        }
-    }
-
-    public static CodeBlockInjector getInputProcessorInjector(TensorInfo tensorInfo) {
-        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-            return new ImagePreprocessorInitInjector();
-        } else {
-            return new DefaultPreprocessorInitInjector();
-        }
-    }
-
-    public static CodeBlockInjector getProcessInjector(TensorInfo tensorInfo) {
-        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-            return new ImageProcessInjector();
-        } else {
-            return new DefaultProcessInjector();
-        }
-    }
-
-    public static CodeBlockInjector getOutputProcessorInjector(TensorInfo tensorInfo) {
-        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-            return new ImagePostprocessorInitInjector();
-        } else {
-            return new DefaultPostprocessorInitInjector();
-        }
+fun getOutputProcessorInjector(tensorInfo: TensorInfo): CodeBlockInjector {
+    return if (tensorInfo.contentType == TensorInfo.ContentType.IMAGE) {
+        ImagePostprocessorInitInjector()
+    } else {
+        DefaultPostprocessorInitInjector()
     }
 }

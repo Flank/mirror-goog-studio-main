@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector;
-
-/** Used to inject code snippet */
-public interface CodeInjector<T, S> {
-
-    void inject(T t, S s);
+/** Used to inject code snippet.  */
+interface CodeInjector<T, S> {
+    fun inject(t: T, s: S)
 }

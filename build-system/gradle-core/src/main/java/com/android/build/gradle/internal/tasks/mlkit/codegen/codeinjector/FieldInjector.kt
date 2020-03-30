@@ -13,55 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
+import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.FieldSpec
+import com.squareup.javapoet.TypeSpec
+import javax.lang.model.element.Modifier
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.TypeSpec;
-import javax.lang.model.element.Modifier;
-
-/** Inject fields based on {@link TensorInfo} */
-public class FieldInjector implements CodeInjector<TypeSpec.Builder, TensorInfo> {
-
-    @Override
-    public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
-        if (!tensorInfo.isMetadataExisted()) {
-            return;
+/** Inject fields based on [TensorInfo].  */
+class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
+    override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
+        if (!tensorInfo.isMetadataExisted) {
+            return
         }
 
-        if (tensorInfo.getFileName() != null) {
-            FieldSpec fieldName =
-                    FieldSpec.builder(
-                                    ClassNames.LIST_OF_STRING,
-                                    CodeUtils.getFileName(tensorInfo.getFileName()))
-                            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                            .addAnnotation(ClassNames.NON_NULL)
-                            .build();
-            classBuilder.addField(fieldName);
+        if (tensorInfo.fileName != null) {
+            val fieldName = FieldSpec.builder(
+                ClassNames.LIST_OF_STRING,
+                CodeUtils.getFileName(tensorInfo.fileName)
+            )
+                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                .addAnnotation(ClassNames.NON_NULL)
+                .build()
+            classBuilder.addField(fieldName)
         }
 
         // Add preprocessor and postprocessor fields.
-        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-            FieldSpec fieldName =
-                    FieldSpec.builder(
-                                    ClassNames.IMAGE_PROCESSOR,
-                                    CodeUtils.getProcessorName(tensorInfo))
-                            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                            .addAnnotation(ClassNames.NON_NULL)
-                            .build();
-            classBuilder.addField(fieldName);
+        if (tensorInfo.contentType == TensorInfo.ContentType.IMAGE) {
+            val fieldName = FieldSpec.builder(
+                ClassNames.IMAGE_PROCESSOR,
+                CodeUtils.getProcessorName(tensorInfo)
+            )
+                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                .addAnnotation(ClassNames.NON_NULL)
+                .build()
+            classBuilder.addField(fieldName)
         } else {
-            FieldSpec fieldName =
-                    FieldSpec.builder(
-                                    ClassNames.TENSOR_PROCESSOR,
-                                    CodeUtils.getProcessorName(tensorInfo))
-                            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                            .addAnnotation(ClassNames.NON_NULL)
-                            .build();
-            classBuilder.addField(fieldName);
+            val fieldName = FieldSpec.builder(
+                ClassNames.TENSOR_PROCESSOR,
+                CodeUtils.getProcessorName(tensorInfo)
+            )
+                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                .addAnnotation(ClassNames.NON_NULL)
+                .build()
+            classBuilder.addField(fieldName)
         }
     }
 }
