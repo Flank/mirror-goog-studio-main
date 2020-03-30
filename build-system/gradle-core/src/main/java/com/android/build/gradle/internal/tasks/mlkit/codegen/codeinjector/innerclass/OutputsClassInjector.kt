@@ -16,9 +16,10 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getGetterMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getDataType
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
 import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.FieldSpec
@@ -28,7 +29,7 @@ import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
 
-/** Injector to inject output class.  */
+/** Injector to inject output class. */
 class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfos: List<TensorInfo>) {
         val builder = TypeSpec.classBuilder(MlkitNames.OUTPUTS)
@@ -37,7 +38,7 @@ class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
         // Add necessary fields.
         for (tensorInfo in tensorInfos) {
             val fieldSpec =
-                FieldSpec.builder(CodeUtils.getParameterType(tensorInfo), tensorInfo.name)
+                FieldSpec.builder(getParameterType(tensorInfo), tensorInfo.name)
                     .addModifiers(Modifier.PRIVATE)
                     .build()
             builder.addField(fieldSpec)
@@ -53,7 +54,7 @@ class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
                 tensorInfo.name,
                 index,
                 ClassNames.DATA_TYPE,
-                CodeUtils.getDataType(tensorInfo.dataType)
+                getDataType(tensorInfo.dataType)
             )
         }
         builder.addMethod(constructorBuilder.build())

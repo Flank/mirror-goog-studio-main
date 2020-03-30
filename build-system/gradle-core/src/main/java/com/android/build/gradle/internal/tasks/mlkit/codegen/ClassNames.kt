@@ -13,59 +13,131 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen;
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.ParameterizedTypeName
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterizedTypeName;
+/** Stores class names used by code generator. */
+object ClassNames {
+    // Basic types
+    @JvmField
+    val STRING: ClassName =
+        ClassName.get("java.lang", "String")
 
-/** Stores class names used by code generator */
-public class ClassNames {
-    // Basic type
-    public static final ClassName STRING = ClassName.get("java.lang", "String");
-    public static final ClassName LIST = ClassName.get("java.util", "List");
-    public static final ClassName CONTEXT = ClassName.get("android.content", "Context");
-    public static final ClassName IO_EXCEPTION = ClassName.get("java.io", "IOException");
-    public static final ClassName MAP = ClassName.get("java.util", "Map");
-    public static final ClassName INTEGER = ClassName.get("java.lang", "Integer");
-    public static final ClassName OBJECT = ClassName.get("java.lang", "Object");
-    public static final ClassName HASH_MAP = ClassName.get("java.util", "HashMap");
-    public static final ClassName ZIP_FILE =
-            ClassName.get("org.apache.commons.compress.archivers.zip", "ZipFile");
-    public static final ClassName IO_UTILS =
-            ClassName.get("org.apache.commons.compress.utils", "IOUtils");
-    public static final ClassName SEEKABLE_IN_MEMORY_BYTE_CHANNEL =
-            ClassName.get("org.apache.commons.compress.utils", "SeekableInMemoryByteChannel");
-    public static final ParameterizedTypeName LIST_OF_STRING =
-            ParameterizedTypeName.get(LIST, STRING);
-    public static final ClassName NON_NULL = ClassName.get("androidx.annotation", "NonNull");
+    @JvmField
+    val LIST: ClassName =
+        ClassName.get("java.util", "List")
 
-    // ML model related type
-    public static final ClassName DATA_TYPE = ClassName.get("org.tensorflow.lite", "DataType");
-    public static final ClassName FILE_UTIL =
-            ClassName.get("org.tensorflow.lite.support.common", "FileUtil");
-    public static final ClassName TENSOR_PROCESSOR =
-            ClassName.get("org.tensorflow.lite.support.common", "TensorProcessor");
-    public static final ClassName CAST_OP =
-            ClassName.get("org.tensorflow.lite.support.common.ops", "CastOp");
-    public static final ClassName DEQUANTIZE_OP =
-            ClassName.get("org.tensorflow.lite.support.common.ops", "DequantizeOp");
-    public static final ClassName NORMALIZE_OP =
-            ClassName.get("org.tensorflow.lite.support.common.ops", "NormalizeOp");
-    public static final ClassName QUANTIZE_OP =
-            ClassName.get("org.tensorflow.lite.support.common.ops", "QuantizeOp");
-    public static final ClassName IMAGE_PROCESSOR =
-            ClassName.get("org.tensorflow.lite.support.image", "ImageProcessor");
-    public static final ClassName TENSOR_IMAGE =
-            ClassName.get("org.tensorflow.lite.support.image", "TensorImage");
-    public static final ClassName RESIZE_OP =
-            ClassName.get("org.tensorflow.lite.support.image.ops", "ResizeOp");
-    public static final ClassName RESIZE_METHOD =
-            ClassName.get("org.tensorflow.lite.support.image.ops.ResizeOp", "ResizeMethod");
-    public static final ClassName TENSOR_LABEL =
-            ClassName.get("org.tensorflow.lite.support.label", "TensorLabel");
-    public static final ClassName MODEL =
-            ClassName.get("org.tensorflow.lite.support.model", "Model");
-    public static final ClassName TENSOR_BUFFER =
-            ClassName.get("org.tensorflow.lite.support.tensorbuffer", "TensorBuffer");
+    @JvmField
+    val CONTEXT: ClassName =
+        ClassName.get("android.content", "Context")
+
+    @JvmField
+    val IO_EXCEPTION: ClassName =
+        ClassName.get("java.io", "IOException")
+
+    @JvmField
+    val MAP: ClassName =
+        ClassName.get("java.util", "Map")
+
+    @JvmField
+    val INTEGER: ClassName =
+        ClassName.get("java.lang", "Integer")
+
+    @JvmField
+    val OBJECT: ClassName =
+        ClassName.get("java.lang", "Object")
+
+    @JvmField
+    val HASH_MAP: ClassName =
+        ClassName.get("java.util", "HashMap")
+
+    @JvmField
+    val ZIP_FILE: ClassName =
+        ClassName.get("org.apache.commons.compress.archivers.zip", "ZipFile")
+
+    @JvmField
+    val IO_UTILS: ClassName =
+        ClassName.get("org.apache.commons.compress.utils", "IOUtils")
+
+    @JvmField
+    val SEEKABLE_IN_MEMORY_BYTE_CHANNEL: ClassName =
+        ClassName.get(
+            "org.apache.commons.compress.utils",
+            "SeekableInMemoryByteChannel"
+        )
+
+    @JvmField
+    val LIST_OF_STRING: ParameterizedTypeName = ParameterizedTypeName.get(
+        LIST,
+        STRING
+    )
+
+    @JvmField
+    val NON_NULL: ClassName =
+        ClassName.get("androidx.annotation", "NonNull")
+
+    // ML model related types
+    @JvmField
+    val DATA_TYPE: ClassName =
+        ClassName.get("org.tensorflow.lite", "DataType")
+
+    @JvmField
+    val FILE_UTIL: ClassName =
+        ClassName.get("org.tensorflow.lite.support.common", "FileUtil")
+
+    @JvmField
+    val TENSOR_PROCESSOR: ClassName =
+        ClassName.get("org.tensorflow.lite.support.common", "TensorProcessor")
+
+    @JvmField
+    val CAST_OP: ClassName =
+        ClassName.get("org.tensorflow.lite.support.common.ops", "CastOp")
+
+    @JvmField
+    val DEQUANTIZE_OP: ClassName = ClassName.get(
+        "org.tensorflow.lite.support.common.ops",
+        "DequantizeOp"
+    )
+
+    @JvmField
+    val NORMALIZE_OP: ClassName =
+        ClassName.get("org.tensorflow.lite.support.common.ops", "NormalizeOp")
+
+    @JvmField
+    val QUANTIZE_OP: ClassName =
+        ClassName.get("org.tensorflow.lite.support.common.ops", "QuantizeOp")
+
+    @JvmField
+    val IMAGE_PROCESSOR: ClassName =
+        ClassName.get("org.tensorflow.lite.support.image", "ImageProcessor")
+
+    @JvmField
+    val TENSOR_IMAGE: ClassName =
+        ClassName.get("org.tensorflow.lite.support.image", "TensorImage")
+
+    @JvmField
+    val RESIZE_OP: ClassName =
+        ClassName.get("org.tensorflow.lite.support.image.ops", "ResizeOp")
+
+    @JvmField
+    val RESIZE_METHOD: ClassName = ClassName.get(
+        "org.tensorflow.lite.support.image.ops.ResizeOp",
+        "ResizeMethod"
+    )
+
+    @JvmField
+    val TENSOR_LABEL: ClassName =
+        ClassName.get("org.tensorflow.lite.support.label", "TensorLabel")
+
+    @JvmField
+    val MODEL: ClassName =
+        ClassName.get("org.tensorflow.lite.support.model", "Model")
+
+    @JvmField
+    val TENSOR_BUFFER: ClassName = ClassName.get(
+        "org.tensorflow.lite.support.tensorbuffer",
+        "TensorBuffer"
+    )
 }

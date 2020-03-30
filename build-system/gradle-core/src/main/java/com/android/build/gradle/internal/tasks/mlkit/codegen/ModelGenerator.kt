@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.tasks.mlkit.codegen
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen;
+import org.gradle.api.file.DirectoryProperty
 
-import org.gradle.api.file.DirectoryProperty;
-
-/** Generate boilerplate code for ML model */
-public interface ModelGenerator {
+/** Generates boilerplate code for ML models. */
+interface ModelGenerator {
     /**
      * Generate concrete classes for Gradle to build.
      *
      * @param outputDirProperty where to store generated classes.
      */
-    void generateBuildClass(DirectoryProperty outputDirProperty);
+    fun generateBuildClass(outputDirProperty: DirectoryProperty)
 }

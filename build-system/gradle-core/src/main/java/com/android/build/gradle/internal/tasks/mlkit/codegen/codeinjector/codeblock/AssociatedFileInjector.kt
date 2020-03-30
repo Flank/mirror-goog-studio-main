@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getFileName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
 
@@ -30,7 +30,7 @@ class AssociatedFileInjector : CodeBlockInjector() {
         if (tensorInfo.fileName != null) {
             methodBuilder.addStatement(
                 "\$L = \$T.loadLabels(getAssociatedFile(context, \$S))",
-                CodeUtils.getFileName(tensorInfo.fileName),
+                getFileName(tensorInfo.fileName),
                 ClassNames.FILE_UTIL,
                 tensorInfo.fileName
             )

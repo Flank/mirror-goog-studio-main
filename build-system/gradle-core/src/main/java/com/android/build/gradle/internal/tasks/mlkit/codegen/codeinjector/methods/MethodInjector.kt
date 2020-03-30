@@ -19,7 +19,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeIn
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.TypeSpec
 
-/** Inject a method for a class.  */
+/** Inject a method for a class. */
 abstract class MethodInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
     abstract override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo)
 }

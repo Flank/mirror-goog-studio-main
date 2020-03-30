@@ -16,8 +16,10 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getFloatArrayString
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorBuilderName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
 
@@ -29,15 +31,15 @@ class DefaultPreprocessorInitInjector : CodeBlockInjector() {
         methodBuilder.addCode(
             "\$T.Builder \$L = new \$T.Builder()\n",
             ClassNames.TENSOR_PROCESSOR,
-            CodeUtils.getProcessorBuilderName(tensorInfo),
+            getProcessorBuilderName(tensorInfo),
             ClassNames.TENSOR_PROCESSOR
         )
         val normalizationParams = tensorInfo.normalizationParams
         methodBuilder.addCode(
             "  .add(new \$T(\$L, \$L))\n",
             ClassNames.NORMALIZE_OP,
-            CodeUtils.getFloatArrayString(normalizationParams.mean),
-            CodeUtils.getFloatArrayString(normalizationParams.std)
+            getFloatArrayString(normalizationParams.mean),
+            getFloatArrayString(normalizationParams.std)
         )
         val quantizationParams =
             tensorInfo.quantizationParams
@@ -49,8 +51,8 @@ class DefaultPreprocessorInitInjector : CodeBlockInjector() {
         )
         methodBuilder.addStatement(
             "\$L = \$L.build()",
-            CodeUtils.getProcessorName(tensorInfo),
-            CodeUtils.getProcessorBuilderName(tensorInfo)
+            getProcessorName(tensorInfo),
+            getProcessorBuilderName(tensorInfo)
         )
     }
 }

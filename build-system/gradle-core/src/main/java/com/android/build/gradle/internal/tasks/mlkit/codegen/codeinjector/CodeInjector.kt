@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 
-/** Used to inject code snippet.  */
+/** Used to inject code snippet. */
 interface CodeInjector<T, S> {
     fun inject(t: T, s: S)
 }

@@ -15,21 +15,23 @@
  */
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessedTypeName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
 
 /** Injector to inject image process code.  */
 class ImageProcessInjector : CodeBlockInjector() {
     override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
-        val typeName = CodeUtils.getParameterType(tensorInfo)
-        val processedTypeName = CodeUtils.getProcessedTypeName(tensorInfo)
+        val typeName = getParameterType(tensorInfo)
+        val processedTypeName = getProcessedTypeName(tensorInfo)
         methodBuilder.addStatement(
             "\$T \$L = \$L.process(\$L)",
             typeName,
             processedTypeName,
-            CodeUtils.getProcessorName(tensorInfo),
+            getProcessorName(tensorInfo),
             tensorInfo.name
         )
     }

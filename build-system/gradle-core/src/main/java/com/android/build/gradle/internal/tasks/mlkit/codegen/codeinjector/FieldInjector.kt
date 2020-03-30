@@ -16,13 +16,14 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getFileName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
 
-/** Inject fields based on [TensorInfo].  */
+/** Inject fields based on [TensorInfo]. */
 class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
         if (!tensorInfo.isMetadataExisted) {
@@ -32,7 +33,7 @@ class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
         if (tensorInfo.fileName != null) {
             val fieldName = FieldSpec.builder(
                 ClassNames.LIST_OF_STRING,
-                CodeUtils.getFileName(tensorInfo.fileName)
+                getFileName(tensorInfo.fileName)
             )
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addAnnotation(ClassNames.NON_NULL)
@@ -44,7 +45,7 @@ class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
         if (tensorInfo.contentType == TensorInfo.ContentType.IMAGE) {
             val fieldName = FieldSpec.builder(
                 ClassNames.IMAGE_PROCESSOR,
-                CodeUtils.getProcessorName(tensorInfo)
+                getProcessorName(tensorInfo)
             )
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addAnnotation(ClassNames.NON_NULL)
@@ -53,7 +54,7 @@ class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
         } else {
             val fieldName = FieldSpec.builder(
                 ClassNames.TENSOR_PROCESSOR,
-                CodeUtils.getProcessorName(tensorInfo)
+                getProcessorName(tensorInfo)
             )
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addAnnotation(ClassNames.NON_NULL)

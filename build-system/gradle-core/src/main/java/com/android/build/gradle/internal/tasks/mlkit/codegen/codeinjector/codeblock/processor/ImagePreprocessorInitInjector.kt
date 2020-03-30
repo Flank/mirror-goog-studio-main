@@ -16,8 +16,11 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getDataType
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getFloatArrayString
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorBuilderName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
 
@@ -30,7 +33,7 @@ class ImagePreprocessorInitInjector : CodeBlockInjector() {
         methodBuilder.addCode(
             "\$T.Builder \$L = new \$T.Builder()\n",
             ClassNames.IMAGE_PROCESSOR,
-            CodeUtils.getProcessorBuilderName(tensorInfo),
+            getProcessorBuilderName(tensorInfo),
             ClassNames.IMAGE_PROCESSOR
         )
         methodBuilder.addCode(
@@ -44,8 +47,8 @@ class ImagePreprocessorInitInjector : CodeBlockInjector() {
         methodBuilder.addCode(
             "  .add(new \$T(\$L, \$L))\n",
             ClassNames.NORMALIZE_OP,
-            CodeUtils.getFloatArrayString(normalizationParams.mean),
-            CodeUtils.getFloatArrayString(normalizationParams.std)
+            getFloatArrayString(normalizationParams.mean),
+            getFloatArrayString(normalizationParams.std)
         )
         val quantizationParams =
             tensorInfo.quantizationParams
@@ -59,12 +62,12 @@ class ImagePreprocessorInitInjector : CodeBlockInjector() {
             "  .add(new \$T(\$T.\$L));\n",
             ClassNames.CAST_OP,
             ClassNames.DATA_TYPE,
-            CodeUtils.getDataType(tensorInfo.dataType)
+            getDataType(tensorInfo.dataType)
         )
         methodBuilder.addStatement(
             "\$L = \$L.build()",
-            CodeUtils.getProcessorName(tensorInfo),
-            CodeUtils.getProcessorBuilderName(tensorInfo)
+            getProcessorName(tensorInfo),
+            getProcessorBuilderName(tensorInfo)
         )
     }
 }

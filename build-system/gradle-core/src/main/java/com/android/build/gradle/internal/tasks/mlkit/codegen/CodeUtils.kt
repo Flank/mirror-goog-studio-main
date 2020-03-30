@@ -14,80 +14,76 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks.mlkit.codegen;
+@file:JvmName("CodeUtils")
 
-import com.android.tools.mlkit.TensorInfo;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
+package com.android.build.gradle.internal.tasks.mlkit.codegen
 
-/** Utility methods to generate code. */
-public class CodeUtils {
+import com.android.tools.mlkit.TensorInfo
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.TypeName
 
-    public static TypeName getParameterType(TensorInfo tensorInfo) {
-        if (tensorInfo.getSource() == TensorInfo.Source.INPUT) {
-            if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-                return ClassNames.TENSOR_IMAGE;
-            } else {
-                return ClassNames.TENSOR_BUFFER;
-            }
+fun getParameterType(tensorInfo: TensorInfo): TypeName {
+    return if (tensorInfo.source == TensorInfo.Source.INPUT) {
+        if (tensorInfo.contentType == TensorInfo.ContentType.IMAGE) {
+            ClassNames.TENSOR_IMAGE
         } else {
-            return ClassNames.TENSOR_BUFFER;
+            ClassNames.TENSOR_BUFFER
         }
+    } else {
+        ClassNames.TENSOR_BUFFER
     }
+}
 
-    public static String getFileName(String name) {
-        return name.replaceAll("\\..*", "") + "Data";
+fun getFileName(name: String): String {
+    return name.replace("\\..*".toRegex(), "") + "Data"
+}
+
+fun getProcessorName(tensorInfo: TensorInfo): String {
+    return if (tensorInfo.source == TensorInfo.Source.INPUT) {
+        tensorInfo.name + "Processor"
+    } else {
+        tensorInfo.name + "PostProcessor"
     }
+}
 
-    public static String getProcessorName(TensorInfo tensorInfo) {
-        if (tensorInfo.getSource() == TensorInfo.Source.INPUT) {
-            return tensorInfo.getName() + "Processor";
-        } else {
-            return tensorInfo.getName() + "PostProcessor";
-        }
+fun getProcessedTypeName(tensorInfo: TensorInfo): String {
+    return "processed" + tensorInfo.name
+}
+
+fun getProcessorBuilderName(tensorInfo: TensorInfo): String {
+    return getProcessorName(tensorInfo) + "Builder"
+}
+
+fun getFloatArrayString(array: FloatArray): String {
+    return getArrayString("float", array.map { it.toString() + "f" }.toTypedArray())
+}
+
+fun getObjectArrayString(array: Array<String>): String {
+    return getArrayString("Object", array)
+}
+
+private fun getArrayString(
+    type: String,
+    array: Array<String>
+): String {
+    val builder = StringBuilder()
+    builder.append(String.format("new %s[] {", type))
+    for (dim in array) {
+        builder.append(dim).append(",")
     }
+    builder.deleteCharAt(builder.length - 1)
+    builder.append("}")
+    return builder.toString()
+}
 
-    public static String getProcessedTypeName(TensorInfo tensorInfo) {
-        return "processed" + tensorInfo.getName();
-    }
+fun getDataType(type: TensorInfo.DataType): String {
+    return type.toString()
+}
 
-    public static String getProcessorBuilderName(TensorInfo tensorInfo) {
-        return getProcessorName(tensorInfo) + "Builder";
-    }
-
-    public static String getFloatArrayString(float[] array) {
-        String[] localArray = new String[array.length];
-        for (int i = 0; i < array.length; i++) {
-            localArray[i] = array[i] + "f";
-        }
-        return getArrayString("float", localArray);
-    }
-
-    public static String getObjectArrayString(String[] array) {
-        return getArrayString("Object", array);
-    }
-
-    private static String getArrayString(String type, String[] array) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(String.format("new %s[] {", type));
-        for (String dim : array) {
-            builder.append(dim).append(",");
-        }
-        builder.deleteCharAt(builder.length() - 1);
-        builder.append("}");
-
-        return builder.toString();
-    }
-
-    public static String getDataType(TensorInfo.DataType type) {
-        return type.toString();
-    }
-
-    public static ClassName getOutputParameterType(TensorInfo tensorInfo) {
-        if (tensorInfo.getFileType() == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
-            return ClassNames.TENSOR_LABEL;
-        } else {
-            return ClassNames.TENSOR_BUFFER;
-        }
+fun getOutputParameterType(tensorInfo: TensorInfo): ClassName {
+    return if (tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
+        ClassNames.TENSOR_LABEL
+    } else {
+        ClassNames.TENSOR_BUFFER
     }
 }

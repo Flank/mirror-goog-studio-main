@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
 import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
@@ -29,8 +29,7 @@ import javax.lang.model.element.Modifier
  */
 class DefaultGetMethodInjector : MethodInjector() {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
-        val returnType =
-            CodeUtils.getOutputParameterType(tensorInfo)
+        val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
             MlkitNames.formatGetterName(
                 tensorInfo.name, returnType.simpleName()

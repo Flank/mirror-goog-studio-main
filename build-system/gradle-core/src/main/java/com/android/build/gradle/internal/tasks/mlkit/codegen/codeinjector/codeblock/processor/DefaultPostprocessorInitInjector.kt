@@ -16,8 +16,9 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorBuilderName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
 
@@ -27,7 +28,7 @@ class DefaultPostprocessorInitInjector : CodeBlockInjector() {
         methodBuilder.addCode(
             "\$T.Builder \$L = new \$T.Builder()\n",
             ClassNames.TENSOR_PROCESSOR,
-            CodeUtils.getProcessorBuilderName(tensorInfo),
+            getProcessorBuilderName(tensorInfo),
             ClassNames.TENSOR_PROCESSOR
         )
         val quantizationParams =
@@ -40,8 +41,8 @@ class DefaultPostprocessorInitInjector : CodeBlockInjector() {
         )
         methodBuilder.addStatement(
             "\$L = \$L.build()",
-            CodeUtils.getProcessorName(tensorInfo),
-            CodeUtils.getProcessorBuilderName(tensorInfo)
+            getProcessorName(tensorInfo),
+            getProcessorBuilderName(tensorInfo)
         )
     }
 }
