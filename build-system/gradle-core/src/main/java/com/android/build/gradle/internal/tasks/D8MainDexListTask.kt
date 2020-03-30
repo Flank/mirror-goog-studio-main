@@ -85,7 +85,8 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
 
-        val programClasses = inputClasses.files
+        // Javac output may be missing if there are no .java sources, so filter missing b/152759930.
+        val programClasses = inputClasses.files.filter { it.exists() }
         val libraryFilesNotInInputs =
             libraryClasses.files.filter { !programClasses.contains(it) } + bootClasspath.files
 

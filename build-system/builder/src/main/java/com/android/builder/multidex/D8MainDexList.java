@@ -28,6 +28,7 @@ import com.android.tools.r8.GenerateMainDexList;
 import com.android.tools.r8.GenerateMainDexListCommand;
 import com.android.tools.r8.errors.DuplicateTypesDiagnostic;
 import com.android.tools.r8.origin.Origin;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,6 +81,8 @@ public final class D8MainDexList {
                 if (Files.isRegularFile(program)) {
                     command.addProgramFiles(program);
                 } else {
+                    Preconditions.checkState(
+                            Files.isDirectory(program), "Expected directory: " + program);
                     try (Stream<Path> classFiles = Files.walk(program)) {
                         List<Path> allClasses =
                                 classFiles
