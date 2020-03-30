@@ -80,6 +80,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
@@ -204,7 +205,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                                 : installOptions;
                                 try {
                                     return testRunner.runTests(
-                                            getProject().getName(),
+                                            getProjectName(),
                                             getFlavorName(),
                                             testData.get(),
                                             buddyApks.getFiles(),
@@ -275,7 +276,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         // For now we check if there are any test sources. We could inspect the test classes and
         // apply JUnit logic to see if there's something to run, but that would not catch the case
         // where user makes a typo in a test name or forgets to inherit from a JUnit class
-        return !getProject().files(testData.getTestDirectories()).getAsFileTree().isEmpty();
+        return !getTestDirectories().getAsFileTree().isEmpty();
     }
 
     @OutputDirectory
@@ -395,6 +396,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     public FileCollection getTestedApksFromBundle() {
         return testData.getTestedApksFromBundle();
     }
+
+    @Internal
+    public abstract ConfigurableFileCollection getTestDirectories();
 
     public static class CreationAction
             extends VariantTaskCreationAction<
@@ -636,6 +640,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             // This task should not be UP-TO-DATE as we don't model the device state as input yet.
             task.getOutputs().upToDateWhen(it -> false);
+            task.getTestDirectories().from(project.files(testData.getTestDirectories()));
         }
     }
 }
