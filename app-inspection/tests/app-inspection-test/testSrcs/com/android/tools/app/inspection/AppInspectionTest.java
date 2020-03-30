@@ -167,6 +167,25 @@ public final class AppInspectionTest {
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
     }
 
+    @Test
+    public void tryToCreateExistingInspectorResultsInException() throws Exception {
+        String inspectorId = "test.inspector";
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex(), "project.A")),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex(), "project.B"));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage())
+                .isEqualTo(
+                        "Inspector with the given id "
+                                + inspectorId
+                                + " already exists. It was launched by project: project.A");
+    }
+
     /**
      * The inspector framework includes features for finding object instances on the heap. This test
      * indirectly verifies it works.
@@ -448,10 +467,22 @@ public final class AppInspectionTest {
 
     @NonNull
     private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
+        return createInspector(inspectorId, dexPath, "test.project");
+    }
+
+    @NonNull
+    private static AppInspectionCommand createInspector(
+            String inspectorId, String dexPath, String project) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setCreateInspectorCommand(
-                        CreateInspectorCommand.newBuilder().setDexPath(dexPath).build())
+                        CreateInspectorCommand.newBuilder()
+                                .setDexPath(dexPath)
+                                .setLaunchMetadata(
+                                        LaunchMetadata.newBuilder()
+                                                .setLaunchedByName(project)
+                                                .build())
+                                .build())
                 .build();
     }
 

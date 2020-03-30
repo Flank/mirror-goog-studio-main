@@ -48,7 +48,9 @@ public class AppInspectionService {
     @SuppressWarnings("FieldCanBeLocal")
     // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
     private final long mNativePtr;
-    private Map<String, Inspector> mInspectors = new HashMap<String, Inspector>();
+
+    private final Map<String, InspectorContext> mInspectorContexts =
+            new HashMap<String, InspectorContext>();
 
     // TODO: save inspector and clean up transformation when inspectors are gone
     Map<String, InspectorEnvironment.ExitHook> mExitTransforms =
@@ -70,14 +72,31 @@ public class AppInspectionService {
         mNativePtr = nativePtr;
     }
 
+    /**
+     * Creates and launches an inspector on device.
+     *
+     * <p>This will respond with error when an inspector with the same ID already exists, when the
+     * dex cannot be located, and when an exception is encountered while loading classes.
+     *
+     * @param inspectorId the unique id of the inspector being launched
+     * @param dexPath the path to the .dex file of the inspector
+     * @param projectName the name of the studio project that is trying to launch the inspector
+     * @param commandId unique id of this command in the context of app inspection service
+     */
     @SuppressWarnings("unused") // invoked via jni
-    public void createInspector(String inspectorId, String dexPath, int commandId) {
+    public void createInspector(
+            String inspectorId, String dexPath, String projectName, int commandId) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        if (mInspectors.containsKey(inspectorId)) {
+        if (mInspectorContexts.containsKey(inspectorId)) {
+            String alreadyLaunchedProjectName = mInspectorContexts.get(inspectorId).getProject();
             sendServiceResponseError(
-                    commandId, "Inspector with the given id " + inspectorId + " already exists");
+                    commandId,
+                    "Inspector with the given id "
+                            + inspectorId
+                            + " already exists. It was launched by project: "
+                            + alreadyLaunchedProjectName);
             return;
         }
         ClassLoader mainClassLoader = mainThreadClassLoader();
@@ -105,7 +124,8 @@ public class AppInspectionService {
                     ConnectionImpl connection = new ConnectionImpl(inspectorId);
                     InspectorEnvironment environment = new InspectorEnvironmentImpl(mNativePtr);
                     inspector = inspectorFactory.createInspector(connection, environment);
-                    mInspectors.put(inspectorId, inspector);
+                    mInspectorContexts.put(
+                            inspectorId, new InspectorContext(inspector, projectName));
                     break;
                 }
             }
@@ -127,7 +147,7 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        if (!mInspectors.containsKey(inspectorId)) {
+        if (!mInspectorContexts.containsKey(inspectorId)) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
@@ -141,7 +161,7 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        Inspector inspector = mInspectors.get(inspectorId);
+        Inspector inspector = mInspectorContexts.get(inspectorId).getInspector();
         if (inspector == null) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
@@ -172,7 +192,7 @@ public class AppInspectionService {
     }
 
     private void doDispose(String inspectorId) {
-        Inspector inspector = mInspectors.remove(inspectorId);
+        Inspector inspector = mInspectorContexts.remove(inspectorId).getInspector();
         if (inspector != null) {
             try {
                 inspector.onDispose();

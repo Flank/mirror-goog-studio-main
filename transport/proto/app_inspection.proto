@@ -44,6 +44,15 @@ message AppInspectionCommand {
 message CreateInspectorCommand {
   // On device path to the jar that has a dexed code of the given inspector.
   string dex_path = 1;
+  // Metadata about the launch of an inspector.
+  LaunchMetadata launch_metadata = 2;
+}
+
+// Metadata about the launch of an inspector.
+message LaunchMetadata {
+  // Name of the entity that sent this launch command. Ex: Name of the Android
+  // Studio project.
+  string launched_by_name = 1;
 }
 
 // A command to dispose the inspector.
