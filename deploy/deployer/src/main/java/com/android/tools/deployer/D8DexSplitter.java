@@ -190,7 +190,25 @@ public class D8DexSplitter implements DexSplitter {
             Optional<ValueInspector> value = fieldInspector.getInitialValue();
             if (fieldInspector.isStatic() && fieldInspector.isFinal() && value.isPresent()) {
                 state.setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT);
-                state.setValue(Integer.toString(value.get().asIntValue().getIntValue()));
+                ValueInspector valueInspector = value.get();
+                if (valueInspector.isByteValue()) {
+                    state.setValue(Byte.toString(value.get().asByteValue().getByteValue()));
+                } else if (valueInspector.isCharValue()) {
+                    state.setValue(Character.toString(value.get().asCharValue().getCharValue()));
+                } else if (valueInspector.isIntValue()) {
+                    state.setValue(Integer.toString(value.get().asIntValue().getIntValue()));
+                } else if (valueInspector.isLongValue()) {
+                    state.setValue(Long.toString(value.get().asLongValue().getLongValue()));
+                } else if (valueInspector.isShortValue()) {
+                    state.setValue(Short.toString(value.get().asShortValue().getShortValue()));
+                } else if (valueInspector.isDoubleValue()) {
+                    state.setValue(Double.toString(value.get().asDoubleValue().getDoubleValue()));
+                } else if (valueInspector.isFloatValue()) {
+                    state.setValue(Float.toString(value.get().asFloatValue().getFloatValue()));
+                } else if (valueInspector.isBooleanValue()) {
+                    state.setValue(
+                            Boolean.toString(value.get().asBooleanValue().getBooleanValue()));
+                }
             } else {
                 state.setState(Deploy.ClassDef.FieldReInitState.VariableState.UNKNOWN);
             }
