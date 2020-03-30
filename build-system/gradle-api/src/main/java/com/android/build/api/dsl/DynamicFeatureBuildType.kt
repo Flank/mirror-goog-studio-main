@@ -23,5 +23,14 @@ interface DynamicFeatureBuildType<AnnotationProcessorOptionsT : AnnotationProces
         SigningConfigT : SigningConfig> :
     BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
     DynamicFeatureVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
-    // TODO(b/140406102)
+    /**
+     * Whether to crunch PNGs.
+     *
+     * Setting this property to `true` reduces of PNG resources that are not already
+     * optimally compressed. However, this process increases build times.
+     *
+     * PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
+     */
+    var isCrunchPngs: Boolean?
 }
