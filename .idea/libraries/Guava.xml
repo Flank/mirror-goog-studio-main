@@ -4,8 +4,8 @@
       <root url="file://$PROJECT_DIR$/external-annotations" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/28.0.1-jre/guava-28.0.1-jre.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/28.1-jre/guava-28.1-jre.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
