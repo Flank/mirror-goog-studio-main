@@ -335,7 +335,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onGetPropertiesInspectorCommand(long viewId) {
         try {
-            List<View> roots = getRootViews();
+            List<View> roots = WindowInspector.getGlobalWindowViews();
             for (View root : roots) {
                 View view = findViewById(root, viewId);
                 if (view != null) {
