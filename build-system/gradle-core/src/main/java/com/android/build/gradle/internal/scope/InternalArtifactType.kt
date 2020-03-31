@@ -88,6 +88,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object DEX_ARCHIVE_INPUT_JAR_HASHES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Directory containing dependency graph(s) for desugaring
     object DESUGAR_GRAPH: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // File containing the number of buckets used for dexing
+    object DEX_NUMBER_OF_BUCKETS_FILE: InternalArtifactType<RegularFile>(FILE), Single
 
     // External file library dex archives (Desugared separately from module & project dependencies)
     object EXTERNAL_FILE_LIB_DEX_ARCHIVES: InternalArtifactType<Directory>(DIRECTORY), Replaceable

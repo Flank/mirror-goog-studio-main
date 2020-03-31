@@ -56,6 +56,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -162,8 +163,16 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:Input
     abstract val dexer: Property<DexerTool>
 
-    @get:Input
+    /**
+     * This property is annotated with [Internal] in order to allow cache hits across build that use
+     * different number of buckets. Changing this property will not re-run the task, but that is
+     * fine. See [canRunIncrementally] for details how this impacts incremental builds.
+     */
+    @get:Internal
     abstract val numberOfBuckets: Property<Int>
+
+    @get:LocalState
+    abstract val previousRunNumberOfBucketsFile: RegularFileProperty
 
     @get:Input
     abstract val useGradleWorkers: Property<Boolean>
@@ -173,8 +182,43 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:InputFiles
     abstract val externalLibDexFiles: ConfigurableFileCollection
 
+    /**
+     * Task runs incrementally if input changes allow that and if the number of buckets is the same
+     * as in the previous run. This is necessary in order to have correct incremental builds as
+     * the output location for an input file is computed using the number of buckets.
+     *
+     * The following scenarios are handled:
+     * - changing the number of buckets between runs will cause non-incremental run
+     * - cache hit will not restore [previousRunNumberOfBucketsFile], and it will cause next run to
+     * be non-incremental
+     * - build in which the number of buckets is the same as in the [previousRunNumberOfBucketsFile]
+     * can be incremental
+     */
+    private fun canRunIncrementally(inputChanges: InputChanges): Boolean {
+        val canRunIncrementally =
+            if (!inputChanges.isIncremental) false
+            else {
+                with(previousRunNumberOfBucketsFile.asFile.get()) {
+                    if (!isFile) false
+                    else readText() == numberOfBuckets.get().toString()
+                }
+            }
+
+        if (!canRunIncrementally) {
+            // If incremental run is not possible write the current number of buckets
+            with(previousRunNumberOfBucketsFile.get().asFile) {
+                FileUtils.mkdirs(parentFile)
+                writeText(numberOfBuckets.get().toString())
+            }
+        }
+        return canRunIncrementally
+    }
+
     override fun doTaskAction(inputChanges: InputChanges) {
-        if ((!externalLibDexFiles.isEmpty && !inputChanges.isIncremental) || getChanged(
+        val isIncremental = canRunIncrementally(inputChanges)
+
+        if ((!externalLibDexFiles.isEmpty && !isIncremental) || getChanged(
+                isIncremental,
                 inputChanges,
                 externalLibDexFiles
             ).isNotEmpty()
@@ -193,16 +237,16 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         }
 
         DexArchiveBuilderTaskDelegate(
-            isIncremental = inputChanges.isIncremental,
+            isIncremental = isIncremental,
 
             projectClasses = projectClasses.files,
-            projectChangedClasses = getChanged(inputChanges, projectClasses),
+            projectChangedClasses = getChanged(isIncremental, inputChanges, projectClasses),
             subProjectClasses = subProjectClasses.files,
-            subProjectChangedClasses = getChanged(inputChanges, subProjectClasses),
+            subProjectChangedClasses = getChanged(isIncremental, inputChanges, subProjectClasses),
             externalLibClasses = externalLibClasses.files,
-            externalLibChangedClasses = getChanged(inputChanges, externalLibClasses),
+            externalLibChangedClasses = getChanged(isIncremental, inputChanges, externalLibClasses),
             mixedScopeClasses = mixedScopeClasses.files,
-            mixedScopeChangedClasses = getChanged(inputChanges, mixedScopeClasses),
+            mixedScopeChangedClasses = getChanged(isIncremental, inputChanges, mixedScopeClasses),
 
             projectOutputDex = projectOutputDex.asFile.get(),
             projectOutputKeepRules = projectOutputKeepRules.asFile.orNull,
@@ -217,6 +261,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             dxDexParams = dxDexParams.toDxDexParameters(),
 
             desugarClasspathChangedClasses = getChanged(
+                isIncremental,
                 inputChanges,
                 dexParams.desugarClasspath
             ),
@@ -241,8 +286,12 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
      * pipeline traverses directories and we'd like to avoid serializing this information to the
      * worker action.
      */
-    private fun getChanged(inputChanges: InputChanges, input: FileCollection): Set<FileChange> {
-        if (!inputChanges.isIncremental) {
+    private fun getChanged(
+        canRunIncrementally: Boolean,
+        inputChanges: InputChanges,
+        input: FileCollection
+    ): Set<FileChange> {
+        if (!canRunIncrementally) {
             return emptySet()
         }
         val fileChanges = mutableMapOf<File, FileChange>()
@@ -430,6 +479,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 taskProvider,
                 DexArchiveBuilderTask::desugarGraphDir
             )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DexArchiveBuilderTask::previousRunNumberOfBucketsFile
+            ).on(InternalArtifactType.DEX_NUMBER_OF_BUCKETS_FILE)
             if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
                 creationConfig.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
