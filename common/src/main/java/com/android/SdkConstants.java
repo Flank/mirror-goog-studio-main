@@ -1470,6 +1470,8 @@ public final class SdkConstants {
     public static final String ATTR_START_DESTINATION = "startDestination";
     public static final String ATTR_NULLABLE = "nullable";
     public static final String ATTR_ARG_TYPE = "argType";
+    public static final String ATTR_DEEPLINK_ACTION = "action";
+    public static final String ATTR_DEEPLINK_MIMETYPE = "mimeType";
 
     // android.view.View
     public static final String ATTR_NEXT_CLUSTER_FORWARD = "nextClusterForward";
