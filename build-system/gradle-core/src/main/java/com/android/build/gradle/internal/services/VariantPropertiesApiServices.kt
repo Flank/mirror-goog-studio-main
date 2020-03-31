@@ -59,7 +59,7 @@ interface VariantPropertiesApiServices:
     fun <T> propertyOf(type: Class<T>, value: Provider<T>, id: String = ""): Property<T>
 
     /**
-     * Creates a new property.
+     * Creates a new nullable property.
      *
      * This should be used for properties used in the new API. If the property is backing an
      * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
