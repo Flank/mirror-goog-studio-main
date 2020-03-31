@@ -103,13 +103,12 @@ abstract class Aapt2DaemonBuildService : BuildService<BuildServiceParameters.Non
     @JvmOverloads
     @Synchronized
     fun registerAaptService(
-        aapt2FromMaven: FileCollection,
+        aapt2FromMaven: File,
         logger: ILogger,
         serviceRegistry: WorkerActionServiceRegistry = aapt2DaemonServiceRegistry
     ): Aapt2DaemonServiceKey {
-        val dir = aapt2FromMaven.singleFile
-        val key = Aapt2DaemonServiceKey(dir)
-        val aaptExecutablePath = dir.toPath().resolve(SdkConstants.FN_AAPT2)
+        val key = Aapt2DaemonServiceKey(aapt2FromMaven)
+        val aaptExecutablePath = aapt2FromMaven.toPath().resolve(SdkConstants.FN_AAPT2)
 
         if (!Files.exists(aaptExecutablePath)) {
             throw InvalidUserDataException(

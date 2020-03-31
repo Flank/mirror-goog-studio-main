@@ -92,7 +92,11 @@ class Aapt2FromMavenTest {
         val registry = WorkerActionServiceRegistry()
 
         val serviceKey =
-            buildService.registerAaptService(artifact, StdLogger(StdLogger.Level.INFO), registry)
+            buildService.registerAaptService(
+                artifact.singleFile,
+                StdLogger(StdLogger.Level.INFO),
+                registry
+            )
 
         val outDir = temporaryFolder.newFolder()
         val inFile = createFileToCompile()

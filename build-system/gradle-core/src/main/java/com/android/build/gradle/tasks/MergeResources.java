@@ -196,7 +196,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
         Aapt2DaemonServiceKey aapt2ServiceKey =
                 aapt2DaemonBuildService.registerAaptService(
-                        aapt2FromMaven, new LoggerWrapper(logger));
+                        aapt2FromMaven.getSingleFile(), new LoggerWrapper(logger));
 
         return new WorkerExecutorResourceCompilationService(
                 projectName,

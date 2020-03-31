@@ -193,6 +193,19 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES)
                 )
             }
+            // fetch desugar methods keep rules generated based on library production code when
+            // building library project android test variant in non-minify release mode
+            val variantType = variantScope.type
+            if (variantType.isTestComponent && variantType.isApk) {
+                val testedVariantData =
+                    checkNotNull(variantScope.testedVariantData) { "Test component without testedVariantData" }
+                if (enableDexingArtifactTransform && testedVariantData.type.isAar) {
+                    task.keepRulesFiles.from(
+                        testedVariantData.scope.artifacts.getFinalProductAsFileCollection(
+                            InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
+                    )
+                }
+            }
             // make sure non-minified release build is not obfuscated
             if (nonMinified) {
                 task.keepRulesConfigurations.set(listOf("-dontobfuscate"))

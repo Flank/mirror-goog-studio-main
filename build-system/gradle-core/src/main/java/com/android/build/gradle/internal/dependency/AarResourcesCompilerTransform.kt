@@ -72,7 +72,7 @@ abstract class AarResourcesCompilerTransform :
 
         val aapt2ServiceKey =
             parameters.aapt2DaemonBuildService.get().registerAaptService(
-                parameters.aapt2FromMaven,
+                parameters.aapt2FromMaven.singleFile,
                 LoggerWrapper.getLogger(this::class.java)
             )
 
