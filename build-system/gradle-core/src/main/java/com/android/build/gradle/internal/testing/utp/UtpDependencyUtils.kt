@@ -20,7 +20,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 
 private const val NITROGEN_MAVEN_GROUP_ID = "com.google.test.platform"
-private const val NITROGEN_DEFAULT_VERSION = "0.0.1-dev"
+private const val NITROGEN_DEFAULT_VERSION = "0.0.2-dev"
 
 /**
  * Available Unified Test Platform dependencies.
@@ -45,7 +45,7 @@ enum class UtpDependency(
             "com.google.test.platform.runtime.android.adb.controller.AdbDeviceController"),
     ANDROID_DRIVER_INSTRUMENTATION(
             "android-driver-instrumentation",
-            "com.google.test.platform.runtime.android.driver.OrchestratorV1Driver"),
+            "com.google.test.platform.runtime.android.driver.AndroidInstrumentationDriver"),
     ANDROID_TEST_PLUGIN(
             "android-test-plugin",
             "com.google.test.platform.plugin.android.AndroidDevicePlugin");

@@ -34,7 +34,7 @@ import com.google.test.platform.config.v1.proto.ExecutorProto
 import com.google.test.platform.config.v1.proto.FixtureProto
 import com.google.test.platform.config.v1.proto.HostPluginProto
 import com.google.test.platform.config.v1.proto.LocalAndroidDeviceProviderProto
-import com.google.test.platform.config.v1.proto.OrchestratorV1DriverProto
+import com.google.test.platform.config.v1.proto.AndroidInstrumentationDriverProto
 import com.google.test.platform.config.v1.proto.RunnerConfigProto
 import com.google.test.platform.core.proto.ExtensionProto
 import com.google.test.platform.core.proto.PathProto
@@ -212,7 +212,7 @@ class UtpConfigFactory {
                     path = it.absolutePath
                 }.build()
             })
-            config = Any.pack(OrchestratorV1DriverProto.OrchestratorV1Driver.newBuilder().apply {
+            config = Any.pack(AndroidInstrumentationDriverProto.AndroidInstrumentationDriver.newBuilder().apply {
                 androidInstrumentationRuntimeBuilder.apply {
                     instrumentationInfoBuilder.apply {
                         appPackage = testData.testedApplicationId

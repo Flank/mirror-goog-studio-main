@@ -223,12 +223,12 @@ class UtpConfigFactoryTest {
                 label {
                   label: "ANDROID_DRIVER_INSTRUMENTATION"
                 }
-                class_name: "com.google.test.platform.runtime.android.driver.OrchestratorV1Driver"
+                class_name: "com.google.test.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
                   path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.OrchestratorV1Driver"
+                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.AndroidInstrumentationDriver"
                   value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000"
                 }
               }
