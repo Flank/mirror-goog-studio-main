@@ -29,6 +29,11 @@ object MockitoKt {
   fun <T> any(type: Class<T>): T = Mockito.any<T>(type)
 
   /**
+   * Wrapper around [Mockito.any] for generic types.
+   */
+  inline fun <reified T: Any> any() = any(T::class.java)
+
+  /**
    * Wrapper around [Mockito.eq] that doesn't return null.
    * If used with Kotlin functions that do not accept nullable types it causes a "must not be null" exception.
    *
