@@ -283,14 +283,14 @@ public class AppInspectionService {
         sInstance.mExitTransforms.put(createLabel(origin, method), hook);
     }
 
-    public static Object onExit(Object returnObject) {
+    private static Object onExitInternal(Object returnObject) {
         Error error = new Error();
         error.fillInStackTrace();
         StackTraceElement[] stackTrace = error.getStackTrace();
-        if (stackTrace.length < 2) {
+        if (stackTrace.length < 3) {
             return returnObject;
         }
-        StackTraceElement element = stackTrace[1];
+        StackTraceElement element = stackTrace[2];
         String label = element.getClassName() + element.getMethodName();
 
         AppInspectionService instance = AppInspectionService.instance();
@@ -299,6 +299,18 @@ public class AppInspectionService {
             hook.onExit(returnObject);
         }
         return returnObject;
+    }
+
+    public static Object onExit(Object returnObject) {
+        return onExitInternal(returnObject);
+    }
+
+    public static void onExit() {
+        onExitInternal(null);
+    }
+
+    public static int onExit(int result) {
+        return ((Integer) onExitInternal(result)).intValue();
     }
 
     /**

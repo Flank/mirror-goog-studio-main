@@ -68,4 +68,17 @@ public final class TodoActivity extends TransportTestActivity {
             activeGroup = null;
         }
     }
+
+    public void clearAllItems() {
+        groups.clear();
+        activeGroup = null;
+    }
+
+    public int getItemsCount() {
+        int sum = 0;
+        for (TodoGroup group : groups) {
+            sum += group.getItems().size();
+        }
+        return sum;
+    }
 }

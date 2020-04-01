@@ -364,6 +364,36 @@ public final class AppInspectionTest {
     }
 
     @Test
+    public void exitHooksSupportVoidAndPrimitives() throws Exception {
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[4]
+
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getItemsCount");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "clearAllItems");
+        { // getItemsCount
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_ITEMS_COUNT.toByteArrayWithArg(
+                                    (byte) 1));
+        }
+
+        { // clearAllItems
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_CLEARED_ALL_ITEMS.toByteArray());
+        }
+    }
+
+    @Test
     public void handleCancellationCommand() throws Exception {
         String inspectorId = "test.cancellation.inspector";
         assertResponseStatus(

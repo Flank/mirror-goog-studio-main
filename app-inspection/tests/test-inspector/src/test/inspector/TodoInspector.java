@@ -117,6 +117,35 @@ public final class TodoInspector extends TestInspector {
                                                 .toByteArrayWithArg(index.byteValue()));
                     }
                 });
+
+        environment.registerExitHook(
+                classActivity,
+                "getItemsCount()I",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Integer count = (Integer) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_ITEMS_COUNT
+                                                .toByteArrayWithArg(count.byteValue()));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "clearAllItems()V",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_CLEARED_ALL_ITEMS
+                                                .toByteArray());
+                        return returnValue;
+                    }
+                });
     }
 
     @NonNull
