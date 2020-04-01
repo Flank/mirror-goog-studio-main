@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
+apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint'
@@ -44,6 +45,27 @@ task lintStartScripts(type: CreateStartScripts) {
         windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0\\..')
     }
 }
+
+
+sdk {
+    common(mac, linux) {
+        item(new File(lintStartScripts.outputDir, "lint")) {
+            into "bin"
+            notice null
+            builtBy 'lintStartScripts'
+        }
+    }
+    windows {
+        item(new File(lintStartScripts.outputDir, "lint.bat")) {
+            into "bin"
+            notice null
+            builtBy 'lintStartScripts'
+        }
+    }
+}
+
+// configure the manifest of the sdkJar task.
+sdkJar.manifest.attributes("Main-Class": "com.android.tools.lint.Main")
 
 project.ext.pomName = 'Android Lint Tool'
 project.ext.pomDesc = 'Lint tools. Both a Command line tool and a library to add lint features to other tools'

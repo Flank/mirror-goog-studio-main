@@ -1,3 +1,14 @@
+apply plugin: 'sdk-files'
+
+sdk {
+    common {
+        item('files/tools_source.properties') {
+            name 'source.properties'
+            notice null
+        }
+    }
+}
+
 subprojects { Project project ->
     // only configure leaf projects.
     if (!project.getSubprojects().isEmpty()) return

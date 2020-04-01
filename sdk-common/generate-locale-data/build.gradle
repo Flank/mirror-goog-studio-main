@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'sdk-java-lib'
 
 dependencies {
     compile project(':base:sdk-common')

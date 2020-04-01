@@ -11,6 +11,10 @@ protobuf {
     }
 }
 
+repositories {
+    maven { url = uri(rootProject.cloneArtifacts.repository) }
+}
+
 dependencies {
     compile project(':analytics-library:protos')
     compile project(':apksig')
