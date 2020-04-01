@@ -41,6 +41,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,7 +105,14 @@ public class LayoutInspectorService {
                     }
                 };
 
-        final Executor realExecutor = Executors.newSingleThreadExecutor();
+        final Executor realExecutor =
+                Executors.newSingleThreadExecutor(
+                        new ThreadFactory() {
+                            @Override
+                            public Thread newThread(Runnable r) {
+                                return new Thread(r, "Studio:LayInsp");
+                            }
+                        });
 
         final Executor executor =
                 new Executor() {
