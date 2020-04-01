@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.resources.ResourceFolderType
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.detector.api.Category
@@ -24,6 +25,7 @@ import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LayoutDetector
+import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -32,7 +34,10 @@ import com.android.tools.lint.detector.api.XmlScanner
 import com.google.common.truth.Truth.assertThat
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
+import org.w3c.dom.Attr
 import org.w3c.dom.Element
+import org.w3c.dom.Node
+import java.util.Locale
 
 class LintDriverCrashTest : AbstractCheckTest() {
     fun testLintDriverError() {
@@ -132,6 +137,104 @@ class LintDriverCrashTest : AbstractCheckTest() {
                     "_TestCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
                     Implementation(CrashingDetector::class.java, Scope.JAVA_FILE_SCOPE)
                 )
+        }
+    }
+
+    // Regression test for https://issuetracker.google.com/123835101
+
+    fun testHalfUppercaseColor2() {
+        lint()
+            .files(xml("res/drawable/drawable.xml", """
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:height="800dp"
+              android:viewportHeight="800"
+              android:viewportWidth="800"
+              android:width="800dp">
+            <path
+                android:fillColor="#ffe000"
+                android:pathData="M644.161,530.032 L644.161,529.032
+          C644.161,522.469,638.821,517.129,632.258,517.129 L24.807,517.129 L24.807,282.871
+          L775.194,282.871 L775.194,517.129 L683.872,517.129
+          C677.309,517.129,671.969,522.469,671.969,529.032 L671.969,530.032
+          L644.161,530.032 Z"/>
+            <path
+                android:fillColor="#fff000"
+                android:pathData="M644.161,530.032 L644.161,529.032
+          C644.161,522.469,638.821,517.129,632.258,517.129 L24.807,517.129 L24.807,282.871
+          L775.194,282.871 L775.194,517.129 L683.872,517.129
+          C677.309,517.129,671.969,522.469,671.969,529.032 L671.969,530.032
+          L644.161,530.032 Z"/>
+            <path
+                android:fillColor="#ffe000"
+                android:pathData="M683.871,516.129 L774.193,516.129 L774.193,283.871 L25.807,283.871
+          L25.807,516.129 L632.258,516.129
+          C639.384,516.129,645.161,521.906,645.161,529.032 L670.968,529.032
+          C670.968,521.906,676.745,516.129,683.871,516.129 Z"/>
+          </vector>""").indented())
+            .issues(ColorCasingDetector.ISSUE_COLOR_CASING)
+            .run()
+            .expect(
+                """
+                res/drawable/drawable.xml:7: Warning: Should be using uppercase letters [ColorCasing]
+                      android:fillColor="#ffe000"
+                                         ~~~~~~~
+                res/drawable/drawable.xml:14: Warning: Should be using uppercase letters [ColorCasing]
+                      android:fillColor="#fff000"
+                                         ~~~~~~~
+                res/drawable/drawable.xml:21: Warning: Should be using uppercase letters [ColorCasing]
+                      android:fillColor="#ffe000"
+                                         ~~~~~~~
+                0 errors, 3 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for res/drawable/drawable.xml line 7: Convert to uppercase:
+                @@ -7 +7
+                -       android:fillColor="#ffe000"
+                +       android:fillColor="#FFE000"
+                Fix for res/drawable/drawable.xml line 14: Convert to uppercase:
+                @@ -14 +14
+                -       android:fillColor="#fff000"
+                +       android:fillColor="#FFF000"
+                Fix for res/drawable/drawable.xml line 21: Convert to uppercase:
+                @@ -21 +21
+                -       android:fillColor="#ffe000"
+                +       android:fillColor="#FFE000"
+                """
+            )
+    }
+
+    class ColorCasingDetector : ResourceXmlDetector() {
+        override fun appliesTo(folderType: ResourceFolderType) = true
+        override fun getApplicableElements() = ALL
+        override fun visitElement(context: XmlContext, element: Element) {
+            element.attributes()
+                .filter { it.nodeValue.matches(COLOR_REGEX) }
+                .filter { it.nodeValue.any { it.isLowerCase() } }
+                .forEach {
+                    val fix = fix()
+                        .name("Convert to uppercase")
+                        .replace()
+                        // .range(context.getValueLocation(it as Attr))
+                        .text(it.nodeValue)
+                        .with(it.nodeValue.toUpperCase(Locale.US))
+                        .autoFix()
+                        .build()
+
+                    context.report(ISSUE_COLOR_CASING, it, context.getValueLocation(it as Attr),
+                        "Should be using uppercase letters", fix)
+                }
+        }
+
+        companion object {
+            val COLOR_REGEX = Regex("#[a-fA-F\\d]{3,8}")
+            val ISSUE_COLOR_CASING = Issue.create("ColorCasing",
+                "Raw colors should be defined with uppercase letters.",
+                "Colors should have uppercase letters. #FF0099 is valid while #ff0099 isn't since the ff should be written in uppercase.",
+                Category.CORRECTNESS, 5, Severity.WARNING,
+                Implementation(ColorCasingDetector::class.java, Scope.RESOURCE_FILE_SCOPE))
+            internal fun Node.attributes() = (0 until attributes.length).map { attributes.item(it) }
         }
     }
 
