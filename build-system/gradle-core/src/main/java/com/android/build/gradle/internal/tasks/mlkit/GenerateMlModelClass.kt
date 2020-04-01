@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks.mlkit
 
+import com.android.SdkConstants.DOT_TFLITE
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ML_MODELS
@@ -59,7 +60,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
 
                 override fun visitFile(fileVisitDetails: FileVisitDetails) {
                     val modelFile = fileVisitDetails.file
-                    if (modelFile.name.endsWith(".tflite")) {
+                    if (modelFile.name.endsWith(DOT_TFLITE)) {
                         try {
                             val modelGenerator = TfliteModelGenerator(
                                 modelFile,

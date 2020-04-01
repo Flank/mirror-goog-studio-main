@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject.Companion.app
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.TestUtils
+import com.android.zipflinger.ZipArchive
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
@@ -30,6 +31,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
+import java.util.zip.ZipEntry
 
 /** Assemble tests for mlkit generated model class.  */
 class MlGeneratedClassTest {
@@ -212,6 +214,10 @@ class MlGeneratedClassTest {
         assertThat(apk.getClass(MODEL_OUTPUT)!!.methods).containsAtLeastElementsIn(
             expectedOutputMethods
         )
+
+        // Check model.tflite is uncompressed (Issue 152875817)
+        val entry = ZipArchive.listEntries(apk.file.toFile())["assets/model.tflite"]
+        assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
     }
 
     companion object {
