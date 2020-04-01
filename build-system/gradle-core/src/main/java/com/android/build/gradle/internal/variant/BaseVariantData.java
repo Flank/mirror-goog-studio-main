@@ -628,41 +628,6 @@ public abstract class BaseVariantData {
         return defaultJavaSources;
     }
 
-    /**
-     * Returns the Java folders needed for code coverage report.
-     *
-     * <p>This includes all the source folders except for the ones containing R and buildConfig.
-     */
-    @NonNull
-    public FileCollection getJavaSourceFoldersForCoverage() {
-        ConfigurableFileCollection fc = scope.getGlobalScope().getProject().files();
-
-        // First the actual source folders.
-        List<SourceProvider> providers = variantSources.getSortedSourceProviders();
-        for (SourceProvider provider : providers) {
-            for (File sourceFolder : provider.getJavaDirectories()) {
-                if (sourceFolder.isDirectory()) {
-                    fc.from(sourceFolder);
-                }
-            }
-        }
-
-        // then all the generated src folders, except the ones for the R/Manifest and
-        // BuildConfig classes.
-        fc.from(
-                scope.getArtifacts()
-                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE));
-
-        if (!variantDslInfo.getRenderscriptNdkModeEnabled()) {
-            fc.from(
-                    scope.getArtifacts()
-                            .getFinalProduct(
-                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE));
-        }
-
-        return fc;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).addValue(publicVariantApi.getName()).toString();

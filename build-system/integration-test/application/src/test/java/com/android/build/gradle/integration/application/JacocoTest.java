@@ -114,4 +114,23 @@ public class JacocoTest {
         DexSubject.assertThat(dexClasses).containsClass("Ltest/A;");
         DexClassSubject.assertThat(dexClasses.getClasses().get("Ltest/A;")).hasField("$jacocoData");
     }
+
+    /** Regression test for http://b/152872138. */
+    @Test
+    public void testDisablingBuildFeaturesInAppAndLib() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n\n"
+                        + "android {\n"
+                        + "  buildFeatures {\n"
+                        + "    aidl = false\n"
+                        + "    renderScript = false\n"
+                        + "  }\n"
+                        + "}\n");
+        project.executor().withArgument("--dry-run").run("createDebugAndroidTestCoverageReport");
+
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "com.android.application", "com.android.library");
+        project.executor().withArgument("--dry-run").run("createDebugAndroidTestCoverageReport");
+    }
 }
