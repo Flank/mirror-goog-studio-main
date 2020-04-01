@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
@@ -255,6 +256,9 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
 
     abstract static class JacocoReportWorkerAction implements WorkAction<JacocoWorkParameters> {
         private static final Logger logger = Logging.getLogger(JacocoReportWorkerAction.class);
+
+        @Inject
+        public JacocoReportWorkerAction() {}
 
         @Override
         public void execute() {
