@@ -261,13 +261,21 @@ public class ApkInstaller {
             builder.addOptions("-r");
         }
 
-        List<Deploy.PatchInstruction> patches =
-                new PatchSetGenerator(logger).generateFromApks(localApks, dump.apks);
-        if (patches == null) {
-            return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
-        } else if (patches.isEmpty()) {
-            return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
+        PatchSet patchSet = new PatchSetGenerator(logger).generateFromApks(localApks, dump.apks);
+        switch (patchSet.getStatus()) {
+            case NoChanges:
+                return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
+            case Invalid:
+            case SizeThresholdExceeded:
+                return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
+            case Ok:
+                break;
+            default:
+                throw new IllegalStateException("Unhandled PatchSet status");
         }
+
+        List<Deploy.PatchInstruction> patches = patchSet.getPatches();
+
         for (Deploy.PatchInstruction patch : patches) {
             logger.info("Patch size %d", patch.getSerializedSize());
         }

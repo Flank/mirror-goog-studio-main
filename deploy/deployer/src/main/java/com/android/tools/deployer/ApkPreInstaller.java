@@ -126,12 +126,21 @@ public class ApkPreInstaller {
             }
 
             Deploy.InstallInfo.Builder pushRequestBuilder = Deploy.InstallInfo.newBuilder();
-            List<Deploy.PatchInstruction> patches =
-                    new PatchSetGenerator(logger).generateFromPairs(pairs);
-            if (patches.isEmpty()) {
-                return SKIPPED_INSTALLATION;
+            PatchSet patchSet = new PatchSetGenerator(logger).generateFromPairs(pairs);
+            switch (patchSet.getStatus()) {
+                case NoChanges:
+                    return SKIPPED_INSTALLATION;
+                case Invalid:
+                    throw new DeltaPreInstallException("Unable to generate patch");
+                case SizeThresholdExceeded:
+                    throw new DeltaPreInstallException("Patches too big.");
+                case Ok:
+                    break;
+                default:
+                    throw new IllegalStateException("Unhandled PatchSet status");
             }
 
+            List<Deploy.PatchInstruction> patches = patchSet.getPatches();
             for (Deploy.PatchInstruction patch : patches) {
                 logger.info("Patch size %d", patch.getSerializedSize());
             }
@@ -142,13 +151,8 @@ public class ApkPreInstaller {
             pushRequestBuilder.setInherit(inherit);
             pushRequestBuilder.setPackageName(packageName);
 
-            Deploy.InstallInfo info = pushRequestBuilder.build();
-            // Don't push more than 40 MiB delta since it has to fit in RAM on the device.
-            if (info.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
-                throw new DeltaPreInstallException("Patches too big.");
-            }
-
             // Send the deltaPreinstall request here.
+            Deploy.InstallInfo info = pushRequestBuilder.build();
             Deploy.DeltaPreinstallResponse response = installer.deltaPreinstall(info);
             if (response.getStatus().equals(Deploy.DeltaStatus.OK)) {
                 return response.getSessionId();

@@ -40,8 +40,8 @@ public class PatchSetGenerator {
     public PatchSetGenerator(ILogger logger) {
         this.logger = logger;
     }
-    public List<Deploy.PatchInstruction> generateFromApks(
-            List<Apk> localApks, List<Apk> remoteApks) {
+
+    public PatchSet generateFromApks(List<Apk> localApks, List<Apk> remoteApks) {
         // Build the list of local apks.
         HashMap<String, Apk> localApkMap = new HashMap<>();
         for (Apk apk : localApks) {
@@ -56,17 +56,17 @@ public class PatchSetGenerator {
         return generateFromApkSets(remoteApkMap, localApkMap);
     }
 
-    public List<Deploy.PatchInstruction> generateFromApkSets(
+    public PatchSet generateFromApkSets(
             HashMap<String, Apk> remoteApks, HashMap<String, Apk> localApks) {
         try {
             if (remoteApks.size() != localApks.size()) {
-                return null;
+                return PatchSet.INVALID;
             }
             // Pair remote and local apks. Attempt to build an app delta.
             List<Pair<Apk, Apk>> pairs = new ArrayList<>();
             for (Map.Entry<String, Apk> localApk : localApks.entrySet()) {
                 if (!remoteApks.keySet().contains(localApk.getValue().name)) {
-                    return null;
+                    return PatchSet.INVALID;
                 }
                 pairs.add(Pair.of(localApk.getValue(), remoteApks.get(localApk.getValue().name)));
             }
@@ -75,11 +75,10 @@ public class PatchSetGenerator {
 
         }
 
-        return null;
+        return PatchSet.INVALID;
     }
 
-    public List<Deploy.PatchInstruction> generateFromPairs(List<Pair<Apk, Apk>> pairs)
-            throws IOException {
+    public PatchSet generateFromPairs(List<Pair<Apk, Apk>> pairs) throws IOException {
         ArrayList<Deploy.PatchInstruction> patches = new ArrayList<>();
 
         boolean noChanges = true;
@@ -94,9 +93,10 @@ public class PatchSetGenerator {
 
         // If nothing has changed, return an empty list of patches.
         if (noChanges) {
-            return patches;
+            return PatchSet.NO_CHANGES;
         }
 
+        long patchSizes = 0;
         // Generate delta for each pairs.
         for (Pair<Apk, Apk> pair : pairs) {
             Apk localApk = pair.getFirst();
@@ -108,18 +108,33 @@ public class PatchSetGenerator {
                 // to skip feeding the APK altogether on the device by using install-create -p.
                 instruction = generateCleanPatch(remoteApk, localApk);
             } else {
-                instruction = generateDelta(remoteApk, localApk);
+                PatchGenerator.Patch patch =
+                        new PatchGenerator(logger).generate(remoteApk, localApk);
+                switch (patch.status) {
+                    case SizeThresholdExceeded:
+                        return PatchSet.SIZE_THRESHOLD_EXCEEDED;
+                    case Ok:
+                        break;
+                    default:
+                        throw new IllegalStateException("Unhandled PatchSet status");
+                }
+                instruction =
+                        buildPatchInstruction(
+                                patch.destinationSize,
+                                patch.sourcePath,
+                                patch.instructions,
+                                patch.data);
             }
+
+            patchSizes += instruction.getInstructions().size() + instruction.getPatches().size();
+            if (patchSizes > MAX_PATCHSET_SIZE) {
+                return PatchSet.SIZE_THRESHOLD_EXCEEDED;
+            }
+
             patches.add(instruction);
         }
         assert pairs.size() == patches.size();
-        return patches;
-    }
-
-    private Deploy.PatchInstruction generateDelta(Apk remoteApk, Apk localApk) throws IOException {
-        PatchGenerator.Patch patch = new PatchGenerator(logger).generate(remoteApk, localApk);
-        return buildPatchInstruction(
-                patch.destinationSize, patch.sourcePath, patch.instructions, patch.data);
+        return new PatchSet(patches);
     }
 
     private Deploy.PatchInstruction buildPatchInstruction(
