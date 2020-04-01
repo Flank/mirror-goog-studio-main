@@ -152,7 +152,7 @@ class LayoutInspectorServiceTest {
         `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
             .then { invocation ->
                 invocation.getArgument<OutputStream>(2).write(bitmapBytes)
-                Unit
+                true
             }
         val picture = Picture()
         val pictureContents = ByteArray(LayoutInspectorService.MAX_IMAGE_SIZE + 1)
@@ -178,7 +178,7 @@ class LayoutInspectorServiceTest {
         `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
             .then { invocation ->
                 invocation.getArgument<OutputStream>(2).write(bitmapBytes)
-                Unit
+                true
             }
         val (service, callback) = setUpInspectorService()
 
