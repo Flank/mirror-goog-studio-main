@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -47,6 +48,17 @@ public class InstallOptionsTest {
         List<String> options = optionsBuilder.build().getFlags();
         assertTrue(options.contains("-t"));
         assertTrue(options.size() == 1);
+    }
+
+    @Test
+    public void testCurrentUser() {
+        InstallOptions.Builder optionsBuilder = InstallOptions.builder();
+        optionsBuilder.setInstallOnCurrentUser();
+        List<String> options = optionsBuilder.build().getFlags();
+        int ix = options.indexOf("--user");
+        assertTrue(ix != -1);
+        assertTrue(ix + 1 < options.size());
+        assertEquals("current", options.get(ix + 1));
     }
 
     @Test
