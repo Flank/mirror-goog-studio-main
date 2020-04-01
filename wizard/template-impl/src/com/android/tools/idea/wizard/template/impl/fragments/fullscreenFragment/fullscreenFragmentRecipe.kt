@@ -22,7 +22,11 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.layout.fragmentFullscreenXml
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.fullScreenColorsXml
+import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.fullscreenAttrs
+import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.fullscreenStyles
+import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.fullscreenThemes
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values_night.fullscreenThemes as fullscreenThemesNight
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.src.app_package.fullscreenFragmentJava
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.src.app_package.fullscreenFragmentKt
 
@@ -32,21 +36,25 @@ fun RecipeExecutor.fullscreenFragmentRecipe(
   layoutName: String,
   packageName: String
 ) {
-  val (projectData, srcOut, resOut, manifestOut) = moduleData
+  val (projectData, srcOut, resOut) = moduleData
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
+  val themeName = moduleData.themesData.main.name
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
+  mergeXml(fullscreenAttrs(), resOut.resolve("values/attrs.xml"))
   mergeXml(fullScreenColorsXml(), resOut.resolve("values/colors.xml"))
-  save(fragmentFullscreenXml(fragmentClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
+  mergeXml(fullscreenStyles(themeName), resOut.resolve("values/styles.xml"))
+  mergeXml(fullscreenThemes(themeName), resOut.resolve("values/themes.xml"))
+  mergeXml(fullscreenThemesNight(themeName), resOut.resolve("values-night/themes.xml"))
+  save(fragmentFullscreenXml(fragmentClass, packageName, themeName), resOut.resolve("layout/${layoutName}.xml"))
 
   val fullscreenFragment = when (projectData.language) {
     Language.Java -> fullscreenFragmentJava(fragmentClass, layoutName, packageName, useAndroidX)
     Language.Kotlin -> fullscreenFragmentKt(fragmentClass, layoutName, packageName, useAndroidX)
   }
   save(fullscreenFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
-
 
   open(resOut.resolve("layout/${layoutName}.xml"))
   open(srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))

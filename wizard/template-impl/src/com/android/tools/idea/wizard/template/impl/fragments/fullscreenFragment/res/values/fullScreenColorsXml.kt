@@ -16,8 +16,14 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values
 
+import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+
 fun fullScreenColorsXml() = """
 <resources>
+    ${LIGHT_BLUE_600.xmlElement()}
+    ${LIGHT_BLUE_900.xmlElement()}
+    ${LIGHT_BLUE_A200.xmlElement()}
+    ${LIGHT_BLUE_A400.xmlElement()}
     <color name="black_overlay">#66000000</color>
 </resources>
 """

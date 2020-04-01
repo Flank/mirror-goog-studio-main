@@ -17,18 +17,16 @@ package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivit
 
 fun fullscreenStyles(themeName: String) =
   """<resources>
-
-   <style name="FullscreenTheme" parent="${themeName}">
-        <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowBackground">@null</item>
-        <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
-        <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
-    </style>
-
-    <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
+    <style name="${getFullscreenActionBarStyle(themeName)}" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">@color/black_overlay</item>
     </style>
 
+    <style name="${getFullscreenButtonBarStyle(themeName)}" parent="">
+        <item name="android:background">@color/black_overlay</item>
+        <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
+    </style>
 </resources>
 """
+
+fun getFullscreenActionBarStyle(themeName: String) = "Widget.${themeName}.ActionBar.Fullscreen"
+fun getFullscreenButtonBarStyle(themeName: String) = "Widget.${themeName}.ButtonBar.Fullscreen"

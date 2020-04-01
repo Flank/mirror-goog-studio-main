@@ -17,12 +17,20 @@ package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivit
 
 import com.android.tools.idea.wizard.template.impl.MaterialColor.*
 
-fun fullscreenColors() =
+fun fullscreenThemes(themeName: String) =
   """<resources>
-    ${LIGHT_BLUE_600.xmlElement()}
-    ${LIGHT_BLUE_900.xmlElement()}
-    ${LIGHT_BLUE_A200.xmlElement()}
-    ${LIGHT_BLUE_A400.xmlElement()}
-    <color name="black_overlay">#66000000</color>
+   <style name="${getFullscreenTheme(themeName)}" parent="${themeName}">
+        <item name="android:actionBarStyle">@style/${getFullscreenActionBarStyle(themeName)}</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:windowBackground">@null</item>
+    </style>
+
+    <style name="${getFullscreenContainerThemeOverlay(themeName)}" parent="">
+        <item name="fullscreenBackgroundColor">@color/${LIGHT_BLUE_600.colorName}</item>
+        <item name="fullscreenTextColor">@color/${LIGHT_BLUE_A200.colorName}</item>
+    </style>
 </resources>
 """
+
+fun getFullscreenTheme(themeName: String) = "${themeName}.Fullscreen"
+fun getFullscreenContainerThemeOverlay(themeName: String) = "ThemeOverlay.${themeName}.FullscreenContainer"

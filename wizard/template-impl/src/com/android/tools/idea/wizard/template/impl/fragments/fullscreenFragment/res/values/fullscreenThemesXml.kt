@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values
+package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values
 
 import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenContainerThemeOverlay
 
-fun fullscreenColors() =
+fun fullscreenThemes(themeName: String) =
   """<resources>
-    ${LIGHT_BLUE_600.xmlElement()}
-    ${LIGHT_BLUE_900.xmlElement()}
-    ${LIGHT_BLUE_A200.xmlElement()}
-    ${LIGHT_BLUE_A400.xmlElement()}
-    <color name="black_overlay">#66000000</color>
+    <style name="${getFullscreenContainerThemeOverlay(themeName)}" parent="">
+        <item name="fullscreenBackgroundColor">@color/${LIGHT_BLUE_600.colorName}</item>
+        <item name="fullscreenTextColor">@color/${LIGHT_BLUE_A200.colorName}</item>
+    </style>
 </resources>
 """

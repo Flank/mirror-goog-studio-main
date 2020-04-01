@@ -27,7 +27,9 @@ import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenAttrs
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenColors
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenStyles
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenThemes
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values_night.fullscreenThemes as fullscreenThemesNight
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.src.app_package.fullscreenActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.src.app_package.fullscreenActivityKt
 
@@ -51,17 +53,20 @@ fun RecipeExecutor.fullscreenActivityRecipe(
 
   val simpleName = activityToLayout(activityClass)
   val superClassFqcn = getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)
-  mergeXml(androidManifestXml(activityClass, packageName, simpleName, isLauncher, moduleData.isLibrary, moduleData.isNewModule),
+  val themeName = moduleData.themesData.main.name
+  mergeXml(androidManifestXml(activityClass, packageName, simpleName, isLauncher, moduleData.isLibrary, moduleData.isNewModule, themeName),
            manifestOut.resolve("AndroidManifest.xml"))
 
   val finalResOut = moduleData.baseFeature?.resDir ?: resOut
   generateThemeStyles(moduleData.themesData.main, useMaterial2, finalResOut)
 
-  mergeXml(fullscreenColors(), finalResOut.resolve("values/colors.xml"))
   mergeXml(fullscreenAttrs(), finalResOut.resolve("values/attrs.xml"))
-  mergeXml(fullscreenStyles(moduleData.themesData.main.name), finalResOut.resolve("values/styles.xml"))
+  mergeXml(fullscreenColors(), finalResOut.resolve("values/colors.xml"))
+  mergeXml(fullscreenStyles(themeName), finalResOut.resolve("values/styles.xml"))
+  mergeXml(fullscreenThemes(themeName), finalResOut.resolve("values/themes.xml"))
+  mergeXml(fullscreenThemesNight(themeName), finalResOut.resolve("values-night/themes.xml"))
 
-  save(activityFullscreenXml(activityClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
+  save(activityFullscreenXml(activityClass, packageName, themeName), resOut.resolve("layout/${layoutName}.xml"))
   mergeXml(stringsXml(activityTitle, moduleData.isNewModule, simpleName), finalResOut.resolve("values/strings.xml"))
 
   val actionBarClassFqcn = getMaterialComponentName("android.support.v7.app.ActionBar", useAndroidX)

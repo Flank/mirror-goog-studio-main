@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values
+package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values_night
 
-import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.impl.MaterialColor
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenContainerThemeOverlay
 
-fun fullscreenColors() =
+fun fullscreenThemes(themeName: String) =
   """<resources>
-    ${LIGHT_BLUE_600.xmlElement()}
-    ${LIGHT_BLUE_900.xmlElement()}
-    ${LIGHT_BLUE_A200.xmlElement()}
-    ${LIGHT_BLUE_A400.xmlElement()}
-    <color name="black_overlay">#66000000</color>
+    <style name="${getFullscreenContainerThemeOverlay(themeName)}" parent="">
+        <item name="fullscreenBackgroundColor">@color/${MaterialColor.LIGHT_BLUE_900.colorName}</item>
+        <item name="fullscreenTextColor">@color/${MaterialColor.LIGHT_BLUE_A400.colorName}</item>
+    </style>
 </resources>
 """
+
