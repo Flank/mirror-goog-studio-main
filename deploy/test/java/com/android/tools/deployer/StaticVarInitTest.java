@@ -126,6 +126,78 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
     }
 
     @Test
+    public void testInitNonStaticNotSupported() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalPrimitives");
+        Assert.assertTrue(
+                android.waitForInput(
+                        "NoSuchFieldException on StaticVarInit.AddStaticFinalPrimitives.X_INT",
+                        RETURN_VALUE_TIMEOUT));
+
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
+
+        Deploy.SwapRequest request =
+                createRequest(
+                        "app.StaticVarInit$AddStaticFinalPrimitives",
+                        "app/StaticVarInit$AddStaticFinalPrimitives.dex",
+                        false,
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("NOT_STATjC")
+                                .setType("Z")
+                                .setStaticVar(false)
+                                .setValue("true")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build());
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT, response.getStatus());
+    }
+
+    @Test
+    public void testInitNonConstantNotSupported() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalPrimitives");
+        Assert.assertTrue(
+                android.waitForInput(
+                        "NoSuchFieldException on StaticVarInit.AddStaticFinalPrimitives.X_INT",
+                        RETURN_VALUE_TIMEOUT));
+
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
+
+        Deploy.SwapRequest request =
+                createRequest(
+                        "app.StaticVarInit$AddStaticFinalPrimitives",
+                        "app/StaticVarInit$AddStaticFinalPrimitives.dex",
+                        false,
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("NOT_STATjC")
+                                .setType("Z")
+                                .setStaticVar(true)
+                                .setValue("true")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.UNKNOWN)
+                                .build());
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT, response.getStatus());
+    }
+
+    @Test
     public void testBackgroundThreadSuspend() throws Exception {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);

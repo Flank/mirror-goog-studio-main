@@ -58,6 +58,9 @@ proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
   } else if (result.status == SwapResult::CLASS_NOT_FOUND) {
     response.set_status(proto::AgentSwapResponse::CLASS_NOT_FOUND);
     response.set_class_name(result.error_details);
+  } else if (result.status == SwapResult::UNSUPPORTED_REINIT) {
+    response.set_status(proto::AgentSwapResponse::UNSUPPORTED_REINIT);
+    response.set_error_msg(result.error_details);
   } else {
     response.set_status(proto::AgentSwapResponse::JVMTI_ERROR);
     response.mutable_jvmti_error()->set_error_code(result.error_details);

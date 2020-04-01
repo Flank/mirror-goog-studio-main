@@ -15,6 +15,7 @@
  *
  */
 #include <string.h>
+#include <sstream>
 
 #include "tools/base/deploy/agent/native/capabilities.h"
 #include "tools/base/deploy/agent/native/variable_reinit.h"
@@ -93,6 +94,17 @@ std::string VariableReinitializer::GatherPreviousState(
     }
 
     if (!found) {
+      if (!state.staticvar()) {
+        std::ostringstream msg;
+        msg << "Adding non-static variable " << state.name()
+            << " is not currently supported" << std::endl;
+        return msg.str();
+      } else if (state.state() != proto::ClassDef::FieldReInitState::CONSTANT) {
+        std::ostringstream msg;
+        msg << "Adding variable " << state.name()
+            << " no known to be compile time constant" << std::endl;
+        return msg.str();
+      }
       newVars->emplace_back(state);
     }
   }
