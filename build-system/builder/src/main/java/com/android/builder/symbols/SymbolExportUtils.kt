@@ -57,7 +57,6 @@ fun processLibraryMainSymbolTable(
         libraries: Set<File>,
         mainPackageName: String?,
         manifestFile: File,
-        sourceOut: File?,
         rClassOutputJar: File?,
         symbolFileOut: File?,
         platformSymbols: SymbolTable,
@@ -82,12 +81,6 @@ fun processLibraryMainSymbolTable(
             generateDependencyRClasses,
             idProvider
         )
-
-    if (sourceOut != null) {
-        FileUtils.cleanOutputDir(sourceOut)
-        // Generate R.java files for main and dependencies
-        tablesToWrite.forEach { SymbolIo.exportToJava(it, sourceOut, false) }
-    }
 
     if (rClassOutputJar != null) {
         FileUtils.deleteIfExists(rClassOutputJar)
