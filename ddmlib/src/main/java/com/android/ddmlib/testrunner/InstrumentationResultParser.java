@@ -203,6 +203,13 @@ public class InstrumentationResultParser extends MultiLineReceiver
     /** Error message supplied from the test runner when some critical failure occurred */
     static final String FATAL_EXCEPTION_MSG = "Fatal exception when running tests";
 
+    /**
+     * Pattern for the instrumentation reported errors (fatal & non-fatal) printed at the end of the
+     * instrumentation.
+     */
+    static final Pattern INSTRUMENTATION_FAILURES_PATTERN =
+            Pattern.compile("There (was|were) (\\d+) failure(.*)", Pattern.DOTALL);
+
     /** Error message supplied when the test run output doesn't contain a valid time stamp. */
     static final String INVALID_OUTPUT_ERR_MSG =
             "Output from instrumentation is missing its time stamp";
@@ -319,8 +326,12 @@ public class InstrumentationResultParser extends MultiLineReceiver
                     handleTestRunFailed(String.format("Instrumentation run failed due to '%1$s'",
                             statusValue));
                 } else if (StatusKeys.STREAM.equals(mCurrentKey)) {
-                    if (statusValue != null && statusValue.contains(FATAL_EXCEPTION_MSG)) {
-                        mStreamError = statusValue;
+                    if (statusValue != null) {
+                        if (INSTRUMENTATION_FAILURES_PATTERN
+                                .matcher(statusValue.trim())
+                                .matches()) {
+                            mStreamError = statusValue.trim();
+                        }
                     }
                 }
             } else {
@@ -604,6 +615,8 @@ public class InstrumentationResultParser extends MultiLineReceiver
             String runErrorMsg = errorMsg;
             if (mOnError != null) {
                 runErrorMsg = String.format("%s. %s", errorMsg, mOnError);
+            } else if (mStreamError != null) {
+                runErrorMsg = String.format("%s. %s", errorMsg, mStreamError);
             }
             listener.testRunFailed(runErrorMsg);
 

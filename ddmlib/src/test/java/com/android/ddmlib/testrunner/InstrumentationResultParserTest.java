@@ -150,10 +150,9 @@ public class InstrumentationResultParserTest extends TestCase {
      */
     public void testParse_missingTimeStamp_withStack() {
         StringBuilder output = new StringBuilder();
-        addLine(
-                output,
-                "INSTRUMENTATION_RESULT: stream="
-                        + InstrumentationResultParser.FATAL_EXCEPTION_MSG);
+        addLine(output, "INSTRUMENTATION_RESULT: stream=");
+        addLine(output, "There was 1 failure:");
+        addLine(output, InstrumentationResultParser.FATAL_EXCEPTION_MSG);
         addLine(
                 output,
                 "java.lang.IllegalArgumentException: Ambiguous arguments: cannot provide both test"
@@ -219,6 +218,49 @@ public class InstrumentationResultParserTest extends TestCase {
 
         Capture<String> capture = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunFailed(EasyMock.capture(capture));
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+        String error = capture.getValue();
+        assertTrue(error.contains("java.lang.RuntimeException: it failed super fast."));
+    }
+
+    /**
+     * Test that a non-fatal incomplete run still parses the instrumentation errors to provide
+     * additional context.
+     */
+    public void testParse_testNonFatalIncomplete() {
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_STATUS: class=com.android.server.utils.TraceBufferTest");
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=5");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=");
+        addLine(output, "INSTRUMENTATION_STATUS: test=test_addItem");
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: 1");
+        addLine(output, "INSTRUMENTATION_STATUS: class=com.android.server.utils.TraceBufferTest");
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=5");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=.");
+        addLine(output, "INSTRUMENTATION_STATUS: test=test_addItem");
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: 0");
+        addLine(output, "INSTRUMENTATION_RESULT: stream=");
+        addLine(output, "Time: 0");
+        addLine(output, "There were 2 failures:");
+        addLine(output, "1) com.android.server.pm.parsing.AndroidPackageInfoFlagBehaviorTest");
+        addLine(output, "java.lang.RuntimeException: it failed super fast.");
+        addLine(output, "at stackstack");
+        addLine(output, "2) Something else");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        Capture<String> capture = new Capture<>();
+        mMockListener.testRunStarted(RUN_NAME, 5);
+        TestIdentifier tid =
+                new TestIdentifier("com.android.server.utils.TraceBufferTest", "test_addItem");
+        mMockListener.testStarted(tid);
+        mMockListener.testEnded(tid, Collections.EMPTY_MAP);
         mMockListener.testRunFailed(EasyMock.capture(capture));
         mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
 
