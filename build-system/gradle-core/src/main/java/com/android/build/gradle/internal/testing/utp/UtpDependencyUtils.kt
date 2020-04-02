@@ -48,7 +48,11 @@ enum class UtpDependency(
             "com.google.test.platform.runtime.android.driver.AndroidInstrumentationDriver"),
     ANDROID_TEST_PLUGIN(
             "android-test-plugin",
-            "com.google.test.platform.plugin.android.AndroidDevicePlugin");
+            "com.google.test.platform.plugin.android.AndroidDevicePlugin"),
+    ANDROID_TEST_PLUGIN_HOST_RETENTION(
+            "android-test-plugin-host-retention",
+            "com.google.test.platform.plugin.android.icebox.host.IceboxPlugin"),
+    ;
 
     /**
      * Returns a maven coordinate string to download dependencies from the Maven repository.

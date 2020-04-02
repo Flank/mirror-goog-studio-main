@@ -56,6 +56,7 @@ class UtpTestRunner @JvmOverloads constructor(
         executor: ExecutorServiceAdapter,
         private val configurations: ConfigurationContainer,
         private val sdkComponents: SdkComponents,
+        private val usesIcebox: Boolean,
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
     : BaseTestRunner(splitSelectExec, processExecutor, executor) {
 
@@ -88,7 +89,8 @@ class UtpTestRunner @JvmOverloads constructor(
                             utpOutputDir,
                             utpTmpDir,
                             utpTestLogDir,
-                            utpTestRunLogDir).writeTo(writer)
+                            utpTestRunLogDir,
+                            usesIcebox).writeTo(writer)
                 }
             }
             val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->
