@@ -71,6 +71,7 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.SymbolTableBuildService;
 import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -316,6 +317,8 @@ public abstract class BasePlugin<
                                 project.getProviders().provider(() -> extension.getNdkVersion()),
                                 project.getProviders().provider(() -> extension.getNdkPath()))
                         .execute();
+
+        new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
 
         projectOptions
                 .getAllOptions()

@@ -16,14 +16,17 @@
 
 package com.android.build.gradle.integration.testing.unit;
 
+import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.Variant;
@@ -148,5 +151,23 @@ public class UnitTestingRClassLoadTest {
             assertThat(Modifier.toString(myStringField.getModifiers())).isEqualTo("public static");
             assertThat(myStringField.getInt(null)).isNotEqualTo(0);
         }
+    }
+
+    /** Smoke tests for the classpath build service. */
+    @Test
+    public void checkLoadRClassInTestWithBuildService() throws Exception {
+        GradleBuildResult result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_SYMBOL_TABLE_CACHING, true)
+                        .run(":c:test");
+        File xmlResults =
+                project.file(
+                        "c/build/test-results/testDebugUnitTest/"
+                                + "TEST-com.example.c.test.MyTest.xml");
+        assertThat(xmlResults).isFile();
+
+        assertThat(result.getStdout())
+                .contains(
+                        "SymbolTableBuildService: cache miss - loaded table 'com.example.a' from disk");
     }
 }

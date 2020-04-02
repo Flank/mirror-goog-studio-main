@@ -31,7 +31,7 @@ fun <T> Property<T>.setDisallowChanges(value: T?) {
     disallowChanges()
 }
 
-fun <T> Property<T>.setDisallowChanges(value: Provider<T>) {
+fun <T> Property<T>.setDisallowChanges(value: Provider<out T>) {
     set(value)
     disallowChanges()
 }

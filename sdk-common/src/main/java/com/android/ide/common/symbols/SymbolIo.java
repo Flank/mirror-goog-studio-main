@@ -107,9 +107,15 @@ public final class SymbolIo {
 
     public static final String ANDROID_ATTR_PREFIX = "android_";
 
-    private final Interner<Symbol> symbolInterner = Interners.newStrongInterner();
+    private final Interner<Symbol> symbolInterner;
 
-    public SymbolIo() {}
+    public SymbolIo() {
+        this(Interners.newStrongInterner());
+    }
+
+    public SymbolIo(Interner<Symbol> symbolInterner) {
+        this.symbolInterner = symbolInterner;
+    }
 
     /**
      * Loads a symbol table from a symbol file created by aapt.
