@@ -22,7 +22,6 @@ project.ext.pomName = 'Android Resource Packaging Compiler'
 project.ext.pomDesc = 'Compiler for Android Resources, to be used by AAPT2.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 compileTestKotlin {

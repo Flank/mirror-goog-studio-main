@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -33,7 +32,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
-import com.google.common.base.Joiner
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -70,8 +68,6 @@ import javax.xml.parsers.ParserConfigurationException
 abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
     private var buildTypeName: String? = null
-
-    private lateinit var aaptOptions: AaptOptions
 
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -112,19 +108,6 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     @get:Internal
     abstract val artifactTransformationRequest: Property<ArtifactTransformationRequest>
 
-    @Input
-    fun getAaptOptionsAsString(): String {
-        return Joiner.on(";")
-            .join(
-                aaptOptions.ignoreAssetsPattern ?: "",
-                Joiner.on(":")
-                    .join(aaptOptions.noCompress),
-                aaptOptions.failOnMissingConfigEntry,
-                Joiner.on(":")
-                    .join(aaptOptions.additionalParameters),
-                aaptOptions.cruncherProcesses
-            )
-    }
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -228,8 +211,6 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.PACKAGED_MANIFESTS,
                 task.mergedManifests
             )
-
-            task.aaptOptions = creationConfig.globalScope.extension.aaptOptions
 
             task.buildTypeName = creationConfig.variantDslInfo.componentIdentity.buildType
 

@@ -156,7 +156,8 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         @get:Nested
         val mainVariantOutput: VariantOutputImpl
 
-        private val packageNameOfFinalRClassProvider: () -> String
+        @get:Input
+        val packageNameOfFinalRClass: Provider<String>
 
         init {
             val testedVariant = unitTestProperties.testedVariant
@@ -168,19 +169,12 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             mergedAssets = testedVariant.artifacts.getFinalProduct(MERGED_ASSETS)
             mergedManifest = testedVariant.artifacts.getFinalProduct(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
-            packageNameOfFinalRClassProvider = {
-                testedVariant.variantDslInfo.originalApplicationId
-            }
+            packageNameOfFinalRClass = testedVariant.packageName
             buildDirectoryPath = FileUtils.toSystemIndependentPath(
                 FileUtils.relativePossiblyNonExistingPath(
                     unitTestProperties.globalScope.project.buildDir,
                     unitTestProperties.globalScope.project.projectDir)
             )
-        }
-
-        @get:Input
-        val packageNameOfFinalRClass: String by lazy {
-            packageNameOfFinalRClassProvider()
         }
 
         fun computeProperties(projectDir: File): TestConfigProperties {
@@ -192,7 +186,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
                 resourceApk?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
                 getRelativePathIfRequired(mergedAssets.get().asFile, projectDir),
                 getRelativePathIfRequired(File(manifestOutput.outputFile), projectDir),
-                packageNameOfFinalRClass
+                packageNameOfFinalRClass.get()
             )
         }
 

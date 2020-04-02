@@ -317,9 +317,6 @@ public class LibraryTaskManager
 
         // ----- Minify next -----
         maybeCreateJavaCodeShrinkerTask(libVariantProperties);
-        if (buildFeatures.getAndroidResources()) {
-            maybeCreateResourcesShrinkerTasks(libVariantProperties);
-        }
 
         // now add a task that will take all the classes and java resources and package them
         // into the main and secondary jar files that goes in the AAR.

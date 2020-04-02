@@ -83,7 +83,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
                 androidJarPath = androidJar.get().absolutePath,
                 generateProtos = true,
                 manifestFile = manifestFile,
-                options = AaptOptions(null, false, null),
+                options = AaptOptions(),
                 resourceOutputApk = File(File(linkedManifestsDirectory.get().asFile, assetPackName), "${assetPackName}.ap_"),
                 variantType = VariantTypeImpl.BASE_APK,
                 //debuggable = false,
@@ -92,7 +92,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             )
 
             val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-                aapt2FromMaven = aapt2FromMaven,
+                aapt2FromMaven = aapt2FromMaven.singleFile,
                 logger = LoggerWrapper(logger)
             )
 

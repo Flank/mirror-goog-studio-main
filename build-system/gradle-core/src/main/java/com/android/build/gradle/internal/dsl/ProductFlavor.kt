@@ -24,7 +24,7 @@ import org.gradle.api.provider.Property
 
 open class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
-    com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions> {
+    com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions, SigningConfig> {
 
     // FIXME remove: b/149431538
     @Suppress("DEPRECATION")

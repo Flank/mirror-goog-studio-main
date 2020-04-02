@@ -74,7 +74,7 @@ internal fun createProcessJunctionService(
                     outputBaseName,
                     logPrefix,
                     { message -> Logging.getLogger(CxxProcessService::class.java).lifecycle(message) },
-                    { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler, baseExecOperation: (Action<in BaseExecSpec>) -> ExecResult ->
+                    { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler, baseExecOperation: (Action<in BaseExecSpec?>) -> ExecResult ->
                         if (processInfo is JavaProcessInfo) {
                             @Suppress("UNCHECKED_CAST")
                             val javaExecOperation =

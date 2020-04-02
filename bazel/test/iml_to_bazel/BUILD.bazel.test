@@ -148,6 +148,8 @@ iml_project(
         "//:compile_runtime_cycle_start",
         "//:compile_test_cycle_end_and_others",
         "//:depend_on_cycle",
+        "//:friends.impl",
+        "//:friends.tests",
         "//:root",
         "//:runtime",
         "//:runtime_after_test",
@@ -207,4 +209,20 @@ java_import(
     name = "lib/lib",
     jars = ["lib/lib.jar"],
     visibility = ["//visibility:public"],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "friends.impl",
+    iml_files = ["test_friends/friends.impl.iml"],
+    visibility = ["//visibility:public"],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "friends.tests",
+    iml_files = ["test_friends/friends.tests.iml"],
+    test_friends = ["//:friends.impl"],
+    visibility = ["//visibility:public"],
+    deps = ["//:friends.impl[module, test]"],
 )

@@ -40,7 +40,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -92,7 +91,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -223,7 +221,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     private SigningConfigProvider signingConfig;
 
-    @Nullable protected Collection<String> aaptOptionsNoCompress;
+    @NonNull
+    @Input
+    public abstract ListProperty<String> getAaptOptionsNoCompress();
 
     protected String projectBaseName;
 
@@ -315,12 +315,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             }
                         });
         return listBuilder.build();
-    }
-
-    @NonNull
-    @Input
-    public Collection<String> getNoCompressExtensions() {
-        return aaptOptionsNoCompress != null ? aaptOptionsNoCompress : Collections.emptyList();
     }
 
     @Input
@@ -469,7 +463,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
             parameter.getJniFolders().set(getJniFolders().getFiles());
             parameter.getManifestDirectory().set(getManifests());
-            parameter.getAaptOptionsNoCompress().set(aaptOptionsNoCompress);
+            parameter.getAaptOptionsNoCompress().set(getAaptOptionsNoCompress().get());
             parameter.getCreatedBy().set(getCreatedBy().get());
             parameter.getMinSdkVersion().set(getMinSdkVersion().get());
 
@@ -1014,9 +1008,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
 
-            packageAndroidArtifact.aaptOptionsNoCompress =
-                    DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions())
-                            .getNoCompress();
+            packageAndroidArtifact
+                    .getAaptOptionsNoCompress()
+                    .set(creationConfig.getAaptOptions().getNoCompress());
+            packageAndroidArtifact.getAaptOptionsNoCompress().disallowChanges();
 
             packageAndroidArtifact.getManifests().set(manifests);
 

@@ -49,7 +49,6 @@ import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
-import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
@@ -362,7 +361,7 @@ abstract class BaseExtension protected constructor(
      */
     val sdkDirectory: File
         get() {
-            return globalScope.sdkComponents.getSdkDirectory()
+            return globalScope.sdkComponents.sdkDirectoryProvider.get().asFile
         }
 
     /**
@@ -376,13 +375,13 @@ abstract class BaseExtension protected constructor(
     val ndkDirectory: File
         get() {
         // do not call this method from within the plugin code as it forces part of SDK initialization.
-        return globalScope.sdkComponents.ndkFolderProvider.get()
+            return globalScope.sdkComponents.ndkDirectoryProvider.get().asFile
     }
 
     // do not call this method from within the plugin code as it forces SDK initialization.
     override val bootClasspath: List<File>
         get() = try {
-            ArrayList(globalScope.bootClasspath.files)
+            globalScope.bootClasspath.get().map { it.asFile }
         } catch (e: IllegalStateException) {
             listOf()
         }
@@ -394,7 +393,7 @@ abstract class BaseExtension protected constructor(
      */
     val adbExecutable: File
         get() {
-            return globalScope.sdkComponents.adbExecutableProvider.get()
+            return globalScope.sdkComponents.adbExecutableProvider.get().asFile
         }
 
     /** This property is deprecated. Instead, use [adbExecutable]. */

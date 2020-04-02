@@ -37,10 +37,10 @@ import java.util.Set;
 import javax.lang.model.element.Modifier;
 
 /**
- * Class able to generate a BuildConfig class in an Android project.
- * The BuildConfig class contains constants related to the build target.
+ * Class able to generate a BuildConfig class in an Android project. The BuildConfig class contains
+ * constants related to the build target.
  */
-public class BuildConfigGenerator {
+public class BuildConfigGenerator implements BuildConfigCreator {
 
     public static final String BUILD_CONFIG_NAME = "BuildConfig.java";
 
@@ -88,21 +88,20 @@ public class BuildConfigGenerator {
         return this;
     }
 
-    /**
-     * Returns a File representing where the BuildConfig class will be.
-     */
+    /** Returns a File representing where the BuildConfig class will be. */
+    @Override
     public File getFolderPath() {
         return new File(mGenFolder, mBuildConfigPackageName.replace('.', File.separatorChar));
     }
 
+    @Override
     public File getBuildConfigFile() {
         File folder = getFolderPath();
         return new File(folder, BUILD_CONFIG_NAME);
     }
 
-    /**
-     * Generates the BuildConfig class.
-     */
+    /** Generates the BuildConfig class. */
+    @Override
     public void generate() throws IOException {
         File pkgFolder = getFolderPath();
         if (!pkgFolder.isDirectory() && !pkgFolder.mkdirs()) {

@@ -23,7 +23,7 @@ import org.junit.Test
 /**
  * Test of [LazyManifestParser] that focuses on properties values
  */
-class LazyManifestParserPropertiesTest : LazyManifestParserBaseTest() {
+internal class LazyManifestParserPropertiesTest : LazyManifestParserBaseTest() {
 
     @Test
     fun `basic manifest values`() {
@@ -58,16 +58,18 @@ class LazyManifestParserPropertiesTest : LazyManifestParserBaseTest() {
         }
 
         expect {
-            packageName = "com.android.tests.builder.core"
-            split = "com.android.tests.builder.core.split"
-            minSdkVersion = AndroidTarget(apiLevel = 21, codeName = null)
-            targetSdkVersion = AndroidTarget(apiLevel = 25, codeName = null)
-            instrumentationRunner = "com.android.tests.builder.core.instrumentation.name"
-            testLabel = "instrumentation_label"
-            functionalTest = true
-            handleProfiling = false
-            extractNativeLibs = true
-            useEmbeddedDex = true
+            data {
+                packageName = "com.android.tests.builder.core"
+                split = "com.android.tests.builder.core.split"
+                minSdkVersion = AndroidTarget(apiLevel = 21, codeName = null)
+                targetSdkVersion = AndroidTarget(apiLevel = 25, codeName = null)
+                instrumentationRunner = "com.android.tests.builder.core.instrumentation.name"
+                testLabel = "instrumentation_label"
+                functionalTest = true
+                handleProfiling = false
+                extractNativeLibs = true
+                useEmbeddedDex = true
+            }
         }
     }
 
@@ -85,7 +87,9 @@ class LazyManifestParserPropertiesTest : LazyManifestParserBaseTest() {
         }
 
         expect {
-            minSdkVersion = AndroidTarget(apiLevel = null, codeName = "Q")
+            data {
+                minSdkVersion = AndroidTarget(apiLevel = null, codeName = "Q")
+            }
         }
     }
 
@@ -103,60 +107,9 @@ class LazyManifestParserPropertiesTest : LazyManifestParserBaseTest() {
         }
 
         expect {
-            targetSdkVersion = AndroidTarget(apiLevel = null, codeName = "Q")
-        }
-    }
-
-    // ---------------------------------------------------------------------------------------------
-
-    override fun compareResult(
-        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE") expectedMaybe: ManifestData?,
-        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE") actualMaybe: ManifestData?,
-        given: GivenBuilder
-    ) {
-        val expected = expectedMaybe ?: throw RuntimeException("expected is null")
-        val actual = actualMaybe ?: throw RuntimeException("actual is null")
-
-        // only check the cases where expected value is not null
-
-        expected.packageName?.let {
-            Truth.assertThat(actual.packageName).named("packageName").isEqualTo(it)
-        }
-
-        expected.split?.let {
-            Truth.assertThat(actual.split).named("split").isEqualTo(it)
-        }
-
-        expected.minSdkVersion?.let {
-            Truth.assertThat(actual.minSdkVersion).named("minSdkVersion").isEqualTo(it)
-        }
-
-        expected.targetSdkVersion?.let {
-            Truth.assertThat(actual.targetSdkVersion).named("targetSdkVersion").isEqualTo(it)
-        }
-
-        expected.instrumentationRunner?.let {
-            Truth.assertThat(actual.instrumentationRunner).named("instrumentationRunner").isEqualTo(it)
-        }
-
-        expected.testLabel?.let {
-            Truth.assertThat(actual.testLabel).named("testLabel").isEqualTo(it)
-        }
-
-        expected.functionalTest?.let {
-            Truth.assertThat(actual.functionalTest).named("functionalTest").isEqualTo(it)
-        }
-
-        expected.handleProfiling?.let {
-            Truth.assertThat(actual.handleProfiling).named("handleProfiling").isEqualTo(it)
-        }
-
-        expected.extractNativeLibs?.let {
-            Truth.assertThat(actual.extractNativeLibs).named("extractNativeLibs").isEqualTo(it)
-        }
-
-        expected.useEmbeddedDex?.let {
-            Truth.assertThat(actual.useEmbeddedDex).named("useEmbeddedDex").isEqualTo(it)
+            data {
+                targetSdkVersion = AndroidTarget(apiLevel = null, codeName = "Q")
+            }
         }
     }
 }

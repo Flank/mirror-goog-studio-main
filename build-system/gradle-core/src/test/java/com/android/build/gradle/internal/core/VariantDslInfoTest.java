@@ -289,11 +289,9 @@ public class VariantDslInfoTest {
                         buildType,
                         new MockSourceProvider("debug"),
                         signingOverride,
-                        null /*manifest supplier*/,
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
-                        variantPropertiesApiServices,
-                        () -> true);
+                        variantPropertiesApiServices);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 

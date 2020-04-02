@@ -366,7 +366,10 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)
-            task.setBootClasspath(globalScope.getFilteredBootClasspath());
+            task.setBootClasspath(
+                    creationConfig
+                            .getServices()
+                            .fileCollection(globalScope.getFilteredBootClasspath()));
 
             task.lintClassPath =
                     globalScope

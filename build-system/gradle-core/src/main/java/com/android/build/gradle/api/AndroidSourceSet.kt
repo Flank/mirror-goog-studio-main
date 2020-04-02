@@ -50,34 +50,6 @@ interface AndroidSourceSet: com.android.build.api.dsl.AndroidSourceSet {
     @get:Deprecated("use {@link #getCompileOnlyConfigurationName()}")
     val providedConfigurationName: String
 
-    /** Returns the name of the api configuration for this source set.  */
-    val apiConfigurationName: String
-
-    /**
-     * Returns the name of the compileOnly configuration for this source set.
-     */
-    val compileOnlyConfigurationName: String
-
-    /**
-     * Returns the name of the implemenation configuration for this source set.
-     */
-    val implementationConfigurationName: String
-
-    /**
-     * Returns the name of the implemenation configuration for this source set.
-     */
-    val runtimeOnlyConfigurationName: String
-
-    /**
-     * Returns the name of the wearApp configuration for this source set.
-     */
-    val wearAppConfigurationName: String
-
-    /**
-     * Returns the name of the annotation processing tool classpath for this source set.
-     */
-    val annotationProcessorConfigurationName: String
-
     override val manifest: AndroidSourceFile
 
     /**

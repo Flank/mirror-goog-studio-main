@@ -112,6 +112,10 @@ private fun findNdkPathImpl(
                             "which disagrees with android.ndkVersion $ndkVersion")
                     return null
                 }
+                warnln("NDK was located by using ndk.dir property. This method is " +
+                        "deprecated and will be removed in a future release. Please use " +
+                        "android.ndkVersion or android.ndkPath in build.gradle to specify " +
+                        "the NDK to use. ")
                 return ndkDirFolder
             }
             warnln(

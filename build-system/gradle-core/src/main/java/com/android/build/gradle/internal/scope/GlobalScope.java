@@ -38,15 +38,17 @@ import com.android.ide.common.blame.MessageReceiver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.SoftwareComponentFactory;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.BasePluginConvention;
+import org.gradle.api.provider.Provider;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** A scope containing data for the Android plugin. */
@@ -71,7 +73,7 @@ public class GlobalScope {
 
     @NonNull private final BuildArtifactsHolder globalArtifacts;
 
-    @Nullable private ConfigurableFileCollection bootClasspath = null;
+    @Nullable private Provider<List<RegularFile>> bootClasspath = null;
 
     public GlobalScope(
             @NonNull Project project,
@@ -323,12 +325,27 @@ public class GlobalScope {
      * @return {@link FileCollection} for the boot classpath.
      */
     @NonNull
-    public FileCollection getBootClasspath() {
+    public Provider<List<RegularFile>> getBootClasspath() {
         if (bootClasspath == null) {
-            bootClasspath = project.files(getFilteredBootClasspath());
-            if (extension.getCompileOptions().getTargetCompatibility().isJava8Compatible()) {
-                bootClasspath.from(getSdkComponents().getCoreLambdaStubsProvider());
-            }
+            bootClasspath =
+                    project.provider(
+                            () -> {
+                                ImmutableList.Builder<RegularFile> builder =
+                                        ImmutableList.builder();
+                                builder.addAll(getFilteredBootClasspath().get());
+                                if (extension
+                                        .getCompileOptions()
+                                        .getTargetCompatibility()
+                                        .isJava8Compatible()) {
+                                    builder.add(
+                                            project.getLayout()
+                                                    .file(
+                                                            getSdkComponents()
+                                                                    .getCoreLambdaStubsProvider())
+                                                    .get());
+                                }
+                                return builder.build();
+                            });
         }
         return bootClasspath;
     }
@@ -341,7 +358,7 @@ public class GlobalScope {
      *
      * @return a {@link FileCollection} that forms the filtered classpath.
      */
-    public FileCollection getFilteredBootClasspath() {
+    public Provider<List<RegularFile>> getFilteredBootClasspath() {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
                 getDslServices().getIssueReporter(),
@@ -362,16 +379,19 @@ public class GlobalScope {
      */
     @NonNull
     public FileCollection getFullBootClasspath() {
-        return BootClasspathBuilder.INSTANCE.computeClasspath(
-                project,
-                getDslServices().getIssueReporter(),
-                getSdkComponents().getTargetBootClasspathProvider(),
-                getSdkComponents().getTargetAndroidVersionProvider(),
-                getSdkComponents().getAdditionalLibrariesProvider(),
-                getSdkComponents().getOptionalLibrariesProvider(),
-                getSdkComponents().getAnnotationsJarProvider(),
-                true,
-                ImmutableList.of());
+        return project.files(
+                BootClasspathBuilder.INSTANCE
+                        .computeClasspath(
+                                project,
+                                getDslServices().getIssueReporter(),
+                                getSdkComponents().getTargetBootClasspathProvider(),
+                                getSdkComponents().getTargetAndroidVersionProvider(),
+                                getSdkComponents().getAdditionalLibrariesProvider(),
+                                getSdkComponents().getOptionalLibrariesProvider(),
+                                getSdkComponents().getAnnotationsJarProvider(),
+                                true,
+                                ImmutableList.of())
+                        .get());
     }
 
     @NonNull

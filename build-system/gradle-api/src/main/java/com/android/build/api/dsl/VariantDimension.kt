@@ -25,7 +25,8 @@ import java.io.File
  * That is, [BuildType] and [ProductFlavor] and [DefaultConfig].
  */
 @Incubating
-interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
+interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
+        SigningConfigT : SigningConfig> {
     /**
      * Application id suffix. It is appended to the "base" application id when calculating the final
      * application id for a variant.
@@ -242,4 +243,38 @@ interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOpti
      * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
      */
     fun externalNativeBuild(action: ExternalNativeBuildOptions.() -> Unit)
+
+    /** The associated signing config or null if none are set on the variant dimension. */
+    var signingConfig: SigningConfigT?
+
+    /**
+     * Adds a new field to the generated BuildConfig class.
+     *
+     *
+     * The field is generated as: `<type> <name> = <value>;`
+     *
+     *
+     * This means each of these must have valid Java content. If the type is a String, then the
+     * value should include quotes.
+     *
+     * @param type the type of the field
+     * @param name the name of the field
+     * @param value the value of the field
+     */
+    fun buildConfigField(type: String, name: String, value: String)
+
+    /**
+     * Adds a new generated resource.
+     *
+     *
+     * This is equivalent to specifying a resource in res/values.
+     *
+     *
+     * See [Resource Types](http://developer.android.com/guide/topics/resources/available-resources.html).
+     *
+     * @param type the type of the resource
+     * @param name the name of the resource
+     * @param value the value of the resource
+     */
+    fun resValue(type: String, name: String, value: String)
 }

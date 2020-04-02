@@ -352,8 +352,7 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
 
     override fun compareResult(
         expected: List<DimensionCombination>?,
-        actual: List<DimensionCombination>?,
-        given: TestVariantInputModel
+        actual: List<DimensionCombination>?
     ) {
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
     }

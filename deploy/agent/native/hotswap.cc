@@ -268,11 +268,16 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
     def[i].klass = FindClass(name);
 
-    var_reinit.GatherPreviousState(def[i].klass, class_def);
-
     if (def[i].klass == nullptr) {
       result.status = SwapResult::CLASS_NOT_FOUND;
       result.error_details = class_def.name();
+      return result;
+    }
+
+    std::string error = var_reinit.GatherPreviousState(def[i].klass, class_def);
+    if (!error.empty()) {
+      result.status = SwapResult::UNSUPPORTED_REINIT;
+      result.error_details = error;
       return result;
     }
 

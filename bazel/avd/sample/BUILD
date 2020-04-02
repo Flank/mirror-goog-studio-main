@@ -14,6 +14,7 @@ java_test(
         "//prebuilts/studio/sdk:platform-tools",
     ],
     tags = [
+        "manual",
         "no_mac",
         "no_windows",
     ],

@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.test
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.TestCreationConfig
+import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
@@ -31,13 +32,14 @@ import java.util.stream.Collectors
 
 /** Implementation of [TestData] for separate test modules.  */
 class TestApplicationTestData constructor(
-    variantDslInfo: VariantDslInfo,
-    variantSources: VariantSources,
-    override val applicationId: Provider<String>,
-    override val testedApplicationId: Provider<String>,
+    creationConfig: TestVariantCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection
-) : AbstractTestDataImpl(variantDslInfo, variantSources, testApkDir, testedApksDir) {
+) : AbstractTestDataImpl(
+    creationConfig,
+    creationConfig.variantSources,
+    testApkDir,
+    testedApksDir) {
 
     override val isLibrary: Boolean
         get() = false

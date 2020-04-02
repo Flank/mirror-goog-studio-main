@@ -40,15 +40,10 @@ fun RecipeExecutor.generateSimpleMenu(packageName: PackageName, activityClass: S
 }
 
 fun RecipeExecutor.generateThemeStyles(
-  themeData: ThemeData, isDynamicFeature: Boolean, useMaterial2: Boolean, resOut: File, baseFeatureResOut: File
+  themeData: ThemeData, useMaterial2: Boolean, resOut: File
 ) {
   if (!themeData.exists) {
-    if (isDynamicFeature) {
-      mergeXml(themeStyles(themeData.name, useMaterial2), baseFeatureResOut.resolve("values/styles.xml"))
-    }
-    else {
-      mergeXml(themeStyles(themeData.name, useMaterial2), resOut.resolve("values/styles.xml"))
-    }
+    mergeXml(themeStyles(themeData.name, useMaterial2), resOut.resolve("values/styles.xml"))
   }
 }
 
@@ -64,23 +59,20 @@ fun RecipeExecutor.generateManifest(
   isLibrary: Boolean = moduleData.isLibrary,
   mainTheme: ThemeData = moduleData.themesData.main,
   manifestOut: File = moduleData.manifestDir,
-  resOut: File = moduleData.resDir,
+  baseFeatureResOut: File = moduleData.baseFeature?.resDir ?: moduleData.resDir,
   requireTheme: Boolean,
   generateActivityTitle: Boolean,
-  useMaterial2: Boolean,
-  isDynamicFeature: Boolean = false
+  useMaterial2: Boolean
 ) {
   if (requireTheme) {
     generateThemeStyles(
       themeData = mainTheme,
-      isDynamicFeature = isDynamicFeature,
       useMaterial2 = useMaterial2,
-      resOut = resOut,
-      baseFeatureResOut = resOut
+      resOut =  baseFeatureResOut
     )
   }
 
-  generateManifestStrings(activityClass, activityTitle, resOut, resOut, isNewModule, generateActivityTitle, isDynamicFeature)
+  generateManifestStrings(activityClass, activityTitle, baseFeatureResOut, isNewModule, generateActivityTitle)
 
   val manifest = androidManifestXml(
     isNewModule,
@@ -169,19 +161,11 @@ fun RecipeExecutor.generateNoActionBarStyles(baseFeatureResOut: File?, resDir: F
 fun RecipeExecutor.generateManifestStrings(
   activityClass: String,
   activityTitle: String,
-  resOut: File,
   baseFeatureResOut: File,
   isNewModule: Boolean,
-  generateActivityTitle: Boolean,
-  isDynamicFeature: Boolean = false
+  generateActivityTitle: Boolean
 ) {
-  val stringsContent = manifestStrings(activityClass, activityTitle, isNewModule, generateActivityTitle)
-  if (isDynamicFeature) {
-    mergeXml(stringsContent, baseFeatureResOut.resolve("values/strings.xml"))
-  }
-  else {
-    mergeXml(manifestStrings(activityClass, activityTitle, isNewModule, generateActivityTitle), resOut.resolve("values/strings.xml"))
-  }
+  mergeXml(manifestStrings(activityClass, activityTitle, isNewModule, generateActivityTitle), baseFeatureResOut.resolve("values/strings.xml"))
 }
 
 fun RecipeExecutor.generateAppBar(

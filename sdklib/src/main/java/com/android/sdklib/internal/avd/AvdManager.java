@@ -301,6 +301,9 @@ public class AvdManager {
      */
     public static final String AVD_INI_DEVICE_HASH_V2 = "hw.device.hash2";
 
+    /** AVD/config.ini key name representing the Android display settings file */
+    public static final String AVD_INI_DISPLAY_SETTINGS_FILE = "display.settings.xml";
+
     /**
      * The API level of this AVD. Derived from the target hash.
      */

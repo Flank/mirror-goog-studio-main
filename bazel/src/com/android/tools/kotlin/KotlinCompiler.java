@@ -98,7 +98,7 @@ public class KotlinCompiler extends JarOutputCompiler {
             List<String> friendPaths = friends.stream()
                     .map(friend -> new File(friend).getAbsolutePath())
                     .collect(Collectors.toList());
-            args.add("-Xfriend-paths=" + String.join(File.pathSeparator, friendPaths));
+            args.add("-Xfriend-paths=" + String.join(",", friendPaths));
         }
 
         args.add("-d");

@@ -473,7 +473,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         testBuildType = action()
     }
 
-    override fun compareResult(expected: String?, actual: String?, given: TestVariantInputModel) {
+    override fun compareResult(expected: String?, actual: String?) {
         assertThat(actual).named("Name of the default Variant").isEqualTo(expected)
     }
 

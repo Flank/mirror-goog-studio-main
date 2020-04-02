@@ -61,6 +61,10 @@ public class InstallerResponseHandler {
             throw DeployerException.classNotFound(failedAgent.getClassName());
         }
 
+        if (failedAgent.getStatus() == AgentSwapResponse.Status.UNSUPPORTED_REINIT) {
+            throw DeployerException.unsupportedVariableReinit(failedAgent.getErrorMsg());
+        }
+
         if (failedAgent.getStatus() == AgentSwapResponse.Status.JVMTI_ERROR) {
             handleJvmtiError(failedAgent.getJvmtiError());
         }

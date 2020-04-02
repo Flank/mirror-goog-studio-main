@@ -104,7 +104,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
     abstract val execOperations: ExecOperations
 
     private val stlSharedObjectFiles: Map<Abi, File>
-        get() = generator.get().stlSharedObjectFiles
+        get() = generator.get().getStlSharedObjectFiles()
 
     private val stats: GradleBuildVariant.Builder
         get() = generator.get().stats
@@ -205,8 +205,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                     // Only need to check existence of output files we expect to create
                     continue
                 }
-                val output = library.output
-                if (output == null) continue
+                val output = library.output ?: continue
                 if (!output.exists()) {
                     throw GradleException(
                         "Expected output file at $output for target ${library.artifactName} but there was none")

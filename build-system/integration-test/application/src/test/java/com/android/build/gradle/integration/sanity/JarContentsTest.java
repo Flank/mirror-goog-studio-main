@@ -434,7 +434,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/codeblock/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/codeblock/processor/",
-                "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/codeblock/tensor/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/innerclass/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/methods/",
                 "com/android/build/gradle/internal/tasks/structureplugin/",

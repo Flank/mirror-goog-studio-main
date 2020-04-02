@@ -227,7 +227,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -581,10 +580,8 @@ public abstract class TaskManager<
         // Make sure MAIN_PREBUILD runs first:
         taskFactory.register(MAIN_PREBUILD);
 
-        taskFactory.register(
-                EXTRACT_PROGUARD_FILES,
-                ExtractProguardFiles.class,
-                task -> task.dependsOn(MAIN_PREBUILD));
+        taskFactory.register(new ExtractProguardFiles.CreationAction(globalScope))
+                .configure(it -> it.dependsOn(MAIN_PREBUILD));
 
         taskFactory.register(new SourceSetsTask.CreationAction(sourceSetContainer));
 
@@ -992,7 +989,7 @@ public abstract class TaskManager<
     }
 
     protected void createProcessTestManifestTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull TestComponentPropertiesImpl componentProperties) {
         taskFactory.register(new ProcessTestManifest.CreationAction(componentProperties));
     }
 
@@ -1337,8 +1334,12 @@ public abstract class TaskManager<
             }
 
             // create the task that creates the aapt output for the bundle.
-            taskFactory.register(
-                    new LinkAndroidResForBundleTask.CreationAction(componentProperties));
+            if (componentProperties instanceof ApkCreationConfig
+                    && !componentProperties.getVariantType().isForTesting()) {
+                taskFactory.register(
+                        new LinkAndroidResForBundleTask.CreationAction(
+                                (ApkCreationConfig) componentProperties));
+            }
 
             componentProperties
                     .getArtifacts()
@@ -1687,7 +1688,7 @@ public abstract class TaskManager<
                                 "mainVariantOutput", testConfigInputs.getMainVariantOutput());
                         taskInputs.property(
                                 "packageNameOfFinalRClassProvider",
-                                (Supplier<String>) testConfigInputs::getPackageNameOfFinalRClass);
+                                testConfigInputs.getPackageNameOfFinalRClass());
                     });
         } else {
             if (testedVariant.getVariantType().isAar()) {
@@ -2018,11 +2019,7 @@ public abstract class TaskManager<
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 androidTestProperties,
                                 new ConnectedDeviceProvider(
-                                        () ->
-                                                globalScope
-                                                        .getSdkComponents()
-                                                        .getAdbExecutableProvider()
-                                                        .get(),
+                                        globalScope.getSdkComponents().getAdbExecutableProvider(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(logger)),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type

@@ -175,11 +175,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             task.partialRFiles.setDisallowChanges(
                 creationConfig.artifacts.getOperations().getAll(
                 MultipleArtifactType.PARTIAL_R_FILES))
-            task.packageForR.setDisallowChanges(
-                creationConfig.globalScope.project.provider {
-                    creationConfig.variantDslInfo.originalApplicationId
-                }
-            )
+            task.packageForR.setDisallowChanges(creationConfig.packageName)
         }
     }
 }

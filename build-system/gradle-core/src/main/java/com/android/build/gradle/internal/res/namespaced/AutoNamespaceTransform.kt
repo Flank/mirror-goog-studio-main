@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.res.namespaced.NamespaceRewriter
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -145,7 +144,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         val requestList = ArrayList<CompileResourceRequest>()
         val aapt2ServiceKey: Aapt2DaemonServiceKey =
             parameters.aapt2DaemonBuildService.get().registerAaptService(
-                parameters.aapt2FromMaven,
+                parameters.aapt2FromMaven.singleFile,
                 LoggerWrapper.getLogger(this::class.java)
             )
 
@@ -279,7 +278,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         val request = AaptPackageConfig(
             androidJarPath = null,
             manifestFile = manifestFile.toFile(),
-            options = AaptOptions(null, false, null),
+            options = AaptOptions(),
             resourceDirs = ImmutableList.of(
                 compiledResDir.toFile(),
                 preProcessedAarDir.get().asFile.resolve(AutoNamespacePreProcessTransform.PRECOMPILED_RES_DIR_NAME),

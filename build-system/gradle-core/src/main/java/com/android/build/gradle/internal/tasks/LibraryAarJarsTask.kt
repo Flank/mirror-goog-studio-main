@@ -38,6 +38,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -328,7 +329,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 task.typedefRecipe
             )
 
-            task.packageName.setDisallowChanges(creationConfig.variantDslInfo.packageFromManifest)
+            task.packageName.setDisallowChanges(creationConfig.packageName)
             task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
             task.debugBuild.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 

@@ -19,8 +19,7 @@ package com.android.build.gradle.integration.dependencies
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.SyncIssue.SEVERITY_ERROR
-import com.android.builder.model.SyncIssue.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED
+import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -54,8 +53,8 @@ class AndroidXPropertySyncIssueTest {
         assertThat(syncIssues).hasSize(1)
         val syncIssue = syncIssues.single()
 
-        assertThat(syncIssue.type).isEqualTo(TYPE_ANDROID_X_PROPERTY_NOT_ENABLED)
-        assertThat(syncIssue.severity).isEqualTo(SEVERITY_ERROR)
+        assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED)
+        assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_ERROR)
         assertThat(syncIssue.message).isEqualTo(
             "This project uses AndroidX dependencies, but the 'android.useAndroidX' property is" +
                     " not enabled. Set this property to true in the gradle.properties file and" +

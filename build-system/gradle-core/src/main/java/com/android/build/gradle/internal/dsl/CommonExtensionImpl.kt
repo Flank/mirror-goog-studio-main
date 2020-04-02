@@ -20,6 +20,7 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
@@ -41,8 +42,8 @@ abstract class CommonExtensionImpl<
         AnnotationProcessorOptionsT : com.android.build.api.dsl.AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
         SigningConfigT : com.android.build.api.dsl.SigningConfig,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
@@ -81,6 +82,9 @@ abstract class CommonExtensionImpl<
     // This is exposed only to support AndroidConfig.libraryRequests
     // TODO: Make private when AndroidConfig is removed
     val libraryRequests: MutableList<LibraryRequest> = mutableListOf()
+
+    override val sdkComponents: SdkComponents =
+        dslServices.newInstance(SdkComponentsImpl::class.java, dslServices)
 
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT> =
         dslContainers.buildTypeContainer

@@ -37,19 +37,18 @@ import java.util.TreeSet;
 /** Contains the data of a {@link ClientImpl}. */
 public class ClientData {
     /* This is a place to stash data associated with a Client, such as thread
-    * states or heap data.  ClientData maps 1:1 to Client, but it's a little
-    * cleaner if we separate the data out.
-    *
-    * Message handlers are welcome to stash arbitrary data here.
-    *
-    * IMPORTANT: The data here is written by HandleFoo methods and read by
-    * FooPanel methods, which run in different threads.  All non-trivial
-    * access should be synchronized against the ClientData object.
-    */
-
+     * states or heap data.  ClientData maps 1:1 to Client, but it's a little
+     * cleaner if we separate the data out.
+     *
+     * Message handlers are welcome to stash arbitrary data here.
+     *
+     * IMPORTANT: The data here is written by HandleFoo methods and read by
+     * FooPanel methods, which run in different threads.  All non-trivial
+     * access should be synchronized against the ClientData object.
+     */
 
     /** Temporary name of VM to be ignored. */
-    private static final String PRE_INITIALIZED = "<pre-initialized>"; //$NON-NLS-1$
+    public static final String PRE_INITIALIZED = "<pre-initialized>"; // $NON-NLS-1$
 
     private static final Names UNINITIALIZED = new Names(null, null, null);
 

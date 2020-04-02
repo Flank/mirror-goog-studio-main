@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.SdkComponents
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -37,6 +38,7 @@ interface DslServices: BaseServices {
 
     val logger: Logger
     val buildDirectory: DirectoryProperty
+    val sdkComponents: SdkComponents
 
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
     fun <T> domainObjectContainer(

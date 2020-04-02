@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-feaebf2e0c2747f599f9de7445b4216e6af5d0d930f6e6af4d7b0a192c6ac623
+2e26382e73b07ee4d0de53723ab03b0804d47d3c3e5568707327e5f6ea4afec8
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -392,6 +392,7 @@ com.android.builder.model.SourceProviderContainer
 com.android.builder.model.SourceProviderContainer.getArtifactName: java.lang.String ()
 com.android.builder.model.SourceProviderContainer.getSourceProvider: com.android.builder.model.SourceProvider ()
 com.android.builder.model.SyncIssue
+com.android.builder.model.SyncIssue$Companion
 com.android.builder.model.SyncIssue.getData: java.lang.String ()
 com.android.builder.model.SyncIssue.getMessage: java.lang.String ()
 com.android.builder.model.SyncIssue.getMultiLineMessage: java.util.List<java.lang.String> ()

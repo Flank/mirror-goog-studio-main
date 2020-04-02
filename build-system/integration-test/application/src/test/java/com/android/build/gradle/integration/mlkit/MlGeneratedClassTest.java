@@ -67,7 +67,7 @@ public class MlGeneratedClassTest {
                         + "    implementation 'org.tensorflow:tensorflow-lite-support:0.0.0-nightly'\n"
                         + "}");
         TestFileUtils.searchAndReplace(
-                buildFile, "defaultConfig.minSdkVersion 14", "defaultConfig.minSdkVersion 24");
+                buildFile, "defaultConfig.minSdkVersion 14", "defaultConfig.minSdkVersion 19");
 
         File gradlePropertiesFile = project.getGradlePropertiesFile();
         TestFileUtils.appendToFile(gradlePropertiesFile, "android.useAndroidX=true");

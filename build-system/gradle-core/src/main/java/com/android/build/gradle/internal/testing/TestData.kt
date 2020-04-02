@@ -21,6 +21,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import java.io.File
 
 /**
@@ -44,7 +45,7 @@ interface TestData {
     val testedApplicationId: Provider<String>
 
     @get:Input
-    val instrumentationRunner: String
+    val instrumentationRunner: Provider<String>
 
     @get:Input
     val instrumentationRunnerArguments: Map<String, String>

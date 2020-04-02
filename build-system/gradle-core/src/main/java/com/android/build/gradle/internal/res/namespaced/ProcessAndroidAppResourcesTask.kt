@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -51,7 +50,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.nio.file.Files
 
 /**
  * Task to link the resource and the AAPT2 static libraries of its dependencies.
@@ -106,7 +104,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
         val config = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = manifestFile,
-                options = AaptOptions(noCompress, false, null),
+                options = AaptOptions(noCompress, additionalParameters = null),
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource.get().asFile,
@@ -115,7 +113,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven = aapt2FromMaven, logger = LoggerWrapper(logger)
+            aapt2FromMaven = aapt2FromMaven.singleFile, logger = LoggerWrapper(logger)
         )
         getWorkerFacadeWithWorkers().use {
             it.submit(

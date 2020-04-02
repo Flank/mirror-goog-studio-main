@@ -6,6 +6,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -75,5 +76,53 @@ class AaptOptionsTest {
 
         // Should execute without failure.
         project.executor().run("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testTasksRunAfterAaptOptionsChanges_bundleDebug() {
+        testTasksRunAfterAaptOptionsChanges(
+            "bundleDebug",
+            listOf(":bundleDebugResources", ":mergeDebugJavaResource", ":packageDebugBundle")
+        )
+    }
+
+    @Test
+    fun testTasksRunAfterAaptOptionsChanges_assembleDebug() {
+        testTasksRunAfterAaptOptionsChanges(
+            "assembleDebug",
+            listOf(":mergeDebugJavaResource", ":packageDebug")
+        )
+    }
+
+    private fun testTasksRunAfterAaptOptionsChanges(
+        assembleTask: String,
+        expectedDidWorkTasks: List<String>
+    ) {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android {
+                    aaptOptions {
+                        noCompress "foo"
+                    }
+
+                    onVariantProperties {
+                        aaptOptions.noCompress.add("bar")
+                    }
+                }
+                """.trimIndent()
+        )
+
+        project.executor().run("clean", assembleTask)
+
+        // test that tasks run when aapt options changed via the DSL
+        TestFileUtils.searchAndReplace(project.buildFile, "foo", "baz")
+        val result1 = project.executor().run(assembleTask)
+        assertThat(result1.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
+
+        // test that tasks run when aapt options changed via the variant API
+        TestFileUtils.searchAndReplace(project.buildFile, "bar", "qux")
+        val result2 = project.executor().run(assembleTask)
+        assertThat(result2.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
     }
 }

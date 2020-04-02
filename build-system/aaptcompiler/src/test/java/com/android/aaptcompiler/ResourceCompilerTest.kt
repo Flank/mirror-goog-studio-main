@@ -472,7 +472,7 @@ class ResourceCompilerTest {
         Truth.assertThat(symbol2.value).isEqualTo(1)
         Truth.assertThat(symbol2.symbol.name).isEqualTo(parseNameOrFail("id/right"))
     }
-    
+
     @Test
     fun testCompileRawFileSupported() {
         val input = """

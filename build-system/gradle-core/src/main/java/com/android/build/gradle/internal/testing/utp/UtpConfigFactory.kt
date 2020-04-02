@@ -181,7 +181,7 @@ class UtpConfigFactory {
                         path = sdkComponents.getSdkDirectory().absolutePath
                     }
                     adbPathBuilder.apply {
-                        path = sdkComponents.adbExecutableProvider.get().absolutePath
+                        path = sdkComponents.adbExecutableProvider.get().asFile.absolutePath
                     }
                     aaptPathBuilder.apply {
                         path = sdkComponents.buildToolInfoProvider.get().getPath(BuildToolInfo.PathId.AAPT)

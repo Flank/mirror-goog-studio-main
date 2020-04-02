@@ -96,10 +96,9 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
 
             final Project project = creationConfig.getGlobalScope().getProject();
             task.uniqueIdentifier = project.getPath();
-            task.getApplicationId()
-                    .set(
-                            project.provider(
-                                    creationConfig.getVariantDslInfo()::getOriginalApplicationId));
+            // rename this as packageName since this is really what this is
+            // TODO b/152002064
+            task.getApplicationId().set(creationConfig.getPackageName());
             task.getApplicationId().disallowChanges();
         }
     }

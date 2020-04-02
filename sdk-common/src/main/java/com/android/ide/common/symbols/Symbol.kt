@@ -110,12 +110,12 @@ sealed class Symbol {
                 isMaybeDefinition: Boolean = false): Symbol {
             validateSymbol(name, resourceType)
             return if (resourceType == ResourceType.ATTR) {
-                AttributeSymbol(
+                attributeSymbol(
                     name = name,
                     intValue = value,
                     isMaybeDefinition = isMaybeDefinition)
             } else {
-                NormalSymbol(
+                normalSymbol(
                     resourceType = resourceType,
                     name = name,
                     intValue = value
@@ -147,7 +147,7 @@ sealed class Symbol {
             values: ImmutableList<Int>,
             children: List<String> = ImmutableList.of()): StyleableSymbol {
             validateSymbol(name, ResourceType.STYLEABLE)
-            return StyleableSymbol(
+            return styleableSymbol(
                 name = name,
                 canonicalName = canonicalizeValueResourceName(name),
                 values = values,
@@ -172,55 +172,176 @@ sealed class Symbol {
             }
 
         }
-    }
 
-    data class NormalSymbol @JvmOverloads constructor(
-        override val resourceType: ResourceType,
-        override val name: String,
-        override val intValue: Int,
-        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
-        override val canonicalName: String = canonicalizeValueResourceName(name)
-    ) : Symbol() {
-        init {
+        @JvmStatic
+        @JvmOverloads
+        fun normalSymbol(
+            resourceType: ResourceType,
+            name: String,
+            intValue: Int = 0,
+            resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+            canonicalName: String = canonicalizeValueResourceName(name)
+        ) : NormalSymbol {
             Preconditions.checkArgument(resourceType != ResourceType.STYLEABLE,
                 "Internal Error: Styleables must be represented by StyleableSymbol.")
             Preconditions.checkArgument(resourceType != ResourceType.ATTR,
                 "Internal Error: Attributes must be represented by AttributeSymbol.")
+            if (intValue == 0 && resourceVisibility == ResourceVisibility.UNDEFINED && canonicalName == name) {
+                return BasicNormalSymbol(resourceType, name)
+            }
+            return NormalSymbolImpl(resourceType, name, intValue, resourceVisibility, canonicalName)
         }
-        override val javaType: SymbolJavaType
-            get() = SymbolJavaType.INT
-        override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
-        override val children: ImmutableList<String>
-            get() = throw UnsupportedOperationException("Only styleables have children.")
 
-        override fun toString(): String =
-                "$resourceVisibility $resourceType $canonicalName = 0x${intValue.toString(16)}"
+        @JvmStatic
+        @JvmOverloads
+        fun attributeSymbol(
+            name: String,
+            intValue: Int = 0,
+            isMaybeDefinition: Boolean = false,
+            resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+            canonicalName: String = canonicalizeValueResourceName(name)
+        ): AttributeSymbol {
+            if (intValue == 0 && isMaybeDefinition == false && resourceVisibility == ResourceVisibility.UNDEFINED && canonicalName == name) {
+                return BasicAttributeSymbol(name)
+            }
+            return AttributeSymbolImpl(name, intValue, isMaybeDefinition, resourceVisibility, canonicalName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun styleableSymbol(
+            name: String,
+            values: ImmutableList<Int> = ImmutableList.of(),
+            children: ImmutableList<String>,
+            resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+            canonicalName: String = canonicalizeValueResourceName(name)
+        ): StyleableSymbol {
+            if (values.isEmpty() && resourceVisibility == ResourceVisibility.UNDEFINED && canonicalName == name) {
+                return BasicStyleableSymbol(name, children)
+            }
+            return StyleableSymbolImpl(name, values, children, resourceVisibility, canonicalName)
+        }
+    }
+
+    abstract class NormalSymbol internal constructor(): Symbol() {
+        final override fun toString(): String =
+            "$resourceVisibility $resourceType $canonicalName = 0x${intValue.toString(16)}"
+        final override val javaType: SymbolJavaType
+            get() = SymbolJavaType.INT
+        final override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
+        final override val children: ImmutableList<String>
+            get() = throw UnsupportedOperationException("Only styleables have children.")
+    }
+
+    /**
+     * A normal symbol which can't be represented by [BasicNormalSymbol].
+     *
+     * The use of the data class generated equals method means that it is vital that
+     * this class is never used to represent a symbol that could be represented by
+     * [BasicNormalSymbol]
+     */
+    internal data class NormalSymbolImpl(
+        override val resourceType: ResourceType,
+        override val name: String,
+        override val intValue: Int,
+        override val resourceVisibility: ResourceVisibility,
+        override val canonicalName: String
+    ) : NormalSymbol()
+
+    /** A normal symbol with only type and name, e.g. loaded from a symbol list with package name. */
+    internal data class BasicNormalSymbol(
+        override val resourceType: ResourceType,
+        override val name: String
+    ) : NormalSymbol() {
+        override val intValue: Int
+            get() = 0
+        override val resourceVisibility: ResourceVisibility
+            get() = ResourceVisibility.UNDEFINED
+        override val canonicalName: String
+            get() = name
     }
 
     /**
      * TODO: add attribute format
      */
-    data class AttributeSymbol @JvmOverloads constructor(
-        override val name: String,
-        override val intValue: Int,
-        val isMaybeDefinition: Boolean = false,
-        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
-        override val canonicalName: String = canonicalizeValueResourceName(name)
-    ) : Symbol() {
-        override val resourceType: ResourceType = ResourceType.ATTR
-        override val javaType: SymbolJavaType = SymbolJavaType.INT
-        override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
-        override val children: ImmutableList<String>
+    abstract class AttributeSymbol : Symbol() {
+        abstract val isMaybeDefinition: Boolean
+        final override val resourceType: ResourceType
+            get() = ResourceType.ATTR
+        final override val javaType: SymbolJavaType
+            get() = SymbolJavaType.INT
+
+        final override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
+        final override val children: ImmutableList<String>
             get() = throw UnsupportedOperationException("Attributes cannot have children.")
 
-        private val typeWithMaybeDef = "$resourceType${if (isMaybeDefinition) "?" else ""}"
-        override fun toString(): String =
-            "$resourceVisibility $typeWithMaybeDef $canonicalName = 0x${intValue.toString(16)}"
+        final override fun toString(): String {
+            val maybeSuffix = if (isMaybeDefinition) "?" else ""
+            return "$resourceVisibility $resourceType$maybeSuffix $canonicalName = 0x${intValue.toString(16)}"
+        }
     }
 
-    data class StyleableSymbol @JvmOverloads constructor(
+    /**
+     * An attribute symbol which can't be represented by [BasicAttributeSymbol].
+     *
+     * The use of the data class generated equals method means that it is vital that
+     * this class is never used to represent a symbol that could be represented by
+     * [BasicAttributeSymbol]
+     */
+    internal data class AttributeSymbolImpl(
         override val name: String,
-        val values: ImmutableList<Int>,
+        override val intValue: Int,
+        override val isMaybeDefinition: Boolean = false,
+        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+        override val canonicalName: String = canonicalizeValueResourceName(name)
+    ) : AttributeSymbol()
+
+    /** An attribute symbol with only name, e.g. loaded from a symbol list with package name. */
+    internal data class BasicAttributeSymbol(
+        override val name: String
+    ) : AttributeSymbol() {
+        override val intValue: Int
+            get() = 0
+        override val isMaybeDefinition
+            get() = false
+        override val resourceVisibility: ResourceVisibility
+            get() = ResourceVisibility.UNDEFINED
+        override val canonicalName: String
+            get() = name
+    }
+
+    abstract class StyleableSymbol: Symbol() {
+        final override val resourceType: ResourceType
+            get() = ResourceType.STYLEABLE
+        final override val intValue: Int
+            get() = throw UnsupportedOperationException("Styleables have no int value")
+        abstract val values: ImmutableList<Int>
+
+        final override fun getValue(): String =
+            StringBuilder(values.size * 12 + 2).apply {
+                append("{ ")
+                for (i in 0 until values.size) {
+                    if (i != 0) { append(", ") }
+                    append("0x")
+                    append(Integer.toHexString(values[i]))
+                }
+                append(" }")
+            }.toString()
+
+        final override val javaType: SymbolJavaType
+            get() = SymbolJavaType.INT_LIST
+    }
+
+    /**
+     * An styleable symbol which can't be represented by [BasicStyleableSymbol].
+     *
+     * The use of the data class generated equals method means that it is vital that
+     * this class is never used to represent a symbol that could be represented by
+     * [BasicStyleableSymbol]
+     */
+    internal data class StyleableSymbolImpl constructor(
+        override val name: String,
+        override val values: ImmutableList<Int>,
         /**
          * list of the symbol's children in order corresponding to their IDs in the value list.
          * For example:
@@ -231,29 +352,22 @@ sealed class Symbol {
          * ```
          *  corresponds to a Symbol with value `"{0x7f040001,0x7f040002}"` and children `{"attr1",
          * "attr2"}`.
-         * */
+         */
         override val children: ImmutableList<String>,
         override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
         override val canonicalName: String = canonicalizeValueResourceName(name)
-    ) : Symbol() {
-        override val resourceType: ResourceType
-            get() = ResourceType.STYLEABLE
-        override val intValue: Int
-            get() = throw UnsupportedOperationException("Styleables have no int value")
+    ) : StyleableSymbol()
 
-
-        override fun getValue(): String =
-            StringBuilder(values.size * 12 + 2).apply {
-                    append("{ ")
-                    for (i in 0 until values.size) {
-                        if (i != 0) { append(", ") }
-                        append("0x")
-                        append(Integer.toHexString(values[i]))
-                    }
-                    append(" }")
-                }.toString()
-
-        override val javaType: SymbolJavaType
-            get() = SymbolJavaType.INT_LIST
+    /** An styleable symbol with only name and children e.g. loaded from a symbol list with package name. */
+    internal data class BasicStyleableSymbol constructor(
+        override val name: String,
+        override val children: ImmutableList<String>
+    ) : StyleableSymbol() {
+        override val values: ImmutableList<Int>
+            get() = ImmutableList.of()
+        override val resourceVisibility: ResourceVisibility
+            get() = ResourceVisibility.UNDEFINED
+        override val canonicalName: String
+            get() = name
     }
 }

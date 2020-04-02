@@ -35,6 +35,7 @@ public class IrModule extends IrNode {
     private List<File> resources = new ArrayList<>();
     private Map<File, String> prefixes = new LinkedHashMap<>();
     private List<Dependency<? extends IrNode>> dependencies = new ArrayList<>();
+    private List<IrModule> testFriends = new ArrayList<>();
     private List<File> excludes = new ArrayList<>();
     private String name;
     private Path baseDir;
@@ -64,6 +65,10 @@ public class IrModule extends IrNode {
             }
         }
         dependencies.add(dependency);
+    }
+
+    public void addTestFriend(IrModule friend) {
+        testFriends.add(friend);
     }
 
     public String getName() {
@@ -96,6 +101,10 @@ public class IrModule extends IrNode {
 
     public List<Dependency<? extends IrNode>> getDependencies() {
         return dependencies;
+    }
+
+    public List<IrModule> getTestFriends() {
+        return testFriends;
     }
 
     public List<File> getImls() {

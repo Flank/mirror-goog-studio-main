@@ -19,6 +19,8 @@
       <module fileurl="file://$PROJECT_DIR$/test/test.iml" filepath="$PROJECT_DIR$/test/test.iml" />
       <module fileurl="file://$PROJECT_DIR$/test_runtime_cycle_end/test_runtime_cycle_end.iml" filepath="$PROJECT_DIR$/test_runtime_cycle_end/test_runtime_cycle_end.iml" />
       <module fileurl="file://$PROJECT_DIR$/test_runtime_cycle_start/test_runtime_cycle_start.iml" filepath="$PROJECT_DIR$/test_runtime_cycle_start/test_runtime_cycle_start.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test_friends/friends.impl.iml" filepath="$PROJECT_DIR$/test_friends/friends.impl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test_friends/friends.tests.iml" filepath="$PROJECT_DIR$/test_friends/friends.tests.iml" />
     </modules>
   </component>
 </project>

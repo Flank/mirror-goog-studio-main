@@ -267,6 +267,12 @@ public class DeployerException extends Exception {
 
         INTERRUPTED("Deployment was interrupted.", "%s", "Retry", ResolutionAction.RETRY),
 
+        UNSUPPORTED_REINIT(
+                "Added variable(s) does not support value initialization.",
+                "%s",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE);
 
         private final String message;
@@ -392,6 +398,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException classNotFound(String className) {
         return new DeployerException(Error.CLASS_NOT_FOUND, new String[] {className}, className);
+    }
+
+    public static DeployerException unsupportedVariableReinit(String msg) {
+        return new DeployerException(Error.UNSUPPORTED_REINIT, NO_ARGS, msg);
     }
 
     // JVMTI error codes for which we have specific error messages.

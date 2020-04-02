@@ -25,10 +25,12 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.apache.log4j.Logger
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -63,10 +65,11 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val layoutInfoDirectory: DirectoryProperty
+
     // the package name for the module / app
-    private lateinit var packageNameSupplier: () -> String
-    @get:Input val packageName: String
-        get() = packageNameSupplier()
+    @get:Input
+    abstract val packageName: Property<String>
+
     // list of artifacts from dependencies
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -148,7 +151,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 dependencyClassesFolder = mergedArtifactsFromDependencies.get().asFile,
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
-                packageName = packageName,
+                packageName = packageName.get(),
                 artifactFolder = classInfoBundleDir.get().asFile,
                 v1ArtifactsFolder = v1Artifacts.orNull?.asFile,
                 useAndroidX = useAndroidX,
@@ -186,12 +189,14 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             task: DataBindingGenBaseClassesTask
         ) {
             super.configure(task)
+            val operations = creationConfig.operations
 
             creationConfig.operations.setTaskInputToFinalProduct(
                 DataBindingCompilerArguments.getLayoutInfoArtifactType(creationConfig),
                 task.layoutInfoDirectory)
-            val operations = creationConfig.operations
-            task.packageNameSupplier = { creationConfig.variantDslInfo.originalApplicationId }
+
+            task.packageName.setDisallowChanges(creationConfig.packageName)
+
             operations.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies

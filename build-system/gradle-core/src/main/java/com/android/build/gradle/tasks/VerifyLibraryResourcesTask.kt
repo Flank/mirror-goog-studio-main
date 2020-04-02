@@ -127,7 +127,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs.elements).outputFile
 
         val aapt2ServiceKey =
-            aapt2DaemonBuildService.get().registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
+            aapt2DaemonBuildService.get().registerAaptService(aapt2FromMaven.singleFile, LoggerWrapper(logger))
         val aapt2WorkersBuildServiceKey = aapt2WorkersBuildService.get().getWorkersServiceKey()
         val parameter = Params(
             projectName = projectName,
@@ -274,7 +274,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 .addResourceDirectories(compiledDependenciesResourcesDirs)
                 .addResourceDir(resDir)
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
-                .setOptions(AaptOptions(failOnMissingConfigEntry = false))
+                .setOptions(AaptOptions())
                 .setVariantType(VariantTypeImpl.LIBRARY)
                 .setAndroidTarget(androidJar)
                 .build()

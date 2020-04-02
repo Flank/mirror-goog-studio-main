@@ -114,6 +114,11 @@ public class IrToBazel {
             File librariesDir = new File(projectDir, ".idea/libraries");
             Package librariesPkg = bazel
                     .findPackage(workspace.relativize(librariesDir.toPath()).toString());
+
+            for (IrModule friend : module.getTestFriends()) {
+                rules.get(module).addTestFriend(rules.get(friend));
+            }
+
             for (IrModule.Dependency<? extends IrNode> dependency : module
                     .getDependencies()) {
                 List<ImlModule.Tag> scopes = new LinkedList<>();

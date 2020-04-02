@@ -31,9 +31,9 @@ import org.gradle.api.NamedDomainObjectContainer
  *
  */
 interface DslContainerProvider<
-        DefaultConfigT : DefaultConfig<*>,
+        DefaultConfigT : DefaultConfig<*, *>,
         BuildTypeT : BuildType<*, *>,
-        ProductFlavorT : ProductFlavor<*>,
+        ProductFlavorT : ProductFlavor<*, *>,
         SigningConfigT : SigningConfig> {
 
     val defaultConfig: DefaultConfigT

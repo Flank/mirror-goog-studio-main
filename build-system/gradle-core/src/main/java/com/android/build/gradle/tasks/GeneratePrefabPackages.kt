@@ -27,14 +27,13 @@ import org.gradle.api.Action
 import org.gradle.process.ExecResult
 import org.gradle.process.JavaExecSpec
 import java.io.File
-import java.util.function.Function
 
 fun generatePrefabPackages(
     nativeBuildSystem: NativeBuildSystem,
     moduleModel: CxxModuleModel,
     abiModel: CxxAbiModel,
     packages: List<File>,
-    execOperation: Function<Action<in JavaExecSpec>, ExecResult>
+    execOperation: (Action<in JavaExecSpec?>) -> ExecResult
 ) {
     val packagePaths = packages.map { it.path }
 
@@ -106,5 +105,5 @@ fun generatePrefabPackages(
         abiModel.soFolder,
         "prefab_${buildSystem}_${abiModel.abi.tag}",
         builder, "prefab"
-    ).javaProcess().logStderrToInfo().execute(execOperation::apply)
+    ).javaProcess().logStderrToInfo().execute(execOperation)
 }

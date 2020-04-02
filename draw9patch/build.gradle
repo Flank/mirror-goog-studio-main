@@ -19,5 +19,4 @@ project.ext.pomName = 'Draw 9-patch tool'
 project.ext.pomDesc = 'WYSIWYG editor for automatically resizing images'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"

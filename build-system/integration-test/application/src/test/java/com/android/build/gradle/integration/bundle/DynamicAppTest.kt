@@ -529,7 +529,7 @@ class DynamicAppTest {
         val baseApk = File(apkFolder, "base-master.apk")
         Zip(baseApk).use {
             Truth.assertThat(it.entries.map { it.toString() })
-                    .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
+                    .containsAllOf("/META-INF/BNDLTOOL.RSA", "/META-INF/BNDLTOOL.SF")
         }
 
         // check model
@@ -596,7 +596,7 @@ class DynamicAppTest {
 
         project.getSubproject("app").getBundleUniversalApk(GradleTestProject.ApkType.DEBUG).use {
             Truth.assertThat(it.entries.map { it.toString() })
-                .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
+                .containsAllOf("/META-INF/BNDLTOOL.RSA", "/META-INF/BNDLTOOL.SF")
         }
 
         val result = project

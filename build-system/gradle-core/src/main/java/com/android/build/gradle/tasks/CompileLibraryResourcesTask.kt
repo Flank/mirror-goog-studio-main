@@ -96,7 +96,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     override fun doTaskAction(inputChanges: InputChanges) {
         val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven, LoggerWrapper(logger)
+            aapt2FromMaven.singleFile, LoggerWrapper(logger)
         )
 
         getWorkerFacadeWithWorkers().use { workers ->

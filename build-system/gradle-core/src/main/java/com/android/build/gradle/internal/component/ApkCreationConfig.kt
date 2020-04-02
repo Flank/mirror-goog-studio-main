@@ -16,7 +16,14 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.variant.AaptOptions
+
+/**
+ * Interface for properties common to all variant generating APKs
+ */
 interface ApkCreationConfig: BaseCreationConfig {
+
+    val aaptOptions: AaptOptions
 
     // TODO: move the below properties to Property<X>
 

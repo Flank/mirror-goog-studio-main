@@ -106,7 +106,8 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
                         "7.3\" Foldable",
-                        "8\" Foldable");
+                        "8\" Foldable",
+                        "13.5\" Freeform");
 
         assertThat(dm.getDevice("2.7in QVGA", "Generic").getDisplayName()).isEqualTo("2.7\" QVGA");
 
@@ -164,6 +165,7 @@ public class DeviceManagerTest {
                         "7\" WSVGA (Tablet)",
                         "7.3\" Foldable",
                         "8\" Foldable",
+                        "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Android Wear Round",
@@ -256,7 +258,8 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
                         "7.3\" Foldable",
-                        "8\" Foldable");
+                        "8\" Foldable",
+                        "13.5\" Freeform");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -310,6 +313,7 @@ public class DeviceManagerTest {
                         "7\" WSVGA (Tablet)",
                         "7.3\" Foldable",
                         "8\" Foldable",
+                        "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Android Wear Round",
@@ -392,7 +396,8 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
                         "7.3\" Foldable",
-                        "8\" Foldable");
+                        "8\" Foldable",
+                        "13.5\" Freeform");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -446,6 +451,7 @@ public class DeviceManagerTest {
                         "7\" WSVGA (Tablet)",
                         "7.3\" Foldable",
                         "8\" Foldable",
+                        "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Android Wear Round",

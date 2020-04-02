@@ -32,6 +32,8 @@ import com.android.sdklib.OptionalLibrary
 import com.android.utils.ILogger
 import com.google.common.base.Suppliers
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.function.Supplier
@@ -105,29 +107,49 @@ open class SdkComponents(
     }
 
     val sdkSetupCorrectly: Provider<Boolean> = project.providers.provider {
-        sdkLoadStrategy.getAndroidJar() != null && sdkLoadStrategy.getBuildToolsInfo() != null }
+        sdkLoadStrategy.getAndroidJar() != null && sdkLoadStrategy.getBuildToolsInfo() != null
+    }
 
-    val buildToolInfoProvider: Provider<BuildToolInfo> = project.providers.provider { sdkLoadStrategy.getBuildToolsInfo() }
-    val buildToolsRevisionProvider: Provider<Revision> = project.providers.provider { sdkLoadStrategy.getBuildToolsRevision() }
-    val aidlExecutableProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getAidlExecutable() }
-    val adbExecutableProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getAdbExecutable() }
-    val coreLambdaStubsProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getCoreLambaStubs() }
-    val splitSelectExecutableProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getSplitSelectExecutable() }
+    val buildToolInfoProvider: Provider<BuildToolInfo> =
+        project.providers.provider { sdkLoadStrategy.getBuildToolsInfo() }
+    val buildToolsRevisionProvider: Provider<Revision> =
+        project.providers.provider { sdkLoadStrategy.getBuildToolsRevision() }
+    val aidlExecutableProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getAidlExecutable() }
+    val adbExecutableProvider: Provider<RegularFile> =
+        project.layout.file(project.provider { sdkLoadStrategy.getAdbExecutable() })
+    val coreLambdaStubsProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getCoreLambaStubs() }
+    val splitSelectExecutableProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getSplitSelectExecutable() }
 
-    val androidJarProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getAndroidJar() }
-    val annotationsJarProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getAnnotationsJar() }
-    val aidlFrameworkProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getAidlFramework() }
+    val androidJarProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getAndroidJar() }
+    val annotationsJarProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getAnnotationsJar() }
+    val aidlFrameworkProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getAidlFramework() }
 
-    val additionalLibrariesProvider: Provider<List<OptionalLibrary>> = project.providers.provider { sdkLoadStrategy.getAdditionalLibraries() }
-    val optionalLibrariesProvider: Provider<List<OptionalLibrary>> = project.providers.provider { sdkLoadStrategy.getOptionalLibraries() }
-    val targetAndroidVersionProvider: Provider<AndroidVersion> = project.providers.provider { sdkLoadStrategy.getTargetPlatformVersion() }
-    val targetBootClasspathProvider: Provider<List<File>> = project.providers.provider { sdkLoadStrategy.getTargetBootClasspath() }
+    val additionalLibrariesProvider: Provider<List<OptionalLibrary>> =
+        project.providers.provider { sdkLoadStrategy.getAdditionalLibraries() }
+    val optionalLibrariesProvider: Provider<List<OptionalLibrary>> =
+        project.providers.provider { sdkLoadStrategy.getOptionalLibraries() }
+    val targetAndroidVersionProvider: Provider<AndroidVersion> =
+        project.providers.provider { sdkLoadStrategy.getTargetPlatformVersion() }
+    val targetBootClasspathProvider: Provider<List<File>> =
+        project.providers.provider { sdkLoadStrategy.getTargetBootClasspath() }
 
-    val renderScriptSupportJarProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getRenderScriptSupportJar() }
-    val supportNativeLibFolderProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getSupportNativeLibFolder() }
-    val supportBlasLibFolderProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getSupportBlasLibFolder() }
+    val renderScriptSupportJarProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getRenderScriptSupportJar() }
+    val supportNativeLibFolderProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getSupportNativeLibFolder() }
+    val supportBlasLibFolderProvider: Provider<File> =
+        project.providers.provider { sdkLoadStrategy.getSupportBlasLibFolder() }
 
-    val ndkFolderProvider: Provider<File> = project.providers.provider { ndkHandlerSupplier.get().ndkPlatform.getOrThrow().ndkDirectory }
+    val sdkDirectoryProvider: Provider<Directory> =
+        project.layout.dir(project.provider { getSdkDirectory() })
+    val ndkDirectoryProvider: Provider<Directory> =
+        project.layout.dir(project.provider { ndkHandlerSupplier.get().ndkPlatform.getOrThrow().ndkDirectory })
     val ndkRevisionProvider: Provider<Revision> =
         project.providers.provider { ndkHandlerSupplier.get().ndkPlatform.getOrThrow().revision }
     val stripExecutableFinderProvider: Provider<SymbolStripExecutableFinder> =

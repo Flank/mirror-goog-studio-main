@@ -30,10 +30,6 @@ class LinkingTaskInputAaptOptions(private val aaptOptions: AaptOptions) {
         get() = aaptOptions.noCompress
 
     @get:Input
-    val failOnMissingConfigEntry: Boolean
-        get() = aaptOptions.failOnMissingConfigEntry
-
-    @get:Input
     @get:Optional
     val additionalParameters: List<String>?
         get() = aaptOptions.additionalParameters

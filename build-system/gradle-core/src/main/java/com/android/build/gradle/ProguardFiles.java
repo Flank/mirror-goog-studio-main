@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -95,8 +96,9 @@ public class ProguardFiles {
     }
 
     @VisibleForTesting
-    public static void createProguardFile(@NonNull String name, @NonNull File destination)
-            throws IOException {
+    public static void createProguardFile(
+            @NonNull String name, @NonNull File destination, @NonNull Boolean keepRClass)
+             throws IOException {
         ProguardFile proguardFile = null;
         for (ProguardFile knownFile : ProguardFile.values()) {
             if (knownFile.fileName.equals(name)) {
@@ -141,6 +143,13 @@ public class ProguardFiles {
 
         sb.append("\n");
         append(sb, "proguard-common.txt");
+
+        if (keepRClass) {
+            String rFieldRule = "-keepclassmembers class **.R$* {\n" +
+                    "    public static <fields>;\n" +
+                    "}\n";
+            sb.append(rFieldRule);
+        }
 
         Files.asCharSink(destination, UTF_8).write(sb.toString());
     }

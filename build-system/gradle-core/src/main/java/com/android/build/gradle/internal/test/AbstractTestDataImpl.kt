@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.test
 
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
@@ -30,29 +30,32 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.Locale
 
 /**
  * Common implementation of [TestData] for embedded test projects (in androidTest folder)
  * and separate module test projects.
  */
 abstract class AbstractTestDataImpl(
-    protected val testVariantConfig: VariantDslInfo,
-    private val testVariantSources: VariantSources,
+    private val creationConfig: TestCreationConfig,
+    private val variantSources: VariantSources,
     val testApkDir: Provider<Directory>,
     val testedApksDir: FileCollection?
 ) : TestData {
     private var extraInstrumentationTestRunnerArgs: Map<String, String> = mutableMapOf()
 
-    override val instrumentationRunner: String
-        get() {
-            return testVariantConfig.instrumentationRunner.get()
-        }
+    override val applicationId: Provider<String>
+        get() = creationConfig.applicationId
+
+    override val testedApplicationId: Provider<String>
+        get() = creationConfig.testedApplicationId
+
+    override val instrumentationRunner: Provider<String>
+        get() = creationConfig.instrumentationRunner
 
     override val instrumentationRunnerArguments: Map<String, String>
         get() {
             return ImmutableMap.builder<String, String>()
-                .putAll(testVariantConfig.instrumentationRunnerArguments)
+                .putAll(creationConfig.instrumentationRunnerArguments)
                 .putAll(extraInstrumentationTestRunnerArgs)
                 .build()
         }
@@ -69,22 +72,13 @@ abstract class AbstractTestDataImpl(
     override var animationsDisabled: Boolean = false
 
     override val isTestCoverageEnabled: Boolean
-        get() {
-            return testVariantConfig.isTestCoverageEnabled
-        }
+        get() = creationConfig.isTestCoverageEnabled
 
     override val minSdkVersion: AndroidVersion
-        get() {
-            return testVariantConfig.minSdkVersion
-        }
+        get() = creationConfig.minSdkVersion
 
     override val flavorName: String
-        get() {
-            return testVariantConfig
-                .componentIdentity
-                .flavorName
-                .toUpperCase(Locale.getDefault())
-        }
+        get() = creationConfig.name
 
     open fun getTestedApksFromBundle(): FileCollection? = null
 
@@ -95,7 +89,7 @@ abstract class AbstractTestDataImpl(
             // where user makes a typo in a test name or forgets to inherit from a JUnit class
             val javaDirectories =
                 ImmutableList.builder<File>()
-            for (sourceProvider in testVariantSources.sortedSourceProviders) {
+            for (sourceProvider in variantSources.sortedSourceProviders) {
                 javaDirectories.addAll(sourceProvider.javaDirectories)
             }
             return javaDirectories.build()
@@ -124,7 +118,7 @@ abstract class AbstractTestDataImpl(
         return StaticTestData(
             applicationId.get(),
             testedApplicationId.orNull,
-            instrumentationRunner,
+            instrumentationRunner.get(),
             instrumentationRunnerArguments,
             animationsDisabled,
             isTestCoverageEnabled,

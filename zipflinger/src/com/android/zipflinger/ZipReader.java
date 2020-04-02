@@ -17,25 +17,45 @@
 package com.android.zipflinger;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 
 public class ZipReader implements Closeable {
 
+    private File file;
     private FileChannel channel;
+    private boolean isOpen;
 
-    ZipReader(FileChannel channel) {
-        this.channel = channel;
+    ZipReader(File file) {
+        this.file = file;
+        isOpen = false;
     }
 
     @Override
     public void close() throws IOException {
+        if (!isOpen) {
+            return;
+        }
         channel.close();
     }
 
     void read(ByteBuffer byteBuffer, long offset) throws IOException {
+        ensureOpen();
         channel.read(byteBuffer, offset);
         byteBuffer.rewind();
+    }
+
+    void ensureOpen() throws IOException {
+        if (isOpen) {
+            return;
+        }
+        this.channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+        if (!channel.isOpen()) {
+            throw new IllegalStateException("Unable to open Channel to " + file.getAbsolutePath());
+        }
+        isOpen = true;
     }
 }

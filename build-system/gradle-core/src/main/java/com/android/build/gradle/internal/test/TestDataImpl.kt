@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.test
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.TestCreationConfig
+import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher.computeBestOutput
 import com.android.builder.testing.api.DeviceConfigProvider
@@ -29,21 +31,21 @@ import org.gradle.api.provider.Provider
 import java.io.File
 
 /**
- * Implementation of [TestData] on top of a [TestVariantData]
+ * Implementation of [TestData] on top of a [AndroidTestCreationConfig]
  */
-class TestDataImpl constructor(
-    private val androidTestConfig: AndroidTestCreationConfig,
+class TestDataImpl(
+    private val testConfig:  AndroidTestCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
-    androidTestConfig.variantDslInfo,
-    androidTestConfig.variantSources,
+    testConfig,
+    testConfig.variantSources,
     testApkDir,
     testedApksDir
 ) {
 
     init {
-        if (androidTestConfig
+        if (testConfig
                 .outputs
                 .getSplitsByType(
                     VariantOutputConfiguration.OutputType.ONE_OF_MANY
@@ -54,21 +56,13 @@ class TestDataImpl constructor(
         }
     }
 
-    override val applicationId: Provider<String>
-        get() = androidTestConfig.applicationId
-
-    override val testedApplicationId: Provider<String>
-        get() = androidTestConfig.testedConfig.applicationId
-
     override val isLibrary: Boolean
-        get() {
-            return androidTestConfig.testedConfig.variantType.isAar
-        }
+        get() = testConfig.testedConfig.variantType.isAar
 
     override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider, logger: ILogger
     ): ImmutableList<File> {
-        val testedConfig = androidTestConfig.testedConfig
+        val testedConfig = testConfig.testedConfig
         val apks =
             ImmutableList.builder<File>()
         val builtArtifacts = BuiltArtifactsLoaderImpl()

@@ -37,6 +37,10 @@ public class ZipMap {
     private File file;
     private long fileSize;
 
+    private Location payloadLocation;
+    private Location cdLocation;
+    private Location eocdLocation;
+
     private ZipMap(@NonNull File file, boolean accountDataDescriptors) {
         this.file = file;
         this.accountDataDescriptors = accountDataDescriptors;
@@ -57,6 +61,21 @@ public class ZipMap {
         return map;
     }
 
+    @NonNull
+    public Location getPayloadLocation() {
+        return payloadLocation;
+    }
+
+    @NonNull
+    public Location getCdLoc() {
+        return cdLocation;
+    }
+
+    @NonNull
+    public Location getEocdLoc() {
+        return eocdLocation;
+    }
+
     private void parse(Zip64.Policy policy) throws IOException {
         try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
 
@@ -66,7 +85,8 @@ public class ZipMap {
             if (eocd.getLocation() == Location.INVALID) {
                 throw new IllegalStateException(String.format("Could not find EOCD in '%s'", file));
             }
-            Location cdLocation = eocd.getCdLocation();
+            eocdLocation = eocd.getLocation();
+            cdLocation = eocd.getCdLocation();
 
             // Check if this is a zip64 archive
             Zip64Locator locator = Zip64Locator.find(channel, eocd);
@@ -88,6 +108,8 @@ public class ZipMap {
             }
 
             parseCentralDirectory(channel, cdLocation, policy);
+
+            payloadLocation = new Location(0, cdLocation.first);
         }
     }
 

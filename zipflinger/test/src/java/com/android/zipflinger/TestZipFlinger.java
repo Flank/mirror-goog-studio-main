@@ -21,11 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.Deflater;
@@ -698,13 +697,7 @@ public class TestZipFlinger extends TestBase {
         ZipMap map = ZipMap.from(archivePath.toFile(), false);
 
         Path cdDumpPath = getTestPath("cd_dump");
-        try (FileChannel channel =
-                        FileChannel.open(
-                                cdDumpPath,
-                                StandardOpenOption.WRITE,
-                                StandardOpenOption.READ,
-                                StandardOpenOption.CREATE);
-                ZipWriter writer = new ZipWriter(channel)) {
+        try (ZipWriter writer = new ZipWriter(cdDumpPath.toFile())) {
             map.getCentralDirectory().write(writer);
         }
 
@@ -772,5 +765,18 @@ public class TestZipFlinger extends TestBase {
         verifyArchive(dst);
         Assert.assertEquals(
                 "Archive size differ from ECOD", dst.length(), EndOfCentralDirectory.SIZE);
+    }
+
+    @Test
+    public void testParseReadOnlyFile() throws Exception {
+        Path src = getPath("1-2-3files.zip");
+        FileTime lastModifiedTime = Files.getLastModifiedTime(src);
+        try (ZipArchive archive = new ZipArchive(src.toFile())) {
+            List<String> entries = archive.listEntries();
+            Assert.assertEquals("Unexpected number of entries", entries.size(), 3);
+        }
+        FileTime modifiedTime = Files.getLastModifiedTime(src);
+        Assert.assertEquals(
+                "Archive should not have been modified", lastModifiedTime, modifiedTime);
     }
 }

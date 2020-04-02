@@ -7,6 +7,7 @@
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/livestore/library/app-inspection.demo.livestore.library.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/livestore/library/app-inspection.demo.livestore.library.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/livestore/protocol/app-inspection.demo.livestore.protocol.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/livestore/protocol/app-inspection.demo.livestore.protocol.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-app/app-inspection.test-app.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-app/app-inspection.test-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-framework/app-inspection.test-framework.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-framework/app-inspection.test-framework.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/api/app-inspection.test-inspector.api.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/api/app-inspection.test-inspector.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" />

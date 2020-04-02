@@ -41,14 +41,14 @@ interface CommonExtension<
         CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT>,
         DensitySplitT : DensitySplit,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
         NdkBuildT : NdkBuild,
         PackagingOptionsT : PackagingOptions,
-        ProductFlavorT : ProductFlavor<AnnotationProcessorOptionsT>,
+        ProductFlavorT : ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
         TestOptionsT : TestOptions<UnitTestOptionsT>,
@@ -699,4 +699,6 @@ interface CommonExtension<
      *     the library is not required.
      */
     fun useLibrary(name: String, required: Boolean)
+
+    val sdkComponents: SdkComponents
 }

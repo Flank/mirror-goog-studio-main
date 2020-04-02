@@ -244,28 +244,28 @@ public class SymbolTableTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.DRAWABLE, "img", 0, ResourceVisibility.PUBLIC))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.ID,
                                         "bar",
                                         0,
                                         ResourceVisibility.PRIVATE_XML_ONLY))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.STRING, "beep", 0, ResourceVisibility.PRIVATE))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.STRING,
                                         "foo",
                                         0,
                                         ResourceVisibility.PRIVATE_XML_ONLY))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.XML, "xml", 0, ResourceVisibility.PUBLIC))
                         .build();
 

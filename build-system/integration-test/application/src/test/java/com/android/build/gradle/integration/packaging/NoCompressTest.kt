@@ -59,11 +59,22 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .appendToBuild(
                     "android.aaptOptions.noCompress = " +
                             "['.no', '.Test', 'end', '.a(b)c', 'space name.txt', '.KoŃcówka']")
+                .appendToBuild(
+                    """
+                        android {
+                            onVariantProperties {
+                                aaptOptions.noCompress.add(".variantApiNo")
+                            }
+                        }
+                        """.trimIndent()
+                )
                 .appendToBuild("android.defaultConfig.versionCode 1")
                 .withFile("src/main/resources/jres.yes", content)
                 .withFile("src/main/resources/jres.no", content)
+                .withFile("src/main/resources/jres.variantApiNo", content)
                 .withFile("src/main/assets/a.yes", content)
                 .withFile("src/main/assets/a.no", content)
+                .withFile("src/main/assets/a.variantApiNo", content)
                 .withFile("src/main/assets/a_matching.Test", content)
                 .withFile("src/main/assets/a_lower.test", content)
                 .withFile("src/main/assets/a_upper.TEST", content)
@@ -117,8 +128,10 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
         ZFile.openReadOnly(apk).use { zf ->
             zf.expectCompressionMethodOf("jres.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("jres.no").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("jres.variantApiNo").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("assets/a.no").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("assets/a.variantApiNo").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a_matching.Test").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a_lower.test").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a_upper.TEST").isEqualTo(CompressionMethod.STORE)

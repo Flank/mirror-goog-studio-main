@@ -151,12 +151,7 @@ public class MetadataExtractor {
         return null;
     }
 
-    public String getOutputLabelFileName() {
-        ModelMetadata modelMetadata = getModelMetaData();
-        return modelMetadata.subgraphMetadata(0).outputTensorMetadata(0).associatedFiles(0).name();
-    }
-
-    public QuantizationParams getQuantizationParams(Tensor tensor) {
+    public static QuantizationParams getQuantizationParams(Tensor tensor) {
         byte tensorType = tensor.type();
         float scale;
         long zeroPoint;

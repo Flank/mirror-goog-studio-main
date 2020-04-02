@@ -124,6 +124,7 @@ message AgentSwapResponse {
     JNI_SETUP_FAILED = 7;    // The JNI environment could not be set up.
     JVMTI_SETUP_FAILED = 8;  // The JVMTI environment could not be set up.
     SET_CAPABILITIES_FAILED = 9;  // JVMTI capabilities could not be set.
+    UNSUPPORTED_REINIT = 10;  // JVMTI supports the swap but some variables cannot be reinit.
   }
 
   // The state of the swap that was requested.
@@ -138,6 +139,7 @@ message AgentSwapResponse {
   oneof error_details {
     string class_name = 4;
     JvmtiError jvmti_error = 5;
+    string error_msg = 6;
   }
 }
 

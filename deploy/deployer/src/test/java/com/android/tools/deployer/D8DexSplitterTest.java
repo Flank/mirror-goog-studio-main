@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.r8.ByteDataView;
@@ -23,6 +24,7 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.DexIndexedConsumer;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.origin.Origin;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.util.Collection;
@@ -106,6 +108,105 @@ public class D8DexSplitterTest {
         splitter = new D8InMemoryDexSplitter();
         result = splitter.split(input, clz -> crcs.get(target.getName()).equals(clz.checksum));
         Assert.assertNotNull(findClass(result, target).code);
+    }
+
+    @Test
+    public void testStaticInitValues() {
+        Class<StaticPrimitiveClass> target = StaticPrimitiveClass.class;
+        ApkEntry input = new InMemoryDexFile(true, target);
+        D8InMemoryDexSplitter splitter = new D8InMemoryDexSplitter();
+        Collection<DexClass> result = splitter.split(input, d -> true);
+        DexClass splittedTarget = findClass(result, target);
+        Assert.assertNotNull(splittedTarget);
+        Deploy.ClassDef.FieldReInitState state = null;
+
+        state = findVariableState(splittedTarget.variableStates, "int1");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("I", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(1, Integer.parseInt(state.getValue()));
+
+        state = findVariableState(splittedTarget.variableStates, "boolFalse");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("Z", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(false, Boolean.parseBoolean(state.getValue()));
+
+        state = findVariableState(splittedTarget.variableStates, "byte3");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("B", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(3, Byte.parseByte(state.getValue()));
+
+        state = findVariableState(splittedTarget.variableStates, "charK");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("C", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals("k", state.getValue());
+
+        state = findVariableState(splittedTarget.variableStates, "double15");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("D", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(15.0, Double.parseDouble(state.getValue()), 0);
+
+        state = findVariableState(splittedTarget.variableStates, "float13");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("F", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(13.0, Float.parseFloat(state.getValue()), 0);
+
+        state = findVariableState(splittedTarget.variableStates, "long17");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("J", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(17l, Long.parseLong(state.getValue()));
+
+        state = findVariableState(splittedTarget.variableStates, "short22");
+        Assert.assertNotNull(state);
+        Assert.assertEquals("S", state.getType());
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(22, Short.parseShort(state.getValue()));
+
+        state = findVariableState(splittedTarget.variableStates, "notStatic");
+        Assert.assertNotNull(state);
+        Assert.assertFalse(state.getStaticVar());
+
+        state = findVariableState(splittedTarget.variableStates, "notFinal");
+        Assert.assertNotNull(state);
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.UNKNOWN, state.getState());
+
+        state = findVariableState(splittedTarget.variableStates, "notFound");
+        Assert.assertNull(state);
+    }
+
+    /** Return the first varaible state with a given variable name. */
+    private static Deploy.ClassDef.FieldReInitState findVariableState(
+            ImmutableList<Deploy.ClassDef.FieldReInitState> states, String name) {
+        for (Deploy.ClassDef.FieldReInitState state : states) {
+            if (state.getName().equals(name)) {
+                return state;
+            }
+        }
+        return null;
     }
 
     private static class D8InMemoryDexSplitter extends D8DexSplitter {

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -33,7 +34,6 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -97,7 +97,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         val request = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = manifestFile.get().asFile,
-                options = AaptOptions(null, false, null),
+                options = AaptOptions(),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.get().stream()
                     .map(Directory::getAsFile).iterator()),
                 staticLibrary = true,
@@ -108,7 +108,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven = aapt2FromMaven,
+            aapt2FromMaven = aapt2FromMaven.singleFile,
             logger = LoggerWrapper(logger)
         )
         getWorkerFacadeWithWorkers().use {
@@ -177,10 +177,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                     FileUtils.join(
                             creationConfig.globalScope.intermediatesDir, "res-link-intermediate", creationConfig.variantDslInfo.dirName)
 
-            task.packageForR.set(creationConfig.globalScope.project.provider {
-                creationConfig.variantDslInfo.originalApplicationId
-            })
-            task.packageForR.disallowChanges()
+            task.packageForR.setDisallowChanges(creationConfig.packageName)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
@@ -194,5 +191,4 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }
-
 }

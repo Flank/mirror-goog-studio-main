@@ -26,6 +26,7 @@ import java.io.File
 import java.util.Objects
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.util.concurrent.ConcurrentHashMap
 
@@ -34,14 +35,14 @@ object BootClasspathBuilder {
 
     private data class CacheKey(val target: AndroidVersion, val addAllOptionalLibraries: Boolean, val libraryRequests: List<LibraryRequest>)
 
-    private val classpathCache = ConcurrentHashMap<CacheKey, List<File>>()
+    private val classpathCache = ConcurrentHashMap<CacheKey, List<RegularFile>>()
 
     /**
      * Computes the classpath for compilation.
      *
      * @param project target project
      * @param issueReporter sync issue reporter to report missing optional libraries with.
-     * @param target the lazy provider for sdk information
+     * @param targetBootClasspath the lazy provider for sdk information
      * @param annotationsJar the lazy provider for annotations jar file.
      * @param addAllOptionalLibraries true if all optional libraries should be included.
      * @param libraryRequests list of optional libraries to find and include.
@@ -57,32 +58,39 @@ object BootClasspathBuilder {
         annotationsJar: Provider<File>,
         addAllOptionalLibraries: Boolean,
         libraryRequests: List<LibraryRequest>
-    ): FileCollection {
+    ): Provider<List<RegularFile>> {
 
-        return project.files(
-            targetBootClasspath.map { bootClasspath ->
-                val target = targetAndroidVersion.get()
-                val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
+        return targetBootClasspath.map { bootClasspath ->
+            val target = targetAndroidVersion.get()
+            val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
 
-                classpathCache.getOrPut(key) {
-                    val files = ImmutableList.builder<File>()
-                    files.addAll(bootClasspath)
+            classpathCache.getOrPut(key) {
+                val files = ImmutableList.builder<RegularFile>()
+                files.addAll(bootClasspath.map {
+                    project.objects.fileProperty().fileValue(it).get()
+                })
 
-                    // add additional and requested optional libraries if any
-                    files.addAll(
-                        computeAdditionalAndRequestedOptionalLibraries(
-                            additionalLibraries.get(), optionalLibraries.get(), addAllOptionalLibraries, libraryRequests, issueReporter
-                        )
+                // add additional and requested optional libraries if any
+                files.addAll(
+                    computeAdditionalAndRequestedOptionalLibraries(
+                        project,
+                        additionalLibraries.get(),
+                        optionalLibraries.get(),
+                        addAllOptionalLibraries,
+                        libraryRequests,
+                        issueReporter
                     )
+                )
 
-                    // add annotations.jar if needed.
-                    if (target.apiLevel <= 15) {
-                        files.add(annotationsJar.get())
-                    }
+                // add annotations.jar if needed.
+                if (target.apiLevel <= 15) {
 
-                    files.build()
+                    files.add(project.layout.file(annotationsJar).get())
                 }
-            })
+
+                files.build()
+            }
+        }
     }
 
     /**
@@ -97,31 +105,34 @@ object BootClasspathBuilder {
      * @return a list of File to add to the classpath.
      */
     fun computeAdditionalAndRequestedOptionalLibraries(
+        project: Project,
         additionalLibraries: List<OptionalLibrary>,
         optionalLibraries: List<OptionalLibrary>,
         addAllOptionalLibraries: Boolean,
         libraryRequestsArg: List<LibraryRequest>,
         issueReporter: IssueReporter
-    ): List<File> {
+    ): List<RegularFile> {
 
         // iterate through additional libraries first, in case they contain
         // a requested library
         val libraryRequests = libraryRequestsArg.map { it.name }.toMutableSet()
-        val files = ImmutableList.builder<File>()
+        val files = ImmutableList.builder<RegularFile>()
         additionalLibraries
             .stream()
-            .map<File> { lib ->
-                val jar = lib.jar
-                Verify.verify(
-                    jar != null,
-                    "Jar missing from additional library %s.",
-                    lib.name
-                )
-                // search if requested, and remove from libraryRequests if so
-                if (libraryRequests.contains(lib.name)) {
-                    libraryRequests.remove(lib.name)
-                }
-                jar
+            .map<RegularFile> { lib ->
+                project.layout.file(project.provider {
+                    val jar = lib.jar
+                    Verify.verify(
+                        jar != null,
+                        "Jar missing from additional library %s.",
+                        lib.name
+                    )
+                    // search if requested, and remove from libraryRequests if so
+                    if (libraryRequests.contains(lib.name)) {
+                        libraryRequests.remove(lib.name)
+                    }
+                    jar
+                }).orNull
             }
             .filter { Objects.nonNull(it) }
             .forEach { files.add(it) }
@@ -129,23 +140,25 @@ object BootClasspathBuilder {
         // then iterate through optional libraries
         optionalLibraries
             .stream()
-            .map<File> { lib ->
-                // add to jar and remove from requests
-                val libraryRequested = libraryRequests.contains(lib.name)
-                if (addAllOptionalLibraries || libraryRequested) {
-                    val jar = lib.jar
-                    Verify.verify(
-                        jar != null,
-                        "Jar missing from optional library %s.",
-                        lib.name
-                    )
-                    if (libraryRequested) {
-                        libraryRequests.remove(lib.name)
+            .map<RegularFile> { lib ->
+                project.layout.file(project.provider {
+                    // add to jar and remove from requests
+                    val libraryRequested = libraryRequests.contains(lib.name)
+                    if (addAllOptionalLibraries || libraryRequested) {
+                        val jar = lib.jar
+                        Verify.verify(
+                            jar != null,
+                            "Jar missing from optional library %s.",
+                            lib.name
+                        )
+                        if (libraryRequested) {
+                            libraryRequests.remove(lib.name)
+                        }
+                        jar
+                    } else {
+                        null
                     }
-                    jar
-                } else {
-                    null
-                }
+                }).orNull
             }
             .filter { Objects.nonNull(it) }
             .forEach { files.add(it) }

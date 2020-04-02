@@ -328,9 +328,9 @@ public class AvdManagerCliTest {
                         "P 7in WSVGA (Tablet)\n",
                         "P 7.3in Foldable\n",
                         "P 8in Foldable\n",
-                        "P 10.1in WXGA (Tablet)\n"),
-                mLogger.getMessages()
-                        .stream()
+                        "P 10.1in WXGA (Tablet)\n",
+                        "P 13.5in Freeform\n"),
+                mLogger.getMessages().stream()
                         .filter(s -> s.startsWith("P"))
                         .collect(Collectors.toList()));
         assertTrue(mLogger.getMessages().contains("P wear_round_chin_320_290\n"));

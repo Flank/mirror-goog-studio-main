@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -46,7 +47,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
@@ -60,7 +61,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantPropertiesApiServices,
+    internalServices,
     taskCreationServices,
     globalScope
 ), ApplicationVariantProperties, ApplicationCreationConfig {
@@ -72,7 +73,8 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
+    override val applicationId: Property<String> =
+        internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
@@ -82,6 +84,17 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
 
     override val dependenciesInfo: com.android.build.api.variant.DependenciesInfo = variantDependencyInfo
 
+    override val aaptOptions: AaptOptions by lazy {
+        initializeAaptOptionsFromDsl(
+            globalScope.extension.aaptOptions,
+            internalServices
+        )
+    }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        action.invoke(aaptOptions)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -90,7 +103,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         get() = variantScope.isTestOnly
 
     override val needAssetPackTasks: Property<Boolean> =
-        variantPropertiesApiServices.propertyOf(Boolean::class.java, false)
+        internalServices.propertyOf(Boolean::class.java, false)
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

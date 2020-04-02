@@ -24,37 +24,37 @@ import com.google.common.collect.ListMultimap
 import org.junit.Assert.fail
 
 fun checkIssuesForSameSeverity(issues: Collection<SyncIssue>, severity: Int) {
-    testIssuesForSingleValue(issues, severity, "severity", SyncIssue::getSeverity)
+    testIssuesForSingleValue(issues, severity, "severity", SyncIssue::severity)
 }
 
 fun checkIssuesForSameType(issues: Collection<SyncIssue>, type: Int) {
-    testIssuesForSingleValue(issues, type, "type", SyncIssue::getType)
+    testIssuesForSingleValue(issues, type, "type", SyncIssue::type)
 }
 
 fun checkIssuesForSameData(issues: Collection<SyncIssue>, data: String?) {
-    testIssuesForSingleValue(issues, data, "data", SyncIssue::getData)
+    testIssuesForSingleValue(issues, data, "data", SyncIssue::data)
 }
 
 fun checkIssuesWithSeverityIn(issues: Collection<SyncIssue>, vararg severity: Integer) {
-    testIssuesForPossibleValue(issues, severity.asList(), "severity", SyncIssue::getSeverity)
+    testIssuesForPossibleValue(issues, severity.asList(), "severity", SyncIssue::severity)
 }
 
 fun checkIssuesFoTypeIn(issues: Collection<SyncIssue>, vararg type: Integer) {
-    testIssuesForPossibleValue(issues, type.asList(), "type", SyncIssue::getType)
+    testIssuesForPossibleValue(issues, type.asList(), "type", SyncIssue::type)
 }
 
 fun checkIssuesForDataIn(issues: Collection<SyncIssue>, vararg data: String) {
-    testIssuesForPossibleValue(issues, data.asList(), "data", SyncIssue::getData)
+    testIssuesForPossibleValue(issues, data.asList(), "data", SyncIssue::data)
 }
 
 fun checkSomeIssuesHaveSeverityValue(issues: Collection<SyncIssue>, data: String): Int =
-    testIssuesForAtleastOneWithValue(issues, data, "severity", SyncIssue::getSeverity)
+    testIssuesForAtleastOneWithValue(issues, data, "severity", SyncIssue::severity)
 
 fun checkSomeIssuesHaveTypeValue(issues: Collection<SyncIssue>, data: String): Int =
-    testIssuesForAtleastOneWithValue(issues, data, "type", SyncIssue::getType)
+    testIssuesForAtleastOneWithValue(issues, data, "type", SyncIssue::type)
 
 fun checkSomeIssuesHaveDataValue(issues: Collection<SyncIssue>, data: String): Int =
-    testIssuesForAtleastOneWithValue(issues, data, "data", SyncIssue::getData)
+    testIssuesForAtleastOneWithValue(issues, data, "data", SyncIssue::data)
 
 
 private fun <T> testIssuesForSingleValue(

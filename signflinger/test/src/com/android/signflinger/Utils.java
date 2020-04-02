@@ -75,6 +75,22 @@ public final class Utils {
             String errors = result.getErrors().toString();
             String warning = result.getWarnings().toString();
             String message = String.format("Errors: '%s', Warnings: '%s'", errors, warning);
+            for (ApkVerifier.Result.V1SchemeSignerInfo signer : result.getV1SchemeSigners()) {
+                for (ApkVerifier.IssueWithParams error : signer.getErrors()) {
+                    message += ", V1Signer Error:" + error.toString() + "\n";
+                }
+                for (ApkVerifier.IssueWithParams error : signer.getWarnings()) {
+                    message += ", V1Signer Warning:" + error.toString() + "\n";
+                }
+            }
+            for (ApkVerifier.Result.V2SchemeSignerInfo signer : result.getV2SchemeSigners()) {
+                for (ApkVerifier.IssueWithParams error : signer.getErrors()) {
+                    message += ", V2Signer Error:" + error.toString() + "\n";
+                }
+                for (ApkVerifier.IssueWithParams error : signer.getWarnings()) {
+                    message += ", V2Signer Warning:" + error.toString() + "\n";
+                }
+            }
             Assert.fail(message);
         }
         Assert.assertTrue(result.isVerified());

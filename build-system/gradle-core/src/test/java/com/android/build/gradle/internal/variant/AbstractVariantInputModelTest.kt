@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.model.SyncIssue
 import com.android.testutils.AbstractReturnGivenReturnExpectTest
@@ -43,6 +44,13 @@ abstract class AbstractVariantInputModelTest<ResultT>:
 
         return modelBuilder.toModel()
     }
+
+    final override fun compareResult(expected: ResultT?, actual: ResultT?, given: TestVariantInputModel) {
+        compareResult(expected, actual)
+        issueChecker?.invoke((dslServices.issueReporter as FakeSyncIssueReporter).syncIssues)
+    }
+
+    abstract fun compareResult(expected: ResultT?, actual: ResultT?)
 
     fun withIssueChecker(action: (List<SyncIssue>) -> Unit) {
         checkState(TestState.GIVEN)

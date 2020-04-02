@@ -18,5 +18,4 @@ project.ext.pomName = 'Android Tools dvlib'
 project.ext.pomDesc = 'A Library to manage the Android device database XML files.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"

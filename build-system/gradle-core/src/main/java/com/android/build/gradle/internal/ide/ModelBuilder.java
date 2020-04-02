@@ -273,11 +273,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<String> bootClasspath;
         if (globalScope.getSdkComponents().getSdkSetupCorrectly().get()) {
             bootClasspath =
-                    globalScope
-                            .getFilteredBootClasspath()
-                            .getFiles()
-                            .stream()
-                            .map(File::getAbsolutePath)
+                    globalScope.getFilteredBootClasspath().get().stream()
+                            .map(it -> it.getAsFile().getAbsolutePath())
                             .collect(Collectors.toList());
         } else {
             // SDK not set up, error will be reported as a sync issue.
@@ -893,7 +890,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         try {
             // This can throw an exception if no package name can be found.
             // Normally, this is fine to throw an exception, but we don't want to crash in sync.
-            applicationId = variantDslInfo.getApplicationId();
+            applicationId = variantDslInfo.getApplicationId().get();
         } catch (RuntimeException e) {
             // don't crash. just throw a sync error.
             applicationId = "";

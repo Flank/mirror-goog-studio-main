@@ -39,5 +39,4 @@ project.ext.pomName = 'Android Signflinger Library'
 project.ext.pomDesc = 'Library used to sign APKs'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"

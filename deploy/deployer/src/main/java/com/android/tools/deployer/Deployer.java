@@ -47,6 +47,7 @@ public class Deployer {
 
     // Temp flag.
     private final boolean useOptimisticSwap;
+    private final boolean useOptimisticResourceSwap;
     private final boolean useStructuralRedefinition;
 
     public Deployer(
@@ -59,6 +60,7 @@ public class Deployer {
             Collection<DeployMetric> metrics,
             ILogger logger,
             boolean useOptimisticSwap,
+            boolean useOptimisticResourceSwap,
             boolean useStructuralRedefinition) {
         this.adb = adb;
         this.deployCache = deployCache;
@@ -69,6 +71,7 @@ public class Deployer {
         this.metrics = metrics;
         this.logger = logger;
         this.useOptimisticSwap = useOptimisticSwap;
+        this.useOptimisticResourceSwap = useOptimisticResourceSwap;
         this.useStructuralRedefinition = useStructuralRedefinition;
     }
 
@@ -174,7 +177,7 @@ public class Deployer {
 
     public Result fullSwap(List<String> apks) throws DeployerException {
         try (Trace ignored = Trace.begin("fullSwap")) {
-            if (supportsNewPipeline()) {
+            if (supportsNewPipeline() && useOptimisticResourceSwap) {
                 return optimisticSwap(apks, /* Restart Activity */ true, ImmutableMap.of());
             } else {
                 return swap(apks, true /* Restart Activity */, ImmutableMap.of());

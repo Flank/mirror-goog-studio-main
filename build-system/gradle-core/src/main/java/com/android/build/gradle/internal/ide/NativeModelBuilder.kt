@@ -46,9 +46,9 @@ class NativeModelBuilder(
         projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)
     private val enableParallelNativeJsonGen get() =
         projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)
-    private val scopes get() = (variantModel.variants + variantModel.testComponents)
+    private val scopes
+        get() = (variantModel.variants + variantModel.testComponents)
         .filter { it.taskContainer.externalNativeJsonGenerator != null }
-        .filterNotNull()
     private val generators get() = scopes.map { it.taskContainer.externalNativeJsonGenerator!!.get() }
 
     /**
@@ -127,7 +127,7 @@ class NativeModelBuilder(
         generator: ExternalNativeJsonGenerator
     ) {
         builder.addBuildSystem(generator.nativeBuildSystem.tag)
-        val abis = generator.abis.map { it.tag }
+        val abis = generator.abis.map { it.abi.tag }
         val buildFolders = generator.nativeBuildConfigurationsJsons.map { it.parentFile }
         builder.addVariantInfo(
             generator.variantName,
@@ -211,9 +211,9 @@ class NativeModelBuilder(
     private fun regenerateNativeJson() {
         if (enableParallelNativeJsonGen) {
             val cpuCores = Runtime.getRuntime().availableProcessors()
-            val threadNumber = Math.min(cpuCores, 8)
+            val threadNumber = cpuCores.coerceAtMost(8)
             val nativeJsonGenExecutor = Executors.newFixedThreadPool(threadNumber)
-            val buildSteps = ArrayList<Callable<Void>>()
+            val buildSteps = ArrayList<Callable<Void?>>()
             for (component in (variantModel.variants + variantModel.testComponents)) {
                 val generator = component
                     .taskContainer

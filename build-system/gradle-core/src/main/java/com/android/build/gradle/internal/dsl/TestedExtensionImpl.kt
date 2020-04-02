@@ -28,8 +28,8 @@ abstract class TestedExtensionImpl<
         AnnotationProcessorOptionsT : com.android.build.api.dsl.AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
         SigningConfigT : com.android.build.api.dsl.SigningConfig,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(

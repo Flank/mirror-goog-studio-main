@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
  *
  * This generated during DSL execution and is used for variant creation
  */
-class ProductFlavorData<ProductFlavorT : ProductFlavor<*>>(
+class ProductFlavorData<ProductFlavorT : ProductFlavor<*, *>>(
     val productFlavor: ProductFlavorT,
     sourceSet: DefaultAndroidSourceSet,
     androidTestSourceSet: DefaultAndroidSourceSet?,

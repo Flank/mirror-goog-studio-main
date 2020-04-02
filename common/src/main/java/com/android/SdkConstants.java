@@ -965,6 +965,8 @@ public final class SdkConstants {
     public static final String FD_RES_NAVIGATION = "navigation"; //$NON-NLS-1$
     /** Default values resource folder name, i.e. "values" */
     public static final String FD_RES_VALUES = "values"; //$NON-NLS-1$
+    /** Default values resource folder name for the dark theme, i.e. "values-night" */
+    public static final String FD_RES_VALUES_NIGHT = "values-night"; // $NON-NLS-1$
     /** Default xml resource folder name, i.e. "xml" */
     public static final String FD_RES_XML = "xml"; //$NON-NLS-1$
     /** Default raw resource folder name, i.e. "raw" */
@@ -2717,7 +2719,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.3-rc-1";
+    public static final String GRADLE_MINIMUM_VERSION = "6.3";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

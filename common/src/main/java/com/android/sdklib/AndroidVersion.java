@@ -109,6 +109,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     /** Frist version to support Foldable device */
     public static final int MIN_FOLDABLE_DEVICE_API = 29;
 
+    /** First version to support freeform display */
+    public static final int MIN_FREEFORM_DEVICE_API = 30;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */

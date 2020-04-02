@@ -144,13 +144,15 @@ interface VariantDslInfo {
     fun hasFlavors(): Boolean
 
     /**
-     * Returns the original application ID before any overrides from flavors. If the variant is a
-     * test variant, then the application ID is the one coming from the configuration of the tested
-     * variant, and this call is similar to [.getApplicationId]
+     * The Package Name of the variant.
      *
-     * @return the original application ID
+     * This is the package name original present in the manifest (for non-test variants).
+     *
+     * This is not impacted by (test)ApplicationId values coming from the manifest.
+     *
+     * For test components, this is the package name of the tested variant + '.test'
      */
-    val originalApplicationId: String
+    val packageName: Provider<String>
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could
@@ -158,11 +160,7 @@ interface VariantDslInfo {
      *
      * @return the application ID
      */
-    val applicationId: String
-
-    val testApplicationId: String
-
-    val testedApplicationId: String?
+    val applicationId: Provider<String>
 
     /**
      * Returns the version name for this variant. This could be specified by the product flavors,
@@ -213,9 +211,6 @@ interface VariantDslInfo {
 
     /** Gets the test label for this variant  */
     val testLabel: Provider<String?>
-
-    /** Reads the package name from the manifest. This is unmodified by the build type.  */
-    val packageFromManifest: Provider<String>
 
     /**
      * Return the minSdkVersion for this variant.

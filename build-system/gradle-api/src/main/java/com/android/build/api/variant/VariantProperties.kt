@@ -33,4 +33,8 @@ interface VariantProperties: ComponentProperties {
      */
     val applicationId: Provider<String>
 
+    /**
+     * The package name into which some classes are generated
+     */
+    val packageName: Provider<String>
 }

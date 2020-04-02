@@ -4,8 +4,8 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 kotlin_library(
     name = "aaptcompiler",
     srcs = glob([
-        "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
+        "src/main/java/**/*.kt",
     ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/aaptcompiler",
@@ -22,6 +22,22 @@ kotlin_library(
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+    ],
+)
+
+kotlin_test(
+    name = "tests",
+    srcs = glob([
+        "src/test/java/**/*.kt",
+    ]),
+    friends = [":aaptcompiler"],
+    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":aaptcompiler",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 

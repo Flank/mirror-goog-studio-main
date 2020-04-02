@@ -95,6 +95,7 @@ enum CpuTraceType {
   ART = 1;
   SIMPLEPERF = 2;
   ATRACE = 3;
+  PERFETTO = 4;
 }
 
 enum CpuTraceMode {
