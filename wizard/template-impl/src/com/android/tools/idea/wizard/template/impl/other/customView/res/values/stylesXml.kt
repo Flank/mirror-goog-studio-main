@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl
 
-enum class MaterialColor(val colorName: String, val color: String) {
-  GRAY_400("gray_400", "#BDBDBD"),
-  GRAY_600("gray_600", "#757575"),
-  LIGHT_BLUE_400("light_blue_400", "#29B6F6"),
-  LIGHT_BLUE_600("light_blue_600", "#039BE5"),
-  LIGHT_BLUE_900("light_blue_900", "#01579B"),
-  LIGHT_BLUE_A200("light_blue_A200", "#40C4FF"),
-  LIGHT_BLUE_A400("light_blue_A400", "#00B0FF");
+package com.android.tools.idea.wizard.template.impl.other.customView.res.values
 
-  fun xmlElement(): String = """<color name="$colorName">$color</color>"""
-}
+import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+
+fun stylesXml(themeName: String) = """
+<resources>
+    <style name="${getCustomViewStyle(themeName)}" parent="">
+        <item name="android:background">@color/${GRAY_400.colorName}</item>
+        <item name="exampleColor">@color/${LIGHT_BLUE_400.colorName}</item>
+    </style>
+</resources>
+"""
+
+fun getCustomViewStyle(themeName: String) = "Widget.${themeName}.MyView"

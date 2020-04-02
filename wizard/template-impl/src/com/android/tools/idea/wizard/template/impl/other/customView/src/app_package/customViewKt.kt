@@ -45,7 +45,7 @@ class ${viewClass} : View {
     private var _exampleColor: Int = Color.RED // TODO: use a default from R.color...
     private var _exampleDimension: Float = 0f // TODO: use a default from R.dimen...
 
-    private var textPaint: TextPaint? = null
+    private lateinit var textPaint: TextPaint
     private var textWidth: Float = 0f
     private var textHeight: Float = 0f
 
@@ -131,7 +131,7 @@ class ${viewClass} : View {
     }
 
     private fun invalidateTextPaintAndMeasurements() {
-        textPaint?.let {
+        textPaint.let {
             it.textSize = exampleDimension
             it.color = exampleColor
             textWidth = it.measureText(exampleString)

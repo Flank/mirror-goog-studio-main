@@ -16,8 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.other.customView.res.layout
 
+import com.android.tools.idea.wizard.template.impl.other.customView.res.values.getCustomViewStyle
+
 fun sampleXml(
   packageName: String,
+  themeName: String,
   viewClass: String
 ) = """
 <FrameLayout
@@ -27,13 +30,12 @@ fun sampleXml(
     android:layout_height="match_parent">
 
     <${packageName}.${viewClass}
-        android:background="#ccc"
+        style="@style/${getCustomViewStyle(themeName)}"
         android:layout_width="300dp"
         android:layout_height="300dp"
         android:paddingLeft="20dp"
         android:paddingBottom="40dp"
         app:exampleDimension="24sp"
-        app:exampleColor="#33b5e5"
         app:exampleString="Hello, ${viewClass}"
         app:exampleDrawable="@android:drawable/ic_menu_add" />
 
