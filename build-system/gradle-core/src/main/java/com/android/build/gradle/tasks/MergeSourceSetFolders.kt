@@ -44,7 +44,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -58,7 +57,6 @@ import java.io.IOException
 import java.util.concurrent.Callable
 import java.util.function.Function
 
-@CacheableTask
 abstract class MergeSourceSetFolders : IncrementalTask() {
 
     // ----- PUBLIC TASK API -----

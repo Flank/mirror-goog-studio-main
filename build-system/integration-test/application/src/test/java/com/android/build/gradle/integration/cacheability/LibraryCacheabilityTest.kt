@@ -61,7 +61,6 @@ class LibraryCacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":lib:compileReleaseJavaWithJavac",
-                    ":lib:copyReleaseJniLibsProjectAndLocalJars",
                     ":lib:extractReleaseAnnotations",
                     ":lib:generateReleaseBuildConfig",
                     ":lib:generateReleaseResValues",
@@ -70,11 +69,7 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseConsumerProguardFiles",
                     ":lib:mergeReleaseGeneratedProguardFiles",
                     ":lib:mergeReleaseJavaResource",
-                    ":lib:mergeReleaseJniLibFolders",
-                    ":lib:mergeReleaseNativeLibs",
-                    ":lib:mergeReleaseShaders",
                     ":lib:mergeReleaseResources",
-                    ":lib:packageReleaseAssets",
                     ":lib:packageReleaseResources",
                     ":lib:parseReleaseLocalResources",
                     ":lib:processReleaseManifest",
@@ -87,7 +82,12 @@ class LibraryCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
-                    ":lib:bundleReleaseAar" /*Bug 121275773 */,
+                    ":lib:bundleReleaseAar", /* Bug 121275773 */
+                    ":lib:copyReleaseJniLibsProjectAndLocalJars", /* Intended. See bug 153088766 */
+                    ":lib:mergeReleaseJniLibFolders", /* Intended. See bug 153088766 */
+                    ":lib:mergeReleaseNativeLibs", /* Intended. See bug 153088766 */
+                    ":lib:mergeReleaseShaders", /* Intended. See bug 153088766 */
+                    ":lib:packageReleaseAssets", /* Intended. See bug 153088766 */
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
                 ),
                 SKIPPED to setOf(

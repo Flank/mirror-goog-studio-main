@@ -69,12 +69,8 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":generateMinifiedResValues",
             ":jacocoMinified",
             ":javaPreCompileMinified",
-            ":mergeMinifiedAssets",
             ":mergeMinifiedGeneratedProguardFiles",
             ":mergeMinifiedJavaResource",
-            ":mergeMinifiedJniLibFolders",
-            ":mergeMinifiedNativeLibs",
-            ":mergeMinifiedShaders",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified"
         ).plus(
@@ -90,7 +86,11 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
         DID_WORK to setOf(
             ":createMinifiedCompatibleScreenManifests",
             ":extractProguardFiles",
+            ":mergeMinifiedAssets", /* Intended. See bug 153088766 */
+            ":mergeMinifiedJniLibFolders", /* Intended. See bug 153088766 */
+            ":mergeMinifiedNativeLibs", /* Intended. See bug 153088766 */
             ":mergeMinifiedResources",
+            ":mergeMinifiedShaders", /* Intended. See bug 153088766 */
             ":packageMinified",
             ":processMinifiedMainManifest",
             ":processMinifiedManifest",

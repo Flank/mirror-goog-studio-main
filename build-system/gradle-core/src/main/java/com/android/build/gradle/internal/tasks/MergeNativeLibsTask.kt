@@ -33,7 +33,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -50,7 +49,6 @@ import javax.inject.Inject
 /**
  * Task to merge native libs from multiple modules
  */
-@CacheableTask
 abstract class MergeNativeLibsTask
 @Inject constructor(objects: ObjectFactory) : IncrementalTask() {
 
