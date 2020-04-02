@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 class Overlay {
     private static final String TAG = "studio.deploy";
@@ -57,11 +56,16 @@ class Overlay {
         return dexFiles;
     }
 
-    public Optional<File> getResourceTable() {
-        if (!Files.exists(resourceTablePath)) {
-            return Optional.empty();
+    public List<File> getResourceDirs() {
+        ArrayList<File> resDirs = new ArrayList<>();
+        try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.apk")) {
+            for (Path apk : dir) {
+                resDirs.add(apk.toFile());
+            }
+        } catch (IOException io) {
+            Log.e(TAG, "Could not enumerate overlay res dirs", io);
         }
-        return Optional.of(resourceTablePath.toFile());
+        return resDirs;
     }
 
     public List<File> getNativeLibraryDirs() {

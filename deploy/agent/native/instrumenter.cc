@@ -187,29 +187,6 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
       "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
       "addResourceOverlays", MethodHooks::kNoHook);
 
-  const HookTransform asset_manager_builder(
-      /* target class */ "android/content/res/AssetManager$Builder",
-      /* target method */ "build",
-      /* target signature */
-      "()Landroid/content/res/AssetManager;", "addResourceOverlays",
-      MethodHooks::kNoHook);
-
-  // This transform changes the integer cookie passed in to each of these
-  // methods to zero. The cookie is used to determine where to look for a
-  // resource; a cookie of zero means "look everywhere". Setting this value to
-  // zero prevents the app from trying to load content from our resource loader
-  // that is not present.
-  const ParameterSetTransform asset_manager(
-      "android/content/res/AssetManager",
-      {{/* target method */ "openXmlBlockAsset",
-        /* target signature */ "(ILjava/lang/String;)Landroid/content/res/"
-                               "XmlBlock;"},
-       {/* target method */ "openNonAsset",
-        /* target signature */ "(ILjava/lang/String;I)Ljava/io/InputStream;"},
-       {/* target method */ "openNonAssetFd",
-        /* target signature */ "(ILjava/lang/String;)Landroid/content/res/"
-                               "AssetFileDescriptor;"}});
-
   bool success = true;
   success &=
       CheckJvmti(jvmti->SetEventNotificationMode(
@@ -222,8 +199,6 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   if (overlay_swap) {
     success &= ApplyTransform(jvmti, jni, dex_path_list);
     success &= ApplyTransform(jvmti, jni, res_manager);
-    success &= ApplyTransform(jvmti, jni, asset_manager_builder);
-    success &= ApplyTransform(jvmti, jni, asset_manager);
   }
 
   // Failing to disable this event does not actually have any bearing on

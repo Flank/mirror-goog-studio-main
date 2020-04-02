@@ -16,7 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.model.ApkEntryContent;
+import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.utils.ILogger;
@@ -26,19 +26,16 @@ import java.util.Map;
 /** An object that can perform swaps via an installer or custom redefiners. */
 public class OptimisticApkSwapper {
 
-    public static final class SwapData {
-        public final OverlayId expectedOverlayId;
-        public final OverlayId overlayId;
-        public final DexComparator.ChangedClasses dexOverlays;
-        public final List<ApkEntryContent> fileOverlays;
+    public static final class OverlayUpdate {
+        private final DeploymentCacheDatabase.Entry cachedDump;
+        private final DexComparator.ChangedClasses dexOverlays;
+        private final Map<ApkEntry, ByteString> fileOverlays;
 
-        public SwapData(
-                OverlayId expectedOverlayId,
+        public OverlayUpdate(
+                DeploymentCacheDatabase.Entry cachedDump,
                 DexComparator.ChangedClasses dexOverlays,
-                List<ApkEntryContent> fileOverlays)
-                throws DeployerException {
-            this.expectedOverlayId = expectedOverlayId;
-            this.overlayId = new OverlayId(expectedOverlayId, dexOverlays, fileOverlays);
+                Map<ApkEntry, ByteString> fileOverlays) {
+            this.cachedDump = cachedDump;
             this.dexOverlays = dexOverlays;
             this.fileOverlays = fileOverlays;
         }
@@ -81,26 +78,33 @@ public class OptimisticApkSwapper {
      * @param sessionId the installation session
      * @param toSwap the actual dex classes to swap.
      */
-    public boolean optimisticSwap(
-            String packageId, List<Integer> pids, Deploy.Arch arch, SwapData swapData)
+    public OverlayId optimisticSwap(
+            String packageId, List<Integer> pids, Deploy.Arch arch, OverlayUpdate overlayUpdate)
             throws DeployerException {
+        final DeploymentCacheDatabase.Entry cachedDump = overlayUpdate.cachedDump;
+        final DexComparator.ChangedClasses dexOverlays = overlayUpdate.dexOverlays;
+        final Map<ApkEntry, ByteString> fileOverlays = overlayUpdate.fileOverlays;
+
+        OverlayId nextOverlayId =
+                new OverlayId(cachedDump.getOverlayId(), dexOverlays, fileOverlays.keySet());
+
         Deploy.OverlaySwapRequest.Builder request =
                 Deploy.OverlaySwapRequest.newBuilder()
                         .setPackageName(packageId)
                         .setRestartActivity(restart)
                         .addAllProcessIds(pids)
                         .setArch(arch)
-                        .setExpectedOverlayId(swapData.expectedOverlayId.getSha())
-                        .setOverlayId(swapData.overlayId.getSha());
+                        .setExpectedOverlayId(cachedDump.getOverlayId().getSha())
+                        .setOverlayId(nextOverlayId.getSha());
 
-        for (DexClass clazz : swapData.dexOverlays.newClasses) {
+        for (DexClass clazz : dexOverlays.newClasses) {
             request.addNewClasses(
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code)));
         }
 
-        for (DexClass clazz : swapData.dexOverlays.modifiedClasses) {
+        for (DexClass clazz : dexOverlays.modifiedClasses) {
             request.addModifiedClasses(
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
@@ -108,11 +112,11 @@ public class OptimisticApkSwapper {
                             .addAllFields(clazz.variableStates));
         }
 
-        for (ApkEntryContent file : swapData.fileOverlays) {
+        for (Map.Entry<ApkEntry, ByteString> entry : fileOverlays.entrySet()) {
             request.addResourceOverlays(
                     Deploy.OverlayFile.newBuilder()
-                            .setPath(file.getName())
-                            .setContent(file.getContent()));
+                            .setPath(entry.getKey().getQualifiedPath())
+                            .setContent(entry.getValue()));
         }
 
         request.setStructuralRedefinition(useStructuralRedefinition);
@@ -121,7 +125,7 @@ public class OptimisticApkSwapper {
         // the JDI bug in O.
 
         sendSwapRequest(request.build(), new InstallerBasedClassRedefiner(installer));
-        return true;
+        return nextOverlayId;
     }
 
     private static void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)

@@ -20,7 +20,6 @@ import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import java.io.File;
 import java.lang.ref.Reference;
@@ -106,14 +105,13 @@ public final class InstrumentationHooks {
     public static void addResourceOverlays(
             Object resourcesManager, ApplicationInfo appInfo, String[] oldPaths) {
         try {
-            // A ResourcesLoader is a collection of resource providers that can add or override
-            // existing resources in the APK.
+            // A container for supplying ResourcesProvider to Resources objects. ResourcesLoader are
+            // added to Resources objects to supply additional resources and assets or modify the
+            // values of existing resources and assets.
             Class<?> resourcesLoaderClass =
                     Class.forName("android.content.res.loader.ResourcesLoader");
-            // A ResourcesProvider loads resource data from a resource table (.arsc).
             Class<?> resourcesProviderClass =
                     Class.forName("android.content.res.loader.ResourcesProvider");
-            // An AssetsProvider is a provider of file-based resources, such as layout xml.
             Class<?> assetsProviderClass =
                     Class.forName("android.content.res.loader.AssetsProvider");
 
@@ -139,57 +137,15 @@ public final class InstrumentationHooks {
             Object activityThread = getActivityThread();
             Overlay overlay = new Overlay(getPackageName(activityThread));
 
-            // Create an asset provider for file-based resources (xml, etc.) based in the overlay
-            // directory.
-            Object directoryAssetsProvider =
-                    Class.forName("android.content.res.loader.DirectoryAssetsProvider")
-                            .getConstructor(File.class)
-                            .newInstance(overlay.getOverlayRoot().toFile());
-
             List<Object> providers = new ArrayList<>();
-
-            // If a resource table is present in the overlay directory, use that to create the
-            // provider.
-            if (overlay.getResourceTable().isPresent()) {
-                ParcelFileDescriptor fd =
-                        ParcelFileDescriptor.open(
-                                overlay.getResourceTable().get(),
-                                ParcelFileDescriptor.MODE_READ_ONLY);
-                providers.add(
-                        call(
-                                resourcesProviderClass,
-                                "loadFromTable",
-                                arg(fd),
-                                arg(directoryAssetsProvider, assetsProviderClass)));
-            } else {
-                providers.add(
-                        call(
-                                resourcesProviderClass,
-                                "empty",
-                                arg(directoryAssetsProvider, assetsProviderClass)));
+            for (File resDir : overlay.getResourceDirs()) {
+                Arg path = arg(resDir.getAbsolutePath());
+                Arg assets = arg(null, assetsProviderClass);
+                providers.add(call(resourcesProviderClass, "loadFromDirectory", path, assets));
             }
 
-            // Set our loader to use our providers. This will update every AssetManager that
-            // currently references our loader.
+            // This will update every AssetManager that currently references our loader.
             call(resourcesLoader, "setProviders", arg(providers, List.class));
-        } catch (Exception e) {
-            Log.e(TAG, "Exception", e);
-        }
-    }
-
-    // Instruments AssetManager$Builder#build(). Inserts our resource loader's ApkAssets object(s)
-    // at the front of the builder's internal list.
-    public static void addResourceOverlays(Object builder) {
-        try {
-            // When an asset manager is created, insert our loader's ApkAssets object at the front
-            // of the list of ApkAssets being used to construct the AssetManager. This allows us to
-            // intercept lookups that progress forwards through the ApkAsset list, such as when
-            // resolving the id associated with a particular resource.
-            ArrayList mUserApkAssets = (ArrayList) getDeclaredField(builder, "mUserApkAssets");
-            if (resourcesLoader != null) {
-                List apkAssets = (List) call(resourcesLoader, "getApkAssets");
-                mUserApkAssets.addAll(0, apkAssets);
-            }
         } catch (Exception e) {
             Log.e(TAG, "Exception", e);
         }

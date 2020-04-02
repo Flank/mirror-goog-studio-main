@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ApkDiffer {
 
@@ -32,10 +33,31 @@ public class ApkDiffer {
             // TODO: We could just fall back to non-optimistic swap.
             throw DeployerException.remoteApkNotFound();
         }
-        return diff(cacheEntry.getApks(), newApks);
+
+        // This function performs a standard diff, but additionally ensures that any resource not
+        // currently present in the overlay is added to the list of file diffs.
+        DiffFunction compare =
+                (oldFile, newFile) -> {
+                    boolean inOverlay =
+                            cacheEntry.getOverlayFiles().contains(newFile.getQualifiedPath());
+                    boolean isResource = newFile.getName().startsWith("res");
+                    if (!inOverlay && isResource) {
+                        return Optional.of(
+                                new FileDiff(
+                                        null, newFile, FileDiff.Status.RESOURCE_NOT_IN_OVERLAY));
+                    }
+                    return standardDiff(oldFile, newFile);
+                };
+
+        return diff(cacheEntry.getApks(), newApks, compare);
     }
 
     public List<FileDiff> diff(List<Apk> oldApks, List<Apk> newApks) throws DeployerException {
+        return diff(oldApks, newApks, ApkDiffer::standardDiff);
+    }
+
+    public List<FileDiff> diff(List<Apk> oldApks, List<Apk> newApks, DiffFunction compare)
+            throws DeployerException {
         List<ApkEntry> oldFiles = new ArrayList<>();
         Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();
         groupFiles(oldApks, oldFiles, oldMap);
@@ -56,20 +78,13 @@ public class ApkDiffer {
         List<FileDiff> diffs = new ArrayList<>();
         for (ApkEntry newFile : newFiles) {
             ApkEntry oldFile = oldMap.get(newFile.getApk().name).get(newFile.getName());
-            if (oldFile == null) {
-                diffs.add(new FileDiff(null, newFile, FileDiff.Status.CREATED));
-            } else {
-                // Check if modified.
-                if (oldFile.getChecksum() != newFile.getChecksum()) {
-                    diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
-                }
-            }
+            compare.diff(oldFile, newFile).ifPresent(diffs::add);
         }
 
         for (ApkEntry oldFile : oldFiles) {
             ApkEntry newFile = newMap.get(oldFile.getApk().name).get(oldFile.getName());
             if (newFile == null) {
-                diffs.add(new FileDiff(oldFile, null, FileDiff.Status.DELETED));
+                compare.diff(oldFile, null).ifPresent(diffs::add);
             }
         }
         return diffs;
@@ -81,5 +96,27 @@ public class ApkDiffer {
             map.putIfAbsent(apk.name, apk.apkEntries);
             entries.addAll(apk.apkEntries.values());
         }
+    }
+
+    private static Optional<FileDiff> standardDiff(ApkEntry oldFile, ApkEntry newFile) {
+        FileDiff.Status status = null;
+        if (oldFile == null) {
+            status = FileDiff.Status.CREATED;
+        } else if (newFile == null) {
+            status = FileDiff.Status.DELETED;
+        } else if (oldFile.getChecksum() != newFile.getChecksum()) {
+            status = FileDiff.Status.MODIFIED;
+        }
+
+        if (status != null) {
+            return Optional.of(new FileDiff(oldFile, newFile, status));
+        }
+
+        return Optional.empty();
+    }
+
+    @FunctionalInterface
+    private interface DiffFunction {
+        Optional<FileDiff> diff(ApkEntry oldFile, ApkEntry newFile);
     }
 }

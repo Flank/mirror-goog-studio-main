@@ -54,6 +54,10 @@ public class ApkEntry {
         return apk;
     }
 
+    public String getQualifiedPath() {
+        return String.format("%s/%s", apk.name, name);
+    }
+
     void setApk(Apk apk) {
         this.apk = apk;
     }

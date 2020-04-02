@@ -19,6 +19,7 @@ import com.android.tools.deployer.model.Apk;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.util.List;
+import java.util.Set;
 
 /**
  * In memory cache of APK info of a given device.
@@ -39,7 +40,7 @@ public class DeploymentCacheDatabase {
     // Key = serial + ":" + appId.
     private final Cache<String, Entry> db;
 
-    public class Entry {
+    public static class Entry {
         private final List<Apk> apks;
         private final OverlayId oid;
 
@@ -49,6 +50,10 @@ public class DeploymentCacheDatabase {
 
         public OverlayId getOverlayId() {
             return oid;
+        }
+
+        public Set<String> getOverlayFiles() {
+            return oid.getOverlayFiles();
         }
 
         private Entry(List<Apk> apks, OverlayId overlayId) {

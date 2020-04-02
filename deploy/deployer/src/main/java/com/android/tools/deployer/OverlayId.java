@@ -16,13 +16,14 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntryContent;
+import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableSortedMap;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -41,7 +42,7 @@ public class OverlayId {
     public OverlayId(
             OverlayId prevOverlayId,
             DexComparator.ChangedClasses dexOverlays,
-            List<ApkEntryContent> fileOverlays)
+            Set<ApkEntry> fileOverlays)
             throws DeployerException {
         apks = prevOverlayId.apks;
         deltas = new TreeMap<>(prevOverlayId.deltas);
@@ -56,7 +57,9 @@ public class OverlayId {
                                 String.format("%s.dex", cls.name),
                                 String.format("%d", cls.checksum)));
         fileOverlays.forEach(
-                file -> deltas.put(file.getName(), String.format("%d", file.getChecksum())));
+                file ->
+                        deltas.put(
+                                file.getQualifiedPath(), String.format("%d", file.getChecksum())));
         sha = computeShaHex(getRepresentation());
     }
 
@@ -65,6 +68,10 @@ public class OverlayId {
         deltas = ImmutableSortedMap.of();
         installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
         this.sha = computeShaHex(getRepresentation());
+    }
+
+    public Set<String> getOverlayFiles() {
+        return deltas.keySet();
     }
 
     public String getRepresentation() {

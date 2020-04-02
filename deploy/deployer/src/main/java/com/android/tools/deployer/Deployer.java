@@ -19,17 +19,19 @@ package com.android.tools.deployer;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntryContent;
+import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.Task;
 import com.android.tools.deployer.tasks.TaskResult;
 import com.android.tools.deployer.tasks.TaskRunner;
+import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class Deployer {
 
@@ -291,11 +293,10 @@ public class Deployer {
                 runner.create(Tasks.DIFF, new ApkDiffer()::specDiff, speculativeDump, newFiles);
 
         // Extract files from the APK for overlays. Currently only extract resources.
-        Task<List<ApkEntryContent>> extractedFiles =
+        Predicate<String> filter = file -> file.startsWith("res");
+        Task<Map<ApkEntry, ByteString>> extractedFiles =
                 runner.create(
-                        Tasks.EXTRACT_APK_ENTRIES,
-                        new ApkEntryExtractor(file -> file.startsWith("res"))::extract,
-                        diffs);
+                        Tasks.EXTRACT_APK_ENTRIES, new ApkEntryExtractor(filter)::extract, diffs);
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =
@@ -305,21 +306,25 @@ public class Deployer {
         Task<DexComparator.ChangedClasses> changedClasses =
                 runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
 
-        // Aggregate the data required to do the swap.
-        Task<OptimisticApkSwapper.SwapData> swapData =
-                runner.create(
-                        Tasks.COLLECT_SWAP_DATA,
-                        this::collectSwapData,
-                        speculativeDump,
-                        changedClasses,
-                        extractedFiles);
-
         // Perform the swap.
         OptimisticApkSwapper swapper =
                 new OptimisticApkSwapper(
                         installer, redefiners, argRestart, useStructuralRedefinition, adb, logger);
-        runner.create(
-                Tasks.OPTIMISTIC_SWAP, swapper::optimisticSwap, packageName, pids, arch, swapData);
+        Task<OptimisticApkSwapper.OverlayUpdate> overlayUpdate =
+                runner.create(
+                        Tasks.COLLECT_SWAP_DATA,
+                        OptimisticApkSwapper.OverlayUpdate::new,
+                        speculativeDump,
+                        changedClasses,
+                        extractedFiles);
+        Task<OverlayId> nextOverlayId =
+                runner.create(
+                        Tasks.OPTIMISTIC_SWAP,
+                        swapper::optimisticSwap,
+                        packageName,
+                        pids,
+                        arch,
+                        overlayUpdate);
 
         TaskResult result = runner.run();
         result.getMetrics().forEach(metrics::add);
@@ -339,33 +344,16 @@ public class Deployer {
 
         runner.create(
                 Tasks.DEPLOY_CACHE_STORE,
-                this::updateDeployCache,
+                deployCache::store,
                 deviceSerial,
                 packageName,
                 newFiles,
-                swapData);
+                nextOverlayId);
 
         Result deployResult = new Result();
         // TODO: May be notify user we IWI'ed.
         // deployResult.didIwi = true;
         return deployResult;
-    }
-
-    private OptimisticApkSwapper.SwapData collectSwapData(
-            DeploymentCacheDatabase.Entry cachedDeploy,
-            DexComparator.ChangedClasses dexOverlays,
-            List<ApkEntryContent> fileOverlays)
-            throws DeployerException {
-        return new OptimisticApkSwapper.SwapData(
-                cachedDeploy.getOverlayId(), dexOverlays, fileOverlays);
-    }
-
-    private boolean updateDeployCache(
-            String deviceSerial,
-            String packageName,
-            List<Apk> newFiles,
-            OptimisticApkSwapper.SwapData swapData) {
-        return deployCache.store(deviceSerial, packageName, newFiles, swapData.overlayId);
     }
 
     private boolean supportsNewPipeline() {
