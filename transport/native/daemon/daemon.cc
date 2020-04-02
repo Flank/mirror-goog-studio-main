@@ -401,7 +401,7 @@ void Daemon::SetHeartBeatTimestamp(int32_t app_pid, int64_t timestamp) {
 }
 
 void Daemon::RunAgentStatusThread() {
-  SetThreadName("Studio::AgentStatus");
+  SetThreadName("Studio:AgentStatus");
   while (agent_status_is_running_.load()) {
     {
       std::lock_guard<std::mutex> lock(heartbeat_mutex_);

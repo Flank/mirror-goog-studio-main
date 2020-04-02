@@ -33,6 +33,7 @@
 #include "utils/socket_utils.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
+#include "utils/trace.h"
 
 namespace {
 // If the agent is disconnected from daemon, grpc requests will begin backing
@@ -57,6 +58,7 @@ using proto::InternalNetworkService;
 using std::lock_guard;
 
 Agent& Agent::Instance(bool replace, const AgentConfig& config) {
+  Trace trace("Studio Agent ctor");
   static Agent* instance = new Agent(config);
   if (replace && !google::protobuf::util::MessageDifferencer::Equals(
                      config, instance->agent_config())) {
