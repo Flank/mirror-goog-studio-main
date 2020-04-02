@@ -15,6 +15,7 @@
  */
 package com.android.tools.mlkit;
 
+import com.android.annotations.Nullable;
 import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.CharMatcher;
@@ -66,6 +67,35 @@ public class MlkitNames {
             return className;
         } else {
             return MODEL_NAME_PREFIX + className;
+        }
+    }
+
+    @Nullable
+    public static String computeIdentifierName(@Nullable String name) {
+        if (name == null) {
+            return null;
+        }
+
+        // Handle "-" and "_" inside to make name lowerCamel.
+        String formattedName = name;
+        if (name.contains("_")) {
+            formattedName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, name.trim());
+        }
+        if (name.contains("-")) {
+            formattedName = CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, name.trim());
+        }
+
+        // Remove special characters.
+        CharMatcher classNameMatcher =
+                CharMatcher.inRange('0', '9')
+                        .or(CharMatcher.inRange('A', 'Z'))
+                        .or(CharMatcher.inRange('a', 'z'));
+        String matchedName = classNameMatcher.retainFrom(formattedName);
+
+        if (SourceVersion.isIdentifier(matchedName) && !SourceVersion.isKeyword(matchedName)) {
+            return matchedName;
+        } else {
+            return null;
         }
     }
 }

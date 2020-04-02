@@ -17,6 +17,7 @@
 package com.android.tools.mlkit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import org.junit.Test;
@@ -43,6 +44,28 @@ public class MlkitNamesTest {
     @Test
     public void computeModelClassName_nameStartWithDigit_correctIt() {
         assertEquals(MlkitNames.computeModelClassName(new File("012.tflite")), "AutoModel012");
+    }
+
+    @Test
+    public void computeIdentifierName_nameStartWithDigit_returnNull() {
+        assertNull(MlkitNames.computeIdentifierName("012abc"));
+    }
+
+    @Test
+    public void computeIdentifierName_nameIsKeyword_returnNull() {
+        assertNull(MlkitNames.computeIdentifierName("class"));
+    }
+
+    @Test
+    public void computeIdentifierName_nameWithInvalidCharacters_correctIt() {
+        assertEquals(MlkitNames.computeIdentifierName("%tensorName"), "tensorName");
+    }
+
+    @Test
+    public void computeIdentifierName_nameValid_returnName() {
+        assertEquals(MlkitNames.computeIdentifierName("tensorName"), "tensorName");
+        assertEquals(MlkitNames.computeIdentifierName("tensor-name"), "tensorName");
+        assertEquals(MlkitNames.computeIdentifierName("tensor_name"), "tensorName");
     }
 
     @Test

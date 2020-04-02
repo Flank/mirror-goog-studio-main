@@ -283,10 +283,8 @@ public class TensorInfo {
             }
 
             builder.setContentType(extractContentType(tensorMetadata));
-            builder.setName(
-                    tensorMetadata.name() == null
-                            ? getDefaultName(source, index)
-                            : formatName(tensorMetadata.name()));
+            String name = MlkitNames.computeIdentifierName(tensorMetadata.name());
+            builder.setName(name == null ? getDefaultName(source, index) : name);
             builder.setDescription(tensorMetadata.description());
             builder.setQuantizationParams(MetadataExtractor.getQuantizationParams(tensor));
 
@@ -322,10 +320,6 @@ public class TensorInfo {
 
     private static String getDefaultName(Source source, int index) {
         return (source == Source.INPUT ? DEFAULT_INPUT_NAME : DEFAULT_OUTPUT_NAME) + index;
-    }
-
-    private static String formatName(String tensorName) {
-        return tensorName.replaceAll("[^a-zA-Z0-9]+", "");
     }
 
     public static TensorInfo.ContentType extractContentType(TensorMetadata tensorMetadata) {
