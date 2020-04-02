@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 378;
+    public static final int INITIAL_CAPACITY = 380;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -282,6 +282,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(OverdrawDetector.ISSUE);
         issues.add(OverrideConcreteDetector.ISSUE);
         issues.add(OverrideDetector.ISSUE);
+        issues.add(PackageVisibilityDetector.QUERY_PERMISSIONS_NEEDED);
+        issues.add(PackageVisibilityDetector.QUERY_ALL_PACKAGES_PERMISSION);
         issues.add(ParcelDetector.ISSUE);
         issues.add(PermissionDetector.MISSING_PERMISSION);
         issues.add(PluralsDetector.EXTRA);
