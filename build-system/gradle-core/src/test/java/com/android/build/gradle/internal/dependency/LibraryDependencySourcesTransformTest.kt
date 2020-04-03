@@ -7,6 +7,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.utils.FileUtils
+import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
@@ -131,17 +132,16 @@ class LibraryDependencySourcesTransformTest {
                         "string:app_name:-1",
                         "string:desc:-1",
                         "layout:activity_main:-1",
+                        "drawable:example:-1",
                         "drawable:foo:-1"
         )
     }
 
     private fun addResourceTestDirectoryTo(parentDirectory: File): File {
-        val resDir = File(parentDirectory, SdkConstants.FD_RES)
-        val layoutDir = File(resDir, SdkConstants.FD_RES_LAYOUT)
-        val valuesDir = File(resDir, SdkConstants.FD_RES_VALUES)
-        FileUtils.mkdirs(resDir)
-        FileUtils.mkdirs(layoutDir)
-        FileUtils.mkdirs(valuesDir)
+        val resDir = File(parentDirectory, SdkConstants.FD_RES).also { FileUtils.mkdirs(it) }
+        val layoutDir = File(resDir, SdkConstants.FD_RES_LAYOUT).also { FileUtils.mkdirs(it) }
+        val valuesDir = File(resDir, SdkConstants.FD_RES_VALUES).also { FileUtils.mkdirs(it) }
+        val drawableDir = File(resDir, SdkConstants.FD_RES_DRAWABLE).also { FileUtils.mkdirs(it) }
         // Write test values file to resource directory.
         mapOf(
                 "${SdkConstants.FD_RES_LAYOUT}/activity_main.xml" to """
@@ -171,7 +171,9 @@ class LibraryDependencySourcesTransformTest {
                                 <attr name="maybeAttr" />
                             </declare-styleable>
                         <attr name="myAttr2" format="color" />
-                        </resources>"""
+                        </resources>""",
+            "${SdkConstants.FD_RES_DRAWABLE}/example.png" to
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACXBIWXMAAAsTAAALEwEAmpwYAAAACklEQVQIHWNgAAAAAgABz8g15QAAAABJRU5ErkJggg=="
         ).forEach { (fileName, content) ->
             val resFile = File(resDir, fileName)
             Files.write(resFile.toPath(), content.toByteArray(Charset.defaultCharset()))
