@@ -776,7 +776,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.splits: void (kotli
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.useLibrary: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.useLibrary: void (java.lang.String, boolean)
-com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor, com.android.build.api.dsl.BaseFlavor
+com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor, com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DynamicFeatureBaseFlavor
 com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.BaseFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)

@@ -23,5 +23,4 @@ interface LibraryBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOpt
         SigningConfigT : SigningConfig> :
     BaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
     LibraryVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
-    // TODO(b/140406102)
 }

@@ -183,6 +183,19 @@ com.android.build.api.dsl.AnnotationProcessorOptions.setArguments: void (java.ut
 com.android.build.api.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.List<org.gradle.process.CommandLineArgumentProvider>)
 com.android.build.api.dsl.ApkExtension
+com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
+com.android.build.api.dsl.ApplicationBaseFlavor.getApplicationId: java.lang.String ()
+com.android.build.api.dsl.ApplicationBaseFlavor.getMaxSdk: java.lang.Integer ()
+com.android.build.api.dsl.ApplicationBaseFlavor.getTargetSdk: java.lang.Integer ()
+com.android.build.api.dsl.ApplicationBaseFlavor.getTargetSdkPreview: java.lang.String ()
+com.android.build.api.dsl.ApplicationBaseFlavor.getVersionCode: java.lang.Integer ()
+com.android.build.api.dsl.ApplicationBaseFlavor.getVersionName: java.lang.String ()
+com.android.build.api.dsl.ApplicationBaseFlavor.setApplicationId: void (java.lang.String)
+com.android.build.api.dsl.ApplicationBaseFlavor.setMaxSdk: void (java.lang.Integer)
+com.android.build.api.dsl.ApplicationBaseFlavor.setTargetSdk: void (java.lang.Integer)
+com.android.build.api.dsl.ApplicationBaseFlavor.setTargetSdkPreview: void (java.lang.String)
+com.android.build.api.dsl.ApplicationBaseFlavor.setVersionCode: void (java.lang.Integer)
+com.android.build.api.dsl.ApplicationBaseFlavor.setVersionName: void (java.lang.String)
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildFeatures.getMlModelBinding: java.lang.Boolean ()
@@ -197,6 +210,7 @@ com.android.build.api.dsl.ApplicationBuildType.setCrunchPngs: void (java.lang.Bo
 com.android.build.api.dsl.ApplicationBuildType.setDebuggable: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setEmbedMicroApp: void (boolean)
+com.android.build.api.dsl.ApplicationDefaultConfig implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
@@ -206,14 +220,13 @@ com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.ApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
+com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
 com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.VariantDimension
-com.android.build.api.dsl.BaseFlavor.getApplicationId: java.lang.String ()
-com.android.build.api.dsl.BaseFlavor.getMaxSdk: java.lang.Integer ()
 com.android.build.api.dsl.BaseFlavor.getMinSdk: java.lang.Integer ()
 com.android.build.api.dsl.BaseFlavor.getMinSdkPreview: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getName: java.lang.String ()
@@ -222,19 +235,13 @@ com.android.build.api.dsl.BaseFlavor.getRenderscriptSupportModeBlasEnabled: java
 com.android.build.api.dsl.BaseFlavor.getRenderscriptSupportModeEnabled: java.lang.Boolean ()
 com.android.build.api.dsl.BaseFlavor.getRenderscriptTargetApi: java.lang.Integer ()
 com.android.build.api.dsl.BaseFlavor.getResourceConfigurations: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.BaseFlavor.getTargetSdk: java.lang.Integer ()
-com.android.build.api.dsl.BaseFlavor.getTargetSdkPreview: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getTestApplicationId: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getTestFunctionalTest: java.lang.Boolean ()
 com.android.build.api.dsl.BaseFlavor.getTestHandleProfiling: java.lang.Boolean ()
 com.android.build.api.dsl.BaseFlavor.getTestInstrumentationRunner: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getTestInstrumentationRunnerArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.dsl.VectorDrawables ()
-com.android.build.api.dsl.BaseFlavor.getVersionCode: java.lang.Integer ()
-com.android.build.api.dsl.BaseFlavor.getVersionName: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getWearAppUnbundled: java.lang.Boolean ()
-com.android.build.api.dsl.BaseFlavor.setApplicationId: void (java.lang.String)
-com.android.build.api.dsl.BaseFlavor.setMaxSdk: void (java.lang.Integer)
 com.android.build.api.dsl.BaseFlavor.setMinSdk: void (java.lang.Integer)
 com.android.build.api.dsl.BaseFlavor.setMinSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setRenderscriptNdkModeEnabled: void (java.lang.Boolean)
@@ -242,15 +249,11 @@ com.android.build.api.dsl.BaseFlavor.setRenderscriptSupportModeBlasEnabled: void
 com.android.build.api.dsl.BaseFlavor.setRenderscriptSupportModeEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setRenderscriptTargetApi: void (java.lang.Integer)
 com.android.build.api.dsl.BaseFlavor.setResourceConfigurations: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.BaseFlavor.setTargetSdk: void (java.lang.Integer)
-com.android.build.api.dsl.BaseFlavor.setTargetSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setTestApplicationId: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setTestFunctionalTest: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setTestHandleProfiling: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setTestInstrumentationRunner: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setTestInstrumentationRunnerArguments: void (java.util.Map<java.lang.String, java.lang.String>)
-com.android.build.api.dsl.BaseFlavor.setVersionCode: void (java.lang.Integer)
-com.android.build.api.dsl.BaseFlavor.setVersionName: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setWearAppUnbundled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.vectorDrawables: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables, kotlin.Unit>)
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
@@ -412,6 +415,7 @@ com.android.build.api.dsl.DependenciesInfo.setIncludeInBundle: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.dsl.DynamicFeatureBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.getMlModelBinding: java.lang.Boolean ()
@@ -420,7 +424,9 @@ com.android.build.api.dsl.DynamicFeatureBuildFeatures.setMlModelBinding: void (j
 com.android.build.api.dsl.DynamicFeatureBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildType.setCrunchPngs: void (java.lang.Boolean)
+com.android.build.api.dsl.DynamicFeatureDefaultConfig implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeT, kotlin.Unit>)
@@ -470,6 +476,7 @@ com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
 com.android.build.api.dsl.JavaCompileOptions
 com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super AnnotationProcessorOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: AnnotationProcessorOptionsT ()
+com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.getDataBinding: java.lang.Boolean ()
@@ -480,9 +487,11 @@ com.android.build.api.dsl.LibraryBuildFeatures.setMlModelBinding: void (java.lan
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildType.isDefault: boolean ()
 com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)
+com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.LintOptions
 com.android.build.api.dsl.LintOptions.baseline: void (java.io.File)

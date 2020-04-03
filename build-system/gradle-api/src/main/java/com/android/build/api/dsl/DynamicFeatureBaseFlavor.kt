@@ -23,5 +23,4 @@ interface DynamicFeatureBaseFlavor<AnnotationProcessorOptionsT : AnnotationProce
         SigningConfigT : SigningConfig> :
     BaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
     DynamicFeatureVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
-    // TODO(b/140406102)
 }
