@@ -42,14 +42,16 @@ import java.util.ServiceLoader
  *
  * <pre><code>
  * abstract class MyTask @inject constructor(val objectFactory: ObjectFactory): DefaultTask() {
- *     @InputDirectory
+ *     @get:InputDirectory
  *     abstract val input: DirectoryProperty
- *     @OutputDirectory
+ *     @get:OutputDirectory
  *     abstract val output: DirectoryProperty
+ *     @get:Internal
+ *     abstract val artifactsLoader: Property<BuiltArtifactsLoader>
  *
  *     @TaskAction
  *     fun taskAction() {
- *          val builtArtifacts= BuiltArtifacts.Loader.loadFromFolder(
+ *          val builtArtifacts= artifactsLoader.get().load(
  *               objectFactory, input.get())
  *
  *          TODO : TBD what will be surfaced here
@@ -71,21 +73,6 @@ interface BuiltArtifacts {
          * Current version of the metadata file.
          */
         const val METADATA_FILE_VERSION = 2
-
-        /**
-         * Provides an implementation of [BuiltArtifactsLoader]
-         */
-        @JvmStatic
-        val Loader: BuiltArtifactsLoader by lazy {
-            var loadedServices = ServiceLoader.load(
-                BuiltArtifactsLoader::class.java,
-                BuiltArtifactsLoader::class.java.classLoader
-            )
-            if (!loadedServices.iterator().hasNext()) {
-                loadedServices = ServiceLoader.load(BuiltArtifactsLoader::class.java)
-            }
-            loadedServices.first()
-        }
     }
 
     /**

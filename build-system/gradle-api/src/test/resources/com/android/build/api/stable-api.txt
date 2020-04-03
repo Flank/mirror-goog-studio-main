@@ -4,8 +4,12 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2c2371913076c070e621fbe3ff5b063bd5a3be9f9e0b825952ab7b148a71d58c
+f5d15d42895b6375c5000ecf6b58ec04b9b026b3540df35f6e1dc6a36a935d2b
 -------------------------------------------------------------------------
+com.android.build.api.artifact.FileNames extends java.lang.Enum
+com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
+com.android.build.api.artifact.FileNames.valueOf: com.android.build.api.artifact.FileNames (java.lang.String)
+com.android.build.api.artifact.FileNames.values: com.android.build.api.artifact.FileNames[] ()
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.BuildTypeAttr$Companion.<init>: com.android.build.api.attributes.BuildTypeAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)

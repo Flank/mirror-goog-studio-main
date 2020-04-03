@@ -23,6 +23,8 @@ import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Operations
 import com.android.build.api.artifact.ReplaceRequest
 import com.android.build.api.artifact.TransformRequest
+import com.android.build.api.variant.BuiltArtifactsLoader
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Task
@@ -51,6 +53,10 @@ class OperationsImpl(
     private val buildDirectory: DirectoryProperty): Operations {
 
     private val storageProvider = StorageProviderImpl()
+
+    override fun getBuiltArtifactsLoader(): BuiltArtifactsLoader {
+        return BuiltArtifactsLoaderImpl()
+    }
 
     override fun <FILE_TYPE : FileSystemLocation, ARTIFACT_TYPE> get(type: ARTIFACT_TYPE): Provider<FILE_TYPE>
             where ARTIFACT_TYPE : ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Single
@@ -190,7 +196,7 @@ class OperationsImpl(
      * Sets a [Property] value to the final producer for the given artifact type.
      *
      * If there are more than one producer appending artifacts for the passed type, calling this
-     * method will generate an error and [setTaskInputToFinalProducts] should be used instead.
+     * method will generate an error.
      *
      * The simplest way to use the mechanism is as follow :
      * <pre>
@@ -221,8 +227,7 @@ class OperationsImpl(
                   ARTIFACT_TYPE: ArtifactType.Single,
                   FILE_TYPE: FileSystemLocation {
 
-        storageProvider.getStorage(artifactType.kind).copy(
-            artifactType, from)
+        storageProvider.getStorage(artifactType.kind).copy(artifactType, from)
     }
 }
 
@@ -232,7 +237,7 @@ class OperationsImpl(
 internal class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>(
     private val operationsImpl: OperationsImpl,
     private val taskProvider: TaskProvider<TASK>,
-    private val from: (TASK) -> Property<FILE_TYPE>,
+    private val from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
     private val into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
 ) : TransformRequest<FILE_TYPE> {
 
@@ -246,7 +251,12 @@ internal class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>
         taskProvider.configure {
             from(it).set(currentProvider)
             // since the task will now execute, resolve its output path.
-            into(it).set(operationsImpl.getOutputPath(type, taskProvider.name))
+            into(it).set(
+                operationsImpl.getOutputPath(type,
+                    taskProvider.name,
+                    type.getFileSystemLocationName()
+                )
+            )
         }
     }
 }
@@ -374,15 +384,19 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
             if (type.kind is ArtifactKind.FILE && fileName == null) {
                 fileName = DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
             }
-            val outputAbsolutePath = if (buildOutputLocation != null) {
-                File(buildOutputLocation, fileName.orEmpty())
-            } else if (buildOutputLocationResolver != null) {
-                val resolver = buildOutputLocationResolver!!
-                File(resolver.invoke(it).get().asFile, fileName.orEmpty())
-            } else {
-                operationsImpl.getOutputPath(type,
-                    if (artifactContainer.hasCustomProviders()) taskProvider.name else "",
-                    fileName.orEmpty())
+            val outputAbsolutePath = when {
+                buildOutputLocation != null -> {
+                    File(buildOutputLocation, fileName.orEmpty())
+                }
+                buildOutputLocationResolver != null -> {
+                    val resolver = buildOutputLocationResolver!!
+                    File(resolver.invoke(it).get().asFile, fileName.orEmpty())
+                }
+                else -> {
+                    operationsImpl.getOutputPath(type,
+                        if (artifactContainer.hasCustomProviders()) taskProvider.name else "",
+                        fileName.orEmpty())
+                }
             }
             // since the taskProvider will execute, resolve its output path.
             from(it).set(outputAbsolutePath)

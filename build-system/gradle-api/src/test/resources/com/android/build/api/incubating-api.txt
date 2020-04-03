@@ -27,6 +27,7 @@ com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Transformable
 com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind<T>)
+com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
 com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
@@ -34,7 +35,8 @@ com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactTypes extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable
 com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.ArtifactTypes.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.ArtifactTypes.isPublic: boolean ()
 com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
@@ -47,6 +49,7 @@ com.android.build.api.artifact.Operations
 com.android.build.api.artifact.Operations.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Operations.getBuiltArtifactsLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
@@ -723,13 +726,11 @@ com.android.build.api.variant.BuiltArtifact.getVersionCode: java.lang.Integer ()
 com.android.build.api.variant.BuiltArtifact.getVersionName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts
 com.android.build.api.variant.BuiltArtifacts$Companion
-com.android.build.api.variant.BuiltArtifacts$Companion.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.variant.BuiltArtifacts$TransformParams implements org.gradle.workers.WorkParameters, java.io.Serializable
 com.android.build.api.variant.BuiltArtifacts$TransformParams.getOutput: java.io.File ()
 com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
 com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
-com.android.build.api.variant.BuiltArtifacts.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader

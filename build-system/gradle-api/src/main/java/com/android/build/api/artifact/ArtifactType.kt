@@ -59,6 +59,12 @@ abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): S
     open fun getFolderName(): String = name().toLowerCase(Locale.US)
 
     /**
+     * @return Depending on [T] the file name of folder under the variant specific folder, empty
+     * string to use defaults.
+     */
+    open fun getFileSystemLocationName(): String = ""
+
+    /**
      * Supported [ArtifactKind]
      */
     @Incubating

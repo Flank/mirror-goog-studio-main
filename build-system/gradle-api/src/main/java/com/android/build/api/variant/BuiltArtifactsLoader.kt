@@ -22,6 +22,11 @@ import org.gradle.api.file.FileCollection
 
 /**
  * Facility to load [BuiltArtifacts] instances from metadata files in the file system.
+ *
+ * This interface should not be implemented by third party.
+ *
+ * Implementation of this interface can be obtained from
+ * [com.android.build.api.artifact.Operations.getBuiltArtifactsLoader]
  */
 @Incubating
 interface BuiltArtifactsLoader {

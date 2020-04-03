@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.ArtifactTypes
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile

@@ -315,7 +315,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ProcessApplicationManifest::mergedManifest
             )
-                .withName(SdkConstants.ANDROID_MANIFEST_XML)
                 .on(ArtifactTypes.MERGED_MANIFEST)
 
             operations.setInitialProvider(

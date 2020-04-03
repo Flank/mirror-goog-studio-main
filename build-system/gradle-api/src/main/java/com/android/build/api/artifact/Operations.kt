@@ -16,6 +16,7 @@
 
 package com.android.build.api.artifact
 
+import com.android.build.api.variant.BuiltArtifactsLoader
 import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
@@ -33,6 +34,12 @@ import org.gradle.api.tasks.TaskProvider
  */
 @Incubating
 interface Operations {
+
+    /**
+     * Provides an implementation of [BuiltArtifactsLoader] that can be used to load and save
+     * built artifacts metadata.
+     */
+    fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
 
     /**
      * Get the [Provider] of [FILE_TYPE] for the passed [ArtifactType].

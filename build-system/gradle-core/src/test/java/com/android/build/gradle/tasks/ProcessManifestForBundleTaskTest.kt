@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth
