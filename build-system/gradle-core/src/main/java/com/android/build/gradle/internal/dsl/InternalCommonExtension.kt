@@ -38,9 +38,9 @@ import com.android.build.gradle.internal.dsl.TestOptions as TestOptionsImpl
  */
 interface InternalCommonExtension<
         BuildFeaturesT : com.android.build.api.dsl.BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions, SigningConfig>,
-        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<AnnotationProcessorOptions, SigningConfig>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions, SigningConfig>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions>,
+        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<AnnotationProcessorOptions>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions>,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>
     : CommonExtension<

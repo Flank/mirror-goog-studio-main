@@ -21,7 +21,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface ApplicationBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> :
-    BaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
+    BaseFlavor<AnnotationProcessorOptionsT>,
     ApplicationVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
     /**
      * The application ID.

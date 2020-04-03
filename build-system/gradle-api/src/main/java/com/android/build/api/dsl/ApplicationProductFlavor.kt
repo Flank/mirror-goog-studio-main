@@ -22,7 +22,7 @@ import org.gradle.api.Incubating
 interface ApplicationProductFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> :
     ApplicationBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-    ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT> {
+    ProductFlavor<AnnotationProcessorOptionsT> {
     /** Whether this product flavor should be selected in Studio by default  */
     var isDefault: Boolean
 }

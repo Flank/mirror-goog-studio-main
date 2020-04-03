@@ -39,9 +39,9 @@ import java.util.function.Supplier
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions, SigningConfig>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptions, SigningConfig>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions, SigningConfig>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptions>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions>,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
     protected val dslServices: DslServices,

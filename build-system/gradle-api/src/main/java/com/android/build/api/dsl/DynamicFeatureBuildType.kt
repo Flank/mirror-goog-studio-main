@@ -19,10 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface DynamicFeatureBuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
-    DynamicFeatureVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
+interface DynamicFeatureBuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
+    BuildType<AnnotationProcessorOptionsT>,
+    DynamicFeatureVariantDimension<AnnotationProcessorOptionsT> {
     /**
      * Whether to crunch PNGs.
      *

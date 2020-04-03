@@ -45,7 +45,7 @@ open class BuildType @Inject constructor(
     AbstractBuildType(), CoreBuildType, Serializable,
     ApplicationBuildType<AnnotationProcessorOptions, SigningConfig>,
     LibraryBuildType<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureBuildType<AnnotationProcessorOptions, SigningConfig> {
+    DynamicFeatureBuildType<AnnotationProcessorOptions> {
 
     /**
      * Name of this build type.
