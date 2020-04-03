@@ -159,9 +159,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         // (2) Is this AST node surrounded by a test-only annotation?
         while (true) {
-            val owner = current.getParentOfType<UAnnotated>(
-                UAnnotated::class.java, true
-            ) ?: break
+            val owner = current.getParentOfType<UAnnotated>(true) ?: break
 
             //noinspection AndroidLintExternalAnnotations
             for (annotation in owner.uAnnotations) {
