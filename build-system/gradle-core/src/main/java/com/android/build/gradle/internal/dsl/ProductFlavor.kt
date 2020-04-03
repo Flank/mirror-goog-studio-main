@@ -15,6 +15,9 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationProductFlavor
+import com.android.build.api.dsl.DynamicFeatureProductFlavor
+import com.android.build.api.dsl.LibraryProductFlavor
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.BaseConfig
@@ -24,7 +27,9 @@ import org.gradle.api.provider.Property
 
 open class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
-    com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions, SigningConfig> {
+    ApplicationProductFlavor<AnnotationProcessorOptions, SigningConfig>,
+    DynamicFeatureProductFlavor<AnnotationProcessorOptions, SigningConfig>,
+    LibraryProductFlavor<AnnotationProcessorOptions, SigningConfig> {
 
     // FIXME remove: b/149431538
     @Suppress("DEPRECATION")

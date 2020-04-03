@@ -221,6 +221,8 @@ com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set
 com.android.build.api.dsl.ApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
+com.android.build.api.dsl.ApplicationProductFlavor.isDefault: boolean ()
+com.android.build.api.dsl.ApplicationProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
@@ -492,6 +494,8 @@ com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.
 com.android.build.api.dsl.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
+com.android.build.api.dsl.LibraryProductFlavor.isDefault: boolean ()
+com.android.build.api.dsl.LibraryProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.LintOptions
 com.android.build.api.dsl.LintOptions.baseline: void (java.io.File)
@@ -602,8 +606,6 @@ com.android.build.api.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<ja
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.ProductFlavor.getDimension: java.lang.String ()
 com.android.build.api.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
-com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
-com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.ProductFlavor.setDimension: void (java.lang.String)
 com.android.build.api.dsl.ProductFlavor.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.SdkComponents

@@ -23,5 +23,6 @@ interface ApplicationProductFlavor<AnnotationProcessorOptionsT : AnnotationProce
         SigningConfigT : SigningConfig> :
     ApplicationBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
     ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT> {
-    // TODO(b/140406102)
+    /** Whether this product flavor should be selected in Studio by default  */
+    var isDefault: Boolean
 }

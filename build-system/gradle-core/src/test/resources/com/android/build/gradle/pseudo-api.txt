@@ -1415,7 +1415,7 @@ com.android.build.gradle.internal.dsl.PostProcessingBlock.setRemoveUnusedResourc
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setTestProguardFiles: void (java.util.List<java.lang.Object>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFiles: void (java.lang.Object[])
-com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ProductFlavor
+com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationProductFlavor, com.android.build.api.dsl.DynamicFeatureProductFlavor, com.android.build.api.dsl.LibraryProductFlavor
 com.android.build.gradle.internal.dsl.ProductFlavor.<init>: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.ProductFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.ProductFlavor.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()
