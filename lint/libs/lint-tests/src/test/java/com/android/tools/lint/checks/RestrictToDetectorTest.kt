@@ -1358,6 +1358,163 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test140642032() {
+        // Regression test for
+        // 140642032: Kotlin class property annotated with VisibleForTesting not generating
+        // error/warning when called from other Kotlin code
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.support.annotation.VisibleForTesting
+                import android.support.annotation.VisibleForTesting.NONE
+
+                open class Foo {
+                    var hiddenProp: String = ""
+                        @VisibleForTesting(otherwise = NONE) get() = field
+                        @VisibleForTesting(otherwise = NONE) set(value) {
+                            field = value
+                        }
+
+                    @VisibleForTesting(otherwise = NONE)
+                    open fun hiddenFunc() {
+                        // Do something
+                    }
+                }
+
+                class Bar : Foo() {
+                    override fun hiddenFunc() {
+                        // Do something
+                    }
+                }
+
+                class FooKtCaller {
+                    fun func() {
+                        val f = Foo()
+                        // NO error/warning
+                        f.hiddenProp
+                        // NO error/warning
+                        f.hiddenProp = ""
+                        // Generates error/warning
+                        f.hiddenFunc()
+
+                        val b = Bar()
+                        // NO error/warning
+                        b.hiddenProp
+                        // NO error/warning
+                        b.hiddenProp = ""
+                        // Generates error/warning
+                        b.hiddenFunc()
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public class FooCaller {
+                    public void method() {
+                        final Foo f = new Foo();
+                        // Generates error/warning
+                        f.getHiddenProp();
+                        // Generates error/warning
+                        f.setHiddenProp("");
+                        // Generates error/warning
+                        f.hiddenFunc();
+
+                        final Bar b = new Bar();
+                        // Generates error/warning
+                        b.getHiddenProp();
+                        // Generates error/warning
+                        b.setHiddenProp("");
+                        // Generates error/warning
+                        b.hiddenFunc();
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Foo.kt:29: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+                    f.hiddenProp
+                      ~~~~~~~~~~
+            src/test/pkg/Foo.kt:31: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+                    f.hiddenProp = ""
+                      ~~~~~~~~~~
+            src/test/pkg/Foo.kt:33: Error: Foo.hiddenFunc can only be called from tests [RestrictedApi]
+                    f.hiddenFunc()
+                      ~~~~~~~~~~
+            src/test/pkg/Foo.kt:37: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+                    b.hiddenProp
+                      ~~~~~~~~~~
+            src/test/pkg/Foo.kt:39: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+                    b.hiddenProp = ""
+                      ~~~~~~~~~~
+            src/test/pkg/FooCaller.java:6: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+                    f.getHiddenProp();
+                      ~~~~~~~~~~~~~
+            src/test/pkg/FooCaller.java:8: Error: Foo.setHiddenProp can only be called from tests [RestrictedApi]
+                    f.setHiddenProp("");
+                      ~~~~~~~~~~~~~
+            src/test/pkg/FooCaller.java:10: Error: Foo.hiddenFunc can only be called from tests [RestrictedApi]
+                    f.hiddenFunc();
+                      ~~~~~~~~~~
+            src/test/pkg/FooCaller.java:14: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+                    b.getHiddenProp();
+                      ~~~~~~~~~~~~~
+            src/test/pkg/FooCaller.java:16: Error: Foo.setHiddenProp can only be called from tests [RestrictedApi]
+                    b.setHiddenProp("");
+                      ~~~~~~~~~~~~~
+            10 errors, 0 warnings
+            """
+        )
+    }
+
+    fun test148905488() {
+        // Regression test for https://issuetracker.google.com/148905488
+        // Referencing a @VisibleForTesting-annotated property in Kotlin does not cause a Lint error
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.support.annotation.VisibleForTesting
+
+                class MyViewModel {
+                    @get:VisibleForTesting
+                    internal var currentNamespace: String? = null
+                    @VisibleForTesting
+                    internal var currentNamespace2: String? = null
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                class MyActivity {
+                    private val myViewModel = MyViewModel()
+                    fun foo() {
+                        val foo = myViewModel.currentNamespace.orEmpty()
+                        val bar = myViewModel.currentNamespace2.orEmpty()
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/MyActivity.kt:6: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    val foo = myViewModel.currentNamespace.orEmpty()
+                                          ~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
     companion object {
         /*
                 Compiled version of these 5 files (and the RestrictTo annotation);

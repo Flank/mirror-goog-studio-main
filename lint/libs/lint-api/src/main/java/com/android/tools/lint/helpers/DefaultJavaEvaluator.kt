@@ -110,6 +110,7 @@ open class DefaultJavaEvaluator(
         return (psiType as? PsiClassType)?.resolve()
     }
 
+    @Suppress("ExternalAnnotations")
     override fun getAllAnnotations(
         owner: UAnnotated,
         inHierarchy: Boolean
@@ -127,24 +128,24 @@ open class DefaultJavaEvaluator(
                     return annotations
                 }
 
-                // Filter with preference given to the builtins
-                val result = mutableListOf<UAnnotation>()
+                var modified = false
+                val map = LinkedHashMap<String, UAnnotation>()
+                for (annotation in annotations) {
+                    val name = annotation.qualifiedName ?: annotation.uastAnchor?.name ?: continue
+                    map[name] = annotation
+                }
                 for (psi in psiAnnotations) {
-                    val signature = psi.qualifiedName
-                    var handled = false
-                    for (ua in annotations) {
-                        if (ua.qualifiedName == signature) {
-                            result.add(ua)
-                            handled = true
-                            break
-                        }
-                    }
-                    if (!handled) {
-                        result.add(JavaUAnnotation.wrap(psi))
+                    val signature = psi.qualifiedName ?: continue
+                    if (map[signature] == null) {
+                        map[signature] = JavaUAnnotation.wrap(psi)
+                        modified = true
                     }
                 }
-
-                return result
+                return if (modified) {
+                    map.values.toList()
+                } else {
+                    annotations
+                }
             }
 
             // Work around bug: Passing in a UAST node to this method generates a
