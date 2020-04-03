@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Rule;
@@ -825,6 +826,26 @@ public class ShrinkResourcesTest {
                             "res/layout/used1.xml")
                     .inOrder();
         }
+        // Check R class keep rule is removed from proguard files when R.txt is used when useRTxt is
+        // enabled and kept when useRTxt is disabled.
+        File proguardFilesIntermediateDir = project.getIntermediateFile("proguard-files");
+        assertThat(containsRClassKeepRule(proguardFilesIntermediateDir)).isEqualTo(!useRTxt);
+    }
+
+    /** Checks if a Proguard directory files contain a keep rule to keep R class members. */
+    private static boolean containsRClassKeepRule(File keepRulesDir) throws IOException {
+        assertTrue(keepRulesDir.isDirectory());
+        File[] keepRuleFiles = keepRulesDir.listFiles();
+        assertThat(keepRuleFiles).isNotNull();
+        for (File file : keepRuleFiles) {
+            try (Stream<String> stream = Files.lines(file.toPath())) {
+                if (stream.parallel()
+                        .anyMatch(x -> x.contains("-keepclassmembers class **.R$* {"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static List<String> getZipPaths(File zipFile, boolean includeMethod)
