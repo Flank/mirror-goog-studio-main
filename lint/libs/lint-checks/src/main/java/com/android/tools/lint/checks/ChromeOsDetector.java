@@ -117,7 +117,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     public static final Issue SETTING_ORIENTATION_ON_ACTIVITY =
             Issue.create(
                             "LockedOrientationActivity",
-                            "Activity is locked to an orientation",
+                            "Incompatible screenOrientation value",
                             "The `<activity>` element should not be locked to any orientation so "
                                     + "that users can take advantage of the multi-window environments and "
                                     + "larger screens on Chrome OS. To fix the issue, consider declaring the "
