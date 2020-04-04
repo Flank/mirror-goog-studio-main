@@ -82,7 +82,12 @@ class AaptOptionsTest {
     fun testTasksRunAfterAaptOptionsChanges_bundleDebug() {
         testTasksRunAfterAaptOptionsChanges(
             "bundleDebug",
-            listOf(":bundleDebugResources", ":mergeDebugJavaResource", ":packageDebugBundle")
+            listOf(
+                ":bundleDebugResources",
+                ":mergeDebugJavaResource",
+                ":packageDebugBundle",
+                ":processDebugResources"
+            )
         )
     }
 
@@ -90,7 +95,7 @@ class AaptOptionsTest {
     fun testTasksRunAfterAaptOptionsChanges_assembleDebug() {
         testTasksRunAfterAaptOptionsChanges(
             "assembleDebug",
-            listOf(":mergeDebugJavaResource", ":packageDebug")
+            listOf(":mergeDebugJavaResource", ":packageDebug", ":processDebugResources")
         )
     }
 
