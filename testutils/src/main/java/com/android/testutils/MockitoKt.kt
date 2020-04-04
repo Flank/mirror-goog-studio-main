@@ -17,6 +17,7 @@ package com.android.testutils
 
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
+import org.mockito.invocation.InvocationOnMock
 
 object MockitoKt {
   /**
@@ -26,12 +27,22 @@ object MockitoKt {
    * Using the not-null assertion operator (!!) doesn't work because the result of the method call is recorded internally by Mockito.
    * @see Mockito.any
    */
-  fun <T> any(type: Class<T>): T = Mockito.any<T>(type)
+  fun <T> any(type: Class<T>): T = Mockito.any(type)
 
   /**
    * Wrapper around [Mockito.any] for generic types.
    */
-  inline fun <reified T: Any> any() = any(T::class.java)
+  inline fun <reified T> any() = any(T::class.java)
+
+  /**
+   * Convenience wrapper around [Mockito.mock] that allows the type to be inferred.
+   */
+  inline fun <reified T> mock(): T = Mockito.mock(T::class.java)
+
+  /**
+   * Convenience wrapper around [InvocationOnMock.getArgument] that allows the type to be inferred.
+   */
+  inline fun <reified T> InvocationOnMock.getTypedArgument(i: Int): T = getArgument(i, T::class.java)
 
   /**
    * Wrapper around [Mockito.eq] that doesn't return null.
