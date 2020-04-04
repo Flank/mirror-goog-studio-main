@@ -34,7 +34,7 @@ import java.util.Properties
  *
  * @param scriptingLanguage the language used to express the build logic.
  */
-open class VariantApiBaseTest(private val scriptingLanguage: ScriptingLanguage = ScriptingLanguage.Kotlin) :
+open class VariantApiBaseTest(protected val scriptingLanguage: ScriptingLanguage = ScriptingLanguage.Kotlin) :
     AbstractBuildGivenBuildCheckTest<VariantApiBaseTest.GivenBuilder, BuildResult>() {
 
     companion object {
@@ -323,7 +323,7 @@ repositories {
             FileReader(File("$srcDir/tools/gradle/wrapper/gradle-wrapper.properties")).apply {
                 val gradleWrapperProperties = Properties()
                     .also { properties -> properties.load(this) }
-                val relativePathDistribution = gradleWrapperProperties.get("distributionUrl")
+                val relativePathDistribution = gradleWrapperProperties["distributionUrl"]
                 gradleRunner.withGradleDistribution(
                     File("$srcDir/tools/gradle/wrapper/$relativePathDistribution").toURI())
             }
