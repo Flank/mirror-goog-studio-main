@@ -33,7 +33,7 @@ fun <T : Task> TaskContainer.registerTask(
     secondaryAction: TaskConfigAction<in T>? = null,
     secondaryProviderCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
-    val actionWrapper = TaskAction(
+    val actionWrapper = TaskConfigurationActions(
         creationAction,
         secondaryPreConfigAction,
         secondaryAction,
@@ -56,7 +56,7 @@ fun <T : Task> TaskContainer.registerTask(
     action: TaskConfigAction<in T>? = null,
     providerCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
-    val actionWrapper = TaskAction(
+    val actionWrapper = TaskConfigurationActions(
         preConfigAction = preConfigAction,
         configureAction = action,
         providerHandler = providerCallback
@@ -77,7 +77,7 @@ fun <T : Task> TaskContainer.registerTask(
  * After register, if it has not been called then it is called,
  * alongside [VariantTaskCreationAction.handleProvider]
  */
-internal class TaskAction<T: Task>(
+internal class TaskConfigurationActions<T: Task>(
     private val creationAction: TaskCreationAction<T>? = null,
     private val preConfigAction: PreConfigAction? = null,
     private val configureAction: TaskConfigAction<in T>? = null,
