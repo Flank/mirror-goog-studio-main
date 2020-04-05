@@ -20,6 +20,7 @@ import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
+import com.android.build.gradle.internal.databinding.LayoutXmlProcessorDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.dependency.getClassesDirFormat
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -42,6 +43,8 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
@@ -54,6 +57,7 @@ import org.gradle.work.InputChanges
 import java.io.File
 import java.io.Serializable
 import java.util.function.Predicate
+import java.util.function.Supplier
 import java.util.regex.Pattern
 import java.util.zip.Deflater
 import javax.inject.Inject
@@ -118,6 +122,7 @@ private fun BundleLibraryClassesInputs.getWorkerActionParams(
 }
 
 /** Bundles all library classes to a directory. */
+@CacheableTask
 abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClassesInputs {
 
     @get:OutputDirectory
@@ -173,6 +178,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
 }
 
 /** Bundles all library classes to a jar. */
+@CacheableTask
 abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClassesInputs {
 
     @get:OutputFile

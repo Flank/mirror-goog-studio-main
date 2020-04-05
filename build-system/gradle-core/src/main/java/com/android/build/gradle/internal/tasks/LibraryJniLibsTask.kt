@@ -34,6 +34,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -53,6 +54,7 @@ private val pattern = Pattern.compile("lib/[^/]+/[^/]+\\.so")
 /**
  * A task that copies the project native libs (and optionally the native libs from local jars)
  */
+@CacheableTask
 abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     @get:InputFiles

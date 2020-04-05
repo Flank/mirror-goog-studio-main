@@ -72,7 +72,11 @@ class CacheabilityTest {
                     ":app:generateDebugUnitTestConfig",
                     ":app:javaPreCompileDebug",
                     ":app:javaPreCompileDebugUnitTest",
+                    ":app:mergeDebugAssets",
                     ":app:mergeDebugJavaResource",
+                    ":app:mergeDebugJniLibFolders",
+                    ":app:mergeDebugNativeLibs",
+                    ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
                     ":app:mergeExtDexDebug",
                     ":app:packageDebugUnitTestForUnitTest",
@@ -89,10 +93,6 @@ class CacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
-                    ":app:mergeDebugAssets", /* Intended. See bug 153088766 */
-                    ":app:mergeDebugJniLibFolders", /* Intended. See bug 153088766 */
-                    ":app:mergeDebugNativeLibs", /* Intended. See bug 153088766 */
-                    ":app:mergeDebugShaders", /* Intended. See bug 153088766 */
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:processDebugResources" /* Bug 141301405 */
