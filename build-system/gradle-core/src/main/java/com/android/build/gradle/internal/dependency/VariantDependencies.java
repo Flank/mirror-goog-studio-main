@@ -330,6 +330,7 @@ public class VariantDependencies {
     private boolean isArtifactTypeExcluded(@NonNull AndroidArtifacts.ArtifactType artifactType) {
         if (variantType.isDynamicFeature()) {
             return artifactType != AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
+                    && artifactType != AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE
                     && artifactType != AndroidArtifacts.ArtifactType.FEATURE_DEX
                     && artifactType != AndroidArtifacts.ArtifactType.FEATURE_NAME;
         }
