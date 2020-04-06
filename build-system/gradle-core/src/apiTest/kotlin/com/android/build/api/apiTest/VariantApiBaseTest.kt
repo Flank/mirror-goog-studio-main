@@ -107,8 +107,14 @@ repositories {
         Groovy("build.gradle", "settings.gradle") {
             override fun configureBuildFile(repositories: List<String>) =
 """
-plugins {
-    id 'com.android.application'
+buildscript {
+    ${addRepositories(repositories).prependIndent("\t")}
+    dependencies {
+        classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+    }
+}
+allprojects {
+    ${addRepositories(repositories).prependIndent("\t")}
 }
 ${addRepositories(repositories)}
 """

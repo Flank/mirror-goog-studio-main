@@ -19,7 +19,6 @@ package com.android.build.api.apiTest
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.IOException
-import java.nio.file.Files
 
 // specialization of [TemporaryFolder] to keep the folder after test execution and generate
 // extra documentation artifacts.

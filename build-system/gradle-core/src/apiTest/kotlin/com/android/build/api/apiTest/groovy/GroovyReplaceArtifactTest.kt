@@ -23,23 +23,23 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
 import kotlin.test.assertNotNull
 
-class GroovyTransformArtifactTest: VariantApiBaseTest(ScriptingLanguage.Groovy) {
+class GroovyReplaceArtifactTest : VariantApiBaseTest(ScriptingLanguage.Groovy) {
 
     private val testingElements = TestingElements(scriptingLanguage)
 
     override fun tasksToInvoke(): Array<String> = arrayOf(":app:processDebugResources")
 
     @Test
-    fun manifestTransformerTest() {
+    fun manifestReplacementTask() {
         given {
             addModule(":app") {
                 buildFile =
                     """
                 plugins {
                     id 'com.android.application'
-                }
+                } 
                 ${testingElements.getGitVersionTask()}
-                ${testingElements.getManifestTransformerTask()}
+                ${testingElements.getManifestProducerTask()}
 
                 import com.android.build.api.artifact.ArtifactTypes
 
@@ -51,22 +51,24 @@ class GroovyTransformArtifactTest: VariantApiBaseTest(ScriptingLanguage.Groovy) 
                         targetSdkVersion 29
                     }
                     
-                    TaskProvider gitVersionProvider = tasks.register('gitVersionProvider', GitVersionTask) {
-                        task ->
-                            task.getGitVersionOutputFile().set(
-                                new File(project.buildDir, "intermediates/gitVersionProvider/output")
-                            )
-                            task.getOutputs().upToDateWhen { false }
-                    }
-                    
                     onVariantProperties {
-                        TaskProvider manifestUpdater = tasks.register(it.getName() + 'ManifestUpdater', ManifestTransformerTask) {
+                        TaskProvider gitVersionProvider = tasks.register(it.getName() + 'GitVersionProvider', GitVersionTask) {
+                            task ->
+                                task.getGitVersionOutputFile().set(
+                                    new File(project.buildDir, "intermediates/gitVersionProvider/output")
+                                )
+                                task.getOutputs().upToDateWhen { false }
+                        }
+                
+                        TaskProvider manifestProducer = tasks.register(it.getName() + 'ManifestProducer', ManifestProducerTask) {
                             task ->
                                 task.getGitInfoFile().set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
+                                task.getOutputManifest().set(
+                                    new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
+                                )
                         }
-                        it.operations.transform(manifestUpdater,
-                                { it.getMergedManifest() },
-                                { it.getUpdatedManifest() })
+                        it.operations.replace(manifestProducer,
+                                { it.getOutputManifest() })
                         .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
                     }
                 }
@@ -80,14 +82,15 @@ class GroovyTransformArtifactTest: VariantApiBaseTest(ScriptingLanguage.Groovy) 
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             arrayOf(
-                ":app:gitVersionProvider",
-                ":app:processDebugMainManifest",
-                ":app:debugManifestUpdater"
+                ":app:debugGitVersionProvider",
+                ":app:debugManifestProducer"
             ).forEach {
                 val task = task(it)
                 assertNotNull(task)
                 Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
             }
+            Truth.assertThat(task(":app:processDebugMainManifest")).isNull()
         }
     }
 }

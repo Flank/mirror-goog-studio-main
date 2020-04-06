@@ -176,7 +176,7 @@ class TestingElements(val language: ScriptingLanguage) {
                 """.trimIndent()
         }
 
-    private fun getManifestProducerTask() =
+    fun getManifestProducerTask() =
         when(language) {
             ScriptingLanguage.Kotlin ->
                 // language=kotlin
@@ -201,9 +201,8 @@ class TestingElements(val language: ScriptingLanguage) {
                         val manifest = ""${'"'}<?xml version="1.0" encoding="utf-8"?>
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="com.android.build.example.minimal"
-                        android:versionCode="${'$'}{gitVersion}"
-                        android:versionName="1.0" >
-
+                        android:versionName="${'$'}{gitVersion}"
+                        android:versionCode="1" >
                         <application android:label="Minimal">
                             <activity android:name="MainActivity">
                                 <intent-filter>
@@ -220,7 +219,45 @@ class TestingElements(val language: ScriptingLanguage) {
                 }
                 """.trimIndent()
             ScriptingLanguage.Groovy ->
+                // language=kotlin
                 """
+                import org.gradle.api.DefaultTask
+                import org.gradle.api.file.RegularFileProperty
+                import org.gradle.api.tasks.InputFile
+                import org.gradle.api.tasks.OutputFile
+                import org.gradle.api.tasks.TaskAction
+                
+                abstract class ManifestProducerTask extends DefaultTask {
+                    @InputFile
+                    abstract RegularFileProperty getGitInfoFile()
+                
+                    @OutputFile
+                    abstract RegularFileProperty getOutputManifest()
+                
+                    @TaskAction
+                    void taskAction() {
+                
+                        String gitVersion = new String(getGitInfoFile().get().asFile.readBytes())
+                        String manifest = ""${'"'}<?xml version=\"1.0\" encoding=\"utf-8\"?>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            package="com.android.build.example.minimal"
+                            android:versionName="${'$'}{gitVersion}"
+                            android:versionCode="1" >
+                        
+                            <application android:label="Minimal">
+                                <activity android:name="MainActivity">
+                                    <intent-filter>
+                                        <action android:name="android.intent.action.MAIN" />
+                                        <category android:name="android.intent.category.LAUNCHER" />
+                                    </intent-filter>
+                                </activity>
+                            </application>
+                        </manifest>
+                            ""${'"'}
+                        println("Writes to " + getOutputManifest().get().getAsFile().getAbsolutePath())
+                        getOutputManifest().get().getAsFile().write(manifest)
+                    }
+                }                    
                 """.trimIndent()
         }
 
