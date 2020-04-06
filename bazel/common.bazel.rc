@@ -119,9 +119,9 @@ build --worker_verbose  # Increases visibility in case there are issues.
 build:dynamic --config=remote
 
 # Enable dynamic scheduling. This will run some actions locally
-# as well as remotely, choosing whichever finishes first.
+# # as well as remotely, choosing whichever finishes first.
 build:dynamic --internal_spawn_scheduler
 build:dynamic --strategy=Javac=dynamic
-build:dynamic --dynamic_local_strategy=Javac=worker
+build:dynamic --dynamic_local_strategy=Javac=worker,sandboxed,local
 build:dynamic --strategy=kotlinc=dynamic
-build:dynamic --dynamic_local_strategy=kotlinc=worker
+build:dynamic --dynamic_local_strategy=kotlinc=worker,sandboxed,local
