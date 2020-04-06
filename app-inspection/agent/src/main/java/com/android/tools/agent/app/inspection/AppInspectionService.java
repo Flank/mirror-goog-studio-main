@@ -333,6 +333,10 @@ public class AppInspectionService {
         return ((Integer) onExitInternal(result)).intValue();
     }
 
+    public static long onExit(long result) {
+        return ((Long) onExitInternal(result)).longValue();
+    }
+
     public static boolean onExit(boolean result) {
         return ((Boolean) onExitInternal(result)).booleanValue();
     }

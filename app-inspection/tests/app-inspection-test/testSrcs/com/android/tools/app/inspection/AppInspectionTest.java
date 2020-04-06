@@ -396,6 +396,7 @@ public final class AppInspectionTest {
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
         androidDriver.triggerMethod(TODO_ACTIVITY, "getItemsCount");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getLongItemsCount");
         androidDriver.triggerMethod(TODO_ACTIVITY, "clearAllItems");
         androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
 
@@ -404,6 +405,14 @@ public final class AppInspectionTest {
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(
                             TodoInspectorApi.Event.TODO_GOT_ITEMS_COUNT.toByteArrayWithArg(
+                                    (byte) 1));
+        }
+
+        { // getLongItemsCount
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_LONG_ITEMS_COUNT.toByteArrayWithArg(
                                     (byte) 1));
         }
 

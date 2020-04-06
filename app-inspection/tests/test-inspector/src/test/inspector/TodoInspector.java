@@ -135,6 +135,21 @@ public final class TodoInspector extends TestInspector {
 
         environment.registerExitHook(
                 classActivity,
+                "getLongItemsCount()J",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Long count = (Long) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_LONG_ITEMS_COUNT
+                                                .toByteArrayWithArg(count.byteValue()));
+                        return returnValue;
+                    }
+                });
+
+       environment.registerExitHook(
+                classActivity,
                 "clearAllItems()V",
                 new InspectorEnvironment.ExitHook<Object>() {
                     @Override

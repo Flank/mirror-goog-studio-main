@@ -74,12 +74,23 @@ public final class TodoActivity extends TransportTestActivity {
         activeGroup = null;
     }
 
-    public int getItemsCount() {
+    // we have this special internal method instead of simply
+    // calling getItemsCount from getLongItemsCount to avoid
+    // sending two events once we call getLongItemsCount.
+    public int countItemsInternal() {
         int sum = 0;
         for (TodoGroup group : groups) {
             sum += group.getItems().size();
         }
         return sum;
+    }
+
+    public int getItemsCount() {
+      return countItemsInternal();
+    }
+
+    public long getLongItemsCount() {
+      return countItemsInternal();
     }
 
     public boolean hasEmptyTodoList() {

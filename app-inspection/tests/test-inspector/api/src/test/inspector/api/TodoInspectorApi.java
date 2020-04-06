@@ -43,6 +43,7 @@ public final class TodoInspectorApi {
         TODO_GROUP_REMOVING,
 
         TODO_GOT_ITEMS_COUNT,
+        TODO_GOT_LONG_ITEMS_COUNT,
         TODO_CLEARED_ALL_ITEMS,
 
         TODO_HAS_EMPTY_TODO_LIST;
