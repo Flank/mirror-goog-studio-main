@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -36,10 +35,11 @@ import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.google.common.base.Strings
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -47,25 +47,18 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import java.io.File
-import java.io.IOException
-import java.io.Serializable
-import javax.inject.Inject
 
 @CacheableTask
-abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFactory) : ProcessAndroidResources() {
+abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
-    @get:OutputDirectory @get:Optional var sourceOutputDirectory= objects.directoryProperty(); private set
-
-    @get:OutputFile @get:Optional var rClassOutputJar = objects.fileProperty()
-        private set
+    @get:OutputFile
+    abstract val rClassOutputJar: RegularFileProperty
 
     @Internal // rClassOutputJar is already marked as @OutputFile
     override fun getSourceOutputDir(): File? = rClassOutputJar.get().asFile
@@ -229,7 +222,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 "package-aware-r.txt"
             )
         }
-
 
         override fun configure(
             task: GenerateLibraryRFileTask
