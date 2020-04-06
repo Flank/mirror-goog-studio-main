@@ -327,7 +327,9 @@ public class InstrumentationResultParser extends MultiLineReceiver
                             statusValue));
                 } else if (StatusKeys.STREAM.equals(mCurrentKey)) {
                     if (statusValue != null) {
-                        if (INSTRUMENTATION_FAILURES_PATTERN
+                        if (statusValue.contains(FATAL_EXCEPTION_MSG)) {
+                            mStreamError = statusValue.trim();
+                        } else if (INSTRUMENTATION_FAILURES_PATTERN
                                 .matcher(statusValue.trim())
                                 .matches()) {
                             mStreamError = statusValue.trim();

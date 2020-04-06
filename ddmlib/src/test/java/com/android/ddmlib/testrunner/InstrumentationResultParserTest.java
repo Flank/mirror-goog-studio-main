@@ -144,14 +144,12 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
-     * Tests parsing output for a missing time stamp, meaning an invalid output from the runner. In
-     * some case a stack or exception will be available in 'stream=' we recover it in this case to
-     * have a more meaningful message.
+     * In some case a stack or exception will be available in 'stream=' we recover it in this case
+     * to have a more meaningful message.
      */
-    public void testParse_missingTimeStamp_withStack() {
+    public void testParse_fatalException() {
         StringBuilder output = new StringBuilder();
         addLine(output, "INSTRUMENTATION_RESULT: stream=");
-        addLine(output, "There was 1 failure:");
         addLine(output, InstrumentationResultParser.FATAL_EXCEPTION_MSG);
         addLine(
                 output,
