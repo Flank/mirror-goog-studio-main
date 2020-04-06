@@ -333,6 +333,10 @@ public class AppInspectionService {
         return ((Integer) onExitInternal(result)).intValue();
     }
 
+    public static boolean onExit(boolean result) {
+        return ((Boolean) onExitInternal(result)).booleanValue();
+    }
+
     /**
      * Receives an array where the first parameter is the "this" reference and all remaining
      * arguments are the function's parameters.

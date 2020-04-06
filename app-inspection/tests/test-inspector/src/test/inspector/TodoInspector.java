@@ -146,6 +146,21 @@ public final class TodoInspector extends TestInspector {
                         return returnValue;
                     }
                 });
+
+        environment.registerExitHook(
+                classActivity,
+                "hasEmptyTodoList()Z",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Boolean empty = (Boolean) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST
+                                                .toByteArrayWithArg((byte) (empty ? 1 : 0)));
+                        return returnValue;
+                    }
+                });
     }
 
     @NonNull

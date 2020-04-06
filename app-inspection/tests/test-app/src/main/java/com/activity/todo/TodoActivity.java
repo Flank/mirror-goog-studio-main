@@ -81,4 +81,8 @@ public final class TodoActivity extends TransportTestActivity {
         }
         return sum;
     }
+
+    public boolean hasEmptyTodoList() {
+        return groups.isEmpty();
+    }
 }

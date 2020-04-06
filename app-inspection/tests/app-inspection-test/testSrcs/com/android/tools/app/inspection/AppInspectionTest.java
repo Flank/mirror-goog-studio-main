@@ -397,6 +397,8 @@ public final class AppInspectionTest {
                 SUCCESS);
         androidDriver.triggerMethod(TODO_ACTIVITY, "getItemsCount");
         androidDriver.triggerMethod(TODO_ACTIVITY, "clearAllItems");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
+
         { // getItemsCount
             AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
@@ -409,6 +411,14 @@ public final class AppInspectionTest {
             AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(TodoInspectorApi.Event.TODO_CLEARED_ALL_ITEMS.toByteArray());
+        }
+
+        { // hasEmptyTodoList
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST.toByteArrayWithArg(
+                                    (byte) 1));
         }
     }
 
