@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import java.nio.FloatBuffer;
 import org.tensorflow.lite.schema.Tensor;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
+import org.tensorflow.lite.support.metadata.schema.Content;
 import org.tensorflow.lite.support.metadata.schema.ContentProperties;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 import org.tensorflow.lite.support.metadata.schema.NormalizationOptions;
@@ -350,13 +351,17 @@ public class TensorInfo {
     }
 
     public static TensorInfo.ContentType extractContentType(TensorMetadata tensorMetadata) {
-        byte type = tensorMetadata.content().contentPropertiesType();
+        Content content = tensorMetadata.content();
+        if (content == null) {
+            return ContentType.UNKNOWN;
+        }
+        byte type = content.contentPropertiesType();
         if (type == ContentProperties.ImageProperties) {
             return ContentType.IMAGE;
         } else if (type == ContentProperties.FeatureProperties) {
             return ContentType.FEATURE;
         }
-        return ContentType.FEATURE;
+        return ContentType.UNKNOWN;
     }
 
     private static NormalizationOptions extractNormalizationOptions(TensorMetadata tensorMetadata) {

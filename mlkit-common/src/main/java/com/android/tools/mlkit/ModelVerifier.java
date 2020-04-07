@@ -81,6 +81,13 @@ public class ModelVerifier {
     private static void verifyTensorMetadata(
             TensorMetadata tensorMetadata, int index, TensorInfo.Source source)
             throws ModelParsingException {
+        if (tensorMetadata == null) {
+            throw new ModelParsingException(
+                    ErrorType.INVALID_METADATA,
+                    String.format(
+                            "Metadata of %s tensor %d is null",
+                            source == TensorInfo.Source.INPUT ? "Input" : "Output", index));
+        }
         if (tensorMetadata.name() == null) {
             throw new ModelParsingException(
                     ErrorType.INVALID_PARAM_NAME,
