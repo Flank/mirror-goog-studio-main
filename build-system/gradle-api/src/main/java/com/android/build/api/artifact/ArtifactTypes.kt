@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import com.android.SdkConstants
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation

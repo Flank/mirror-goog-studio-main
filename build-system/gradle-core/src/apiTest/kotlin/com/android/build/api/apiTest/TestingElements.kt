@@ -363,4 +363,80 @@ class TestingElements(val language: ScriptingLanguage) {
 
                 """.trimIndent()
         }
+
+        fun getDisplayApksTask()=
+            when(language) {
+                ScriptingLanguage.Kotlin ->
+                    """
+                    import org.gradle.api.DefaultTask
+                    import org.gradle.api.file.DirectoryProperty
+                    import org.gradle.api.tasks.InputFiles
+                    import org.gradle.api.tasks.TaskAction
+                    import java.io.ByteArrayOutputStream
+                    import java.io.PrintStream
+
+                    import com.android.build.api.variant.BuiltArtifactsLoader
+                    import com.android.build.api.artifact.ArtifactTypes
+                    import org.gradle.api.provider.Property
+                    import org.gradle.api.tasks.Internal
+                    import java.io.File
+
+                    abstract class DisplayApksTask: DefaultTask() {
+
+                        @get:InputFiles
+                        abstract val apkFolder: DirectoryProperty
+
+                        @get:Internal
+                        abstract val builtArtifactsLoader: Property<BuiltArtifactsLoader>
+
+                        @TaskAction
+                        fun taskAction() {
+
+                            val builtArtifacts = builtArtifactsLoader.get().load(apkFolder.get())
+                                ?: throw RuntimeException("Cannot load APKs")
+                            builtArtifacts.elements.forEach {
+                                println("Got an APK at ${ '$' }{it.outputFile}")
+                            }
+                        }
+                    }
+                    """.trimIndent()
+                ScriptingLanguage.Groovy ->
+                    // language = groovy
+                    """
+                    import org.gradle.api.DefaultTask;
+                    import org.gradle.api.file.DirectoryProperty;
+                    import org.gradle.api.tasks.InputFiles;
+                    import org.gradle.api.tasks.TaskAction;
+                    import java.io.ByteArrayOutputStream;
+                    import java.io.PrintStream;
+
+                    import com.android.build.api.variant.BuiltArtifactsLoader;
+                    import com.android.build.api.artifact.ArtifactTypes;
+                    import com.android.build.api.variant.BuiltArtifacts;
+                    import org.gradle.api.provider.Property;
+                    import org.gradle.api.tasks.Internal;
+                    import java.io.File;
+
+                    abstract class DisplayApksTask extends DefaultTask {
+
+                        @InputFiles
+                        abstract DirectoryProperty getApkFolder()
+
+                        @Internal
+                        abstract Property<BuiltArtifactsLoader> getBuiltArtifactsLoader()
+
+                        @TaskAction
+                        void taskAction() {
+
+                            BuiltArtifacts artifacts = getBuiltArtifactsLoader().get().load(getApkFolder().get())
+                            if (artifacts == null) {
+                                throw new RuntimeException("Cannot load APKs")
+                            }
+                            artifacts.elements.forEach {
+                                println("Got an APK at ${ '$' }{it.outputFile}")
+                            }
+                        }
+                    }
+                    """.trimIndent()
+            }
 }
