@@ -320,6 +320,15 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     }
 
     /**
+     * Returns the value of the property with the given name, or null if the AVD doesn't have such
+     * property.
+     */
+    @Nullable
+    public String getProperty(@NonNull String propertyName) {
+        return mProperties.get(propertyName);
+    }
+
+    /**
      * Returns an unmodifiable map of properties for the AVD.
      * This can be empty but not null.
      * Callers must NOT try to modify this immutable map.
