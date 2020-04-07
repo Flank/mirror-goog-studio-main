@@ -17,11 +17,11 @@
 package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
+import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -96,14 +96,15 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContainJavaResource(".svn/ignored-1");
-        apk.containsJavaResourceWithContent("not-ignored-1", c0);
-        apk.doesNotContainJavaResource("foo/.svn/ignored-2");
-        apk.containsJavaResourceWithContent("foo/not-ignored-2", c1);
-        apk.doesNotContainJavaResource("foo/bar/.svn/ignored-3");
-        apk.containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
-        apk.containsJavaResourceWithContent("foo/svn/not-ignored-4", c3);
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContainJavaResource(".svn/ignored-1");
+            assertThat(apk).containsJavaResourceWithContent("not-ignored-1", c0);
+            assertThat(apk).doesNotContainJavaResource("foo/.svn/ignored-2");
+            assertThat(apk).containsJavaResourceWithContent("foo/not-ignored-2", c1);
+            assertThat(apk).doesNotContainJavaResource("foo/bar/.svn/ignored-3");
+            assertThat(apk).containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
+            assertThat(apk).containsJavaResourceWithContent("foo/svn/not-ignored-4", c3);
+        }
     }
 
     /**
@@ -128,14 +129,15 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContainJavaResource("CVS/ignored-1");
-        apk.containsJavaResourceWithContent("not-ignored-1", c0);
-        apk.doesNotContainJavaResource("foo/cvs/ignored-2");
-        apk.containsJavaResourceWithContent("foo/not-ignored-2", c1);
-        apk.doesNotContainJavaResource("foo/bar/Cvs/ignored-3");
-        apk.containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
-        apk.containsJavaResourceWithContent("foo/cvs.cvs/not-ignored-4", c3);
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContainJavaResource("CVS/ignored-1");
+            assertThat(apk).containsJavaResourceWithContent("not-ignored-1", c0);
+            assertThat(apk).doesNotContainJavaResource("foo/cvs/ignored-2");
+            assertThat(apk).containsJavaResourceWithContent("foo/not-ignored-2", c1);
+            assertThat(apk).doesNotContainJavaResource("foo/bar/Cvs/ignored-3");
+            assertThat(apk).containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
+            assertThat(apk).containsJavaResourceWithContent("foo/cvs.cvs/not-ignored-4", c3);
+        }
     }
 
     /**
@@ -160,14 +162,15 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContainJavaResource("SCCS/ignored-1");
-        apk.containsJavaResourceWithContent("not-ignored-1", c0);
-        apk.doesNotContainJavaResource("foo/SCCS/ignored-2");
-        apk.containsJavaResourceWithContent("foo/not-ignored-2", c1);
-        apk.doesNotContainJavaResource("foo/bar/SCCS/ignored-3");
-        apk.containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
-        apk.containsJavaResourceWithContent("foo/SCCS.1/not-ignored-4", c3);
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContainJavaResource("SCCS/ignored-1");
+            assertThat(apk).containsJavaResourceWithContent("not-ignored-1", c0);
+            assertThat(apk).doesNotContainJavaResource("foo/SCCS/ignored-2");
+            assertThat(apk).containsJavaResourceWithContent("foo/not-ignored-2", c1);
+            assertThat(apk).doesNotContainJavaResource("foo/bar/SCCS/ignored-3");
+            assertThat(apk).containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
+            assertThat(apk).containsJavaResourceWithContent("foo/SCCS.1/not-ignored-4", c3);
+        }
     }
 
     /**
@@ -192,21 +195,41 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContainJavaResource("_/ignored-1");
-        apk.containsJavaResourceWithContent("not-ignored-1", c0);
-        apk.doesNotContainJavaResource("foo/__/ignored-2");
-        apk.containsJavaResourceWithContent("foo/not-ignored-2", c1);
-        apk.doesNotContainJavaResource("foo/bar/_blah/ignored-3");
-        apk.containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
-        apk.containsJavaResourceWithContent("foo/x_/not-ignored-4", c3);
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContainJavaResource("_/ignored-1");
+            assertThat(apk).containsJavaResourceWithContent("not-ignored-1", c0);
+            assertThat(apk).doesNotContainJavaResource("foo/__/ignored-2");
+            assertThat(apk).containsJavaResourceWithContent("foo/not-ignored-2", c1);
+            assertThat(apk).doesNotContainJavaResource("foo/bar/_blah/ignored-3");
+            assertThat(apk).containsJavaResourceWithContent("foo/bar/not-ignored-3", c2);
+            assertThat(apk).containsJavaResourceWithContent("foo/x_/not-ignored-4", c3);
+        }
     }
 
     @Test
-    public void byDefaultKotlinMetaDataAreIgnored() throws Exception {
+    public void byDefaultKotlinMetaDataAndKotlinModuleAreIgnored() throws Exception {
         app.execute("assembleDebug");
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContain("/kotlin/text/UStringsKt.kotlin_metadata");
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContain("/kotlin/text/UStringsKt.kotlin_metadata");
+            assertThat(apk).doesNotContain("/META-INF/app_debug.kotlin_module");
+        }
+
+        // ensure that these apk entries are present if we remove the corresponding patterns from
+        // packagingOptions.excludes
+        appendBuild("android {");
+        appendBuild("    packagingOptions {");
+        appendBuild("        excludes -= [");
+        appendBuild("            '**/*.kotlin_metadata',");
+        appendBuild("            '/META-INF/*.kotlin_module'");
+        appendBuild("        ]");
+        appendBuild("    }");
+        appendBuild("}");
+
+        app.execute("assembleDebug");
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).contains("/kotlin/text/UStringsKt.kotlin_metadata");
+            assertThat(apk).contains("/META-INF/app_debug.kotlin_module");
+        }
     }
 
     /**
@@ -237,13 +260,14 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContainJavaResource("I_am_ign");
-        apk.containsJavaResourceWithContent("ssccs/I stay", c0);
-        apk.doesNotContainJavaResource("Ignoring/this/fileign");
-        apk.containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
-        apk.doesNotContainJavaResource("some/sensitive/files/dont");
-        apk.containsJavaResourceWithContent("pkg/ccvs/very-sensitive-info", c2);
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContainJavaResource("I_am_ign");
+            assertThat(apk).containsJavaResourceWithContent("ssccs/I stay", c0);
+            assertThat(apk).doesNotContainJavaResource("Ignoring/this/fileign");
+            assertThat(apk).containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
+            assertThat(apk).doesNotContainJavaResource("some/sensitive/files/dont");
+            assertThat(apk).containsJavaResourceWithContent("pkg/ccvs/very-sensitive-info", c2);
+        }
     }
 
     /**
@@ -278,12 +302,13 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
-        apk.doesNotContainJavaResource("I_am_ign");
-        apk.containsJavaResourceWithContent("sccs2/I stay", c0);
-        apk.doesNotContainJavaResource("Ignoring/this/fileign");
-        apk.containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
-        apk.doesNotContainJavaResource("some/sensitive/files/dont");
-        apk.containsJavaResourceWithContent("pkg/cvs2/very-sensitive-info", c2);
+        try (Apk apk = app.getApk(DEBUG)) {
+            assertThat(apk).doesNotContainJavaResource("I_am_ign");
+            assertThat(apk).containsJavaResourceWithContent("sccs2/I stay", c0);
+            assertThat(apk).doesNotContainJavaResource("Ignoring/this/fileign");
+            assertThat(apk).containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
+            assertThat(apk).doesNotContainJavaResource("some/sensitive/files/dont");
+            assertThat(apk).containsJavaResourceWithContent("pkg/cvs2/very-sensitive-info", c2);
+        }
     }
 }
