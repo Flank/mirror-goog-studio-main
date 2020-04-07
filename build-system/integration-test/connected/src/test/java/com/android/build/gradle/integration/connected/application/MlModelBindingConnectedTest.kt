@@ -43,12 +43,28 @@ class MlModelBindingConnectedTest {
     @Before
     fun setup() {
         // Add model file to ml folder
-        val modelFile = project.file("src/main/ml/model.tflite")
+        val imageClassificationModelFile = project.file("src/main/ml/mobilenet_quant_metadata.tflite")
         FileUtils.copyFile(
             TestUtils.getWorkspaceFile(
                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"
             ),
-            modelFile
+            imageClassificationModelFile
+        )
+
+        val stylePredictModelFile = project.file("src/main/ml/style_predict_quant_metadata.tflite")
+        FileUtils.copyFile(
+            TestUtils.getWorkspaceFile(
+                "prebuilts/tools/common/mlkit/testData/models/style_predict_quant_metadata.tflite"
+            ),
+            stylePredictModelFile
+        )
+
+        val styleTransferModelFile = project.file("src/main/ml/style_transfer_quant_metadata.tflite")
+        FileUtils.copyFile(
+            TestUtils.getWorkspaceFile(
+                "prebuilts/tools/common/mlkit/testData/models/style_transfer_quant_metadata.tflite"
+            ),
+            styleTransferModelFile
         )
     }
 
