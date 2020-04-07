@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.apiTest.buildSrc
+package com.android.build.api.apiTest
 
-import com.android.build.api.apiTest.TestingElements
-import com.android.build.api.apiTest.VariantApiBaseTest
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -25,14 +23,14 @@ import kotlin.test.assertNotNull
 /**
  * Test with a buildSrc plugin that replace the manifest file producer task.
  */
-class BuildSrcPluginReplaceArtifactTest: VariantApiBaseTest() {
+class BuildSrcScriptApiTests: VariantApiBaseTest(
+    TestType.BuildSrc
+) {
 
     private val testingElements = TestingElements(scriptingLanguage)
 
-    override fun tasksToInvoke(): Array<String> = arrayOf(":app:processDebugResources")
-
     @Test
-    fun replaceManifest() {
+    fun manifestReplacementTest() {
         given {
             addBuildSrc() {
 
@@ -104,7 +102,6 @@ class BuildSrcPluginReplaceArtifactTest: VariantApiBaseTest() {
 
                     android {
                         compileSdkVersion(29)
-                        buildToolsVersion("29.0.3")
                         defaultConfig {
                             minSdkVersion(21)
                             targetSdkVersion(29)

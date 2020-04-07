@@ -14,20 +14,61 @@
  * limitations under the License.
  */
 
-package com.android.build.api.apiTest.kotlin
+package com.android.build.api.apiTest
 
-import com.android.build.api.apiTest.TestingElements
-import com.android.build.api.apiTest.VariantApiBaseTest
 import com.google.common.truth.Truth
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
 import kotlin.test.assertNotNull
 
-class KotlinScriptTransformArtifactTest: VariantApiBaseTest(ScriptingLanguage.Kotlin) {
+class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
 
-    private val testingElements= TestingElements(ScriptingLanguage.Kotlin)
+    private val testingElements= TestingElements(scriptingLanguage)
 
-    override fun tasksToInvoke(): Array<String> = arrayOf(":app:processDebugResources")
+    @Test
+    fun getApksTest() {
+        given {
+            tasksToInvoke.add(":app:debugDisplayApks")
+            addModule(":app") {
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=kotlin
+                    """
+                    plugins {
+                            id("com.android.application")
+                            kotlin("android")
+                            kotlin("android.extensions")
+                    }
+                
+                    ${testingElements.getDisplayApksTask()}
+
+                    android {
+                        compileSdkVersion(29)
+                        defaultConfig {
+                            minSdkVersion(21)
+                            targetSdkVersion(29)
+                        }
+                        
+                        onVariantProperties {
+                            project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
+                                apkFolder.set(operations.get(ArtifactTypes.APK))
+                                builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
+                            }
+                        }
+
+                    }
+                """.trimIndent()
+
+                testingElements.addManifest(this)
+            }
+        }
+
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("Got an APK")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+        }
+    }
 
     @Test
     fun manifestTransformerTest() {
@@ -45,7 +86,6 @@ class KotlinScriptTransformArtifactTest: VariantApiBaseTest(ScriptingLanguage.Ko
                     ${testingElements.getManifestTransformerTask()}
                     android {
                         compileSdkVersion(29)
-                        buildToolsVersion("29.0.3")
                         defaultConfig {
                             minSdkVersion(21)
                             targetSdkVersion(29)
