@@ -3,6 +3,8 @@ package com.android.aaptcompiler
 import com.android.aapt.Resources
 import com.android.aaptcompiler.android.stringToInt
 import com.android.resources.ResourceVisibility
+import com.android.utils.ILogger
+import sun.security.krb5.Config
 import java.io.InputStream
 import javax.xml.XMLConstants
 import javax.xml.namespace.QName
@@ -147,7 +149,8 @@ class TableExtractor(
   val table: ResourceTable,
   val source: Source,
   val config: ConfigDescription,
-  val options: TableExtractorOptions) {
+  val options: TableExtractorOptions,
+  val logger: ILogger?) {
 
   fun extract(inputFile: InputStream) : Boolean {
     var eventReader : XMLEventReader? = null
@@ -156,7 +159,7 @@ class TableExtractor(
 
       val documentStart = eventReader.nextEvent()
       if (!documentStart.isStartDocument) {
-        // TODO(b/139297538): diagnostics
+        logError("Failed to find start of xml for file %s", blameSource(source))
         return false
       }
 
@@ -172,7 +175,9 @@ class TableExtractor(
 
       val rootName = rootStart.asStartElement().name
       if (rootName.namespaceURI != null && rootName.localPart != "resources") {
-        // TODO(b/139297538): diagnostics
+        val errorMessage =
+          "Root xml element of resource table not labeled \"resources\" for file %s"
+        logError(errorMessage, blameSource(source))
         return false
       }
 
@@ -180,6 +185,7 @@ class TableExtractor(
     } catch (xmlException: XMLStreamException) {
       if (xmlException.message?.contains("Premature end of file.", true) != true) {
         // Having no root is not an error, but any other xml format exception is.
+        logger?.error(xmlException, "For file %s", blameSource(source))
         throw xmlException
       }
       return true
@@ -188,6 +194,9 @@ class TableExtractor(
     }
   }
 
+  private fun logError(formatMessage: String, vararg args: Any?) {
+    logger?.error(null, formatMessage, args)
+  }
 
   /**
    * Extracts all the resources from the given eventReader.
@@ -215,8 +224,9 @@ class TableExtractor(
 
       if (event.isCharacters) {
         if (!event.asCharacters().isWhiteSpace) {
-          // whitespace is not allowed here
-          // TODO(b/139297538): diagnostics
+          // non-whitespace characters are not allowed here
+          logError(
+            "%s plain text is not allowed here.", blameSource(source, event.location))
           error = true
         }
         continue
@@ -228,7 +238,8 @@ class TableExtractor(
       }
 
       if (!event.isStartElement) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "Unexpected element type: %s at %s"
+        logError(errorMsg, event.eventType, blameSource(source, event.location))
         error = true
       }
 
@@ -302,7 +313,8 @@ class TableExtractor(
       if (formatAttribute != null) {
         resourceFormat = parseFormatNoEnumsOrFlags(formatAttribute.value)
         if (resourceFormat == 0) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s Resource has an invalid format of %s."
+          logError(errorMsg, blameSource(parsedResource.source), formatAttribute.value)
           walkToEndOfElement(element, eventReader)
           return false
         }
@@ -311,7 +323,8 @@ class TableExtractor(
       // Items have their type encoded in the type attribute.
       val typeAttribute = element.getAttributeByName(QName("type"))
       if (typeAttribute == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s <item> must have a 'type' attribute"
+        logError(errorMsg, blameSource(parsedResource.source))
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -323,7 +336,8 @@ class TableExtractor(
       // Bags have their type encoded in the type attribute.
       val typeAttribute = element.getAttributeByName(QName("type"))
       if (typeAttribute == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s <bag> must have a 'type' attribute"
+        logError(errorMsg, blameSource(parsedResource.source))
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -335,11 +349,14 @@ class TableExtractor(
 
     if (resourceTypeName == "id") {
       if (nameAttribute == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s <%s> is missing the 'name' attribute."
+        logError(errorMsg, blameSource(parsedResource.source), element.name)
         walkToEndOfElement(element, eventReader)
         return false
       }
 
+      // Grab the name of the resource. This will be validated later, as not all XML resources
+      // require a name.
       parsedResource.name =
         parsedResource.name.copy(type = AaptResourceType.ID, entry = nameAttribute.value)
       parseItem(element, eventReader, parsedResource, resourceFormat)
@@ -353,10 +370,12 @@ class TableExtractor(
           // A null reference also means there is no inner element when ids are in the form:
           //    <id name="name"/>
           parsedResource.value = Id()
-        (item is Reference && item.name.type != AaptResourceType.ID) || item !is Reference ->
+        (item is Reference && item.name.type != AaptResourceType.ID) || item !is Reference -> {
           // if an inner element exists, the inner element must be a reference to another id
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s <%s> inner element must either be a resource reference or empty."
+          logError(errorMsg, blameSource(parsedResource.source), element.name)
           return false
+        }
       }
       return true
     }
@@ -387,7 +406,8 @@ class TableExtractor(
       if (type != null) {
         // this is an item record its type and format and start parsing.
         if (nameAttribute == null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s <%s> is missing the 'name' attribute."
+          logError(errorMsg, blameSource(parsedResource.source), element.name)
           walkToEndOfElement(element, eventReader)
           return false
         }
@@ -426,7 +446,8 @@ class TableExtractor(
         if (resourceTypeName != "public-group" && resourceTypeName != "overlayable") {
           if (nameAttribute == null) {
             walkToEndOfElement(element, eventReader)
-            // TODO(b/139297538): diagnostics
+            val errorMsg = "%s <%s> is missing the 'name' attribute."
+            logError(errorMsg, blameSource(parsedResource.source), element.name)
             return false
           }
 
@@ -443,7 +464,8 @@ class TableExtractor(
       val parsedType = resourceTypeFromTag(resourceTypeName)
       if (parsedType != null) {
         if (nameAttribute == null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s <%s> is missing the 'name' attribute."
+          logError(errorMsg, blameSource(parsedResource.source), element.name)
           walkToEndOfElement(element, eventReader)
           return false
         }
@@ -453,7 +475,8 @@ class TableExtractor(
           parseXml(element, eventReader, Resources.Attribute.FormatFlags.REFERENCE_VALUE, false)
 
         if (parsedResource.value == null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s Invalid value for type %s. Expected a reference."
+          logError(errorMsg, blameSource(parsedResource.source), parsedType)
           return false
         }
 
@@ -461,7 +484,8 @@ class TableExtractor(
       }
     }
 
-    // TODO(b/139297538): diagnostics
+    val errorMsg = "%s Unknown resource type '%s'"
+    logError(errorMsg, blameSource(parsedResource.source), resourceTypeName)
     walkToEndOfElement(element, eventReader)
     return false
   }
@@ -488,7 +512,7 @@ class TableExtractor(
     resourceFormat: Int,
     allowRawString : Boolean) : Item? {
 
-    val flattenedXml = flattenXmlSubTree(eventReader)
+    val flattenedXml = flattenXmlSubTree(element, eventReader)
     if (!flattenedXml.success) {
       return null
     }
@@ -564,7 +588,8 @@ class TableExtractor(
 
     parsedResource.value = parseXml(element, eventReader, resourceFormat, false)
     if (parsedResource.value == null) {
-      // TODO(b/139297538): DIAG
+      val errorMsg = "%s Invalid %s, for given resource value."
+      logError(errorMsg, blameSource(parsedResource.source), parsedResource.name.type)
       return false
     }
     return true
@@ -589,7 +614,8 @@ class TableExtractor(
     if (formattedAttribute != null) {
       val maybeFormatted = parseAsBool(formattedAttribute.value)
       if (maybeFormatted == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s Invalid value for 'formatted' attribute. Was '%s', must be a boolean."
+        logError(errorMsg, blameSource(parsedResource.source), formattedAttribute.value)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -601,7 +627,8 @@ class TableExtractor(
     if (translatableAttribute != null) {
       val maybeTranslatable = parseAsBool(translatableAttribute.value)
       if (maybeTranslatable == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s Invalid value for 'translatable' attribute. Was '%s', must be a boolean."
+        logError(errorMsg, blameSource(parsedResource.source), translatableAttribute.value)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -611,7 +638,8 @@ class TableExtractor(
     val value =
       parseXml(element, eventReader, Resources.Attribute.FormatFlags.STRING_VALUE, false)
     if (value == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, %s does not contain a valid string resource."
+      logError(errorMsg, blameSource(parsedResource.source), parsedResource.name)
       return false
     }
 
@@ -620,10 +648,13 @@ class TableExtractor(
 
       if (formatted && translatable) {
         if (!verifyJavaStringFormat(value.toString())) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, multiple substitutions specified in non-positional format of string" +
+                  "resource %s. Did you mean to add the formatted=\"false\" attribute?"
           if (options.errorOnPositionalArgs) {
+            logError(errorMsg, blameSource(parsedResource.source), parsedResource.name)
             return false
           }
+          logger?.warning(errorMsg, blameSource(parsedResource.source), parsedResource.name)
         }
       }
     } else if (value is StyledString) {
@@ -652,19 +683,22 @@ class TableExtractor(
 
     val nameAttribute = element.getAttributeByName(QName("name"))
     if (nameAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, No attribute 'name' found for tag <%s>."
+      logError(errorMsg, blameSource(elementSource), tag)
       return null
     }
 
     val valueAttribute = element.getAttributeByName(QName("value"))
     if (valueAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, No attribute 'value' found for tag <%s>."
+      logError(errorMsg, blameSource(elementSource), tag)
       return null
     }
 
     val resValue = stringToInt(valueAttribute.value)
     if (resValue == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, invalid value '%s' for <%s>. Must be an integer."
+      logError(errorMsg, blameSource(elementSource), resValue, tag)
       return null
     }
 
@@ -690,7 +724,8 @@ class TableExtractor(
 
     val nameAttribute = element.getAttributeByName(QName("name"))
     if (nameAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <item> must have a 'name' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return false
     }
@@ -702,7 +737,8 @@ class TableExtractor(
 
     val xmlItem = parseXml(element, eventReader, 0, true)
     if (xmlItem == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Could not parse style item with name %s."
+      logError(errorMsg, blameSource(source, element.location), nameAttribute.value)
       return false
     }
 
@@ -727,7 +763,9 @@ class TableExtractor(
    *   [FlattenedXml.untranslatableSections] contains the sections of the string that should not be
    *     translated.
    */
-  private fun flattenXmlSubTree(eventReader: XMLEventReader) : FlattenedXml {
+  private fun flattenXmlSubTree(
+    startElement: StartElement, eventReader: XMLEventReader) : FlattenedXml {
+
     var depth = 1
 
     val builder = XmlStringBuilder()
@@ -763,7 +801,12 @@ class TableExtractor(
             }
             else -> {
               // besides XLIFF, any other namespaced tags are unsupported and ignored.
-              // TODO(b/139297538): diagnostics, warn here
+              val warningMsg = "%s, ignoring element '%s' with unknown namespace '%s'."
+              logger?.warning(
+                warningMsg,
+                blameSource(source.withLine(element.location.lineNumber)),
+                elementName,
+                elementName.namespaceURI)
             }
 
           }
@@ -793,7 +836,9 @@ class TableExtractor(
 
     val flattenedXml = builder.getFlattenedXml()
     if (builder.error.isNotEmpty()) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s Failed to flatten XML for resource '%s' with error: %s"
+      val resourceName = startElement.getAttributeByName(QName("name")).value
+      logError(errorMsg, blameSource(source, startElement.location), resourceName, builder.error)
     }
     return flattenedXml
   }
@@ -810,9 +855,19 @@ class TableExtractor(
    */
   private fun parseSymbol(
     element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    var error = false
+    if (options.visibility != null) {
+      val errorMsg =
+        "%s, <java-symbol> and <symbol> tags are not supported with the --visibility flag."
+      logError(errorMsg, blameSource(source, element.location))
+      error = true
+    }
+
     // Symbols should have the default config
     if (parsedResource.config != ConfigDescription()) {
-      // TODO(b/139297538): diagnostics warn
+      val warningMsg = "%s, Ignoring configuration '%s' for <%s> tag."
+      logger?.warning(
+        warningMsg, blameSource(source, element.location), parsedResource.config, element.name)
     }
 
     if (!parseSymbolImpl(element, eventReader, parsedResource)) {
@@ -820,7 +875,7 @@ class TableExtractor(
     }
 
     parsedResource.visibility = ResourceVisibility.PRIVATE
-    return true
+    return !error
   }
 
   /**
@@ -859,14 +914,16 @@ class TableExtractor(
     val typeAttribute = element.getAttributeByName(QName("type"))
     if (typeAttribute == null) {
       walkToEndOfElement(element, eventReader)
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <%s> must have a 'type' attribute."
+      logError(errorMsg, blameSource(source, element.location), element.name)
       return false
     }
 
     val parsedType = resourceTypeFromTag(typeAttribute.value)
     if (parsedType == null) {
       walkToEndOfElement(element, eventReader)
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Invalid resource type '%s' in <%s> resource."
+      logError(errorMsg, blameSource(source, element.location), typeAttribute.value,  element.name)
       return false
     }
 
@@ -911,7 +968,9 @@ class TableExtractor(
     // Attributes only end up in default configuration
     val defaultConfig = ConfigDescription()
     if (parsedResource.config != defaultConfig) {
-      // TODO(b/139297538): diagnostics warn
+      val warningMsg = "%s, Ignoring configuration '%s' for <%s> tag."
+      logger?.warning(
+        warningMsg, blameSource(source, element.location), parsedResource.config, element.name)
       parsedResource.config = defaultConfig
     }
 
@@ -921,7 +980,8 @@ class TableExtractor(
     if (formatAttribute != null) {
       typeMask = parseFormatAttribute(formatAttribute.value)
       if (typeMask == 0) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, Invalid attribute format '%s'"
+        logError(errorMsg, blameSource(source, element.location), formatAttribute.value)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -943,7 +1003,8 @@ class TableExtractor(
       }
 
       if (min == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, invalid 'min' value '%s'. Integer value required."
+        logError(errorMsg, blameSource(source, element.location), minString)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -959,7 +1020,8 @@ class TableExtractor(
       }
 
       if (max == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, Invalid 'max' value '%s'. Integer value required."
+        logError(errorMsg, blameSource(source, element.location), maxString)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -967,7 +1029,9 @@ class TableExtractor(
 
     if ((min != null || max != null) &&
       (typeMask and Resources.Attribute.FormatFlags.INTEGER_VALUE) == 0) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg =
+        "%s, 'min' and 'max' attributes can only be used when format='integer' on <%s> resource"
+      logError(errorMsg, blameSource(source, element.location), element.name)
       walkToEndOfElement(element, eventReader)
       return false
     }
@@ -1003,7 +1067,9 @@ class TableExtractor(
         when (childName.localPart) {
           "enum" -> {
             if ((typeMask and Resources.Attribute.FormatFlags.FLAGS_VALUE) != 0) {
-              // TODO(b/139297538): diagnostics
+              val errorMsg =
+                "%s, Cannot define both <enum> and <flag> under the same <%s> resource."
+              logError(errorMsg, blameSource(source, childElement.location), element.name)
               error = true
               itemError = true
             }
@@ -1011,6 +1077,9 @@ class TableExtractor(
           }
           "flag" -> {
             if ((typeMask and Resources.Attribute.FormatFlags.ENUM_VALUE) != 0) {
+              val errorMsg =
+                "%s, Cannot define both <enum> and <flag> under the same <%s> resource."
+              logError(errorMsg, blameSource(source, childElement.location), element.name)
               error = true
               itemError = true
             }
@@ -1035,7 +1104,14 @@ class TableExtractor(
 
           val symbolName = symbol.symbol.name.toString()
           if (symbolMap.contains(symbolName)) {
-            // TODO(b/139297538): diagnostics
+            val errorMsg = "%s, Duplicate symbol '%s' defined here:%s and here:%s"
+            logError(
+              errorMsg,
+              blameSource(symbol.symbol.source),
+              symbolName,
+              blameSource(symbol.symbol.source),
+              blameSource(symbolMap[symbolName]!!.symbol.source)
+            )
             error = true
           }
           symbolMap[symbolName] = symbol
@@ -1044,7 +1120,8 @@ class TableExtractor(
         }
       } else{
         if (!shouldIgnoreElement(childName)) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, Unrecognized tag <%s> of child element of <%s>."
+          logError(errorMsg, blameSource(childSource), childName, element.name)
           error = true
         }
         walkToEndOfElement(childElement, eventReader)
@@ -1083,7 +1160,8 @@ class TableExtractor(
     if (formatAttribute != null) {
       resourceFormat = parseFormatNoEnumsOrFlags(formatAttribute.value)
       if (resourceFormat == 0) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, Invalid format value: '%s'."
+        logError(errorMsg, blameSource(source, element.location), formatAttribute.value)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -1146,7 +1224,8 @@ class TableExtractor(
     if (translatableAttribute != null) {
       val translatableValue = parseAsBool(translatableAttribute.value)
       if (translatableValue == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, Invalid value for 'translatable' attribute. Must be a boolean."
+        logError(errorMsg, blameSource(parsedResource.source))
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -1176,12 +1255,14 @@ class TableExtractor(
             childItem.source = childSource
             array.elements.add(childItem)
           } else {
-            // TODO(b/139297538): diagnostics
+            val errorMsg = "%s, Could not parse array item for array here:%s."
+            logError(errorMsg, blameSource(childSource), blameSource(source, element.location))
             error = true
           }
         }
         !shouldIgnoreElement(childName) -> {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, Unknown tag <%s> in <%s> resource."
+          logError(errorMsg, blameSource(childSource), childName, element.name)
           error = true
           walkToEndOfElement(childElement, eventReader)
         }
@@ -1255,7 +1336,7 @@ class TableExtractor(
       if (parentAttribute.value.isNotEmpty()) {
         val parseResult = parseStyleParentReference(parentAttribute.value)
         if (parseResult.parent == null) {
-          // TODO(b/139297538): diagnostics
+          logError("%s, %s", blameSource(source, element.location), parseResult.errorString)
           walkToEndOfElement(element, eventReader)
           return false
         }
@@ -1299,7 +1380,9 @@ class TableExtractor(
         }
       } else {
         if (!shouldIgnoreElement(childName)) {
-          // TODO(b/139297538): diagnostics
+          val errorMessage = "%s, Unrecognized child element <%s> of <%s> resource."
+          logError(
+            errorMessage, blameSource(source, childElement.location), childName, element.name)
           error = true
         }
         walkToEndOfElement(childElement, eventReader)
@@ -1328,14 +1411,15 @@ class TableExtractor(
     element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
     parsedResource.name = parsedResource.name.copy(type = AaptResourceType.STYLEABLE)
 
-    // Declare-styleable is private by default, because it technically only exists in R.java
-    // TODO(b/139297538): verify correctness of C++ code.
+    // TODO(b/153454907): add option for preservation of stylable visibility to match aapt2
     parsedResource.visibility = ResourceVisibility.PUBLIC
 
     // Declare-stylable only ends up in the default config
     val defaultConfig = ConfigDescription()
     if (parsedResource.config != defaultConfig) {
-      // TODO(b/139297538): diagnostics
+      val warningMsg = "%s, Ignoring configuration '%s' for <%s> tag."
+      logger?.warning(
+        warningMsg, blameSource(source, element.location), parsedResource.config, element.name)
       parsedResource.config = defaultConfig
     }
 
@@ -1368,7 +1452,8 @@ class TableExtractor(
       if (childName.namespaceURI.isEmpty() && childName.localPart == "attr") {
         val nameAttribute = childElement.getAttributeByName(QName("name"))
         if (nameAttribute == null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, <attr> tag must have a 'name' attribute."
+          logError(errorMsg, blameSource(itemSource))
           error = true
           walkToEndOfElement(childElement, eventReader)
           continue
@@ -1396,9 +1481,9 @@ class TableExtractor(
 
       } else {
         if (!shouldIgnoreElement(childName)) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, Unknown tag of <%s> in <%s> resource."
+          logError(errorMsg, blameSource(itemSource), childName, element.name)
           error = true
-
         }
         walkToEndOfElement(childElement, eventReader)
       }
@@ -1429,18 +1514,27 @@ class TableExtractor(
 
     val defaultConfig = ConfigDescription()
     if (parsedResource.config != defaultConfig) {
-      // TODO(b/139297538): diagnostics warn
+      val warningMsg = "%s, Ignoring configuration '%s' for <%s> tag."
+      logger?.warning(
+        warningMsg, blameSource(source, element.location), parsedResource.config, element.name)
     }
 
     val nameAttribute = element.getAttributeByName(QName(null, "name"))
     if (nameAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <overlayable> tag must have a 'name' attribute"
+      logError(errorMsg, blameSource(source, element.location))
       return false
     }
 
     val actorAttribute = element.getAttributeByName(QName(null, "actor"))
-    if (actorAttribute != null && actorAttribute.value.startsWith(Overlayable.ACTOR_SCHEME_URI)) {
-      // TODO(b/139297538): diagnostics
+    if (actorAttribute != null && !actorAttribute.value.startsWith(Overlayable.ACTOR_SCHEME_URI)) {
+      val errorMsg =
+        "%s, <overlayable> tag has a 'actor' attribute: '%s'. Value must use the schema: %s."
+      logError(
+        errorMsg,
+        blameSource(source, element.location),
+        actorAttribute.value,
+        Overlayable.ACTOR_SCHEME_URI)
       return false
     }
 
@@ -1502,7 +1596,8 @@ class TableExtractor(
           comment = ""
         }
         !shouldIgnoreElement(childName) -> {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, unrecognized tag '%s' within an <overlayable> resource."
+          logError(errorMsg, blameSource(source, childElement.location), childName)
           error = true
         }
         else -> comment = ""
@@ -1534,7 +1629,8 @@ class TableExtractor(
     comment: String): ParsedResource? {
 
     if (policies == OverlayableItem.Policy.NONE) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <item> within an <overlayable> must be inside a <policy> block."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return null
     }
@@ -1542,21 +1638,24 @@ class TableExtractor(
     // Items specify the name and type of resource that should be overlayable.
     val nameAttribute = element.getAttributeByName(QName(null, "name"))
     if (nameAttribute == null || nameAttribute.value.isNullOrEmpty()) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <item> within an <overlayable> must have a 'name' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return null
     }
 
     val typeAttribute = element.getAttributeByName(QName(null, "type"))
     if (typeAttribute == null || typeAttribute.value.isNullOrEmpty()) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <item> within an <overlayable> must have a 'type' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return null
     }
 
     val type = resourceTypeFromTag(typeAttribute.value)
     if (type == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, invalid resource type '%s' in <item> in <overlayable> resource."
+      logError(errorMsg, blameSource(source, element.location), typeAttribute.value)
       walkToEndOfElement(element, eventReader)
       return null
     }
@@ -1586,13 +1685,15 @@ class TableExtractor(
 
     if (oldPolicies != OverlayableItem.Policy.NONE) {
       // If the policy list is not empty, then we are currently inside a policy element.
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Policy blocks should not be nested recursively."
+      logError(errorMsg, blameSource(source, element.location))
       return null
     }
 
     val typeAttribute = element.getAttributeByName(QName(null, "type"))
     if (typeAttribute == null || typeAttribute.value.isNullOrEmpty()) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <policy> must have a 'type' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       return null
     }
 
@@ -1609,7 +1710,8 @@ class TableExtractor(
         "system" -> OverlayableItem.Policy.SYSTEM
         "vendor" -> OverlayableItem.Policy.VENDOR
         else -> {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, <policy> has unsupported type '%s'."
+          logError(errorMsg, blameSource(source, element.location), string.trim())
           return null
         }
       }
@@ -1653,7 +1755,8 @@ class TableExtractor(
       if (childName.namespaceURI.isEmpty() && childName.localPart == "item") {
         val quantityAttribute = childElement.getAttributeByName(QName("quantity"))
         if (quantityAttribute == null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, <item> in <plurals> are required to have the 'quantity' attribute."
+          logError(errorMsg, blameSource(source, childElement.location))
           walkToEndOfElement(childElement, eventReader)
           error = true
           continue
@@ -1671,7 +1774,9 @@ class TableExtractor(
         }
 
         if (pluralType == null) {
-          // TODO(b/139297538): diagnostics
+          val errorMessage =
+            "%s, unrecognized quantity value '%' specified in <item> in <plurals> resource."
+          logError(errorMessage, blameSource(source, childElement.location), trimmedQuantity)
           walkToEndOfElement(childElement, eventReader)
           error = true
           continue
@@ -1679,7 +1784,13 @@ class TableExtractor(
 
         val pluralIndex = pluralType.ordinal
         if (plural.values[pluralIndex] != null) {
-          // TODO(b/139297538): diagnostics duplicate
+          val errorMsg = "%s, <item> has quantity '%s' which has already been specified in " +
+                  "<plurals> resource '%'"
+          logError(
+            errorMsg,
+            blameSource(source, childElement.location),
+            trimmedQuantity,
+            element.name)
           error = true
           walkToEndOfElement(childElement, eventReader)
           continue
@@ -1692,7 +1803,8 @@ class TableExtractor(
         }
       } else {
         if (!shouldIgnoreElement(childName)) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, unrecognized tag '%s' within an <plurals> resource."
+          logError(errorMsg, blameSource(source, childElement.location), childName)
           error = true
         }
         walkToEndOfElement(childElement, eventReader)
@@ -1721,25 +1833,30 @@ class TableExtractor(
     element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
 
     if (options.visibility != null ) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <public> tag not allowed with --visibility flag."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return false
     }
 
     if (parsedResource.config != ConfigDescription()) {
-      // TODO(b/139297538): diagnostics warn
+      val warningMsg = "%s, Ignoring configuration '%s' for <%s> tag."
+      logger?.warning(
+        warningMsg, blameSource(source, element.location), parsedResource.config, element.name)
     }
 
     val typeAttribute = element.getAttributeByName(QName("type"))
     if (typeAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <public> must have a 'type' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return false
     }
 
     val parsedType = resourceTypeFromTag(typeAttribute.value)
     if (parsedType == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Invalid resource type '%s' in <public> resource."
+      logError(errorMsg, blameSource(source, element.location), typeAttribute.value)
       walkToEndOfElement(element, eventReader)
       return false
     }
@@ -1750,7 +1867,8 @@ class TableExtractor(
     if (idAttribute != null) {
       val id = parseResourceId(idAttribute.value)
       if (id == null) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, Invalid resource Id '%s' in <public> resource."
+        logError(errorMsg, blameSource(source, element.location), idAttribute.value)
         walkToEndOfElement(element, eventReader)
         return false
       }
@@ -1774,39 +1892,46 @@ class TableExtractor(
   private fun parsePublicGroup(
     element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
     if (options.visibility != null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <public-group> tag not allowed with --visibility flag."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return false
     }
 
     if (parsedResource.config != ConfigDescription()) {
-      // TODO(b/139297538): diagnostics warn
+      val warningMsg = "%s, Ignoring configuration '%s' for <%s> tag."
+      logger?.warning(
+        warningMsg, blameSource(source, element.location), parsedResource.config, element.name)
     }
 
     val typeAttribute = element.getAttributeByName(QName("type"))
     if (typeAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <public-group> must have a 'type' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return false
     }
 
     val parsedType = resourceTypeFromTag(typeAttribute.value)
     if (parsedType == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Invalid resource type '%s' in <public-group>."
+      logError(errorMsg, blameSource(source, element.location), typeAttribute.value)
       walkToEndOfElement(element, eventReader)
       return false
     }
 
     val idAttribute = element.getAttributeByName(QName("first-id"))
     if (idAttribute == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, <public-group> must have a 'first-id' attribute."
+      logError(errorMsg, blameSource(source, element.location))
       walkToEndOfElement(element, eventReader)
       return false
     }
 
     val idVal = parseResourceId(idAttribute.value)
     if (idVal == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Invalid resource ID '%s' in <public-group>. Integer expected."
+      logError(errorMsg, blameSource(source, element.location), idAttribute.value)
       walkToEndOfElement(element, eventReader)
       return false
     }
@@ -1839,7 +1964,8 @@ class TableExtractor(
       if (childName.namespaceURI.isEmpty() && childName.localPart == "public") {
         val nameAttribute = childElement.getAttributeByName(QName("name"))
         if (nameAttribute ==  null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, <public> must have a 'name' attribute."
+          logError(errorMsg, blameSource(source, childElement.location))
           walkToEndOfElement(childElement, eventReader)
           error = true
           continue
@@ -1847,7 +1973,9 @@ class TableExtractor(
 
         val childIdAttribute = childElement.getAttributeByName(QName("id"))
         if (childIdAttribute != null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg =
+            "%s, 'id' attribute is not allowed on <public> tags within a <public-group>."
+          logError(errorMsg, blameSource(source, childElement.location))
           walkToEndOfElement(childElement, eventReader)
           error = true
           continue
@@ -1855,7 +1983,9 @@ class TableExtractor(
 
         val childTypeAttribute = childElement.getAttributeByName(QName("type"))
         if (childTypeAttribute != null) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg =
+            "%s, 'type' attribute is not allowed on <public> tags within a <public-group>."
+          logError(errorMsg, blameSource(source, childElement.location))
           walkToEndOfElement(childElement, eventReader)
           error = true
           continue
@@ -1871,7 +2001,8 @@ class TableExtractor(
         walkToEndOfElement(childElement, eventReader)
       } else {
         if (!shouldIgnoreElement(childName)) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "%s, unrecognized tag '%s' within an <public-group> resource."
+          logError(errorMsg, blameSource(source, childElement.location), childName)
           error = true
         }
         walkToEndOfElement(childElement, eventReader)

@@ -3,6 +3,7 @@ package com.android.aaptcompiler
 import com.android.aapt.Resources
 import com.android.aaptcompiler.android.isTruthy
 import com.android.resources.ResourceVisibility
+import com.android.utils.ILogger
 import java.io.File
 import java.util.SortedMap
 import java.util.TreeMap
@@ -16,7 +17,7 @@ import java.util.TreeMap
  * names validated. While [addResourceMangled] and [addFileReferenceMangled] are used to add
  * resources from libraries and are not validated.
  */
-class ResourceTable(val validateResources: Boolean = false) {
+class ResourceTable(val validateResources: Boolean = false, val logger: ILogger? = null) {
   /**
    * The string pool used by this resource table. Values that reference strings must use
    * this pool to create their strings.
@@ -281,11 +282,16 @@ class ResourceTable(val validateResources: Boolean = false) {
     }
   }
 
+  private fun logError(formatMessage: String, vararg args: Any?) {
+    logger?.error(null, formatMessage, args)
+  }
+
   private fun validateName(
     nameValidator: (String) -> String, name: ResourceName, source: Source): Boolean {
     val badCodePoint = nameValidator.invoke(name.entry!!)
     if (badCodePoint.isNotEmpty()) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Resource '%s' has invalid entry name '%s'. Invalid character '%s'."
+      logError(errorMsg, blameSource(source),  name, name.entry, badCodePoint)
       return false
     }
     return true
@@ -307,8 +313,17 @@ class ResourceTable(val validateResources: Boolean = false) {
     }
 
     val tablePackage = findOrCreatePackage(name.pck!!)
-    if (id.isValidDynamicId() && tablePackage.id != null && id.getPackageId() != tablePackage.id) {
-      // TODO(b/139297538): diagnostics
+    val packageId = tablePackage.id
+    if (id.isValidDynamicId() && packageId != null && id.getPackageId() != packageId) {
+      val errorMsg =
+        "%s, Failed to add resource '%s' with ID %s because package '%s' already has ID %s."
+      logError(
+        errorMsg,
+        blameSource(value.source),
+        name,
+        id.toString(16),
+        tablePackage.name,
+        packageId.toString(16))
       return false
     }
 
@@ -317,15 +332,32 @@ class ResourceTable(val validateResources: Boolean = false) {
 
     val resourceGroup =
       tablePackage.findOrCreateGroup(name.type, if (useId) id.getTypeId() else null)
-    if (checkId && resourceGroup.id.isTruthy() && resourceGroup.id != id.getTypeId()) {
-      // TODO(b/139297538): diagnostics
+    val groupId = resourceGroup.id
+    if (checkId && groupId != null && groupId != id.getTypeId()) {
+      val errorMsg =
+        "%s, Failed to add resource '%s' with ID %s because type '%s' already has ID %s."
+      logError(
+        errorMsg,
+        blameSource(value.source),
+        name,
+        id.toString(16),
+        resourceGroup.type.tagName,
+        groupId.toString(16))
       return false
     }
 
     val resourceEntry =
       resourceGroup.findOrCreateEntry(name.entry!!, if (useId) id.getEntryId() else null)
-    if (checkId && resourceEntry.id != null && id.getEntryId() != resourceEntry.id) {
-      // TODO(b/139297538): diagnostics
+    val entryId = resourceEntry.id
+    if (checkId && entryId != null && id.getEntryId() != entryId) {
+      val errorMsg =
+        "%s, Failed to add resource '%s' with ID %s, because resource already has ID %s."
+      logError(
+        errorMsg,
+        blameSource(value.source),
+        name,
+        id.toString(16),
+        resourceIdFromParts(packageId!!, groupId!!, entryId).toString(16))
       return false
     }
 
@@ -338,7 +370,16 @@ class ResourceTable(val validateResources: Boolean = false) {
       when (conflictResolver.invoke(oldValue, value)) {
         CollisionResult.TAKE_NEW -> configValue.value = value
         CollisionResult.CONFLICT -> {
-          // TODO(b/139297538): diagnostics
+          val errorMsg =
+            "%s, Duplicate value for resource '%s' with config '%s' and product '%s'. Resource " +
+                    "was previously defined here: %s."
+          logError(
+            errorMsg,
+            blameSource(value.source),
+            name,
+            config,
+            product,
+            blameSource(oldValue.source))
           return false
         }
         CollisionResult.KEEP_ORIGINAL -> {}
@@ -379,8 +420,17 @@ class ResourceTable(val validateResources: Boolean = false) {
     }
 
     val tablePackage = findOrCreatePackage(name.pck!!)
-    if (id.isValidDynamicId() && tablePackage.id != null && id.getPackageId() != tablePackage.id) {
-      // TODO(b/139297538): diagnostics
+    val packageId = tablePackage.id
+    if (id.isValidDynamicId() && packageId != null && id.getPackageId() != packageId) {
+      val errorMsg =
+        "%s, Failed to add resource '%s' with ID %s because package '%s' already has ID %s."
+      logError(
+        errorMsg,
+        blameSource(source),
+        name,
+        id.toString(16),
+        tablePackage.name,
+        packageId.toString(16))
       return false
     }
 
@@ -389,15 +439,32 @@ class ResourceTable(val validateResources: Boolean = false) {
 
     val resourceGroup =
       tablePackage.findOrCreateGroup(name.type, if(useId) id.getTypeId() else null)
-    if (checkId && resourceGroup.id.isTruthy() && resourceGroup.id != id.getTypeId()) {
-      // TODO(b/139297538): diagnostics
+    val groupId = resourceGroup.id
+    if (checkId && groupId != null && groupId != id.getTypeId()) {
+      val errorMsg =
+        "%s, Failed to add resource '%s' with ID %s because type '%s' already has ID %s."
+      logError(
+        errorMsg,
+        blameSource(source),
+        name,
+        id.toString(16),
+        resourceGroup.type.tagName,
+        groupId.toString(16))
       return false
     }
 
     val resourceEntry =
       resourceGroup.findOrCreateEntry(name.entry!!, if (useId) id.getEntryId() else null)
-    if (checkId && resourceEntry.id != null && id.getEntryId() != resourceEntry.id) {
-      // TODO(b/139297538): diagnostics
+    val entryId = resourceEntry.id
+    if (checkId && entryId != null && id.getEntryId() != entryId) {
+      val errorMsg =
+        "%s, Failed to add resource '%s' with ID %s, because resource already has ID %s."
+      logError(
+        errorMsg,
+        blameSource(source),
+        name,
+        id.toString(16),
+        resourceIdFromParts(packageId!!, groupId!!, entryId).toString(16))
       return false
     }
 
@@ -453,8 +520,17 @@ class ResourceTable(val validateResources: Boolean = false) {
     val group = tablePackage.findOrCreateGroup(name.type)
     val entry = group.findOrCreateEntry(name.entry!!)
 
-    if (entry.overlayable != null) {
-      // TODO(b/139297538): diagnostics
+    val oldEntry = entry.overlayable
+    if (oldEntry != null) {
+      val errorMsg =
+        "%s, Failed to add overlayable declaration for resource '%s', because resource already " +
+                "has an overlayable defined here: %s."
+      logError(
+        errorMsg,
+        blameSource(overlayable.source),
+        name,
+        blameSource(oldEntry.source)
+      )
       return false
     }
     entry.overlayable = overlayable

@@ -20,10 +20,36 @@ import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.SourcePosition
 import com.android.utils.ILogger
 import java.io.File
+import javax.xml.stream.Location
+
+internal fun blameSource(
+    source: com.android.aaptcompiler.Source,
+    line: Int? = source.line,
+    column: Int? = null
+): BlameLogger.Source =
+    BlameLogger.Source(File(source.path), line ?: -1, column ?: -1)
+
+internal fun blameSource(
+    source: com.android.aaptcompiler.Source,
+    location: Location
+): BlameLogger.Source =
+    BlameLogger.Source(File(source.path), location.lineNumber, location.columnNumber)
 
 class BlameLogger(val logger: ILogger, val blameMap: (Source) -> Source = { it }): ILogger {
 
-    data class Source(val file: File, val line: Int, val column: Int) {
+    data class Source(val file: File, val line: Int = -1, val column: Int = -1) {
+
+        override fun toString(): String {
+            var result = file.absolutePath
+            if (line != -1) {
+                result += ":$line"
+                if (column != -1) {
+                    result += ":$column"
+                }
+            }
+            return result
+        }
+
         fun toSourceFilePosition() =
             SourceFilePosition(file, SourcePosition(line, column, -1, line, column, -1))
 

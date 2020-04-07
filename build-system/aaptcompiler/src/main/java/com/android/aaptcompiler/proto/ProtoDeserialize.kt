@@ -39,10 +39,10 @@ import com.android.aaptcompiler.parseResourceName
 import com.android.aaptcompiler.resourceIdFromParts
 import com.android.aaptcompiler.resourceTypeFromTag
 import com.android.resources.ResourceVisibility
-import java.util.logging.Logger
+import com.android.utils.ILogger
 
 fun deserializeConfigFromPb(
-  config: ConfigurationOuterClass.Configuration, logger: Logger?): ConfigDescription? {
+  config: ConfigurationOuterClass.Configuration, logger: ILogger?): ConfigDescription? {
 
   val mcc = config.getMcc().toShort()
   val mnc = config.getMnc().toShort()
@@ -51,7 +51,7 @@ fun deserializeConfigFromPb(
   val localeValue = LocaleValue()
   if (localeString.isNotEmpty()) {
     if (!localeValue.initFromBcp47Tag(localeString)) {
-      // TODO(b/139297538): diagnostics.
+      logger?.error(null, "Failed to initialized from Bcp47 '%s'", localeString)
       return null
     }
   }
@@ -257,7 +257,7 @@ fun deserializeOverlayableFromPb(
   item: Resources.OverlayableItem,
   overlayable: Overlayable,
   sourcePool: ResStringPool,
-  logger: Logger?): OverlayableItem? {
+  logger: ILogger?): OverlayableItem? {
 
   var policies = 0
   for (policy in item.getPolicyList()) {
@@ -270,7 +270,7 @@ fun deserializeOverlayableFromPb(
       Resources.OverlayableItem.Policy.ODM -> OverlayableItem.Policy.ODM
       Resources.OverlayableItem.Policy.OEM -> OverlayableItem.Policy.OEM
       else -> {
-        // TODO(b/139297538): diagnostics
+        logger?.error(null, "Unrecognized policy: %s.", policy)
         return null
       }
     }
@@ -286,7 +286,7 @@ fun deserializeOverlayableFromPb(
 }
 
 fun deserializeBinPrimitiveFromPb(
-  primitive: Resources.Primitive, logger: Logger?): BinaryPrimitive? {
+  primitive: Resources.Primitive, logger: ILogger?): BinaryPrimitive? {
 
   val (type, deviceValue) = when(primitive.getOneofValueCase()) {
     Resources.Primitive.OneofValueCase.NULL_VALUE ->
@@ -326,7 +326,8 @@ fun deserializeBinPrimitiveFromPb(
       Pair(ResValue.DataType.FRACTION, float.toRawBits())
     }
     else -> {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "Value case unrecognized for Primitive proto: %s"
+      logger?.error(null, errorMsg, primitive.oneofValueCase)
       return null
     }
   }
@@ -349,11 +350,12 @@ fun deserializeStyledStrFromPb(
   return StyledString(valuePool.makeRef(StyleString(string.getValue(), spans)), listOf())
 }
 
-fun deserializeReferenceFromPb(ref: Resources.Reference): Reference? {
+fun deserializeReferenceFromPb(ref: Resources.Reference, logger: ILogger?): Reference? {
   val reference = if (ref.getName().isNotEmpty()) {
     val refName = parseResourceName(ref.getName())
     if (refName == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s cannot be parsed as a Resource Name."
+      logger?.error(null, errorMsg, ref.name)
       return null
     }
     Reference(refName.resourceName)
@@ -383,14 +385,14 @@ fun deserializeFileRefFromPb(
 }
 
 fun deserializeAttrFromPb(
-  attr: Resources.Attribute, sourcePool: ResStringPool): AttributeResource? {
+  attr: Resources.Attribute, sourcePool: ResStringPool, logger: ILogger?): AttributeResource? {
 
   val attrResource = AttributeResource(attr.getFormatFlags())
   attrResource.minInt = attr.getMinInt()
   attrResource.maxInt = attr.getMaxInt()
 
   for (symbol in attr.getSymbolList()) {
-    val reference = deserializeReferenceFromPb(symbol.getName())
+    val reference = deserializeReferenceFromPb(symbol.getName(), logger)
     reference ?: return null
 
     if (symbol.hasSource()) {
@@ -410,11 +412,11 @@ fun deserializeStyleFromPb(
   valuePool: StringPool,
   config: ConfigDescription,
   sourcePool: ResStringPool,
-  logger: Logger?): Style? {
+  logger: ILogger?): Style? {
 
   val styleResource = Style()
   if (style.hasParent()) {
-    val parentRef = deserializeReferenceFromPb(style.getParent())
+    val parentRef = deserializeReferenceFromPb(style.getParent(), logger)
     parentRef ?: return null
 
     parentRef.source = if (style.hasParentSource()) {
@@ -426,7 +428,7 @@ fun deserializeStyleFromPb(
   }
 
   for (entry in style.getEntryList()) {
-    val key = deserializeReferenceFromPb(entry.getKey())
+    val key = deserializeReferenceFromPb(entry.getKey(), logger)
     key ?: return null
 
     val value = deserializeItemFromPb(entry.getItem(), valuePool, config, logger)
@@ -444,11 +446,11 @@ fun deserializeStyleFromPb(
 }
 
 fun deserializeStyleableFromPb(
-  styleable: Resources.Styleable, sourcePool: ResStringPool): Styleable? {
+  styleable: Resources.Styleable, sourcePool: ResStringPool, logger: ILogger?): Styleable? {
 
   val styleableResource = Styleable()
   for (entry in styleable.getEntryList()) {
-    val reference = deserializeReferenceFromPb(entry.getAttr())
+    val reference = deserializeReferenceFromPb(entry.getAttr(), logger)
     reference?: return null
     if (entry.hasSource()) {
       reference.source = deserializeSourceFromPb(entry.getSource(), sourcePool)
@@ -464,7 +466,7 @@ fun deserializeArrayFromPb(
   valuePool: StringPool,
   config: ConfigDescription,
   sourcePool: ResStringPool,
-  logger: Logger?): ArrayResource? {
+  logger: ILogger?): ArrayResource? {
 
   val arrayResource = ArrayResource()
   for (entry in array.getElementList()) {
@@ -494,7 +496,7 @@ fun deserializePluralFromPb(
   valuePool: StringPool,
   config: ConfigDescription,
   sourcePool: ResStringPool,
-  logger: Logger?): Plural? {
+  logger: ILogger?): Plural? {
 
   val pluralResource = Plural()
   for (entry in plural.getEntryList()) {
@@ -520,9 +522,9 @@ fun deserializeItemFromPb(
   item: Resources.Item,
   valuePool: StringPool,
   config: ConfigDescription,
-  logger: Logger?): Item? = when (item.getValueCase()) {
+  logger: ILogger?): Item? = when (item.getValueCase()) {
 
-  Resources.Item.ValueCase.REF -> deserializeReferenceFromPb(item.getRef())
+  Resources.Item.ValueCase.REF -> deserializeReferenceFromPb(item.getRef(), logger)
   Resources.Item.ValueCase.STR -> deserializeStringFromPb(item.getStr(), valuePool)
   Resources.Item.ValueCase.RAW_STR -> deserializeRawFromPb(item.getRawStr(), valuePool)
   Resources.Item.ValueCase.STYLED_STR ->
@@ -531,7 +533,8 @@ fun deserializeItemFromPb(
   Resources.Item.ValueCase.ID -> Id()
   Resources.Item.ValueCase.PRIM -> deserializeBinPrimitiveFromPb(item.getPrim(), logger)
   else -> {
-    // TODO(b/139297538): diagnostics
+    val errorMsg = "Unrecognized value case for Item: %s."
+    logger?.error(null, errorMsg, item.valueCase)
     null
   }
 }
@@ -541,7 +544,7 @@ fun deserializeValueFromPb(
   valuePool: StringPool,
   config: ConfigDescription,
   sourcePool: ResStringPool,
-  logger: Logger?): Value? {
+  logger: ILogger?): Value? {
 
   val valueResource = when {
     value.hasItem() -> deserializeItemFromPb(value.getItem(), valuePool, config, logger)
@@ -550,23 +553,25 @@ fun deserializeValueFromPb(
 
       when (compoundValue.getValueCase()) {
         Resources.CompoundValue.ValueCase.ATTR ->
-          deserializeAttrFromPb(compoundValue.getAttr(), sourcePool)
+          deserializeAttrFromPb(compoundValue.getAttr(), sourcePool, logger)
         Resources.CompoundValue.ValueCase.STYLE ->
           deserializeStyleFromPb(compoundValue.getStyle(), valuePool, config, sourcePool, logger)
         Resources.CompoundValue.ValueCase.STYLEABLE ->
-          deserializeStyleableFromPb(compoundValue.getStyleable(), sourcePool)
+          deserializeStyleableFromPb(compoundValue.getStyleable(), sourcePool, logger)
         Resources.CompoundValue.ValueCase.ARRAY ->
           deserializeArrayFromPb(compoundValue.getArray(), valuePool, config, sourcePool, logger)
         Resources.CompoundValue.ValueCase.PLURAL ->
           deserializePluralFromPb(compoundValue.getPlural(), valuePool, config, sourcePool, logger)
         else -> {
-          // TODO(@daniellabar: diagnostics
+          val errorMsg = "Unrecognized compoundValue value case %s"
+          logger?.error(null, errorMsg, compoundValue.valueCase)
           null
         }
       }
     }
     else -> {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "Unrecognized case for serialized value %s"
+      logger?.error(null, errorMsg, value.valueCase)
       null
     }
   }
@@ -585,7 +590,7 @@ fun deserializePackageFromPb(
   original: Resources.Package,
   sourcePool: ResStringPool,
   overlayables: List<Overlayable>,
-  logger: Logger?,
+  logger: ILogger?,
   table: ResourceTable): Boolean {
 
   val packageId =
@@ -599,7 +604,8 @@ fun deserializePackageFromPb(
     val resType = resourceTypeFromTag(group.getName())
 
     if (resType == null) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "Unrecognized Resource Type: %s."
+      logger?.error(null, errorMsg, group.name)
       return false
     }
 
@@ -656,7 +662,9 @@ fun deserializePackageFromPb(
         // Find the overlayable to which this item belongs.
         val overlayableItem = entry.getOverlayableItem()
         if (overlayableItem.getOverlayableIdx() >= overlayables.size) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "Illegal value for overlayable id '%s'. Because only '%s' overlayables" +
+                  "exist in proto."
+          logger?.error(null, errorMsg, overlayableItem.overlayableIdx, overlayables.size)
           return false
         }
         val resourceOverlayable =
@@ -688,7 +696,13 @@ fun deserializePackageFromPb(
         val resourceConfigValue =
           resourceEntry.findOrCreateValue(resourceConfig, config.getProduct())
         if (resourceConfigValue.value.isTruthy()) {
-          // TODO(b/139297538): diagnostics
+          val errorMsg = "Value already exists for name %s, config %s, and product %s."
+          logger?.error(
+            null,
+            errorMsg,
+            ResourceName(resourcePackage.name, resourceGroup.type, resourceEntry.name),
+            resourceConfig,
+            config.product)
           return false
         }
 
@@ -724,7 +738,7 @@ fun deserializePackageFromPb(
 }
 
 fun deserializeTableFromPb(
-  table: Resources.ResourceTable, outTable: ResourceTable, logger: Logger?): Boolean {
+  table: Resources.ResourceTable, outTable: ResourceTable, logger: ILogger?): Boolean {
 
   val sourcePool = ResStringPool.get(
     table.getSourcePool().getData().asReadOnlyByteBuffer(),

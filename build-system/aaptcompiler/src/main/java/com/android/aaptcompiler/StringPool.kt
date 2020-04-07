@@ -22,9 +22,8 @@ import com.android.aaptcompiler.android.ResStringPoolHeader
 import com.android.aaptcompiler.android.ResStringPoolRef
 import com.android.aaptcompiler.android.ResStringPoolSpan
 import com.android.aaptcompiler.android.hostToDevice
-import com.android.aaptcompiler.android.deviceToHost
 import com.android.aaptcompiler.buffer.BigBuffer
-import java.util.logging.Logger
+import com.android.utils.ILogger
 
 data class Span(val name: String, var firstChar: Int, var lastChar: Int = firstChar)
 
@@ -166,9 +165,9 @@ class StringPool {
     return StyleRef(styleEntry)
   }
 
-  fun flattenUtf8(out: BigBuffer, logger: Logger?) = flatten(out, true, logger)
+  fun flattenUtf8(out: BigBuffer, logger: ILogger?) = flatten(out, true, logger)
 
-  fun flattenUtf16(out: BigBuffer, logger: Logger?) = flatten(out, false, logger)
+  fun flattenUtf16(out: BigBuffer, logger: ILogger?) = flatten(out, false, logger)
 
   fun sort(comparator: Comparator<Context>? = null) {
     sortEntries(comparator)
@@ -176,7 +175,7 @@ class StringPool {
     reAssignIndices()
   }
 
-  private fun flatten(out: BigBuffer, utf8: Boolean, logger: Logger?): Boolean {
+  private fun flatten(out: BigBuffer, utf8: Boolean, logger: ILogger?): Boolean {
     var error = false
 
     val header = ResStringPoolHeader(
@@ -285,7 +284,7 @@ class StringPool {
   }
 
   private fun encodeString(
-    str: String, utf8: Boolean, out: BigBuffer, logger: Logger?): Boolean {
+    str: String, utf8: Boolean, out: BigBuffer, logger: ILogger?): Boolean {
 
     if (utf8) {
       val utf16Length = str.length
@@ -295,8 +294,8 @@ class StringPool {
       // Make sure the lengths to be encoded do not exceed the maximum length that can be encoded
       // using chars
       if (utf8Length > UTF8_ENCODE_LENGTH_MAX || utf16Length > UTF16_ENCODE_LENGTH_MAX) {
-        // TODO(b/139297538): diagnostics for string being too large.
-
+        val errorMsg = "String too large to encode using UTF-8. Writing the string instead as '%s'."
+        logger?.error(null, errorMsg, STRING_TOO_LARGE)
         encodeString(STRING_TOO_LARGE, utf8, out, logger)
         return false
       }
@@ -328,7 +327,9 @@ class StringPool {
       // Make sure the length to be encoded does not exceed the maximum possible length that can be
       // encoded
       if (utf16Length > UTF16_ENCODE_LENGTH_MAX) {
-        // TODO(b/139297538): diagnostics for string being too large.
+        val errorMsg =
+          "String too large to encode using UTF-16. Writing the string instead as '%s'."
+        logger?.error(null, errorMsg, STRING_TOO_LARGE)
 
         encodeString(STRING_TOO_LARGE, utf8, out, logger)
         return false

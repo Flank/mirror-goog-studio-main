@@ -11,7 +11,7 @@ class XmlProcessorTest {
 
   @Before
   fun beforeTest() {
-    processor = XmlProcessor(Source(""))
+    processor = XmlProcessor(Source(""), null)
   }
 
   private fun processTest(input: String, configDescription: String = ""): ResourceFile? {
