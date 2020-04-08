@@ -80,9 +80,4 @@ interface CxxProjectModel {
      * Feature flag enabling prefab for the project.
      */
     val isPrefabEnabled: Boolean
-
-    /**
-     * Path to the Prefab jar to use.
-     */
-    val prefabClassPath: File?
 }

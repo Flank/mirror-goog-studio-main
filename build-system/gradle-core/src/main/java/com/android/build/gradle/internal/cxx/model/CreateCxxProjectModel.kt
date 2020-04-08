@@ -76,12 +76,5 @@ fun createCxxProjectModel(global : GlobalScope) : CxxProjectModel {
             }
 
         override val isPrefabEnabled: Boolean = global.projectOptions.get(BooleanOption.ENABLE_PREFAB)
-        override val prefabClassPath: File? by lazy {
-            if (isPrefabEnabled) {
-                getPrefabFromMaven(global)
-            } else {
-                null
-            }
-        }
     }
 }

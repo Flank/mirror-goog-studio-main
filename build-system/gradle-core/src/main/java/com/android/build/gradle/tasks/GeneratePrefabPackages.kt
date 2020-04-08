@@ -44,9 +44,9 @@ fun generatePrefabPackages(
 
     val osVersion = abiModel.abiPlatformVersion
 
-    val prefabClassPath: File = abiModel.variant.module.project.prefabClassPath
+    val prefabClassPath: File = abiModel.variant.prefabClassPath
         ?: throw RuntimeException(
-                "CxxAbiModule.prefabClassPath cannot be null when Prefab is enabled"
+                "CxxAbiModule.prefabClassPath cannot be null when Prefab is used"
         )
 
     // We need to determine the user's STL choice as best we can. It can come from
