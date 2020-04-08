@@ -293,7 +293,7 @@ public class Deployer {
                 runner.create(Tasks.DIFF, new ApkDiffer()::specDiff, speculativeDump, newFiles);
 
         // Extract files from the APK for overlays. Currently only extract resources.
-        Predicate<String> filter = file -> file.startsWith("res");
+        Predicate<String> filter = file -> file.startsWith("res") || file.startsWith("assets");
         Task<Map<ApkEntry, ByteString>> extractedFiles =
                 runner.create(
                         Tasks.EXTRACT_APK_ENTRIES, new ApkEntryExtractor(filter)::extract, diffs);
