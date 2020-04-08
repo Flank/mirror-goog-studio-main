@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
@@ -380,5 +381,29 @@ public class ManifestMergingTest {
         navigation.executor().run(":app:assembleDebug");
 
         Truth.assertThat(timestampAfterFirstBuild).isLessThan(manifestFile.lastModified());
+    }
+
+    @Test
+    public void checkManifestFile_rebuildsWhenInjectedVersionCodeIsChanged() throws Exception {
+        // Regression test for https://issuetracker.google.com/issues/148525428
+        TestFileUtils.appendToFile(
+                flavors.getBuildFile(),
+                "android {\n"
+                        + "    compileSdkVersion 24\n"
+                        + "    defaultConfig {\n"
+                        + "        versionCode 123\n"
+                        + "    }\n"
+                        + "}");
+        flavors.executor().run("clean", "assembleF1FaDebug");
+
+        TestFileUtils.searchAndReplace(
+                flavors.getBuildFile(), "versionCode 123", "versionCode 124");
+
+        GradleBuildResult buildResult = flavors.executor().run(":assembleF1FaDebug");
+        Truth.assertThat(buildResult.getDidWorkTasks()).contains(":processF1FaDebugManifest");
+        assertThat(
+                        flavors.getIntermediateFile(
+                                "merged_manifests", "f1FaDebug", "AndroidManifest.xml"))
+                .contains("android:versionCode=\"124\"");
     }
 }
