@@ -68,7 +68,7 @@ message QueryParameters {
   oneof query {
     ProcessMetadataParameters process_metadata = 101;
     ProcessTraceEventsParameters process_events = 102;
-    CpuTraceEventsParameters cpu_events = 103;
+    SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
   }
 
@@ -85,12 +85,14 @@ message QueryParameters {
     repeated int64 process_id = 1;
   }
 
-  // Returns all the trace events for a set of CPU cores.
-  // If the set of core ids is empty, will return trace events
-  // for all the cores.
-  // See ResultCpuTraceEvents for the data returned from this.
-  message CpuTraceEventsParameters {
-    repeated int32 core_id = 1;
+  // Returns all CPU scheduling events for all threads part of the process
+  // identified by process_id or for a single thread identified by thread_id.
+  // See SchedulingEventsResults for the data returned from this.
+  message SchedulingEventsParameters {
+    oneof criteria {
+      int64 process_id = 1;
+      int64 thread_id = 2;
+    }
   }
 }
 
@@ -103,7 +105,7 @@ message QueryResult {
   oneof result {
     ProcessMetadataResult process_metadata = 101;
     ProcessTraceEventsResult process_events = 102;
-    CpuTraceEventsResult cpu_events = 103;
+    SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
   }
 
@@ -134,10 +136,36 @@ message ProcessTraceEventsResult {
   }
 }
 
-message CpuTraceEventsResult {
-  repeated CpuTraceEvents events = 1;
+message SchedulingEventsResult {
+  // List of scheduling events, ordered by thread_id and increasing timestamp.
+  repeated SchedulingEvent sched_event = 1;
 
-  message CpuTraceEvents {
+  // How many cores the device has.
+  int32 num_cores = 2;
+
+  message SchedulingEvent {
+    int64 thread_id = 1;
+    // In which cpu core the event happened.
+    // Will be in [0, num_cores).
+    int32 cpu = 2;
+
+    // The timestamp in nanoseconds of when this event happened.
+    int64 timestamp_nanoseconds = 3;
+    // For how long the thread stayed in this state.
+    int64 duration_nanoseconds = 4;
+
+    SchedulingState state = 5;
+    int32 priority = 6;
+
+    enum SchedulingState {
+      UNKNOWN = 0;
+      RUNNING = 1;
+      RUNNING_FOREGROUND = 2;
+      SLEEPING = 3;
+      SLEEPING_UNINTERRUPTIBLE = 4;
+      DEAD = 5;
+    }
   }
+
 }
 
