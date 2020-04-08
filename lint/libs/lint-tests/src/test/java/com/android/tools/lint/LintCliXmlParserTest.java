@@ -168,8 +168,6 @@ public class LintCliXmlParserTest extends TestCase {
         assertEquals(xml.indexOf("/>", start.getOffset()) + 2, end.getOffset());
         assertEquals(16, end.getLine());
 
-        parser.dispose(context, document);
-
         //noinspection ResultOfMethodCallIgnored
         file.delete();
     }

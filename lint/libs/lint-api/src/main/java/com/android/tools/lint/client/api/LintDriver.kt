@@ -1014,29 +1014,25 @@ class LintDriver
                 val parser = client.xmlParser
                 client.runReadAction(Runnable {
                     val context = createXmlContext(project, main, manifestFile, null, parser) ?: return@Runnable
-                    try {
-                        project.readManifest(context.document)
-                        if ((!project.isLibrary || main != null &&
-                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
-                        ) {
-                            val detectors = scopeDetectors[Scope.MANIFEST]
-                            if (detectors != null) {
-                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                                for (detector in detectors) {
-                                    if (detector is XmlScanner) {
-                                        xmlDetectors.add(detector)
-                                    }
+                    project.readManifest(context.document)
+                    if ((!project.isLibrary || main != null &&
+                                main.isMergingManifests) && scope.contains(Scope.MANIFEST)
+                    ) {
+                        val detectors = scopeDetectors[Scope.MANIFEST]
+                        if (detectors != null) {
+                            val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                            for (detector in detectors) {
+                                if (detector is XmlScanner) {
+                                    xmlDetectors.add(detector)
                                 }
-
-                                val v = ResourceVisitor(parser, xmlDetectors, null)
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                v.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
                             }
+
+                            val v = ResourceVisitor(parser, xmlDetectors, null)
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            v.visitFile(context)
+                            fileCount++
+                            resourceFileCount++
                         }
-                    } finally {
-                        disposeXmlContext(context)
                     }
                 })
             }
@@ -1952,14 +1948,10 @@ class LintDriver
                 if (isXmlFile(file)) {
                     client.runReadAction(Runnable {
                         val context = createXmlContext(project, main, file, type, parser) ?: return@Runnable
-                        try {
-                            fireEvent(EventType.SCANNING_FILE, context)
-                            visitor.visitFile(context)
-                            fileCount++
-                            resourceFileCount++
-                        } finally {
-                            disposeXmlContext(context)
-                        }
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        visitor.visitFile(context)
+                        fileCount++
+                        resourceFileCount++
                     })
                 } else if (binaryChecks != null &&
                     (isBitmapFile(file) || type == ResourceFolderType.RAW)
@@ -1980,9 +1972,6 @@ class LintDriver
             }
         }
     }
-
-    private fun disposeXmlContext(context: XmlContext) =
-        context.parser.dispose(context, context.document)
 
     private fun createXmlContext(
         project: Project,
@@ -2038,14 +2027,10 @@ class LintDriver
                         val parser = visitor.parser
                         client.runReadAction(Runnable {
                             val context = createXmlContext(project, main, file, type, parser) ?: return@Runnable
-                            try {
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                visitor.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
-                            } finally {
-                                disposeXmlContext(context)
-                            }
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            visitor.visitFile(context)
+                            fileCount++
+                            resourceFileCount++
                         })
 
                     }

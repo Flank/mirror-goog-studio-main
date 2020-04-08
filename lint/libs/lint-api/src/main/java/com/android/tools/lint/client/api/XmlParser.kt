@@ -202,13 +202,6 @@ abstract class XmlParser {
     ): Location.Handle
 
     /**
-     * Dispose any data structures held for the given context.
-     * @param context information about the file previously parsed
-     * @param document the document that was parsed and is now being disposed
-     */
-    open fun dispose(context: XmlContext, document: Document) {}
-
-    /**
      * Returns the start offset of the given node, or -1 if not known
      *
      * @param context the context providing the node
