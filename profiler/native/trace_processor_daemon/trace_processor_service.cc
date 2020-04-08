@@ -22,6 +22,7 @@
 #include "perfetto/trace_processor/basic_types.h"
 #include "perfetto/trace_processor/read_trace.h"
 #include "perfetto/trace_processor/trace_processor.h"
+#include "scheduling/scheduling_request_handler.h"
 
 using ::perfetto::trace_processor::Config;
 using ::perfetto::trace_processor::ReadTrace;
@@ -124,11 +125,17 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
     proto::QueryBatchResponse* batch_response) {
   for (auto& request : batch_request->query()) {
     switch (request.query_case()) {
-      case QueryParameters::kMemoryRequest:
+      case QueryParameters::kSchedRequest: {
+        SchedulingRequestHandler handler(tp_.get());
+        handler.PopulateEvents(
+            request.sched_request(),
+            batch_response->add_result()->mutable_sched_result());
+      } break;
+      case QueryParameters::kMemoryRequest: {
         MemoryRequestHandler handler(tp_.get());
         handler.PopulateEvents(
             batch_response->add_result()->mutable_memory_events());
-        break;
+      } break;
     }
   }
   return grpc::Status::OK;
