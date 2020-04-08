@@ -338,6 +338,7 @@ public final class AppInspectionTest {
     public void enterHookCanAlsoCaptureParameters() throws Exception {
         // Create a bunch of groups up front that we'll remove from in a little bit
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0] in Group[0]
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[2]
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
@@ -349,11 +350,20 @@ public final class AppInspectionTest {
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
 
+        androidDriver.triggerMethod(TODO_ACTIVITY, "logFirstItem");
+
         // Remove groups - each method we call below calls "removeGroup(idx)"
         // indirectly, which triggers an event that includes the index.
         androidDriver.triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
         androidDriver.triggerMethod(TODO_ACTIVITY, "removeOldestGroup");
         androidDriver.triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
+
+        { // logFirstItem
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_LOGGING_ITEM.toByteArrayWithArg((byte) 2));
+        }
 
         { // removeNewestGroup: Group[4] removed. Group[3] is now the last group
             AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
@@ -429,6 +439,25 @@ public final class AppInspectionTest {
                             TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST.toByteArrayWithArg(
                                     (byte) 1));
         }
+    }
+
+    @Test
+    public void entryHookWithHighRegisties() throws Exception {
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        androidDriver.triggerMethod(TODO_ACTIVITY, "prefillItems");
+
+        { // prefillItems entry
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEMS_PREFILLING.toByteArray());
+        }
+
+        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
     }
 
     @Test

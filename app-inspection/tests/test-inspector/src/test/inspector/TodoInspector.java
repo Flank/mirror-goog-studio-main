@@ -29,8 +29,10 @@ public final class TodoInspector extends TestInspector {
     private static final String CLASS_TODO_GROUP = "com.activity.todo.TodoGroup";
     private static final String CLASS_TODO_ITEM = "com.activity.todo.TodoItem";
     private static final String CLASS_TODO_ACTIVITY = "com.activity.todo.TodoActivity";
+    private static final String CLASS_STRING = "java.lang.String";
     private static final String SIGNATURE_TODO_GROUP = toSignature(CLASS_TODO_GROUP);
     private static final String SIGNATURE_TODO_ITEM = toSignature(CLASS_TODO_ITEM);
+    private static final String SIGNATURE_STRING = toSignature(CLASS_STRING);
 
     /**
      * Convert a fully qualified class name to the Java Byte Code syntax
@@ -174,6 +176,32 @@ public final class TodoInspector extends TestInspector {
                                         TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST
                                                 .toByteArrayWithArg((byte) (empty ? 1 : 0)));
                         return returnValue;
+                    }
+                });
+
+        environment.registerEntryHook(
+                classActivity,
+                "prefillItems()V",
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_ITEMS_PREFILLING.toByteArray());
+                    }
+                });
+
+        environment.registerEntryHook(
+                classActivity,
+                "logItem(I" + SIGNATURE_STRING + SIGNATURE_TODO_ITEM + ")V",
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        Integer severity = (Integer) params.get(0);
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_LOGGING_ITEM.toByteArrayWithArg(
+                                                severity.byteValue()));
                     }
                 });
     }
