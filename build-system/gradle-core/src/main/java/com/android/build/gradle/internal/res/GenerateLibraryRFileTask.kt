@@ -21,6 +21,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -51,8 +52,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
+
 
 @CacheableTask
 abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
@@ -108,6 +108,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         val manifest = File(chooseOutput(manifestBuiltArtifacts).outputFile)
 
         workerExecutor.noIsolation().submit(GenerateLibRFileRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
             it.localResourcesFile.set(localResourcesFile)
             it.manifest.set(manifest)
             it.androidJar.from(platformAttrRTxt)
@@ -127,7 +128,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             .firstOrNull() { output -> output.getFilter(FilterConfiguration.FilterType.DENSITY) == null }
             ?: throw RuntimeException("No non-density apk found")
 
-    abstract class GenerateLibRFileParams : WorkParameters {
+    abstract class GenerateLibRFileParams : ProfileAwareWorkAction.Parameters() {
         abstract val localResourcesFile: RegularFileProperty
         abstract val manifest: RegularFileProperty
         abstract val androidJar: ConfigurableFileCollection
@@ -142,8 +143,8 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
     }
 
     abstract class GenerateLibRFileRunnable @Inject constructor() :
-        WorkAction<GenerateLibRFileParams> {
-        override fun execute() {
+        ProfileAwareWorkAction<GenerateLibRFileParams>() {
+        override fun run() {
             val androidAttrSymbol = getAndroidAttrSymbols()
 
             val symbolTable = SymbolIo.readRDef(parameters.localResourcesFile.asFile.get().toPath())
