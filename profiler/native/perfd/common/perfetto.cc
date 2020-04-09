@@ -64,7 +64,7 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
       "PERFETTO_CONSUMER_SOCK_NAME=@perfetto_perfd_profiler_consumer",
       "PERFETTO_PRODUCER_SOCK_NAME=@perfetto_perfd_profiler_producer",
       // Path to libperfetto.so
-      lib_path.c_str(), NULL};
+      lib_path.c_str(), nullptr};
   LaunchStatus launch_status = LAUNCH_STATUS_SUCCESS;
   string perfettoPath;
   expected_output_path_ = run_args.output_file_path;
