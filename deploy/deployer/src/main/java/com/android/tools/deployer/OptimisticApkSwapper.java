@@ -92,10 +92,22 @@ public class OptimisticApkSwapper {
                 Deploy.OverlaySwapRequest.newBuilder()
                         .setPackageName(packageId)
                         .setRestartActivity(restart)
-                        .addAllProcessIds(pids)
                         .setArch(arch)
                         .setExpectedOverlayId(cachedDump.getOverlayId().getSha())
                         .setOverlayId(nextOverlayId.getSha());
+
+        for (Integer pid : pids) {
+            if (redefiners.containsKey(pid)) {
+                ClassRedefiner redefiner = redefiners.get(pid);
+                if (redefiner.canRedefineClass().support
+                        != ClassRedefiner.RedefineClassSupport.FULL) {
+                    throw new IllegalArgumentException(
+                            "R+ Device should have FULL debugger swap support");
+                }
+            } else {
+                request.addProcessIds(pid);
+            }
+        }
 
         for (DexClass clazz : dexOverlays.newClasses) {
             request.addNewClasses(
@@ -121,10 +133,22 @@ public class OptimisticApkSwapper {
 
         request.setStructuralRedefinition(useStructuralRedefinition);
 
-        // TODO: Debugger stuff. Given that this will be R+ we don't need the complicated workaround
-        // the JDI bug in O.
+        Deploy.OverlaySwapRequest swapRequest = request.build();
 
-        sendSwapRequest(request.build(), new InstallerBasedClassRedefiner(installer));
+        // Do the installer swap first.
+        sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
+
+        // Given the installer swap succeeded, we are targeting the right
+        // device with the right APK in cache. We then proceed to do the debugger swaps.
+        for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
+            sendSwapRequest(swapRequest, entry.getValue());
+            // TODO: If any of the debugger swap fails, we need to undo the IWI swap.
+            // This can be fixed by doing this:
+            //  1. Do a DUMP like verification on the app's current OID.
+            //  2. Perform debugger swap
+            //  3. Perform overlay swap that installs overlays as well as swapping
+            //     processes that are not attached to d a debugger.
+        }
         return nextOverlayId;
     }
 
