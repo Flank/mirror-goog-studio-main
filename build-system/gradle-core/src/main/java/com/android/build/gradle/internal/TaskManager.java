@@ -114,6 +114,7 @@ import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
 import com.android.build.gradle.internal.tasks.DexMergingAction;
 import com.android.build.gradle.internal.tasks.DexMergingTask;
 import com.android.build.gradle.internal.tasks.DexSplitterTask;
+import com.android.build.gradle.internal.tasks.EnumerateClassesTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask;
@@ -1333,6 +1334,7 @@ public abstract class TaskManager<
                 artifacts.republish(PROCESSED_RES.INSTANCE, packageOutputType);
             }
 
+            // TODO: also support stable IDs for the bundle (does it matter?)
             // create the task that creates the aapt output for the bundle.
             if (componentProperties instanceof ApkCreationConfig
                     && !componentProperties.getVariantType().isForTesting()) {
@@ -2180,7 +2182,7 @@ public abstract class TaskManager<
         }
 
         // ----- Minify next -----
-        maybeCreateCheckDuplicateClassesTask(componentProperties);
+        maybeCreateCheckDuplicateClassesTasks(componentProperties);
         maybeCreateJavaCodeShrinkerTask(componentProperties);
         if (componentProperties.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(componentProperties);
@@ -3352,12 +3354,14 @@ public abstract class TaskManager<
                         .getExtraInstrumentationTestRunnerArgs());
     }
 
-    private void maybeCreateCheckDuplicateClassesTask(
+    private void maybeCreateCheckDuplicateClassesTasks(
             @NonNull ComponentPropertiesImpl componentProperties) {
         if (componentProperties
                 .getServices()
                 .getProjectOptions()
                 .get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
+            taskFactory.register(
+                    new EnumerateClassesTask.CreationAction(componentProperties, false));
             taskFactory.register(new CheckDuplicateClassesTask.CreationAction(componentProperties));
         }
     }

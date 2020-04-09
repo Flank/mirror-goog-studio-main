@@ -33,12 +33,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
@@ -230,11 +232,8 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                     creationConfig
                             .getServices()
                             .fileCollection(
-                                    (Callable<Iterable<File>>)
-                                            () ->
-                                                    testedVariant
-                                                            .getVariantData()
-                                                            .getJavaSourceFoldersForCoverage());
+                                    (Callable<List<ConfigurableFileTree>>)
+                                            testedVariant::getJavaSources);
 
             task.setReportDir(testedVariant.getPaths().getCoverageReportDir());
         }

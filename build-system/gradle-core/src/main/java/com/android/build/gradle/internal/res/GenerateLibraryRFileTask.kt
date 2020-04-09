@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -36,10 +35,11 @@ import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.google.common.base.Strings
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -47,23 +47,18 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
-import java.io.IOException
-import java.io.Serializable
-import javax.inject.Inject
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 
 @CacheableTask
-abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFactory) : ProcessAndroidResources() {
+abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
-    @get:OutputDirectory @get:Optional var sourceOutputDirectory= objects.directoryProperty(); private set
-
-    @get:OutputFile @get:Optional var rClassOutputJar = objects.fileProperty()
-        private set
+    @get:OutputFile
+    abstract val rClassOutputJar: RegularFileProperty
 
     @Internal // rClassOutputJar is already marked as @OutputFile
     override fun getSourceOutputDir(): File? = rClassOutputJar.get().asFile
@@ -112,24 +107,18 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             ?: throw RuntimeException("Cannot load generated manifests, file a bug")
         val manifest = File(chooseOutput(manifestBuiltArtifacts).outputFile)
 
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                GenerateLibRFileRunnable::class.java,
-                GenerateLibRFileParams(
-                    localResourcesFile.get().asFile,
-                    manifest,
-                    platformAttrRTxt.singleFile,
-                    dependencies.files,
-                    packageForR.get(),
-                    null,
-                    rClassOutputJar.get().asFile,
-                    textSymbolOutputFileProperty.orNull?.asFile,
-                    nonTransitiveRClass.get(),
-                    compileClasspathLibraryRClasses.get(),
-                    symbolsWithPackageNameOutputFile.orNull?.asFile,
-                    useConstantIds.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(GenerateLibRFileRunnable::class.java) {
+            it.localResourcesFile.set(localResourcesFile)
+            it.manifest.set(manifest)
+            it.androidJar.from(platformAttrRTxt)
+            it.dependencies.from(dependencies)
+            it.packageForR.set(packageForR.get())
+            it.rClassOutputJar.set(rClassOutputJar)
+            it.textSymbolOutputFile.set(textSymbolOutputFileProperty)
+            it.nonTransitiveRClass.set(nonTransitiveRClass.get())
+            it.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses.get())
+            it.symbolsWithPackageNameOutputFile.set(symbolsWithPackageNameOutputFile)
+            it.useConstantIds.set(useConstantIds.get())
         }
     }
 
@@ -138,59 +127,58 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             .firstOrNull() { output -> output.getFilter(FilterConfiguration.FilterType.DENSITY) == null }
             ?: throw RuntimeException("No non-density apk found")
 
-    data class GenerateLibRFileParams(
-        val localResourcesFile: File,
-        val manifest: File,
-        val androidJar: File,
-        val dependencies: Set<File>,
-        val packageForR: String,
-        val sourceOutputDirectory: File?,
-        val rClassOutputJar: File?,
-        val textSymbolOutputFile: File?,
-        val nonTransitiveRClass: Boolean,
-        val compileClasspathLibraryRClasses: Boolean,
-        val symbolsWithPackageNameOutputFile: File?,
-        val useConstantIds: Boolean
-    ) : Serializable
+    abstract class GenerateLibRFileParams : WorkParameters {
+        abstract val localResourcesFile: RegularFileProperty
+        abstract val manifest: RegularFileProperty
+        abstract val androidJar: ConfigurableFileCollection
+        abstract val dependencies: ConfigurableFileCollection
+        abstract val packageForR: Property<String>
+        abstract val rClassOutputJar: RegularFileProperty
+        abstract val textSymbolOutputFile: RegularFileProperty
+        abstract val nonTransitiveRClass: Property<Boolean>
+        abstract val compileClasspathLibraryRClasses: Property<Boolean>
+        abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
+        abstract val useConstantIds: Property<Boolean>
+    }
 
-    class GenerateLibRFileRunnable @Inject constructor(private val params: GenerateLibRFileParams) : Runnable {
-        override fun run() {
+    abstract class GenerateLibRFileRunnable @Inject constructor() :
+        WorkAction<GenerateLibRFileParams> {
+        override fun execute() {
             val androidAttrSymbol = getAndroidAttrSymbols()
 
-            val symbolTable = SymbolIo.readRDef(params.localResourcesFile.toPath())
+            val symbolTable = SymbolIo.readRDef(parameters.localResourcesFile.asFile.get().toPath())
 
             val idProvider =
-                if (params.useConstantIds) {
+                if (parameters.useConstantIds.get()) {
                     IdProvider.constant()
                 } else {
                     IdProvider.sequential()
                 }
             processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
-                libraries = params.dependencies,
-                mainPackageName = params.packageForR,
-                manifestFile = params.manifest,
-                sourceOut = params.sourceOutputDirectory,
-                rClassOutputJar = params.rClassOutputJar,
-                symbolFileOut = params.textSymbolOutputFile,
+                libraries = parameters.dependencies.files,
+                mainPackageName = parameters.packageForR.get(),
+                manifestFile = parameters.manifest.asFile.get(),
+                rClassOutputJar = parameters.rClassOutputJar.asFile.orNull,
+                symbolFileOut = parameters.textSymbolOutputFile.asFile.orNull,
                 platformSymbols = androidAttrSymbol,
-                nonTransitiveRClass = params.nonTransitiveRClass,
-                generateDependencyRClasses = !params.compileClasspathLibraryRClasses,
+                nonTransitiveRClass = parameters.nonTransitiveRClass.get(),
+                generateDependencyRClasses = !parameters.compileClasspathLibraryRClasses.get(),
                 idProvider = idProvider
             )
 
-            params.symbolsWithPackageNameOutputFile?.let {
+            parameters.symbolsWithPackageNameOutputFile.asFile.orNull?.let {
                 SymbolIo.writeSymbolListWithPackageName(
-                    params.textSymbolOutputFile!!.toPath(),
-                    params.manifest.toPath(),
+                    parameters.textSymbolOutputFile.get().asFile.toPath(),
+                    parameters.manifest.get().asFile.toPath(),
                     it.toPath()
                 )
             }
         }
 
         private fun getAndroidAttrSymbols() =
-            if (params.androidJar.exists())
-                SymbolIo.readFromAapt(params.androidJar, "android")
+            if (parameters.androidJar.singleFile.exists())
+                SymbolIo.readFromAapt(parameters.androidJar.singleFile, "android")
             else
                 SymbolTable.builder().tablePackage("android").build()
     }
@@ -234,7 +222,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 "package-aware-r.txt"
             )
         }
-
 
         override fun configure(
             task: GenerateLibraryRFileTask

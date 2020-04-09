@@ -41,52 +41,6 @@ const std::string ToJniFormat(const std::string& class_name) {
   return "L" + class_name + ";";
 }
 
-// Visitor to extract bytecode instructions from an IR.
-struct BytecodeConvertingVisitor : public lir::Visitor {
-  lir::Bytecode* out = nullptr;
-  bool Visit(lir::Bytecode* bytecode) {
-    out = bytecode;
-    return true;
-  }
-};
-
-// Transform that sets a given parameter to zero before a method executes.
-class ParameterSet : public slicer::Transformation {
- public:
-  ParameterSet(dex::u4 param_idx) : param_idx_(param_idx) {}
-
-  bool Apply(lir::CodeIr* code_ir) override {
-    lir::Bytecode* bytecode = nullptr;
-    for (auto instr : code_ir->instructions) {
-      BytecodeConvertingVisitor visitor;
-      instr->Accept(&visitor);
-      bytecode = visitor.out;
-      if (bytecode != nullptr) {
-        break;
-      }
-    }
-    if (bytecode == nullptr) {
-      return false;
-    }
-
-    const auto ir_method = code_ir->ir_method;
-
-    auto regs = ir_method->code->registers;
-    auto args_count = ir_method->code->ins_count;
-    auto target_reg = regs - args_count + param_idx_;
-
-    auto op_const = code_ir->Alloc<lir::Bytecode>();
-    op_const->opcode = dex::OP_CONST;
-    op_const->operands.push_back(code_ir->Alloc<lir::VReg>(target_reg));
-    op_const->operands.push_back(code_ir->Alloc<lir::Const32>(0));
-
-    code_ir->instructions.InsertBefore(bytecode, op_const);
-    return true;
-  }
-
- private:
-  dex::u4 param_idx_;
-};
 }  // namespace
 
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
@@ -182,34 +136,6 @@ class HookTransform : public Transform {
   const char* kHookClassName =
       "Lcom/android/tools/deploy/instrument/InstrumentationHooks;";
   std::vector<MethodHooks> hooks_;
-};
-
-class ParameterSetTransform : public Transform {
- public:
-  ParameterSetTransform(
-      const std::string& class_name,
-      const std::unordered_map<std::string, std::string> target_methods)
-      : Transform(class_name), target_methods_(target_methods) {}
-
-  void Apply(std::shared_ptr<ir::DexFile> dex_ir) const override {
-    slicer::MethodInstrumenter mi(dex_ir);
-    // Currently hardcode that we set the first parameter to zero. We don't need
-    // anything more complex at the moment.
-    mi.AddTransformation<ParameterSet>(1);
-
-    const std::string class_name = ToJniFormat(GetClassName());
-    for (const auto& kv : target_methods_) {
-      ir::MethodId target_method(class_name.c_str(),
-                                 /* method name */ kv.first.c_str(),
-                                 /* method signature*/ kv.second.c_str());
-      if (!mi.InstrumentMethod(target_method)) {
-        Log::E("Failed to instrument: %s", GetClassName().c_str());
-      }
-    }
-  }
-
- private:
-  const std::unordered_map<std::string, std::string> target_methods_;
 };
 
 }  // namespace deploy

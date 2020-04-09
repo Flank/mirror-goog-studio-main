@@ -43,11 +43,14 @@ class AppInspectionTransform {
                 "onEntry"),
             slicer::EntryHook::Tweak::ArrayParams);
       } else {
+        auto tweak = transform.HasPrimitiveOrVoidReturnType()
+                         ? slicer::ExitHook::Tweak::None
+                         : slicer::ExitHook::Tweak::ReturnAsObject;
         mi.AddTransformation<slicer::ExitHook>(
             ir::MethodId(
                 "Lcom/android/tools/agent/app/inspection/AppInspectionService;",
                 "onExit"),
-            slicer::ExitHook::Tweak::ReturnAsObject);
+            tweak);
       }
 
       if (!mi.InstrumentMethod(ir::MethodId(transform.GetClassName(),
@@ -76,6 +79,8 @@ class AppInspectionTransform {
     const char* GetMethod() { return method_name_.c_str(); }
 
     const char* GetSignature() { return signature_.c_str(); }
+
+    bool HasPrimitiveOrVoidReturnType() { return signature_.back() != ';'; }
 
     bool isEntry() { return isEntry_; }
 

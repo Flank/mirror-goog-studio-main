@@ -19,7 +19,9 @@ public class FileDiff {
     public enum Status {
         CREATED,
         MODIFIED,
-        DELETED
+        DELETED,
+        // Used in IWI; all resources in an APK must be present in the overlay after every swap.
+        RESOURCE_NOT_IN_OVERLAY,
     }
 
     public final ApkEntry oldFile;

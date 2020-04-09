@@ -1012,33 +1012,29 @@ class LintDriver
         if (project.isAndroidProject) {
             for (manifestFile in project.manifestFiles) {
                 val parser = client.xmlParser
-                val context = createXmlContext(project, main, manifestFile, null, parser)
-                if (context != null) {
-                    try {
-                        project.readManifest(context.document)
-                        if ((!project.isLibrary || main != null &&
-                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
-                        ) {
-                            val detectors = scopeDetectors[Scope.MANIFEST]
-                            if (detectors != null) {
-                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                                for (detector in detectors) {
-                                    if (detector is XmlScanner) {
-                                        xmlDetectors.add(detector)
-                                    }
+                client.runReadAction(Runnable {
+                    val context = createXmlContext(project, main, manifestFile, null, parser) ?: return@Runnable
+                    project.readManifest(context.document)
+                    if ((!project.isLibrary || main != null &&
+                                main.isMergingManifests) && scope.contains(Scope.MANIFEST)
+                    ) {
+                        val detectors = scopeDetectors[Scope.MANIFEST]
+                        if (detectors != null) {
+                            val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                            for (detector in detectors) {
+                                if (detector is XmlScanner) {
+                                    xmlDetectors.add(detector)
                                 }
-
-                                val v = ResourceVisitor(parser, xmlDetectors, null)
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                v.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
                             }
+
+                            val v = ResourceVisitor(parser, xmlDetectors, null)
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            v.visitFile(context)
+                            fileCount++
+                            resourceFileCount++
                         }
-                    } finally {
-                        disposeXmlContext(context)
                     }
-                }
+                })
             }
         }
 
@@ -1950,15 +1946,13 @@ class LintDriver
             Arrays.sort(files)
             for (file in files) {
                 if (isXmlFile(file)) {
-                    val context = createXmlContext(project, main, file, type, parser) ?: continue
-                    try {
+                    client.runReadAction(Runnable {
+                        val context = createXmlContext(project, main, file, type, parser) ?: return@Runnable
                         fireEvent(EventType.SCANNING_FILE, context)
                         visitor.visitFile(context)
-                    } finally {
-                        disposeXmlContext(context)
-                    }
-                    fileCount++
-                    resourceFileCount++
+                        fileCount++
+                        resourceFileCount++
+                    })
                 } else if (binaryChecks != null &&
                     (isBitmapFile(file) || type == ResourceFolderType.RAW)
                 ) {
@@ -1978,9 +1972,6 @@ class LintDriver
             }
         }
     }
-
-    private fun disposeXmlContext(context: XmlContext) =
-        context.parser.dispose(context, context.document)
 
     private fun createXmlContext(
         project: Project,
@@ -2034,17 +2025,14 @@ class LintDriver
                     val visitor = getVisitor(type, xmlDetectors, binaryChecks)
                     if (visitor != null) {
                         val parser = visitor.parser
-                        val context = createXmlContext(project, main, file, type, parser)
-                        if (context != null) {
-                            try {
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                visitor.visitFile(context)
-                            } finally {
-                                disposeXmlContext(context)
-                            }
-                        }
-                        fileCount++
-                        resourceFileCount++
+                        client.runReadAction(Runnable {
+                            val context = createXmlContext(project, main, file, type, parser) ?: return@Runnable
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            visitor.visitFile(context)
+                            fileCount++
+                            resourceFileCount++
+                        })
+
                     }
                 }
             } else if (binaryChecks != null && file.isFile && isBitmapFile(file)) {

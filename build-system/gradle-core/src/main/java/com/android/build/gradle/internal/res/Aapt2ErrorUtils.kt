@@ -119,7 +119,7 @@ fun rewriteLinkException(
     }
 
     var manifestMergeBlameContents: List<String>? = null
-    if (manifestMergeBlameFile != null) {
+    if (manifestMergeBlameFile != null && manifestMergeBlameFile.isFile) {
         manifestMergeBlameContents = manifestMergeBlameFile.readLines(Charsets.UTF_8)
     }
 

@@ -56,7 +56,9 @@ data class AaptPackageConfig(
     val useConditionalKeepRules: Boolean = false,
     val useMinimalKeepRules: Boolean = false,
     val useFinalIds: Boolean = true,
-    val excludeSources: Boolean = false
+    val excludeSources: Boolean = false,
+    val emitStableIdsFile: File? = null,
+    val consumeStableIdsFile: File? = null
 ) : Serializable {
 
     init {
@@ -103,6 +105,8 @@ data class AaptPackageConfig(
         private var useMinimalKeepRules: Boolean = false
         private var useFinalIds: Boolean = true
         private var excludeSources: Boolean = false
+        private var emitStableIdsFile: File? = null
+        private var consumeStableIdsFile: File? = null
 
         /**
          * Creates a new [AaptPackageConfig] from the data already placed in the builder.
@@ -139,7 +143,9 @@ data class AaptPackageConfig(
                 useConditionalKeepRules = useConditionalKeepRules,
                 useMinimalKeepRules = useMinimalKeepRules,
                 useFinalIds = useFinalIds,
-                excludeSources = excludeSources
+                excludeSources = excludeSources,
+                emitStableIdsFile = emitStableIdsFile,
+                consumeStableIdsFile = consumeStableIdsFile
             )
         }
 
@@ -300,6 +306,16 @@ data class AaptPackageConfig(
 
         fun setExcludeSources(value: Boolean): Builder {
             this.excludeSources = value
+            return this
+        }
+
+        fun setEmitStableIdsFile(value: File?): Builder {
+            this.emitStableIdsFile = value
+            return this
+        }
+
+        fun setConsumeStableIdsFile(value: File?): Builder {
+            this.consumeStableIdsFile = value
             return this
         }
     }

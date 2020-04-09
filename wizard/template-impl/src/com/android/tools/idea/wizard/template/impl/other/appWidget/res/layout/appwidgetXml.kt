@@ -18,19 +18,19 @@ package com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout
 
 fun appwidgetXml() = """
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/AppWidgetContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/widget_margin"
-    android:background="#09C" >
+    android:padding="@dimen/widget_margin" >
 
     <TextView
         android:id="@+id/appwidget_text"
+        style="@style/AppWidgetTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:text="@string/appwidget_text"
-        android:textColor="#ffffff"
         android:textSize="24sp"
         android:textStyle="bold|italic"
         android:layout_margin="8dp"

@@ -4,6 +4,10 @@
 readonly dist_dir="$1"
 readonly build_number="$2"
 
+if [[ $build_number =~ ^[0-9]+$ ]]; then
+  readonly postsubmit=true
+fi
+
 readonly script_dir="$(dirname "$0")"
 
 # Clean up existing results so obsolete data cannot cause issues
@@ -68,8 +72,8 @@ if [[ -d "${dist_dir}" ]]; then
   #popd || exit $?
   #mv -v "./out/html.zip" "${dist_dir}/coverage" || exit $?
 
-  # Upload the LCOV data to GCS if running on BYOB
-  if [[ "$build_number" ]]; then
+  # Upload the LCOV data to GCS if running on BYOB but only for postsubmit builds
+  if [[ "$build_number" && "$postsubmit" ]]; then
     gsutil cp ${lcov_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
     gsutil cp ${comp_list_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
   fi

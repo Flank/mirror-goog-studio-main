@@ -117,6 +117,65 @@ public final class TodoInspector extends TestInspector {
                                                 .toByteArrayWithArg(index.byteValue()));
                     }
                 });
+
+        environment.registerExitHook(
+                classActivity,
+                "getItemsCount()I",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Integer count = (Integer) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_ITEMS_COUNT
+                                                .toByteArrayWithArg(count.byteValue()));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "getLongItemsCount()J",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Long count = (Long) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_LONG_ITEMS_COUNT
+                                                .toByteArrayWithArg(count.byteValue()));
+                        return returnValue;
+                    }
+                });
+
+       environment.registerExitHook(
+                classActivity,
+                "clearAllItems()V",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_CLEARED_ALL_ITEMS
+                                                .toByteArray());
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "hasEmptyTodoList()Z",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Boolean empty = (Boolean) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST
+                                                .toByteArrayWithArg((byte) (empty ? 1 : 0)));
+                        return returnValue;
+                    }
+                });
     }
 
     @NonNull

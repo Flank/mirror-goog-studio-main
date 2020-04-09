@@ -67,6 +67,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
@@ -193,10 +194,13 @@ abstract class VerifierTask extends DefaultTask {
     @InputFiles
     abstract DirectoryProperty getInputDir()
 
+    @Internal
+    abstract Property<BuiltArtifactsLoader> getArtifactsLoader() 
+
     @TaskAction
     void taskAction() {
 
-      BuiltArtifacts  transformed = BuiltArtifacts.getLoader().load(getInputDir().get())
+      BuiltArtifacts  transformed = getArtifactsLoader().get().load(getInputDir().get())
       assert transformed != null
       assert transformed.elements.size == 3
       transformed.elements.each { builtArtifact ->
@@ -229,6 +233,7 @@ android.onVariantProperties {
     task.getInputDir().set(
       it.operations.get(InternalArtifactType.MERGED_MANIFESTS.INSTANCE)
     )
+    task.getArtifactsLoader().set(it.operations.getBuiltArtifactsLoader())
   }
 }
         """.trimIndent()

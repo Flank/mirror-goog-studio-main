@@ -27,6 +27,7 @@ com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Transformable
 com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind<T>)
+com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
 com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
@@ -34,7 +35,8 @@ com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactTypes extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable
 com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.ArtifactTypes.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.ArtifactTypes.isPublic: boolean ()
 com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
@@ -47,6 +49,7 @@ com.android.build.api.artifact.Operations
 com.android.build.api.artifact.Operations.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Operations.getBuiltArtifactsLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Operations.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
@@ -188,6 +191,15 @@ com.android.build.api.dsl.ApplicationBuildFeatures.getDataBinding: java.lang.Boo
 com.android.build.api.dsl.ApplicationBuildFeatures.getMlModelBinding: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.ApplicationBuildFeatures.setMlModelBinding: void (java.lang.Boolean)
+com.android.build.api.dsl.ApplicationBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.ApplicationVariantDimension
+com.android.build.api.dsl.ApplicationBuildType.isCrunchPngs: java.lang.Boolean ()
+com.android.build.api.dsl.ApplicationBuildType.isDebuggable: boolean ()
+com.android.build.api.dsl.ApplicationBuildType.isDefault: boolean ()
+com.android.build.api.dsl.ApplicationBuildType.isEmbedMicroApp: boolean ()
+com.android.build.api.dsl.ApplicationBuildType.setCrunchPngs: void (java.lang.Boolean)
+com.android.build.api.dsl.ApplicationBuildType.setDebuggable: void (boolean)
+com.android.build.api.dsl.ApplicationBuildType.setDefault: void (boolean)
+com.android.build.api.dsl.ApplicationBuildType.setEmbedMicroApp: void (boolean)
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
@@ -197,6 +209,7 @@ com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.ApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
+com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
@@ -261,19 +274,11 @@ com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.BuildType.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.BuildType.getRenderscriptOptimLevel: int ()
-com.android.build.api.dsl.BuildType.isCrunchPngs: java.lang.Boolean ()
-com.android.build.api.dsl.BuildType.isDebuggable: boolean ()
-com.android.build.api.dsl.BuildType.isDefault: boolean ()
-com.android.build.api.dsl.BuildType.isEmbedMicroApp: boolean ()
 com.android.build.api.dsl.BuildType.isJniDebuggable: boolean ()
 com.android.build.api.dsl.BuildType.isMinifyEnabled: boolean ()
 com.android.build.api.dsl.BuildType.isPseudoLocalesEnabled: boolean ()
 com.android.build.api.dsl.BuildType.isRenderscriptDebuggable: boolean ()
 com.android.build.api.dsl.BuildType.isTestCoverageEnabled: boolean ()
-com.android.build.api.dsl.BuildType.setCrunchPngs: void (java.lang.Boolean)
-com.android.build.api.dsl.BuildType.setDebuggable: void (boolean)
-com.android.build.api.dsl.BuildType.setDefault: void (boolean)
-com.android.build.api.dsl.BuildType.setEmbedMicroApp: void (boolean)
 com.android.build.api.dsl.BuildType.setJniDebuggable: void (boolean)
 com.android.build.api.dsl.BuildType.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.BuildType.setMinifyEnabled: void (boolean)
@@ -414,7 +419,11 @@ com.android.build.api.dsl.DynamicFeatureBuildFeatures.getDataBinding: java.lang.
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.getMlModelBinding: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.setMlModelBinding: void (java.lang.Boolean)
+com.android.build.api.dsl.DynamicFeatureBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.DynamicFeatureVariantDimension
+com.android.build.api.dsl.DynamicFeatureBuildType.isCrunchPngs: java.lang.Boolean ()
+com.android.build.api.dsl.DynamicFeatureBuildType.setCrunchPngs: void (java.lang.Boolean)
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeT, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeT ()
@@ -470,9 +479,13 @@ com.android.build.api.dsl.LibraryBuildFeatures.getMlModelBinding: java.lang.Bool
 com.android.build.api.dsl.LibraryBuildFeatures.setAndroidResources: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBuildFeatures.setMlModelBinding: void (java.lang.Boolean)
+com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
+com.android.build.api.dsl.LibraryBuildType.isDefault: boolean ()
+com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.LintOptions
 com.android.build.api.dsl.LintOptions.baseline: void (java.io.File)
 com.android.build.api.dsl.LintOptions.baseline: void (java.lang.String)
@@ -713,13 +726,11 @@ com.android.build.api.variant.BuiltArtifact.getVersionCode: java.lang.Integer ()
 com.android.build.api.variant.BuiltArtifact.getVersionName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts
 com.android.build.api.variant.BuiltArtifacts$Companion
-com.android.build.api.variant.BuiltArtifacts$Companion.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.variant.BuiltArtifacts$TransformParams implements org.gradle.workers.WorkParameters, java.io.Serializable
 com.android.build.api.variant.BuiltArtifacts$TransformParams.getOutput: java.io.File ()
 com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
 com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
-com.android.build.api.variant.BuiltArtifacts.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader

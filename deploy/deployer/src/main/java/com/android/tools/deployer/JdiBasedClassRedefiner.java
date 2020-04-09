@@ -188,7 +188,22 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
     @Override
     public Deploy.SwapResponse redefine(Deploy.OverlaySwapRequest request)
             throws DeployerException {
-        throw DeployerException.operationNotSupported("No overlay swaps for debuggers yet.");
+        Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
+
+        for (Deploy.ClassDef redefinition : request.getModifiedClassesList()) {
+            List<ReferenceType> classes = getReferenceTypeByName(redefinition.getName());
+            for (ReferenceType classRef : classes) {
+                redefinitionRequest.put(classRef, redefinition.getDex().toByteArray());
+            }
+        }
+        try {
+            vm.redefineClasses(redefinitionRequest);
+        } catch (Throwable t) {
+            throw DeployerException.jdwpRedefineClassesException(t);
+        }
+        Deploy.SwapResponse.Builder response = Deploy.SwapResponse.newBuilder();
+        response.setStatus(Deploy.SwapResponse.Status.OK);
+        return response.build();
     }
 
     @Override

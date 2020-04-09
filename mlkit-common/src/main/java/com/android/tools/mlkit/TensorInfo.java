@@ -16,9 +16,11 @@
 
 package com.android.tools.mlkit;
 
+import com.android.annotations.Nullable;
 import java.nio.FloatBuffer;
 import org.tensorflow.lite.schema.Tensor;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
+import org.tensorflow.lite.support.metadata.schema.Content;
 import org.tensorflow.lite.support.metadata.schema.ContentProperties;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 import org.tensorflow.lite.support.metadata.schema.NormalizationOptions;
@@ -40,7 +42,7 @@ public class TensorInfo {
         UINT8(3),
         INT64(4);
 
-        private int id;
+        private final int id;
 
         DataType(int id) {
             this.id = id;
@@ -114,6 +116,7 @@ public class TensorInfo {
     private boolean metadataExisted;
     private MetadataExtractor.NormalizationParams normalizationParams;
     private MetadataExtractor.QuantizationParams quantizationParams;
+    @Nullable private ImageProperties imageProperties;
 
     public String getName() {
         return name;
@@ -147,6 +150,11 @@ public class TensorInfo {
         return description;
     }
 
+    @Nullable
+    public ImageProperties getImageProperties() {
+        return imageProperties;
+    }
+
     public boolean isMetadataExisted() {
         return metadataExisted;
     }
@@ -171,6 +179,7 @@ public class TensorInfo {
         private boolean metadataExisted;
         private MetadataExtractor.NormalizationParams normalizationParams;
         private MetadataExtractor.QuantizationParams quantizationParams;
+        @Nullable private ImageProperties imageProperties;
 
         public Builder setName(String name) {
             this.name = name;
@@ -224,6 +233,11 @@ public class TensorInfo {
             return this;
         }
 
+        public Builder setImageProperties(ImageProperties imageProperties) {
+            this.imageProperties = imageProperties;
+            return this;
+        }
+
         public Builder setSource(Source source) {
             this.source = source;
             return this;
@@ -242,6 +256,7 @@ public class TensorInfo {
             tensorInfo.metadataExisted = metadataExisted;
             tensorInfo.normalizationParams = normalizationParams;
             tensorInfo.quantizationParams = quantizationParams;
+            tensorInfo.imageProperties = imageProperties;
 
             return tensorInfo;
         }
@@ -283,12 +298,23 @@ public class TensorInfo {
             }
 
             builder.setContentType(extractContentType(tensorMetadata));
-            builder.setName(
-                    tensorMetadata.name() == null
-                            ? getDefaultName(source, index)
-                            : formatName(tensorMetadata.name()));
+            String name = MlkitNames.computeIdentifierName(tensorMetadata.name());
+            builder.setName(name == null ? getDefaultName(source, index) : name);
             builder.setDescription(tensorMetadata.description());
             builder.setQuantizationParams(MetadataExtractor.getQuantizationParams(tensor));
+
+            if (builder.contentType == ContentType.IMAGE) {
+                org.tensorflow.lite.support.metadata.schema.ImageProperties properties =
+                        (org.tensorflow.lite.support.metadata.schema.ImageProperties)
+                                tensorMetadata
+                                        .content()
+                                        .contentProperties(
+                                                new org.tensorflow.lite.support.metadata.schema
+                                                        .ImageProperties());
+                builder.setImageProperties(
+                        new ImageProperties(
+                                ImageProperties.ColorSpaceType.fromByte(properties.colorSpace())));
+            }
 
             NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
 
@@ -324,18 +350,18 @@ public class TensorInfo {
         return (source == Source.INPUT ? DEFAULT_INPUT_NAME : DEFAULT_OUTPUT_NAME) + index;
     }
 
-    private static String formatName(String tensorName) {
-        return tensorName.replaceAll("[^a-zA-Z0-9]+", "");
-    }
-
     public static TensorInfo.ContentType extractContentType(TensorMetadata tensorMetadata) {
-        byte type = tensorMetadata.content().contentPropertiesType();
+        Content content = tensorMetadata.content();
+        if (content == null) {
+            return ContentType.UNKNOWN;
+        }
+        byte type = content.contentPropertiesType();
         if (type == ContentProperties.ImageProperties) {
             return ContentType.IMAGE;
         } else if (type == ContentProperties.FeatureProperties) {
             return ContentType.FEATURE;
         }
-        return ContentType.FEATURE;
+        return ContentType.UNKNOWN;
     }
 
     private static NormalizationOptions extractNormalizationOptions(TensorMetadata tensorMetadata) {
@@ -347,5 +373,34 @@ public class TensorInfo {
         }
 
         return null;
+    }
+
+    public static class ImageProperties {
+        public enum ColorSpaceType {
+            UNKNOWN(0),
+            RGB(1),
+            GRAYSCALE(2);
+
+            private final int id;
+
+            ColorSpaceType(int id) {
+                this.id = id;
+            }
+
+            public static ColorSpaceType fromByte(byte id) {
+                for (ColorSpaceType type : values()) {
+                    if (type.id == id) {
+                        return type;
+                    }
+                }
+                return UNKNOWN;
+            }
+        }
+
+        public final ColorSpaceType colorSpaceType;
+
+        public ImageProperties(ColorSpaceType colorSpaceType) {
+            this.colorSpaceType = colorSpaceType;
+        }
     }
 }

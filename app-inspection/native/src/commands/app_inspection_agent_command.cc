@@ -55,11 +55,13 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
           auto& create_inspector = app_command.create_inspector_command();
           jstring dex_path =
               jni_env->NewStringUTF(create_inspector.dex_path().c_str());
-          jmethodID create_inspector_method =
-              jni_env->GetMethodID(service_class, "createInspector",
-                                   "(Ljava/lang/String;Ljava/lang/String;I)V");
+          jstring project = jni_env->NewStringUTF(
+              create_inspector.launch_metadata().launched_by_name().c_str());
+          jmethodID create_inspector_method = jni_env->GetMethodID(
+              service_class, "createInspector",
+              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
           jni_env->CallVoidMethod(service, create_inspector_method,
-                                  inspector_id, dex_path, command_id);
+                                  inspector_id, dex_path, project, command_id);
         } else if (app_command.has_dispose_inspector_command()) {
           auto& dispose_inspector = app_command.dispose_inspector_command();
           jmethodID dispose_inspector_method = jni_env->GetMethodID(

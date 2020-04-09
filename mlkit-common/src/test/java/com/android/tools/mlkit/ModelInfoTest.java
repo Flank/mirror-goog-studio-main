@@ -45,6 +45,9 @@ public class ModelInfoTest {
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
         assertEquals(inputTensorInfo.getContentType(), TensorInfo.ContentType.IMAGE);
         assertEquals(inputTensorInfo.getName(), "image1");
+        assertEquals(
+                inputTensorInfo.getImageProperties().colorSpaceType,
+                TensorInfo.ImageProperties.ColorSpaceType.RGB);
         MetadataExtractor.NormalizationParams inputNormalization =
                 inputTensorInfo.getNormalizationParams();
         assertEquals(inputNormalization.getMean()[0], 127.5f, DELTA);

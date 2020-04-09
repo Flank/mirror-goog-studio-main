@@ -21,4 +21,5 @@ import com.android.build.api.dsl.LibraryBuildFeatures
 abstract class LibraryBuildFeaturesImpl : BuildFeaturesImpl(), LibraryBuildFeatures {
     override var androidResources: Boolean? = null
     override var dataBinding: Boolean? = null
+    override var mlModelBinding: Boolean? = false
 }

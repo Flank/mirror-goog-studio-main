@@ -16,11 +16,16 @@
 
 package com.android.builder.packaging
 
+import com.android.builder.core.ManifestAttributeSupplier
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.BooleanSubject
 import com.google.common.truth.Truth.assertThat
+import org.junit.Before
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import java.nio.file.FileSystem
 import java.util.function.Predicate
 import javax.annotation.CheckReturnValue
@@ -28,6 +33,14 @@ import javax.annotation.CheckReturnValue
 class PackagingUtilsTest {
 
     private val fs: FileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
+
+    @Mock
+    lateinit var manifest: ManifestAttributeSupplier
+
+    @Before
+    fun setup() {
+        MockitoAnnotations.initMocks(this)
+    }
 
     @Test
     fun testGetNoCompressPredicateForExtensions_empty() {
@@ -95,6 +108,12 @@ class PackagingUtilsTest {
         matchers.assertThatTest("FOO").isTrue()
         matchers.assertThatTest("bar").isFalse()
         matchers.assertThatTest("BAR").isFalse()
+        // check .tflite (Issue 152875817)
+        matchers.assertThatTest("model.tflite").isTrue()
+        // check an extension from PackagingUtils.DEFAULT_AAPT_NO_COMPRESS_EXTENSIONS
+        matchers.assertThatTest("picture.jpg").isTrue()
+        matchers.assertThatTest("native.so").isFalse()
+        matchers.assertThatTest("classes.dex").isFalse()
     }
 
     @Test
@@ -134,6 +153,52 @@ class PackagingUtilsTest {
             "\\.(ą|Ą)(ę|Ę)"
         )
         assertThat(matchers).containsExactlyElementsIn(expected)
+    }
+
+    @Test
+    fun testGetNoCompressPredicate_dontCompressNativeLibsOrDex() {
+        Mockito.`when`(manifest.extractNativeLibs).thenReturn(false)
+        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(true)
+        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest).run {
+            // check aaptOptionsNoCompress
+            assertThatTest("foo").isTrue()
+            // check .tflite (Issue 152875817)
+            assertThatTest(".tflite").isTrue()
+            // check an extension from PackagingUtils.DEFAULT_AAPT_NO_COMPRESS_EXTENSIONS
+            assertThatTest("picture.jpg").isTrue()
+            assertThatTest("native.so").isTrue()
+            assertThatTest("classes.dex").isTrue()
+        }
+    }
+
+    @Test
+    fun testGetNoCompressPredicate_compressNativeLibsAndDex() {
+        Mockito.`when`(manifest.extractNativeLibs).thenReturn(true)
+        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(false)
+        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest).run {
+            // check aaptOptionsNoCompress
+            assertThatTest("foo").isTrue()
+            // check .tflite (Issue 152875817)
+            assertThatTest(".tflite").isTrue()
+            // check an extension from PackagingUtils.DEFAULT_AAPT_NO_COMPRESS_EXTENSIONS
+            assertThatTest("picture.jpg").isTrue()
+            assertThatTest("native.so").isFalse()
+            assertThatTest("classes.dex").isFalse()
+        }
+    }
+
+    @Test
+    fun testGetNoCompressPredicateForJavaRes() {
+        PackagingUtils.getNoCompressPredicateForJavaRes(listOf("oo")).run {
+            // check aaptOptionsNoCompress
+            assertThatTest("foo").isTrue()
+            // check .tflite (Issue 152875817)
+            assertThatTest(".tflite").isTrue()
+            // check an extension from PackagingUtils.DEFAULT_AAPT_NO_COMPRESS_EXTENSIONS
+            assertThatTest("picture.jpg").isTrue()
+            assertThatTest("native.so").isFalse()
+            assertThatTest("classes.dex").isFalse()
+        }
     }
 
 

@@ -22,8 +22,8 @@ import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -78,6 +78,15 @@ fun createCxxVariantModel(
                         module.project.ideBuildTargetAbi
                     )
                 ).validAbis.toList()
+            }
+        }
+
+        override val prefabClassPath: File? by lazy {
+            // Don't fetch Prefab from maven unless we actually need it.
+            if (module.project.isPrefabEnabled && prefabPackageDirectoryList.isNotEmpty()) {
+                getPrefabFromMaven(componentProperties.globalScope)
+            } else {
+                null
             }
         }
 

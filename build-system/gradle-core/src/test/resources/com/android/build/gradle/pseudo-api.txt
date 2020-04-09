@@ -855,7 +855,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.testProguardFiles: void (java.l
 com.android.build.gradle.internal.dsl.BaseFlavor.vectorDrawables: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor.vectorDrawables: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.VectorDrawablesOptions>)
 com.android.build.gradle.internal.dsl.BaseFlavor.wearAppUnbundled: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.BuildType extends com.android.builder.core.AbstractBuildType implements com.android.build.gradle.internal.dsl.CoreBuildType, java.io.Serializable, com.android.build.api.dsl.BuildType
+com.android.build.gradle.internal.dsl.BuildType extends com.android.builder.core.AbstractBuildType implements com.android.build.gradle.internal.dsl.CoreBuildType, java.io.Serializable, com.android.build.api.dsl.ApplicationBuildType, com.android.build.api.dsl.LibraryBuildType, com.android.build.api.dsl.DynamicFeatureBuildType
 com.android.build.gradle.internal.dsl.BuildType$Companion
 com.android.build.gradle.internal.dsl.BuildType$Companion.<init>: com.android.build.gradle.internal.dsl.BuildType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration extends java.lang.Enum

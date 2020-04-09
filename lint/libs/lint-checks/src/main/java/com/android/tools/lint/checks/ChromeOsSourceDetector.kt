@@ -109,7 +109,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
         @JvmField
         val UNSUPPORTED_LOCKED_ORIENTATION = Issue.create(
             id = "SourceLockedOrientationActivity",
-            briefDescription = "Activity is locked to an orientation",
+            briefDescription = "Incompatible setRequestedOrientation value",
             explanation = """
                 The `Activity` should not be locked to any orientation so that users
                 can take advantage of the multi-window environments and larger screens

@@ -40,7 +40,13 @@ public final class TodoInspectorApi {
         TODO_ITEM_CREATED,
 
         /** Should be sent with the index of the group being removed. */
-        TODO_GROUP_REMOVING;
+        TODO_GROUP_REMOVING,
+
+        TODO_GOT_ITEMS_COUNT,
+        TODO_GOT_LONG_ITEMS_COUNT,
+        TODO_CLEARED_ALL_ITEMS,
+
+        TODO_HAS_EMPTY_TODO_LIST;
 
         @NonNull
         public byte[] toByteArray() {

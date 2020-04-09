@@ -31,6 +31,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.testutils.TestUtils;
@@ -122,11 +123,7 @@ public class DexArchivesTest {
         runTask("assembleDebug");
         long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
-        String newClass = "package com.example.helloworld;\n" + "public class NewClass {}";
-        Files.write(
-                project.getMainSrcDir().toPath().resolve("com/example/helloworld/NewClass.java"),
-                newClass.getBytes(Charsets.UTF_8));
-
+        addNewClass();
         TestUtils.waitForFileSystemTick();
         runTask("assembleDebug");
         assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get()).wasModifiedAt(created);
@@ -206,6 +203,58 @@ public class DexArchivesTest {
 
         assertThat(result.getTask(":dexBuilderDebug")).wasFromCache();
         assertThat(inputJarHashes).doesNotExist();
+    }
+
+    @Test
+    public void testDexingBucketsImpactOnCaching() throws IOException, InterruptedException {
+        // 1st build to cache
+        GradleTaskExecutor executor =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
+                        .withArgument("--build-cache");
+
+        executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 1).run("assembleDebug");
+        File previousRunDexBuckets =
+                new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.DEX_NUMBER_OF_BUCKETS_FILE.INSTANCE,
+                                project.getBuildDir()),
+                        "debug/out");
+        assertThat(previousRunDexBuckets).exists();
+        executor.run("clean");
+
+        // 2nd build should be a cache hit
+        GradleBuildResult result =
+                executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
+        assertThat(previousRunDexBuckets).doesNotExist();
+        assertThat(result.getTask(":dexBuilderDebug")).wasFromCache();
+
+        // 3rd build adds a source file
+        long initialBuildTimestamp =
+                FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
+        addNewClass();
+        executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
+        assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
+                .isGreaterThan(initialBuildTimestamp);
+        assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
+                .isGreaterThan(initialBuildTimestamp);
+    }
+
+    @Test
+    public void testIncrementalRunWithChangedBuckets() throws IOException, InterruptedException {
+        GradleTaskExecutor executor =
+                project.executor().with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8);
+        executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 1).run("assembleDebug");
+
+        addNewClass();
+        long initialBuildTimestamp =
+                FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
+
+        executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
+        assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
+                .isGreaterThan(initialBuildTimestamp);
+        assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
+                .isGreaterThan(initialBuildTimestamp);
     }
 
     private static Stream<String> getDexClasses(Path path) {
@@ -292,5 +341,12 @@ public class DexArchivesTest {
                 ArtifactTypeUtil.getOutputDir(
                         InternalArtifactType.PROJECT_DEX_ARCHIVE.INSTANCE, project.getBuildDir()),
                 "debug/out");
+    }
+
+    private void addNewClass() throws IOException {
+        String newClass = "package com.example.helloworld;\n" + "public class NewClass {}";
+        Files.write(
+                project.getMainSrcDir().toPath().resolve("com/example/helloworld/NewClass.java"),
+                newClass.getBytes(Charsets.UTF_8));
     }
 }

@@ -39,6 +39,30 @@ sourceSets {
         compileClasspath += files(baseClasses)
         runtimeClasspath += files(baseInstrumentedClasses)
     }
+
+    apiTest {
+        java.srcDirs += 'src/apiTest/kotlin'
+        resources.srcDirs += 'src/apiTest/resources'
+        compileClasspath += test.compileClasspath
+        runtimeClasspath += test.runtimeClasspath
+    }
+}
+
+task apiTest(type: Test) {
+    testClassesDirs = sourceSets.apiTest.output.classesDirs
+    classpath = sourceSets.apiTest.runtimeClasspath
+}
+
+check.dependsOn apiTest
+
+gradlePlugin {
+    testSourceSets sourceSets.apiTest
+    plugins {
+        androidApplication {
+            id = 'com.android.application'
+            implementationClass = 'com.android.build.gradle.AppPlugin'
+        }
+    }
 }
 
 dependencies {
@@ -137,6 +161,7 @@ test {
                     + File.pathSeparator
                     + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 
+
     testLogging {
         events "failed"
     }
@@ -146,6 +171,19 @@ test {
     exclude "**/GradleCoreBazelSuite*"
 
     maxHeapSize = "2048m"
+}
+
+apiTest {
+    // Gradle embeds kotlin when dealing with kts files and that version can be different from
+    // the version Android Studio bundles. This is usually not an issue, but when generating
+    // build.gradle.kts files, we need to use the bundled Android Studio version so all dependencies
+    // are present in prebuilts.
+    environment("KOTLIN_PLUGIN", libs.kotlin_gradle_plugin)
+
+    environment("CUSTOM_REPO",
+            new File(rootProject.ext.androidHostOut, "repo").toString()
+                    + File.pathSeparator
+                    + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 }
 
 javadoc {

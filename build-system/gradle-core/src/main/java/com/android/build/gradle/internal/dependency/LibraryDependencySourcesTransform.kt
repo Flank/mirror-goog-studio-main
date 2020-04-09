@@ -16,7 +16,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
 import com.android.ide.common.symbols.SymbolIo
-
+import java.nio.charset.StandardCharsets
 
 /** This transform outputs a directory containing two files listing the contents of this AAR,
  *  classes.txt where each line is a java class name of the form 'com/example/MyClass.class'
@@ -58,12 +58,11 @@ fun getResourcesFromExplodedAarToFile(explodedAar: File) : List<String> {
             .filter { it.isFile }
             .sorted()
             .forEach { file ->
-                val resourceString = file.readText(Charset.defaultCharset())
-                val document = XmlUtils.parseDocument(resourceString, false)
                 val resFolderType = ResourceFolderType.getTypeByName(file.parentFile.name)
                 if (file.name.endsWith(SdkConstants.DOT_XML)) {
-                    resourceUsageModel
-                            .visitXmlDocument(file, resFolderType, document)
+                    val resourceString = file.readText(StandardCharsets.UTF_8).trim()
+                    val document = XmlUtils.parseDocument(resourceString, false)
+                    resourceUsageModel.visitXmlDocument(file, resFolderType, document)
                 } else {
                     resourceUsageModel.visitBinaryResource(resFolderType, file)
                 }

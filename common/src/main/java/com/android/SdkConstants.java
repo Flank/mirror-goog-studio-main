@@ -1470,6 +1470,8 @@ public final class SdkConstants {
     public static final String ATTR_START_DESTINATION = "startDestination";
     public static final String ATTR_NULLABLE = "nullable";
     public static final String ATTR_ARG_TYPE = "argType";
+    public static final String ATTR_DEEPLINK_ACTION = "action";
+    public static final String ATTR_DEEPLINK_MIMETYPE = "mimeType";
 
     // android.view.View
     public static final String ATTR_NEXT_CLUSTER_FORWARD = "nextClusterForward";
@@ -2184,8 +2186,10 @@ public final class SdkConstants {
     public static final String DOT_HPROF = DOT + EXT_HPROF; //$NON-NLS-1$
     /** Dot-Extension of native debug metadata files, i.e. ".dbg" */
     public static final String DOT_DBG = ".dbg";
-    /** Extension of native debug symbol table files, i.e. ".sym" */
+    /** Dot-Extension of native debug symbol table files, i.e. ".sym" */
     public static final String DOT_SYM = ".sym";
+    /** Dot-Extension of TensorFlow Lite FlatBuffer files, i.e., ".tflite" */
+    public static final String DOT_TFLITE = ".tflite";
 
     /** Resource base name for java files and classes */
     public static final String FN_RESOURCE_BASE = "R"; //$NON-NLS-1$

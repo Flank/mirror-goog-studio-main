@@ -317,38 +317,6 @@ abstract class BaseVariantData(
             .sortedSourceProviders
             .associate { it.name to (it as AndroidSourceSet).res.getBuildableArtifact() }
 
-    /**
-     * Returns the Java folders needed for code coverage report.
-     *
-     *
-     * This includes all the source folders except for the ones containing R and buildConfig.
-     */
-    val javaSourceFoldersForCoverage: FileCollection
-        get() {
-            val fc = services.fileCollection()
-
-            // First the actual source folders.
-            val providers = variantSources.sortedSourceProviders
-
-            for (provider in providers) {
-                for (sourceFolder in provider.javaDirectories) {
-                    if (sourceFolder.isDirectory) {
-                        fc.from(sourceFolder)
-                    }
-                }
-            }
-
-            // then all the generated src folders, except the ones for the R/Manifest and
-            // BuildConfig classes.
-            fc.from(artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR))
-
-            if (!variantDslInfo.renderscriptNdkModeEnabled) {
-                fc.from(artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR))
-            }
-
-            return fc
-        }
-
     override fun toString(): String {
         return MoreObjects.toStringHelper(this)
             .addValue(componentIdentity.name).toString()

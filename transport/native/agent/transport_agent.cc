@@ -28,6 +28,7 @@
 #include "perfa/perfa.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
+#include "utils/trace.h"
 
 using profiler::Agent;
 using profiler::Log;
@@ -61,6 +62,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
 // See https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html#onattach
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                                                  void* reserved) {
+  Trace::Init();
   jvmtiEnv* jvmti_env = CreateJvmtiEnv(vm);
   if (jvmti_env == nullptr) {
     return JNI_ERR;

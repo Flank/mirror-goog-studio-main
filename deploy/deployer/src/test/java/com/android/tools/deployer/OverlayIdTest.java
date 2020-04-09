@@ -17,13 +17,13 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.ApkEntryContent;
 import com.android.tools.deployer.model.DexClass;
-import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -64,7 +64,7 @@ public class OverlayIdTest {
                 new DexComparator.ChangedClasses(
                         Lists.newArrayList(new DexClass("dex1", 1l, null, null)),
                         new ArrayList<>());
-        OverlayId firstSwap = new OverlayId(realInstall, changes, ImmutableList.of());
+        OverlayId firstSwap = new OverlayId(realInstall, changes, ImmutableSet.of());
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
                 "Real APK ApkName0 has checksum of ApkChecksum0\n"
@@ -84,7 +84,7 @@ public class OverlayIdTest {
                 new DexComparator.ChangedClasses(
                         new ArrayList<>(),
                         Lists.newArrayList(new DexClass("dex2", 2l, null, null)));
-        OverlayId secondSwap = new OverlayId(firstSwap, changes, ImmutableList.of());
+        OverlayId secondSwap = new OverlayId(firstSwap, changes, ImmutableSet.of());
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
                 "Real APK ApkName0 has checksum of ApkChecksum0\n"
@@ -105,7 +105,7 @@ public class OverlayIdTest {
                 new DexComparator.ChangedClasses(
                         new ArrayList<>(),
                         Lists.newArrayList(new DexClass("dex2", 200l, null, null)));
-        OverlayId thirdSwap = new OverlayId(secondSwap, changes, ImmutableList.of());
+        OverlayId thirdSwap = new OverlayId(secondSwap, changes, ImmutableSet.of());
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
                 "Real APK ApkName0 has checksum of ApkChecksum0\n"
@@ -141,61 +141,55 @@ public class OverlayIdTest {
         // *****************************************************
         DexComparator.ChangedClasses dexChanges =
                 new DexComparator.ChangedClasses(ImmutableList.of(), ImmutableList.of());
-        List<ApkEntryContent> resChanges =
-                ImmutableList.of(
-                        new ApkEntryContent(new ApkEntry("res/1", 1, null), ByteString.EMPTY));
+        Apk resApk = Apk.builder().setName("apk").build();
+        Set<ApkEntry> resChanges = ImmutableSet.of(new ApkEntry("res/1", 1, resApk));
         OverlayId firstSwap = new OverlayId(realInstall, dexChanges, resChanges);
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
                 "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
-                        + " Has overlayfile res/1 with checksum 1\n",
+                        + " Has overlayfile apk/res/1 with checksum 1\n",
                 stringRep);
         sha = firstSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "b1d237ffcab162d43c7f86ad18a2f1b56083de1a1f49f84309ae4472a9101343", sha);
+                "a7dc2e1b9223b78e88981ae7f4a99384529bbd803e3213d00129f346d08266a1", sha);
 
         // *****************************************************
         // Second IWI Swap
         // Doing a IWI swap on the previous IWI install, modifying an existing resource.
         // *****************************************************
-
-        resChanges =
-                ImmutableList.of(
-                        new ApkEntryContent(new ApkEntry("res/1", 11, null), ByteString.EMPTY));
+        resChanges = ImmutableSet.of(new ApkEntry("res/1", 11, resApk));
         OverlayId secondSwap = new OverlayId(firstSwap, dexChanges, resChanges);
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
                 "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
-                        + " Has overlayfile res/1 with checksum 11\n",
+                        + " Has overlayfile apk/res/1 with checksum 11\n",
                 stringRep);
         sha = secondSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "c86c1dec618821416f8844e1091d1cfd0feab022c851c66a812cd3a3bbf1e981", sha);
+                "239b92a19c32958ef8bac062c48d5aa4a8e377d4d68dea77b5712189d51544e8", sha);
 
         // *****************************************************
         // Third IWI Swap
         // Doing a IWI swap on the previous IWI install, adding another resource.
         // *****************************************************
 
-        resChanges =
-                ImmutableList.of(
-                        new ApkEntryContent(new ApkEntry("res/2", 2, null), ByteString.EMPTY));
+        resChanges = ImmutableSet.of(new ApkEntry("res/2", 2, resApk));
         OverlayId thirdSwap = new OverlayId(secondSwap, dexChanges, resChanges);
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
                 "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
-                        + " Has overlayfile res/1 with checksum 11\n"
-                        + " Has overlayfile res/2 with checksum 2\n",
+                        + " Has overlayfile apk/res/1 with checksum 11\n"
+                        + " Has overlayfile apk/res/2 with checksum 2\n",
                 stringRep);
         sha = thirdSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "8cd619bb850221ca89e79f8333a8fd6d7bf528553539d0dd5b1fa3cef3a0c8ab", sha);
+                "d351af40711467cfd45d74f5f87ab27d5ccb2f0e793af1fbb5e04945c6ef880c", sha);
     }
 
     private List<Apk> makeApks(int size) {

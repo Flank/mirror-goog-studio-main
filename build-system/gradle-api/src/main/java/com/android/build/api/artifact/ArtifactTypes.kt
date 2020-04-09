@@ -16,6 +16,7 @@
 
 package com.android.build.api.artifact
 
+import com.android.SdkConstants
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
@@ -28,9 +29,16 @@ import org.gradle.api.file.RegularFile
  * class.
  */
 @Incubating
-sealed class ArtifactTypes<T : FileSystemLocation>(kind: ArtifactKind<T>)
+sealed class ArtifactTypes<T : FileSystemLocation>(
+    kind: ArtifactKind<T>,
+    private val fileSystemLocationName: FileNames? = null
+)
     : ArtifactType<T>(kind) {
     override val isPublic: Boolean = true
+
+    override fun getFileSystemLocationName(): String {
+        return fileSystemLocationName?.fileName ?: ""
+    }
 
     /**
      * APK directory where final APK files will be located.
@@ -42,7 +50,7 @@ sealed class ArtifactTypes<T : FileSystemLocation>(kind: ArtifactKind<T>)
      * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.
      */
     @Incubating
-    object MERGED_MANIFEST: ArtifactTypes<RegularFile>(FILE), Replaceable, Transformable
+    object MERGED_MANIFEST: ArtifactTypes<RegularFile>(FILE, FileNames.ANDROID_MANIFEST_XML), Replaceable, Transformable
 
 
 }

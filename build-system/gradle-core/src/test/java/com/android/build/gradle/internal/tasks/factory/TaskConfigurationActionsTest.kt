@@ -22,7 +22,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.junit.Test
 import org.mockito.Mockito
 
-class TaskActionTest {
+class TaskConfigurationActionsTest {
 
     enum class Stages {
         // stages for the primary actions
@@ -83,7 +83,7 @@ class TaskActionTest {
         Truth.assertThat(actionRegistrar).containsExactlyElementsIn(expectedOrderedActions).inOrder()
     }
 
-    private fun createTaskAction(): TaskAction<Task> {
+    private fun createTaskAction(): TaskConfigurationActions<Task> {
         val creationAction = object: TaskCreationAction<Task>() {
             override fun configure(task: Task) {
                 actionRegistrar.add(Stages.MAIN_CONFIG)
@@ -121,7 +121,7 @@ class TaskActionTest {
             }
         }
 
-        return TaskAction(
+        return TaskConfigurationActions(
             creationAction,
             preConfigAction,
             configureAction,

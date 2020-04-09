@@ -13,32 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deployer.model;
+package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night
 
-import com.android.tools.idea.protobuf.ByteString;
+fun stylesXml() =
+  """<resources>
+    <style name="AppWidgetContainer">
+        <item name="android:background">@color/light_blue900</item>
+    </style>
 
-public class ApkEntryContent {
-    private final ApkEntry entry;
-    private final ByteString content;
-
-    public ApkEntryContent(ApkEntry entry, ByteString content) {
-        this.entry = entry;
-        this.content = content;
-    }
-
-    public String getApkName() {
-        return entry.getApk().name;
-    }
-
-    public String getName() {
-        return entry.getName();
-    }
-
-    public long getChecksum() {
-        return entry.getChecksum();
-    }
-
-    public ByteString getContent() {
-        return content;
-    }
-}
+    <style name="AppWidgetTextView" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/light_blue200</item>
+    </style>
+</resources>
+"""

@@ -25,9 +25,6 @@ interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> : Named,
     VariantDimension<AnnotationProcessorOptionsT,
             SigningConfigT> {
-    /** Whether this build type should generate a debuggable apk. */
-    var isDebuggable: Boolean
-
     /**
      * Whether test coverage is enabled for this build type.
      *
@@ -103,23 +100,6 @@ interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
     var isMinifyEnabled: Boolean
 
     /**
-     * Whether a linked Android Wear app should be embedded in variant using this build type.
-     *
-     * Wear apps can be linked with the following code:
-     *
-     * ```
-     * dependencies {
-     *     freeWearApp project(:wear:free') // applies to variant using the free flavor
-     *     wearApp project(':wear:base') // applies to all other variants
-     * }
-     * ```
-     */
-    var isEmbedMicroApp: Boolean
-
-    /** Whether this product flavor should be selected in Studio by default  */
-    var isDefault: Boolean
-
-    /**
      * Specifies a sorted list of build types that the plugin should try to use when a direct
      * variant match with a local module dependency is not possible.
      *
@@ -174,15 +154,4 @@ interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
      * @return the names of product flavors to use, in descending priority order
      */
     var matchingFallbacks: MutableList<String>
-
-    /**
-     * Whether to crunch PNGs.
-     *
-     * Setting this property to `true` reduces of PNG resources that are not already
-     * optimally compressed. However, this process increases build times.
-     *
-     * PNG crunching is enabled by default in the release build type and disabled by default in
-     * the debug build type.
-     */
-    var isCrunchPngs: Boolean?
 }

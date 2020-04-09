@@ -18,11 +18,11 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.Directory
 import org.junit.Assert.fail
@@ -231,7 +231,7 @@ class SplitHandlingTest {
     private fun loadBuiltArtifacts(outputFolder: File): BuiltArtifacts {
         val directory = Mockito.mock(Directory::class.java)
         Mockito.`when`(directory.asFile).thenReturn(outputFolder)
-        val builtArtifacts = BuiltArtifacts.Loader.load(directory)
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(directory)
         assertNotNull(builtArtifacts)
         return builtArtifacts
     }

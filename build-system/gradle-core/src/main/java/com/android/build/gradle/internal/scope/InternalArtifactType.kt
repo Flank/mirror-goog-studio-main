@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.ArtifactTypes
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -88,6 +87,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object DEX_ARCHIVE_INPUT_JAR_HASHES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Directory containing dependency graph(s) for desugaring
     object DESUGAR_GRAPH: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // File containing the number of buckets used for dexing
+    object DEX_NUMBER_OF_BUCKETS_FILE: InternalArtifactType<RegularFile>(FILE), Single
 
     // External file library dex archives (Desugared separately from module & project dependencies)
     object EXTERNAL_FILE_LIB_DEX_ARCHIVES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
@@ -182,6 +183,7 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object LINKED_RES_FOR_BUNDLE: InternalArtifactType<RegularFile>(FILE), Replaceable
     object SHRUNK_LINKED_RES_FOR_BUNDLE: InternalArtifactType<RegularFile>(FILE), Replaceable
     object COMPILED_LOCAL_RESOURCES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object STABLE_RESOURCE_IDS_FILE: InternalArtifactType<RegularFile>(FILE)
 
     // Artifacts for legacy multidex
     object LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES: InternalArtifactType<RegularFile>(FILE), Replaceable
@@ -412,6 +414,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // Config file specifying how to protect app's integrity
     object APP_INTEGRITY_CONFIG: InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    // The outputs of EnumerateClassesTask
+    object ENUMERATED_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // A dummy output (folder) result of CheckDuplicateClassesTask execution
     object DUPLICATE_CLASSES_CHECK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 

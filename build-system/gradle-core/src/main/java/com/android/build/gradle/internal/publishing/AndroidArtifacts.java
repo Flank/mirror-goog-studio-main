@@ -52,6 +52,9 @@ public class AndroidArtifacts {
             "preprocessed-aar-for-auto-namespace";
     private static final String TYPE_CLASSES = "android-classes";
 
+    // type for enumerated classes
+    private static final String TYPE_ENUMERATED_RUNTIME_CLASSES = "enumerated-runtime-classes";
+
     // types published by an Android library
     private static final String TYPE_CLASSES_JAR = "android-classes-jar"; // In AAR
     private static final String TYPE_CLASSES_DIR = "android-classes-directory"; // Not in AAR
@@ -288,6 +291,10 @@ public class AndroidArtifacts {
         DEX_AND_KEEP_RULES(TYPE_DEX_AND_KEEP_RULES),
         // a file named keep_rules for shrinking desugar lib
         KEEP_RULES(TYPE_KEEP_RULES),
+
+        // A list of enumerated runtime classes by module,
+        // used to reduce IO in checking for duplicates
+        ENUMERATED_RUNTIME_CLASSES(TYPE_ENUMERATED_RUNTIME_CLASSES),
 
         // manifest is published to both to compare and detect provided-only library dependencies.
         MANIFEST(TYPE_MANIFEST),

@@ -84,6 +84,11 @@ interface CxxVariantModel {
     val module: CxxModuleModel
 
     /**
+     * Path to the Prefab jar to use.
+     */
+    val prefabClassPath: File?
+
+    /**
      * Paths to the unprocessed prefab package directories extracted from the AAR.
      *
      * For example: jsoncpp/build/.transforms/$SHA/jsoncpp/prefab

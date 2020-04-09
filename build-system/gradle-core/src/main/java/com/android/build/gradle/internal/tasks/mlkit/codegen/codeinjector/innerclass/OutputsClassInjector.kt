@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeIn
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getGetterMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getDataType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
+import com.android.build.gradle.internal.tasks.mlkit.codegen.isRGBImage
 import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.FieldSpec
@@ -49,13 +50,28 @@ class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
             .addParameter(ClassNames.MODEL, "model")
             .addModifiers(Modifier.PRIVATE)
         for ((index, tensorInfo) in tensorInfos.withIndex()) {
-            constructorBuilder.addStatement(
-                "this.\$L = TensorBuffer.createFixedSize(model.getOutputTensorShape(\$L), \$T.\$L)",
-                tensorInfo.name,
-                index,
-                ClassNames.DATA_TYPE,
-                getDataType(tensorInfo.dataType)
-            )
+            if (isRGBImage(tensorInfo)) {
+                constructorBuilder.addStatement(
+                    "this.\$L = new \$T(\$T.\$L)",
+                    tensorInfo.name,
+                    ClassNames.TENSOR_IMAGE,
+                    ClassNames.DATA_TYPE,
+                    getDataType(tensorInfo.getDataType()));
+                constructorBuilder.addStatement(
+                    "\$L.load(TensorBuffer.createFixedSize(model.getOutputTensorShape(\$L), \$T.\$L))",
+                    tensorInfo.name,
+                    index,
+                    ClassNames.DATA_TYPE,
+                    getDataType(tensorInfo.getDataType()));
+
+            } else {
+                constructorBuilder.addStatement(
+                    "this.\$L = TensorBuffer.createFixedSize(model.getOutputTensorShape(\$L), \$T.\$L)",
+                    tensorInfo.name,
+                    index,
+                    ClassNames.DATA_TYPE,
+                    getDataType(tensorInfo.getDataType()));
+            }
         }
         builder.addMethod(constructorBuilder.build())
 

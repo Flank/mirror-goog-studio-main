@@ -283,7 +283,7 @@ class MergeJavaResourcesDelegate(
                 inputs.toList(),
                 output,
                 loadMergeState(),
-                PackagingUtils.getNoCompressPredicateForExtensions(noCompress)
+                PackagingUtils.getNoCompressPredicateForJavaRes(noCompress)
             )
         )
     }

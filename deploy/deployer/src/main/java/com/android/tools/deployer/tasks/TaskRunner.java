@@ -276,7 +276,8 @@ public class TaskRunner {
                         throw e;
                     }
                 };
-        Task<O> task = new Task<>(id.name(), callable, input1, input2, input3, input4, input5);
+        Task<O> task =
+                new Task<>(id.name(), callable, input1, input2, input3, input4, input5, input6);
         tasks.add(task);
         return task;
     }

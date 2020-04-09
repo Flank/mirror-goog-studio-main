@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -38,15 +39,15 @@ import kotlin.text.StringsKt;
 public class PackagingUtils {
 
     /**
-     * Set of file formats which are already compressed, or don't compress well, same as the one
+     * List of file formats which are already compressed or don't compress well, same as the one
      * used by aapt.
      */
-    public static final ImmutableSet<String> DEFAULT_DONT_COMPRESS_EXTENSIONS =
-            ImmutableSet.of(
-                    ".jpg", ".jpeg", ".png", ".gif", ".wav", ".mp2", ".mp3", ".ogg", ".aac", ".mpg",
-                    ".mpeg", ".mid", ".midi", ".smf", ".jet", ".rtttl", ".imy", ".xmf", ".mp4",
-                    ".m4a", ".m4v", ".3gp", ".3gpp", ".3g2", ".3gpp2", ".amr", ".awb", ".wma",
-                    ".wmv", ".webm", ".mkv");
+    public static final ImmutableList<String> DEFAULT_AAPT_NO_COMPRESS_EXTENSIONS =
+            ImmutableList.of(
+                    ".jpg", ".jpeg", ".png", ".gif", ".opus", ".wav", ".mp2", ".mp3", ".ogg",
+                    ".aac", ".mpg", ".mpeg", ".mid", ".midi", ".smf", ".jet", ".rtttl", ".imy",
+                    ".xmf", ".mp4", ".m4a", ".m4v", ".3gp", ".3gpp", ".3g2", ".3gpp2", ".amr",
+                    ".awb", ".wma", ".wmv", ".webm", ".mkv");
 
     /** Set of characters that need to be escaped when creating an ECMAScript regular expression. */
     public static final ImmutableSet<Character> ECMA_SCRIPT_ESCAPABLE_CHARACTERS =
@@ -124,11 +125,6 @@ public class PackagingUtils {
             ImmutableList.of("SF", "RSA", "DSA", "EC");
 
     @NonNull
-    public static Predicate<String> getDefaultNoCompressPredicate() {
-        return getNoCompressPredicateForExtensions(DEFAULT_DONT_COMPRESS_EXTENSIONS);
-    }
-
-    @NonNull
     public static Predicate<String> getNoCompressPredicate(
             @Nullable Collection<String> aaptOptionsNoCompress,
             @NonNull ManifestAttributeSupplier manifest) {
@@ -138,6 +134,16 @@ public class PackagingUtils {
 
         return getNoCompressPredicateForExtensions(
                 getAllNoCompressExtensions(aaptOptionsNoCompress, packagingMode, useEmbeddedDex));
+    }
+
+    @NonNull
+    public static Predicate<String> getNoCompressPredicateForJavaRes(
+            @NonNull Collection<String> aaptOptionsNoCompress) {
+        return getNoCompressPredicateForExtensions(
+                getAllNoCompressExtensions(
+                        aaptOptionsNoCompress,
+                        NativeLibrariesPackagingMode.COMPRESSED,
+                        PackageEmbeddedDex.DEFAULT));
     }
 
     @NonNull
@@ -247,8 +253,9 @@ public class PackagingUtils {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static Predicate<String> getNoCompressPredicateForExtensions(
+    static Predicate<String> getNoCompressPredicateForExtensions(
             @NonNull Iterable<String> noCompressExtensions) {
         return name -> {
             for (String extension : noCompressExtensions) {
@@ -266,8 +273,11 @@ public class PackagingUtils {
     private static List<String> getAllNoCompressExtensions(
             @Nullable Collection<String> aaptOptionsNoCompress,
             @NonNull NativeLibrariesPackagingMode nativeLibrariesPackagingMode,
-            PackageEmbeddedDex useEmbeddedDex) {
-        List<String> result = Lists.newArrayList(DEFAULT_DONT_COMPRESS_EXTENSIONS);
+            @NonNull PackageEmbeddedDex useEmbeddedDex) {
+        List<String> result = Lists.newArrayList(DEFAULT_AAPT_NO_COMPRESS_EXTENSIONS);
+
+        // .tflite files should always be uncompressed (Issue 152875817)
+        result.add(SdkConstants.DOT_TFLITE);
 
         if (nativeLibrariesPackagingMode == NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED) {
             result.add(SdkConstants.DOT_NATIVE_LIBS);

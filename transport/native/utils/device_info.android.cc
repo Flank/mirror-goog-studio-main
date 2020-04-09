@@ -16,7 +16,10 @@
 
 #include <cstdlib>
 
+#include <sys/system_properties.h>
+
 #include "utils/device_info.h"
+#include "utils/trace.h"
 
 using std::string;
 
@@ -32,6 +35,28 @@ const char* const kCharacteristics = "ro.build.characteristics";
 const char* const kAbi = "ro.product.cpu.abi";
 // API codename of a release (non preview) system image or platform.
 const char* const kCodeNameRelease = "REL";
+
+// Returns the value of the system property of the given |key|, or the
+// |default_value| if the property is unavailable.
+//
+// __system_property_read() has been deprecated since API level 26 (O) because
+// it works only on property whose name is shorter than 32 char (PROP_NAME_MAX)
+// and value is shorter than 92 char (PROP_VALUE_MAX).
+// __system_property_read_callback() is recommended since then but it's not
+// availale for API < 26. The length limits on the name and value are not a
+// concern for us. Therefore, we still use __system_property_read() for
+// simplicity.
+string GetProperty(const string& key, const string& default_value) {
+  string property_value;
+  const prop_info* pi = __system_property_find(key.c_str());
+  if (pi == nullptr) return default_value;
+
+  char name[PROP_NAME_MAX];
+  char value[PROP_VALUE_MAX];
+
+  if (__system_property_read(pi, name, value) == 0) return default_value;
+  return value;
+}
 
 }  // namespace
 
@@ -61,12 +86,8 @@ DeviceInfo* DeviceInfo::Instance() {
 }
 
 string DeviceInfo::GetSystemProperty(const string& property_name) const {
-  string output;
-  if (getprop_.Run(property_name, &output)) {
-    output.pop_back();
-    return output;
-  }
-  return "";
+  Trace trace("GetSystemProperty");
+  return GetProperty(property_name, "");
 }
 
 }  // namespace profiler

@@ -61,6 +61,12 @@ public final class InstallOptions {
             return this;
         }
 
+        public Builder setInstallOnCurrentUser() {
+            flags.add("--user");
+            flags.add("current");
+            return this;
+        }
+
         // Skips package verification if possible.
         public Builder setSkipVerification(IDevice device, String packageName) {
             String skipVerificationString =

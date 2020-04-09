@@ -16,105 +16,55 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.ServiceKey
-import com.android.builder.dexing.ClassFileInput
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.collect.Maps
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
-import java.util.concurrent.ConcurrentHashMap
-import java.util.zip.ZipFile
 import javax.inject.Inject
-import kotlin.streams.toList
-
-// Shared state used by worker actions.
-private val sharedState = WorkerActionServiceRegistry()
 
 /**
  * A class that checks for duplicate classes within an ArtifactCollection. Classes are assumed to be
  * duplicate if they have the same name and they are positioned within the same package (this is
  * possible if they are in different artifacts).
  */
-class CheckDuplicateClassesDelegate(private val classesArtifacts: ArtifactCollection) {
+class CheckDuplicateClassesDelegate {
+    private fun extractClasses(artifactMap: Map<String, File>): Map<String, List<String>> {
+        val classesMap = HashMap<String, List<String>>()
 
-    class ArtifactClassesMap : ConcurrentHashMap<String, List<String>>()
-
-    data class ArtifactClassesKey(private val name: String) : ServiceKey<ArtifactClassesMap> {
-        override val type = ArtifactClassesMap::class.java
-    }
-
-    fun run(workers: WorkerExecutorFacade) {
-        val artifactClasses = ArtifactClassesMap()
-        val artifactClassesKey = ArtifactClassesKey("artifactClasses${hashCode()}")
-
-        sharedState.registerServiceAsCloseable(artifactClassesKey, artifactClasses).use {
-            workers.use { facade ->
-                classesArtifacts.artifacts.forEach {
-                    facade.submit(
-                        ExtractClassesRunnable::class.java,
-                        ExtractClassesParams(it.id.displayName, it.file, artifactClassesKey)
-                    )
-                }
-
-                facade.await()
-
-                facade.submit(
-                    CheckDuplicatesRunnable::class.java,
-                    CheckDuplicatesParams(artifactClassesKey)
-                )
-
-                facade.await()
+        artifactMap.keys.forEach { key: String ->
+            val artifactFile = artifactMap.getValue(key)
+            if (artifactFile.exists()) {
+                classesMap[key] = artifactFile.readLines()
             }
         }
+        return classesMap
     }
-}
 
-private data class ExtractClassesParams(
-    val artifactName: String,
-    val artifactFile: File,
-    val serviceKey: ServiceKey<CheckDuplicateClassesDelegate.ArtifactClassesMap>
-) : Serializable
+    fun run(
+        projectName: String,
+        enumeratedMainModuleClasses: File,
+        enumeratedClasses: Map<String, File>) {
 
-private class ExtractClassesRunnable @Inject constructor(
-    private val params: ExtractClassesParams) : Runnable {
+        val artifactMap =
+            // Enumerate task may not have executed
+            if (enumeratedMainModuleClasses.exists()) {
+                enumeratedClasses
+                    .plus("${enumeratedMainModuleClasses.nameWithoutExtension} (project :$projectName)" to enumeratedMainModuleClasses)
+                    .toMap()
+            } else { enumeratedClasses }
 
-    override fun run() {
-        val map = sharedState.getService(params.serviceKey).service
-        map[params.artifactName] = extractClasses(params.artifactFile)
-    }
-}
+        val classesMap = extractClasses(artifactMap)
 
-private data class CheckDuplicatesParams(
-    val serviceKey: ServiceKey<CheckDuplicateClassesDelegate.ArtifactClassesMap>): Serializable
-
-private const val RECOMMENDATION =
-    "Go to the documentation to learn how to <a href=\"d.android.com/r/tools/classpath-sync-errors\">Fix dependency resolution errors</a>."
-
-private fun duplicateClassMessage(className: String, artifactNames: List<String>): String {
-    val sorted = artifactNames.sorted()
-    val modules = when {
-        artifactNames.size == 2 -> "modules ${sorted[0]} and ${sorted[1]}"
-        else -> {
-            val last = sorted.last()
-            "the following modules: ${sorted.dropLast(1).joinToString(", ")} and $last"
-        }
-    }
-    return "Duplicate class $className found in $modules"
-}
-
-private class CheckDuplicatesRunnable @Inject constructor(
-    private val params: CheckDuplicatesParams) : Runnable {
-
-    override fun run() {
-
-        val map = sharedState.getService(params.serviceKey).service
-        val maxSize = map.map { it.value.size }.sum()
+        val maxSize = classesMap.map { it.value.size }.sum()
         val classes = Maps.newHashMapWithExpectedSize<String, MutableList<String>>(maxSize)
 
-        map.forEach {
+        classesMap.forEach {
             val artifactName = it.key
             it.value.forEach { className ->
                 classes.getOrPut(className) { mutableListOf() }.add(artifactName)
@@ -132,9 +82,33 @@ private class CheckDuplicatesRunnable @Inject constructor(
     }
 }
 
-private fun extractClasses(jarFile: File): List<String> = ZipFile(jarFile).use {
-    return it.stream()
-    .filter { ClassFileInput.CLASS_MATCHER.test(it.name) }
-    .map { it.name.replace('/', '.').dropLast(SdkConstants.DOT_CLASS.length) }
-    .toList()
+private const val RECOMMENDATION =
+    "Go to the documentation to learn how to <a href=\"d.android.com/r/tools/classpath-sync-errors\">Fix dependency resolution errors</a>."
+
+private fun duplicateClassMessage(className: String, artifactNames: List<String>): String {
+    val sorted = artifactNames.sorted()
+    val modules = when {
+        artifactNames.size == 2 -> "modules ${sorted[0]} and ${sorted[1]}"
+        else -> {
+            val last = sorted.last()
+            "the following modules: ${sorted.dropLast(1).joinToString(", ")} and $last"
+        }
+    }
+    return "Duplicate class $className found in $modules"
+}
+
+abstract class CheckDuplicatesParams: WorkParameters {
+    abstract val projectName: Property<String>
+    abstract val enumeratedMainModuleClasses: RegularFileProperty
+    abstract val enumeratedClasses: MapProperty<String, File>
+}
+
+abstract class CheckDuplicatesRunnable @Inject constructor(): WorkAction<CheckDuplicatesParams> {
+    override fun execute() {
+        CheckDuplicateClassesDelegate().run(
+            parameters.projectName.get(),
+            parameters.enumeratedMainModuleClasses.get().asFile,
+            parameters.enumeratedClasses.get()
+        )
+    }
 }

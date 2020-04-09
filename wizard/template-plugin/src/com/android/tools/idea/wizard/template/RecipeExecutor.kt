@@ -100,7 +100,18 @@ interface RecipeExecutor {
   fun addSourceSet(type: SourceSetType, name: String, dir: File)
 
   /** Initializes the variable with [name] to [value] in the ext block of global Gradle build file. */
-  fun setExtVar(name: String, value: Any)
+  fun setExtVar(name: String, value: String)
+
+  /**
+   * Looks for the given classpath dependency coordinate, in the project base, and returns the version variable name on it.
+   * For example if the base project has a classpath dependency of 'org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version'
+   * this function returns 'kotlin_version'.
+   * If the dependency has no variable, or the variable can't be determined, it returns the specified default value.
+   *
+   * @param mavenCoordinate coordinate of class path dependency to be added in Maven format (e.g androidx.appcompat:appcompat).
+   * @param valueIfNotFound value to return if the dependency has no variable, or the variable can't be determined.
+   */
+  fun getClasspathDependencyVarName(mavenCoordinate: String, valueIfNotFound: String): String
 
   /**
    * Adds a module dependency to global settings.gradle[.kts] file.

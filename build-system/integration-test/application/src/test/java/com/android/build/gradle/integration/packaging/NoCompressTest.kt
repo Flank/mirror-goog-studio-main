@@ -72,6 +72,8 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .withFile("src/main/resources/jres.yes", content)
                 .withFile("src/main/resources/jres.no", content)
                 .withFile("src/main/resources/jres.variantApiNo", content)
+                .withFile("src/main/resources/jres.jpg", content)
+                .withFile("src/main/resources/jres.tflite", content)
                 .withFile("src/main/assets/a.yes", content)
                 .withFile("src/main/assets/a.no", content)
                 .withFile("src/main/assets/a.variantApiNo", content)
@@ -86,6 +88,8 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .withFile("src/main/assets/a_not_weird_chars.abc", content)
                 .withFile("src/main/assets/a_not_weird_chars2.ac", content)
                 .withFile("src/main/assets/a_not_weird_chars3.aa(b)c", content)
+                .withFile("src/main/assets/a.jpg", content)
+                .withFile("src/main/assets/a.tflite", content)
                 .withFile("src/main/res/raw/r_yes.yes", content)
                 .withFile("src/main/res/raw/r_no.no", content)
                 .withFile("src/main/res/raw/r_matching.Test", content)
@@ -99,6 +103,7 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .withFile("src/main/res/raw/r_not_weird_chars.abc", content)
                 .withFile("src/main/res/raw/r_not_weird_chars2.ac", content)
                 .withFile("src/main/res/raw/r_not_weird_chars3.aa(b)c", content)
+                .withFile("src/main/res/raw/r_jpg.jpg", content)
         ).setApkCreatorType(apkCreatorType)
         .create()
 
@@ -129,6 +134,8 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
             zf.expectCompressionMethodOf("jres.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("jres.no").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("jres.variantApiNo").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("jres.jpg").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("jres.tflite").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("assets/a.no").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a.variantApiNo").isEqualTo(CompressionMethod.STORE)
@@ -143,6 +150,8 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
             zf.expectCompressionMethodOf("assets/a_not_weird_chars.abc").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("assets/a_not_weird_chars2.ac").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("assets/a_not_weird_chars3.aa(b)c").isEqualTo(CompressionMethod.DEFLATE)
+            zf.expectCompressionMethodOf("assets/a.jpg").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("assets/a.tflite").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("res/raw/r_yes.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("res/raw/r_no.no").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("res/raw/r_matching.Test").isEqualTo(CompressionMethod.STORE)
@@ -156,6 +165,7 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
             zf.expectCompressionMethodOf("res/raw/r_not_weird_chars.abc").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("res/raw/r_not_weird_chars2.ac").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("res/raw/r_not_weird_chars3.aa(b)c").isEqualTo(CompressionMethod.DEFLATE)
+            zf.expectCompressionMethodOf("res/raw/r_jpg.jpg").isEqualTo(CompressionMethod.STORE)
         }
     }
 

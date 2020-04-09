@@ -9,7 +9,8 @@ Thumbs.db
 cygdrive
 /out
 /repo
-.idea/dictionaries/tnorbye.xml
+.idea/dictionaries/*.xml
+!.idea/dictionaries/adt.xml
 .idea/g3plugins.project.settings.xml
 .idea/google-java-format.xml
 .idea/saveactions_settings.xml

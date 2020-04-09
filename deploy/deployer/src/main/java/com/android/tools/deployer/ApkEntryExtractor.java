@@ -17,7 +17,6 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.ApkEntryContent;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.zipflinger.ZipArchive;
@@ -25,8 +24,10 @@ import com.google.common.collect.ArrayListMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 
 public class ApkEntryExtractor {
@@ -38,24 +39,23 @@ public class ApkEntryExtractor {
         this.filter = filter;
     }
 
-    public List<ApkEntryContent> extract(List<FileDiff> diffs) throws DeployerException {
+    public SortedMap<ApkEntry, ByteString> extract(List<FileDiff> diffs) throws DeployerException {
         ArrayListMultimap<Apk, ApkEntry> entriesToExtract = ArrayListMultimap.create();
 
         diffs.stream()
                 .filter(this::shouldExtract)
                 .forEach(diff -> entriesToExtract.put(diff.newFile.getApk(), diff.newFile));
 
-        List<ApkEntryContent> extracted = new ArrayList<>();
+        SortedMap<ApkEntry, ByteString> extracted =
+                new TreeMap<>(ApkEntryExtractor::compareApkEntries);
         for (Apk apk : entriesToExtract.keySet()) {
             extractFromApk(apk, entriesToExtract.get(apk), extracted);
         }
-
-        // Sort before returning to ensure that the entry order is deterministic.
-        extracted.sort(ApkEntryExtractor::compareExtracted);
         return extracted;
     }
 
-    private void extractFromApk(Apk apk, List<ApkEntry> entries, List<ApkEntryContent> extracted)
+    private void extractFromApk(
+            Apk apk, List<ApkEntry> entries, Map<ApkEntry, ByteString> extracted)
             throws DeployerException {
         try (ZipArchive zip = new ZipArchive(new File(apk.path))) {
             for (ApkEntry apkEntry : entries) {
@@ -63,7 +63,7 @@ public class ApkEntryExtractor {
                 if (content == null) {
                     throw DeployerException.entryNotFound(apkEntry.getName(), apk.path);
                 }
-                extracted.add(new ApkEntryContent(apkEntry, ByteString.copyFrom(content)));
+                extracted.put(apkEntry, ByteString.copyFrom(content));
             }
         } catch (IOException io) {
             throw DeployerException.entryUnzipFailed(io);
@@ -71,14 +71,19 @@ public class ApkEntryExtractor {
     }
 
     private boolean shouldExtract(FileDiff diff) {
-        // Before we handle newly created files, we need to implement a proper overlay diff.
-        return diff.status == FileDiff.Status.MODIFIED && filter.test(diff.newFile.getName());
+        switch (diff.status) {
+            case CREATED:
+            case MODIFIED:
+            case RESOURCE_NOT_IN_OVERLAY:
+                return filter.test(diff.newFile.getName());
+            case DELETED:
+                return false;
+            default:
+                throw new IllegalArgumentException("Unexpected diff status: " + diff.status);
+        }
     }
 
-    private static int compareExtracted(ApkEntryContent a, ApkEntryContent b) {
-        if (a.getApkName().equals(b.getApkName())) {
-            return a.getName().compareTo(b.getName());
-        }
-        return a.getApkName().compareTo(b.getApkName());
+    private static int compareApkEntries(ApkEntry a, ApkEntry b) {
+        return a.getQualifiedPath().compareTo(b.getQualifiedPath());
     }
 }

@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -58,6 +57,7 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.process.ProcessException
+import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.SymbolIo
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -133,6 +133,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:org.gradle.api.tasks.OutputFile
     @get:Optional
     abstract val mainDexListProguardOutputFile: RegularFileProperty
+
+    @get:OutputFile
+    @get:Optional
+    abstract val stableIdsOutputFileProperty: RegularFileProperty
 
     @get:InputFiles
     @get:Optional
@@ -231,6 +235,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var useFinalIds: Boolean = true
         private set
 
+    @get:Input
+    var useStableIds: Boolean = false
+        internal set
+
     @get:Nested
     abstract val variantOutputs : ListProperty<VariantOutputImpl>
 
@@ -244,8 +252,20 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    // FIXME : make me incremental !
+    override val incremental: Boolean
+        get() = useStableIds
+
+    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
+        // For now, we don't care about what changed - we only want to preserve the res IDs from the
+        // previous run if stable IDs support is enabled.
+        doFullTaskAction(stableIdsOutputFileProperty.orNull?.asFile)
+    }
+
     override fun doFullTaskAction() {
+        doFullTaskAction(null)
+    }
+
+    fun doFullTaskAction(inputStableIdsFile: File?) {
         val outputDirectory = resPackageOutputFolder.get().asFile
         FileUtils.deleteDirectoryContents(outputDirectory)
 
@@ -298,7 +318,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     aapt2ServiceKey,
                     compiledDependenciesResourcesDirs,
                     this,
-                    rClassOutputJar.orNull?.asFile
+                    rClassOutputJar.orNull?.asFile,
+                    inputStableIdsFile
                 )
             )
 
@@ -308,6 +329,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 it.await()
 
                 for (variantOutput in unprocessedOutputs) {
+                    // If we're supporting stable IDs we need to make sure the splits get exactly
+                    // the same IDs as the main one.
                     it.submit(
                         AaptSplitInvoker::class.java,
                         AaptSplitInvokerParams(
@@ -321,7 +344,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                             false,
                             aapt2ServiceKey,
                             compiledDependenciesResourcesDirs,
-                            this
+                            this,
+                            null,
+                            if (useStableIds) stableIdsOutputFileProperty.get().asFile else null
                         )
                     )
                 }
@@ -379,6 +404,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::mainDexListProguardOutputFile,
                     "manifest_keep.txt"
+                )
+            }
+
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_STABLE_IDS]) {
+                creationConfig.artifacts.producesFile(
+                    InternalArtifactType.STABLE_RESOURCE_IDS_FILE,
+                    taskProvider,
+                    LinkApplicationAndroidResourcesTask::stableIdsOutputFileProperty,
+                    "stableIds.txt"
                 )
             }
         }
@@ -483,6 +517,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
 
+            task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
+
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
         }
     }
@@ -580,7 +616,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         creationConfig: ApkCreationConfig,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         baseName: String?
-    ) : BaseCreationAction(creationConfig, generateLegacyMultidexMainDexProguardRules, baseName, false) {
+    ) : BaseCreationAction(
+        creationConfig,
+        generateLegacyMultidexMainDexProguardRules,
+        baseName,
+        false
+    ) {
 
         override fun handleProvider(
             taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
@@ -740,6 +781,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setUseMinimalKeepRules(params.useMinimalKeepRules)
                         .setUseFinalIds(params.useFinalIds)
                         .addResourceDirectories(params.compiledDependenciesResourcesDirs)
+                        .setEmitStableIdsFile(params.stableIdsOutputFile)
+                        .setConsumeStableIdsFile(params.stableIdsInputFile)
 
                     if (params.isNamespaced) {
                         configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(params.dependencies))
@@ -816,7 +859,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val aapt2ServiceKey: Aapt2DaemonServiceKey?,
         val compiledDependenciesResourcesDirs: List<File>,
         task: LinkApplicationAndroidResourcesTask,
-        val rClassOutputJar: File? = null
+        val rClassOutputJar: File? = null,
+        val stableIdsInputFile: File?
     ) : Serializable {
         val resourceConfigs: Set<String> = splitList.resourceConfigs
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
@@ -844,6 +888,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val useFinalIds: Boolean = task.useFinalIds
         val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
         val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile
+        val stableIdsOutputFile: File? = task.stableIdsOutputFileProperty.orNull?.asFile
     }
 
     @Internal // sourceOutputDirProperty is already marked as @OutputDirectory

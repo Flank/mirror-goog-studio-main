@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "utils/log.h"
+
 namespace profiler {
 
 int Trace::trace_marker_fd;
@@ -20,8 +22,9 @@ Trace::~Trace() { End(); }
 void Trace::Init() {
   if (trace_marker_fd == 0) {
     trace_marker_fd = open("/sys/kernel/debug/tracing/trace_marker", O_WRONLY);
-    // TODO: Error handling
     if (trace_marker_fd == -1) {
+      Log::E(Log::Tag::TRANSPORT,
+             "Failed to open trace_marker file to initialize tracing");
     }
   }
 }

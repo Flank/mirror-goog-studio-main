@@ -15,6 +15,9 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationBuildType
+import com.android.build.api.dsl.DynamicFeatureBuildType
+import com.android.build.api.dsl.LibraryBuildType
 import com.android.build.api.dsl.Ndk
 import com.android.build.api.dsl.Shaders
 import com.android.build.gradle.internal.errors.DeprecationReporter
@@ -40,7 +43,9 @@ open class BuildType @Inject constructor(
     private val dslServices: DslServices
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    com.android.build.api.dsl.BuildType<AnnotationProcessorOptions, SigningConfig> {
+    ApplicationBuildType<AnnotationProcessorOptions, SigningConfig>,
+    LibraryBuildType<AnnotationProcessorOptions, SigningConfig>,
+    DynamicFeatureBuildType<AnnotationProcessorOptions, SigningConfig> {
 
     /**
      * Name of this build type.

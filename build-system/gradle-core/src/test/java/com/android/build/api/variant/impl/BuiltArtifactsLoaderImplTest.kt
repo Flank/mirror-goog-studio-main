@@ -17,7 +17,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactTypes
-import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
@@ -44,7 +43,7 @@ class BuiltArtifactsLoaderImplTest {
     fun testSingleFileTransformation() {
         createSimpleMetadataFile()
 
-        val builtArtifacts= BuiltArtifacts.Loader.load(
+        val builtArtifacts= BuiltArtifactsLoaderImpl().load(
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()
@@ -56,7 +55,7 @@ class BuiltArtifactsLoaderImplTest {
             elements = builtArtifacts.elements.map {
                 assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
                     "some manifest")
-                (it as BuiltArtifactImpl).newOutput(
+                it.newOutput(
                     outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
                         file.writeText("updated APK")
                     }.toPath())
@@ -66,7 +65,7 @@ class BuiltArtifactsLoaderImplTest {
         newBuiltArtifacts.save(FakeGradleDirectory(outFolder.root))
 
         // load the new file
-        val updatedBuiltArtifacts = BuiltArtifacts.Loader.load(
+        val updatedBuiltArtifacts = BuiltArtifactsLoaderImpl().load(
             FakeGradleDirectory(outFolder.root))
 
         assertThat(updatedBuiltArtifacts).isNotNull()
@@ -124,7 +123,7 @@ class BuiltArtifactsLoaderImplTest {
   ]
 }""", Charsets.UTF_8)
 
-        val builtArtifacts= BuiltArtifacts.Loader.load(
+        val builtArtifacts= BuiltArtifactsLoaderImpl().load(
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()
@@ -135,7 +134,7 @@ class BuiltArtifactsLoaderImplTest {
             elements = builtArtifacts.elements.map {
                 assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
                     it.filters.joinToString())
-                (it as BuiltArtifactImpl).newOutput(
+                it.newOutput(
                     outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
                         file.writeText("updated APK : ${it.filters.joinToString()}")
                     }.toPath())
@@ -145,7 +144,7 @@ class BuiltArtifactsLoaderImplTest {
         newBuiltArtifacts.save(FakeGradleDirectory(outFolder.root))
 
         // load the new file
-        val updatedBuiltArtifacts = BuiltArtifacts.Loader.load(
+        val updatedBuiltArtifacts = BuiltArtifactsLoaderImpl().load(
             FakeGradleDirectory(outFolder.root))
 
         assertThat(updatedBuiltArtifacts).isNotNull()
@@ -168,7 +167,7 @@ class BuiltArtifactsLoaderImplTest {
     fun testSimpleLoading() {
         createSimpleMetadataFile()
 
-        val builtArtifacts= BuiltArtifacts.Loader.load(
+        val builtArtifacts= BuiltArtifactsLoaderImpl().load(
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()

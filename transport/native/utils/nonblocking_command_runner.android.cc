@@ -83,6 +83,13 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
       dup2(stdout_pipe[kPipeWrite], STDOUT_FILENO);
       close(stdout_pipe[kPipeWrite]);
     }
+    // log the command
+    std::ostringstream oss;
+    oss << "NonBlockingCommandRunner executes '" << executable_path_ << "'";
+    for (int i = 0; arguments[i] != nullptr; i++) {
+      oss << " '" << arguments[i] << "'";
+    }
+    Log::D(Log::Tag::TRANSPORT, oss.str().c_str());
 
     // run child process image
     execve(executable_path_.c_str(), (char* const*)arguments,
@@ -106,7 +113,7 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
     }
     if (callback != nullptr) {
       read_data_thread_ = std::thread([callback, stdout_pipe]() -> void {
-        SetThreadName("Studio::CommandRunner");
+        SetThreadName("Studio:CmdCallback");  // only first 15 char are used
         (*callback)(stdout_pipe[kPipeRead]);
         close(stdout_pipe[kPipeRead]);
       });

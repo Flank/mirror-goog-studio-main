@@ -6,7 +6,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.utils.FileUtils
-import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,11 +29,11 @@ class AaptOptionsTest {
 
     @Test
     fun testAaptOptionsFlagsWithAapt2() {
-        val ids = temporaryFolder.newFile()
+        val tracesFolder = temporaryFolder.newFolder()
 
-        val idsFilePath = ids.absolutePath
-        val windowsFriendlyFilePath = idsFilePath.replace("\\", "\\\\")
-        val additionalParams = "additionalParameters \"--emit-ids\", \"$windowsFriendlyFilePath\""
+        val traceFolderPath = tracesFolder.absolutePath
+        val windowsFriendlyFilePath = traceFolderPath.replace("\\", "\\\\")
+        val additionalParams = "additionalParameters \"--trace-folder\", \"$windowsFriendlyFilePath\""
 
         TestFileUtils.appendToFile(
         project.buildFile,
@@ -49,16 +49,16 @@ class AaptOptionsTest {
         project.executor().run("clean", "assembleDebug")
 
         // Check that ids file is generated
-        assertThat(ids).exists()
-        assertThat(ids).contains("raw/kept")
-        FileUtils.delete(ids)
+        assertThat(tracesFolder).exists()
+        Truth.assertThat(tracesFolder.listFiles()!!.size).isEqualTo(1)
+        FileUtils.deleteDirectoryContents(tracesFolder)
 
         TestFileUtils.searchAndReplace(project.buildFile, additionalParams, "")
 
         project.executor().run("assembleDebug")
 
         // Check that ids file is not generated
-        assertThat(ids).doesNotExist()
+        Truth.assertThat(tracesFolder.listFiles()).isEmpty()
     }
 
     @Test
@@ -118,11 +118,11 @@ class AaptOptionsTest {
         // test that tasks run when aapt options changed via the DSL
         TestFileUtils.searchAndReplace(project.buildFile, "foo", "baz")
         val result1 = project.executor().run(assembleTask)
-        assertThat(result1.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
+        Truth.assertThat(result1.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
 
         // test that tasks run when aapt options changed via the variant API
         TestFileUtils.searchAndReplace(project.buildFile, "bar", "qux")
         val result2 = project.executor().run(assembleTask)
-        assertThat(result2.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
+        Truth.assertThat(result2.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
     }
 }

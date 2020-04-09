@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.utils.FileUtils
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import java.io.File
+import java.util.Locale
 
 /**
  * Returns a suitable output directory for this receiving artifact type.
@@ -41,18 +41,6 @@ fun ArtifactType<*>.getOutputDir(parentFile: File)=
     )
 
 /**
- * Returns a relative path to the build directory for this artifact type.
- *
- * @return a relative path
- */
-fun ArtifactType<*>.getOutputPath() =
-    if (this is InternalArtifactType) {
-        category.outputPath
-    } else {
-        InternalArtifactType.Category.INTERMEDIATES.outputPath
-    }
-
-/**
  * Returns a [File] representing the artifact type location (could be a directory or regular file).
  *
  * @param buildDirectory the parent build folder
@@ -63,9 +51,12 @@ fun ArtifactType<*>.getOutputPath() =
  */
 fun ArtifactType<*>.getOutputPath(
     buildDirectory: DirectoryProperty,
+    variantIdentifier: String,
     vararg paths: String) = FileUtils.join(
         getOutputDir(buildDirectory.get().asFile),
-        *paths
+        variantIdentifier,
+        *paths,
+        getFileSystemLocationName()
     )
 
 

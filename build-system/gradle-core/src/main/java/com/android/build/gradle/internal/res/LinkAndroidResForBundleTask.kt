@@ -78,6 +78,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     private var mergeBlameLogFolder: File? = null
 
     // Not an input as it is only used to rewrite exception and doesn't affect task output
+    @get:Internal
+    @get:Optional
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private var buildTargetDensity: String? = null

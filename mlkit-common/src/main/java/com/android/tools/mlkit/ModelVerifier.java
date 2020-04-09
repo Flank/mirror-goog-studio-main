@@ -44,12 +44,13 @@ public class ModelVerifier {
             TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).inputTensorMetadata(i);
             verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.INPUT);
 
-            if (inputNameSet.contains(tensorMetadata.name())) {
+            String formattedName = MlkitNames.computeIdentifierName(tensorMetadata.name());
+            if (inputNameSet.contains(formattedName)) {
                 throw new ModelParsingException(
                         ErrorType.PARAM_NAME_CONFLICT,
-                        "More than one tensor has same name: " + tensorMetadata.name());
+                        "More than one tensor has same name: " + formattedName);
             }
-            inputNameSet.add(tensorMetadata.name());
+            inputNameSet.add(formattedName);
 
             if (TensorInfo.extractContentType(tensorMetadata) == TensorInfo.ContentType.IMAGE
                     && extractor.getInputTensorShape(0, i).length != 4) {
@@ -66,18 +67,27 @@ public class ModelVerifier {
 
             TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).outputTensorMetadata(i);
             verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.OUTPUT);
-            if (outputNameSet.contains(tensorMetadata.name())) {
+
+            String formattedName = MlkitNames.computeIdentifierName(tensorMetadata.name());
+            if (outputNameSet.contains(formattedName)) {
                 throw new ModelParsingException(
                         ErrorType.PARAM_NAME_CONFLICT,
-                        "More than one tensor has same name: " + tensorMetadata.name());
+                        "More than one tensor has same name: " + formattedName);
             }
-            outputNameSet.add(tensorMetadata.name());
+            outputNameSet.add(formattedName);
         }
     }
 
     private static void verifyTensorMetadata(
             TensorMetadata tensorMetadata, int index, TensorInfo.Source source)
             throws ModelParsingException {
+        if (tensorMetadata == null) {
+            throw new ModelParsingException(
+                    ErrorType.INVALID_METADATA,
+                    String.format(
+                            "Metadata of %s tensor %d is null",
+                            source == TensorInfo.Source.INPUT ? "Input" : "Output", index));
+        }
         if (tensorMetadata.name() == null) {
             throw new ModelParsingException(
                     ErrorType.INVALID_PARAM_NAME,

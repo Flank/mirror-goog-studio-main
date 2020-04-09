@@ -157,7 +157,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
         variant.prefabPackageDirectoryList
-        variant.module.project.prefabClassPath
+        variant.prefabClassPath
         for (abi in abis) {
             buildSteps.add(
                 Callable {
@@ -290,7 +290,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 """.trimIndent()
                 val prefabState = PrefabConfigurationState(
                     abi.variant.module.project.isPrefabEnabled,
-                    abi.variant.module.project.prefabClassPath,
+                    abi.variant.prefabClassPath,
                     variant.prefabPackageDirectoryList
                 )
                 val previousPrefabState =

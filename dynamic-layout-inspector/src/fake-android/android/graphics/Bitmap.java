@@ -16,7 +16,7 @@
 
 package android.graphics;
 
-import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 
 /**
  * During testing this is used instead of the version in android.jar, since all the methods there
@@ -29,7 +29,9 @@ public class Bitmap {
         return INSTANCE;
     }
 
-    public void compress(CompressFormat png, int i, BufferedOutputStream out) {}
+    public boolean compress(CompressFormat png, int i, OutputStream out) {
+        return true;
+    }
 
     public void recycle() {}
 

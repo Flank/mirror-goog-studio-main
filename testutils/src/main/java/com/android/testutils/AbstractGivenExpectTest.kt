@@ -27,7 +27,7 @@ import com.google.common.truth.Truth
 abstract class AbstractGivenExpectTest<GivenT, ResultT> {
 
     private var givenAction: (() -> GivenT)? = null
-    private var whenAction: ((GivenT) -> ResultT?)? = null
+    protected var whenAction: ((GivenT) -> ResultT?)? = null
 
     enum class TestState {
         START,
