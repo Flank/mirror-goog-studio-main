@@ -186,17 +186,6 @@ fun mergeAndRenumberSymbols(
 }
 
 /**
- * Load symbol tables of each library on which the main library/application depends on.
- *
- * @param libraries libraries which the main library/application depends on
- * @return a set of of symbol table for each library
- */
-@Throws(IOException::class)
-fun loadDependenciesSymbolTables(libraries: Iterable<File>): ImmutableSet<SymbolTable> {
-    return SymbolIo().loadDependenciesSymbolTables(libraries)
-}
-
-/**
  * Pulls out the package name from the given android manifest.
  *
  * @param manifestFile manifest file of the library

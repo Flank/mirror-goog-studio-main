@@ -1212,7 +1212,7 @@ public class SymbolIoTest {
         Files.asCharSink(lib2File, Charsets.UTF_8).write(lib2Content);
 
         // When loading dependency tables symbols should be interned.
-        ImmutableSet<SymbolTable> symbolTables =
+        ImmutableList<SymbolTable> symbolTables =
                 symbolIo.loadDependenciesSymbolTables(ImmutableList.of(libFile, lib2File));
 
         assertThat(symbolTables).hasSize(2);

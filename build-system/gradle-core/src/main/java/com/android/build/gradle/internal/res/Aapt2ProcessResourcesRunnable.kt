@@ -30,7 +30,6 @@ import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.getPackageNameFromManifest
-import com.android.ide.common.symbols.loadDependenciesSymbolTables
 import com.android.utils.ILogger
 import com.google.common.collect.Iterables
 import org.gradle.api.logging.Logging
@@ -102,7 +101,7 @@ fun processResources(
             SymbolTable.builder().tablePackage(mainPackageName!!).build()
 
         // For each dependency, load its symbol file.
-        var depSymbolTables: Set<SymbolTable> = loadDependenciesSymbolTables(
+        var depSymbolTables: List<SymbolTable> = SymbolIo().loadDependenciesSymbolTables(
             aaptConfig.librarySymbolTableFiles
         )
 
@@ -110,7 +109,7 @@ fun processResources(
         if (rJar != null) { // non-namespaced case
             // replace the default values from the dependency table with the allocated values
             // from the main table
-            depSymbolTables = depSymbolTables.asSequence().map { t -> t.withValuesFrom(mainSymbols) }.toSet()
+            depSymbolTables = depSymbolTables.map { t -> t.withValuesFrom(mainSymbols) }
             exportToCompiledJava(
                 Iterables.concat(setOf(mainSymbols), depSymbolTables),
                 rJar.toPath(),

@@ -48,7 +48,7 @@ class SymbolExportUtilsTest {
         val processedSymbols = processLibraryMainSymbolTable(
             finalPackageName = "com.example.mylib",
             librarySymbols = librarySymbols,
-            depSymbolTables = setOf(depSymbolTable),
+            depSymbolTables = listOf(depSymbolTable),
             platformSymbols = SymbolTable.builder().build(),
             nonTransitiveRClass = false,
             symbolFileOut = symbolFileOut
@@ -89,7 +89,7 @@ class SymbolExportUtilsTest {
         val processedSymbols = processLibraryMainSymbolTable(
             finalPackageName = "com.example.mylib",
             librarySymbols = librarySymbols,
-            depSymbolTables = setOf(depSymbolTable),
+            depSymbolTables = listOf(depSymbolTable),
             platformSymbols = SymbolTable.builder().build(),
             nonTransitiveRClass = true,
             symbolFileOut = symbolFileOut
