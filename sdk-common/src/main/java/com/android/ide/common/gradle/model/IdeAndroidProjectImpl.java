@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of an {@link AndroidProject}. */
@@ -170,7 +171,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                         project.getLintOptions(),
                         options -> new IdeLintOptions(options, parsedModelVersion));
 
-        // We need to use the unresolved dependencies to support older versions of the Android Gradle Plugin.
+        // We need to use the unresolved dependencies to support older versions of the Android
+        // Gradle Plugin.
         //noinspection deprecation
         Set<String> unresolvedDependenciesCopy =
                 ImmutableSet.copyOf(project.getUnresolvedDependencies());
@@ -611,11 +613,14 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     }
 
     @Override
-    public void addVariants(
-            @NonNull Collection<Variant> variants, @NonNull IdeDependenciesFactory factory) {
-        ModelCache modelCache = new ModelCache();
-        for (Variant variant : variants) {
-            myVariants.add(new IdeVariantImpl(variant, modelCache, factory, myParsedModelVersion));
+    public void addVariants(@NonNull Collection<IdeVariant> variants) {
+        Set<String> variantNames =
+                myVariants.stream().map(variant -> variant.getName()).collect(Collectors.toSet());
+        for (IdeVariant variant : variants) {
+            // Add cached IdeVariant only if it is not contained in the current model.
+            if (!variantNames.contains(variant.getName())) {
+                myVariants.add(variant);
+            }
         }
     }
 
