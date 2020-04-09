@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="gradle-api">
     <CLASSES>
-      <root url="jar://$SRC$/out/.gradle/caches/6.3/generated-gradle-jars/gradle-api-6.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/6.3/generated-gradle-jars/gradle-api-6.3.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
