@@ -146,6 +146,25 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
 
     private static final NoKeyNodeResolver DEFAULT_NO_KEY_NODE_RESOLVER = new NoKeyNodeResolver();
 
+    private static final NodeKeyResolver PROVIDER_KEY_RESOLVER =
+            new NodeKeyResolver() {
+                @Override
+                public ImmutableList<String> getKeyAttributesNames() {
+                    return ImmutableList.of();
+                }
+
+                @Override
+                public String getKey(Element element) {
+                    // if the provider is a sub-element from queries, we are not expecting any key.
+                    if (element.getParentNode()
+                            .getNodeName()
+                            .equals(ManifestModel.NodeTypes.QUERIES.name())) {
+                        return null;
+                    }
+                    return DEFAULT_NAME_ATTRIBUTE_RESOLVER.getKey(element);
+                }
+            };
+
     /**
      * A {@link NodeKeyResolver} capable of extracting the element key first in an "android:name"
      * attribute and if not value found there, in the "android:glEsVersion" attribute.
@@ -479,15 +498,23 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                 AttributeModel.newModel(SdkConstants.ATTR_NAME)),
 
         /**
-         * Provider (contained in application)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/provider-element.html>
-         *     Provider Xml documentation</a>}
+         * Provider (contained in application or queries) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/provider-element.html>Provider
+         * Xml documentation</a>}
          */
-        PROVIDER(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER,
-                AttributeModel.newModel(SdkConstants.ATTR_NAME)
-                        .setIsPackageDependent()),
+        PROVIDER(
+                MergeType.MERGE,
+                PROVIDER_KEY_RESOLVER,
+                AttributeModel.newModel(SdkConstants.ATTR_NAME).setIsPackageDependent()),
+
+        /**
+         * Queries <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/queries-element.html>Queries Xml
+         * documentation</a>}
+         */
+        QUERIES(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
          * Receiver (contained in application)
