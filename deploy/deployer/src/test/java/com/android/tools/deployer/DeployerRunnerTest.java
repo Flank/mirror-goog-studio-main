@@ -26,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.fakeadbserver.FakeAdbServer;
@@ -1291,7 +1292,7 @@ public class DeployerRunnerTest {
         File installersPath = DeployerTestUtils.prepareInstaller();
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
 
-        AndroidDebugBridge.init(false);
+        AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
         AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
         while (!bridge.hasInitialDeviceList()) {
             Thread.sleep(100);

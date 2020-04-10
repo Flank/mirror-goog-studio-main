@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.fakeadbserver.FakeAdbServer;
@@ -85,7 +86,7 @@ public class AdbInstallerTest {
 
         File installersPath = DeployerTestUtils.prepareInstaller();
 
-        AndroidDebugBridge.init(false);
+        AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
         AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
         while (!bridge.hasInitialDeviceList()) {
             Thread.sleep(100);
