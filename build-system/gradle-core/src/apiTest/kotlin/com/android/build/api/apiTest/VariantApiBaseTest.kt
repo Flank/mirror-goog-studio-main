@@ -345,12 +345,25 @@ repositories {
         }
     }
 
+    open class DocumentationBuilder {
+        var index: String? = null
+    }
+
+    var docs=  DocumentationBuilder()
+
+    fun withDocs(docs: DocumentationBuilder.()-> Unit) {
+        docs.invoke(this.docs)
+    }
+
     override fun defaultWhen(given: GivenBuilder): BuildResult? {
 
         val projectDir = File(testProjectDir.root, testName.methodName)
         projectDir.deleteRecursively()
         projectDir.mkdirs()
         given.writeModule(projectDir, sdkLocation())
+        docs.index?.apply {
+            File(projectDir, "readme.md").writeText(this)
+        }
 
         if (given.tasksToInvoke.isEmpty()) {
             given.tasksToInvoke.add("assembleDebug")
