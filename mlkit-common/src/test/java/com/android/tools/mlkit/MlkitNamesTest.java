@@ -26,14 +26,20 @@ public class MlkitNamesTest {
 
     @Test
     public void computeModelClassName_validName_justReturn() {
-        assertEquals(
-                MlkitNames.computeModelClassName(new File("valid_model.tflite")), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName(new File("validModel.tflite")), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName(new File("validModel.tflite")), "ValidModel");
     }
 
     @Test
     public void computeModelClassName_nameWithInvalidCharacters_correctIt() {
         assertEquals(
                 MlkitNames.computeModelClassName(new File(" valid_model%$.tflite")), "ValidModel");
+        assertEquals(
+                MlkitNames.computeModelClassName(new File("valid_model.tflite")), "ValidModel");
+        assertEquals(
+                MlkitNames.computeModelClassName(new File("valid-model.tflite")), "ValidModel");
+        assertEquals(
+                MlkitNames.computeModelClassName(new File("valid-_model.tflite")), "ValidModel");
     }
 
     @Test
