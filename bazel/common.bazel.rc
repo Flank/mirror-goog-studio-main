@@ -53,11 +53,17 @@ build:cloud_resultstore --project_id=908081808034
 build:cloud_resultstore --tls_enabled=true
 build:cloud_resultstore --auth_enabled=true
 build:cloud_resultstore --auth_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
+build:cloud_resultstore --remote_cache=remotebuildexecution.googleapis.com
+build:cloud_resultstore --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
+
+# Disable writing to the remote cache by default. This allows test results to still be written, but
+# writing to the action cache will be disabled.
+build:cloud_resultstore --remote_upload_local_results=false
 
 build:remote_common --config=cloud_resultstore
 
-# Enable the remote cache so all remote action results can be shared
-build:remote_common --remote_cache=remotebuildexecution.googleapis.com
+# Enable uploading to the remote cache so all remote action results can be shared
+build:remote_common --remote_upload_local_results=true
 build:remote_common --tls_enabled=true # Enable encryption
 build:remote_common --experimental_strict_action_env=true
 build:remote_common --remote_timeout=3600
