@@ -106,7 +106,6 @@ public class AndroidDebugBridge {
     private static AndroidDebugBridge sThis;
     private static boolean sInitialized = false;
     private static boolean sClientSupport;
-    private static boolean sUseLibusb;
     private static Map<String, String> sEnv; // env vars to set while launching adb
 
     /** Full path to adb. */
@@ -266,17 +265,26 @@ public class AndroidDebugBridge {
      * @see DdmPreferences
      */
     public static synchronized void init(boolean clientSupport) {
-        init(clientSupport, false, ImmutableMap.of());
+        init(clientSupport, ImmutableMap.of());
+    }
+
+    /**
+     * Similar to {@link #init(boolean)}, with ability to enable libusb and pass a custom set of env. variables.
+     */
+    public static synchronized void init(
+      boolean clientSupport, boolean useLibusb, @NonNull Map<String, String> env) {
+        init(clientSupport, new ImmutableMap.Builder<String, String>()
+          .putAll(env)
+          .put("ADB_LIBUSB", useLibusb ? "1" : "0")
+          .build());
     }
 
     /** Similar to {@link #init(boolean)}, with ability to pass a custom set of env. variables. */
-    public static synchronized void init(
-            boolean clientSupport, boolean useLibusb, @NonNull Map<String, String> env) {
+    public static synchronized void init(boolean clientSupport, @NonNull Map<String, String> env) {
         Preconditions.checkState(
                 !sInitialized, "AndroidDebugBridge.init() has already been called.");
         sInitialized = true;
         sClientSupport = clientSupport;
-        sUseLibusb = useLibusb;
         sEnv = env;
         String userManagedAdbModeSetting = System.getenv(USER_MANAGED_ADB_ENV_VAR);
         if (userManagedAdbModeSetting != null) {
@@ -1243,7 +1251,6 @@ public class AndroidDebugBridge {
             Log.d(DDMS, String.format("Launching '%1$s' to ensure ADB is running.", commandString));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Map<String, String> env = processBuilder.environment();
-            env.put("ADB_LIBUSB", sUseLibusb ? "1" : "0");
             sEnv.forEach(env::put);
             if (DdmPreferences.getUseAdbHost()) {
                 String adbHostValue = DdmPreferences.getAdbHostValue();
