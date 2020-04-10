@@ -521,13 +521,45 @@ public final class AdbHelper {
                 int read;
                 while ((read = is.read(data)) != -1) {
                     ByteBuffer buf = ByteBuffer.wrap(data, 0, read);
-                    int written = 0;
+                    int writtenTotal = 0;
+                    long lastResponsive = System.currentTimeMillis();
                     while (buf.hasRemaining()) {
-                        written += adbChan.write(buf);
+                        int written = adbChan.write(buf);
+
+                        if (written == 0) {
+                            // If device takes too long to respond to a write command, throw timeout
+                            // exception.
+                            if (maxTimeToOutputMs > 0
+                                    && System.currentTimeMillis() - lastResponsive
+                                            > maxTimeToOutputMs) {
+                                throw new TimeoutException(
+                                        String.format(
+                                                "executeRemoteCommand write timed out after %sms",
+                                                maxTimeToOutputMs));
+                            }
+                        } else {
+                            lastResponsive = System.currentTimeMillis();
+                        }
+
+                        // If the overall timeout exists and is exceeded, we throw timeout
+                        // exception.
+                        if (maxTimeoutMs > 0
+                                && System.currentTimeMillis() - startTime > maxTimeoutMs) {
+                            throw new TimeoutException(
+                                    String.format(
+                                            "executeRemoteCommand timed out after %sms",
+                                            maxTimeoutMs));
+                        }
+
+                        writtenTotal += written;
                     }
-                    if (written != read) {
-                        Log.e("ddms",
-                                "ADB write inconsistency, wrote " + written + "expected " + read);
+                    if (writtenTotal != read) {
+                        Log.e(
+                                "ddms",
+                                "ADB write inconsistency, wrote "
+                                        + writtenTotal
+                                        + "expected "
+                                        + read);
                         throw new AdbCommandRejectedException("write failed");
                     }
                 }
