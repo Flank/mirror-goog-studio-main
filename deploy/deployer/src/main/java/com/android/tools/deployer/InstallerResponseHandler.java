@@ -61,7 +61,19 @@ public class InstallerResponseHandler {
             throw DeployerException.classNotFound(failedAgent.getClassName());
         }
 
-        if (failedAgent.getStatus() == AgentSwapResponse.Status.UNSUPPORTED_REINIT) {
+        if (failedAgent.getStatus() == AgentSwapResponse.Status.UNSUPPORTED_REINIT
+                || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE
+                || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_OBJECT
+                || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_ARRAY
+                || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE
+                || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_OBJECT
+                || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_ARRAY) {
             throw DeployerException.unsupportedVariableReinit(failedAgent.getErrorMsg());
         }
 

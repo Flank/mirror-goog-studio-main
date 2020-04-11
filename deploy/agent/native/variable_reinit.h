@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "tools/base/deploy/agent/native/hotswap.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -51,11 +52,12 @@ class VariableReinitializer {
 
   // Called before code swap for each class to be swapped.
   // This is the gathering step that populate the worklist.
-  std::string GatherPreviousState(jclass clz, const proto::ClassDef& def);
+  SwapResult::Status GatherPreviousState(jclass clz, const proto::ClassDef& def,
+                                         std::string& error_msg);
 
   // Called after code swap. This initialize the variable in the work
   // list to their initial value.
-  std::string ReinitializeVariables();
+  SwapResult::Status ReinitializeVariables(std::string& error_msg);
 
  private:
   jvmtiEnv* jvmti_;

@@ -30,7 +30,18 @@
 namespace deploy {
 
 struct SwapResult {
-  enum Status { SUCCESS, CLASS_NOT_FOUND, JVMTI_ERROR, UNSUPPORTED_REINIT };
+  enum Status {
+    SUCCESS,
+    CLASS_NOT_FOUND,
+    JVMTI_ERROR,
+    UNSUPPORTED_REINIT,
+    UNSUPPORTED_REINIT_STATIC_PRIMITIVE,
+    UNSUPPORTED_REINIT_STATIC_OBJECT,
+    UNSUPPORTED_REINIT_STATIC_ARRAY,
+    UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE,
+    UNSUPPORTED_REINIT_NON_STATIC_OBJECT,
+    UNSUPPORTED_REINIT_NON_STATIC_ARRAY
+  };
   Status status;
   std::string error_details;
   std::vector<proto::JvmtiError::Details> jvmti_error_details;

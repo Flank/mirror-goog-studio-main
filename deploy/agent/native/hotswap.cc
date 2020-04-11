@@ -274,10 +274,12 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
       return result;
     }
 
-    std::string error = var_reinit.GatherPreviousState(def[i].klass, class_def);
-    if (!error.empty()) {
-      result.status = SwapResult::UNSUPPORTED_REINIT;
-      result.error_details = error;
+    std::string error_msg = "no error";
+    SwapResult::Status variableCheck =
+        var_reinit.GatherPreviousState(def[i].klass, class_def, error_msg);
+    if (variableCheck != SwapResult::SUCCESS) {
+      result.status = variableCheck;
+      result.error_details = error_msg;
       return result;
     }
 
@@ -325,7 +327,14 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
     error_num = (*extension)(jvmti_, num_modified_classes, def);
 
-    var_reinit.ReinitializeVariables();
+    std::string error_msg = "no error";
+    SwapResult::Status variableCheck =
+        var_reinit.ReinitializeVariables(error_msg);
+    if (variableCheck != SwapResult::SUCCESS) {
+      result.status = variableCheck;
+      result.error_details = error_msg;
+      return result;
+    }
 
     suspend_error = suspend.ResumeSuspendedThreads();
     if (!suspend_error.empty()) {
