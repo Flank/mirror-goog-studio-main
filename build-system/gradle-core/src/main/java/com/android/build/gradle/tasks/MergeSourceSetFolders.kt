@@ -17,6 +17,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
@@ -87,8 +88,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
     @get:Input
     @get:Optional
-    var ignoreAssets: String? = null
-        private set
+    abstract val ignoreAssetsPatterns: ListProperty<String>
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -243,9 +243,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         val assetSetList: List<AssetSet>
 
         val assetSets = assetSets.get()
+        val ignoreAssetsPatternsList = ignoreAssetsPatterns.orNull
         if (!shadersOutputDir.isPresent
             && !mlModelsOutputDir.isPresent
-            && ignoreAssets == null
+            && ignoreAssetsPatternsList.isNullOrEmpty()
             && libraryCollection == null
         ) {
             assetSetList = assetSets
@@ -291,9 +292,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             assetSetList.addAll(assetSets)
         }
 
-        if (ignoreAssets != null) {
+        if (!ignoreAssetsPatternsList.isNullOrEmpty()) {
             for (set in assetSetList) {
-                set.setIgnoredPatterns(ignoreAssets)
+                set.setIgnoredPatterns(ignoreAssetsPatternsList)
             }
         }
 
@@ -371,10 +372,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 task.mlModelsOutputDir
             )
 
-            val options = creationConfig.globalScope.extension.aaptOptions
-            if (options != null) {
-                task.ignoreAssets = options.ignoreAssets
+            if (creationConfig is ApkCreationConfig) {
+                task.ignoreAssetsPatterns.set(creationConfig.aaptOptions.ignoreAssetsPatterns)
             }
+            task.ignoreAssetsPatterns.disallowChanges()
 
             if (includeDependencies) {
                 task.libraryCollection = creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)

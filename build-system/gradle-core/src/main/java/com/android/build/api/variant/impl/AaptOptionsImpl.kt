@@ -19,13 +19,11 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
 
 class AaptOptionsImpl(
     override val ignoreAssetsPatterns: ListProperty<String>,
     override val noCompress: ListProperty<String>,
-    override val additionalParameters: ListProperty<String>,
-    override val namespaced: Property<Boolean>
+    override val additionalParameters: ListProperty<String>
 ) : AaptOptions
 
 internal fun initializeAaptOptionsFromDsl(
@@ -47,11 +45,6 @@ internal fun initializeAaptOptionsFromDsl(
             String::class.java,
             dslAaptOptions.additionalParameters,
             "additionalParameters"
-        ),
-        namespaced = variantPropertiesApiServices.propertyOf(
-            Boolean::class.java,
-            dslAaptOptions.namespaced,
-            "namespaced"
         )
     )
 }

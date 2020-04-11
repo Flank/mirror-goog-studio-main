@@ -18,7 +18,6 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
 
 /**
  * Defines a variant's aapt options.
@@ -30,7 +29,7 @@ interface AaptOptions {
      * The list of patterns describing assets to be ignored.
      *
      * See aapt's --ignore-assets flag via `aapt --help`. Note: the --ignore-assets flag accepts a
-     * single string of comma-delimited patterns, whereas this property is a list of patterns.
+     * single string of colon-delimited patterns, whereas this property is a list of patterns.
      *
      * This property will be initialized using the corresponding DSL value.
      */
@@ -53,13 +52,4 @@ interface AaptOptions {
      * This property will be initialized using the corresponding DSL value.
      */
     val additionalParameters: ListProperty<String>
-
-    /**
-     * Whether the resources in this variant are fully namespaced.
-     *
-     * This property is incubating and may change in a future release.
-     *
-     * This property will be initialized with the corresponding DSL value.
-     */
-    val namespaced: Property<Boolean>
 }

@@ -6,11 +6,13 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.utils.FileUtils
+import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.util.zip.ZipEntry
 
 /** Tests for DSL AAPT options.  */
 class AaptOptionsTest {
@@ -23,8 +25,8 @@ class AaptOptionsTest {
 
     @Before
     fun setUp() {
-        FileUtils.createFile(project.file("src/main/res/raw/ignored"), "ignored")
-        FileUtils.createFile(project.file("src/main/res/raw/kept"), "kept")
+        FileUtils.createFile(project.file("src/main/assets/ignored"), "ignored")
+        FileUtils.createFile(project.file("src/main/assets/kept"), "kept")
     }
 
     @Test
@@ -59,6 +61,24 @@ class AaptOptionsTest {
 
         // Check that ids file is not generated
         Truth.assertThat(tracesFolder.listFiles()).isEmpty()
+
+        // Test the same additional parameters specified via onVariantProperties
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android {
+                    onVariantProperties {
+                        aaptOptions.additionalParameters.addAll(
+                            ["--trace-folder", "$windowsFriendlyFilePath"]
+                        )
+                    }
+                }
+                """.trimIndent()
+        )
+
+        project.executor().run("assembleDebug")
+        assertThat(tracesFolder).exists()
+        Truth.assertThat(tracesFolder.listFiles()!!.size).isEqualTo(1)
     }
 
     @Test
@@ -74,8 +94,52 @@ class AaptOptionsTest {
             """.trimIndent()
         )
 
-        // Should execute without failure.
         project.executor().run("clean", "assembleDebug")
+
+        // Check that APK entries are uncompressed
+        project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+            // TODO (Issue 70118728) res/layout/main.xml should be uncompressed too.
+            val entry = ZipArchive.listEntries(apk.file.toFile())["classes.dex"]
+            Truth.assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
+        }
+    }
+
+    @Test
+    fun testIgnoreAssetsPatterns_dsl() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            "android.aaptOptions.ignoreAssetsPattern 'ignored'"
+        )
+
+        project.executor().run("clean", "assembleDebug")
+
+        project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+            val entryMap = ZipArchive.listEntries(apk.file.toFile())
+            Truth.assertThat(entryMap).containsKey("assets/kept")
+            Truth.assertThat(entryMap).doesNotContainKey("assets/ignored")
+        }
+    }
+
+    @Test
+    fun testIgnoreAssetsPatterns_variantApi() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android {
+                    onVariantProperties {
+                        aaptOptions.ignoreAssetsPatterns.add("ignored")
+                    }
+                }
+                """.trimIndent()
+        )
+
+        project.executor().run("clean", "assembleDebug")
+
+        project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+            val entryMap = ZipArchive.listEntries(apk.file.toFile())
+            Truth.assertThat(entryMap).containsKey("assets/kept")
+            Truth.assertThat(entryMap).doesNotContainKey("assets/ignored")
+        }
     }
 
     @Test
@@ -84,6 +148,7 @@ class AaptOptionsTest {
             "bundleDebug",
             listOf(
                 ":bundleDebugResources",
+                ":mergeDebugAssets",
                 ":mergeDebugJavaResource",
                 ":packageDebugBundle",
                 ":processDebugResources"
@@ -95,7 +160,12 @@ class AaptOptionsTest {
     fun testTasksRunAfterAaptOptionsChanges_assembleDebug() {
         testTasksRunAfterAaptOptionsChanges(
             "assembleDebug",
-            listOf(":mergeDebugJavaResource", ":packageDebug", ":processDebugResources")
+            listOf(
+                ":mergeDebugAssets",
+                ":mergeDebugJavaResource",
+                ":packageDebug",
+                ":processDebugResources"
+            )
         )
     }
 
@@ -109,10 +179,12 @@ class AaptOptionsTest {
                 android {
                     aaptOptions {
                         noCompress "foo"
+                        ignoreAssetsPattern ".foo"
                     }
 
                     onVariantProperties {
                         aaptOptions.noCompress.add("bar")
+                        aaptOptions.ignoreAssetsPatterns.add(".bar")
                     }
                 }
                 """.trimIndent()

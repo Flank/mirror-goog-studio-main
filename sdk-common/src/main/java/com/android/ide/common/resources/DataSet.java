@@ -616,8 +616,18 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         return !mFileFilter.isIgnored(file);
     }
 
+    /**
+     * Set ignored patterns using single colon-delimited string (same style as aapt)
+     *
+     * @deprecated replaced by {@link #setIgnoredPatterns(List<String>)}.
+     */
+    @Deprecated
     public void setIgnoredPatterns(String aaptStylePattern) {
         mFileFilter = new PatternBasedFileFilter(aaptStylePattern);
+    }
+
+    public void setIgnoredPatterns(List<String> ignoredPatterns) {
+        mFileFilter = new PatternBasedFileFilter(ignoredPatterns);
     }
 
     public void setAllowedFolderPrefix(@NonNull String allowedFolderPrefix) {
