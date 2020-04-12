@@ -141,30 +141,6 @@
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/RtlDetector.java"
-            line="398"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/RtlDetector.java"
-            line="431"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/RtlDetector.java"
-            line="609"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/SizeConstraint.java"
             line="142"/>
     </issue>

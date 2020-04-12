@@ -62,6 +62,8 @@ import static com.android.SdkConstants.GRAVITY_VALUE_RIGHT;
 import static com.android.SdkConstants.GRAVITY_VALUE_START;
 import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TextAlignment;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.utils.XmlUtils.getFirstSubTagByName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -93,14 +95,12 @@ import java.util.Locale;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /** Check which looks for RTL issues (right-to-left support) in layouts */
 public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
-    // TODO: Use the new merged manifest model
-
-    @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
             new Implementation(
                     RtlDetector.class,
@@ -212,6 +212,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
     private Boolean mEnabledRtlSupport;
     private boolean mUsesRtlAttributes;
+    private boolean mSpecifiesRtlMode;
 
     /** Constructs a new {@link RtlDetector} */
     public RtlDetector() {}
@@ -227,17 +228,43 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             return false;
         }
 
-        //noinspection RedundantIfStatement
         if (mEnabledRtlSupport != null && !mEnabledRtlSupport) {
             return false;
+        }
+
+        // Enabled RTL support not set? Look for it in the merged manifest
+        if (mEnabledRtlSupport == null) {
+            mEnabledRtlSupport = getMergedManifestRtlSetting(context);
+            if (mEnabledRtlSupport == null) {
+                mEnabledRtlSupport = false;
+            }
         }
 
         return true;
     }
 
+    @Nullable
+    private static Boolean getMergedManifestRtlSetting(@NonNull Context context) {
+        Project mainProject = context.getMainProject();
+        Document mergedManifest = mainProject.getMergedManifest();
+        if (mergedManifest == null) {
+            return null;
+        }
+        Element root = mergedManifest.getDocumentElement();
+        if (root == null) {
+            return null;
+        }
+        Element application = getFirstSubTagByName(root, TAG_APPLICATION);
+        if (application == null) {
+            return null;
+        }
+        String rtlSupported = application.getAttributeNS(ANDROID_URI, ATTR_SUPPORTS_RTL);
+        return !VALUE_FALSE.equals(rtlSupported);
+    }
+
     @Override
     public void afterCheckRootProject(@NonNull Context context) {
-        if (mUsesRtlAttributes && mEnabledRtlSupport == null && rtlApplies(context)) {
+        if (mUsesRtlAttributes && !mSpecifiesRtlMode && rtlApplies(context)) {
             List<File> manifestFile = context.getMainProject().getManifestFiles();
             if (!manifestFile.isEmpty()) {
                 Location location = Location.create(manifestFile.get(0));
@@ -382,6 +409,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
         assert name != null : attribute.getName();
 
         if (name.equals(ATTR_SUPPORTS_RTL)) {
+            mSpecifiesRtlMode = true;
             mEnabledRtlSupport = Boolean.valueOf(value);
             if (!attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
                 context.report(
@@ -396,9 +424,11 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             if (mEnabledRtlSupport && targetSdk < RTL_API) {
                 String message =
                         String.format(
+                                Locale.getDefault(),
                                 "You must set `android:targetSdkVersion` to at least %1$d when "
                                         + "enabling RTL support (is %2$d)",
-                                RTL_API, project.getTargetSdk());
+                                RTL_API,
+                                project.getTargetSdk());
                 context.report(ENABLED, attribute, context.getValueLocation(attribute), message);
             }
             return;
@@ -429,9 +459,11 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                     if (expectedGravity != null) {
                         String message =
                                 String.format(
+                                        Locale.getDefault(),
                                         "To support older versions than API 17 (project specifies %1$d) "
                                                 + "you must **also** specify `gravity` or `layout_gravity=\"%2$s\"`",
-                                        project.getMinSdk(), expectedGravity);
+                                        project.getMinSdk(),
+                                        expectedGravity);
 
                         LintFix fix1 =
                                 fix().set(ANDROID_URI, ATTR_GRAVITY, expectedGravity).build();
@@ -607,9 +639,13 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             String oldValue = convertNewToOld(value);
             String message =
                     String.format(
+                            Locale.getDefault(),
                             "To support older versions than API 17 (project specifies %1$d) "
                                     + "you should **also** add `%2$s:%3$s=\"%4$s\"`",
-                            project.getMinSdk(), attribute.getPrefix(), old, oldValue);
+                            project.getMinSdk(),
+                            attribute.getPrefix(),
+                            old,
+                            oldValue);
             LintFix fix = fix().set(attribute.getNamespaceURI(), old, oldValue).build();
             context.report(COMPAT, attribute, context.getNameLocation(attribute), message, fix);
         }
