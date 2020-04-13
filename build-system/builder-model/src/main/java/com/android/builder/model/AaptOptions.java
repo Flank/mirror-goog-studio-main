@@ -17,12 +17,9 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import java.util.Collection;
-import java.util.List;
 
 /**
- * Options for aapt.
+ * Options for aapt, but only those needed by the IDE.
  */
 public interface AaptOptions {
     enum Namespacing {
@@ -42,23 +39,6 @@ public interface AaptOptions {
         REQUIRED,
         // TODO: add more modes as implemented.
     }
-
-    /** Returns the value for the --ignore-assets option, or null */
-    @Nullable
-    String getIgnoreAssets();
-
-    /** Returns the list of values for the -0 (disabled compression) option, or null */
-    @Nullable
-    Collection<String> getNoCompress();
-
-    /**
-     * passes the --error-on-missing-config-entry parameter to the aapt command, by default false.
-     */
-    boolean getFailOnMissingConfigEntry();
-
-    /** Returns the list of additional parameters to pass. */
-    @NonNull
-    List<String> getAdditionalParameters();
 
     /** Returns the resource namespacing strategy for this sub-project */
     @NonNull

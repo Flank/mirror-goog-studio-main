@@ -4,17 +4,13 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2e26382e73b07ee4d0de53723ab03b0804d47d3c3e5568707327e5f6ea4afec8
+da4486cf0ed179676def52c2ab3de2a31ec954df00385dba73b89dfd4915529b
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
 com.android.builder.model.AaptOptions$Namespacing.valueOf: com.android.builder.model.AaptOptions$Namespacing (java.lang.String)
 com.android.builder.model.AaptOptions$Namespacing.values: com.android.builder.model.AaptOptions$Namespacing[] ()
-com.android.builder.model.AaptOptions.getAdditionalParameters: java.util.List<java.lang.String> ()
-com.android.builder.model.AaptOptions.getFailOnMissingConfigEntry: boolean ()
-com.android.builder.model.AaptOptions.getIgnoreAssets: java.lang.String ()
 com.android.builder.model.AaptOptions.getNamespacing: com.android.builder.model.AaptOptions$Namespacing ()
-com.android.builder.model.AaptOptions.getNoCompress: java.util.Collection<java.lang.String> ()
 com.android.builder.model.AdbOptions
 com.android.builder.model.AdbOptions.getInstallOptions: java.util.Collection<java.lang.String> ()
 com.android.builder.model.AdbOptions.getTimeOutInMs: int ()
