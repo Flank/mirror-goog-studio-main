@@ -445,7 +445,7 @@ enum class TextFormat {
                 in 'a'..'z' -> false
                 in 'A'..'Z' -> false
                 in '0'..'9' -> false
-                '-', '_', '.', '*', '+', '%', '/', '#' -> false
+                '-', '_', '.', '*', '+', '%', '/', '#', ':', '@', '!', '$', '&', '\'' -> false
                 else -> true
             }
         }
