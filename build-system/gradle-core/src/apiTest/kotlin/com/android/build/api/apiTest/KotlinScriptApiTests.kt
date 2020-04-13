@@ -16,9 +16,12 @@
  */
 
 package com.android.build.api.apiTest
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputPath
 import com.google.common.truth.Truth
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
+import java.io.File
 import kotlin.test.assertNotNull
 
 class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
@@ -155,6 +158,7 @@ expected result : "Got an APK...." message.
             Truth.assertThat(task(":app:processDebugMainManifest")).isNull()
         }
     }
+
     @Test
     fun manifestTransformerTest() {
         given {
@@ -208,6 +212,81 @@ expected result : "Got an APK...." message.
                 assertNotNull(task)
                 Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             }
+        }
+    }
+
+    @Test
+    fun workerEnabledTransformation() {
+        val outFolderForApk = File(testProjectDir.root, "${testName.methodName}/build/acme_apks")
+        given {
+            tasksToInvoke.add(":app:copyDebugApks")
+            addModule(":app") {
+                buildFile =
+                    """
+                    plugins {
+                            id("com.android.application")
+                            kotlin("android")
+                            kotlin("android.extensions")
+                    }
+                    import java.io.Serializable
+                    import javax.inject.Inject
+                    import org.gradle.api.DefaultTask
+                    import org.gradle.api.file.RegularFileProperty
+                    import org.gradle.api.tasks.InputFile
+                    import org.gradle.api.tasks.OutputFile
+                    import org.gradle.api.tasks.TaskAction
+                    import org.gradle.workers.WorkerExecutor
+                    import com.android.build.api.artifact.ArtifactTypes 
+                    import com.android.build.api.artifact.ArtifactTransformationRequest
+                    import com.android.build.api.variant.BuiltArtifact
+
+                    import com.android.build.api.artifact.ArtifactKind
+                    import com.android.build.api.artifact.ArtifactType
+                    import com.android.build.api.artifact.ArtifactType.Replaceable
+                    import com.android.build.api.artifact.ArtifactType.ContainsMany
+                    
+                    sealed class AcmeArtifactTypes<T : FileSystemLocation>(
+                        kind: ArtifactKind<T>
+                    ) : ArtifactType<T>(kind) {
+
+                        object ACME_APK: AcmeArtifactTypes<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
+                    }
+
+                    ${testingElements.getCopyApksTask()}
+
+                    android {
+                        compileSdkVersion(29)
+                        buildToolsVersion("29.0.3")
+                        defaultConfig {
+                            minSdkVersion(21)
+                            targetSdkVersion(29)
+                        }
+
+                        onVariantProperties {
+                            val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")
+
+                            val transformationRequest = operations.use(copyApksProvider) 
+                                .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
+                                .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
+
+                            copyApksProvider.configure {
+                                this.transformationRequest.set(transformationRequest)
+                            }
+                        }
+                    }
+                """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            val task = task(":app:copydebugApks")
+            assertNotNull(task)
+            Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
+                "app-debug.apk", "output.json"
+            )
         }
     }
 }

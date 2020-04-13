@@ -50,9 +50,6 @@ class StorageProviderImplTest {
     }
 
     sealed class TestTypes<T: FileSystemLocation>(kind: ArtifactKind<T>): ArtifactType<T>(kind) {
-
-        override val isPublic=false
-
         object SINGLE_FILE: TestTypes<RegularFile>(ArtifactKind.FILE), Single
         object SINGLE_DIRECTORY: TestTypes<Directory>(ArtifactKind.DIRECTORY), Single
         object MULTIPLE_FILES: TestTypes<RegularFile>(ArtifactKind.FILE), Multiple

@@ -19,6 +19,7 @@ package com.android.build.api.apiTest
 import com.google.common.truth.Truth
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
+import java.io.File
 import kotlin.test.assertNotNull
 
 class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLanguage.Groovy) {
@@ -192,6 +193,83 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                 assertNotNull(task)
                 Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             }
+        }
+    }
+
+    @Test
+    fun workerEnabledTransformation() {
+        val outFolderForApk = File(testProjectDir.root, "${testName.methodName}/build/acme_apks")
+        given {
+            tasksToInvoke.add(":app:copyDebugApks")
+            addModule(":app") {
+                buildFile =
+                    """
+                    plugins {
+                        id 'com.android.application'
+                    }
+                    import java.io.Serializable
+                    import javax.inject.Inject
+                    import org.gradle.api.DefaultTask
+                    import org.gradle.api.file.RegularFileProperty
+                    import org.gradle.api.tasks.InputFile
+                    import org.gradle.api.tasks.OutputFile
+                    import org.gradle.api.tasks.TaskAction
+                    import org.gradle.workers.WorkerExecutor
+                    import com.android.build.api.artifact.ArtifactTypes 
+                    import com.android.build.api.artifact.ArtifactTransformationRequest
+                    import com.android.build.api.variant.BuiltArtifact
+
+                    import com.android.build.api.artifact.ArtifactKind
+                    import com.android.build.api.artifact.ArtifactType
+                    import com.android.build.api.artifact.ArtifactType.Replaceable
+                    import com.android.build.api.artifact.ArtifactType.ContainsMany
+                    import com.android.build.api.artifact.ArtifactTransformationRequest
+
+                    class ACME_APK extends ArtifactType<Directory> implements Replaceable, ContainsMany {
+                            ACME_APK() {
+                                super(ArtifactKind.DIRECTORY.INSTANCE)
+                            }
+
+                    }
+
+                    ACME_APK acme_apk_instance = new ACME_APK()
+
+
+                    ${testingElements.getCopyApksTask()}
+
+                    android {
+                        compileSdkVersion(29)
+                        defaultConfig {
+                            minSdkVersion(21)
+                            targetSdkVersion(29)
+                        }
+
+                        onVariantProperties {
+                            TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
+
+                            ArtifactTransformationRequest request = 
+                                it.operations.use(copyApksProvider)
+                                .toRead(ArtifactTypes.APK.INSTANCE, { it.getApkFolder() })
+                                .andWrite(acme_apk_instance, { it.getOutFolder()}, "${outFolderForApk.absolutePath}")
+
+                            copyApksProvider.configure {
+                                it.transformationRequest.set(request)
+                            }
+                        }
+                    } 
+                """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            val task = task(":app:copydebugApks")
+            assertNotNull(task)
+            Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
+                "app-debug.apk", "output.json"
+            )
         }
     }
 }

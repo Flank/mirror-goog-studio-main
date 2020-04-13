@@ -121,6 +121,10 @@ plugins {
     kotlin("jvm") version "$kotlinVersion"
 }
 ${addRepositories(repositories)}
+
+dependencies {
+    implementation("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+}
 """
 
             private fun addRepositories(repositories: List<String>) =

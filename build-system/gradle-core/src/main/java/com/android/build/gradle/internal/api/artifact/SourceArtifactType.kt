@@ -24,8 +24,6 @@ import org.gradle.api.file.Directory
 @Incubating
 sealed class SourceArtifactType: ArtifactType<Directory>(
     DIRECTORY) {
-    override val isPublic: Boolean
-        get() = true
 
     object JAVA_SOURCES : SourceArtifactType()
     object JAVA_RESOURCES : SourceArtifactType()

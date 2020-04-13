@@ -91,6 +91,39 @@ class TestingElements(val language: ScriptingLanguage) {
         )
     }
 
+    fun addCopyApksTask(builder: VariantApiBaseTest.GivenBuilder) {
+        builder.addSource(
+            constructFilePath("CopyApksTask"),
+            """
+
+                import java.io.Serializable
+                import java.io.File
+                import javax.inject.Inject
+                import org.gradle.api.DefaultTask
+                import org.gradle.api.file.RegularFileProperty
+                import org.gradle.api.file.Directory
+                import org.gradle.api.file.DirectoryProperty
+                import org.gradle.api.tasks.InputFiles
+                import org.gradle.api.tasks.Internal
+                import org.gradle.api.tasks.OutputDirectory
+                import org.gradle.api.tasks.TaskAction
+                import org.gradle.api.provider.Property
+                import org.gradle.workers.WorkParameters
+                import org.gradle.workers.WorkerExecutor
+                import org.gradle.workers.WorkAction
+                import com.android.build.api.artifact.ArtifactTypes
+                import com.android.build.api.artifact.ArtifactKind
+                import com.android.build.api.artifact.ArtifactType
+                import com.android.build.api.artifact.ArtifactType.Replaceable
+                import com.android.build.api.artifact.ArtifactType.ContainsMany
+                import com.android.build.api.artifact.ArtifactTransformationRequest
+                import com.android.build.api.variant.BuiltArtifact
+
+                ${getCopyApksTask()}
+            """
+        )
+    }
+
     fun addManifest(builder: VariantApiBaseTest.GivenBuilder) {
         builder.manifest =
                 // language=xml
@@ -461,4 +494,129 @@ fun getManifestProducerTask() =
                     }
                     """.trimIndent()
             }
+
+    fun getCopyApksTask()=
+        when(language) {
+            ScriptingLanguage.Kotlin ->
+                """
+                interface WorkItemParameters: WorkParameters, Serializable {
+                    val inputApkFile: RegularFileProperty
+                    val outputApkFile: RegularFileProperty
+                }
+
+                abstract class WorkItem @Inject constructor(private val workItemParameters: WorkItemParameters)
+                    : WorkAction<WorkItemParameters> {
+                    override fun execute() {
+                        workItemParameters.inputApkFile.asFile.get().copyTo(
+                            workItemParameters.outputApkFile.get().asFile)
+                    } 
+                }
+                abstract class CopyApksTask @Inject constructor(val workers: WorkerExecutor): DefaultTask() {
+
+                    @get:InputFiles
+                    abstract val apkFolder: DirectoryProperty
+                    
+                    @get:OutputDirectory
+                    abstract val outFolder: DirectoryProperty
+
+                    @get:Internal
+                    abstract val transformationRequest: Property<ArtifactTransformationRequest>
+
+                    @TaskAction
+                    fun taskAction() {
+
+                      transformationRequest.get().submit(
+                         this, 
+                         workers.noIsolation(),
+                         WorkItem::class.java,
+                         WorkItemParameters::class.java) {
+                             builtArtifact: BuiltArtifact, 
+                             outputLocation: Directory, 
+                             param: WorkItemParameters -> 
+                                val inputFile = File(builtArtifact.outputFile)
+                                param.inputApkFile.set(inputFile)
+                                param.outputApkFile.set(File(outputLocation.asFile, inputFile.name))
+                                param.outputApkFile.get().asFile
+                         }
+                    }
+                }
+                """.trimIndent()
+            ScriptingLanguage.Groovy ->
+                // language = groovy
+                """
+                import org.gradle.api.DefaultTask;
+                import org.gradle.api.file.DirectoryProperty;
+                import org.gradle.api.tasks.InputFiles;
+                import org.gradle.api.tasks.TaskAction;
+                import java.io.ByteArrayOutputStream;
+                import java.io.PrintStream;
+
+                import com.android.build.api.variant.BuiltArtifactsLoader;
+                import com.android.build.api.artifact.ArtifactTypes;
+                import com.android.build.api.variant.BuiltArtifacts;
+                import org.gradle.api.provider.Property;
+                import org.gradle.api.tasks.Internal;
+                import java.io.File;
+                import java.nio.file.Files;
+
+                interface WorkItemParameters extends WorkParameters, Serializable {
+                    RegularFileProperty getInputApkFile()
+                    RegularFileProperty getOutputApkFile()
+                }
+
+                abstract class WorkItem implements WorkAction<WorkItemParameters> {
+                    
+                    WorkItemParameters workItemParameters
+
+                    @Inject
+                    WorkItem(WorkItemParameters parameters) {
+                       this.workItemParameters = parameters
+                    }
+
+                    void execute() {
+                        Files.copy(
+                            workItemParameters.getInputApkFile().getAsFile().get().toPath(),
+                            workItemParameters.getOutputApkFile().get().getAsFile().toPath())
+                    } 
+                }
+
+                abstract class CopyApksTask extends DefaultTask {
+
+                    WorkerExecutor workers
+
+                    @Inject
+                    CopyApksTask(WorkerExecutor workerExecutor) {
+                        this.workers = workerExecutor
+                    }
+
+                    @InputFiles
+                    abstract DirectoryProperty getApkFolder()
+
+                    @OutputDirectory
+                    abstract DirectoryProperty getOutFolder()
+                    
+                    @Internal
+                    abstract Property<ArtifactTransformationRequest> getTransformationRequest()
+
+                    @TaskAction
+                    void taskAction() {
+                    
+                         transformationRequest.get().submit(
+                             this, 
+                             workers.noIsolation(),
+                             WorkItem,
+                             WorkItemParameters, {
+                                 BuiltArtifact builtArtifact, 
+                                 Directory outputLocation, 
+                                 WorkItemParameters param -> 
+                                    File inputFile = new File(builtArtifact.outputFile)
+                                    param.getInputApkFile().set(inputFile)
+                                    param.getOutputApkFile().set(new File(outputLocation.asFile, inputFile.name))
+                                    param.getOutputApkFile().get().getAsFile()
+                             }
+                        )
+                    }
+                }
+                """.trimIndent()
+        }
 }

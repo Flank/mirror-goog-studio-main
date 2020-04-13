@@ -180,6 +180,8 @@ apiTest {
     // are present in prebuilts.
     environment("KOTLIN_PLUGIN", libs.kotlin_gradle_plugin)
 
+    maxParallelForks = Runtime.runtime.availableProcessors()
+
     environment("CUSTOM_REPO",
             new File(rootProject.ext.androidHostOut, "repo").toString()
                     + File.pathSeparator

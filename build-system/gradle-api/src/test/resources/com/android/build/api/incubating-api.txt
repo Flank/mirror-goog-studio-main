@@ -30,19 +30,16 @@ com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifa
 com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
-com.android.build.api.artifact.ArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactTypes extends com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable
+com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$ContainsMany
 com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$Transformable
 com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactTypes.getFileSystemLocationName: java.lang.String ()
-com.android.build.api.artifact.ArtifactTypes.isPublic: boolean ()
 com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH extends com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.artifact.BuildArtifactType.isPublic: boolean ()
 com.android.build.api.artifact.MultipleTransformRequest
 com.android.build.api.artifact.MultipleTransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.Operations

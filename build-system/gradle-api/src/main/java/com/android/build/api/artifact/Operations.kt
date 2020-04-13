@@ -77,7 +77,7 @@ interface Operations {
      *     }
      * </pre>
      *
-     * and an ArtifactType defined as follow :
+     * and an ArtifactType defined as follows :
      *
      * <pre
      *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
@@ -125,7 +125,7 @@ interface Operations {
      *     }
      * </pre>
      *
-     * and an ArtifactType defined as follow :
+     * and an ArtifactType defined as follows :
      *
      * <pre
      *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
@@ -142,7 +142,7 @@ interface Operations {
      *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
      * </pre>
      *
-     * @return a instance of [TransformRequest] that can be used to specify the artifact type.
+     * @return an instance of [TransformRequest] that can be used to specify the artifact type.
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> transform(
         taskProvider: TaskProvider<TASK>,
@@ -180,7 +180,7 @@ interface Operations {
      *     }
      * </pre>
      *
-     * and an ArtifactType defined as follow :
+     * and an ArtifactType defined as follows :
      *
      * <pre
      *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
@@ -197,7 +197,7 @@ interface Operations {
      *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
-     * @return a instance of [TransformRequest] that can be used to specify the artifact type.
+     * @return an instance of [TransformRequest] that can be used to specify the artifact type.
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> transformAll(
         taskProvider: TaskProvider<TASK>,
@@ -244,7 +244,7 @@ interface Operations {
      *     }
      * </pre>
      *
-     * and an ArtifactType defined as follow :
+     * and an ArtifactType defined as follows :
      *
      * <pre
      *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {

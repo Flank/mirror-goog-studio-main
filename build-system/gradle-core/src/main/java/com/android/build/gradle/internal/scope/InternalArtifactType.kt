@@ -40,9 +40,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     private val folderName: String? = null
 ) : SingleArtifactType<T>(kind) {
 
-    override val isPublic: Boolean
-        get() = false
-
     // --- classes ---
     // These are direct task outputs. If you are looking for all the classes of a
     // module: InternalArtifactType<RegularFile>(FILE), Replaceable use AnchorOutputType.ALL_CLASSES
