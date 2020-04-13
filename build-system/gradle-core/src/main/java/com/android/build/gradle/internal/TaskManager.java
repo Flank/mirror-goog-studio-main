@@ -105,6 +105,7 @@ import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
+import com.android.build.gradle.internal.tasks.CompressAssetsTask;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DesugarTask;
@@ -1790,6 +1791,8 @@ public abstract class TaskManager<
 
         // Add a task to merge the assets folders
         createMergeAssetsTask(androidTestProperties);
+
+        taskFactory.register(new CompressAssetsTask.CreationAction(androidTestProperties));
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(androidTestProperties);

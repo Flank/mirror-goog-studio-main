@@ -75,6 +75,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:checkDebugDuplicateClasses",
                     ":app:checkDebugLibraries",
                     ":app:compileDebugJavaWithJavac",
+                    ":app:compressDebugAssets",
                     ":app:createDebugCompatibleScreenManifests",
                     ":app:dexBuilderDebug",
                     ":app:extractDeepLinksDebug",
@@ -98,6 +99,7 @@ class DynamicFeaturesCacheabilityTest {
 
                     ":feature1:checkDebugDuplicateClasses",
                     ":feature1:compileDebugJavaWithJavac",
+                    ":feature1:compressDebugAssets",
                     ":feature1:createDebugCompatibleScreenManifests",
                     ":feature1:dexBuilderDebug",
                     ":feature1:extractDeepLinksDebug",
@@ -120,6 +122,7 @@ class DynamicFeaturesCacheabilityTest {
 
                     ":feature2:checkDebugDuplicateClasses",
                     ":feature2:compileDebugJavaWithJavac",
+                    ":feature2:compressDebugAssets",
                     ":feature2:createDebugCompatibleScreenManifests",
                     ":feature2:dexBuilderDebug",
                     ":feature2:extractDeepLinksDebug",

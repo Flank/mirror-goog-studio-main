@@ -232,6 +232,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     object LIBRARY_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object MERGED_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // compressed assets, ready to be packaged in the APK.
+    object COMPRESSED_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // AIDL headers "packaged" by libraries for consumers.
     object AIDL_PARCELABLE: InternalArtifactType<Directory>(DIRECTORY), Replaceable

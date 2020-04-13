@@ -20,7 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPRESSED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.SHRUNK_JAVA_RES;
 
@@ -665,7 +665,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             @NonNull BuiltArtifactsImpl manifestOutputs,
             @NonNull Map<RelativeFile, FileStatus> changedDex,
             @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
-            @NonNull Map<RelativeFile, FileStatus> changedAssets,
+            @NonNull Collection<SerializableChange> changedAssets,
             @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull Map<RelativeFile, FileStatus> changedNLibs,
             @NonNull SplitterParams params)
@@ -857,10 +857,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 Map<RelativeFile, FileStatus> changedJavaResources =
                         getChangedJavaResources(params, cacheKeyMap, cache, cacheUpdates);
 
-                Map<RelativeFile, FileStatus> changedAssets =
-                        IncrementalChanges.classpathToRelativeFileSet(
-                                params.getAssetsFiles().get(), cache, cacheUpdates);
-
                 final Map<RelativeFile, FileStatus> changedAndroidResources;
                 if (params.getAndroidResourcesChanged().get()) {
                     changedAndroidResources =
@@ -887,7 +883,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         manifestOutputs,
                         changedDexFiles,
                         changedJavaResources,
-                        changedAssets,
+                        params.getAssetsFiles().get().getChanges(),
                         changedAndroidResources,
                         changedJniLibs,
                         params);
@@ -1024,7 +1020,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getAssets()
-                    .set(creationConfig.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
+                    .set(creationConfig.getArtifacts().getFinalProduct(COMPRESSED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()

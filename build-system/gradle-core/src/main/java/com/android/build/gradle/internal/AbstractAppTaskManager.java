@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
+import com.android.build.gradle.internal.tasks.CompressAssetsTask;
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
@@ -126,6 +127,8 @@ public abstract class AbstractAppTaskManager<
 
         // Add a task to merge the asset folders
         createMergeAssetsTask(appVariantProperties);
+
+        taskFactory.register(new CompressAssetsTask.CreationAction(apkCreationConfig));
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(appVariantProperties);
