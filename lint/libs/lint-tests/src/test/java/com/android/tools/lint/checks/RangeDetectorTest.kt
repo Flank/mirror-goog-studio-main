@@ -987,4 +987,30 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "                                ~~~\n" +
                     "4 errors, 0 warnings")
     }
+
+    fun testFlow() {
+        // Regression test for
+        // https://issuetracker.google.com/37124951
+        // Make sure that in the code snippet below, the flow analysis
+        // doesn't look beyond the previous assignment to alpha
+        // when trying to figure out the range
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.graphics.drawable.Drawable;
+                public class AlphaTest {
+                    void test(Drawable d) {
+                        int alpha = -1;
+                        long l = System.currentTimeMillis();
+                        if (l != 0) {
+                            alpha = (int) (l % 256);
+                            d.setAlpha(alpha);
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }
