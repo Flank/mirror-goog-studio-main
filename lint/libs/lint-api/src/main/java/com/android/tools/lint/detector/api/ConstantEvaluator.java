@@ -266,6 +266,13 @@ public class ConstantEvaluator {
                 PsiVariable variable = (PsiVariable) resolved;
                 Object value = UastLintUtils.findLastValue(variable, node, this);
 
+                // Special return value: the variable *was* assigned something but we don't know
+                // the value. In that case we should not continue to look at the initializer
+                // since the initial value is no longer relevant.
+                if (value == LastAssignmentFinder.LAST_ASSIGNMENT_VALUE_UNKNOWN) {
+                    return null;
+                }
+
                 if (value != null) {
                     if (surroundedByVariableCheck(node, variable)) {
                         return null;
@@ -923,6 +930,13 @@ public class ConstantEvaluator {
     }
 
     public static class LastAssignmentFinder extends AbstractUastVisitor {
+        /**
+         * Special marker value from [findLastValue] to indicate that a node was assigned to, but
+         * the value is unknown
+         */
+        @SuppressWarnings("StringOperationCanBeSimplified") // prevent interning; no aliases
+        public static final Object LAST_ASSIGNMENT_VALUE_UNKNOWN = new String("<unknown>");
+
         private final PsiVariable mVariable;
         private final UElement mEndAt;
 
@@ -961,7 +975,7 @@ public class ConstantEvaluator {
         }
 
         @Override
-        public boolean visitElement(UElement node) {
+        public boolean visitElement(@NonNull UElement node) {
             if (elementHasLevel(node)) {
                 mCurrentLevel++;
             }
@@ -972,7 +986,7 @@ public class ConstantEvaluator {
         }
 
         @Override
-        public boolean visitVariable(UVariable node) {
+        public boolean visitVariable(@NonNull UVariable node) {
             if (mVariableLevel < 0 && node.getPsi().isEquivalentTo(mVariable)) {
                 mVariableLevel = mCurrentLevel;
             }
@@ -981,7 +995,7 @@ public class ConstantEvaluator {
         }
 
         @Override
-        public void afterVisitBinaryExpression(UBinaryExpression node) {
+        public void afterVisitBinaryExpression(@NonNull UBinaryExpression node) {
             if (!mDone
                     && node.getOperator() instanceof UastBinaryOperator.AssignOperator
                     && mVariableLevel >= 0) {
@@ -1020,7 +1034,7 @@ public class ConstantEvaluator {
         }
 
         @Override
-        public void afterVisitElement(UElement node) {
+        public void afterVisitElement(@NonNull UElement node) {
             if (elementHasLevel(node)) {
                 mCurrentLevel--;
             }
