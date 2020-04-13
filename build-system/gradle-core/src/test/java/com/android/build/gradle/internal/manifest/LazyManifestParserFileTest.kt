@@ -98,9 +98,9 @@ internal class LazyManifestParserFileTest : LazyManifestParserBaseTest() {
                         sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
                         sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
                         java.lang.reflect.Method.invoke(Method.java:498)
-                        org.junit.runners.model.FrameworkMethod${'$'}1.runReflectiveCall(FrameworkMethod.java:50)
+                        org.junit.runners.model.FrameworkMethod${'$'}1.runReflectiveCall(FrameworkMethod.java:59)
                         org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-                        org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)""".trimIndent()
+                        org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)""".trimIndent()
             }
         }
     }

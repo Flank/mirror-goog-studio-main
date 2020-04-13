@@ -843,7 +843,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "junit_junit",
-    export_artifact = "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/junit/junit/4.13:jar",
     visibility = ["//visibility:public"],
     exports = [":org.hamcrest_hamcrest-core"],
 )
