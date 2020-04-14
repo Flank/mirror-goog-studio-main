@@ -2024,7 +2024,6 @@ public class ManifestMerger2SmallTest {
      * <p>For provider in application xml eleemnt, an "android:name" attribute is used as the key
      * for merging. For provider in queries xml element, there are no key.
      *
-     * @throws Exception
      */
     @Test
     public void testProviderTags() throws Exception {
@@ -2058,9 +2057,9 @@ public class ManifestMerger2SmallTest {
                         + "package=\"com.example.lib1\">\n"
                         + "\n"
                         + "  <queries>\n"
-                        + "    <provider android:authority=\"some.authority\" />\n"
+                        + "      <provider android:authority=\"some.authority\" />\n"
                         + "      <intent>\n"
-                        + "          <action android:name=\"android.intent.action.ANOTHER\" />\n"
+                        + "          <data android:mimeType=\"text/plain\" />\n"
                         + "      </intent>\n"
                         + "  </queries>\n"
                         + "\n"
@@ -2104,6 +2103,12 @@ public class ManifestMerger2SmallTest {
                                     .getNamedItem("android:authority")
                                     .getNodeValue())
                     .isEqualTo("some.authority");
+
+            // ensure all intent are merged into a single one.
+            NodeList queriesIntents =
+                    ((Element) mergedQueries.item(0)).getElementsByTagName(SdkConstants.TAG_INTENT);
+            assertThat(queriesIntents.getLength()).isEqualTo(1);
+
             NodeList applications =
                     mergedDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
             assertThat(applications.getLength()).isEqualTo(1);

@@ -268,11 +268,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
     enum NodeTypes {
 
         /**
-         * Action (contained in intent-filter)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/action-element.html>
-         *     Action Xml documentation</a>}
+         * Action (contained in intent-filter, intent) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/action-element.html>Action Xml
+         * documentation</a>}
          */
         ACTION(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
@@ -335,11 +334,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                                 })),
 
         /**
-         * Category (contained in intent-filter)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/category-element.html>
-         *     Category Xml documentation</a>}
+         * Category (contained in intent-filter, intent) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/category-element.html>Category
+         * Xml documentation</a>}
          */
         CATEGORY(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
@@ -353,11 +351,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
         COMPATIBLE_SCREENS(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
-         * Data (contained in intent-filter)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/data-element.html>
-         *     Category Xml documentation</a>}
+         * Data (contained in intent-filter, intent) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/data-element.html>Category Xml
+         * documentation</a>}
          */
         DATA(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
@@ -388,6 +385,14 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                         .setMergingPolicy(AttributeModel.NO_MERGING_POLICY),
                 AttributeModel.newModel("label").setMergingPolicy(AttributeModel.NO_MERGING_POLICY)
         ),
+
+        /**
+         * Intent (contained in queries) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/intent.html>Intent Xml
+         * documentation</a>}
+         */
+        INTENT(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
          * Intent-filter (contained in activity, activity-alias, service, receiver) <br>
