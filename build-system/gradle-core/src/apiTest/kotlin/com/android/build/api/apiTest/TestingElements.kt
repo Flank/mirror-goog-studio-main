@@ -28,12 +28,12 @@ class TestingElements(val language: ScriptingLanguage) {
         builder.addSource(
             constructFilePath("GitVersion"),
             """
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.RegularFileProperty
-                import org.gradle.api.tasks.OutputFile
-                import org.gradle.api.tasks.TaskAction
-                ${getGitVersionTask()}
-            """.trimIndent()
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
+            ${getGitVersionTask()}
+            """
         )
     }
 
@@ -47,7 +47,7 @@ class TestingElements(val language: ScriptingLanguage) {
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             ${getManifestProducerTask()}
-            """.trimIndent()
+            """
 
         )
     }
@@ -77,17 +77,17 @@ class TestingElements(val language: ScriptingLanguage) {
         builder.addSource(
             constructFilePath("DisplayApksTask"),
             """
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.DirectoryProperty
-                import org.gradle.api.tasks.InputFiles
-                import org.gradle.api.tasks.TaskAction
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.DirectoryProperty
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.TaskAction
 
-                import com.android.build.api.variant.BuiltArtifactsLoader
-                import com.android.build.api.artifact.ArtifactTypes
-                import org.gradle.api.provider.Property
-                import org.gradle.api.tasks.Internal
-                ${getDisplayApksTask()}
-            """.trimIndent()
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import com.android.build.api.artifact.ArtifactTypes
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+            ${getDisplayApksTask()}
+            """
         )
     }
 
@@ -95,31 +95,30 @@ class TestingElements(val language: ScriptingLanguage) {
         builder.addSource(
             constructFilePath("CopyApksTask"),
             """
+            import java.io.Serializable
+            import java.io.File
+            import javax.inject.Inject
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.file.Directory
+            import org.gradle.api.file.DirectoryProperty
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.Internal
+            import org.gradle.api.tasks.OutputDirectory
+            import org.gradle.api.tasks.TaskAction
+            import org.gradle.api.provider.Property
+            import org.gradle.workers.WorkParameters
+            import org.gradle.workers.WorkerExecutor
+            import org.gradle.workers.WorkAction
+            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactKind
+            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.ArtifactType.Replaceable
+            import com.android.build.api.artifact.ArtifactType.ContainsMany
+            import com.android.build.api.artifact.ArtifactTransformationRequest
+            import com.android.build.api.variant.BuiltArtifact
 
-                import java.io.Serializable
-                import java.io.File
-                import javax.inject.Inject
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.RegularFileProperty
-                import org.gradle.api.file.Directory
-                import org.gradle.api.file.DirectoryProperty
-                import org.gradle.api.tasks.InputFiles
-                import org.gradle.api.tasks.Internal
-                import org.gradle.api.tasks.OutputDirectory
-                import org.gradle.api.tasks.TaskAction
-                import org.gradle.api.provider.Property
-                import org.gradle.workers.WorkParameters
-                import org.gradle.workers.WorkerExecutor
-                import org.gradle.workers.WorkAction
-                import com.android.build.api.artifact.ArtifactTypes
-                import com.android.build.api.artifact.ArtifactKind
-                import com.android.build.api.artifact.ArtifactType
-                import com.android.build.api.artifact.ArtifactType.Replaceable
-                import com.android.build.api.artifact.ArtifactType.ContainsMany
-                import com.android.build.api.artifact.ArtifactTransformationRequest
-                import com.android.build.api.variant.BuiltArtifact
-
-                ${getCopyApksTask()}
+            ${getCopyApksTask()}
             """
         )
     }
@@ -128,18 +127,18 @@ class TestingElements(val language: ScriptingLanguage) {
         builder.manifest =
                 // language=xml
             """<?xml version="1.0" encoding="utf-8"?>
-                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                        package="com.android.build.example.minimal">
-                        <application android:label="Minimal">
-                            <activity android:name="MainActivity">
-                                <intent-filter>
-                                    <action android:name="android.intent.action.MAIN" />
-                                    <category android:name="android.intent.category.LAUNCHER" />
-                                </intent-filter>
-                            </activity>
-                        </application>
-                    </manifest>
-                    """.trimIndent()
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.build.example.minimal">
+                    <application android:label="Minimal">
+                        <activity android:name="MainActivity">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
+            """.trimIndent()
     }
 
     fun addMainActivity(builder: VariantApiBaseTest.GivenBuilder) =
@@ -148,46 +147,45 @@ class TestingElements(val language: ScriptingLanguage) {
                 builder.addSource(
                     constructFilePath("com/android/build/example/minimal/MainActivity.kt"),
                     //language = kotlin
-                    """
-                        package com.android.build.example.minimal
+            """
+            package com.android.build.example.minimal
 
-                        import android.app.Activity
-                        import android.os.Bundle
-                        import android.widget.TextView
+            import android.app.Activity
+            import android.os.Bundle
+            import android.widget.TextView
 
-                        class MainActivity : Activity() {
-                            override fun onCreate(savedInstanceState: Bundle?) {
-                                super.onCreate(savedInstanceState)
-                                val label = TextView(this)
-                                label.setText("Hello world!")
-                                setContentView(label)
-                            }
-                        }
-                        """.trimIndent()
-                )
+            class MainActivity : Activity() {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    val label = TextView(this)
+                    label.setText("Hello world!")
+                    setContentView(label)
+                }
+            }
+            """)
             ScriptingLanguage.Groovy ->
                 builder.addSource(
                     constructFilePath("com/android/build/example/minimal/MainActivity"),
-                    """
-                    package com.android.build.example.minimal;
+            """
+            package com.android.build.example.minimal;
 
-                    import android.app.Activity;
-                    import android.os.Bundle;
-                    import android.widget.TextView;
+            import android.app.Activity;
+            import android.os.Bundle;
+            import android.widget.TextView;
 
-                    public class MainActivity extends Activity
-                    {
-                        @Override
-                        public void onCreate(Bundle savedInstanceState) {
-                            super.onCreate(savedInstanceState);
+            public class MainActivity extends Activity
+            {
+                @Override
+                public void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
 
-                            TextView label = new TextView(this);
-                            label.setText("Hello world!");
+                    TextView label = new TextView(this);
+                    label.setText("Hello world!");
 
-                            setContentView(label);
-                        }
-                    }
-                    """.trimIndent())
+                    setContentView(label);
+                }
+            }
+            """)
     }
 
     private fun constructFilePath(relativePath: String) =
@@ -202,75 +200,116 @@ class TestingElements(val language: ScriptingLanguage) {
         when(language) {
             ScriptingLanguage.Kotlin ->
                 // language=kotlin
-                """
-                    abstract class GitVersionTask: DefaultTask() {
+            """
+            abstract class GitVersionTask: DefaultTask() {
 
-                    @get:OutputFile
-                    abstract val gitVersionOutputFile: RegularFileProperty
-
-                    @ExperimentalStdlibApi
-                    @TaskAction
-                    fun taskAction() {
-
-                        val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
-                        val error = firstProcess.errorStream.readBytes().decodeToString()
-                        if (error.isNotBlank()) {
-                            System.err.println("Git error : ${'$'}error")
-                        }
-                        var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
-                        if (gitVersion.isEmpty()) {
-                            gitVersion="12"
-                        }
-                        gitVersionOutputFile.get().asFile.writeText(gitVersion)
+                @get:OutputFile
+                abstract val gitVersionOutputFile: RegularFileProperty
+    
+                @ExperimentalStdlibApi
+                @TaskAction
+                fun taskAction() {
+    
+                    val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
+                    val error = firstProcess.errorStream.readBytes().decodeToString()
+                    if (error.isNotBlank()) {
+                        System.err.println("Git error : ${'$'}error")
                     }
+                    var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
+                    if (gitVersion.isEmpty()) {
+                        gitVersion="12"
+                    }
+                    gitVersionOutputFile.get().asFile.writeText(gitVersion)
                 }
-                """.trimIndent()
+            }
+            """
             ScriptingLanguage.Groovy ->
                 // language=groovy
-                """
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.RegularFileProperty
-                import org.gradle.api.tasks.OutputFile
-                import org.gradle.api.tasks.TaskAction
+            """
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
 
-                abstract class GitVersionTask extends DefaultTask {
+            abstract class GitVersionTask extends DefaultTask {
 
-                    @OutputFile
-                    abstract RegularFileProperty getGitVersionOutputFile()
+                @OutputFile
+                abstract RegularFileProperty getGitVersionOutputFile()
 
-                    @TaskAction
-                    void taskAction() {
-                        String gitVersion = "git rev-parse --short HEAD".execute().text.trim()
-                        if (gitVersion.isEmpty()) {
-                            gitVersion="12"
-                        }
-                        getGitVersionOutputFile().get().asFile.write(gitVersion)
+                @TaskAction
+                void taskAction() {
+                    String gitVersion = "git rev-parse --short HEAD".execute().text.trim()
+                    if (gitVersion.isEmpty()) {
+                        gitVersion="12"
                     }
+                    getGitVersionOutputFile().get().asFile.write(gitVersion)
                 }
-                """.trimIndent()
+            }
+            """
         }
 
 fun getManifestProducerTask() =
         when(language) {
             ScriptingLanguage.Kotlin ->
                 // language=kotlin
-                """
-                abstract class ManifestProducerTask: DefaultTask() {
-                    @get:InputFile
-                    abstract val gitInfoFile: RegularFileProperty
+            """
+            abstract class ManifestProducerTask: DefaultTask() {
+                @get:InputFile
+                abstract val gitInfoFile: RegularFileProperty
 
-                    @get:OutputFile
-                    abstract val outputManifest: RegularFileProperty
+                @get:OutputFile
+                abstract val outputManifest: RegularFileProperty
 
-                    @TaskAction
-                    fun taskAction() {
+                @TaskAction
+                fun taskAction() {
 
-                        val gitVersion = gitInfoFile.get().asFile.readText()
-                        val manifest = ""${'"'}<?xml version="1.0" encoding="utf-8"?>
+                    val gitVersion = gitInfoFile.get().asFile.readText()
+                    val manifest = ""${'"'}<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.build.example.minimal"
+                    android:versionName="${'$'}{gitVersion}"
+                    android:versionCode="1" >
+                    <application android:label="Minimal">
+                        <activity android:name="MainActivity">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
+                    ""${'"'}
+                    println("Writes to " + outputManifest.get().asFile.absolutePath)
+                    outputManifest.get().asFile.writeText(manifest)
+                }
+            }
+            """
+            ScriptingLanguage.Groovy ->
+                // language=kotlin
+            """
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
+            
+            abstract class ManifestProducerTask extends DefaultTask {
+                @InputFile
+                abstract RegularFileProperty getGitInfoFile()
+            
+                @OutputFile
+                abstract RegularFileProperty getOutputManifest()
+
+                @TaskAction
+                void taskAction() {
+            
+                    String gitVersion = new String(getGitInfoFile().get().asFile.readBytes())
+                    String manifest = ""${'"'}<?xml version=\"1.0\" encoding=\"utf-8\"?>
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="com.android.build.example.minimal"
                         android:versionName="${'$'}{gitVersion}"
                         android:versionCode="1" >
+
                         <application android:label="Minimal">
                             <activity android:name="MainActivity">
                                 <intent-filter>
@@ -281,151 +320,110 @@ fun getManifestProducerTask() =
                         </application>
                     </manifest>
                         ""${'"'}
-                        println("Writes to " + outputManifest.get().asFile.absolutePath)
-                        outputManifest.get().asFile.writeText(manifest)
-                    }
+                    println("Writes to " + getOutputManifest().get().getAsFile().getAbsolutePath())
+                    getOutputManifest().get().getAsFile().write(manifest)
                 }
-                """.trimIndent()
-            ScriptingLanguage.Groovy ->
-                // language=kotlin
-                """
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.RegularFileProperty
-                import org.gradle.api.tasks.InputFile
-                import org.gradle.api.tasks.OutputFile
-                import org.gradle.api.tasks.TaskAction
-                
-                abstract class ManifestProducerTask extends DefaultTask {
-                    @InputFile
-                    abstract RegularFileProperty getGitInfoFile()
-                
-                    @OutputFile
-                    abstract RegularFileProperty getOutputManifest()
-                
-                    @TaskAction
-                    void taskAction() {
-                
-                        String gitVersion = new String(getGitInfoFile().get().asFile.readBytes())
-                        String manifest = ""${'"'}<?xml version=\"1.0\" encoding=\"utf-8\"?>
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            package="com.android.build.example.minimal"
-                            android:versionName="${'$'}{gitVersion}"
-                            android:versionCode="1" >
-                        
-                            <application android:label="Minimal">
-                                <activity android:name="MainActivity">
-                                    <intent-filter>
-                                        <action android:name="android.intent.action.MAIN" />
-                                        <category android:name="android.intent.category.LAUNCHER" />
-                                    </intent-filter>
-                                </activity>
-                            </application>
-                        </manifest>
-                            ""${'"'}
-                        println("Writes to " + getOutputManifest().get().getAsFile().getAbsolutePath())
-                        getOutputManifest().get().getAsFile().write(manifest)
-                    }
-                }                    
-                """.trimIndent()
+            }
+            """
         }
 
     fun getManifestTransformerTask() =
         when(language) {
             ScriptingLanguage.Kotlin ->
-                """
-                abstract class ManifestTransformerTask: DefaultTask() {
+            """
+            abstract class ManifestTransformerTask: DefaultTask() {
 
-                    @get:InputFile
-                    abstract val gitInfoFile: RegularFileProperty
+                @get:InputFile
+                abstract val gitInfoFile: RegularFileProperty
 
-                    @get:InputFile
-                    abstract val mergedManifest: RegularFileProperty
+                @get:InputFile
+                abstract val mergedManifest: RegularFileProperty
 
-                    @get:OutputFile
-                    abstract val updatedManifest: RegularFileProperty
+                @get:OutputFile
+                abstract val updatedManifest: RegularFileProperty
 
-                    @TaskAction
-                    fun taskAction() {
+                @TaskAction
+                fun taskAction() {
 
-                        val gitVersion = gitInfoFile.get().asFile.readText()
-                        var manifest = mergedManifest.asFile.get().readText()
-                        manifest = manifest.replace("android:versionCode=\"1\"", "android:versionCode=\""+ gitVersion +"\"")
-                        System.out.println("Writes to " + updatedManifest.get().asFile.getAbsolutePath())
-                        updatedManifest.get().asFile.writeText(manifest)
-                    }
+                    val gitVersion = gitInfoFile.get().asFile.readText()
+                    var manifest = mergedManifest.asFile.get().readText()
+                    manifest = manifest.replace("android:versionCode=\"1\"", "android:versionCode=\""+ gitVersion +"\"")
+                    System.out.println("Writes to " + updatedManifest.get().asFile.getAbsolutePath())
+                    updatedManifest.get().asFile.writeText(manifest)
                 }
-                """.trimIndent()
+            }
+            """
             ScriptingLanguage.Groovy ->
-                """
-                abstract class ManifestTransformerTask extends DefaultTask {
+            """
+            abstract class ManifestTransformerTask extends DefaultTask {
 
-                    @InputFile
-                    abstract RegularFileProperty getGitInfoFile()
+                @InputFile
+                abstract RegularFileProperty getGitInfoFile()
 
-                    @InputFile
-                    abstract RegularFileProperty getMergedManifest()
+                @InputFile
+                abstract RegularFileProperty getMergedManifest()
 
-                    @OutputFile
-                    abstract RegularFileProperty getUpdatedManifest()
+                @OutputFile
+                abstract RegularFileProperty getUpdatedManifest()
 
-                    @TaskAction
-                    void taskAction() {
-                        String gitVersion = new String(getGitInfoFile().get().asFile.readBytes())
-                        String manifest = new String(getMergedManifest().get().asFile.readBytes())
-                        manifest = manifest.replace("android:versionCode=\"1\"", 
-                            "android:versionCode=\""+ gitVersion +"\"")
-                        getUpdatedManifest().get().asFile.write(manifest)
-                    }
+                @TaskAction
+                void taskAction() {
+                    String gitVersion = new String(getGitInfoFile().get().asFile.readBytes())
+                    String manifest = new String(getMergedManifest().get().asFile.readBytes())
+                    manifest = manifest.replace("android:versionCode=\"1\"",
+                        "android:versionCode=\""+ gitVersion +"\"")
+                    getUpdatedManifest().get().asFile.write(manifest)
                 }
-                """.trimIndent()
+            }
+            """
         }
 
     private fun getManifestVerifierTask() =
         when(language) {
             ScriptingLanguage.Kotlin ->
                 // language=kotlin
-                """ 
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.DirectoryProperty
-                import org.gradle.api.tasks.InputFiles
-                import org.gradle.api.tasks.TaskAction
-                import java.io.ByteArrayOutputStream
-                import java.io.PrintStream
+            """ 
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.DirectoryProperty
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.TaskAction
+            import java.io.ByteArrayOutputStream
+            import java.io.PrintStream
 
-                import com.android.tools.apk.analyzer.ApkAnalyzerImpl
-                import com.android.build.api.variant.BuiltArtifactsLoader
-                import org.gradle.api.provider.Property
-                import org.gradle.api.tasks.Internal
-                import java.io.File
+            import com.android.tools.apk.analyzer.ApkAnalyzerImpl
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+            import java.io.File
 
-                abstract class VerifyManifestTask: DefaultTask() {
+            abstract class VerifyManifestTask: DefaultTask() {
 
-                    @get:InputFiles
-                    abstract val apkFolder: DirectoryProperty
+                @get:InputFiles
+                abstract val apkFolder: DirectoryProperty
 
-                    @get:Internal
-                    abstract val builtArtifactsLoader: Property<BuiltArtifactsLoader>
+                @get:Internal
+                abstract val builtArtifactsLoader: Property<BuiltArtifactsLoader>
 
-                    @TaskAction
-                    fun taskAction() {
-                        val byteArrayOutputStream = object : ByteArrayOutputStream() {
-                            @Synchronized
-                            override fun toString(): String =
-                                super.toString().replace(System.getProperty("line.separator"), "\n")
-                        }
-                        val ps = PrintStream(byteArrayOutputStream)
-                        val apkAnalyzer = ApkAnalyzerImpl(ps, null)
-                        val builtArtifacts = builtArtifactsLoader.get().load(apkFolder.get())
-                            ?: throw RuntimeException("Cannot load APKs")
-                        if (builtArtifacts.elements.size != 1) 
-                            throw RuntimeException("Expected one APK !")
-                        val apk = File(builtArtifacts.elements.single().outputFile).toPath()
-                        apkAnalyzer.resXml(apk, "/AndroidManifest.xml")
-                        val manifest = byteArrayOutputStream.toString()
-                        println(if (manifest.contains("android:versionCode=\"12\"")) "SUCCESS" else "FAILED")
+                @TaskAction
+                fun taskAction() {
+                    val byteArrayOutputStream = object : ByteArrayOutputStream() {
+                        @Synchronized
+                        override fun toString(): String =
+                            super.toString().replace(System.getProperty("line.separator"), "\n")
                     }
+                    val ps = PrintStream(byteArrayOutputStream)
+                    val apkAnalyzer = ApkAnalyzerImpl(ps, null)
+                    val builtArtifacts = builtArtifactsLoader.get().load(apkFolder.get())
+                        ?: throw RuntimeException("Cannot load APKs")
+                    if (builtArtifacts.elements.size != 1)
+                        throw RuntimeException("Expected one APK !")
+                    val apk = File(builtArtifacts.elements.single().outputFile).toPath()
+                    apkAnalyzer.resXml(apk, "/AndroidManifest.xml")
+                    val manifest = byteArrayOutputStream.toString()
+                    println(if (manifest.contains("android:versionCode=\"12\"")) "SUCCESS" else "FAILED")
                 }
-                """.trimIndent()
+            }
+            """
             ScriptingLanguage.Groovy ->
                 """
 
@@ -435,188 +433,188 @@ fun getManifestProducerTask() =
         fun getDisplayApksTask()=
             when(language) {
                 ScriptingLanguage.Kotlin ->
-                    """
-                    abstract class DisplayApksTask: DefaultTask() {
+            """
+            abstract class DisplayApksTask: DefaultTask() {
 
-                        @get:InputFiles
-                        abstract val apkFolder: DirectoryProperty
+                @get:InputFiles
+                abstract val apkFolder: DirectoryProperty
 
-                        @get:Internal
-                        abstract val builtArtifactsLoader: Property<BuiltArtifactsLoader>
+                @get:Internal
+                abstract val builtArtifactsLoader: Property<BuiltArtifactsLoader>
 
-                        @TaskAction
-                        fun taskAction() {
+                @TaskAction
+                fun taskAction() {
 
-                            val builtArtifacts = builtArtifactsLoader.get().load(apkFolder.get())
-                                ?: throw RuntimeException("Cannot load APKs")
-                            builtArtifacts.elements.forEach {
-                                println("Got an APK at ${ '$' }{it.outputFile}")
-                            }
-                        }
+                    val builtArtifacts = builtArtifactsLoader.get().load(apkFolder.get())
+                        ?: throw RuntimeException("Cannot load APKs")
+                    builtArtifacts.elements.forEach {
+                        println("Got an APK at ${ '$' }{it.outputFile}")
                     }
-                    """.trimIndent()
+                }
+            }
+            """
                 ScriptingLanguage.Groovy ->
                     // language = groovy
-                    """
-                    import org.gradle.api.DefaultTask;
-                    import org.gradle.api.file.DirectoryProperty;
-                    import org.gradle.api.tasks.InputFiles;
-                    import org.gradle.api.tasks.TaskAction;
-                    import java.io.ByteArrayOutputStream;
-                    import java.io.PrintStream;
+            """
+            import org.gradle.api.DefaultTask;
+            import org.gradle.api.file.DirectoryProperty;
+            import org.gradle.api.tasks.InputFiles;
+            import org.gradle.api.tasks.TaskAction;
+            import java.io.ByteArrayOutputStream;
+            import java.io.PrintStream;
 
-                    import com.android.build.api.variant.BuiltArtifactsLoader;
-                    import com.android.build.api.artifact.ArtifactTypes;
-                    import com.android.build.api.variant.BuiltArtifacts;
-                    import org.gradle.api.provider.Property;
-                    import org.gradle.api.tasks.Internal;
-                    import java.io.File;
+            import com.android.build.api.variant.BuiltArtifactsLoader;
+            import com.android.build.api.artifact.ArtifactTypes;
+            import com.android.build.api.variant.BuiltArtifacts;
+            import org.gradle.api.provider.Property;
+            import org.gradle.api.tasks.Internal;
+            import java.io.File;
 
-                    abstract class DisplayApksTask extends DefaultTask {
+            abstract class DisplayApksTask extends DefaultTask {
 
-                        @InputFiles
-                        abstract DirectoryProperty getApkFolder()
+                @InputFiles
+                abstract DirectoryProperty getApkFolder()
 
-                        @Internal
-                        abstract Property<BuiltArtifactsLoader> getBuiltArtifactsLoader()
+                @Internal
+                abstract Property<BuiltArtifactsLoader> getBuiltArtifactsLoader()
 
-                        @TaskAction
-                        void taskAction() {
+                @TaskAction
+                void taskAction() {
 
-                            BuiltArtifacts artifacts = getBuiltArtifactsLoader().get().load(getApkFolder().get())
-                            if (artifacts == null) {
-                                throw new RuntimeException("Cannot load APKs")
-                            }
-                            artifacts.elements.forEach {
-                                println("Got an APK at ${ '$' }{it.outputFile}")
-                            }
-                        }
+                    BuiltArtifacts artifacts = getBuiltArtifactsLoader().get().load(getApkFolder().get())
+                    if (artifacts == null) {
+                        throw new RuntimeException("Cannot load APKs")
                     }
-                    """.trimIndent()
+                    artifacts.elements.forEach {
+                        println("Got an APK at ${ '$' }{it.outputFile}")
+                    }
+                }
+            }
+            """
             }
 
     fun getCopyApksTask()=
         when(language) {
             ScriptingLanguage.Kotlin ->
-                """
-                interface WorkItemParameters: WorkParameters, Serializable {
-                    val inputApkFile: RegularFileProperty
-                    val outputApkFile: RegularFileProperty
+            """
+            interface WorkItemParameters: WorkParameters, Serializable {
+                val inputApkFile: RegularFileProperty
+                val outputApkFile: RegularFileProperty
+            }
+
+            abstract class WorkItem @Inject constructor(private val workItemParameters: WorkItemParameters)
+                : WorkAction<WorkItemParameters> {
+                override fun execute() {
+                    workItemParameters.inputApkFile.asFile.get().copyTo(
+                        workItemParameters.outputApkFile.get().asFile)
                 }
+            }
+            abstract class CopyApksTask @Inject constructor(val workers: WorkerExecutor): DefaultTask() {
 
-                abstract class WorkItem @Inject constructor(private val workItemParameters: WorkItemParameters)
-                    : WorkAction<WorkItemParameters> {
-                    override fun execute() {
-                        workItemParameters.inputApkFile.asFile.get().copyTo(
-                            workItemParameters.outputApkFile.get().asFile)
-                    } 
+                @get:InputFiles
+                abstract val apkFolder: DirectoryProperty
+
+                @get:OutputDirectory
+                abstract val outFolder: DirectoryProperty
+
+                @get:Internal
+                abstract val transformationRequest: Property<ArtifactTransformationRequest>
+
+                @TaskAction
+                fun taskAction() {
+
+                  transformationRequest.get().submit(
+                     this, 
+                     workers.noIsolation(),
+                     WorkItem::class.java,
+                     WorkItemParameters::class.java) {
+                         builtArtifact: BuiltArtifact, 
+                         outputLocation: Directory, 
+                         param: WorkItemParameters -> 
+                            val inputFile = File(builtArtifact.outputFile)
+                            param.inputApkFile.set(inputFile)
+                            param.outputApkFile.set(File(outputLocation.asFile, inputFile.name))
+                            param.outputApkFile.get().asFile
+                     }
                 }
-                abstract class CopyApksTask @Inject constructor(val workers: WorkerExecutor): DefaultTask() {
-
-                    @get:InputFiles
-                    abstract val apkFolder: DirectoryProperty
-                    
-                    @get:OutputDirectory
-                    abstract val outFolder: DirectoryProperty
-
-                    @get:Internal
-                    abstract val transformationRequest: Property<ArtifactTransformationRequest>
-
-                    @TaskAction
-                    fun taskAction() {
-
-                      transformationRequest.get().submit(
-                         this, 
-                         workers.noIsolation(),
-                         WorkItem::class.java,
-                         WorkItemParameters::class.java) {
-                             builtArtifact: BuiltArtifact, 
-                             outputLocation: Directory, 
-                             param: WorkItemParameters -> 
-                                val inputFile = File(builtArtifact.outputFile)
-                                param.inputApkFile.set(inputFile)
-                                param.outputApkFile.set(File(outputLocation.asFile, inputFile.name))
-                                param.outputApkFile.get().asFile
-                         }
-                    }
-                }
-                """.trimIndent()
+            }
+            """
             ScriptingLanguage.Groovy ->
-                // language = groovy
-                """
-                import org.gradle.api.DefaultTask;
-                import org.gradle.api.file.DirectoryProperty;
-                import org.gradle.api.tasks.InputFiles;
-                import org.gradle.api.tasks.TaskAction;
-                import java.io.ByteArrayOutputStream;
-                import java.io.PrintStream;
+            // language = groovy
+            """
+            import org.gradle.api.DefaultTask;
+            import org.gradle.api.file.DirectoryProperty;
+            import org.gradle.api.tasks.InputFiles;
+            import org.gradle.api.tasks.TaskAction;
+            import java.io.ByteArrayOutputStream;
+            import java.io.PrintStream;
 
-                import com.android.build.api.variant.BuiltArtifactsLoader;
-                import com.android.build.api.artifact.ArtifactTypes;
-                import com.android.build.api.variant.BuiltArtifacts;
-                import org.gradle.api.provider.Property;
-                import org.gradle.api.tasks.Internal;
-                import java.io.File;
-                import java.nio.file.Files;
+            import com.android.build.api.variant.BuiltArtifactsLoader;
+            import com.android.build.api.artifact.ArtifactTypes;
+            import com.android.build.api.variant.BuiltArtifacts;
+            import org.gradle.api.provider.Property;
+            import org.gradle.api.tasks.Internal;
+            import java.io.File;
+            import java.nio.file.Files;
 
-                interface WorkItemParameters extends WorkParameters, Serializable {
-                    RegularFileProperty getInputApkFile()
-                    RegularFileProperty getOutputApkFile()
+            interface WorkItemParameters extends WorkParameters, Serializable {
+                RegularFileProperty getInputApkFile()
+                RegularFileProperty getOutputApkFile()
+            }
+
+            abstract class WorkItem implements WorkAction<WorkItemParameters> {
+
+                WorkItemParameters workItemParameters
+
+                @Inject
+                WorkItem(WorkItemParameters parameters) {
+                   this.workItemParameters = parameters
                 }
 
-                abstract class WorkItem implements WorkAction<WorkItemParameters> {
-                    
-                    WorkItemParameters workItemParameters
+                void execute() {
+                    Files.copy(
+                        workItemParameters.getInputApkFile().getAsFile().get().toPath(),
+                        workItemParameters.getOutputApkFile().get().getAsFile().toPath())
+                } 
+            }
 
-                    @Inject
-                    WorkItem(WorkItemParameters parameters) {
-                       this.workItemParameters = parameters
-                    }
+            abstract class CopyApksTask extends DefaultTask {
 
-                    void execute() {
-                        Files.copy(
-                            workItemParameters.getInputApkFile().getAsFile().get().toPath(),
-                            workItemParameters.getOutputApkFile().get().getAsFile().toPath())
-                    } 
+                WorkerExecutor workers
+
+                @Inject
+                CopyApksTask(WorkerExecutor workerExecutor) {
+                    this.workers = workerExecutor
                 }
 
-                abstract class CopyApksTask extends DefaultTask {
+                @InputFiles
+                abstract DirectoryProperty getApkFolder()
 
-                    WorkerExecutor workers
+                @OutputDirectory
+                abstract DirectoryProperty getOutFolder()
 
-                    @Inject
-                    CopyApksTask(WorkerExecutor workerExecutor) {
-                        this.workers = workerExecutor
-                    }
+                @Internal
+                abstract Property<ArtifactTransformationRequest> getTransformationRequest()
 
-                    @InputFiles
-                    abstract DirectoryProperty getApkFolder()
+                @TaskAction
+                void taskAction() {
 
-                    @OutputDirectory
-                    abstract DirectoryProperty getOutFolder()
-                    
-                    @Internal
-                    abstract Property<ArtifactTransformationRequest> getTransformationRequest()
-
-                    @TaskAction
-                    void taskAction() {
-                    
-                         transformationRequest.get().submit(
-                             this, 
-                             workers.noIsolation(),
-                             WorkItem,
-                             WorkItemParameters, {
-                                 BuiltArtifact builtArtifact, 
-                                 Directory outputLocation, 
-                                 WorkItemParameters param -> 
-                                    File inputFile = new File(builtArtifact.outputFile)
-                                    param.getInputApkFile().set(inputFile)
-                                    param.getOutputApkFile().set(new File(outputLocation.asFile, inputFile.name))
-                                    param.getOutputApkFile().get().getAsFile()
-                             }
-                        )
-                    }
+                     transformationRequest.get().submit(
+                         this,
+                         workers.noIsolation(),
+                         WorkItem,
+                         WorkItemParameters, {
+                             BuiltArtifact builtArtifact,
+                             Directory outputLocation,
+                             WorkItemParameters param ->
+                                File inputFile = new File(builtArtifact.outputFile)
+                                param.getInputApkFile().set(inputFile)
+                                param.getOutputApkFile().set(new File(outputLocation.asFile, inputFile.name))
+                                param.getOutputApkFile().get().getAsFile()
+                         }
+                    )
                 }
-                """.trimIndent()
+            }
+            """
         }
 }

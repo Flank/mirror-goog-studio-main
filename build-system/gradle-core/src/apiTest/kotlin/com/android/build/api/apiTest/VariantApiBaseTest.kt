@@ -103,14 +103,15 @@ open class VariantApiBaseTest(
             override fun configureBuildFile(repositories: List<String>) =
 """
 buildscript {
-    ${addRepositories(repositories).prependIndent("\t")}
+    ${addRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
         classpath(kotlin("gradle-plugin", version = "$kotlinVersion"))
     }
 }
+
 allprojects {
-    ${addRepositories(repositories).prependIndent("\t")}
+    ${addRepositories(repositories).prependIndent("    ")}
 }
 
 """
@@ -130,11 +131,11 @@ dependencies {
             private fun addRepositories(repositories: List<String>) =
 """
 repositories {
-    ${repositories.joinToString(
-                separator = "\")\n\tmaven(\"",
-                prefix = "maven(\"",
-                postfix = "\")"
-                )}
+${repositories.joinToString(
+            separator = "\")\n    maven(\"",
+            prefix = "    maven(\"",
+            postfix = "\")"
+            )}
 }
 """
 
@@ -143,13 +144,13 @@ repositories {
             override fun configureBuildFile(repositories: List<String>) =
 """
 buildscript {
-    ${addRepositories(repositories).prependIndent("\t")}
+${addRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
     }
 }
 allprojects {
-    ${addRepositories(repositories).prependIndent("\t")}
+${addRepositories(repositories).prependIndent("    ")}
 }
 ${addRepositories(repositories)}
 """
@@ -163,11 +164,11 @@ ${addRepositories(repositories)}
             private fun addRepositories(repositories: List<String>) =
 """
 repositories {
-    ${repositories.joinToString(
-                    separator = "\'}\n\tmaven { url \'",
-                    prefix = "maven { url \'",
-                    postfix = "\'}"
-                )}
+${repositories.joinToString(
+            separator = "\'}\n    maven { url \'",
+            prefix = "    maven { url \'",
+            postfix = "\'}"
+        )}
 }
 """
         };
@@ -249,7 +250,7 @@ repositories {
             sourceFiles.forEach {
                 File(folder, it.first).apply {
                     parentFile.mkdirs()
-                    writeText(it.second)
+                    writeText(it.second.trimIndent())
                 }
             }
 

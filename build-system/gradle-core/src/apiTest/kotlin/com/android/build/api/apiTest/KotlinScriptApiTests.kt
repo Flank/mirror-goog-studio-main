@@ -33,39 +33,39 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
             addModule(":app") {
                 @Suppress("RemoveExplicitTypeArguments")
                 buildFile =
-                        // language=kotlin
-                    """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
+            // language=kotlin
+            """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.DirectoryProperty
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.TaskAction
+
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import com.android.build.api.artifact.ArtifactTypes
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+
+            ${testingElements.getDisplayApksTask()}
+            android {
+                compileSdkVersion(29)
+                defaultConfig {
+                    minSdkVersion(21)
+                    targetSdkVersion(29)
+                }
+
+                onVariantProperties {
+                    project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
+                        apkFolder.set(operations.get(ArtifactTypes.APK))
+                        builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
                     }
-                    import org.gradle.api.DefaultTask
-                    import org.gradle.api.file.DirectoryProperty
-                    import org.gradle.api.tasks.InputFiles
-                    import org.gradle.api.tasks.TaskAction
-
-                    import com.android.build.api.variant.BuiltArtifactsLoader
-                    import com.android.build.api.artifact.ArtifactTypes
-                    import org.gradle.api.provider.Property
-                    import org.gradle.api.tasks.Internal
-
-                    ${testingElements.getDisplayApksTask()}
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-
-                        onVariantProperties {
-                            project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
-                                apkFolder.set(operations.get(ArtifactTypes.APK))
-                                builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
-                            }
-                        }
-                    }
-                """.trimIndent()
+                }
+            }
+        """.trimIndent()
                 testingElements.addManifest(this)
             }
         }
@@ -74,17 +74,17 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
                     // language=markdown
                 """
 # Operations.get in Kotlin
-           
+
 This sample show how to obtain a built artifact from the AGP. The built artifact is identified by
 its [ArtifactTypes] and in this case, it's [ArtifactTypes.APK].
 The [onVariantProperties] block will wire the [DisplayApksTask] input property (apkFolder) by using
 the Operations.get call with the right ArtifactTypes
 `apkFolder.set(operations.get(ArtifactTypes.APK))`
-Since more than one APK can be produced by the build when dealing with multi-apk, you should use the 
-[BuiltArtifacts] interface to load the metadata associated with produced files using 
-[BuiltArtifacts.load] method. 
+Since more than one APK can be produced by the build when dealing with multi-apk, you should use the
+[BuiltArtifacts] interface to load the metadata associated with produced files using
+[BuiltArtifacts.load] method.
 `builtArtifactsLoader.get().load(apkFolder.get())'
-Once loaded, the built artifacts can be accessed. 
+Once loaded, the built artifacts can be accessed.
 ## To Run
 /path/to/gradle debugDisplayApks 
 expected result : "Got an APK...." message.
@@ -102,43 +102,44 @@ expected result : "Got an APK...." message.
             tasksToInvoke.add(":app:processDebugResources")
             addModule(":app") {
                 buildFile =
-                    """
-                plugins {
-                        id("com.android.application")
-                        kotlin("android")
-                        kotlin("android.extensions")
-                }
-                import org.gradle.api.DefaultTask
-                import org.gradle.api.file.RegularFileProperty
-                import org.gradle.api.tasks.InputFile
-                import org.gradle.api.tasks.OutputFile
-                import org.gradle.api.tasks.TaskAction
-                import com.android.build.api.artifact.ArtifactTypes
-                ${testingElements.getGitVersionTask()}
-                ${testingElements.getManifestProducerTask()}
-                android {
-                        compileSdkVersion(29)
-                        buildToolsVersion("29.0.3")
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-                    val gitVersionProvider = tasks.register<GitVersionTask>("gitVersionProvider") {
-                        gitVersionOutputFile.set(
-                            File(project.buildDir, "intermediates/gitVersionProvider/output"))
-                        outputs.upToDateWhen { false }
+            // language=kotlin
+            """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
+            import com.android.build.api.artifact.ArtifactTypes
+            ${testingElements.getGitVersionTask()}
+            ${testingElements.getManifestProducerTask()}
+            android {
+                    compileSdkVersion(29)
+                    buildToolsVersion("29.0.3")
+                    defaultConfig {
+                        minSdkVersion(21)
+                        targetSdkVersion(29)
                     }
-                    onVariantProperties {
-                        val manifestProducer = tasks.register<ManifestProducerTask>("${'$'}{name}ManifestProducer") {
-                            gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
-                            outputManifest.set(
-                                File(project.buildDir, "intermediates/${'$'}{name}/ManifestProducer/output")
-                            )
-                        }
-                        operations.replace(manifestProducer, ManifestProducerTask::outputManifest)
-                            .on(ArtifactTypes.MERGED_MANIFEST)
-                    }
+                val gitVersionProvider = tasks.register<GitVersionTask>("gitVersionProvider") {
+                    gitVersionOutputFile.set(
+                        File(project.buildDir, "intermediates/gitVersionProvider/output"))
+                    outputs.upToDateWhen { false }
                 }
+                onVariantProperties {
+                    val manifestProducer = tasks.register<ManifestProducerTask>("${'$'}{name}ManifestProducer") {
+                        gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
+                        outputManifest.set(
+                            File(project.buildDir, "intermediates/${'$'}{name}/ManifestProducer/output")
+                        )
+                    }
+                    operations.replace(manifestProducer, ManifestProducerTask::outputManifest)
+                        .on(ArtifactTypes.MERGED_MANIFEST)
+                }
+            }
                 """.trimIndent()
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
@@ -164,39 +165,40 @@ expected result : "Got an APK...." message.
         given {
             addModule(":app") {
                 buildFile =
-                    """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
+            // language=kotlin
+            """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            ${testingElements.getGitVersionTask()}
+
+            ${testingElements.getManifestTransformerTask()}
+            android {
+                compileSdkVersion(29)
+                defaultConfig {
+                    minSdkVersion(21)
+                    targetSdkVersion(29)
+                }
+
+                onVariantProperties {
+                    val gitVersionProvider = tasks.register<GitVersionTask>("${'$'}{name}GitVersionProvider") {
+                        gitVersionOutputFile.set(
+                            File(project.buildDir, "intermediates/gitVersionProvider/output"))
+                        outputs.upToDateWhen { false }
                     }
-                    ${testingElements.getGitVersionTask()}
 
-                    ${testingElements.getManifestTransformerTask()}
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-
-                        onVariantProperties {
-                            val gitVersionProvider = tasks.register<GitVersionTask>("${'$'}{name}GitVersionProvider") {
-                                gitVersionOutputFile.set(
-                                    File(project.buildDir, "intermediates/gitVersionProvider/output"))
-                                outputs.upToDateWhen { false }
-                            }
-
-                            val manifestUpdater = tasks.register<ManifestTransformerTask>("${'$'}{name}ManifestUpdater") {
-                                gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
-                            }
-                            operations.transform(manifestUpdater,
-                                    ManifestTransformerTask::mergedManifest,
-                                    ManifestTransformerTask::updatedManifest)
-                            .on(com.android.build.api.artifact.ArtifactTypes.MERGED_MANIFEST)
-                        }
-                    } 
-                """.trimIndent()
+                    val manifestUpdater = tasks.register<ManifestTransformerTask>("${'$'}{name}ManifestUpdater") {
+                        gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
+                    }
+                    operations.transform(manifestUpdater,
+                            ManifestTransformerTask::mergedManifest,
+                            ManifestTransformerTask::updatedManifest)
+                    .on(com.android.build.api.artifact.ArtifactTypes.MERGED_MANIFEST)
+                }
+            }
+            """.trimIndent()
                 testingElements.addManifest(this)
             }
         }
@@ -221,59 +223,58 @@ expected result : "Got an APK...." message.
         given {
             tasksToInvoke.add(":app:copyDebugApks")
             addModule(":app") {
-                buildFile =
-                    """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
+                buildFile = """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            import java.io.Serializable
+            import javax.inject.Inject
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
+            import org.gradle.workers.WorkerExecutor
+            import com.android.build.api.artifact.ArtifactTypes 
+            import com.android.build.api.artifact.ArtifactTransformationRequest
+            import com.android.build.api.variant.BuiltArtifact
+
+            import com.android.build.api.artifact.ArtifactKind
+            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.ArtifactType.Replaceable
+            import com.android.build.api.artifact.ArtifactType.ContainsMany
+
+            sealed class AcmeArtifactTypes<T : FileSystemLocation>(
+                kind: ArtifactKind<T>
+            ) : ArtifactType<T>(kind) {
+
+                object ACME_APK: AcmeArtifactTypes<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
+            }
+
+            ${testingElements.getCopyApksTask()}
+
+            android {
+                compileSdkVersion(29)
+                buildToolsVersion("29.0.3")
+                defaultConfig {
+                    minSdkVersion(21)
+                    targetSdkVersion(29)
+                }
+
+                onVariantProperties {
+                    val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")
+
+                    val transformationRequest = operations.use(copyApksProvider)
+                        .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
+                        .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
+
+                    copyApksProvider.configure {
+                        this.transformationRequest.set(transformationRequest)
                     }
-                    import java.io.Serializable
-                    import javax.inject.Inject
-                    import org.gradle.api.DefaultTask
-                    import org.gradle.api.file.RegularFileProperty
-                    import org.gradle.api.tasks.InputFile
-                    import org.gradle.api.tasks.OutputFile
-                    import org.gradle.api.tasks.TaskAction
-                    import org.gradle.workers.WorkerExecutor
-                    import com.android.build.api.artifact.ArtifactTypes 
-                    import com.android.build.api.artifact.ArtifactTransformationRequest
-                    import com.android.build.api.variant.BuiltArtifact
-
-                    import com.android.build.api.artifact.ArtifactKind
-                    import com.android.build.api.artifact.ArtifactType
-                    import com.android.build.api.artifact.ArtifactType.Replaceable
-                    import com.android.build.api.artifact.ArtifactType.ContainsMany
-                    
-                    sealed class AcmeArtifactTypes<T : FileSystemLocation>(
-                        kind: ArtifactKind<T>
-                    ) : ArtifactType<T>(kind) {
-
-                        object ACME_APK: AcmeArtifactTypes<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
-                    }
-
-                    ${testingElements.getCopyApksTask()}
-
-                    android {
-                        compileSdkVersion(29)
-                        buildToolsVersion("29.0.3")
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-
-                        onVariantProperties {
-                            val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")
-
-                            val transformationRequest = operations.use(copyApksProvider) 
-                                .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
-                                .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
-
-                            copyApksProvider.configure {
-                                this.transformationRequest.set(transformationRequest)
-                            }
-                        }
-                    }
+                }
+            }
                 """.trimIndent()
                 testingElements.addManifest(this)
             }
