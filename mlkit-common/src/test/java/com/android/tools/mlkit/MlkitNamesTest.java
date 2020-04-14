@@ -17,7 +17,6 @@
 package com.android.tools.mlkit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import org.junit.Test;
@@ -53,13 +52,18 @@ public class MlkitNamesTest {
     }
 
     @Test
-    public void computeIdentifierName_nameStartWithDigit_returnNull() {
-        assertNull(MlkitNames.computeIdentifierName("012abc"));
+    public void computeIdentifierName_nameStartWithDigit_returnHashedName() {
+        assertEquals(MlkitNames.computeIdentifierName("012abc"), "name250");
     }
 
     @Test
-    public void computeIdentifierName_nameIsKeyword_returnNull() {
-        assertNull(MlkitNames.computeIdentifierName("class"));
+    public void computeIdentifierName_nameIsKeyword_returnHashedName() {
+        assertEquals(MlkitNames.computeIdentifierName("class"), "name158");
+    }
+
+    @Test
+    public void computeIdentifierNameWithDefault_nameIsKeyword_returnDefaultName() {
+        assertEquals(MlkitNames.computeIdentifierName("class", "defaultName"), "defaultName");
     }
 
     @Test

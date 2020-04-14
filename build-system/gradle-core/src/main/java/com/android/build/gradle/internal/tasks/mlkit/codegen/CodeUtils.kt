@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.tasks.mlkit.codegen
 
+import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
@@ -30,8 +31,8 @@ fun getParameterType(tensorInfo: TensorInfo): TypeName {
     }
 }
 
-fun getFileName(name: String): String {
-    return name.replace("\\..*".toRegex(), "") + "Data"
+fun getIdentifierFromFileName(name: String): String {
+    return MlkitNames.computeIdentifierName(name.replace("\\..*".toRegex(), ""))
 }
 
 fun getProcessorName(tensorInfo: TensorInfo): String {

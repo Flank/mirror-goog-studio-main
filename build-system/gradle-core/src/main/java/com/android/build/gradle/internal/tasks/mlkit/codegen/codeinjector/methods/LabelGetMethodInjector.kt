@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getFileName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getIdentifierFromFileName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.MlkitNames
@@ -40,7 +40,7 @@ class LabelGetMethodInjector : MethodInjector() {
             .addStatement(
                 "return new \$T(\$L, \$L.process(\$L))",
                 ClassNames.TENSOR_LABEL,
-                getFileName(tensorInfo.fileName),
+                getIdentifierFromFileName(tensorInfo.fileName),
                 getProcessorName(tensorInfo),
                 tensorInfo.name
             )

@@ -168,14 +168,14 @@ public class TensorInfo {
     }
 
     public static class Builder {
-        private String name;
+        private String name = "";
         private int[] shape;
         private DataType dataType;
         private String fileName;
         private FileType fileType = FileType.UNKNOWN;
         private Source source;
         private ContentType contentType = ContentType.UNKNOWN;
-        private String description;
+        private String description = "";
         private boolean metadataExisted;
         private MetadataExtractor.NormalizationParams normalizationParams;
         private MetadataExtractor.QuantizationParams quantizationParams;
@@ -298,8 +298,9 @@ public class TensorInfo {
             }
 
             builder.setContentType(extractContentType(tensorMetadata));
-            String name = MlkitNames.computeIdentifierName(tensorMetadata.name());
-            builder.setName(name == null ? getDefaultName(source, index) : name);
+            builder.setName(
+                    MlkitNames.computeIdentifierName(
+                            tensorMetadata.name(), getDefaultName(source, index)));
             builder.setDescription(tensorMetadata.description());
             builder.setQuantizationParams(MetadataExtractor.getQuantizationParams(tensor));
 

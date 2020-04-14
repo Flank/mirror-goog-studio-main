@@ -15,6 +15,7 @@
  */
 package com.android.tools.mlkit;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
@@ -73,10 +74,10 @@ public class MlkitNames {
         }
     }
 
-    @Nullable
-    public static String computeIdentifierName(@Nullable String name) {
+    @NonNull
+    public static String computeIdentifierName(@Nullable String name, @NonNull String defaultName) {
         if (name == null) {
-            return null;
+            return defaultName;
         }
 
         // Handle "-" and "_" inside to make name lowerCamel.
@@ -96,7 +97,20 @@ public class MlkitNames {
         if (SourceVersion.isIdentifier(matchedName) && !SourceVersion.isKeyword(matchedName)) {
             return matchedName;
         } else {
-            return null;
+            return defaultName;
         }
+    }
+
+    @NonNull
+    public static String computeIdentifierName(@Nullable String name) {
+        String defaultName =
+                name == null
+                        ? "name"
+                        : "name"
+                                + UnsignedBytes.toString(
+                                        Hashing.murmur3_32()
+                                                .hashString(name, Charsets.UTF_8)
+                                                .asBytes()[0]);
+        return computeIdentifierName(name, defaultName);
     }
 }

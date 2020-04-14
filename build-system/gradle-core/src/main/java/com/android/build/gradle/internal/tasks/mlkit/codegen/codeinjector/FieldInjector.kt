@@ -16,10 +16,11 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getFileName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getIdentifierFromFileName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.isRGBImage
 import com.android.tools.mlkit.TensorInfo
+import com.google.common.base.Strings
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
@@ -31,10 +32,10 @@ class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
             return
         }
 
-        if (tensorInfo.fileName != null) {
+        if (!Strings.isNullOrEmpty(tensorInfo.fileName)) {
             val fieldName = FieldSpec.builder(
                 ClassNames.LIST_OF_STRING,
-                getFileName(tensorInfo.fileName)
+                getIdentifierFromFileName(tensorInfo.fileName)
             )
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addAnnotation(ClassNames.NON_NULL)
