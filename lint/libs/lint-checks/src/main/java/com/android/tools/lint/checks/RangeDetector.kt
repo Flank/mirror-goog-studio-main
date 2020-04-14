@@ -33,12 +33,14 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UResolvable
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
@@ -101,11 +103,11 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         allAnnotations: List<UAnnotation>
     ) {
         if (argument is UIfExpression) {
-            if (argument.thenExpression != null) {
-                checkIntRange(context, annotation, argument.thenExpression!!, allAnnotations)
+            argument.thenExpression?.let { thenExpression ->
+                checkIntRange(context, annotation, thenExpression, allAnnotations)
             }
-            if (argument.elseExpression != null) {
-                checkIntRange(context, annotation, argument.elseExpression!!, allAnnotations)
+            argument.elseExpression?.let { elseExpression ->
+                checkIntRange(context, annotation, elseExpression, allAnnotations)
             }
             return
         }
@@ -129,11 +131,11 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         argument: UElement
     ) {
         if (argument is UIfExpression) {
-            if (argument.thenExpression != null) {
-                checkFloatRange(context, annotation, argument.thenExpression!!)
+            argument.thenExpression?.let { thenExpression ->
+                checkFloatRange(context, annotation, thenExpression)
             }
-            if (argument.elseExpression != null) {
-                checkFloatRange(context, annotation, argument.elseExpression!!)
+            argument.elseExpression?.let { elseExpression ->
+                checkFloatRange(context, annotation, elseExpression)
             }
             return
         }
@@ -149,7 +151,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 constant is LongArray
             ) {
                 if (constant is FloatArray) {
-                    for (value in (constant as FloatArray?)!!) {
+                    for (value in constant) {
                         if (!constraint.isValid(value.toDouble())) {
                             val message = constraint.describe(value.toDouble())
                             report(
@@ -162,7 +164,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
                 // Kinda repetitive but primitive arrays are not related by subtyping
                 if (constant is DoubleArray) {
-                    for (value in (constant as DoubleArray?)!!) {
+                    for (value in constant) {
                         if (!constraint.isValid(value)) {
                             val message = constraint.describe(value)
                             report(
@@ -174,7 +176,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     }
                 }
                 if (constant is IntArray) {
-                    for (value in (constant as IntArray?)!!) {
+                    for (value in constant) {
                         if (!constraint.isValid(value.toDouble())) {
                             val message = constraint.describe(value.toDouble())
                             report(
@@ -186,7 +188,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     }
                 }
                 if (constant is LongArray) {
-                    for (value in (constant as LongArray?)!!) {
+                    for (value in constant) {
                         if (!constraint.isValid(value.toDouble())) {
                             val message = constraint.describe(value.toDouble())
                             report(
@@ -201,15 +203,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             // Try to resolve it; see if there's an annotation on the variable/parameter/field
             if (argument is UResolvable) {
-                val resolved = (argument as UResolvable).resolve()
-                // TODO: What about parameters or local variables here?
-                // UAST-wise we could look for UDeclaration but it turns out
-                // UDeclaration also extends PsiModifierListOwner!
-                if (resolved is PsiModifierListOwner) {
-                    val referenceConstraint =
-                        RangeConstraint.create((resolved as PsiModifierListOwner?)!!, context.evaluator)
+                val referenceConstraint = getRangeConstraint(context, argument)
+                if (referenceConstraint != null) {
                     val here = RangeConstraint.create(annotation)
-                    if (here != null && referenceConstraint != null) {
+                    if (here != null) {
                         val contains = here.contains(referenceConstraint)
                         if (contains != null && !contains) {
                             val message = here.toString()
@@ -245,11 +242,11 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (argument.isNewArrayWithInitializer()) {
             actual = (argument as UCallExpression).valueArgumentCount.toLong()
         } else if (argument is UIfExpression) {
-            if (argument.thenExpression != null) {
-                checkSize(context, annotation, argument.thenExpression!!)
+            argument.thenExpression?.let { thenExpression ->
+                checkSize(context, annotation, thenExpression)
             }
-            if (argument.elseExpression != null) {
-                checkSize(context, annotation, argument.elseExpression!!)
+            argument.elseExpression?.let { elseExpression ->
+                checkSize(context, annotation, elseExpression)
             }
             return
         } else {
@@ -263,14 +260,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (actual == -1L) {
                     // Try to resolve it; see if there's an annotation on the variable/parameter/field
                     if (argument is UResolvable) {
-                        val resolved = (argument as UResolvable).resolve()
-                        if (resolved is PsiModifierListOwner) {
-                            val constraint = RangeConstraint.create(
-                                resolved,
-                                context.evaluator
-                            )
+                        val constraint = getRangeConstraint(context, argument)
+                        if (constraint != null) {
                             val here = RangeConstraint.create(annotation)
-                            if (here != null && constraint != null) {
+                            if (here != null) {
                                 val contains = here.contains(constraint)
                                 if (contains != null && !contains) {
                                     val message = here.toString()
@@ -342,14 +335,14 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 // Number arrays
                 if (o is IntArray || o is LongArray) {
                     if (o is IntArray) {
-                        for (value in (o as IntArray?)!!) {
+                        for (value in o) {
                             if (!constraint.isValid(value.toLong())) {
                                 return constraint.describe(value.toLong())
                             }
                         }
                     }
                     if (o is LongArray) {
-                        for (value in (o as LongArray?)!!) {
+                        for (value in o) {
                             if (!constraint.isValid(value)) {
                                 return constraint.describe(value)
                             }
@@ -359,17 +352,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                 // Try to resolve it; see if there's an annotation on the variable/parameter/field
                 if (argument is UResolvable) {
-                    val resolved = (argument as UResolvable).resolve()
-                    // TODO: What about parameters or local variables here?
-                    // UAST-wise we could look for UDeclaration but it turns out
-                    // UDeclaration also extends PsiModifierListOwner!
-                    if (resolved is PsiModifierListOwner) {
-                        val referenceConstraint = RangeConstraint.create(
-                            resolved,
-                            context.evaluator
-                        )
+                    val referenceConstraint = getRangeConstraint(context, argument)
+                    if (referenceConstraint != null) {
                         val here = RangeConstraint.create(annotation)
-                        if (here != null && referenceConstraint != null) {
+                        if (here != null) {
                             val contains = here.contains(referenceConstraint)
                             if (contains != null && !contains) {
                                 return here.toString()
@@ -385,6 +371,29 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return if (!constraint.isValid(value)) {
                 constraint.describe(value)
             } else null
+        }
+
+        private fun getRangeConstraint(
+            context: JavaContext,
+            resolvable: UResolvable?
+        ): RangeConstraint? {
+            val resolved = resolvable?.resolve() ?: return null
+            // TODO: What about parameters or local variables here?
+            // UAST-wise we could look for UDeclaration but it turns out
+            // UDeclaration also extends PsiModifierListOwner!
+            return if (resolved is PsiModifierListOwner) {
+                (resolved.toUElement() as? UAnnotated)?.let {
+                    RangeConstraint.create(
+                        it,
+                        context.evaluator
+                    )
+                } ?: RangeConstraint.create(
+                    resolved,
+                    context.evaluator
+                )
+            } else {
+                null
+            }
         }
 
         /** Makes sure values are within the allowed range */

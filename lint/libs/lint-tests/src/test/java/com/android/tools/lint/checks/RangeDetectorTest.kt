@@ -1013,4 +1013,42 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             ).indented()
         ).run().expectClean()
     }
+
+    fun testAndroidXBug() {
+        // Regression test for bug uncovered by continuous androidx+studio integration build
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import android.support.annotation.IntRange
+                import android.support.annotation.Size
+                import test.pkg.ColorSpace.Companion.MaxId
+                import test.pkg.ColorSpace.Companion.MinId
+                private fun isSrgb(
+                        @Size(6) primaries: FloatArray,
+                        OETF: (Double) -> Double,
+                        EOTF: (Double) -> Double,
+                        min: Float,
+                        max: Float,
+                        @IntRange(from = MinId.toLong(), to = MaxId.toLong()) id: Int
+                ): Boolean {
+                    if (id == 0) return true
+                    return false
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                abstract class ColorSpace {
+                    internal companion object {
+                        internal const val MinId = -1
+                        internal const val MaxId = 63
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
