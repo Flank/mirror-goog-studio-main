@@ -461,6 +461,68 @@ public final class AppInspectionTest {
     }
 
     @Test
+    public void entryAndExitHooksDisposed() throws Exception {
+        String inspectorId = "todo.inspector";
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        // doesn't fail
+        androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
+
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(disposeInspector(inspectorId)),
+                SUCCESS);
+
+        // hooks will throw if they are called but inspection is disposed
+        androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
+    }
+
+    @Test
+    public void entryAndExitDoubleHooks() throws Exception {
+        String inspectorId = "todo.inspector";
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        androidDriver.triggerMethod(TODO_ACTIVITY, "selectLastGroup");
+        {
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTING.toByteArrayWithArg(
+                                    (byte) 0));
+        }
+        {
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTING.toByteArrayWithArg(
+                                    (byte) 1));
+        }
+
+        {
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTED.toByteArrayWithArg(
+                                    (byte) 0));
+        }
+
+        {
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTED.toByteArrayWithArg(
+                                    (byte) 1));
+        }
+    }
+
+    @Test
     public void handleCancellationCommand() throws Exception {
         String inspectorId = "test.cancellation.inspector";
         assertResponseStatus(

@@ -155,4 +155,15 @@ public final class TodoActivity extends TransportTestActivity {
             logItem(Log.VERBOSE, "todo_activity", groups.get(0).getItems().get(0));
         }
     }
+
+    public void selectFirstGroup() {
+        activeGroup = groups.get(0);
+    }
+
+    public void selectLastGroup() {
+        int size = groups.size();
+        if (size != 0) {
+            activeGroup = groups.get(size - 1);
+        }
+    }
 }

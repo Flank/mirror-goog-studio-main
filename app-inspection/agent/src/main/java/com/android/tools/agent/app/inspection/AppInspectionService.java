@@ -23,12 +23,16 @@ import static com.android.tools.agent.app.inspection.NativeTransport.sendService
 import android.util.Pair;
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
+import androidx.inspection.InspectorEnvironment.EntryHook;
+import androidx.inspection.InspectorEnvironment.ExitHook;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 /** This service controls all app inspectors */
 @SuppressWarnings("unused") // invoked via jni
@@ -52,11 +56,10 @@ public class AppInspectionService {
     private final Map<String, InspectorContext> mInspectorContexts =
             new HashMap<String, InspectorContext>();
 
-    // TODO: save inspector and clean up transformation when inspectors are gone
-    Map<String, InspectorEnvironment.ExitHook> mExitTransforms =
-            new HashMap<String, InspectorEnvironment.ExitHook>();
-    Map<String, InspectorEnvironment.EntryHook> mEntryTransforms =
-            new HashMap<String, InspectorEnvironment.EntryHook>();
+    Map<String, List<HookInfo<ExitHook>>> mExitTransforms =
+            new ConcurrentHashMap<String, List<HookInfo<ExitHook>>>();
+    Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
+            new ConcurrentHashMap<String, List<HookInfo<EntryHook>>>();
 
     // it keeps reference only to pending commands.
     private ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
@@ -122,7 +125,8 @@ public class AppInspectionService {
                 InspectorFactory inspectorFactory = iterator.next();
                 if (inspectorId.equals(inspectorFactory.getInspectorId())) {
                     ConnectionImpl connection = new ConnectionImpl(inspectorId);
-                    InspectorEnvironment environment = new InspectorEnvironmentImpl(mNativePtr);
+                    InspectorEnvironment environment =
+                            new InspectorEnvironmentImpl(mNativePtr, inspectorId);
                     inspector = inspectorFactory.createInspector(connection, environment);
                     mInspectorContexts.put(
                             inspectorId, new InspectorContext(inspector, projectName));
@@ -152,6 +156,8 @@ public class AppInspectionService {
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
+        removeHooks(inspectorId, mEntryTransforms);
+        removeHooks(inspectorId, mExitTransforms);
         doDispose(inspectorId);
         sendServiceResponseSuccess(commandId);
     }
@@ -208,6 +214,7 @@ public class AppInspectionService {
         }
         return result;
     }
+
 
     enum Status {
         PENDING,
@@ -294,13 +301,38 @@ public class AppInspectionService {
     }
 
     public static void addEntryHook(
-            Class origin, String method, InspectorEnvironment.EntryHook hook) {
-        sInstance.mEntryTransforms.put(createLabel(origin, method), hook);
+            String inspectorId, Class origin, String method, EntryHook hook) {
+        List<HookInfo<EntryHook>> hooks =
+                sInstance.mEntryTransforms.computeIfAbsent(
+                        createLabel(origin, method),
+                        new Function<String, List<HookInfo<EntryHook>>>() {
+
+                            @Override
+                            public List<HookInfo<EntryHook>> apply(String key) {
+                                nativeRegisterEntryHook(sInstance.mNativePtr, origin, method);
+                                return new CopyOnWriteArrayList<HookInfo<EntryHook>>();
+                            }
+                        });
+        hooks.add(new HookInfo<EntryHook>(inspectorId, hook));
     }
 
     public static void addExitHook(
-            Class origin, String method, InspectorEnvironment.ExitHook<?> hook) {
-        sInstance.mExitTransforms.put(createLabel(origin, method), hook);
+            String inspectorId,
+            Class origin,
+            String method,
+            InspectorEnvironment.ExitHook<?> hook) {
+        List<HookInfo<ExitHook>> hooks =
+                sInstance.mExitTransforms.computeIfAbsent(
+                        createLabel(origin, method),
+                        new Function<String, List<HookInfo<ExitHook>>>() {
+
+                            @Override
+                            public List<HookInfo<ExitHook>> apply(String key) {
+                                nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
+                                return new CopyOnWriteArrayList<HookInfo<ExitHook>>();
+                            }
+                        });
+        hooks.add(new HookInfo<ExitHook>(inspectorId, hook));
     }
 
     private static Object onExitInternal(Object returnObject) {
@@ -314,9 +346,12 @@ public class AppInspectionService {
         String label = element.getClassName() + element.getMethodName();
 
         AppInspectionService instance = AppInspectionService.instance();
-        InspectorEnvironment.ExitHook hook = instance.mExitTransforms.get(label);
-        if (hook != null) {
-            hook.onExit(returnObject);
+        List<HookInfo<ExitHook>> hooks = instance.mExitTransforms.get(label);
+        if (hooks == null) {
+            return returnObject;
+        }
+        for (HookInfo<ExitHook> info : hooks) {
+            returnObject = info.hook.onExit(returnObject);
         }
         return returnObject;
     }
@@ -358,17 +393,50 @@ public class AppInspectionService {
         }
         StackTraceElement element = stackTrace[1];
         String label = element.getClassName() + element.getMethodName();
-        InspectorEnvironment.EntryHook hook =
+        List<HookInfo<EntryHook>> hooks =
                 AppInspectionService.instance().mEntryTransforms.get(label);
-        if (hook != null) {
-            Object thisObject = thisAndParams[0];
-            List<Object> params = Collections.emptyList();
-            if (thisAndParams.length > 1) {
-                params = Arrays.asList(Arrays.copyOfRange(thisAndParams, 1, thisAndParams.length));
+
+        if (hooks == null) {
+            return;
+        }
+
+        Object thisObject = thisAndParams[0];
+        List<Object> params = Collections.emptyList();
+        if (thisAndParams.length > 1) {
+            params = Arrays.asList(Arrays.copyOfRange(thisAndParams, 1, thisAndParams.length));
+        }
+
+        for (HookInfo<EntryHook> info : hooks) {
+            info.hook.onEntry(thisObject, params);
+        }
+    }
+
+    private static final class HookInfo<T> {
+        private final String inspectorId;
+        private final T hook;
+
+        HookInfo(String inspectorId, T hook) {
+            this.inspectorId = inspectorId;
+            this.hook = hook;
+        }
+    }
+
+    private static void removeHooks(
+            String inspectorId, Map<String, ? extends List<? extends HookInfo<?>>> hooks) {
+        for (List<? extends HookInfo<?>> list : hooks.values()) {
+            for (HookInfo<?> info : list) {
+                if (info.inspectorId.equals(inspectorId)) {
+                    list.remove(info);
+                }
             }
-            hook.onEntry(thisObject, params);
         }
     }
 
     private static native AppInspectionService createAppInspectionService();
+
+    private static native void nativeRegisterEntryHook(
+            long servicePtr, Class<?> originClass, String originMethod);
+
+    private static native void nativeRegisterExitHook(
+            long servicePtr, Class<?> originClass, String originMethod);
 }
