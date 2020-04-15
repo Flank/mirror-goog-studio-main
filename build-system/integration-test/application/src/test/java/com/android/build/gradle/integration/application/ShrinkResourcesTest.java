@@ -32,6 +32,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.res.shrinker.DummyContent;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.internal.packaging.ApkCreatorType;
@@ -420,6 +421,99 @@ public class ShrinkResourcesTest {
                         "res/layout/used18.xml",
                         "res/layout/used19.xml",
                         "res/layout/used20.xml");
+
+        List<String> expectedOptimizeApkContents =
+                ImmutableList.of(
+                        "res/09.9.png",
+                        "res/11.xml",
+                        "res/2P.xml",
+                        "res/3Y.xml",
+                        "res/3j.xml",
+                        "res/3m.xml",
+                        "res/3m1.xml",
+                        "res/4W.xml",
+                        "res/4c.xml",
+                        "res/4u.xml",
+                        "res/56.xml",
+                        "res/5M.xml",
+                        "res/8V.9.png",
+                        "res/8r.xml",
+                        "res/93.9.png",
+                        "res/A1.xml",
+                        "AndroidManifest.xml",
+                        "res/BB.xml",
+                        "res/C7.xml",
+                        "res/Cv.xml",
+                        "res/DS.xml",
+                        "res/E1.xml",
+                        "res/Eq.xml",
+                        "res/FZ.xml",
+                        "res/GQ.xml",
+                        "res/HC.xml",
+                        "res/Hs.xml",
+                        "res/JX.xml",
+                        "res/Jv.xml",
+                        "res/LD.png",
+                        "res/Lb.xml",
+                        "res/NR.xml",
+                        "res/Nf.xml",
+                        "res/O3.9.png",
+                        "res/Ot.png",
+                        "res/PP.xml",
+                        "res/Pg.xml",
+                        "res/Pq.9.png",
+                        "res/QR.xml",
+                        "res/Qv.png",
+                        "res/SH.xml",
+                        "res/SS.xml",
+                        "res/T2.9.png",
+                        "res/TW.xml",
+                        "res/Tq.xml",
+                        "res/UT.xml",
+                        "res/WV.xml",
+                        "res/WV1.xml",
+                        "res/WV2.xml",
+                        "res/WV3.xml",
+                        "res/WV4.xml",
+                        "res/WV5.xml",
+                        "res/WV6.xml",
+                        "res/WV7.xml",
+                        "res/X8.xml",
+                        "res/XB.xml",
+                        "res/Xs.9.png",
+                        "res/Z2.xml",
+                        "res/ZX.xml",
+                        "res/cH.xml",
+                        "classes.dex",
+                        "res/dH.9.png",
+                        "res/eK.9.png",
+                        "res/fS.xml",
+                        "res/f_.xml",
+                        "res/gW.xml",
+                        "res/hC.xml",
+                        "res/hj.9.png",
+                        "res/iL.xml",
+                        "res/jK.9.png",
+                        "res/kI.xml",
+                        "res/kM.xml",
+                        "res/m1.xml",
+                        "res/n1.xml",
+                        "res/nD.xml",
+                        "res/oy.xml",
+                        "res/pA.xml",
+                        "res/q6.xml",
+                        "res/qj.xml",
+                        "res/r2.xml",
+                        "res/rK.xml",
+                        "resources.arsc",
+                        "res/tf.xml",
+                        "res/tr.9.png",
+                        "res/u6.xml",
+                        "res/um.xml",
+                        "res/yX.xml",
+                        "res/yX1.xml",
+                        "res/ya.xml",
+                        "res/yp.xml");
         if (REPLACE_DELETED_WITH_EMPTY) {
             // If replacing deleted files with empty files, the file list will include
             // the "unused" files too, though they will be much smaller. This is checked
@@ -544,9 +638,18 @@ public class ShrinkResourcesTest {
         assertThat(dumpZipContents(apkDebug.getFile()))
                 .containsExactlyElementsIn(expectedUnstrippedApk)
                 .inOrder();
-        assertThat(dumpZipContents(apkProguardOnly.getFile()))
-                .containsExactlyElementsIn(expectedUnstrippedApk)
-                .inOrder();
+        if (FileUtils.join(
+                        intermediates,
+                        InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE.getFolderName())
+                .exists()) {
+            assertThat(dumpZipContents(apkProguardOnly.getFile()))
+                    .containsExactlyElementsIn(expectedOptimizeApkContents)
+                    .inOrder();
+        } else {
+            assertThat(dumpZipContents(apkProguardOnly.getFile()))
+                    .containsExactlyElementsIn(expectedUnstrippedApk)
+                    .inOrder();
+        }
 
         // Make sure force_remove was replaced with a small file if replacing rather than removing
         if (REPLACE_DELETED_WITH_EMPTY) {
@@ -566,10 +669,21 @@ public class ShrinkResourcesTest {
         if (!REPLACE_DELETED_WITH_EMPTY) {
             assertThat(Joiner.on('\n').join(expectedCompressed)).doesNotContain("unused");
         }
-        assertThat(dumpZipContents(apkRelease.getFile()))
-                .named("strippedApkContents")
-                .containsExactlyElementsIn(expectedStrippedApkContents)
-                .inOrder();
+
+        if (FileUtils.join(
+                        intermediates,
+                        InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE.getFolderName())
+                .exists()) {
+            assertThat(dumpZipContents(apkRelease.getFile()))
+                    .named("strippedApkContents")
+                    .containsExactlyElementsIn(expectedOptimizeApkContents)
+                    .inOrder();
+        } else {
+            assertThat(dumpZipContents(apkRelease.getFile()))
+                    .named("strippedApkContents")
+                    .containsExactlyElementsIn(expectedStrippedApkContents)
+                    .inOrder();
+        }
 
         // Bundle handles splits anyway.
         if (apkPipeline == ApkPipeline.NO_BUNDLE) {

@@ -28,7 +28,7 @@ import java.io.File
 
 /** Test cases for [OptimizeResourcesTask]. */
 @RunWith(Parameterized::class)
-class OptimizeResourcesTaskTest(private val aaptOptimizeArg: String) {
+class OptimizeResourcesTest(private val enableResourceObfuscation: Boolean) {
 
     private val testApkName = "santa-tracker-release.apk"
 
@@ -42,67 +42,38 @@ class OptimizeResourcesTaskTest(private val aaptOptimizeArg: String) {
     companion object {
         @JvmStatic
         @Parameterized.Parameters
-        fun aaptOptimizeArg() = AAPT2OptimizeFlags.values().map { it.flag }
+        fun enableResourceObfuscation() = arrayOf(true, false)
     }
 
     @Test
     fun testInvokeAaptOptimize_producesExpectedOutput() {
-        val sourceApk = TestResources.getFile(OptimizeResourcesTask::class.java, testApkName)
+        val sourceApk = TestResources.getFile(OptimizeResourcesTest::class.java, testApkName)
         sourceApk.setExecutable(true)
 
         val testFolder = temporaryFolder.newFolder()
         val optimizedApk = File(testFolder, "optimized.apk")
 
-        val flags = arrayOf(
-                aaptOptimizeCommand,
-                sourceApk.path,
-                aaptOptimizeArg,
-                "-o",
-                optimizedApk.path
-        )
+        val flags = listOf (
+                    aaptOptimizeCommand,
+                    sourceApk.path,
+                    AAPT2OptimizeFlags.ENABLE_SPARSE_ENCODING.flag,
+                    AAPT2OptimizeFlags.SHORTEN_RESOURCE_PATHS.flag,
+                    AAPT2OptimizeFlags.COLLAPSE_RESOURCE_NAMES.flag,
+                    "-o",
+                    optimizedApk.path
+            )
 
-        invokeAapt(testAapt2, *flags)
+        if (enableResourceObfuscation) {
+            invokeAapt(testAapt2.parentFile, *flags.toTypedArray())
+        } else {
+            invokeAapt(testAapt2.parentFile,
+                    *flags.minus(AAPT2OptimizeFlags.COLLAPSE_RESOURCE_NAMES.flag).toTypedArray())
+        }
 
         val previousApkSize = sourceApk.length()
         val optimizedApkSize = optimizedApk.length()
         assertThat(previousApkSize).isNotEqualTo(0)
         assertThat(optimizedApkSize).isAtMost(previousApkSize)
         assertThat(optimizedApkSize).isNotEqualTo(0)
-    }
-
-    @Test
-    fun testDoFullTaskAction_ResourceShrinkingEnabled() {
-        val params = getTestOptimizeResourcesParams()
-
-        doFullTaskAction(params)
-
-        val previousApkSize = params.inputApkFile.length()
-        val optimizedApkSize = params.outputApkFile.length()
-        assertThat(optimizedApkSize).isAtMost(previousApkSize)
-        assertThat(optimizedApkSize).isNotEqualTo(0)
-    }
-
-    @Test
-    fun testVerifyAaptFlagEnabled() {
-        val params = getTestOptimizeResourcesParams()
-
-        val result = verifyAaptFlagEnabled(params)
-        assertThat(result).isTrue()
-    }
-
-    private fun getTestOptimizeResourcesParams() : OptimizeResourcesTask.OptimizeResourcesParams {
-        val sourceApk = TestResources.getFile(OptimizeResourcesTask::class.java, testApkName)
-
-        val testFolder = temporaryFolder.newFolder()
-        val optimizedApk = File(testFolder, "optimized.apk")
-
-        return OptimizeResourcesTask.OptimizeResourcesParams(
-                aapt2Executable = testAapt2,
-                inputApkFile = sourceApk,
-                enableResourcePathShortening = aaptOptimizeArg == "--shorten-resource-paths",
-                enableSparseResourceEncoding = aaptOptimizeArg == "--enable-sparse-encoding",
-                enableResourceObfuscation = aaptOptimizeArg == "--collapse-resource-names",
-                outputApkFile = optimizedApk
-        )
     }
 }

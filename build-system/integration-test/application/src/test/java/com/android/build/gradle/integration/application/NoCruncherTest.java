@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,8 +46,17 @@ public class NoCruncherTest {
         // Check "crunchable" PNG is not crunched
         checkResource(ApkType.DEBUG, "drawable/icon.png", false);
         checkResource(ApkType.DEBUG, "drawable/lib_bg.9.png", true);
-        checkResource(ApkType.RELEASE, "drawable/icon.png", false);
-        checkResource(ApkType.RELEASE, "drawable/lib_bg.9.png", true);
+
+        if (noPngCrunch
+                .getIntermediateFile(
+                        InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE.getFolderName())
+                .exists()) {
+            checkResource(ApkType.RELEASE, "drawable/icon.png", "rR.png", false);
+            checkResource(ApkType.RELEASE, "drawable/lib_bg.9.png", "h1.9.png", true);
+        } else {
+            checkResource(ApkType.RELEASE, "drawable/icon.png", false);
+            checkResource(ApkType.RELEASE, "drawable/lib_bg.9.png", true);
+        }
     }
 
     @Test
@@ -58,7 +68,15 @@ public class NoCruncherTest {
                             "build.gradle", "cruncherEnabled = false", "//cruncherEnabled = false");
                     noPngCrunch.executor().run("assembleDebug", "assembleRelease", "assembleQa");
                     checkResource(ApkType.DEBUG, "drawable/icon.png", false);
-                    checkResource(ApkType.RELEASE, "drawable/icon.png", true);
+                    if (noPngCrunch
+                            .getIntermediateFile(
+                                    InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE
+                                            .getFolderName())
+                            .exists()) {
+                        checkResource(ApkType.RELEASE, "drawable/icon.png", "rR.png", true);
+                    } else {
+                        checkResource(ApkType.RELEASE, "drawable/icon.png", true);
+                    }
                     // QA is debuggable, but inits from release, so the cruncher is default enabled.
                     checkResource(ApkType.of("qa", false), "drawable/icon.png", true);
                 });
@@ -83,8 +101,17 @@ public class NoCruncherTest {
     private static void checkResource(
             @NonNull ApkType apkType, @NonNull String fileName, boolean shouldBeProcessed)
             throws IOException {
-        Path srcFile = noPngCrunch.file("src/main/res/" + fileName).toPath();
-        Path destFile = noPngCrunch.getApk(apkType).getResource(fileName);
+        checkResource(apkType, fileName, fileName, shouldBeProcessed);
+    }
+
+    private static void checkResource(
+            @NonNull ApkType apkType,
+            @NonNull String srcName,
+            @NonNull String destName,
+            boolean shouldBeProcessed)
+            throws IOException {
+        Path srcFile = noPngCrunch.file("src/main/res/" + srcName).toPath();
+        Path destFile = noPngCrunch.getApk(apkType).getResource(destName);
         assertThat(srcFile).exists();
         assertThat(destFile).exists();
 

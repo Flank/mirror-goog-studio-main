@@ -1345,23 +1345,6 @@ public abstract class TaskManager<
                         new GenerateLibraryRFileTask.CreationAction(
                                 componentProperties, isLibrary()));
             }
-
-            if (!componentProperties.getVariantDslInfo().isDebuggable()
-                    && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
-                if (componentProperties.getVariantScope().useResourceShrinker()) {
-                    taskFactory.register(
-                            new OptimizeResourcesTask.CreateAction(componentProperties));
-                    // Republish the RES_PROCESSED_OPTIMIZED as PROCESSED_RES
-                    componentProperties
-                            .getArtifacts()
-                            .republish(
-                                    InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE,
-                                    InternalArtifactType.PROCESSED_RES.INSTANCE);
-                } else {
-                    logger.error(
-                            "Cannot apply AAPT2 OPTIMIZE without resource shrinker being enabled.");
-                }
-            }
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
@@ -1394,6 +1377,11 @@ public abstract class TaskManager<
                                     artifacts.get(
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                                     .INSTANCE)));
+
+            if (!componentProperties.getVariantDslInfo().isDebuggable()
+                    && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
+                taskFactory.register(new OptimizeResourcesTask.CreateAction(componentProperties));
+            }
         }
     }
 

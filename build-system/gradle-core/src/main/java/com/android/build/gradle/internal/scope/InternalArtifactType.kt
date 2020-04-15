@@ -160,7 +160,7 @@ InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // compiled resources (output of aapt)
     object PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // Processed res after an AAPT2 optimize operation
-    object OPTIMIZED_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object OPTIMIZED_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // package resources for aar publishing.
     object PACKAGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // R.txt output for libraries - contains mock resource IDs used only at compile time.
