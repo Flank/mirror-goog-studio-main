@@ -155,3 +155,27 @@ java_test(
         "//tools/base/zipflinger",
     ],
 )
+
+java_test(
+    name = "testV3Signing",
+    size = "small",
+    srcs = [
+        "test/src/com/android/signflinger/V3SigningTest.java",
+    ],
+    data = [
+        "test/resources/AndroidManifest.xml",
+        "test/resources/test1.txt",
+        ":test_keys_and_certs",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=testV3Signing.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":sign_utils",
+        ":signflinger",
+        "//tools/apksig",
+        "//tools/base/annotations",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/zipflinger",
+    ],
+)

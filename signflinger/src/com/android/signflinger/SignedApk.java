@@ -79,7 +79,8 @@ public class SignedApk implements Archive {
                 new DefaultApkSignerEngine.Builder(signerConfigs, options.minSdkVersion)
                         .setV1SigningEnabled(options.v1Enabled)
                         .setV2SigningEnabled(options.v2Enabled)
-                        .setV3SigningEnabled(false)
+                        .setV3SigningEnabled(options.v3Enabled)
+                        .setSigningCertificateLineage(options.v3SigningCertificateLineage)
                         .setCreatedBy(options.v1CreatedBy)
                         .setOtherSignersSignaturesPreserved(false)
                         .build();
@@ -156,7 +157,7 @@ public class SignedApk implements Archive {
     public void close() throws IOException {
         try {
             finishV1();
-            finishV2();
+            finishV2andV3();
         } finally {
             signer.close();
             if (!archive.isClosed()) {
@@ -177,14 +178,14 @@ public class SignedApk implements Archive {
         return os.toByteArray();
     }
 
-    private void finishV2() throws IOException {
-        if (!options.v2Enabled) {
+    private void finishV2andV3() throws IOException {
+        if (!options.v2Enabled && !options.v3Enabled) {
             return;
         }
 
         ZipInfo zipInfo = archive.closeWithInfo();
         try (RandomAccessFile raf = new RandomAccessFile(archive.getFile(), "rw")) {
-            byte[] sigBlock = v2Sign(raf, zipInfo);
+            byte[] sigBlock = v2andV3Sign(raf, zipInfo);
             sigBlock =
                     SigningBlockUtils.addToSigningBlock(
                             sigBlock, options.sdkDependencies, DEPENDENCY_INFO_BLOCK_ID);
@@ -243,7 +244,7 @@ public class SignedApk implements Archive {
     }
 
     @NonNull
-    private byte[] v2Sign(@NonNull RandomAccessFile raf, @NonNull ZipInfo zipInfo)
+    private byte[] v2andV3Sign(@NonNull RandomAccessFile raf, @NonNull ZipInfo zipInfo)
             throws ApkFormatException, SignatureException, NoSuchAlgorithmException,
                     InvalidKeyException, IOException {
         DataSource beforeCentralDir =
