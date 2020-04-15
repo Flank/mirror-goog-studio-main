@@ -40,7 +40,7 @@
     <option name="myDefaultNotNull" value="com.android.annotations.NonNull" />
     <option name="myNullables">
       <value>
-        <list size="11">
+        <list size="14">
           <item index="0" class="java.lang.String" itemvalue="com.android.annotations.Nullable" />
           <item index="1" class="java.lang.String" itemvalue="org.jetbrains.annotations.Nullable" />
           <item index="2" class="java.lang.String" itemvalue="javax.annotation.Nullable" />
@@ -52,12 +52,15 @@
           <item index="8" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.qual.Nullable" />
           <item index="9" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NullableDecl" />
           <item index="10" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NullableType" />
+          <item index="11" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NullableDecl" />
+          <item index="12" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NullableType" />
+          <item index="13" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.qual.Nullable" />
         </list>
       </value>
     </option>
     <option name="myNotNulls">
       <value>
-        <list size="10">
+        <list size="13">
           <item index="0" class="java.lang.String" itemvalue="com.android.annotations.NonNull" />
           <item index="1" class="java.lang.String" itemvalue="org.jetbrains.annotations.NotNull" />
           <item index="2" class="java.lang.String" itemvalue="javax.annotation.Nonnull" />
@@ -68,6 +71,9 @@
           <item index="7" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.qual.NonNull" />
           <item index="8" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NonNullDecl" />
           <item index="9" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NonNullType" />
+          <item index="10" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NonNullDecl" />
+          <item index="11" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.compatqual.NonNullType" />
+          <item index="12" class="java.lang.String" itemvalue="org.checkerframework.checker.nullness.qual.NonNull" />
         </list>
       </value>
     </option>

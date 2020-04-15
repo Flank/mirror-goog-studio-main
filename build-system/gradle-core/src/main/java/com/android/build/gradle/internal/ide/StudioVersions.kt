@@ -26,19 +26,19 @@ import com.android.Version
 import com.google.common.base.Splitter
 import org.gradle.api.InvalidUserDataException
 
-/** Throws if the Android Studio version used has a lower major/minor version than the current plugin */
-fun verifyStudioIsNotOld(projectOptions: ProjectOptions) {
+/** Throws if the Intellij Android Support plugin version used has a lower major/minor version than the current Android Gradle plugin */
+fun verifyIDEIsNotOld(projectOptions: ProjectOptions) {
     if (!projectOptions[BooleanOption.ENABLE_STUDIO_VERSION_CHECK]) {
         return
     }
-    verifyStudioIsNotOld(
+    verifyIDEIsNotOld(
         projectOptions.get(StringOption.IDE_ANDROID_STUDIO_VERSION),
         ANDROID_GRADLE_PLUGIN_VERSION
     )
 }
 
 @VisibleForTesting
-internal fun verifyStudioIsNotOld(
+internal fun verifyIDEIsNotOld(
     injectedVersion: String?,
     androidGradlePluginVersion: MajorMinorVersion
 ) {
@@ -48,11 +48,11 @@ internal fun verifyStudioIsNotOld(
     }
 
     val parsedInjected = parseVersion(injectedVersion)
-        ?: throw InvalidUserDataException("Invalid injected android studio version '$injectedVersion', expected to be of the form 'w.x.y.z'")
+        ?: throw InvalidUserDataException("Invalid injected android support version '$injectedVersion', expected to be of the form 'w.x.y.z'")
 
     if (parsedInjected < androidGradlePluginVersion) {
         throw RuntimeException(
-            "This version of Android Studio cannot open this project, please retry with Android Studio $androidGradlePluginVersion or newer."
+            "This version of the Android Support plugin for IntelliJ IDEA (or Android Studio) cannot open this project, please retry with version $androidGradlePluginVersion or newer."
         )
     }
 }
