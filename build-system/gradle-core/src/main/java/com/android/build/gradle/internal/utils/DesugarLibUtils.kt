@@ -76,7 +76,9 @@ fun getDesugarLibDexFromTransform(creationConfig: BaseCreationConfig): FileColle
     }
 
     val configuration = getDesugarLibConfiguration(creationConfig.globalScope.project)
-    return getDesugarLibDexFromTransform(configuration, creationConfig.minSdkVersion.featureLevel)
+    return getDesugarLibDexFromTransform(
+        configuration,
+        creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
 }
 
 /**

@@ -107,7 +107,7 @@ fun getDesugarLibConfigurations(components: Collection<ComponentPropertiesImpl>)
 private fun getDesugarLibConfiguration(component: ComponentPropertiesImpl): DesugarLibConfiguration {
     val libConfiguration = getDesugarLibConfig(component.globalScope.project)
     val bootClasspath = component.variantScope.bootClasspath.filter { it.name == SdkConstants.FN_FRAMEWORK_LIBRARY }
-    val minSdkVersion = component.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel
+    val minSdkVersion = component.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
 
     return DesugarLibConfiguration(libConfiguration, bootClasspath, minSdkVersion)
 }
