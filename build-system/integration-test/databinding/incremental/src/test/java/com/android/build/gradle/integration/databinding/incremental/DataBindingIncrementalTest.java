@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.databinding.incremental;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER;
 import static com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTaskKt.DATA_BINDING_TRIGGER_CLASS;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -55,25 +57,26 @@ public class DataBindingIncrementalTest {
     @Rule
     public GradleTestProject project;
 
+    // Tasks
     private static final String TRIGGER_TASK = ":dataBindingTriggerDebug";
     private static final String COMPILE_JAVA_TASK = ":compileDebugJavaWithJavac";
 
+    // Generated source files
     private static final String MAIN_ACTIVITY_BINDING_CLASS =
             "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
     private static final String MAIN_ACTIVITY_BINDING_CLASS_IMPL =
             "Landroid/databinding/testapp/databinding/ActivityMainBindingImpl;";
-    private static final String MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL =
-            "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;";
-
     private static final String MAIN_ACTIVITY_2_BINDING_CLASS =
             "Landroid/databinding/testapp/databinding/Activity2Binding;";
     private static final String MAIN_ACTIVITY_2_BINDING_CLASS_IMPL =
             "Landroid/databinding/testapp/databinding/Activity2BindingImpl;";
 
-
+    // Layout files
     private static final String ACTIVITY_MAIN_XML = "src/main/res/layout/activity_main.xml";
-    private static final String ACTIVITY_MAIN_JAVA
-            = "src/main/java/android/databinding/testapp/MainActivity.java";
+
+    // Source files
+    private static final String ACTIVITY_MAIN_JAVA =
+            "src/main/java/android/databinding/testapp/MainActivity.java";
     private static final String USER_JAVA = "src/main/java/android/databinding/testapp/User.java";
 
     private final boolean useAndroidX;
@@ -95,14 +98,11 @@ public class DataBindingIncrementalTest {
         this.withKotlin = withKotlin;
         mainActivityBindingClasses =
                 ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
-        String androidXProp = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
-        String incrementalProp =
-                BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING.getPropertyName() + "=true";
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
-                        .addGradleProperties(androidXProp)
-                        .addGradleProperties(incrementalProp)
+                        .addGradleProperties(
+                                BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
                         .withKotlinGradlePlugin(withKotlin)
                         .create();
     }
@@ -119,51 +119,47 @@ public class DataBindingIncrementalTest {
         }
     }
 
-    private File getGeneratedInfoClass() {
+    private File getTriggerClass() {
         return new File(
-                ArtifactTypeUtil.getOutputDir(
-                        InternalArtifactType.DATA_BINDING_TRIGGER.INSTANCE, project.getBuildDir()),
+                ArtifactTypeUtil.getOutputDir(DATA_BINDING_TRIGGER.INSTANCE, project.getBuildDir()),
                 "debug/android/databinding/testapp/" + DATA_BINDING_TRIGGER_CLASS + ".java");
     }
 
-    private File getGeneratedSourceFile() {
+    private File getGeneratedSourceDir() {
         return withKotlin
-                ? project.getGeneratedSourceFile(
-                        "source",
-                        "kapt",
-                        "debug",
-                        "android",
-                        "databinding",
-                        "testapp",
-                        "databinding",
-                        "ActivityMainBindingImpl.java")
-                : project.getGeneratedSourceFile(
-                        "ap_generated_sources",
-                        "debug",
-                        "out",
-                        "android",
-                        "databinding",
-                        "testapp",
-                        "databinding",
-                        "ActivityMainBindingImpl.java");
+                ? new File(project.getGeneratedDir(), "source/kapt/debug")
+                : new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE,
+                                project.getBuildDir()),
+                        "debug/out");
     }
 
-    private File getInfoIntermediate(String fileName) {
-        return project.getIntermediateFile(
-                "data_binding_layout_info_type_merge",
-                "debug",
-                "out",
-                fileName);
+    private File getGeneratedSourceFile() {
+        return new File(
+                getGeneratedSourceDir(),
+                "android/databinding/testapp/databinding/ActivityMainBindingImpl.java");
+    }
+
+    private File getLayoutInfoDir() {
+        return new File(
+                ArtifactTypeUtil.getOutputDir(
+                        DATA_BINDING_LAYOUT_INFO_TYPE_MERGE.INSTANCE, project.getBuildDir()),
+                "debug/out");
+    }
+
+    private File getLayoutInfoFile(String fileName) {
+        return new File(getLayoutInfoDir(), fileName);
     }
 
     @Test
     public void compileWithoutChange() throws Exception {
         project.executor().run(TRIGGER_TASK);
-        File infoClass = getGeneratedInfoClass();
+        File infoClass = getTriggerClass();
         assertThat(infoClass).exists();
         String contents = FileUtils.readFileToString(infoClass, Charsets.UTF_8);
         project.executor().run(TRIGGER_TASK);
-        assertThat(getGeneratedInfoClass()).hasContents(contents);
+        assertThat(getTriggerClass()).hasContents(contents);
     }
 
     @Test
@@ -171,7 +167,7 @@ public class DataBindingIncrementalTest {
         // Compile fully the first time
         project.execute(COMPILE_JAVA_TASK);
 
-        File generatedInfoFile = getGeneratedInfoClass();
+        File generatedInfoFile = getTriggerClass();
         File generatedSourceFile = getGeneratedSourceFile();
         assertThat(generatedInfoFile).exists();
         assertThat(generatedSourceFile).exists();
@@ -208,7 +204,7 @@ public class DataBindingIncrementalTest {
         // Compile fully the first time
         project.execute(COMPILE_JAVA_TASK);
 
-        File generatedInfoFile = getGeneratedInfoClass();
+        File generatedInfoFile = getTriggerClass();
         File generatedSourceFile = getGeneratedSourceFile();
         assertThat(generatedInfoFile).exists();
         assertThat(generatedSourceFile).exists();
@@ -244,7 +240,7 @@ public class DataBindingIncrementalTest {
         // Compile fully the first time
         project.execute(COMPILE_JAVA_TASK);
 
-        File generatedInfoFile = getGeneratedInfoClass();
+        File generatedInfoFile = getTriggerClass();
         File generatedSourceFile = getGeneratedSourceFile();
         assertThat(generatedInfoFile).exists();
         assertThat(generatedSourceFile).exists();
@@ -361,24 +357,26 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addNewLayoutFolderAndFile() throws Exception {
+        String mainActivityBindingClassImpl =
+                "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;";
+
         project.execute(TRIGGER_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File landscapeActivity = new File(mainActivity
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
         assertThat(landscapeActivity.getParentFile().mkdirs()).isTrue();
         Files.copy(mainActivity, landscapeActivity);
-        project.executor().withArgument("-Pkapt.incremental.apt=false").run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         DexSubject apk = assertThat(project.getApk(DEBUG)).hasMainDexFile().that();
         apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
-        apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL);
+        apk.containsClass(mainActivityBindingClassImpl);
         apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS_IMPL);
 
         // delete and recompile
         assertThat(landscapeActivity.delete()).isTrue();
-        project.executor().withArgument("-Pkapt.incremental.apt=false").run("assembleDebug");
-        assertThat(project.getApk(DEBUG))
-                .doesNotContainClass(MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL);
+        project.executor().run("assembleDebug");
+        assertThat(project.getApk(DEBUG)).doesNotContainClass(mainActivityBindingClassImpl);
         for (String className : mainActivityBindingClasses) {
             assertThat(project.getApk(DEBUG)).containsClass(className);
         }
@@ -390,11 +388,11 @@ public class DataBindingIncrementalTest {
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
-        assertThat(getInfoIntermediate("activity2-layout.xml")).doesNotExist();
+        assertThat(getLayoutInfoFile("activity2-layout.xml")).doesNotExist();
 
         project.executor().run("assembleDebug");
 
-        assertThat(getInfoIntermediate("activity2-layout.xml")).exists();
+        assertThat(getLayoutInfoFile("activity2-layout.xml")).exists();
 
         assertThat(project.getApk(DEBUG))
                 .hasMainDexFile()
@@ -419,12 +417,12 @@ public class DataBindingIncrementalTest {
         assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS);
         assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
 
-        assertThat(getInfoIntermediate("activity2-layout.xml")).exists();
+        assertThat(getLayoutInfoFile("activity2-layout.xml")).exists();
         assertThat(activity2.delete()).isTrue();
         project.execute("assembleDebug");
         assertThat(project.getApk(DEBUG)).doesNotContainClass(MAIN_ACTIVITY_2_BINDING_CLASS);
         assertThat(project.getApk(DEBUG)).doesNotContainClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
-        assertThat(getInfoIntermediate("activity2-layout.xml")).doesNotExist();
+        assertThat(getLayoutInfoFile("activity2-layout.xml")).doesNotExist();
     }
 
     @Test
@@ -437,7 +435,7 @@ public class DataBindingIncrementalTest {
         Files.copy(mainActivity, activity3);
         project.executor().run("assembleDebug");
 
-        File activity3DataBindingInfo = getInfoIntermediate("activity3-layout.xml");
+        File activity3DataBindingInfo = getLayoutInfoFile("activity3-layout.xml");
         assertThat(activity3DataBindingInfo).exists();
         long dataBindingInfoLastModified = activity3DataBindingInfo.lastModified();
         TestUtils.waitForFileSystemTick();
