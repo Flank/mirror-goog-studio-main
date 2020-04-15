@@ -17,6 +17,7 @@
 package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +33,9 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.io.Files;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -47,6 +50,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -55,6 +59,13 @@ public class SymbolIoTest {
 
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
+
+    private SymbolIo symbolIo;
+
+    @Before
+    public void initSymbolIo() {
+        symbolIo = new SymbolIo();
+    }
 
     @Test
     public void testSingleInt() throws Exception {
@@ -99,6 +110,16 @@ public class SymbolIoTest {
                                         "xml", "authenticator", "int", "0x7f040000"))
                         .build();
         assertEquals(expected, table);
+        assertCanonicalizationDoesNotProduceDuplicateStrings(table);
+    }
+
+    /** Check that cannonicalization doesn't produce duplicate strings. */
+    private static void assertCanonicalizationDoesNotProduceDuplicateStrings(SymbolTable table) {
+        for (Symbol symbol : table.getSymbols().values()) {
+            if (symbol.getCanonicalName().equals(symbol.getName())) {
+                assertThat(symbol.getCanonicalName()).isSameAs(symbol.getName());
+            }
+        }
     }
 
     @Test
@@ -127,6 +148,7 @@ public class SymbolIoTest {
                                         "xml", "authenticator", "int", "0x7f040000"))
                         .build();
         assertEquals(expected, table);
+        assertCanonicalizationDoesNotProduceDuplicateStrings(table);
     }
 
     @Test
@@ -212,10 +234,10 @@ public class SymbolIoTest {
                 .isEqualTo(
                         SymbolTable.builder()
                                 .add(
-                                        new Symbol.StyleableSymbol(
+                                        Symbol.styleableSymbol(
                                                 "a", ImmutableList.of(0x1), ImmutableList.of("b")))
                                 .add(
-                                        new Symbol.StyleableSymbol(
+                                        Symbol.styleableSymbol(
                                                 "a_c",
                                                 ImmutableList.of(0x2),
                                                 ImmutableList.of("d")))
@@ -582,8 +604,8 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.readFromAapt(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
-                        new Symbol.StyleableSymbol(
+                        Symbol.normalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
+                        Symbol.styleableSymbol(
                                 "LimitedSizeLinearLayout",
                                 ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("max_width", "max_height")));
@@ -635,7 +657,7 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.readFromAapt(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "LimitedSizeLinearLayout",
                                 ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("android:max_width", "android:max_height")));
@@ -720,17 +742,17 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(content);
 
-        SymbolTable table = SymbolIo.readSymbolListWithPackageName(file.toPath());
+        SymbolTable table = symbolIo.readSymbolListWithPackageName(file.toPath());
 
         assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0),
-                        new Symbol.StyleableSymbol(
+                        Symbol.normalSymbol(ResourceType.DRAWABLE, "foobar", 0),
+                        Symbol.styleableSymbol(
                                 "LimitedSizeLinearLayout",
                                 ImmutableList.of(),
                                 ImmutableList.of("child_1", "child_2")),
-                        new Symbol.StyleableSymbol("S2", ImmutableList.of(), ImmutableList.of()));
+                        Symbol.styleableSymbol("S2", ImmutableList.of(), ImmutableList.of()));
     }
 
     @Test
@@ -740,9 +762,9 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("com.example.lib")
-                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000))
+                        .add(Symbol.normalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000))
                         .add(
-                                new Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         "LimitedSizeLinearLayout",
                                         ImmutableList.of(0x7f010000, 0x7f010001),
                                         ImmutableList.of("max_width", "max_height")))
@@ -767,7 +789,7 @@ public class SymbolIoTest {
                         "styleable LimitedSizeLinearLayout max_width max_height")
                 .inOrder();
 
-        SymbolTable result = SymbolIo.readSymbolListWithPackageName(output);
+        SymbolTable result = symbolIo.readSymbolListWithPackageName(output);
         for (ResourceType type : ResourceType.values()) {
             assertThat(result.getSymbols().row(type).keySet())
                     .named(type.getName() + " resources in table " + result)
@@ -820,7 +842,7 @@ public class SymbolIoTest {
         FileSubject.assertThat(file).exists();
 
         try {
-            SymbolIo.readSymbolListWithPackageName(file.toPath());
+            symbolIo.readSymbolListWithPackageName(file.toPath());
             fail();
         } catch (IOException e) {
             assertThat(e.getMessage())
@@ -846,12 +868,12 @@ public class SymbolIoTest {
         Path output = fs.getPath("package-aware-r.txt");
         SymbolIo.writeSymbolListWithPackageName(misordered, manifest, output);
 
-        SymbolTable symbolTable = SymbolIo.readSymbolListWithPackageName(output);
+        SymbolTable symbolTable = symbolIo.readSymbolListWithPackageName(output);
         Symbol symbol = symbolTable.getSymbols().get(ResourceType.STYLEABLE, "AlertDialog");
 
         assertThat(symbol)
                 .isEqualTo(
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "AlertDialog",
                                 ImmutableList.of(),
                                 ImmutableList.of(),
@@ -925,26 +947,26 @@ public class SymbolIoTest {
         SymbolTable sampleSymbolTable =
                 SymbolTable.builder()
                         .tablePackage("foo.bar")
-                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
-                        .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
+                        .add(Symbol.normalSymbol(ResourceType.DRAWABLE, "img", 0))
+                        .add(Symbol.normalSymbol(ResourceType.ID, "bar", 0))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.STRING,
                                         "be.ep",
                                         0,
                                         ResourceVisibility.UNDEFINED,
                                         "be_ep"))
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
+                        .add(Symbol.normalSymbol(ResourceType.STRING, "foo", 0))
                         .add(
-                                new Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         "A.B",
                                         ImmutableList.of(),
                                         ImmutableList.of("a1", "a2.f"),
                                         ResourceVisibility.UNDEFINED,
                                         "A_B"))
-                        .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
-                        .add(new Symbol.AttributeSymbol("maybeAttr", 0, true))
-                        .add(new Symbol.AttributeSymbol("realAttr", 0, false))
+                        .add(Symbol.normalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .add(Symbol.attributeSymbol("maybeAttr", 0, true))
+                        .add(Symbol.attributeSymbol("realAttr", 0, false))
                         .build();
 
         SymbolIo.writePartialR(sampleSymbolTable, partialR.toPath());
@@ -980,26 +1002,28 @@ public class SymbolIoTest {
                         "public int transition t"),
                 StandardCharsets.UTF_8);
 
-        SymbolTable table = SymbolIo.readFromPartialRFile(partialR, "foo.bar.com");
+        SymbolTable table = symbolIo.readFromPartialRFile(partialR, "foo.bar.com");
 
         assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.DRAWABLE, "img", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.ID, "bar", 0, ResourceVisibility.PRIVATE_XML_ONLY),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.STRING, "beep", 0, ResourceVisibility.PRIVATE),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.STRING, "foo", 0, ResourceVisibility.PRIVATE_XML_ONLY),
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "s1",
                                 ImmutableList.of(),
                                 ImmutableList.of("a1", "a2"),
                                 ResourceVisibility.PRIVATE_XML_ONLY),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC));
+
+        assertCanonicalizationDoesNotProduceDuplicateStrings(table);
     }
 
     @Test
@@ -1027,13 +1051,13 @@ public class SymbolIoTest {
 
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.AttributeSymbol("color", 0, false, ResourceVisibility.PUBLIC),
-                        new Symbol.AttributeSymbol("size", 0, false, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
+                        Symbol.attributeSymbol("color", 0, false, ResourceVisibility.PUBLIC),
+                        Symbol.attributeSymbol("size", 0, false, ResourceVisibility.PUBLIC),
+                        Symbol.normalSymbol(
                                 ResourceType.STRING, "publicString", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
+                        Symbol.normalSymbol(
                                 ResourceType.INTEGER, "value", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.StyleableSymbol(
+                        Symbol.styleableSymbol(
                                 "myStyleable",
                                 ImmutableList.of(),
                                 ImmutableList.of(),
@@ -1045,35 +1069,36 @@ public class SymbolIoTest {
         SymbolTable originalTable =
                 SymbolTable.builder()
                         .tablePackage("foo.bar")
-                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
-                        .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
+                        .add(Symbol.normalSymbol(ResourceType.DRAWABLE, "img", 0))
+                        .add(Symbol.normalSymbol(ResourceType.ID, "bar", 0))
                         .add(
-                                new Symbol.NormalSymbol(
+                                Symbol.normalSymbol(
                                         ResourceType.STRING,
                                         "be.ep",
                                         0,
                                         ResourceVisibility.UNDEFINED,
                                         "be_ep"))
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
+                        .add(Symbol.normalSymbol(ResourceType.STRING, "foo", 0))
                         .add(
-                                new Symbol.StyleableSymbol(
+                                Symbol.styleableSymbol(
                                         "A.B",
                                         ImmutableList.of(),
                                         ImmutableList.of("a1", "a2.f"),
                                         ResourceVisibility.UNDEFINED,
                                         "A_B"))
-                        .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
-                        .add(new Symbol.AttributeSymbol("maybeAttr", 0, true))
-                        .add(new Symbol.AttributeSymbol("realAttr", 0, false))
+                        .add(Symbol.normalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .add(Symbol.attributeSymbol("maybeAttr", 0, true))
+                        .add(Symbol.attributeSymbol("realAttr", 0, false))
                         .build();
 
         Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();
 
         SymbolIo.writeRDef(originalTable, rDefFile);
 
-        SymbolTable tableLoadedFromFile = SymbolIo.readRDef(rDefFile);
+        SymbolTable tableLoadedFromFile = symbolIo.readRDef(rDefFile);
 
         assertThat(tableLoadedFromFile).isEqualTo(originalTable);
+        assertCanonicalizationDoesNotProduceDuplicateStrings(tableLoadedFromFile);
     }
 
     @Test
@@ -1081,7 +1106,7 @@ public class SymbolIoTest {
         Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();
         java.nio.file.Files.write(rDefFile, ImmutableList.of("not an RDef file should fail"));
         try {
-            SymbolIo.readRDef(rDefFile);
+            symbolIo.readRDef(rDefFile);
             fail("Expected failure");
         } catch (IOException e) {
             assertThat(e).hasMessageThat().contains("Invalid symbol file");
@@ -1140,7 +1165,7 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("foo.bar")
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "e_ë", 0))
+                        .add(Symbol.normalSymbol(ResourceType.STRING, "e_ë", 0))
                         .build();
 
         // Sanity check.
@@ -1163,5 +1188,50 @@ public class SymbolIoTest {
         File rClass = FileUtils.join(rSources, "foo", "bar", "R.java");
         FileSubject.assertThat(rClass).exists();
         FileSubject.assertThat(rClass).contains("e_ë = 0x0");
+    }
+
+    @Test
+    public void checkInterning() throws IOException {
+        // Given
+        String libContent =
+                "com.example.lib\n"
+                        + "drawable foobar\n"
+                        + "attr myattr\n"
+                        + "styleable LimitedSizeLinearLayout child_1 child_2\n";
+        File libFile = mTemporaryFolder.newFile();
+        Files.asCharSink(libFile, Charsets.UTF_8).write(libContent);
+        String lib2Content =
+                "com.example.lib2\n"
+                        + "drawable foobar\n"
+                        + "styleable LimitedSizeLinearLayout child_1 child_2\n";
+        File lib2File = mTemporaryFolder.newFile();
+        Files.asCharSink(lib2File, Charsets.UTF_8).write(lib2Content);
+
+        // When loading dependency tables symbols should be interned.
+        ImmutableSet<SymbolTable> symbolTables =
+                symbolIo.loadDependenciesSymbolTables(ImmutableList.of(libFile, lib2File));
+
+        assertThat(symbolTables).hasSize(2);
+
+        UnmodifiableIterator<SymbolTable> iterator = symbolTables.iterator();
+        SymbolTable lib = iterator.next();
+        Symbol drawable = lib.getSymbols().get(ResourceType.DRAWABLE, "foobar");
+        Symbol layout = lib.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout");
+        SymbolTable lib2 = iterator.next();
+
+        assertThat(lib2.getSymbols().get(ResourceType.DRAWABLE, "foobar")).isSameAs(drawable);
+
+        assertThat(lib2.getSymbols().get(ResourceType.STYLEABLE, "LimitedSizeLinearLayout"))
+                .isSameAs(layout);
+
+        assertThat(drawable.getCanonicalName()).isSameAs(drawable.getName());
+        assertThat(layout.getCanonicalName()).isSameAs(layout.getName());
+
+        for (Symbol symbol : lib.getSymbols().values()) {
+            assertWithMessage(
+                            "Symbols loaded from the symbol list with package name use basic impl classes to optimize memory use")
+                    .that(symbol.getClass().getSimpleName())
+                    .startsWith("Basic");
+        }
     }
 }

@@ -65,11 +65,11 @@ fun compileSources(sources: ImmutableList<File>, javacOutput: File) {
 fun symbol(type: String, name: String, maybeDefinition: Boolean = false): Symbol {
     val resType = ResourceType.fromClassName(type)!!
     if (resType == ResourceType.STYLEABLE) {
-        return Symbol.StyleableSymbol(name, ImmutableList.of(), ImmutableList.of())
+        return Symbol.styleableSymbol(name, ImmutableList.of(), ImmutableList.of())
     } else if (resType == ResourceType.ATTR) {
-        return Symbol.AttributeSymbol(name, 0, isMaybeDefinition = maybeDefinition)
+        return Symbol.attributeSymbol(name, 0, isMaybeDefinition = maybeDefinition)
     }
-    return Symbol.NormalSymbol(resType, name, 0)
+    return Symbol.normalSymbol(resType, name, 0)
 }
 
 class MockLogger : FakeLogger() {

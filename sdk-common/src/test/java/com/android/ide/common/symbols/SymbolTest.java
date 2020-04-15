@@ -20,6 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.resources.ResourceType;
+import com.google.common.collect.ImmutableList;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
 import org.junit.Test;
 
 public class SymbolTest {
@@ -101,5 +105,38 @@ public class SymbolTest {
             assertThat(e.getCause().getMessage())
                     .contains("':' is not a valid resource name character");
         }
+    }
+
+    /** Test to prevent inadvertent addition of fields which might regress memory use. */
+    @Test
+    public void checkFieldCounts() {
+        Symbol normalSymbol = Symbol.normalSymbol(ResourceType.STRING, "foo");
+        assertThat(getAllInstanceFields(normalSymbol.getClass()))
+                .containsExactly(
+                        "com.android.resources.ResourceType resourceType",
+                        "java.lang.String name");
+
+        Symbol attrSymbol = Symbol.attributeSymbol("bar");
+        assertThat(getAllInstanceFields(attrSymbol.getClass()))
+                .containsExactly("java.lang.String name");
+
+        Symbol styleableSymbol = Symbol.styleableSymbol("baz", ImmutableList.of("bar"));
+        assertThat(getAllInstanceFields(styleableSymbol.getClass()))
+                .containsExactly(
+                        "java.lang.String name",
+                        "com.google.common.collect.ImmutableList<java.lang.String> children");
+    }
+
+    private static List<String> getAllInstanceFields(Class<?> klass) {
+        ImmutableList.Builder<String> fields = ImmutableList.builder();
+        while (klass != Object.class) {
+            for (Field field : klass.getDeclaredFields()) {
+                if (!Modifier.isStatic(field.getModifiers())) {
+                    fields.add(field.getGenericType().getTypeName() + " " + field.getName());
+                }
+            }
+            klass = klass.getSuperclass();
+        }
+        return fields.build();
     }
 }

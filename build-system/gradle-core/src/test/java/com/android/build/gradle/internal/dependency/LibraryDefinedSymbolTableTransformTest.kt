@@ -111,20 +111,20 @@ class LibraryDefinedSymbolTableTransformTest {
 
         val expected = SymbolTable.builder()
             .tablePackage("com.example.mylibrary")
-            .add(Symbol.AttributeSymbol("myAttr", 0, false))
-            .add(Symbol.AttributeSymbol("maybeAttr", 0, true))
-            .add(Symbol.AttributeSymbol("myAttr2", 0, false))
-            .add(Symbol.NormalSymbol(ResourceType.STRING, "app_name", 0))
-            .add(Symbol.NormalSymbol(ResourceType.STRING, "desc", 0))
+            .add(Symbol.attributeSymbol("myAttr", 0, false))
+            .add(Symbol.attributeSymbol("maybeAttr", 0, true))
+            .add(Symbol.attributeSymbol("myAttr2", 0, false))
+            .add(Symbol.normalSymbol(ResourceType.STRING, "app_name", 0))
+            .add(Symbol.normalSymbol(ResourceType.STRING, "desc", 0))
             .add(
-                Symbol.StyleableSymbol(
+                Symbol.styleableSymbol(
                     "ds",
                     ImmutableList.of(),
                 ImmutableList.of("android:name", "android:color", "myAttr")
                 )
             )
             .add(
-                Symbol.StyleableSymbol(
+                Symbol.styleableSymbol(
                     "ds2",
                     ImmutableList.of(),
                     ImmutableList.of("myAttr2", "maybeAttr")

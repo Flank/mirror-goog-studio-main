@@ -174,7 +174,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     // TODO : We need to remove this from this API and always go directly to the
     // Variant API variantOutput.
-    @Internal
+    @Input
     @Override
     public int getVersionCode() {
         if (variantOutput != null) {

@@ -54,7 +54,6 @@ import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
-import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
 import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
@@ -261,16 +260,9 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         val (roots, singleJavaFileRoots) =
             initialRoots.partition { (file) -> file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION }
 
-        fun updateClasspathFromRootsIndex(index: JvmDependenciesIndex) {
-            index.indexedRoots.forEach {
-                environment.projectEnvironment.addSourcesToClasspath(it.file)
-            }
-        }
+        val rootsIndex = JvmDependenciesDynamicCompoundIndex()
+        rootsIndex.addIndex(JvmDependenciesIndexImpl(roots))
 
-        val rootsIndex = JvmDependenciesDynamicCompoundIndex().apply {
-            addIndex(JvmDependenciesIndexImpl(roots))
-            updateClasspathFromRootsIndex(this)
-        }
         val finderFactory = CliVirtualFileFinderFactory(rootsIndex)
         project.registerServiceIfNeeded(MetadataFinderFactory::class.java, finderFactory)
         project.registerServiceIfNeeded(VirtualFileFinderFactory::class.java, finderFactory)

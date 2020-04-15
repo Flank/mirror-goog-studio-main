@@ -163,7 +163,7 @@ class SourceSetManager(
      */
     private fun createConfiguration(
             name: String, description: String, canBeResolved: Boolean = false): Configuration {
-        logger.info("Creating configuration {}", name)
+        logger.debug("Creating configuration {}", name)
 
         val configuration = configurations.maybeCreate(name)
 

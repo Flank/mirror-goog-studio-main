@@ -222,12 +222,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.sourceFolders =
                     scope.getGlobalScope()
                             .getProject()
-                            .files(
-                                    (Callable)
-                                            () ->
-                                                    testedScope
-                                                            .getVariantData()
-                                                            .getJavaSourceFoldersForCoverage());
+                            .files((Callable) () -> testedScope.getVariantData().getJavaSources());
 
             task.setReportDir(testedScope.getCoverageReportDir());
         }

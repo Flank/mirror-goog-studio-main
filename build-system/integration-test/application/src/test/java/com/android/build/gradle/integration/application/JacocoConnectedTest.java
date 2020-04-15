@@ -59,7 +59,7 @@ public class JacocoConnectedTest {
         assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 
@@ -74,7 +74,7 @@ public class JacocoConnectedTest {
 
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 
@@ -124,7 +124,28 @@ public class JacocoConnectedTest {
         Truth.assertThat(files.size()).isAtLeast(2);
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
+                .exists();
+    }
+
+    /** Regression test for http://b/152872138. */
+    @Test
+    @Category(DeviceTests.class)
+    public void testDisablingBuildFeatures() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n\n"
+                        + "android {\n"
+                        + "  buildFeatures {\n"
+                        + "    aidl = false\n"
+                        + "    renderScript = false\n"
+                        + "  }\n"
+                        + "}\n");
+        adb.exclusiveAccess();
+        project.executor().run("connectedCheck");
+        assertThat(
+                        project.file(
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 }

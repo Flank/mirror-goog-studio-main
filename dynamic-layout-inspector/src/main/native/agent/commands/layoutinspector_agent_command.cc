@@ -82,6 +82,16 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
             break;
           }
 
+          case LayoutInspectorCommand::USE_SCREENSHOT_MODE: {
+            jmethodID screenshot_mode_command_method = jni_env->GetMethodID(
+                inspector_class, "onUseScreenshotModeCommand", "(Z)V");
+
+            jni_env->CallVoidMethod(inspector_service,
+                                    screenshot_mode_command_method,
+                                    liCommand->screenshot_mode());
+            break;
+          }
+
           default:
             // Ignore unknown commands
             break;

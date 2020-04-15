@@ -58,8 +58,17 @@ class ScopedBooleanFlag {
   bool* val_;
 };
 
-// Whether the running thread is calling FillAllocEventThreadData().
-static thread_local bool thread_in_FillAllocEventThreadData = false;
+// Whether the running thread is actively in any JVMTI callback.
+//
+// Starting from Android R, the profiler's implementation of a JVMTI callback
+// may perform a JVM operation that triggers the same or a different JVMTI
+// callback. For example, in order to obtain the callstack of the allocation of
+// an object, ObjectAllocCallback() calls into _jvmtiEnv::GetStackTrace().
+// GetStackTrace() may allocate an object causing ObjectAllocCallback() being
+// invoked again. This could lead to infinite recursive calls. Similarly, dead
+// lock could happen. Therefore, we need a flag to indicate we are already
+// calling a JVMTI callback. (See b/147456477 and b/151177685 for more context.)
+static thread_local bool is_thread_in_jvmti_callbacks = false;
 
 static JavaVM* g_vm;
 static profiler::MemoryTrackingEnv* g_env;
@@ -199,6 +208,8 @@ void MemoryTrackingEnv::Initialize() {
   memset(&callbacks, 0, sizeof(callbacks));
   // Note: we only track ClassPrepare as class information like
   // fields and methods are not yet available during ClassLoad.
+  //
+  // Every callback shouldn't enter if |is_thread_in_jvmti_callbacks| is true.
   callbacks.ClassPrepare = &ClassPrepareCallback;
   callbacks.VMObjectAlloc = &ObjectAllocCallback;
   callbacks.ObjectFree = &ObjectFreeCallback;
@@ -650,6 +661,10 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
 
 void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                              jthread thread, jclass klass) {
+  // Don't enter if a JVMTI callback is already on the callstack.
+  ScopedBooleanFlag scoped_flag(&is_thread_in_jvmti_callbacks);
+  if (scoped_flag.InitialValue()) return;
+
   std::lock_guard<std::mutex> lock(g_env->class_data_mutex_);
   AllocationEvent klass_event;
   auto klass_data = g_env->RegisterNewClass(jvmti, jni, klass);
@@ -681,6 +696,10 @@ void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                             jthread thread, jobject object,
                                             jclass klass, jlong size) {
+  // Don't enter if a JVMTI callback is already on the callstack.
+  ScopedBooleanFlag scoped_flag(&is_thread_in_jvmti_callbacks);
+  if (scoped_flag.InitialValue()) return;
+
   if (!g_env->ShouldSelectSample(g_env->total_alloc_count_++)) {
     return;
   }
@@ -729,6 +748,10 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 }
 
 void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
+  // Don't enter if a JVMTI callback is already on the callstack.
+  ScopedBooleanFlag scoped_flag(&is_thread_in_jvmti_callbacks);
+  if (scoped_flag.InitialValue()) return;
+
   g_env->total_free_count_++;
 
   Stopwatch stopwatch;
@@ -744,10 +767,18 @@ void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
 }
 
 void MemoryTrackingEnv::GCStartCallback(jvmtiEnv* jvmti) {
+  // Don't enter if a JVMTI callback is already on the callstack.
+  ScopedBooleanFlag scoped_flag(&is_thread_in_jvmti_callbacks);
+  if (scoped_flag.InitialValue()) return;
+
   g_env->LogGcStart();
 }
 
 void MemoryTrackingEnv::GCFinishCallback(jvmtiEnv* jvmti) {
+  // Don't enter if a JVMTI callback is already on the callstack.
+  ScopedBooleanFlag scoped_flag(&is_thread_in_jvmti_callbacks);
+  if (scoped_flag.InitialValue()) return;
+
   g_env->LogGcFinish();
 }
 
@@ -1077,22 +1108,10 @@ int32_t MemoryTrackingEnv::FindLineNumber(int64_t location_id, int entry_count,
   return line_number;
 }
 
-// Profiler code MemoryTrackingEnv::FillAllocEventThreadData(..) calls into
-// _jvmtiEnv::GetStackTrace(). Starting from Android R, GetStackTrace() may
-// allocate an object causing ObjectAllocCallback() being invoked again, which
-// calls FillAllocEventThreadData(). This could lead to infinite recursive
-// calls. Therefore, we need a flag to indicate we are already calling
-// FillAllocEventThreadData() so any further invocations of
-// FillAllocEventThreadData() would not cause recursions. We miss stack trace
-// for those allocations but profiler continues running. (See b/147456477 for
-// more context.)
 void MemoryTrackingEnv::FillAllocEventThreadData(
     MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni, jthread thread,
     AllocationEvent::Allocation* alloc_data) {
   env->FillThreadName(jvmti, jni, thread, alloc_data->mutable_thread_name());
-
-  ScopedBooleanFlag scoped_flag(&thread_in_FillAllocEventThreadData);
-  if (scoped_flag.InitialValue()) return;
 
   // Collect stack frames
   int32_t depth = env->max_stack_depth_;

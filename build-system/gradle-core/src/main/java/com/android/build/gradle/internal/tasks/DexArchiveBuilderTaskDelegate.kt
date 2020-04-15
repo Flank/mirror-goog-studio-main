@@ -425,7 +425,12 @@ class DexArchiveBuilderTaskDelegate(
             outputKeepRules?.let { FileUtils.cleanOutputDir(it) }
             desugarGraphDir?.let { FileUtils.cleanOutputDir(it) }
         } else {
-            removeChangedJarOutputs(inputFiles, inputFileChanges, outputDir)
+            removeChangedJarOutputs(
+                inputFiles,
+                inputFileChanges,
+                impactedFiles ?: emptySet(),
+                outputDir
+            )
             deletePreviousOutputsFromDirs(inputFileChanges, outputDir)
         }
 
@@ -559,14 +564,15 @@ class DexArchiveBuilderTaskDelegate(
     private fun removeChangedJarOutputs(
         inputClasses: Set<File>,
         changes: Set<FileChange>,
+        desugaringImpactedFiles: Set<File>,
         output: File
     ) {
-        if (changes.isEmpty()) return
+        if (changes.isEmpty() && desugaringImpactedFiles.isEmpty()) return
 
         val changedFiles = changes.map { it.file }.toSet()
         val unchangedOutputs = mutableSetOf<File>()
         inputClasses.asSequence()
-            .filter { it.extension == SdkConstants.EXT_JAR && it !in changedFiles }
+            .filter { it.extension == SdkConstants.EXT_JAR && it !in changedFiles && it !in desugaringImpactedFiles }
             .forEach { file ->
                 unchangedOutputs.add(getDexOutputForJar(file, output, null))
                 (0 until numberOfBuckets).forEach {

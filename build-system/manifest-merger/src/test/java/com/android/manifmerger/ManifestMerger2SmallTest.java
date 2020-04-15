@@ -2472,6 +2472,114 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    /**
+     * Tests related to provider tag which can have different behaviors depending on its location in
+     * the xml tree.
+     *
+     * <p>For provider in application xml eleemnt, an "android:name" attribute is used as the key
+     * for merging. For provider in queries xml element, there are no key.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testProviderTags() throws Exception {
+        MockLog mockLog = new MockLog();
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <provider android:name=\"provider1\" "
+                        + " android:authorities=\"content://com.example.app.provider/table1\"/>\n"
+                        + "    </application>"
+                        + "    <queries>\n"
+                        + "      <intent>\n"
+                        + "          <action android:name=\"android.intent.action.WHATEVER\" />\n"
+                        + "      </intent>\n"
+                        + "    </queries>"
+                        + "\n"
+                        + "</manifest>";
+
+        File appFile = TestUtils.inputAsFile("providerTagsHandlingLibApp", appInput);
+        assertTrue(appFile.exists());
+
+        String lib1Input =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "  <queries>\n"
+                        + "    <provider android:authority=\"some.authority\" />\n"
+                        + "      <intent>\n"
+                        + "          <action android:name=\"android.intent.action.ANOTHER\" />\n"
+                        + "      </intent>\n"
+                        + "  </queries>\n"
+                        + "\n"
+                        + "</manifest>";
+        File lib1File = TestUtils.inputAsFile("providerTagsHandlingLib", lib1Input);
+
+        String lib2Input =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.lib2\">\n"
+                        + "\n"
+                        + "    <application>\n"
+                        + "       <provider android:name=\"com.example.app1.provider1\" "
+                        + " android:directBootAware=\"true\"/>\n"
+                        + "    </application>"
+                        + "\n"
+                        + "</manifest>";
+        File lib2File = TestUtils.inputAsFile("providerTagsHandlingLib", lib2Input);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addLibraryManifest(lib1File)
+                            .addLibraryManifest(lib2File)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document mergedDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList mergedQueries = mergedDocument.getElementsByTagName(SdkConstants.TAG_QUERIES);
+            assertThat(mergedQueries.getLength()).isEqualTo(1);
+            NodeList queriesProviders =
+                    ((Element) mergedQueries.item(0))
+                            .getElementsByTagName(SdkConstants.TAG_PROVIDER);
+            assertThat(queriesProviders.getLength()).isEqualTo(1);
+            assertThat(
+                            queriesProviders
+                                    .item(0)
+                                    .getAttributes()
+                                    .getNamedItem("android:authority")
+                                    .getNodeValue())
+                    .isEqualTo("some.authority");
+            NodeList applications =
+                    mergedDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
+            assertThat(applications.getLength()).isEqualTo(1);
+            NodeList appProviders =
+                    ((Element) applications.item(0))
+                            .getElementsByTagName(SdkConstants.TAG_PROVIDER);
+            assertThat(appProviders.getLength()).isEqualTo(1);
+            Truth.assertThat(
+                            appProviders
+                                    .item(0)
+                                    .getAttributes()
+                                    .getNamedItem("android:name")
+                                    .getNodeValue())
+                    .isEqualTo("com.example.app1.provider1");
+        } finally {
+            assertThat(appFile.delete()).named("Overlay was deleted").isTrue();
+            assertThat(lib1File.delete()).named("Lib1 file was deleted").isTrue();
+            assertThat(lib2File.delete()).named("Lib1 file was deleted").isTrue();
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {

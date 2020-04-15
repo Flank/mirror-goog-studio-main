@@ -688,6 +688,71 @@ class DexArchiveBuilderDelegateTest(
             .hasSize(1)
     }
 
+    @Test
+    fun testDesugaringAdditionalPaths() {
+        // Only for D8, Ignore DX
+        Assume.assumeTrue(dexerTool == DexerTool.D8)
+        // Caching is currently not supported when withIncrementalDexingV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
+
+        val carbonFormLibJar = tmpDir.root.resolve("carbonFormLib.jar")
+        TestInputsGenerator.pathWithClasses(
+            carbonFormLibJar.toPath(), ImmutableList.of<Class<*>>(CarbonForm::class.java)
+        )
+
+        val animalLibJar = tmpDir.root.resolve("animalLib.jar")
+        TestInputsGenerator.pathWithClasses(
+            animalLibJar.toPath(), ImmutableList.of<Class<*>>(Animal::class.java)
+        )
+
+        val externalLibsOutput = tmpDir.newFolder()
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(carbonFormLibJar, animalLibJar),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutput = externalLibsOutput
+        ).doProcess()
+        externalLibsOutput.deleteRecursively()
+        // Outputs should be retrieved from Android build cache.
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(carbonFormLibJar, animalLibJar),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutput = externalLibsOutput
+        ).doProcess()
+
+        // This matches "hash_1.jar" but not "hash.jar" which is retrieved from cache.
+        val matchProcessedName = Regex(".*_\\d+.jar")
+        assertThat(
+            externalLibsOutput.listFiles()!!.filter { it.name.contains(matchProcessedName) }).named(
+            "list of external libraries processed"
+        ).isEmpty()
+
+        // Modify carbonFormLib as animalLib desugaring depends on it.
+        TestInputsGenerator.pathWithClasses(
+            carbonFormLibJar.toPath(),
+            ImmutableList.of<Class<*>>(CarbonForm::class.java, Toy::class.java)
+        )
+        getDelegate(
+            isIncremental = true,
+            withCache = true,
+            externalLibClasses = setOf(carbonFormLibJar, animalLibJar),
+            externalLibChanges = setOf(
+                FakeFileChange(
+                    carbonFormLibJar,
+                    changeType = ChangeType.MODIFIED
+                )
+            ),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            externalLibsOutput = externalLibsOutput
+        ).doProcess()
+        assertThat(
+            externalLibsOutput.listFiles()!!
+                .filterNot { it.name.contains(matchProcessedName) }).named(
+            "list of external libraries from cache"
+        ).isEmpty()
+    }
+
     private fun findOutputBucketForDirInput(numberOfBuckets: Int): String =
         (0 until numberOfBuckets).find {
             FileUtils.find(out.resolve(it.toString()).toFile(),

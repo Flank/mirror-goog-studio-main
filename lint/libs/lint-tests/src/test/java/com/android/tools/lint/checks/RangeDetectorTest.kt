@@ -987,4 +987,68 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "                                ~~~\n" +
                     "4 errors, 0 warnings")
     }
+
+    fun testFlow() {
+        // Regression test for
+        // https://issuetracker.google.com/37124951
+        // Make sure that in the code snippet below, the flow analysis
+        // doesn't look beyond the previous assignment to alpha
+        // when trying to figure out the range
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.graphics.drawable.Drawable;
+                public class AlphaTest {
+                    void test(Drawable d) {
+                        int alpha = -1;
+                        long l = System.currentTimeMillis();
+                        if (l != 0) {
+                            alpha = (int) (l % 256);
+                            d.setAlpha(alpha);
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testAndroidXBug() {
+        // Regression test for bug uncovered by continuous androidx+studio integration build
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import android.support.annotation.IntRange
+                import android.support.annotation.Size
+                import test.pkg.ColorSpace.Companion.MaxId
+                import test.pkg.ColorSpace.Companion.MinId
+                private fun isSrgb(
+                        @Size(6) primaries: FloatArray,
+                        OETF: (Double) -> Double,
+                        EOTF: (Double) -> Double,
+                        min: Float,
+                        max: Float,
+                        @IntRange(from = MinId.toLong(), to = MaxId.toLong()) id: Int
+                ): Boolean {
+                    if (id == 0) return true
+                    return false
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                abstract class ColorSpace {
+                    internal companion object {
+                        internal const val MinId = -1
+                        internal const val MaxId = 63
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

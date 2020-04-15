@@ -1080,6 +1080,8 @@ public final class SdkConstants {
     public static final String TAG_RESOURCE = "resource";
     public static final String TAG_MODULE = "module";
     public static final String TAG_NAV_GRAPH = "nav-graph";
+    public static final String TAG_QUERIES = "queries";
+    public static final String TAG_INTENT = "intent";
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources"; //$NON-NLS-1$

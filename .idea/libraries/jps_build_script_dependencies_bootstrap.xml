@@ -37,7 +37,7 @@
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/be/cyberelf/nanoxml/nanoxml/2.2.3/nanoxml-2.2.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/jgoodies/forms/1.1-preview/forms-1.1-preview.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/jetbrains/intellij/java/java-rt/193.4744/java-rt-193.4744.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/27.1-jre/guava-27.1-jre.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/28.1-jre/guava-28.1-jre.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/j2objc/j2objc-annotations/1.1/j2objc-annotations-1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.41.Final/netty-codec-http2-4.1.41.Final.jar!/" />
