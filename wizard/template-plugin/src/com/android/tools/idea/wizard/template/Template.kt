@@ -4,9 +4,12 @@ typealias Recipe = RecipeExecutor.(TemplateData) -> Unit
 
 /**
  * Determines in which context (basically a screen) the template should be shown.
+ * Note: [NewProjectExtraDetail] should only be used if [NewProject] is simultaneously used.
  */
 enum class WizardUiContext {
   NewProject,
+  /** Show extra step for Activity details in New Project. */
+  NewProjectExtraDetail,
   NewModule,
   MenuEntry,
   ActivityGallery,
