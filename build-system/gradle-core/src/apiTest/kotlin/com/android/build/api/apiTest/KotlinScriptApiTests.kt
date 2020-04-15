@@ -52,11 +52,7 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
 
             ${testingElements.getDisplayApksTask()}
             android {
-                compileSdkVersion(29)
-                defaultConfig {
-                    minSdkVersion(21)
-                    targetSdkVersion(29)
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
                     project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
@@ -118,12 +114,8 @@ expected result : "Got an APK...." message.
             ${testingElements.getGitVersionTask()}
             ${testingElements.getManifestProducerTask()}
             android {
-                    compileSdkVersion(29)
-                    buildToolsVersion("29.0.3")
-                    defaultConfig {
-                        minSdkVersion(21)
-                        targetSdkVersion(29)
-                    }
+                ${testingElements.addCommonAndroidBuildLogic()}
+
                 val gitVersionProvider = tasks.register<GitVersionTask>("gitVersionProvider") {
                     gitVersionOutputFile.set(
                         File(project.buildDir, "intermediates/gitVersionProvider/output"))
@@ -176,11 +168,7 @@ expected result : "Got an APK...." message.
 
             ${testingElements.getManifestTransformerTask()}
             android {
-                compileSdkVersion(29)
-                defaultConfig {
-                    minSdkVersion(21)
-                    targetSdkVersion(29)
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
                     val gitVersionProvider = tasks.register<GitVersionTask>("${'$'}{name}GitVersionProvider") {
@@ -256,12 +244,7 @@ expected result : "Got an APK...." message.
             ${testingElements.getCopyApksTask()}
 
             android {
-                compileSdkVersion(29)
-                buildToolsVersion("29.0.3")
-                defaultConfig {
-                    minSdkVersion(21)
-                    targetSdkVersion(29)
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
                     val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")

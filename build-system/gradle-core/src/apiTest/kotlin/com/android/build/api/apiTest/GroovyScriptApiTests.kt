@@ -40,11 +40,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             ${testingElements.getDisplayApksTask()}
 
             android {
-                compileSdkVersion(29)
-                defaultConfig {
-                    minSdkVersion(21)
-                    targetSdkVersion(29)
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
                     project.tasks.register(it.getName() + "DisplayApks", DisplayApksTask.class) {
@@ -82,11 +78,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             import com.android.build.api.artifact.ArtifactTypes
     
             android {
-                compileSdkVersion 29
-                defaultConfig {
-                    minSdkVersion 21
-                    targetSdkVersion 29
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
     
                 onVariantProperties {
                     TaskProvider gitVersionProvider = tasks.register(it.getName() + 'GitVersionProvider', GitVersionTask) {
@@ -148,11 +140,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             import com.android.build.api.artifact.ArtifactTypes
 
             android {
-                compileSdkVersion 29
-                defaultConfig {
-                    minSdkVersion 21
-                    targetSdkVersion 29
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
 
                 TaskProvider gitVersionProvider = tasks.register('gitVersionProvider', GitVersionTask) {
                     task ->
@@ -235,11 +223,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             ${testingElements.getCopyApksTask()}
 
             android {
-                compileSdkVersion(29)
-                defaultConfig {
-                    minSdkVersion(21)
-                    targetSdkVersion(29)
-                }
+                ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
                     TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)

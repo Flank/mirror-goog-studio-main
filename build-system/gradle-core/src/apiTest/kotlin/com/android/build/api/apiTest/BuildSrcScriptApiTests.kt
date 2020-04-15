@@ -88,22 +88,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 """.trimIndent()
             }
             addModule(":app") {
-                buildFile =
-                    """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
-                    }
-                    apply<ExamplePlugin>()
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-                    }
-                    """.trimIndent()
+                addCommonBuildFile(this)
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
             }
@@ -176,22 +161,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 """.trimIndent()
             }
             addModule(":app") {
-                buildFile =
-                    """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
-                    }
-                    apply<ExamplePlugin>()
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-                    }
-                    """.trimIndent()
+                addCommonBuildFile(this)
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
             }
@@ -266,23 +236,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 """.trimIndent()
             }
             addModule(":app") {
-                buildFile =
-                    """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
-                    }
-                    apply<ExamplePlugin>()
-                    android {
-                        compileSdkVersion(29)
-                        buildToolsVersion("29.0.3")
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-                    }
-                    """.trimIndent()
+                addCommonBuildFile(this)
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
             }
@@ -384,19 +338,16 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
     private fun addCommonBuildFile(givenBuilder: GivenBuilder) {
         givenBuilder.buildFile =
             """
-                    plugins {
-                            id("com.android.application")
-                            kotlin("android")
-                            kotlin("android.extensions")
-                    }
-                    apply<ExamplePlugin>()
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-                    }
-                    """.trimIndent()
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            
+            apply<ExamplePlugin>()
+            
+            android { ${testingElements.addCommonAndroidBuildLogic()}
+            }
+            """.trimIndent()
     }
 }
