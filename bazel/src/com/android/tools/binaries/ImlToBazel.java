@@ -84,8 +84,18 @@ public class ImlToBazel {
             boolean dryRun,
             boolean warningsAsErrors)
             throws IOException {
+        return run(workspace, project, imlGraph, dryRun, warningsAsErrors, new BazelToolsLogger());
+    }
+
+    public static int run(
+            Path workspace,
+            String project,
+            String imlGraph,
+            boolean dryRun,
+            boolean warningsAsErrors,
+            BazelToolsLogger logger)
+            throws IOException {
         StudioConfiguration configuration = new StudioConfiguration();
-        BazelToolsLogger logger = new BazelToolsLogger();
 
         ImlToIr imlToIr = new ImlToIr();
         IrProject irProject = imlToIr.convert(workspace, project, imlGraph, logger);

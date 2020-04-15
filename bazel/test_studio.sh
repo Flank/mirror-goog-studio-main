@@ -18,25 +18,6 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-pe
 
 config_options="--config=dynamic"
 
-# Building //tools/adt/idea/android:artifacts creates files referenced from
-# IMLs, which is required for iml_to_build to succeed below.
-"${script_dir}/bazel" \
-  build \
-  ${config_options} \
-  //tools/adt/idea/android:artifacts
-
-# Use the same compilation mode as the build invocation above, see ag/10086024.
-"${script_dir}/bazel" \
-  run \
-  --compilation_mode opt \
-  //tools/base/bazel:iml_to_build -- --dry_run --warnings_as_errors
-
-readonly iml_to_build_status=$?
-if [ $iml_to_build_status -ne 0 ]; then
-  echo "BUILD files not in sync with *.iml files, run 'bazel run //tools/base/bazel:iml_to_build' to update them."
-  # exit $iml_to_build_status
-fi
-
 # Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"
 
@@ -53,10 +34,14 @@ readonly invocation_id="$(uuidgen)"
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
+  --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
   -- \
   //tools/idea/updater:updater_deploy.jar \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   $(< "${script_dir}/targets")
+# Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
+# iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
+# This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
 
 readonly bazel_status=$?
 
