@@ -41,12 +41,16 @@ class ComponentTree {
             throws LayoutInspectorService.LayoutModifiedException {
         // We shouldn't come in here more than once.
         assert !mStringTable.entries().iterator().hasNext();
-        loadView(event, view, false);
+        loadView(event, view, null, null);
         mConfiguration.writeConfiguration(event, view);
         loadStringTable(event);
     }
 
-    private void loadView(long buffer, @NonNull View view, boolean isSubView)
+    private void loadView(
+            long buffer,
+            @NonNull View view,
+            @Nullable ViewGroup parent,
+            @Nullable int[] parentLocation)
             throws LayoutInspectorService.LayoutModifiedException {
         long viewId = view.getUniqueDrawingId();
         Class<? extends View> klass = view.getClass();
@@ -54,11 +58,11 @@ class ComponentTree {
         int className = toInt(klass.getSimpleName());
         int textValue = toInt(getTextValue(view));
         int[] location = new int[2];
-        if (isSubView) {
-            location[0] = view.getLeft();
-            location[1] = view.getTop();
-        } else {
+        if (parent == null || parentLocation == null) {
             view.getLocationOnScreen(location);
+        } else {
+            location[0] = view.getLeft() + parentLocation[0] - parent.getScrollX();
+            location[1] = view.getTop() + parentLocation[1] - parent.getScrollY();
         }
         int flags = 0;
         ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
@@ -68,12 +72,10 @@ class ComponentTree {
         long viewBuffer =
                 addView(
                         buffer,
-                        isSubView,
+                        parent != null,
                         viewId,
                         location[0],
                         location[1],
-                        view.getScrollX(),
-                        view.getScrollY(),
                         view.getWidth(),
                         view.getHeight(),
                         className,
@@ -103,7 +105,7 @@ class ComponentTree {
                 // The tree changed. Start over.
                 throw new LayoutInspectorService.LayoutModifiedException();
             }
-            loadView(viewBuffer, group.getChildAt(index), true);
+            loadView(viewBuffer, group.getChildAt(index), group, location);
         }
     }
 
@@ -143,8 +145,6 @@ class ComponentTree {
             long drawId,
             int x,
             int y,
-            int scrollX,
-            int scrollY,
             int width,
             int height,
             int className,

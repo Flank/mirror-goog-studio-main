@@ -91,15 +91,13 @@ message View {
   Resource layout = 3;     // the layout where the view was found
   int32 x = 4;
   int32 y = 5;
-  int32 scroll_x = 6;
-  int32 scroll_y = 7;
-  int32 width = 8;
-  int32 height = 9;
-  int32 class_name = 10;   // the simple class name of the view e.g. LinearLayout
-  int32 package_name = 11; // the package part of the class name e.g. android.view
-  int32 text_value = 12;   // the value of the text property if it exists
-  int32 layout_flags = 13;
-  repeated View sub_view = 14;
+  int32 width = 6;
+  int32 height = 7;
+  int32 class_name = 8;    // the simple class name of the view e.g. LinearLayout
+  int32 package_name = 9;  // the package part of the class name e.g. android.view
+  int32 text_value = 10;   // the value of the text property if it exists
+  int32 layout_flags = 11;
+  repeated View sub_view = 12;
 }
 
 message Property {
