@@ -564,6 +564,11 @@ public abstract class MergeResources extends ResourceAwareTask {
             }
 
             @Override
+            public void processFileWithNoDataBinding(@NonNull File file) {
+                getProcessor().processFileWithNoDataBinding(file);
+            }
+
+            @Override
             public void end() throws JAXBException {
                 getProcessor()
                         .writeLayoutInfoFiles(

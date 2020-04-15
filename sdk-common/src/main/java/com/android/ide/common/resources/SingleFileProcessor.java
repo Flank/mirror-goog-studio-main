@@ -41,5 +41,8 @@ public interface SingleFileProcessor {
 
     void processRemovedFile(File file);
 
+    /** Processes a layout file which does not contain data binding constructs. */
+    void processFileWithNoDataBinding(@NonNull File file);
+
     void end() throws JAXBException;
 }
