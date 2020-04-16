@@ -47,7 +47,9 @@ public class MlkitNames {
         // TODO(b/151171517): in gradle or other place, handle the case that two models might
         // have same class name.
         String formattedName =
-                MoreFiles.getNameWithoutExtension(modelFile.toPath()).trim().replaceAll("-", "_");
+                MoreFiles.getNameWithoutExtension(modelFile.toPath())
+                        .trim()
+                        .replaceAll("[- ]+", "_");
         if (formattedName.contains("_")) {
             formattedName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, formattedName);
         } else {
@@ -81,7 +83,7 @@ public class MlkitNames {
         }
 
         // Handle "-" and "_" inside to make name lowerCamel.
-        String formattedName = name.replaceAll("-", "_");
+        String formattedName = name.replaceAll("[- ]+", "_");
         if (formattedName.contains("_")) {
             formattedName =
                     CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, formattedName.trim());

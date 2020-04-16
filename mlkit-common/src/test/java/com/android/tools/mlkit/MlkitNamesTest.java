@@ -39,6 +39,8 @@ public class MlkitNamesTest {
                 MlkitNames.computeModelClassName(new File("valid-model.tflite")), "ValidModel");
         assertEquals(
                 MlkitNames.computeModelClassName(new File("valid-_model.tflite")), "ValidModel");
+        assertEquals(
+                MlkitNames.computeModelClassName(new File("valid model.tflite")), "ValidModel");
     }
 
     @Test
@@ -69,13 +71,14 @@ public class MlkitNamesTest {
     @Test
     public void computeIdentifierName_nameWithInvalidCharacters_correctIt() {
         assertEquals(MlkitNames.computeIdentifierName("%tensorName"), "tensorName");
+        assertEquals(MlkitNames.computeIdentifierName("tensor name"), "tensorName");
+        assertEquals(MlkitNames.computeIdentifierName("tensor-name"), "tensorName");
+        assertEquals(MlkitNames.computeIdentifierName("tensor_name"), "tensorName");
     }
 
     @Test
     public void computeIdentifierName_nameValid_returnName() {
         assertEquals(MlkitNames.computeIdentifierName("tensorName"), "tensorName");
-        assertEquals(MlkitNames.computeIdentifierName("tensor-name"), "tensorName");
-        assertEquals(MlkitNames.computeIdentifierName("tensor_name"), "tensorName");
     }
 
     @Test
