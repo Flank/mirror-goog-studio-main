@@ -150,7 +150,11 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             task.minSdkVersion = minSdkVersion
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
-            if (scope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {
+            // This is consumed only by library androidTest so desugar whenever java 8 lang
+            // support is enabled.
+            if (scope.java8LangSupportType != VariantScope.Java8LangSupport.INVALID
+                && scope.java8LangSupportType != VariantScope.Java8LangSupport.UNUSED
+            ) {
                 task.enableDesugaring.set(true)
 
                 if (minSdkVersion < AndroidVersion.VersionCodes.N) {

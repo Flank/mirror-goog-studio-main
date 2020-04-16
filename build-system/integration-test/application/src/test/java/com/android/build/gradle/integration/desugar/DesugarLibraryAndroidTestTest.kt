@@ -96,6 +96,20 @@ class DesugarLibraryAndroidTestTest {
             assertThat(classes.filter { it.startsWith("Lcom/android/build/gradle/integration/desugar/resources/InterfaceWithDefaultMethod") })
                 .hasSize(2)
         }
+    }
 
+    /** Regression test for b/154218507. */
+    @Test
+    fun testMinifiedLib() {
+        project.buildFile.appendText("""
+            android {
+              buildTypes {
+                debug {
+                  minifyEnabled true
+                }
+              }
+            }
+        """.trimIndent())
+        project.executor().run("assembleDebugAndroidTest")
     }
 }
