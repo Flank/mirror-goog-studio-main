@@ -52,28 +52,7 @@ open class BaseAppModuleExtension(
     sourceSetManager,
     extraModelInfo,
     true
-), ApplicationExtension<
-        AaptOptions,
-        AbiSplitOptions,
-        AdbOptions,
-        AndroidSourceSet,
-        AnnotationProcessorOptions,
-        BuildType,
-        CmakeOptions,
-        CompileOptions,
-        DataBindingOptions,
-        DefaultConfig,
-        DensitySplitOptions,
-        ExternalNativeBuild,
-        JacocoOptions,
-        LintOptions,
-        NdkBuildOptions,
-        PackagingOptions,
-        ProductFlavor,
-        SigningConfig,
-        Splits,
-        TestOptions,
-        TestOptions.UnitTestOptions> by publicExtensionImpl,
+), InternalApplicationExtension by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<ApplicationVariant<ApplicationVariantProperties>, ApplicationVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =

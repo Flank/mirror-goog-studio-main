@@ -25,23 +25,19 @@ import com.android.build.gradle.internal.services.DslServices
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class TestedExtensionImpl<
-        AnnotationProcessorOptionsT : com.android.build.api.dsl.AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-        SigningConfigT : com.android.build.api.dsl.SigningConfig,
+        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions, SigningConfig>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptions, SigningConfig>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions, SigningConfig>,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
     dslServices: DslServices,
-    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>
+    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
 ) : CommonExtensionImpl<
-        AnnotationProcessorOptionsT,
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,
-        SigningConfigT,
         VariantT,
         VariantPropertiesT>(
     dslServices,

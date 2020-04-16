@@ -62,7 +62,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
-    val aaptOptions: AaptOptionsT
+    val aaptOptions: AaptOptions
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).
@@ -78,7 +78,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    val adbOptions: AdbOptionsT
+    val adbOptions: AdbOptions
 
     /**
      * Specifies options for the
@@ -95,7 +95,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
-    val compileOptions: CompileOptionsT
+    val compileOptions: CompileOptions
 
     /**
      * Specifies Java compiler options, such as the language level of the Java source code and
@@ -147,7 +147,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
-    val dataBinding: DataBindingT
+    val dataBinding: DataBinding
 
     /**
      * Specifies options for the
@@ -171,7 +171,7 @@ interface CommonExtension<
      * }
      * ```
      */
-    val jacoco: JacocoOptionsT
+    val jacoco: JacocoOptions
     /**
      * Configure JaCoCo version that is used for offline instrumentation and coverage report.
      *
@@ -193,7 +193,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
-    val lintOptions: LintOptionsT
+    val lintOptions: LintOptions
 
     /**
      * Specifies options for the lint tool.
@@ -208,7 +208,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [PackagingOptions].
      */
-    val packagingOptions: PackagingOptionsT
+    val packagingOptions: PackagingOptions
 
     /**
      * Specifies options and rules that determine which files the Android plugin packages into your
@@ -340,7 +340,7 @@ interface CommonExtension<
      * @since 2.2.0
      */
 
-    val externalNativeBuild: ExternalNativeBuildT
+    val externalNativeBuild: ExternalNativeBuild<CMakeT, NdkBuildT>
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
      * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
@@ -366,7 +366,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
-    val testOptions: TestOptionsT
+    val testOptions: TestOptions<UnitTestOptionsT>
 
     /**
      * Specifies options for how the Android plugin should run local and instrumented tests.
@@ -426,7 +426,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
-    val splits: SplitsT
+    val splits: Splits<AbiSplitT, DensitySplitT>
 
     /**
      * Specifies configurations for

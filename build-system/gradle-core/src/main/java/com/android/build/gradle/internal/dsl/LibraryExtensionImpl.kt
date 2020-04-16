@@ -35,39 +35,16 @@ class LibraryExtensionImpl(
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     TestedExtensionImpl<
-            AnnotationProcessorOptions,
             LibraryBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig,
             LibraryVariant<LibraryVariantProperties>,
             LibraryVariantProperties>(
         dslServices,
         dslContainers
     ),
-    LibraryExtension<
-            AaptOptions,
-            AbiSplitOptions,
-            AdbOptions,
-            AndroidSourceSet,
-            AnnotationProcessorOptions,
-            BuildType,
-            CmakeOptions,
-            CompileOptions,
-            DataBindingOptions,
-            DefaultConfig,
-            DensitySplitOptions,
-            ExternalNativeBuild,
-            JacocoOptions,
-            LintOptions,
-            NdkBuildOptions,
-            PackagingOptions,
-            ProductFlavor,
-            SigningConfig,
-            Splits,
-            TestOptions,
-            TestOptions.UnitTestOptions> {
+    InternalLibraryExtension {
 
     private var _aidlPackageWhiteList: MutableCollection<String> = Lists.newArrayList()
 

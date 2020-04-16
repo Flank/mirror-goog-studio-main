@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
-import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.SdkComponents
@@ -35,44 +34,23 @@ import com.android.builder.core.ToolsRevisionUtils
 import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import java.lang.Exception
 import java.util.function.Supplier
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
-        AnnotationProcessorOptionsT : com.android.build.api.dsl.AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-        SigningConfigT : com.android.build.api.dsl.SigningConfig,
+        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions, SigningConfig>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptions, SigningConfig>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions, SigningConfig>,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
     protected val dslServices: DslServices,
-    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>
-) : CommonExtension<
-        AaptOptions,
-        AbiSplitOptions,
-        AdbOptions,
-        AndroidSourceSet,
-        AnnotationProcessorOptionsT,
+    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
+) : InternalCommonExtension<
         BuildFeaturesT,
         BuildTypeT,
-        CmakeOptions,
-        CompileOptions,
-        DataBindingOptions,
         DefaultConfigT,
-        DensitySplitOptions,
-        ExternalNativeBuild,
-        JacocoOptions,
-        LintOptions,
-        NdkBuildOptions,
-        PackagingOptions,
         ProductFlavorT,
-        SigningConfigT,
-        Splits,
-        TestOptions,
-        TestOptions.UnitTestOptions,
         VariantT,
         VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
 
@@ -95,7 +73,7 @@ abstract class CommonExtensionImpl<
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT> =
         dslContainers.productFlavorContainer
 
-    override val signingConfigs: NamedDomainObjectContainer<SigningConfigT> =
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfig> =
         dslContainers.signingConfigContainer
 
     override val aaptOptions: AaptOptions =
@@ -162,7 +140,7 @@ abstract class CommonExtensionImpl<
         _compileSdkVersion = "$vendor:$name:$version"
     }
 
-    override val composeOptions: ComposeOptions =
+    override val composeOptions: ComposeOptionsImpl =
         dslServices.newInstance(ComposeOptionsImpl::class.java)
 
     override fun composeOptions(action: ComposeOptions.() -> Unit) {
@@ -218,7 +196,7 @@ abstract class CommonExtensionImpl<
         action.execute(productFlavors)
     }
 
-    override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>) {
+    override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>) {
         action.execute(signingConfigs)
     }
 

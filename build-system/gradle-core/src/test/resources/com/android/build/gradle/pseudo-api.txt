@@ -170,7 +170,7 @@ com.android.build.gradle.FeaturePlugin implements org.gradle.api.Plugin
 com.android.build.gradle.FeaturePlugin.<init>: com.android.build.gradle.FeaturePlugin ()
 com.android.build.gradle.FeaturePlugin.apply: void (java.lang.Object)
 com.android.build.gradle.FeaturePlugin.apply: void (org.gradle.api.Project)
-com.android.build.gradle.LibraryExtension extends com.android.build.gradle.TestedExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
+com.android.build.gradle.LibraryExtension extends com.android.build.gradle.TestedExtension implements com.android.build.gradle.internal.dsl.InternalLibraryExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 com.android.build.gradle.LibraryExtension.<init>: com.android.build.gradle.LibraryExtension (com.android.build.gradle.internal.services.DslServices, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, com.android.build.gradle.internal.dsl.LibraryExtensionImpl)
 com.android.build.gradle.LibraryExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AaptOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AdbOptions, kotlin.Unit>)
@@ -300,7 +300,7 @@ com.android.build.gradle.ReportingPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.
 com.android.build.gradle.TestAndroidConfig implements com.android.build.gradle.AndroidConfig
 com.android.build.gradle.TestAndroidConfig.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestAndroidConfig.getTargetVariant: java.lang.String ()
-com.android.build.gradle.TestExtension extends com.android.build.gradle.BaseExtension implements com.android.build.gradle.TestAndroidConfig, com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
+com.android.build.gradle.TestExtension extends com.android.build.gradle.BaseExtension implements com.android.build.gradle.TestAndroidConfig, com.android.build.gradle.internal.dsl.InternalTestExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 com.android.build.gradle.TestExtension.<init>: com.android.build.gradle.TestExtension (com.android.build.gradle.internal.services.DslServices, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, com.android.build.gradle.internal.dsl.TestExtensionImpl)
 com.android.build.gradle.TestExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AaptOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AdbOptions, kotlin.Unit>)
@@ -674,7 +674,7 @@ com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setClassNames: 
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.List<org.gradle.process.CommandLineArgumentProvider>)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setIncludeCompileClasspath: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.toString: java.lang.String ()
-com.android.build.gradle.internal.dsl.BaseAppModuleExtension extends com.android.build.gradle.AppExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension extends com.android.build.gradle.AppExtension implements com.android.build.gradle.internal.dsl.InternalApplicationExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.<init>: com.android.build.gradle.internal.dsl.BaseAppModuleExtension (com.android.build.gradle.internal.services.DslServices, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, com.android.build.gradle.internal.dsl.ApplicationExtensionImpl)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AaptOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AdbOptions, kotlin.Unit>)
@@ -1089,7 +1089,7 @@ com.android.build.gradle.internal.dsl.DexOptions.additionalParameters: void (jav
 com.android.build.gradle.internal.dsl.DexOptions.getIncremental: boolean ()
 com.android.build.gradle.internal.dsl.DexOptions.setIncremental: void (boolean)
 com.android.build.gradle.internal.dsl.DexOptions.setOptimize: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.DynamicFeatureExtension extends com.android.build.gradle.AppExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension extends com.android.build.gradle.AppExtension implements com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension, com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.<init>: com.android.build.gradle.internal.dsl.DynamicFeatureExtension (com.android.build.gradle.internal.services.DslServices, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AaptOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AdbOptions, kotlin.Unit>)
@@ -1248,6 +1248,21 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setCppFlags:
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalCommonExtension implements com.android.build.api.dsl.CommonExtension
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getAdbOptions: com.android.build.gradle.internal.dsl.AdbOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getJacoco: com.android.build.gradle.internal.coverage.JacocoOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getLintOptions: com.android.build.gradle.internal.dsl.LintOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
+com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions, com.android.build.api.dsl.JavaCompileOptions
 com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AnnotationProcessorOptions, kotlin.Unit>)

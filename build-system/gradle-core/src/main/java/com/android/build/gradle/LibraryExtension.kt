@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.InternalLibraryExtension
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
@@ -78,28 +79,7 @@ open class LibraryExtension(
     extraModelInfo,
     false
 ),
-    com.android.build.api.dsl.LibraryExtension<
-            AaptOptions,
-            AbiSplitOptions,
-            AdbOptions,
-            AndroidSourceSet,
-            AnnotationProcessorOptions,
-            BuildType,
-            CmakeOptions,
-            CompileOptions,
-            DataBindingOptions,
-            DefaultConfig,
-            DensitySplitOptions,
-            ExternalNativeBuild,
-            JacocoOptions,
-            LintOptions,
-            NdkBuildOptions,
-            PackagingOptions,
-            ProductFlavor,
-            SigningConfig,
-            Splits,
-            TestOptions,
-            TestOptions.UnitTestOptions> by publicExtensionImpl,
+   InternalLibraryExtension by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant<LibraryVariantProperties>, LibraryVariantProperties> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
