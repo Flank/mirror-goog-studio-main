@@ -371,6 +371,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for Dagger editor support.
+coverage_report(
+    name = "dagger-editing",
+    srcpath_include = [
+        "tools/adt/idea/dagger/src/com/android/tools/idea/dagger",
+    ],
+    tests = [
+        "//tools/adt/idea/dagger:intellij.android.dagger.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
@@ -395,6 +406,7 @@ combine_report_definitions(
         "systracev2",
         "templates",
         "validation",
+        "dagger-editing",
     ],
 )
 
@@ -421,6 +433,7 @@ coverage_report(
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/connection-assistant:connection-assistant-test_tests",
+        "//tools/adt/idea/dagger:intellij.android.dagger.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
