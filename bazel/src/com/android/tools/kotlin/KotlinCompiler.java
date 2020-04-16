@@ -83,6 +83,9 @@ public class KotlinCompiler extends JarOutputCompiler {
 
         List<String> args = new ArrayList<>(files.size() + 16);
 
+        // Disable warnings, mirroring what is done for javac in Bazel.
+        args.add("-nowarn");
+
         args.add("-module-name");
         args.add(moduleName);
 

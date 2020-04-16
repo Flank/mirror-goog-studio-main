@@ -54,7 +54,7 @@ class KotlinDslTest {
     private fun initFieldsFromProject() {
         android =
             project.extensions.getByType(ApplicationExtension::class.java)
-        android.compileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
+        android.compileSdk = TestConstants.COMPILE_SDK_VERSION
         plugin = project.plugins.getPlugin(AppPlugin::class.java)
     }
 
@@ -62,11 +62,11 @@ class KotlinDslTest {
     fun testDslLocking() {
         plugin.createAndroidTasks()
         val exception = assertFailsWith(EvalIssueException::class) {
-            android.compileSdkVersion(28)
+            android.compileSdk = 28
         }
         assertThat(exception).hasMessageThat().isEqualTo(
             """
-                It is too late to set property 'compileSdkVersion' to 'android-28'. (It has value 'android-${TestConstants.COMPILE_SDK_VERSION}')
+                It is too late to set property '_compileSdkVersion' to 'android-28'. (It has value 'android-${TestConstants.COMPILE_SDK_VERSION}')
                 The DSL is now locked as the variants have been created.
                 Either move this call earlier, or use the variant API to customize individual variants.
                 """.trimIndent()

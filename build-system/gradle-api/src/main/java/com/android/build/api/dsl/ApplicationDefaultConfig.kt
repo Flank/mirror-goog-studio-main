@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl
+package com.android.build.api.dsl
 
-import com.android.builder.internal.aapt.AaptOptions
+import org.gradle.api.Incubating
 
-fun com.android.build.gradle.internal.dsl.AaptOptions.convert(): AaptOptions =
-    AaptOptions(noCompress, additionalParameters)
+@Incubating
+interface ApplicationDefaultConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
+        SigningConfigT : SigningConfig> :
+    ApplicationBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
+    DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT> {
+    // TODO(b/140406102)
+}

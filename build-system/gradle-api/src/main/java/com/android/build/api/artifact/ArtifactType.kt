@@ -40,14 +40,6 @@ import java.io.Serializable
 abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): Serializable {
 
     /**
-     * Returns true if this artifact type is meant to be public, therefore available through
-     * the variant API that third party plugins can use.
-     *
-     * @return true if this artifact can be consumed by third party plugins, false otherwise.
-     */
-    abstract val isPublic: Boolean
-
-    /**
      * Provide a unique name for the artifact type. For external plugins defining new types,
      * consider adding the plugin name to the artifact's name to avoid collision with other plugins.
      */

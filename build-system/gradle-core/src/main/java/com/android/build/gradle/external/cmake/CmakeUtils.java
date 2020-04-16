@@ -53,7 +53,26 @@ public class CmakeUtils {
     @NonNull
     public static Revision getVersion(@NonNull File cmakeInstallPath) throws IOException {
         final String versionString = getVersionString(cmakeInstallPath);
-        return Revision.parseRevision(versionString);
+        // Custom built CMake (like the Google-built one in the SDK) started having a version
+        // number containing hash of something. For example,
+        //   3.17.0-gc5272a5
+        // This isn't parsable by Revision.parseRevision(). It's also fairly non-standard so
+        // it didn't make sense to make Revision understand it. Instead, we just strip the
+        // preview version first.
+        return Revision.parseRevision(keepWhileNumbersAndDots(versionString));
+    }
+
+    @NonNull
+    @VisibleForTesting
+    public static String keepWhileNumbersAndDots(String versionString) {
+        String stripped = "";
+        for (char c : versionString.toCharArray()) {
+            if ((c < '0' || c > '9') && c != '.') {
+                break;
+            }
+            stripped += c;
+        }
+        return stripped;
     }
 
     @NonNull

@@ -55,8 +55,6 @@ class OperationsImplTest {
     @Suppress("ClassName")
     sealed class TestArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>) :
         ArtifactType<T>(kind) {
-        override val isPublic: Boolean
-            get() = false
 
         object TEST_FILE : TestArtifactType<RegularFile>(FILE), Single
         object TEST_FILES : TestArtifactType<RegularFile>(FILE), Multiple

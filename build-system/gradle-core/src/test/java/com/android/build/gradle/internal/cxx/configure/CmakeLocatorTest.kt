@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
@@ -290,6 +291,30 @@ class CmakeLocatorTest {
             cmakeVersionGetter = { folder ->
                 if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/bin") {
                     Revision.parseRevision("3.12")
+                } else {
+                    null
+                }
+            })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/a/b/c/cmake"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
+    fun cmakeHashedVersionIsAccepted() {
+        val threeSeventeen = fakeLocalPackageOf("cmake;3.17.0", "3.17.0")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = null,
+            cmakePathFromLocalProperties = File("/a/b/c/cmake"),
+            environmentPaths = { listOf(File("/d/e/f")) },
+            repositoryPackages = { listOf(threeSeventeen) },
+            cmakeVersionGetter = { folder ->
+                if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/bin") {
+                    Revision.parseRevision(CmakeUtils.keepWhileNumbersAndDots("3.17.0-gc5272a5"))
                 } else {
                     null
                 }

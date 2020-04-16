@@ -15,9 +15,13 @@
  */
 package com.android.testutils
 
+import org.junit.rules.ExternalResource
+import org.junit.runner.Description
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty
 
 object MockitoKt {
   /**
@@ -61,4 +65,21 @@ object MockitoKt {
    * @see Mockito.refEq
    */
   fun <T> refEq(arg: T): T = ArgumentMatchers.refEq(arg)
+}
+
+/**
+ * Sets the given [property] to [newValue] before the test, and puts the original value back after.
+ */
+class PropertySetterRule<T: Any>(val newValue: T, val property: KMutableProperty<T>) : ExternalResource() {
+    var oldValue: T? = null
+
+    override fun before() {
+      oldValue = property.getter.call()
+      property.setter.call(newValue)
+    }
+
+    override fun after() {
+      property.setter.call(oldValue)
+      oldValue = null
+    }
 }

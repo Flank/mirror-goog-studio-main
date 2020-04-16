@@ -563,6 +563,36 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                 + "          android:layout_marginStart=\"35dip\"\n");
     }
 
+    public void testIncrementalRtlOff() {
+        // Regression test for
+        //    https://issuetracker.google.com/37122978
+        // In batch mode things work fine -- we look up the supportsRtl flag,
+        // but in incremental mode we need to look at the merged manifest
+        lint().files(
+                        projectProperties().compileSdk(17),
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.bytecode\"\n"
+                                        + "    android:versionCode=\"1\"\n"
+                                        + "    android:versionName=\"1.0\" >\n"
+                                        + "\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"18\" />\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:supportsRtl=\"false\">\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"),
+                        mRtlQuickFixed)
+                .issues(RtlDetector.USE_START)
+                .incremental("res/layout/rtl_quick_fixed.xml")
+                .run()
+                .expectClean();
+    }
+
     public void testJava() throws Exception {
         mEnabled = ALL;
         //noinspection all // Sample code

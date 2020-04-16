@@ -35,6 +35,7 @@ import com.android.builder.core.ToolsRevisionUtils
 import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import java.lang.Exception
 import java.util.function.Supplier
 
 /** Internal implementation of the 'new' DSL interface */
@@ -124,20 +125,41 @@ abstract class CommonExtensionImpl<
     protected val variantOperations = VariantOperations<VariantT>()
     protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>()
 
-    override val compileOptions: CompileOptions = dslServices.newInstance(CompileOptions::class.java)
+    override val compileOptions: CompileOptions =
+        dslServices.newInstance(CompileOptions::class.java)
 
     override fun compileOptions(action: CompileOptions.() -> Unit) {
         action.invoke(compileOptions)
     }
 
-    override var compileSdkVersion: String? by dslServices.newVar(null)
+    private var _compileSdkVersion: String? by dslServices.newVar(null)
 
-    override fun compileSdkVersion(version: String) {
-        this.compileSdkVersion = version
-    }
+    override var compileSdk: Int?
+        get() {
+            if (_compileSdkVersion == null) {
+                return null
+            }
+            if (_compileSdkVersion!!.startsWith("android-")) {
+                return try {
+                    Integer.valueOf(_compileSdkVersion!!.substring(8))
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            return null
+        }
+        set(value) {
+            _compileSdkVersion = if (value == null) null
+            else "android-$value"
+        }
+    override var compileSdkPreview: String?
+        get() = _compileSdkVersion
+        set(value) {
+            _compileSdkVersion = value
+        }
 
-    override fun compileSdkVersion(apiLevel: Int) {
-        compileSdkVersion("android-$apiLevel")
+    override fun compileSdkAddon(vendor: String, name: String, version: Int) {
+        _compileSdkVersion = "$vendor:$name:$version"
     }
 
     override val composeOptions: ComposeOptions =

@@ -17,90 +17,31 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AaptOptions;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 /**
- * Implementation of AaptOptions that is Serializable.
+ * Implementation of {@link AaptOptions} that is Serializable.
  *
  * <p>Should only be used for the model.
  */
 @Immutable
 public final class AaptOptionsImpl implements AaptOptions, Serializable {
-    private static final long serialVersionUID = 1L;
-
-    @Nullable
-    private final String ignoreAssets;
-
-    @Nullable
-    private final Collection<String> noCompress;
-
-    private final boolean failOnMissingConfigEntry;
-
-    @NonNull
-    private final List<String> additionalParameters;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final AaptOptions.Namespacing namespacing;
 
     public static AaptOptions create(
             @NonNull com.android.build.gradle.internal.dsl.AaptOptions aaptOptions) {
         return new AaptOptionsImpl(
-                aaptOptions.getIgnoreAssets(),
-                aaptOptions.getNoCompress(),
-                aaptOptions.getFailOnMissingConfigEntry(),
-                aaptOptions.getAdditionalParameters(),
                 aaptOptions.getNamespaced() ? Namespacing.REQUIRED : Namespacing.DISABLED);
     }
 
-    public static AaptOptions createDummy() {
-        return new AaptOptionsImpl(
-                "", Collections.emptyList(), false, Collections.emptyList(), Namespacing.DISABLED);
-    }
-
-    public AaptOptionsImpl(
-            @Nullable String ignoreAssets,
-            @Nullable Collection<String> noCompress,
-            boolean failOnMissingConfigEntry,
-            @Nullable List<String> additionalParameters,
-            @NonNull Namespacing namespacing) {
-        this.ignoreAssets = ignoreAssets;
-        this.failOnMissingConfigEntry = failOnMissingConfigEntry;
-        this.noCompress =
-                noCompress == null ? null : ImmutableList.copyOf(noCompress);
-        this.additionalParameters =
-                additionalParameters == null ? ImmutableList.of() : additionalParameters;
+    public AaptOptionsImpl(@NonNull Namespacing namespacing) {
         this.namespacing = namespacing;
-    }
-
-    @Nullable
-    @Override
-    public String getIgnoreAssets() {
-        return ignoreAssets;
-    }
-
-    @Nullable
-    @Override
-    public Collection<String> getNoCompress() {
-        return noCompress;
-    }
-
-    @Override
-    public boolean getFailOnMissingConfigEntry() {
-        return failOnMissingConfigEntry;
-    }
-
-    @NonNull
-    @Override
-    public List<String> getAdditionalParameters() {
-        return additionalParameters;
     }
 
     @NonNull
@@ -111,10 +52,6 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
 
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("ignoreAssets", ignoreAssets)
-                .add("noCompress", noCompress)
-                .add("failOnMissingConfigEntry", failOnMissingConfigEntry)
-                .add("additionalParameters", additionalParameters)
                 .add("namespacing", namespacing)
                 .toString();
     }
@@ -128,20 +65,11 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
             return false;
         }
         AaptOptionsImpl that = (AaptOptionsImpl) o;
-        return failOnMissingConfigEntry == that.failOnMissingConfigEntry
-                && Objects.equals(ignoreAssets, that.ignoreAssets)
-                && Objects.equals(noCompress, that.noCompress)
-                && Objects.equals(additionalParameters, that.additionalParameters)
-                && namespacing == that.namespacing;
+        return namespacing == that.namespacing;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                ignoreAssets,
-                noCompress,
-                failOnMissingConfigEntry,
-                additionalParameters,
-                namespacing);
+        return Objects.hash(namespacing);
     }
 }

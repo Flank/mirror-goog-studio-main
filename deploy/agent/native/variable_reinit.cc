@@ -63,8 +63,25 @@ typedef struct ClassVarReInitWorkItem {
       : klass(k), states(s) {}
 } ClassVarReInitWorkItem;
 
-std::string VariableReinitializer::GatherPreviousState(
-    jclass clz, const proto::ClassDef& def) {
+namespace {
+bool isPrimitive(const std::string& jvm_type) {
+  return jvm_type == "B" || jvm_type == "C" || jvm_type == "I" ||
+         jvm_type == "J" || jvm_type == "S" || jvm_type == "F" ||
+         jvm_type == "D" || jvm_type == "Z";
+}
+
+bool isObject(const std::string& jvm_type) {
+  return !jvm_type.empty() && jvm_type.at(0) == 'L';
+}
+
+bool isArray(const std::string& jvm_type) {
+  return !jvm_type.empty() && jvm_type.at(0) == '[';
+}
+
+}  // namespace
+
+SwapResult::Status VariableReinitializer::GatherPreviousState(
+    jclass clz, const proto::ClassDef& def, std::string& error_msg) {
   // Create the entry. If there is nothing to do,
   // we just don't add to the work list later.
   auto newVars = new std::vector<proto::ClassDef::FieldReInitState>();
@@ -94,16 +111,49 @@ std::string VariableReinitializer::GatherPreviousState(
     }
 
     if (!found) {
+      // Non-statics. All of them not supported right now.
       if (!state.staticvar()) {
         std::ostringstream msg;
         msg << "Adding non-static variable " << state.name()
             << " is not currently supported" << std::endl;
-        return msg.str();
-      } else if (state.state() != proto::ClassDef::FieldReInitState::CONSTANT) {
-        std::ostringstream msg;
-        msg << "Adding variable " << state.name()
-            << " no known to be compile time constant" << std::endl;
-        return msg.str();
+        error_msg = msg.str();
+        if (isPrimitive(state.type())) {
+          return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE;
+        } else if (isArray(state.type())) {
+          return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_ARRAY;
+        } else if (isObject(state.type())) {
+          return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_OBJECT;
+        } else {
+          return SwapResult::UNSUPPORTED_REINIT;  // should not be reachable.
+        }
+
+        // Statics.
+      } else {
+        // Object types are not suppoeted.
+        if (isArray(state.type())) {
+          std::ostringstream msg;
+          msg << "Adding static array " << state.name() << std::endl;
+          error_msg = msg.str();
+          return SwapResult::UNSUPPORTED_REINIT_STATIC_ARRAY;
+        } else if (isObject(state.type())) {
+          std::ostringstream msg;
+          msg << "Adding static object " << state.name() << std::endl;
+          error_msg = msg.str();
+          return SwapResult::UNSUPPORTED_REINIT_STATIC_OBJECT;
+
+          // Primitives. Supported should they be compile time constants.
+        } else if (isPrimitive(state.type())) {
+          if (state.state() != proto::ClassDef::FieldReInitState::CONSTANT) {
+            std::ostringstream msg;
+            msg << "Adding variable " << state.name()
+                << " no known to be compile time constant" << std::endl;
+            error_msg = msg.str();
+            return SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE;
+          }
+        } else {
+          error_msg = "unknown error";
+          return SwapResult::UNSUPPORTED_REINIT;  // should not be reachable.
+        }
       }
       newVars->emplace_back(state);
     }
@@ -113,10 +163,11 @@ std::string VariableReinitializer::GatherPreviousState(
     new_static_vars_.emplace_back(work_item);
   }
 
-  return "";
+  return SwapResult::SUCCESS;
 }
 
-std::string VariableReinitializer::ReinitializeVariables() {
+SwapResult::Status VariableReinitializer::ReinitializeVariables(
+    std::string& error_msg) {
   for (auto& work_item : new_static_vars_) {
     jclass& cls = work_item->klass;
     std::vector<proto::ClassDef::FieldReInitState>& vars = work_item->states;
@@ -197,7 +248,8 @@ std::string VariableReinitializer::ReinitializeVariables() {
             jni_->GetStaticFieldID(cls, var.name().c_str(), var.type().c_str());
         jni_->SetStaticBooleanField(cls, fid, result);
       } else {
-        return "Type not supported yet";
+        error_msg = "unknown error";
+        return SwapResult::UNSUPPORTED_REINIT;  // should not be reachable.
       }
     }
 
@@ -205,7 +257,7 @@ std::string VariableReinitializer::ReinitializeVariables() {
     delete work_item;
   }
 
-  return "";
+  return SwapResult::SUCCESS;
 }
 
 }  // namespace deploy

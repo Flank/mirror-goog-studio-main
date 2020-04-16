@@ -104,28 +104,6 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
     fun compileOptions(action: CompileOptionsT.() -> Unit)
-    /**
-     * Specifies the API level to compile your project against. The Android plugin requires you to
-     * configure this property.
-     *
-     * This means your code can use only the Android APIs included in that API level and lower.
-     * You can configure the compile sdk version by adding the following to the `android`
-     * block: `compileSdkVersion 26`.
-     *
-     * You should generally
-     * [use the most up-to-date API level](https://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels)
-     * available. If you are planning to also support older API levels, it's good practice to
-     * [use the Lint tool](https://developer.android.com/studio/write/lint.html)
-     * to check if you are using APIs that are not available in earlier API levels.
-     *
-     * The value you assign to this property is parsed and stored in a normalized form, so
-     * reading it back may return a slightly different value.
-     */
-    var compileSdkVersion: String?
-    /** @see compileSdkVersion */
-    fun compileSdkVersion(version: String)
-    /** @see compileSdkVersion */
-    fun compileSdkVersion(apiLevel: Int)
 
     /**
      * A list of build features that can be enabled or disabled on the Android Project.
@@ -701,4 +679,28 @@ interface CommonExtension<
     fun useLibrary(name: String, required: Boolean)
 
     val sdkComponents: SdkComponents
+
+    /**
+     * Specifies the API level to compile your project against. The Android plugin requires you to
+     * configure this property.
+     *
+     * This means your code can use only the Android APIs included in that API level and lower.
+     * You can configure the compile sdk version by adding the following to the `android`
+     * block: `compileSdk 26`.
+     *
+     * You should generally
+     * [use the most up-to-date API level](https://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels)
+     * available.
+     * If you are planning to also support older API levels, it's good practice to
+     * [use the Lint tool](https://developer.android.com/studio/write/lint.html)
+     * to check if you are using APIs that are not available in earlier API levels.
+     *
+     * The value you assign to this property is parsed and stored in a normalized form, so
+     * reading it back may return a slightly different value.
+     */
+    var compileSdk: Int?
+
+    var compileSdkPreview: String?
+
+    fun compileSdkAddon(vendor: String, name: String, version: Int)
 }

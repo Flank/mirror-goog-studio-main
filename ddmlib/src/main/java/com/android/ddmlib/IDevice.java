@@ -300,11 +300,20 @@ public interface IDevice extends IShellEnabledDevice {
     Client getClient(String applicationName);
 
     /**
-     * Force stop an application by its application name.
+     * Force stop an application by its application name. This removes all pending alarms and queued
+     * computation.
      *
      * @param applicationName the name of the application
      */
     default void forceStop(String applicationName) {}
+
+    /**
+     * Kills an application by its application name. This only destroy the activities, leaving its
+     * state in the Android system alone.
+     *
+     * @param applicationName the name of the application
+     */
+    default void kill(String applicationName) {}
 
     /**
      * Returns a {@link SyncService} object to push / pull files to and from the device.

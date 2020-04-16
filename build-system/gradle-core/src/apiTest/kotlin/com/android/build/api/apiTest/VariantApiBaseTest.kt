@@ -24,6 +24,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
+import org.junit.rules.TestName
 import java.io.File
 import java.io.FileReader
 import java.util.Properties
@@ -32,9 +33,13 @@ import java.util.Properties
  * Base test class for Variant API related tasks. These tasks setup a Gradle project and execute
  * some tasks on those and finally verifies the build behavior or output.
  *
+ * @param testType the test type.
  * @param scriptingLanguage the language used to express the build logic.
  */
-open class VariantApiBaseTest(protected val scriptingLanguage: ScriptingLanguage = ScriptingLanguage.Kotlin) :
+open class VariantApiBaseTest(
+    private val testType: TestType,
+    protected val scriptingLanguage: ScriptingLanguage = ScriptingLanguage.Kotlin
+) :
     AbstractBuildGivenBuildCheckTest<VariantApiBaseTest.GivenBuilder, BuildResult>() {
 
     companion object {
@@ -55,6 +60,32 @@ open class VariantApiBaseTest(protected val scriptingLanguage: ScriptingLanguage
             System.getenv("CUSTOM_REPO").split(File.pathSeparatorChar)
         }
 
+    }
+
+    /**
+     * Type of test.
+     */
+    enum class TestType {
+        /**
+         * In [Script] tests, all build logic is expressed in build file scripts.
+         */
+        Script {
+            override fun getDirName(test: VariantApiBaseTest): String {
+                return test.scriptingLanguage.name
+            }
+        },
+
+        /**
+         * In [BuildSrc] tests, build customization is done through a buildSrc plugin.
+         */
+        BuildSrc,
+
+        /**
+         * In [Plugin] tests, build customization is done through a binary plugin dependency.
+         */
+        Plugin;
+
+        open fun getDirName(test: VariantApiBaseTest): String = name
     }
 
     /**
@@ -90,6 +121,10 @@ plugins {
     kotlin("jvm") version "$kotlinVersion"
 }
 ${addRepositories(repositories)}
+
+dependencies {
+    implementation("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+}
 """
 
             private fun addRepositories(repositories: List<String>) =
@@ -158,8 +193,11 @@ repositories {
     }
 
     @Rule
+    @JvmField val testName= TestName()
+
+    @Rule
     @JvmField val testProjectDir = if (System.getenv("KEEP_TEST_DIR") != null) {
-        ApiTestFolder(File(System.getenv("KEEP_TEST_DIR")), javaClass.name)
+        ApiTestFolder(File(System.getenv("KEEP_TEST_DIR")), testType.getDirName(this))
     } else {
         TemporaryFolder()
     }
@@ -168,12 +206,6 @@ repositories {
     @JvmField val testBuildDir = TemporaryFolder()
 
     open fun sdkLocation(): String = TestUtils.getSdk().absolutePath
-
-    /**
-     * @return the list of tasks' names to invoke on the project, by default, we only invoke
-     * the assembleDebug task.
-     */
-    open fun tasksToInvoke() = arrayOf("assembleDebug")
 
     open class ModuleGivenBuilder(val scriptingLanguage: ScriptingLanguage) {
 
@@ -233,6 +265,12 @@ repositories {
         : ModuleGivenBuilder(scriptingLanguage) {
 
         private val modules = mutableListOf<Pair<String, GivenBuilder>>()
+
+        /**
+         * the list of tasks' names to invoke on the project, by default, we only invoke
+         * the assembleDebug task.
+         */
+        internal val tasksToInvoke = mutableListOf<String>()
 
         private fun modulesPath(): List<String> = modules.filter { it.first != "buildSrc" }.map { it.first }
 
@@ -311,14 +349,33 @@ repositories {
         }
     }
 
+    open class DocumentationBuilder {
+        var index: String? = null
+    }
+
+    var docs=  DocumentationBuilder()
+
+    fun withDocs(docs: DocumentationBuilder.()-> Unit) {
+        docs.invoke(this.docs)
+    }
+
     override fun defaultWhen(given: GivenBuilder): BuildResult? {
 
-        given.writeModule(testProjectDir.root, sdkLocation())
+        val projectDir = File(testProjectDir.root, testName.methodName)
+        projectDir.deleteRecursively()
+        projectDir.mkdirs()
+        given.writeModule(projectDir, sdkLocation())
+        docs.index?.apply {
+            File(projectDir, "readme.md").writeText(this)
+        }
 
+        if (given.tasksToInvoke.isEmpty()) {
+            given.tasksToInvoke.add("assembleDebug")
+        }
         val gradleRunner = GradleRunner.create()
-            .withProjectDir(testProjectDir.root)
+            .withProjectDir(projectDir)
             .withPluginClasspath()
-            .withArguments("-Dandroid.enableJvmResourceCompiler=true", *tasksToInvoke())
+            .withArguments("-Dandroid.enableJvmResourceCompiler=true", *given.tasksToInvoke.toTypedArray())
             .forwardOutput()
 
         // if running within Intellij, we must set the Gradle Distribution when invoking the

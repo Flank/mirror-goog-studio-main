@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.TextFormat.HTML_WITH_UNICODE;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.PrivateApiDetector;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import junit.framework.TestCase;
@@ -150,6 +151,14 @@ public class TextFormatTest extends TestCase {
                                 + "(http://firebase.google.com/docs/android/setup), "
                                 + "Android Studio ...",
                         HTML));
+        assertEquals(
+                ""
+                        + "The URL is <a href=\"https://developer.android.com/reference/android/widget/SlidingDrawer#attr_android:allowSingleTap\">https://developer.android.com/reference/android/widget/SlidingDrawer#attr_android:allowSingleTap</a>",
+                convertMarkup(
+                        "The URL is https://developer.android.com/reference/android/widget/SlidingDrawer#attr_android:allowSingleTap",
+                        HTML
+                )
+        );
     }
 
     public void testConvertMarkup2() {

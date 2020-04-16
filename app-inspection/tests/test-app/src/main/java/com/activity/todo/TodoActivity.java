@@ -16,6 +16,7 @@
 
 package com.activity.todo;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.activity.TransportTestActivity;
@@ -95,5 +96,63 @@ public final class TodoActivity extends TransportTestActivity {
 
     public boolean hasEmptyTodoList() {
         return groups.isEmpty();
+    }
+
+    // this function allocates more than 16 variables
+    // it checks that we don't fail once high registers
+    // are in the picture.
+    public void prefillItems() {
+        TodoItem item1 = new TodoItem("1");
+        TodoItem item2 = new TodoItem("2");
+        TodoItem item3 = new TodoItem("3");
+        TodoItem item4 = new TodoItem("4");
+        TodoItem item5 = new TodoItem("5");
+        TodoItem item6 = new TodoItem("6");
+        TodoItem item7 = new TodoItem("7");
+
+        TodoItem item8 = new TodoItem("8");
+        TodoItem item9 = new TodoItem("9");
+        TodoItem item10 = new TodoItem("10");
+        TodoItem item11 = new TodoItem("11");
+        TodoItem item12 = new TodoItem("12");
+
+        TodoGroup group1 = new TodoGroup("group #1");
+        TodoGroup group2 = new TodoGroup("group #2");
+        TodoGroup group3 = new TodoGroup("group #3");
+        TodoGroup group4 = new TodoGroup("group #4");
+        group1.addItem(item1);
+        group1.addItem(item2);
+        group1.addItem(item3);
+        group2.addItem(item4);
+        group2.addItem(item5);
+        group2.addItem(item6);
+        group2.addItem(item7);
+        group2.addItem(item8);
+        group2.addItem(item9);
+        group2.addItem(item10);
+        group3.addItem(item11);
+        group4.addItem(item12);
+        groups.add(group1);
+        groups.add(group2);
+        groups.add(group3);
+        groups.add(group4);
+        activeGroup = group4;
+    }
+
+    // A function that needs at max one register,
+    // except params (and that one can be optimized away)
+    // it is important to keep it this way, because it tests
+    // special code path in slicer/instrumentation.cc
+    // that allocates additional registers to add entry hook
+    public void logItem(int severity, String tag, TodoItem item) {
+        Log.printlns(severity, tag, item.getDescription());
+    }
+
+    public void logFirstItem() {
+        if (groups.isEmpty() || groups.get(0).getItems().isEmpty()) {
+            Log.printlns(Log.VERBOSE, "todo_activity", "first item doesn't exist");
+        } else {
+            logItem(Log.VERBOSE, "todo_activity", groups.get(0).getItems().get(0));
+        }
     }
 }

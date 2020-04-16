@@ -140,10 +140,7 @@ class ExtractNativeDebugMetadataTaskTest {
             val outputFile = File(outputDir, "$path.sym")
             assertThat(processInfo.args)
                 .containsExactly(
-                    "-j",
-                    "symtab",
-                    "-j",
-                    "dynsym",
+                    "--strip-debug",
                     nativeLib.toString(),
                     outputFile.toString()
                 )

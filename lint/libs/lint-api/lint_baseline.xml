@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha13">
+<issues format="5" by="lint 4.1.0-dev">
 
     <issue
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
-            line="334"/>
+            line="349"/>
     </issue>
 
     <issue
@@ -14,23 +14,7 @@
         message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/AnnotationLookup.kt"
-            line="102"/>
-    </issue>
-
-    <issue
-        id="ExternalAnnotations"
-        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
-        <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/helpers/DefaultJavaEvaluator.kt"
-            line="117"/>
-    </issue>
-
-    <issue
-        id="ExternalAnnotations"
-        message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
-        <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/helpers/DefaultJavaEvaluator.kt"
-            line="150"/>
+            line="98"/>
     </issue>
 
     <issue
@@ -38,7 +22,7 @@
         message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/JavaEvaluator.kt"
-            line="721"/>
+            line="783"/>
     </issue>
 
     <issue
@@ -46,7 +30,7 @@
         message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="3326"/>
+            line="3428"/>
     </issue>
 
     <issue
@@ -54,7 +38,7 @@
         message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="3326"/>
+            line="3428"/>
     </issue>
 
     <issue
@@ -62,7 +46,7 @@
         message="getUAnnotations used instead of `JavaContext.getAllAnnotations`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="3390"/>
+            line="3492"/>
     </issue>
 
     <issue
@@ -70,7 +54,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1053"/>
+            line="1117"/>
     </issue>
 
     <issue
@@ -78,7 +62,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1055"/>
+            line="1119"/>
     </issue>
 
     <issue
@@ -86,7 +70,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1057"/>
+            line="1121"/>
     </issue>
 
     <issue
@@ -94,7 +78,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1058"/>
+            line="1122"/>
     </issue>
 
     <issue
@@ -102,7 +86,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1311"/>
+            line="1338"/>
     </issue>
 
     <issue
@@ -110,7 +94,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1327"/>
+            line="1354"/>
     </issue>
 
     <issue
@@ -118,7 +102,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1358"/>
+            line="1385"/>
     </issue>
 
     <issue
@@ -126,7 +110,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1392"/>
+            line="1419"/>
     </issue>
 
     <issue
@@ -134,7 +118,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1407"/>
+            line="1434"/>
     </issue>
 
     <issue
@@ -142,7 +126,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="796"/>
+            line="802"/>
     </issue>
 
     <issue
@@ -150,7 +134,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="800"/>
+            line="806"/>
     </issue>
 
     <issue
@@ -158,7 +142,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="2873"/>
+            line="2956"/>
     </issue>
 
     <issue
@@ -166,7 +150,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="642"/>
+            line="660"/>
     </issue>
 
     <issue
@@ -174,7 +158,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="651"/>
+            line="669"/>
     </issue>
 
     <issue
@@ -182,7 +166,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
-            line="462"/>
+            line="477"/>
     </issue>
 
     <issue
@@ -190,7 +174,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
-            line="1320"/>
+            line="1364"/>
     </issue>
 
 </issues>

@@ -15,6 +15,7 @@
  */
 package com.android.tools.mlkit;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
@@ -46,9 +47,12 @@ public class MlkitNames {
         // TODO(b/151171517): in gradle or other place, handle the case that two models might
         // have same class name.
         String formattedName =
-                CaseFormat.LOWER_UNDERSCORE.to(
-                        CaseFormat.UPPER_CAMEL,
-                        MoreFiles.getNameWithoutExtension(modelFile.toPath()).trim());
+                MoreFiles.getNameWithoutExtension(modelFile.toPath()).trim().replaceAll("-", "_");
+        if (formattedName.contains("_")) {
+            formattedName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, formattedName);
+        } else {
+            formattedName = StringHelper.usLocaleCapitalize(formattedName);
+        }
         CharMatcher classNameMatcher =
                 CharMatcher.inRange('0', '9')
                         .or(CharMatcher.inRange('A', 'Z'))
@@ -70,19 +74,17 @@ public class MlkitNames {
         }
     }
 
-    @Nullable
-    public static String computeIdentifierName(@Nullable String name) {
+    @NonNull
+    public static String computeIdentifierName(@Nullable String name, @NonNull String defaultName) {
         if (name == null) {
-            return null;
+            return defaultName;
         }
 
         // Handle "-" and "_" inside to make name lowerCamel.
-        String formattedName = name;
-        if (name.contains("_")) {
-            formattedName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, name.trim());
-        }
-        if (name.contains("-")) {
-            formattedName = CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, name.trim());
+        String formattedName = name.replaceAll("-", "_");
+        if (formattedName.contains("_")) {
+            formattedName =
+                    CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, formattedName.trim());
         }
 
         // Remove special characters.
@@ -95,7 +97,20 @@ public class MlkitNames {
         if (SourceVersion.isIdentifier(matchedName) && !SourceVersion.isKeyword(matchedName)) {
             return matchedName;
         } else {
-            return null;
+            return defaultName;
         }
+    }
+
+    @NonNull
+    public static String computeIdentifierName(@Nullable String name) {
+        String defaultName =
+                name == null
+                        ? "name"
+                        : "name"
+                                + UnsignedBytes.toString(
+                                        Hashing.murmur3_32()
+                                                .hashString(name, Charsets.UTF_8)
+                                                .asBytes()[0]);
+        return computeIdentifierName(name, defaultName);
     }
 }

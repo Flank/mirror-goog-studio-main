@@ -210,7 +210,7 @@ class ExtractNativeDebugMetadataDelegate(
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     outputFile =
                         File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}$DOT_SYM")
-                    objcopyArgs = listOf("-j", "symtab", "-j", "dynsym")
+                    objcopyArgs = listOf("--strip-debug")
                 }
                 DebugSymbolLevel.NONE ->
                     throw RuntimeException(

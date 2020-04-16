@@ -148,7 +148,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                         "app/StaticVarInit$AddStaticFinalPrimitives.dex",
                         false,
                         Deploy.ClassDef.FieldReInitState.newBuilder()
-                                .setName("NOT_STATjC")
+                                .setName("NOT_STATIC")
                                 .setType("Z")
                                 .setStaticVar(false)
                                 .setValue("true")
@@ -158,7 +158,8 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
         Assert.assertEquals(
-                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT, response.getStatus());
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE,
+                response.getStatus());
     }
 
     @Test
@@ -184,7 +185,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                         "app/StaticVarInit$AddStaticFinalPrimitives.dex",
                         false,
                         Deploy.ClassDef.FieldReInitState.newBuilder()
-                                .setName("NOT_STATjC")
+                                .setName("STATjC")
                                 .setType("Z")
                                 .setStaticVar(true)
                                 .setValue("true")
@@ -194,7 +195,70 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
         Assert.assertEquals(
-                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT, response.getStatus());
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE,
+                response.getStatus());
+    }
+
+    @Test
+    public void testInitStaticObjectNotSupported() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
+
+        Deploy.SwapRequest request =
+                createRequest(
+                        "app.StaticVarInit$AddStaticFinalPrimitives",
+                        "app/StaticVarInit$AddStaticFinalPrimitives.dex",
+                        false,
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("STATIC")
+                                .setType("Lcom/example/SomeType;")
+                                .setStaticVar(true)
+                                .setValue("null")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build());
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_OBJECT,
+                response.getStatus());
+    }
+
+    @Test
+    public void testInitStaticArrayNotSupported() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
+
+        Deploy.SwapRequest request =
+                createRequest(
+                        "app.StaticVarInit$AddStaticFinalPrimitives",
+                        "app/StaticVarInit$AddStaticFinalPrimitives.dex",
+                        false,
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("STATIC")
+                                .setType("[I")
+                                .setStaticVar(true)
+                                .setValue("null")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build());
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_ARRAY,
+                response.getStatus());
     }
 
     @Test

@@ -107,6 +107,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUFile
 import org.jetbrains.uast.java.JavaUImportStatement
@@ -3560,6 +3561,13 @@ class LintDriver
             } else if (value is UCallExpression) {
                 for (mmv in value.valueArguments) {
                     if (isSuppressedExpression(issue, mmv)) {
+                        return true
+                    }
+                }
+            } else if (value is UInjectionHost) {
+                val literalValue = value.evaluateToString()
+                if (literalValue is String) {
+                    if (isSuppressed(issue, literalValue)) {
                         return true
                     }
                 }

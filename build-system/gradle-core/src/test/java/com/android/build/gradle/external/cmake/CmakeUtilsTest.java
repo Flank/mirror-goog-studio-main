@@ -36,6 +36,14 @@ import org.mockito.Mockito;
 
 public class CmakeUtilsTest {
     @Test
+    public void testKeepWhileNumbersAndDots() {
+        assertThat(CmakeUtils.keepWhileNumbersAndDots("3.6.0")).isEqualTo("3.6.0");
+        assertThat(CmakeUtils.keepWhileNumbersAndDots("3.17.0-gc5272a5")).isEqualTo("3.17.0");
+        assertThat(CmakeUtils.keepWhileNumbersAndDots("3.6.0-rc2")).isEqualTo("3.6.0");
+        assertThat(CmakeUtils.keepWhileNumbersAndDots("3.6.0 rc2")).isEqualTo("3.6.0");
+    }
+
+    @Test
     public void testValidCmakeVersion() {
         assertThat(CheckCmakeVersionEquality("3.8.0", new Revision(3, 8, 0))).isTrue();
         assertThat(CheckCmakeVersionEquality("3.8.123", new Revision(3, 8, 123))).isTrue();

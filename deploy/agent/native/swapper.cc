@@ -58,6 +58,32 @@ proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
   } else if (result.status == SwapResult::CLASS_NOT_FOUND) {
     response.set_status(proto::AgentSwapResponse::CLASS_NOT_FOUND);
     response.set_class_name(result.error_details);
+  } else if (result.status == SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE) {
+    response.set_status(
+        proto::AgentSwapResponse::UNSUPPORTED_REINIT_STATIC_PRIMITIVE);
+    response.set_error_msg(result.error_details);
+  } else if (result.status == SwapResult::UNSUPPORTED_REINIT_STATIC_OBJECT) {
+    response.set_status(
+        proto::AgentSwapResponse::UNSUPPORTED_REINIT_STATIC_OBJECT);
+    response.set_error_msg(result.error_details);
+  } else if (result.status == SwapResult::UNSUPPORTED_REINIT_STATIC_ARRAY) {
+    response.set_status(
+        proto::AgentSwapResponse::UNSUPPORTED_REINIT_STATIC_ARRAY);
+    response.set_error_msg(result.error_details);
+  } else if (result.status ==
+             SwapResult::UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE) {
+    response.set_status(
+        proto::AgentSwapResponse::UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE);
+    response.set_error_msg(result.error_details);
+  } else if (result.status ==
+             SwapResult::UNSUPPORTED_REINIT_NON_STATIC_OBJECT) {
+    response.set_status(
+        proto::AgentSwapResponse::UNSUPPORTED_REINIT_NON_STATIC_OBJECT);
+    response.set_error_msg(result.error_details);
+  } else if (result.status == SwapResult::UNSUPPORTED_REINIT_NON_STATIC_ARRAY) {
+    response.set_status(
+        proto::AgentSwapResponse::UNSUPPORTED_REINIT_NON_STATIC_ARRAY);
+    response.set_error_msg(result.error_details);
   } else if (result.status == SwapResult::UNSUPPORTED_REINIT) {
     response.set_status(proto::AgentSwapResponse::UNSUPPORTED_REINIT);
     response.set_error_msg(result.error_details);

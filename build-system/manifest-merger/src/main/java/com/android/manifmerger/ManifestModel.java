@@ -146,6 +146,25 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
 
     private static final NoKeyNodeResolver DEFAULT_NO_KEY_NODE_RESOLVER = new NoKeyNodeResolver();
 
+    private static final NodeKeyResolver PROVIDER_KEY_RESOLVER =
+            new NodeKeyResolver() {
+                @Override
+                public ImmutableList<String> getKeyAttributesNames() {
+                    return ImmutableList.of();
+                }
+
+                @Override
+                public String getKey(Element element) {
+                    // if the provider is a sub-element from queries, we are not expecting any key.
+                    if (element.getParentNode()
+                            .getNodeName()
+                            .equals(ManifestModel.NodeTypes.QUERIES.name())) {
+                        return null;
+                    }
+                    return DEFAULT_NAME_ATTRIBUTE_RESOLVER.getKey(element);
+                }
+            };
+
     /**
      * A {@link NodeKeyResolver} capable of extracting the element key first in an "android:name"
      * attribute and if not value found there, in the "android:glEsVersion" attribute.
@@ -249,11 +268,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
     enum NodeTypes {
 
         /**
-         * Action (contained in intent-filter)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/action-element.html>
-         *     Action Xml documentation</a>}
+         * Action (contained in intent-filter, intent) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/action-element.html>Action Xml
+         * documentation</a>}
          */
         ACTION(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
@@ -316,11 +334,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                                 })),
 
         /**
-         * Category (contained in intent-filter)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/category-element.html>
-         *     Category Xml documentation</a>}
+         * Category (contained in intent-filter, intent) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/category-element.html>Category
+         * Xml documentation</a>}
          */
         CATEGORY(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
@@ -334,11 +351,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
         COMPATIBLE_SCREENS(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
-         * Data (contained in intent-filter)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/data-element.html>
-         *     Category Xml documentation</a>}
+         * Data (contained in intent-filter, intent) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/data-element.html>Category Xml
+         * documentation</a>}
          */
         DATA(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
@@ -369,6 +385,14 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                         .setMergingPolicy(AttributeModel.NO_MERGING_POLICY),
                 AttributeModel.newModel("label").setMergingPolicy(AttributeModel.NO_MERGING_POLICY)
         ),
+
+        /**
+         * Intent (contained in queries) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/intent.html>Intent Xml
+         * documentation</a>}
+         */
+        INTENT(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
          * Intent-filter (contained in activity, activity-alias, service, receiver) <br>
@@ -479,15 +503,23 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                 AttributeModel.newModel(SdkConstants.ATTR_NAME)),
 
         /**
-         * Provider (contained in application)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/provider-element.html>
-         *     Provider Xml documentation</a>}
+         * Provider (contained in application or queries) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/provider-element.html>Provider
+         * Xml documentation</a>}
          */
-        PROVIDER(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER,
-                AttributeModel.newModel(SdkConstants.ATTR_NAME)
-                        .setIsPackageDependent()),
+        PROVIDER(
+                MergeType.MERGE,
+                PROVIDER_KEY_RESOLVER,
+                AttributeModel.newModel(SdkConstants.ATTR_NAME).setIsPackageDependent()),
+
+        /**
+         * Queries <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/queries-element.html>Queries Xml
+         * documentation</a>}
+         */
+        QUERIES(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /**
          * Receiver (contained in application)

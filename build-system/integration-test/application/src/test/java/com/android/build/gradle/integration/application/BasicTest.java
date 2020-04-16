@@ -35,6 +35,7 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
@@ -106,16 +107,10 @@ public class BasicTest {
         assertFalse("Non empty bootclasspath", model.getBootClasspath().isEmpty());
 
         assertNotNull("aaptOptions not null", model.getAaptOptions());
-        assertEquals("aaptOptions noCompress", 1, model.getAaptOptions().getNoCompress().size());
-        assertTrue("aaptOptions noCompress",
-                model.getAaptOptions().getNoCompress().contains("txt"));
         assertEquals(
-                "aaptOptions ignoreAssetsPattern",
-                "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~",
-                model.getAaptOptions().getIgnoreAssets());
-        assertFalse(
-                "aaptOptions getFailOnMissingConfigEntry",
-                model.getAaptOptions().getFailOnMissingConfigEntry());
+                "aaptOptions namespacing",
+                AaptOptions.Namespacing.DISABLED,
+                model.getAaptOptions().getNamespacing());
 
         // Since source and target compatibility are not explicitly set in the build.gradle,
         // the default value depends on the JDK used.

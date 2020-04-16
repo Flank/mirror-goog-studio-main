@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -36,6 +37,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -90,8 +92,8 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
 
     @get:Input
-    lateinit var noCompress: List<String>
-        private set
+    @get:Optional
+    abstract val noCompress: ListProperty<String>
 
     override fun doTaskAction() {
         val staticLibraries = ImmutableList.builder<File>()
@@ -104,7 +106,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
         val config = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = manifestFile,
-                options = AaptOptions(noCompress, additionalParameters = null),
+                options = AaptOptions(noCompress.orNull, additionalParameters = null),
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource.get().asFile,
@@ -187,8 +189,10 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 creationConfig.services.projectOptions
             )
-            task.noCompress =
-                creationConfig.globalScope.extension.aaptOptions.noCompress.toList().sorted()
+            if (creationConfig is ApkCreationConfig) {
+                task.noCompress.set(creationConfig.aaptOptions.noCompress)
+            }
+            task.noCompress.disallowChanges()
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }

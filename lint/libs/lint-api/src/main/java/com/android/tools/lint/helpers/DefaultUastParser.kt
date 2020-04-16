@@ -45,6 +45,7 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getIoFile
+import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
 import org.jetbrains.uast.psi.UElementWithLocation
 import java.io.File
 import kotlin.math.ceil
@@ -235,6 +236,11 @@ open class DefaultUastParser(
             val location = Location.create(ioFile, text, element.startOffset, element.endOffset)
             location.setSource(element)
             return location
+        } else if (element is KotlinStringTemplateUPolyadicExpression &&
+            element.operands.size == 1
+        ) {
+            val literal = element.operands[0]
+            return getLocation(context, literal).withSource(literal)
         } else {
             val psiElement = element.sourcePsi
             if (psiElement != null) {

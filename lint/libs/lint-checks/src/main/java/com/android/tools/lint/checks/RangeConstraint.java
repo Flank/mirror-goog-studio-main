@@ -24,6 +24,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiModifierListOwner;
+import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.java.JavaUAnnotation;
 
@@ -52,6 +53,20 @@ public abstract class RangeConstraint {
             @NonNull PsiModifierListOwner owner, @NonNull JavaEvaluator evaluator) {
         for (PsiAnnotation annotation : evaluator.getAllAnnotations(owner, false)) {
             RangeConstraint constraint = create(JavaUAnnotation.wrap(annotation));
+            // Pick first; they're mutually exclusive
+            if (constraint != null) {
+                return constraint;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static RangeConstraint create(
+            @NonNull UAnnotated owner, @NonNull JavaEvaluator evaluator) {
+        for (UAnnotation annotation : evaluator.getAllAnnotations(owner, false)) {
+            RangeConstraint constraint = create(annotation);
             // Pick first; they're mutually exclusive
             if (constraint != null) {
                 return constraint;

@@ -28,9 +28,6 @@ sealed class MultipleArtifactType<T: FileSystemLocation>(kind: ArtifactKind<T>,
     val category: InternalArtifactType.Category = InternalArtifactType.Category.INTERMEDIATES)
     : ArtifactType<T>(kind), ArtifactType.Multiple, ArtifactType.Appendable {
 
-    override val isPublic: Boolean
-        get() = false
-
     // The final dex files (if the dex splitter does not run)
     // that will get packaged in the APK or bundle.
     object DEX: MultipleArtifactType<Directory>(DIRECTORY)

@@ -37,7 +37,6 @@ public class PseudoApiChangesTest {
             ImmutableSet.of(
                     "ActionableVariantObjectOperationsExecutor",
                     "AndroidSourceSetFactory",
-                    "DslAdaptersKt",
                     "DslVariableFactory",
                     "NoOpDeprecationReporter",
                     "VariantOutputFactory",

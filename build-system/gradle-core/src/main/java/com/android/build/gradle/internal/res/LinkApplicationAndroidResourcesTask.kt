@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
@@ -165,10 +164,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Input
     val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
 
-    private lateinit var aaptOptions: AaptOptions
+    @get:Input
+    @get:Optional
+    abstract val noCompress: ListProperty<String>
 
-    @Nested
-    fun getAaptOptionsInput() = LinkingTaskInputAaptOptions(aaptOptions)
+    @get:Input
+    @get:Optional
+    abstract val aaptAdditionalParameters: ListProperty<String>
 
     private lateinit var mergeBlameLogFolder: File
 
@@ -319,7 +321,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     compiledDependenciesResourcesDirs,
                     this,
                     rClassOutputJar.orNull?.asFile,
-                    inputStableIdsFile
+                    inputStableIdsFile,
+                    AaptOptions(noCompress.orNull, aaptAdditionalParameters.orNull)
                 )
             )
 
@@ -346,7 +349,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                             compiledDependenciesResourcesDirs,
                             this,
                             null,
-                            if (useStableIds) stableIdsOutputFileProperty.get().asFile else null
+                            if (useStableIds) stableIdsOutputFileProperty.get().asFile else null,
+                            AaptOptions(noCompress.orNull, aaptAdditionalParameters.orNull)
                         )
                     )
                 }
@@ -474,7 +478,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
 
             task.setType(creationConfig.variantType)
-            task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
+            if (creationConfig is ApkCreationConfig) {
+                task.noCompress.set(creationConfig.aaptOptions.noCompress)
+                task.aaptAdditionalParameters.set(creationConfig.aaptOptions.additionalParameters)
+            }
+            task.noCompress.disallowChanges()
+            task.aaptAdditionalParameters.disallowChanges()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
@@ -860,7 +869,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val compiledDependenciesResourcesDirs: List<File>,
         task: LinkApplicationAndroidResourcesTask,
         val rClassOutputJar: File? = null,
-        val stableIdsInputFile: File?
+        val stableIdsInputFile: File?,
+        val aaptOptions: AaptOptions
     ) : Serializable {
         val resourceConfigs: Set<String> = splitList.resourceConfigs
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
@@ -872,7 +882,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val proguardOutputFile: File? = task.proguardOutputFile.orNull?.asFile
         val mainDexListProguardOutputFile: File? = task.mainDexListProguardOutputFile.orNull?.asFile
         val buildTargetDensity: String? = task.buildTargetDensity
-        val aaptOptions: AaptOptions = task.aaptOptions
         val variantType: VariantType = task.type
         val variantName: String = task.name
         val packageId: Int? = task.resOffset.orNull

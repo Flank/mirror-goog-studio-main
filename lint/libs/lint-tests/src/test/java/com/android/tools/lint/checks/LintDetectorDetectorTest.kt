@@ -535,6 +535,7 @@ class LintDetectorDetectorTest {
                     LibraryReferenceTestFile("libs/${file.name}_$index", file)
                 }.toTypedArray()
             )
+            .checkUInjectionHost(false)
             .allowMissingSdk()
             .run()
             .expectClean()

@@ -46,7 +46,10 @@ public final class TodoInspectorApi {
         TODO_GOT_LONG_ITEMS_COUNT,
         TODO_CLEARED_ALL_ITEMS,
 
-        TODO_HAS_EMPTY_TODO_LIST;
+        TODO_HAS_EMPTY_TODO_LIST,
+
+        TODO_ITEMS_PREFILLING,
+        TODO_LOGGING_ITEM;
 
         @NonNull
         public byte[] toByteArray() {

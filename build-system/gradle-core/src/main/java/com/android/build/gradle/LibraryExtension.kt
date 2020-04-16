@@ -158,6 +158,11 @@ open class LibraryExtension(
         Collections.addAll(publicExtensionImpl.aidlPackageWhiteList, *aidlFqcns)
     }
 
+    override var compileSdkVersion: String?
+        get() = publicExtensionImpl.compileSdkPreview
+        set(value) {
+            publicExtensionImpl.compileSdkPreview = value
+        }
     override val flavorDimensionList: MutableList<String>
         get() = flavorDimensions
 

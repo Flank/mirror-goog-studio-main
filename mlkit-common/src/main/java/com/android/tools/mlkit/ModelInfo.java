@@ -15,6 +15,7 @@
  */
 package com.android.tools.mlkit;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
@@ -30,11 +31,11 @@ public class ModelInfo {
     /** Stores necessary data for subgraphs. */
     private final List<SubGraphInfo> subGraphInfos;
 
-    private String modelName;
-    private String modelDescription;
-    private String modelVersion;
-    private String modelAuthor;
-    private String modelLicense;
+    private String modelName = "";
+    private String modelDescription = "";
+    private String modelVersion = "";
+    private String modelAuthor = "";
+    private String modelLicense = "";
     private boolean metaDataExisted;
 
     private ModelInfo() {
@@ -97,11 +98,11 @@ public class ModelInfo {
 
         // TODO(jackqdyulei): consider to remove this check and make fields not null.
         if (modelMetadata != null) {
-            modelInfo.modelName = modelMetadata.name();
-            modelInfo.modelDescription = modelMetadata.description();
-            modelInfo.modelVersion = modelMetadata.version();
-            modelInfo.modelAuthor = modelMetadata.author();
-            modelInfo.modelLicense = modelMetadata.license();
+            modelInfo.modelName = Strings.nullToEmpty(modelMetadata.name());
+            modelInfo.modelDescription = Strings.nullToEmpty(modelMetadata.description());
+            modelInfo.modelVersion = Strings.nullToEmpty(modelMetadata.version());
+            modelInfo.modelAuthor = Strings.nullToEmpty(modelMetadata.author());
+            modelInfo.modelLicense = Strings.nullToEmpty(modelMetadata.license());
             modelInfo.metaDataExisted = true;
 
             int subgraphLength = modelMetadata.subgraphMetadataLength();

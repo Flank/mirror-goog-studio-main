@@ -124,7 +124,15 @@ message AgentSwapResponse {
     JNI_SETUP_FAILED = 7;    // The JNI environment could not be set up.
     JVMTI_SETUP_FAILED = 8;  // The JVMTI environment could not be set up.
     SET_CAPABILITIES_FAILED = 9;  // JVMTI capabilities could not be set.
-    UNSUPPORTED_REINIT = 10;  // JVMTI supports the swap but some variables cannot be reinit.
+
+    // JVMTI supports the swap but some variables cannot be reinit.
+    UNSUPPORTED_REINIT = 10; 
+    UNSUPPORTED_REINIT_STATIC_PRIMITIVE = 11; 
+    UNSUPPORTED_REINIT_STATIC_OBJECT = 12; 
+    UNSUPPORTED_REINIT_STATIC_ARRAY = 13; 
+    UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE = 14; 
+    UNSUPPORTED_REINIT_NON_STATIC_OBJECT = 15; 
+    UNSUPPORTED_REINIT_NON_STATIC_ARRAY = 16; 
   }
 
   // The state of the swap that was requested.

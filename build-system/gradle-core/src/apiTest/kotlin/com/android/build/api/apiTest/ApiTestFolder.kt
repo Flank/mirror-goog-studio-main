@@ -24,7 +24,7 @@ import java.io.IOException
 // extra documentation artifacts.
 class ApiTestFolder(
     private val parentFolder: File,
-    private val className: String
+    private val folderName: String
 ): TemporaryFolder(parentFolder) {
 
     var folder: File? = null
@@ -38,18 +38,12 @@ class ApiTestFolder(
     }
 
     override fun create() {
-        folder = createTemporaryFolderIn(parentFolder, simplifyFolderName())
-    }
-
-    private fun simplifyFolderName(): String {
-        val subName = className.substring(className.indexOf("apiTest") + "apiTest".length)
-        return subName.replace('.', File.separatorChar)
+        folder = createTemporaryFolderIn(parentFolder, folderName)
     }
 
     @Throws(IOException::class)
     private fun createTemporaryFolderIn(parentFolder: File, folderName: String): File? {
         val createdFolder = File(parentFolder, folderName)
-        createdFolder.deleteRecursively()
         createdFolder.mkdirs()
         return createdFolder
     }

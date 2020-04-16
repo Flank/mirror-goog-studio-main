@@ -18,6 +18,9 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.DOT_GRADLE;
+import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.DOT_KTS;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
@@ -115,6 +118,7 @@ public class TestLintTask {
     File baselineFile;
     Set<Desugaring> desugaring;
     EnumSet<Platform> platforms;
+    boolean checkUInjectionHost = true;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -588,6 +592,15 @@ public class TestLintTask {
     }
 
     /**
+     * Whether lint should check that the lint checks correctly handles the UInjectionHost string
+     * literals. This will run lint checks that contain Kotlin files twice and diff the results.
+     */
+    public TestLintTask checkUInjectionHost(boolean check) {
+        this.checkUInjectionHost = check;
+        return this;
+    }
+
+    /**
      * Normally resource repositories are only provided in incremental/single-file lint runs. This
      * method allows you to add support for this in the test.
      *
@@ -686,6 +699,19 @@ public class TestLintTask {
         return projectDirs;
     }
 
+    private boolean haveKotlinTestFiles() {
+        for (ProjectDescription project : projects) {
+            for (TestFile file : project.getFiles()) {
+                if (file.targetRelativePath.endsWith(DOT_KT)
+                        || file.targetRelativePath.endsWith(DOT_KTS)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Performs the lint check, returning the results of the lint check.
      *
@@ -717,9 +743,32 @@ public class TestLintTask {
 
         List<File> projectDirs = createProjects(rootDir);
         try {
+            if (checkUInjectionHost) {
+                setForceUiInjection(false);
+            }
+
             Pair<String, List<Warning>> result = checkLint(rootDir, projectDirs);
             String output = result.getFirst();
             List<Warning> warnings = result.getSecond();
+
+            // Test both with and without UInjectionHost
+            if (checkUInjectionHost && haveKotlinTestFiles()) {
+                setForceUiInjection(true);
+                Pair<String, List<Warning>> result2 = checkLint(rootDir, projectDirs);
+                String output2 = result2.getFirst();
+                setForceUiInjection(false);
+
+                assertEquals(
+                        "The unit test results differ based on whether\n"
+                                + "`kotlin.uast.force.uinjectionhost` is on or off. Make sure your\n"
+                                + "detector correctly handles strings in Kotlin; soon all String\n"
+                                + "`ULiteralExpression` elements will be wrapped in a `UPolyadicExpression`.\n"
+                                + "Lint now runs the tests twice, in both modes, and checks that\n"
+                                + "the results are identical.",
+                        output,
+                        output2);
+            }
+
             return new TestLintResult(this, output, null, warnings);
         } catch (Exception e) {
             return new TestLintResult(this, null, e, Collections.emptyList());
@@ -728,6 +777,11 @@ public class TestLintTask {
                 TestUtils.deleteFile(rootDir);
             }
         }
+    }
+
+    private static void setForceUiInjection(boolean on) {
+        //noinspection KotlinInternalInJava
+        org.jetbrains.uast.kotlin.KotlinConverter.INSTANCE.setForceUInjectionHost(on);
     }
 
     /** Returns all the platforms encountered by the given issues */

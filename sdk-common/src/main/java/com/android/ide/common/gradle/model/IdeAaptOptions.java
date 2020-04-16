@@ -18,29 +18,17 @@ package com.android.ide.common.gradle.model;
 import static com.android.builder.model.AaptOptions.Namespacing.DISABLED;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 public class IdeAaptOptions implements AaptOptions, Serializable {
 
-    @Nullable private final String ignoreAssets;
-    @Nullable private final Collection<String> noCompress;
-    private final boolean failOnMissingConfigEntry;
-    @NonNull private final List<String> additionalParameters;
     @NonNull private final Namespacing namespacing;
 
     // Used for serialization by the IDE.
     IdeAaptOptions() {
-        ignoreAssets = null;
-        noCompress = null;
-        failOnMissingConfigEntry = false;
-        additionalParameters = Collections.emptyList();
         namespacing = DISABLED;
     }
 
@@ -48,38 +36,7 @@ public class IdeAaptOptions implements AaptOptions, Serializable {
     @SuppressWarnings("ConstantConditions")
     @VisibleForTesting
     public IdeAaptOptions(@NonNull AaptOptions original) {
-
-        ignoreAssets = IdeModel.copyNewProperty(original::getIgnoreAssets, null);
-        noCompress = IdeModel.copyNewProperty(original::getNoCompress, null);
         namespacing = IdeModel.copyNewProperty(original::getNamespacing, DISABLED);
-        additionalParameters =
-                IdeModel.copyNewProperty(
-                        original::getAdditionalParameters, Collections.emptyList());
-        failOnMissingConfigEntry =
-                IdeModel.copyNewProperty(original::getFailOnMissingConfigEntry, false);
-    }
-
-    @Override
-    @Nullable
-    public String getIgnoreAssets() {
-        return ignoreAssets;
-    }
-
-    @Override
-    @Nullable
-    public Collection<String> getNoCompress() {
-        return noCompress;
-    }
-
-    @Override
-    public boolean getFailOnMissingConfigEntry() {
-        return failOnMissingConfigEntry;
-    }
-
-    @Override
-    @NonNull
-    public List<String> getAdditionalParameters() {
-        return additionalParameters;
     }
 
     @Override
@@ -97,21 +54,11 @@ public class IdeAaptOptions implements AaptOptions, Serializable {
             return false;
         }
         IdeAaptOptions that = (IdeAaptOptions) o;
-        return failOnMissingConfigEntry == that.failOnMissingConfigEntry
-                && Objects.equals(ignoreAssets, that.ignoreAssets)
-                && Objects.equals(noCompress, that.noCompress)
-                && Objects.equals(additionalParameters, that.additionalParameters)
-                && namespacing == that.namespacing;
+        return namespacing == that.namespacing;
     }
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(
-                ignoreAssets,
-                noCompress,
-                failOnMissingConfigEntry,
-                additionalParameters,
-                namespacing);
+        return Objects.hash(namespacing);
     }
 }

@@ -29,9 +29,6 @@ import org.gradle.api.file.Directory
 @Incubating
 sealed class BuildArtifactType : ArtifactType<Directory>(DIRECTORY) {
 
-    override val isPublic: Boolean
-        get() = true
-
     @Incubating
     object JAVAC_CLASSES : BuildArtifactType()
     @Incubating
