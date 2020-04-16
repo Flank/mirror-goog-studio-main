@@ -24,6 +24,7 @@ import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basi
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.blankWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.composeActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.cppEmptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity.googleAdMobAdsActivityTemplate
@@ -86,6 +87,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     scrollActivityTemplate,
     tabbedActivityTemplate,
     viewModelActivityTemplate,
+    cppEmptyActivityTemplate, // Keep last as per UX design
 
     blankFragmentTemplate,
     fullscreenFragmentTemplate,
