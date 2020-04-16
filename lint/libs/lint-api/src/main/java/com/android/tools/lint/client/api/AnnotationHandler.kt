@@ -27,6 +27,7 @@ import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.search.GlobalSearchScope
@@ -389,11 +390,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         */
 
         val field = node.resolve()
-        if (field is PsiField) {
+        if (field is PsiField || field is PsiMethod) {
             val evaluator = context.evaluator
             val annotations = filterRelevantAnnotations(
                 evaluator,
-                evaluator.getAllAnnotations(field, inHierarchy = true)
+                evaluator.getAllAnnotations(field as PsiMember, inHierarchy = true)
             )
             checkAnnotations(
                 context = context,
@@ -499,11 +500,9 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
     fun visitVariable(context: JavaContext, variable: UVariable) {
         val evaluator = context.evaluator
-        val psi = variable.psi
         val methodAnnotations = filterRelevantAnnotations(
             evaluator,
-            evaluator.getAllAnnotations(psi, inHierarchy = true),
-            variable
+            evaluator.getAllAnnotations(variable as UAnnotated, inHierarchy = true)
         )
         if (methodAnnotations.isNotEmpty()) {
             checkContextAnnotations(context, null, null, variable, methodAnnotations, variable)

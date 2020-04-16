@@ -48,6 +48,10 @@ import com.intellij.psi.PsiWildcardType
 import org.jetbrains.kotlin.asJava.elements.KtLightModifierList
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtModifierListOwner
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
@@ -754,6 +758,14 @@ class JavaEvaluator {
         if (psi is PsiAnnotation) {
             val annotationOwner = psi.owner
             return annotationOwner == null || annotationOwner != owner.modifierList
+        } else if (psi is KtAnnotationEntry) {
+            val parent = psi.getParentOfType<KtModifierListOwner>(true)
+                ?.let { if (it is KtPropertyAccessor) it.property else it }
+            val ownerPsi = if (owner is UElement)
+                owner.sourcePsi
+            else
+                owner
+            return parent == null || parent != ownerPsi
         }
 
         return true
