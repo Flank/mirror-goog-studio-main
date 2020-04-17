@@ -17,40 +17,35 @@
 package com.android.tools.mlkit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
-import java.io.File;
 import org.junit.Test;
 
 public class MlkitNamesTest {
 
     @Test
     public void computeModelClassName_validName_justReturn() {
-        assertEquals(MlkitNames.computeModelClassName(new File("validModel.tflite")), "ValidModel");
-        assertEquals(MlkitNames.computeModelClassName(new File("validModel.tflite")), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName("validModel.tflite"), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName("validModel.tflite"), "ValidModel");
     }
 
     @Test
     public void computeModelClassName_nameWithInvalidCharacters_correctIt() {
-        assertEquals(
-                MlkitNames.computeModelClassName(new File(" valid_model%$.tflite")), "ValidModel");
-        assertEquals(
-                MlkitNames.computeModelClassName(new File("valid_model.tflite")), "ValidModel");
-        assertEquals(
-                MlkitNames.computeModelClassName(new File("valid-model.tflite")), "ValidModel");
-        assertEquals(
-                MlkitNames.computeModelClassName(new File("valid-_model.tflite")), "ValidModel");
-        assertEquals(
-                MlkitNames.computeModelClassName(new File("valid model.tflite")), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName(" valid_model%$.tflite"), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName("valid_model.tflite"), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName("valid-model.tflite"), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName("valid-_model.tflite"), "ValidModel");
+        assertEquals(MlkitNames.computeModelClassName("valid model.tflite"), "ValidModel");
     }
 
     @Test
     public void computeModelClassName_nameAllWithInvalidCharacters_returnModelWithHashcode() {
-        assertEquals(MlkitNames.computeModelClassName(new File(" %$.tflite")), "AutoModel40");
+        assertEquals(MlkitNames.computeModelClassName(" %$.tflite"), "AutoModel40");
     }
 
     @Test
     public void computeModelClassName_nameStartWithDigit_correctIt() {
-        assertEquals(MlkitNames.computeModelClassName(new File("012.tflite")), "AutoModel012");
+        assertEquals(MlkitNames.computeModelClassName("012.tflite"), "AutoModel012");
     }
 
     @Test
@@ -82,11 +77,9 @@ public class MlkitNamesTest {
     }
 
     @Test
-    public void computeModelClassName_sameFileInDifferentDir_returnSameName() {
-        File file1 = new File("dir1", "model.tflite");
-        File file2 = new File("dir2", "model.tflite");
-
-        assertEquals(
-                MlkitNames.computeModelClassName(file1), MlkitNames.computeModelClassName(file2));
+    public void computeModelClassName_sameFileInDifferentDir_returnDifferentName() {
+        assertNotEquals(
+                MlkitNames.computeModelClassName("dir1/model.tflite"),
+                MlkitNames.computeModelClassName("dir2/model.tflite"));
     }
 }

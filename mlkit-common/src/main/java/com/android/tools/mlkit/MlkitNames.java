@@ -21,10 +21,12 @@ import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
 import com.google.common.primitives.UnsignedBytes;
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import javax.lang.model.SourceVersion;
 
 /** Store names that used by both light class and gradle task. */
@@ -43,13 +45,17 @@ public class MlkitNames {
                 + StringHelper.usLocaleCapitalize(type);
     }
 
-    public static String computeModelClassName(File modelFile) {
-        // TODO(b/151171517): in gradle or other place, handle the case that two models might
-        // have same class name.
+    public static String computeModelClassName(String relativeModelFilePath) {
+        Path filePath = Paths.get(relativeModelFilePath);
+        String fileName = filePath.getFileName().toString();
+
+        // Indicates whether model is in sub directory. Empty string if it is in root directory.
+        String relativePathIndicator = relativeModelFilePath;
+        if (relativeModelFilePath == null || relativeModelFilePath.equals(fileName)) {
+            relativePathIndicator = "";
+        }
         String formattedName =
-                MoreFiles.getNameWithoutExtension(modelFile.toPath())
-                        .trim()
-                        .replaceAll("[- ]+", "_");
+                MoreFiles.getNameWithoutExtension(filePath).trim().replaceAll("[- ]+", "_");
         if (formattedName.contains("_")) {
             formattedName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, formattedName);
         } else {
@@ -64,12 +70,14 @@ public class MlkitNames {
         if (className.isEmpty()) {
             // If we can't interpret a valid class name from file name, then create name from
             // fileName hashcode(i.e. Model75)
-            return MODEL_NAME_PREFIX
-                    + UnsignedBytes.toString(
-                            Hashing.murmur3_32()
-                                    .hashString(modelFile.getName(), Charsets.UTF_8)
-                                    .asBytes()[0]);
-        } else if (SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className)) {
+            return MODEL_NAME_PREFIX + getHashValue(fileName + relativePathIndicator);
+        }
+
+        // If model is in sub directory, add a hashcode in model class name.
+        if (!Strings.isNullOrEmpty(relativePathIndicator)) {
+            className += getHashValue(relativePathIndicator);
+        }
+        if (SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className)) {
             return className;
         } else {
             return MODEL_NAME_PREFIX + className;
@@ -104,15 +112,14 @@ public class MlkitNames {
     }
 
     @NonNull
+    private static String getHashValue(@NonNull String name) {
+        return UnsignedBytes.toString(
+                Hashing.murmur3_32().hashString(name, Charsets.UTF_8).asBytes()[0]);
+    }
+
+    @NonNull
     public static String computeIdentifierName(@Nullable String name) {
-        String defaultName =
-                name == null
-                        ? "name"
-                        : "name"
-                                + UnsignedBytes.toString(
-                                        Hashing.murmur3_32()
-                                                .hashString(name, Charsets.UTF_8)
-                                                .asBytes()[0]);
+        String defaultName = name == null ? "name" : "name" + getHashValue(name);
         return computeIdentifierName(name, defaultName);
     }
 }

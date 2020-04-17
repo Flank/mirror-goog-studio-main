@@ -49,7 +49,7 @@ class TfliteModelGenerator(
 ) : ModelGenerator {
     private val logger: Logger = Logging.getLogger(this.javaClass)
     private val modelInfo: ModelInfo = ModelInfo.buildFrom(ByteBuffer.wrap(modelFile.readBytes()))
-    private val className: String = MlkitNames.computeModelClassName(modelFile)
+    private val className: String = MlkitNames.computeModelClassName(localModelPath)
 
     override fun generateBuildClass(outputDirProperty: DirectoryProperty) {
         val classBuilder = TypeSpec.classBuilder(className).addModifiers(
