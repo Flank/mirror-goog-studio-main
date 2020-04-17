@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
@@ -72,7 +73,7 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         task.outputFile.set(File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME))
         task.inputFiles = fileCollection
         task.minSdkVersion = minSdkVersion
-        task.enableGradleWorkers.set(false)
+        task.enableGradleWorkers.setDisallowChanges(false)
 
         `when`(fileCollection.asFileTree).thenReturn(fileTree)
         `when`(fileTree.files).thenReturn(files)

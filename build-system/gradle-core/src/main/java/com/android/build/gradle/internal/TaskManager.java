@@ -85,6 +85,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.lint.LintModelModuleWriterTask;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -95,6 +96,7 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
@@ -386,7 +388,8 @@ public abstract class TaskManager<
      *
      * <p>This creates the tasks for all the variants and all the test components
      */
-    public void createTasks() {
+    public void createTasks(
+            @NonNull VariantType variantType, @NonNull BuildFeatureValues buildFeatures) {
         // this is call before all the variants are created since they are all going to depend
         // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
@@ -411,6 +414,14 @@ public abstract class TaskManager<
                 testComponent : testComponents) {
             createTasksForTest(testComponent);
         }
+
+        taskFactory.register(
+                new LintModelModuleWriterTask.CreationAction(
+                        globalScope,
+                        variantPropertiesList,
+                        testComponentPropertiesList,
+                        variantType,
+                        buildFeatures));
 
         createReportTasks();
     }

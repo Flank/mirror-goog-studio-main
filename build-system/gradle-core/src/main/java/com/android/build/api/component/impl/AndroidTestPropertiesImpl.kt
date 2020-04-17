@@ -105,6 +105,9 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         action.invoke(aaptOptions)
     }
 
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.isMinifyEnabled
+
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
 

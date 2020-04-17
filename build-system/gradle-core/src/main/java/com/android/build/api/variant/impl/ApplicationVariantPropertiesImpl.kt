@@ -91,6 +91,9 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         action.invoke(aaptOptions)
     }
 
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.isMinifyEnabled
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

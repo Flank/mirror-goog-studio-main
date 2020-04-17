@@ -33,7 +33,6 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 
 public abstract class LintPerVariantTask extends LintBaseTask implements VariantAwareTask {
 
@@ -62,8 +61,8 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         return allInputs;
     }
 
-    @TaskAction
-    public void lint() {
+    @Override
+    protected void doTaskAction() {
         runLint(new LintPerVariantTaskDescriptor());
     }
 

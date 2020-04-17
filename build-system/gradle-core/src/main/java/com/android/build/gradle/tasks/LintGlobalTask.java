@@ -32,7 +32,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 
 public abstract class LintGlobalTask extends LintBaseTask {
 
@@ -46,8 +45,8 @@ public abstract class LintGlobalTask extends LintBaseTask {
         return allInputs;
     }
 
-    @TaskAction
-    public void lint() {
+    @Override
+    protected void doTaskAction() {
         runLint(new LintGlobalTaskDescriptor());
     }
 

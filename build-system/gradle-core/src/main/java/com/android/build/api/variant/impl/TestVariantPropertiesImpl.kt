@@ -90,6 +90,9 @@ open class TestVariantPropertiesImpl @Inject constructor(
 
     override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
 
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.isMinifyEnabled
+
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
 

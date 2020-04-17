@@ -98,6 +98,9 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
         action.invoke(aaptOptions)
     }
 
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.isMinifyEnabled
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

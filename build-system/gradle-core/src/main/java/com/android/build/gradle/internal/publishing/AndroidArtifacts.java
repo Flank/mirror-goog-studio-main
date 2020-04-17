@@ -21,7 +21,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 
@@ -79,6 +78,8 @@ public class AndroidArtifacts {
     private static final String TYPE_AIDL = "android-aidl";
     private static final String TYPE_RENDERSCRIPT = "android-renderscript";
     private static final String TYPE_LINT_JAR = "android-lint";
+    private static final String TYPE_LINT_MODULE = "android-lint-module";
+    private static final String TYPE_LINT_DEPENDENCIES = "android-lint-dependencies";
     private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
@@ -351,6 +352,8 @@ public class AndroidArtifacts {
         AAPT_PROGUARD_RULES(TYPE_AAPT_PROGUARD_RULES),
 
         LINT(TYPE_LINT_JAR),
+        LINT_MODULE(TYPE_LINT_MODULE),
+        LINT_DEPENDENCIES(TYPE_LINT_DEPENDENCIES),
 
         APK_MAPPING(TYPE_MAPPING),
         APK_METADATA(TYPE_METADATA),
