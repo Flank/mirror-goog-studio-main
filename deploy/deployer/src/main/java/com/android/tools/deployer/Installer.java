@@ -31,6 +31,12 @@ public interface Installer {
 
     Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException;
 
+    /** Updates the App's OverlayID. The app is expected to have no OverlayID at this point. */
     Deploy.OverlayIdPushResponse pushOverlayId(
             String packageName, String oid, boolean cleanOverlays) throws IOException;
+
+    /**
+     * Verify the App's current OverlayID. The app's OverlayID will not be change should it differs.
+     */
+    Deploy.OverlayIdPushResponse verifyOverlayId(String packageName, String oid) throws IOException;
 }

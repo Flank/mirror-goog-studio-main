@@ -20,6 +20,7 @@ import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.utils.ILogger;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -96,6 +97,7 @@ public class OptimisticApkSwapper {
                         .setExpectedOverlayId(cachedDump.getOverlayId().getSha())
                         .setOverlayId(nextOverlayId.getSha());
 
+        boolean hasDebuggerAttached = false;
         for (Integer pid : pids) {
             if (redefiners.containsKey(pid)) {
                 ClassRedefiner redefiner = redefiners.get(pid);
@@ -104,6 +106,7 @@ public class OptimisticApkSwapper {
                     throw new IllegalArgumentException(
                             "R+ Device should have FULL debugger swap support");
                 }
+                hasDebuggerAttached = true;
             } else {
                 request.addProcessIds(pid);
             }
@@ -135,20 +138,43 @@ public class OptimisticApkSwapper {
 
         Deploy.OverlaySwapRequest swapRequest = request.build();
 
-        // Do the installer swap first.
-        sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
+        if (hasDebuggerAttached) {
+            // Anytime we have an non-Installer based redefiner, it is not going to do any OID
+            // verification.
+            // Therefore we are going to do a manual OID check first. Here is the order:
 
-        // Given the installer swap succeeded, we are targeting the right
-        // device with the right APK in cache. We then proceed to do the debugger swaps.
-        for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
-            sendSwapRequest(swapRequest, entry.getValue());
-            // TODO: If any of the debugger swap fails, we need to undo the IWI swap.
-            // This can be fixed by doing this:
             //  1. Do a DUMP like verification on the app's current OID.
             //  2. Perform debugger swap
             //  3. Perform overlay swap that installs overlays as well as swapping
             //     processes that are not attached to d a debugger.
+            //
+            // Failure at any step would short circuit the whole operation. The only issue that
+            // might
+            // occur is when the debugger swap succeed and somehow the overlay install fails. We
+            // would
+            // have the running app be swapped but nothing installed. This is also the case in the
+            // non-optimistic case and user would get an error message as well.
+            try {
+                Deploy.OverlayIdPushResponse response =
+                        installer.verifyOverlayId(
+                                request.getPackageName(), request.getExpectedOverlayId());
+                if (response.getStatus() != Deploy.OverlayIdPushResponse.Status.OK) {
+                    throw DeployerException.overlayIdMisMatch();
+                }
+            } catch (IOException e) {
+                throw DeployerException.installerIoException(e);
+            }
+
+            // Given the installer swap succeeded, we are targeting the right
+            // device with the right APK in cache. We then proceed to do the debugger swaps.
+            for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
+                sendSwapRequest(swapRequest, entry.getValue());
+            }
         }
+
+        // Do the installer swap first.
+        sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
+
         return nextOverlayId;
     }
 

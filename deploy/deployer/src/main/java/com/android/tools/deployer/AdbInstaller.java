@@ -121,15 +121,37 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.OverlayIdPushResponse pushOverlayId(
             String packageName, String oid, boolean clearOverlays) throws IOException {
-        String[] cmd =
-                buildCmd(
-                        new String[] {
-                            "overlayidpush", packageName, oid, Boolean.toString(clearOverlays)
-                        });
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
+        String[] cmd = buildCmd(new String[] {"overlayidpush"});
+        Deploy.OverlayIdPush request = createOidPushRequest(packageName, "", oid, clearOverlays);
+        ByteArrayInputStream inputStream = wrap(request);
+        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.OverlayIdPushResponse response = installerResponse.getOverlayidpushResponse();
-        logger.verbose("installer swap: " + response.getStatus().toString());
+        logger.verbose("installer overlayidpush: " + response.getStatus().toString());
         return response;
+    }
+
+    @Override
+    public Deploy.OverlayIdPushResponse verifyOverlayId(String packageName, String oid)
+            throws IOException {
+        // Doing a overylayid push with both new and old OID as the argument effectively verifies
+        // the OID without updating it.
+        String[] cmd = buildCmd(new String[] {"overlayidpush"});
+        Deploy.OverlayIdPush request = createOidPushRequest(packageName, oid, oid, false);
+        ByteArrayInputStream inputStream = wrap(request);
+        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.OverlayIdPushResponse response = installerResponse.getOverlayidpushResponse();
+        logger.verbose("installer overlayidpush: " + response.getStatus().toString());
+        return response;
+    }
+
+    private static Deploy.OverlayIdPush createOidPushRequest(
+            String packageName, String prevOid, String nextOid, boolean wipeOverlays) {
+        return Deploy.OverlayIdPush.newBuilder()
+                .setPackageName(packageName)
+                .setPrevOid(prevOid)
+                .setNextOid(nextOid)
+                .setWipeOverlays(wipeOverlays)
+                .build();
     }
 
     @Override
