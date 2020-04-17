@@ -108,8 +108,8 @@ public class FakeRepoManager extends RepoManager {
 
     @Override
     public void load(long cacheExpirationMs,
-            @Nullable List<RepoLoadedCallback> onLocalComplete,
-            @Nullable List<RepoLoadedCallback> onSuccess,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
             @Nullable List<Runnable> onError, @NonNull ProgressRunner runner,
             @Nullable Downloader downloader, @Nullable SettingsController settings, boolean sync) {
 
@@ -143,13 +143,19 @@ public class FakeRepoManager extends RepoManager {
     }
 
     @Override
-    public void registerLocalChangeListener(@NonNull RepoLoadedCallback listener) {
-
+    public void addLocalChangeListener(@NonNull RepoLoadedListener listener) {
     }
 
     @Override
-    public void registerRemoteChangeListener(@NonNull RepoLoadedCallback listener) {
+    public void removeLocalChangeListener(@NonNull RepoLoadedListener listener) {
+    }
 
+    @Override
+    public void addRemoteChangeListener(@NonNull RepoLoadedListener listener) {
+    }
+
+    @Override
+    public void removeRemoteChangeListener(@NonNull RepoLoadedListener listener) {
     }
 
     @Override

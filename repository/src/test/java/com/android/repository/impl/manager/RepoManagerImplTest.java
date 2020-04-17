@@ -57,11 +57,11 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(1, counter, false));
-        RepoManager.RepoLoadedCallback localCallback =
+        RepoManager.RepoLoadedListener localCallback =
                 packages -> assertEquals(2, counter.addAndGet(1));
         RepoManagerImpl.RemoteRepoLoaderFactory remoteFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(3, counter, false));
-        RepoManager.RepoLoadedCallback remoteCallback =
+        RepoManager.RepoLoadedListener remoteCallback =
                 packages -> assertEquals(4, counter.addAndGet(1));
         Runnable errorCallback = Assert::fail;
 
@@ -82,11 +82,11 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(1, counter, false));
-        RepoManager.RepoLoadedCallback localCallback =
+        RepoManager.RepoLoadedListener localCallback =
                 packages -> assertEquals(2, counter.addAndGet(1));
         RepoManagerImpl.RemoteRepoLoaderFactory remoteFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(3, counter, true));
-        RepoManager.RepoLoadedCallback remoteCallback = packages -> fail();
+        RepoManager.RepoLoadedListener remoteCallback = packages -> fail();
         Runnable errorCallback = () -> assertEquals(4, counter.addAndGet(1));
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
@@ -110,10 +110,10 @@ public class RepoManagerImplTest extends TestCase {
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(1, counter, true));
-        RepoManager.RepoLoadedCallback localCallback = packages -> fail();
+        RepoManager.RepoLoadedListener localCallback = packages -> fail();
         RepoManagerImpl.RemoteRepoLoaderFactory remoteFactory =
                 new TestLoaderFactory<>(new OrderTestLoader<>(3, counter, false));
-        RepoManager.RepoLoadedCallback remoteCallback = packages -> fail();
+        RepoManager.RepoLoadedListener remoteCallback = packages -> fail();
         Runnable errorCallback = () -> assertEquals(2, counter.addAndGet(1));
 
         RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
@@ -156,19 +156,19 @@ public class RepoManagerImplTest extends TestCase {
                         return new HashMap<>();
                     }
                 });
-        RepoManager.RepoLoadedCallback localCallback1 = new RunningCallback(localCallback1Run);
-        RepoManager.RepoLoadedCallback localCallback2 = new RunningCallback(localCallback2Run);
-        RepoManager.RepoLoadedCallback remoteCallback1 = new RunningCallback(remoteCallback1Run) {
+        RepoManager.RepoLoadedListener localCallback1 = new RunningCallback(localCallback1Run);
+        RepoManager.RepoLoadedListener localCallback2 = new RunningCallback(localCallback2Run);
+        RepoManager.RepoLoadedListener remoteCallback1 = new RunningCallback(remoteCallback1Run) {
             @Override
-            public void doRun(@NonNull RepositoryPackages packages) {
-                super.doRun(packages);
+            public void loaded(@NonNull RepositoryPackages packages) {
+                super.loaded(packages);
                 completeDone.release();
             }
         };
-        RepoManager.RepoLoadedCallback remoteCallback2 = new RunningCallback(remoteCallback2Run) {
+        RepoManager.RepoLoadedListener remoteCallback2 = new RunningCallback(remoteCallback2Run) {
             @Override
-            public void doRun(@NonNull RepositoryPackages packages) {
-                super.doRun(packages);
+            public void loaded(@NonNull RepositoryPackages packages) {
+                super.loaded(packages);
                 completeDone.release();
             }
         };
@@ -328,8 +328,8 @@ public class RepoManagerImplTest extends TestCase {
         mgr.load(-1, null, null, null, runner, downloader, null, true);
         AtomicBoolean localRan = new AtomicBoolean(false);
         AtomicBoolean remoteRan = new AtomicBoolean(false);
-        mgr.registerLocalChangeListener(new RunningCallback(localRan));
-        mgr.registerRemoteChangeListener(new RunningCallback(remoteRan));
+        mgr.addLocalChangeListener(new RunningCallback(localRan));
+        mgr.addRemoteChangeListener(new RunningCallback(remoteRan));
 
         // load again with no changes
         mgr.load(-1, null, null, null, runner, downloader, null, true);
@@ -364,7 +364,7 @@ public class RepoManagerImplTest extends TestCase {
         }
     }
 
-    private static class RunningCallback implements RepoManager.RepoLoadedCallback {
+    private static class RunningCallback implements RepoManager.RepoLoadedListener {
 
         private final AtomicBoolean mDidRun;
 
@@ -373,7 +373,7 @@ public class RepoManagerImplTest extends TestCase {
         }
 
         @Override
-        public void doRun(@NonNull RepositoryPackages packages) {
+        public void loaded(@NonNull RepositoryPackages packages) {
             assertTrue(mDidRun.compareAndSet(false, true));
         }
     }

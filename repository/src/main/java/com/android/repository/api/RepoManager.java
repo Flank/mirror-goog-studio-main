@@ -239,7 +239,7 @@ public abstract class RepoManager {
      *                          Specify {@code 0} to reload immediately.
      * @param onLocalComplete   When loading, the local repo load happens first, and should be
      *                          relatively fast. When complete, the {@code onLocalComplete} {@link
-     *                          RepoLoadedCallback}s are run. Will be called with a {@link
+     *                          RepoLoadedListener }s are run. Will be called with a {@link
      *                          RepositoryPackages} that contains only the local packages.
      * @param onSuccess         Callbacks that are run when the entire load (local and remote) has
      *                          completed successfully. Called with an {@link RepositoryPackages}
@@ -260,8 +260,8 @@ public abstract class RepoManager {
      * TODO: throw exception if cancelled
      */
     public abstract void load(long cacheExpirationMs,
-            @Nullable List<RepoLoadedCallback> onLocalComplete,
-            @Nullable List<RepoLoadedCallback> onSuccess,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
             @Nullable List<Runnable> onError,
             @NonNull ProgressRunner runner,
             @Nullable Downloader downloader,
@@ -337,13 +337,23 @@ public abstract class RepoManager {
      * changed. The {@link RepositoryPackages} instance passed to the callback will contain only the
      * local packages.
      */
-    public abstract void registerLocalChangeListener(@NonNull RepoLoadedCallback listener);
+    public abstract void addLocalChangeListener(@NonNull RepoLoadedListener listener);
+
+    /**
+     * Removes the listener previously added by calling {@link #addLocalChangeListener}.
+     */
+    public abstract void removeLocalChangeListener(@NonNull RepoLoadedListener listener);
 
     /**
      * Register a listener that will be called whenever the remote packages are reloaded and have
      * changed. The {@link RepositoryPackages} instance will contain the remote and local packages.
      */
-    public abstract void registerRemoteChangeListener(@NonNull RepoLoadedCallback listener);
+    public abstract void addRemoteChangeListener(@NonNull RepoLoadedListener listener);
+
+    /**
+     * Removes the listener previously added by calling {@link #addRemoteChangeListener}.
+     */
+    public abstract void removeRemoteChangeListener(@NonNull RepoLoadedListener listener);
 
     /**
      * Record that the given package is in the process of being installed by the given installer.
@@ -368,15 +378,15 @@ public abstract class RepoManager {
     /**
      * Callback for when repository load is completed/partially completed.
      */
-    public interface RepoLoadedCallback {
+    public interface RepoLoadedListener {
 
         /**
-         * @param packages The packages that have been loaded so far. When this callback is used in
+         * @param packages The packages that have been loaded so far. When this listener is used in
          *                 the {@code onLocalComplete} argument to {@link #load(long, List, List,
          *                 List, ProgressRunner, Downloader, SettingsController, boolean)} {@code
          *                 packages} will only include local packages.
          */
-        void doRun(@NonNull RepositoryPackages packages);
+        void loaded(@NonNull RepositoryPackages packages);
     }
 
     protected static class DummyProgressRunner implements ProgressRunner {
