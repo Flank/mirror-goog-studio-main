@@ -67,7 +67,7 @@ message QueryParameters {
 
   oneof query {
     ProcessMetadataParameters process_metadata = 101;
-    ProcessTraceEventsParameters process_events = 102;
+    TraceEventsParameters trace_events_request = 102;
     SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
   }
@@ -78,11 +78,14 @@ message QueryParameters {
     repeated int64 process_id = 1;
   }
 
-  // Returns all the trace events for a set of processes.
-  // Includes all the threads under those processes.
-  // See ResultProcessTraceEvents for the data returned from this.
-  message ProcessTraceEventsParameters {
-    repeated int64 process_id = 1;
+  // Returns all the trace events for all threads part of the process_id
+  // identified by process_id or for a single thread identified by thread_id.
+  // See TraceEventsResult for the data returned from this.
+  message TraceEventsParameters {
+    oneof criteria {
+      int64 process_id = 1;
+      int64 thread_id = 2;
+    }
   }
 
   // Returns all CPU scheduling events for all threads part of the process
@@ -104,7 +107,7 @@ message QueryResult {
   // check the error field.
   oneof result {
     ProcessMetadataResult process_metadata = 101;
-    ProcessTraceEventsResult process_events = 102;
+    TraceEventsResult trace_events_result = 102;
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
   }
@@ -129,10 +132,30 @@ message ProcessMetadataResult {
   }
 }
 
-message ProcessTraceEventsResult {
-  repeated ProcessTraceEvents events = 1;
+message TraceEventsResult {
+  repeated ThreadTraceEvents thread = 1;
 
-  message ProcessTraceEvents {
+  message ThreadTraceEvents {
+    int64 thread_id = 1;
+
+    // Trace Events keyed by their id, useful to reconstruct the event tree.
+    // See TraceEvent.parent_id.
+    repeated TraceEvent trace_event = 2;
+  }
+
+  message TraceEvent {
+    // Id of this particular event.
+    int64 id = 1;
+
+    int64 timestamp_nanoseconds = 2;
+    int64 duration_nanoseconds = 3;
+    string name = 4;
+
+    // The parent event of this. Will be 0 if depth = 0.
+    int64 parent_id = 5;
+
+    // The depth of this event on its event tree.
+    int32 depth = 6;
   }
 }
 
