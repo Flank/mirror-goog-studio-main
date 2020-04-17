@@ -17,7 +17,7 @@ package com.android.build.api.variant
 
 import com.android.build.api.component.ComponentProperties
 import org.gradle.api.Incubating
-import org.gradle.api.provider.Property
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 
 /**
@@ -37,4 +37,9 @@ interface VariantProperties: ComponentProperties {
      * The package name into which some classes are generated
      */
     val packageName: Provider<String>
+
+    /**
+     * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
+     */
+    val buildConfigFields: MapProperty<String, BuildConfigField>
 }

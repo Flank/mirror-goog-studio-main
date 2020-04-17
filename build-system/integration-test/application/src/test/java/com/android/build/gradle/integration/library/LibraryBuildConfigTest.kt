@@ -126,14 +126,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "debug";
               public static final String FLAVOR = "flavor1";
-              // Fields from the variant
-              public static final int VALUE_VARIANT = 1000;
-              // Fields from build type: debug
+              // Field from build type: debug
               public static final int VALUE_DEBUG = 100;
-              // Fields from product flavor: flavor1
-              public static final int VALUE_FLAVOR = 10;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor1
+              public static final int VALUE_FLAVOR = 10;
+              // Field from the variant API
+              public static final int VALUE_VARIANT = 1000;
             }
 
             """.trimIndent()
@@ -173,14 +173,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "debug";
               public static final String FLAVOR = "flavor2";
-              // Fields from the variant
-              public static final int VALUE_VARIANT = 1000;
-              // Fields from build type: debug
+              // Field from build type: debug
               public static final int VALUE_DEBUG = 100;
-              // Fields from product flavor: flavor2
-              public static final int VALUE_FLAVOR = 20;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor2
+              public static final int VALUE_FLAVOR = 20;
+              // Field from the variant API
+              public static final int VALUE_VARIANT = 1000;
             }
 
             """).trimIndent()
@@ -209,12 +209,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "release";
               public static final String FLAVOR = "flavor1";
-              // Fields from product flavor: flavor1
+              // Field from product flavor: flavor1
               public static final int VALUE_DEBUG = 10;
-              public static final int VALUE_FLAVOR = 10;
-              public static final int VALUE_VARIANT = 10;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor1
+              public static final int VALUE_FLAVOR = 10;
+              // Field from product flavor: flavor1
+              public static final int VALUE_VARIANT = 10;
             }
 
             """.trimIndent()
@@ -243,12 +245,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "release";
               public static final String FLAVOR = "flavor2";
-              // Fields from product flavor: flavor2
+              // Field from product flavor: flavor2
               public static final int VALUE_DEBUG = 20;
-              public static final int VALUE_FLAVOR = 20;
-              public static final int VALUE_VARIANT = 20;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor2
+              public static final int VALUE_FLAVOR = 20;
+              // Field from product flavor: flavor2
+              public static final int VALUE_VARIANT = 20;
             }
 
             """.trimIndent()

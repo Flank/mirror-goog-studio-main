@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.variant.BuildConfigField
+import org.gradle.api.provider.MapProperty
+
 interface VariantCreationConfig: BaseCreationConfig {
 
+    val buildConfigFields: MapProperty<String, BuildConfigField>
 }

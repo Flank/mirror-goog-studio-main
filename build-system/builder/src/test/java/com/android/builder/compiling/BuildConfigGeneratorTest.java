@@ -19,12 +19,9 @@ package com.android.builder.compiling;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.builder.internal.ClassFieldImpl;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -86,11 +83,8 @@ public class BuildConfigGeneratorTest {
         File tempDir = mTemporaryFolder.newFolder();
         BuildConfigGenerator generator = new BuildConfigGenerator(tempDir, "my.app.pkg");
 
-        List<Object> items = Lists.newArrayList();
-        items.add("Extra line");
-        items.add(new ClassFieldImpl("int", "EXTRA", "42"));
-
-        generator.addItems(items).generate();
+        generator.addField("int", "EXTRA", "42", "Extra line");
+        generator.generate();
 
         File file = generator.getBuildConfigFile();
         assertTrue(file.exists());

@@ -131,14 +131,14 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor1\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from the variant\n"
-                        + "  public static final int VALUE_VARIANT = 1000;\n"
-                        + "  // Fields from build type: debug\n"
+                        + "  // Field from build type: debug\n"
                         + "  public static final int VALUE_DEBUG = 100;\n"
-                        + "  // Fields from product flavor: flavor1\n"
-                        + "  public static final int VALUE_FLAVOR = 10;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor1\n"
+                        + "  public static final int VALUE_FLAVOR = 10;\n"
+                        + "  // Field from the variant API\n"
+                        + "  public static final int VALUE_VARIANT = 1000;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor1/debug");
     }
@@ -167,14 +167,14 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor2\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from the variant\n"
-                        + "  public static final int VALUE_VARIANT = 1000;\n"
-                        + "  // Fields from build type: debug\n"
+                        + "  // Field from build type: debug\n"
                         + "  public static final int VALUE_DEBUG = 100;\n"
-                        + "  // Fields from product flavor: flavor2\n"
-                        + "  public static final int VALUE_FLAVOR = 20;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor2\n"
+                        + "  public static final int VALUE_FLAVOR = 20;\n"
+                        + "  // Field from the variant API\n"
+                        + "  public static final int VALUE_VARIANT = 1000;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor2/debug");
     }
@@ -204,12 +204,14 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor1\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from product flavor: flavor1\n"
+                        + "  // Field from product flavor: flavor1\n"
                         + "  public static final int VALUE_DEBUG = 10;\n"
-                        + "  public static final int VALUE_FLAVOR = 10;\n"
-                        + "  public static final int VALUE_VARIANT = 10;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor1\n"
+                        + "  public static final int VALUE_FLAVOR = 10;\n"
+                        + "  // Field from product flavor: flavor1\n"
+                        + "  public static final int VALUE_VARIANT = 10;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor1/release");
     }
@@ -239,12 +241,14 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor2\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from product flavor: flavor2\n"
+                        + "  // Field from product flavor: flavor2\n"
                         + "  public static final int VALUE_DEBUG = 20;\n"
-                        + "  public static final int VALUE_FLAVOR = 20;\n"
-                        + "  public static final int VALUE_VARIANT = 20;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor2\n"
+                        + "  public static final int VALUE_FLAVOR = 20;\n"
+                        + "  // Field from product flavor: flavor2\n"
+                        + "  public static final int VALUE_VARIANT = 20;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor2/release");
     }

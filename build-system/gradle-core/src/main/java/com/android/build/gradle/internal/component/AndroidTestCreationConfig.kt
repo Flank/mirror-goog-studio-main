@@ -16,8 +16,13 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.variant.BuildConfigField
+import org.gradle.api.provider.MapProperty
+
 /**
  * Internal interface for Android Test component
  */
 interface AndroidTestCreationConfig: TestComponentCreationConfig, ApkCreationConfig {
+
+    val buildConfigFields: MapProperty<String, BuildConfigField>
 }

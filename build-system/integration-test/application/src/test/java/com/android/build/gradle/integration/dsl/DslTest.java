@@ -130,7 +130,7 @@ public class DslTest {
                         + "  public static final String BUILD_TYPE = \"debug\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final String test2 = \"ą\";\n"
                         + "}\n";
 

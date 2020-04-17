@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 open class ApplicationVariantPropertiesImpl @Inject constructor(

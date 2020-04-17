@@ -17,7 +17,9 @@
 package com.android.build.api.component
 
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.BuildConfigField
 import org.gradle.api.Incubating
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
@@ -64,4 +66,9 @@ interface AndroidTestProperties : TestComponentProperties {
 
     /** the test label  */
     val testLabel: Property<String?>
+
+    /**
+     * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
+     */
+    val buildConfigFields: MapProperty<String, out BuildConfigField>
 }
