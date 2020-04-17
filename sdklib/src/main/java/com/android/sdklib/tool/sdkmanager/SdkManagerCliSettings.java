@@ -99,11 +99,11 @@ class SdkManagerCliSettings implements SettingsController {
     private String mProxyHostStr;
     private AndroidSdkHandler mHandler;
     private RepoManager mRepoManager;
-    private PrintStream mOut;
+    private PrintStream mOut = System.out;
     private BufferedReader mIn;
     private Downloader mDownloader;
-    private FileSystem mFileSystem;
-    private Map<String, String> mEnvironment;
+    private final FileSystem mFileSystem;
+    private final Map<String, String> mEnvironment;
 
     public void setDownloader(@Nullable Downloader downloader) {
         mDownloader = downloader;
@@ -120,7 +120,7 @@ class SdkManagerCliSettings implements SettingsController {
         }
     }
 
-    public void setOutputStream(@Nullable PrintStream out) {
+    public void setOutputStream(@NonNull PrintStream out) {
         mOut = out;
     }
 
@@ -304,7 +304,7 @@ class SdkManagerCliSettings implements SettingsController {
         return mIn;
     }
 
-    @Nullable
+    @NonNull
     public PrintStream getOutputStream() {
         return mOut;
     }

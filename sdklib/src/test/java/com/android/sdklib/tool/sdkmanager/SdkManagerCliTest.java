@@ -471,6 +471,8 @@ public class SdkManagerCliTest {
                 mDownloader,
                 mSdkHandler);
         downloader.run(new FakeProgressIndicator());
+
+        assertTrue(out.toString().replaceAll("\\r\\n", "\n").contains("Updating:\nupgrade\n"));
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertEquals(2,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
@@ -480,6 +482,24 @@ public class SdkManagerCliTest {
                 mSdkHandler.getSdkManager(progress).getPackages().getLocalPackages().size());
     }
 
+    @Test
+    public void testNoUpdates() throws Exception {
+        mFileOp.deleteFileOrFolder(new File("sdk/upgrade"));
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
+
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--update", "--sdk_root=/sdk"), mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        assertNotNull("Arguments should be valid", settings);
+        SdkManagerCli downloader =
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
+        downloader.run(new FakeProgressIndicator());
+
+        assertTrue(out.toString().replaceAll("\\r\\n", "\n").contains("No updates available\n"));
+    }
 
     /**
      * Install a package into a subdirectory of an existing package should fail.
