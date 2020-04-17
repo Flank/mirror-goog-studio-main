@@ -35,6 +35,7 @@ import static com.android.SdkConstants.TAG_INTENT_FILTER;
 import static com.android.SdkConstants.TAG_PERMISSION;
 import static com.android.SdkConstants.TAG_PERMISSION_GROUP;
 import static com.android.SdkConstants.TAG_PROVIDER;
+import static com.android.SdkConstants.TAG_QUERIES;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.TAG_USES_FEATURE;
@@ -730,7 +731,6 @@ public class ManifestDetector extends Detector implements XmlScanner {
         if (tag.equals(TAG_USES_LIBRARY)
                 || tag.equals(TAG_ACTIVITY)
                 || tag.equals(TAG_SERVICE)
-                || tag.equals(TAG_PROVIDER)
                 || isReceiver) {
             if (!TAG_APPLICATION.equals(parentNode.getNodeName())
                     && context.isEnabled(WRONG_PARENT)) {
@@ -863,6 +863,22 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 }
             }
 
+            return;
+        }
+
+        if (tag.equals(TAG_PROVIDER)) {
+            if (!TAG_APPLICATION.equals(parentNode.getNodeName())
+                    && !TAG_QUERIES.equals(parentNode.getNodeName())
+                    && context.isEnabled(WRONG_PARENT)) {
+                context.report(
+                        WRONG_PARENT,
+                        element,
+                        context.getNameLocation(element),
+                        String.format(
+                                "The `<%1$s>` element must be a direct child of the "
+                                        + "`<application>` element or the `<queries>` element",
+                                tag));
+            }
             return;
         }
 
