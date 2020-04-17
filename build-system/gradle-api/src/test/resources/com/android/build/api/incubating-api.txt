@@ -446,8 +446,8 @@ com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.bui
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super CMakeT, kotlin.Unit>)
-com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeT ()
-com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: NdkBuildT ()
+com.android.build.api.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
+com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuild ()
 com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super NdkBuildT, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuildOptions
 com.android.build.api.dsl.ExternalNativeBuildOptions.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions, kotlin.Unit>)
@@ -491,7 +491,7 @@ com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
 com.android.build.api.dsl.JavaCompileOptions
 com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super AnnotationProcessorOptionsT, kotlin.Unit>)
-com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: AnnotationProcessorOptionsT ()
+com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
@@ -663,9 +663,9 @@ com.android.build.api.dsl.SplitOptions.setEnable: void (boolean)
 com.android.build.api.dsl.Splits
 com.android.build.api.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super AbiSplitT, kotlin.Unit>)
 com.android.build.api.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super DensitySplitT, kotlin.Unit>)
-com.android.build.api.dsl.Splits.getAbi: AbiSplitT ()
+com.android.build.api.dsl.Splits.getAbi: com.android.build.api.dsl.AbiSplit ()
 com.android.build.api.dsl.Splits.getAbiFilters: java.util.Collection<java.lang.String> ()
-com.android.build.api.dsl.Splits.getDensity: DensitySplitT ()
+com.android.build.api.dsl.Splits.getDensity: com.android.build.api.dsl.DensitySplit ()
 com.android.build.api.dsl.Splits.getDensityFilters: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.TestBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.TestVariantDimension
 com.android.build.api.dsl.TestBaseFlavor.getMaxSdk: java.lang.Integer ()
@@ -689,7 +689,7 @@ com.android.build.api.dsl.TestOptions.getAnimationsDisabled: boolean ()
 com.android.build.api.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getResultsDir: java.lang.String ()
-com.android.build.api.dsl.TestOptions.getUnitTests: UnitTestOptionsT ()
+com.android.build.api.dsl.TestOptions.getUnitTests: com.android.build.api.dsl.UnitTestOptions ()
 com.android.build.api.dsl.TestOptions.setAnimationsDisabled: void (boolean)
 com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)

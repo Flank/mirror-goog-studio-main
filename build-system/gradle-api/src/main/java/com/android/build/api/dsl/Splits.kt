@@ -59,7 +59,7 @@ interface Splits<
      * Encapsulates settings for
      * [building per-ABI APKs](https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split).
      */
-    val abi: AbiSplitT
+    val abi: AbiSplit
 
     /**
      * Encapsulates settings for <a
@@ -73,7 +73,7 @@ interface Splits<
      * Encapsulates settings for
      * [building per-density APKs](https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split).
      */
-    val density: DensitySplitT
+    val density: DensitySplit
 
     /**
      * Encapsulates settings for

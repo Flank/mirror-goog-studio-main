@@ -22,7 +22,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface JavaCompileOptions<AnnotationProcessorOptionsT: AnnotationProcessorOptions> {
     /** Options for configuration the annotation processor. */
-    val annotationProcessorOptions: AnnotationProcessorOptionsT
+    val annotationProcessorOptions: AnnotationProcessorOptions
 
     /** Configures annotation processor options. */
     fun annotationProcessorOptions(action: AnnotationProcessorOptionsT.() -> Unit)

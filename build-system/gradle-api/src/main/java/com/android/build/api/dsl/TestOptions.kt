@@ -22,7 +22,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface TestOptions<UnitTestOptionsT: UnitTestOptions> {
     /** Options for controlling unit tests execution. */
-    val unitTests: UnitTestOptionsT
+    val unitTests: UnitTestOptions
 
     /** Options for controlling unit tests execution. */
     fun unitTests(action: UnitTestOptionsT.() -> Unit)
