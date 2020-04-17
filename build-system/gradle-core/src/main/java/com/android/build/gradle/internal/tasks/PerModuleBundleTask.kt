@@ -246,9 +246,9 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     })
             val desugarLibDexFile =
                 if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                    artifacts
-                        .getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
-                        .get()
+                    creationConfig.globalScope.project.files(
+                        artifacts.getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
+                    )
                 } else {
                     getDesugarLibDexFromTransform(creationConfig)
                 }

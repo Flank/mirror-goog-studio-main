@@ -540,6 +540,12 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
     }
 
+    @Test
+    fun testL8TaskInvocationForBundleReleaseBuild() {
+        val build = project.executor().run(":app:bundleRelease")
+        Truth.assertThat(build.didWorkTasks).contains(":app:l8DexDesugarLibRelease")
+    }
+
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
         project.buildFile.appendText("""
