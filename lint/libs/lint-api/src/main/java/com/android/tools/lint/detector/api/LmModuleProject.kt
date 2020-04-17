@@ -55,6 +55,8 @@ open class LmModuleProject(
         mergeManifests = true
         directLibraries = mutableListOf()
         mergedManifest?.let { readManifest(it) }
+        manifestMinSdk = variant.minSdkVersion
+        manifestTargetSdk = variant.targetSdkVersion
     }
 
     @JvmField
@@ -308,8 +310,7 @@ open class LmModuleProject(
 
     override fun getTargetSdkVersion(): AndroidVersion {
         return manifestTargetSdk ?: run {
-            val targetSdk = variant.targetSdkVersion
-                ?: super.getTargetSdkVersion() // from manifest
+            val targetSdk = variant.targetSdkVersion ?: minSdkVersion
             manifestTargetSdk = targetSdk
             targetSdk
         }
