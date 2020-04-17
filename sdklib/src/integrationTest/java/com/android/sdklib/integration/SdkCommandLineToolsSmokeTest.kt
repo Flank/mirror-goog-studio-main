@@ -42,7 +42,7 @@ class SdkCommandLineToolsSmokeTest {
     fun sdkManagerSmokeTestOnLinux() {
         val extractedDir = extract()
 
-        val sdkManagerBinary = extractedDir.resolve("tools/bin/sdkmanager")
+        val sdkManagerBinary = extractedDir.resolve("cmdline-tools/bin/sdkmanager")
 
         val outFile = temporaryFolder.newFile("out")
         val errFile = temporaryFolder.newFile("err")

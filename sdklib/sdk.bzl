@@ -100,7 +100,7 @@ def _package_component_impl(ctx):
     args = ["c", ctx.outputs.out.path]
     for bin in ctx.attr.bins:
         file = bin.files.to_list()[0]
-        args.append("tools/bin/%s=%s" % (file.basename, file.path))
+        args.append("cmdline-tools/bin/%s=%s" % (file.basename, file.path))
         inputs += [file]
 
     runtime_jars = depset(transitive = [java_lib[JavaInfo].transitive_runtime_jars for java_lib in ctx.attr.java_libs])
@@ -111,7 +111,7 @@ def _package_component_impl(ctx):
         if existing:
             fail("Multiple jars have same name for SDK component with the same name! name= " + name + " jars= " + existing.path + "       " + jar.path)
         runtime_jar_names[name] = jar
-        args.append("tools/lib/%s=%s" % (name, jar.path))
+        args.append("cmdline-tools/lib/%s=%s" % (name, jar.path))
         inputs += [jar]
     for other_file, other_location in ctx.attr.others.items():
         args.append(other_location + "=" + other_file.files.to_list()[0].path)
@@ -156,9 +156,9 @@ def sdk_package(name, binaries, sourceprops, visibility):
     combine_licenses(name = name + "_combined_licenses", out = "NOTICE.txt", deps = binaries)
     for platform in platforms:
         others = {
-            "source.properties": "tools/source.properties",
-            name + "_combined_licenses": "tools/NOTICE.txt",
-            "README.libs": "tools/lib/README",
+            "source.properties": "cmdline-tools/source.properties",
+            name + "_combined_licenses": "cmdline-tools/NOTICE.txt",
+            "README.libs": "cmdline-tools/lib/README",
         }
 
         if platform == "mac":

@@ -36,20 +36,20 @@ class SdkCommandLineToolsPackagingTest(private val platform: AndroidSdkCommandLi
         val suffix = platform.binarySuffix
 
         val expectedNonLibEntries = listOfNotNull(
-            "tools/bin/apkanalyzer$suffix",
-            "tools/bin/avdmanager$suffix",
+            "cmdline-tools/bin/apkanalyzer$suffix",
+            "cmdline-tools/bin/avdmanager$suffix",
             // b/135688047
             // "tools/bin/jobb$suffix",
-            "tools/bin/lint$suffix",
-            "tools/bin/screenshot2$suffix",
-            "tools/bin/sdkmanager$suffix",
-            "tools/NOTICE.txt",
-            "tools/source.properties",
-            "tools/lib/README",
+            "cmdline-tools/bin/lint$suffix",
+            "cmdline-tools/bin/screenshot2$suffix",
+            "cmdline-tools/bin/sdkmanager$suffix",
+            "cmdline-tools/NOTICE.txt",
+            "cmdline-tools/source.properties",
+            "cmdline-tools/lib/README",
             "_codesign/filelist".takeIf { platform == AndroidSdkCommandLineToolsPlatform.MAC }
         )
 
-        assertThat(entries.filter { !(it.startsWith("tools/lib/") && it.endsWith(".jar")) })
+        assertThat(entries.filter { !(it.startsWith("cmdline-tools/lib/") && it.endsWith(".jar")) })
             .containsExactlyElementsIn(expectedNonLibEntries)
     }
 
