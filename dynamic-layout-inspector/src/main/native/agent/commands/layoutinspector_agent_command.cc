@@ -64,8 +64,9 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
 
           case LayoutInspectorCommand::START: {
             jmethodID start_command_method = jni_env->GetMethodID(
-                inspector_class, "onStartLayoutInspectorCommand", "()V");
-            jni_env->CallVoidMethod(inspector_service, start_command_method);
+                inspector_class, "onStartLayoutInspectorCommand", "(Z)V");
+            jni_env->CallVoidMethod(inspector_service, start_command_method,
+                                    liCommand->compose_mode());
             break;
           }
 

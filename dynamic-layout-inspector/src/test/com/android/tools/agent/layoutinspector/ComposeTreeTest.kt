@@ -44,7 +44,7 @@ class ComposeTreeTest {
         val event = ComponentTreeTest.allocateEvent()
 
         val linearLayout = StandardView.createLinearLayoutWithComposeView()
-        val treeBuilder = ComponentTree()
+        val treeBuilder = ComponentTree(true)
         treeBuilder.writeTree(event, linearLayout)
 
         val proto = ComponentTreeEvent.parseFrom(ComponentTreeTest.toByteArray(event))

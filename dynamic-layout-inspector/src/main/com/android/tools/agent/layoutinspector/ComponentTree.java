@@ -32,7 +32,12 @@ class ComponentTree {
     private static final String COMPOSE_VIEW = "androidx.ui.core.AndroidComposeView";
     private final StringTable mStringTable = new StringTable();
     private final ResourceConfiguration mConfiguration = new ResourceConfiguration(mStringTable);
+    private final boolean mShowComposeNodes;
     private ComposeTree mComposeTree;
+
+    public ComponentTree(boolean showComposeNodes) {
+        mShowComposeNodes = showComposeNodes;
+    }
 
     /**
      * Write the component tree starting with the specified view into the event buffer.
@@ -98,7 +103,7 @@ class ComponentTree {
                     toInt(layout.getType()),
                     toInt(layout.getName()));
         }
-        if (COMPOSE_VIEW.equals(klass.getCanonicalName())) {
+        if (mShowComposeNodes && COMPOSE_VIEW.equals(klass.getCanonicalName())) {
             try {
                 if (mComposeTree == null) {
                     mComposeTree = new ComposeTree(view.getClass().getClassLoader(), mStringTable);

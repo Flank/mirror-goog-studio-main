@@ -178,6 +178,7 @@ message LayoutInspectorCommand {
   Type type = 1;
   int64 view_id = 2;
   bool screenshot_mode = 3;
+  bool compose_mode = 4;
 
   EditProperty edit_property = 17;
 }
