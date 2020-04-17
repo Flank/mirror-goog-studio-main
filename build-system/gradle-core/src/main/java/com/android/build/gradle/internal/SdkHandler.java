@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
@@ -42,6 +41,7 @@ import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -235,20 +235,25 @@ public class SdkHandler {
     }
 
     /** Installs the NDK. */
-    public void installNdk(@NonNull NdkHandler ndkHandler) {
+    @Nullable
+    public File installNdk(@NonNull Revision ndkRevision) {
         if (!sdkLibData.useSdkDownload()) {
-            return;
+            return null;
         }
-        SdkLoader loader = getSdkLoader();
-        if (loader == null) {
-            // If the loader is null it means we couldn't set-up one based on a local SDK.
-            // So we can't even try to installPackage something. This set up error will be reported
-            // during SdkHandler set-up.
-            return;
+        try {
+            SdkLoader loader = getSdkLoader();
+            if (loader == null) {
+                // If the loader is null it means we couldn't set-up one based on a local SDK.
+                // So we can't even try to installPackage something. This set up error will be
+                // reported during SdkHandler set-up.
+                return null;
+            }
+            loader.getSdkInfo(logger); // We need to make sure the loader was initialized.
+            return sdkLoader.installSdkTool(
+                    sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE + ";" + ndkRevision.toString());
+        } catch (LicenceNotAcceptedException | InstallFailedException e) {
+            throw new RuntimeException(e);
         }
-
-        loader.getSdkInfo(logger); // We need to make sure the loader was initialized.
-        ndkHandler.installFromSdk(loader, sdkLibData);
     }
 
     /** Installs CMake. */

@@ -16,25 +16,12 @@
 
 package com.android.build.gradle.internal.ndk
 
-import com.android.SdkConstants
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
-import com.android.build.gradle.internal.cxx.configure.findNdkPath
-import com.android.builder.errors.IssueReporter
-import com.android.builder.sdk.InstallFailedException
-import com.android.builder.sdk.LicenceNotAcceptedException
-import com.android.builder.sdk.SdkLibData
-import com.android.builder.sdk.SdkLoader
-import com.android.repository.Revision
-import com.android.repository.Revision.parseRevision
-import com.google.common.annotations.VisibleForTesting
-import com.google.common.base.Charsets
+import com.android.build.gradle.internal.cxx.configure.NdkLocator
+import com.android.build.gradle.internal.cxx.configure.NdkLocatorRecord
+import com.android.build.gradle.internal.ndk.NdkInstallStatus.Invalid
+import com.android.build.gradle.internal.ndk.NdkInstallStatus.NotInstalled
+import com.android.build.gradle.internal.ndk.NdkInstallStatus.Valid
 import org.gradle.api.InvalidUserDataException
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.InputStreamReader
-import java.util.Properties
 
 sealed class NdkInstallStatus {
     /**
@@ -69,7 +56,7 @@ sealed class NdkInstallStatus {
 
     fun getOrThrow(): NdkPlatform {
         when (this) {
-            is Valid -> return this.platform
+            is Valid -> return platform
             is Invalid -> throw InvalidUserDataException(errorMessage)
             is NotInstalled -> throw InvalidUserDataException("NDK is not installed")
         }
@@ -80,133 +67,37 @@ sealed class NdkInstallStatus {
  * Handles NDK related information.
  */
 class NdkHandler(
-    private val issueReporter: IssueReporter,
-    private val ndkVersionFromDsl: String?,
-    private val ndkPathFromDsl: String?,
-    private val compileSdkVersion: String,
-    private val projectDir: File
+    private val ndkLocator: NdkLocator,
+    private val compileSdkVersion: String
 ) {
     private var ndkInstallStatus: NdkInstallStatus? = null
 
-    private fun getNdkInfo(ndkDirectory: File, revision: Revision): NdkInfo {
-        return when {
-            revision.major >= 21 -> NdkR21Info(ndkDirectory)
-            revision.major >= 19 -> NdkR19Info(ndkDirectory)
-            revision.major >= 14 -> NdkR14Info(ndkDirectory)
-            else -> DefaultNdkInfo(ndkDirectory)
-        }
+    private fun getNdkInfo(ndk: NdkLocatorRecord) = when {
+        ndk.revision.major >= 21 -> NdkR21Info(ndk.ndk)
+        ndk.revision.major >= 19 -> NdkR19Info(ndk.ndk)
+        ndk.revision.major >= 14 -> NdkR14Info(ndk.ndk)
+        else -> DefaultNdkInfo(ndk.ndk)
     }
 
-    private fun getNdkStatus(): NdkInstallStatus {
-        val ndkDirectory =
-            findNdkPath(issueReporter, ndkVersionFromDsl, ndkPathFromDsl, projectDir)
-        if (ndkDirectory == null || !ndkDirectory.exists()) {
-            return NdkInstallStatus.NotInstalled
-        }
-
-        val revision =
-            when (val found = findRevision(ndkDirectory)) {
-                is FindRevisionResult.Found -> found.revision
-                is FindRevisionResult.Error -> return NdkInstallStatus.Invalid(found.message)
-            }
-
-        val ndkInfo = getNdkInfo(ndkDirectory, revision)
-
+    private fun getNdkStatus(downloadOkay: Boolean): NdkInstallStatus {
+        val ndk = ndkLocator.findNdkPath(downloadOkay)
+            ?: return NotInstalled
+        val ndkInfo = getNdkInfo(ndk)
         val error = ndkInfo.validate()
-        if (error != null) {
-            return NdkInstallStatus.Invalid(error)
-        }
+        if (error != null) return Invalid(error)
+        return Valid(NdkPlatform(ndk.ndk, ndkInfo, ndk.revision, compileSdkVersion))
+    }
 
-        return NdkInstallStatus.Valid(
-            NdkPlatform(ndkDirectory, ndkInfo, revision, compileSdkVersion)
-        )
+    fun getNdkPlatform(downloadOkay: Boolean) : NdkInstallStatus {
+        if (ndkInstallStatus == null ||
+            (downloadOkay && ndkInstallStatus == NotInstalled)) {
+            // Calculate NDK platform if that hadn't been done before or if it's
+            // okay to download now.
+            ndkInstallStatus = getNdkStatus(downloadOkay)
+        }
+        return ndkInstallStatus!!
     }
 
     val ndkPlatform: NdkInstallStatus
-        get() {
-            if (ndkInstallStatus == null) {
-                ndkInstallStatus = getNdkStatus()
-            }
-
-            return ndkInstallStatus!!
-        }
-
-    /** Schedule the NDK to be rediscovered the next time it's needed  */
-    private fun invalidateNdk() {
-        this.ndkInstallStatus = null
-    }
-
-    /**
-     * Install NDK from the SDK. When NDK SxS is enabled the latest available SxS version is used.
-     */
-    fun installFromSdk(sdkLoader: SdkLoader, sdkLibData: SdkLibData) {
-        try {
-            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE +
-                    ";" + downloadNdkVersion())
-        } catch (e: LicenceNotAcceptedException) {
-            throw RuntimeException(e)
-        } catch (e: InstallFailedException) {
-            throw RuntimeException(e)
-        }
-
-        invalidateNdk()
-    }
-
-    private fun downloadNdkVersion() : String {
-        val fullVersion = ndkVersionFromDsl ?: ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
-        val parsed = parseRevision(fullVersion)
-        val threePart = Revision(parsed.major, parsed.minor, parsed.micro)
-        return threePart.toString()
-    }
-
-    sealed class FindRevisionResult {
-        data class Found(val revision: Revision) : FindRevisionResult()
-        data class Error(val message: String) : FindRevisionResult()
-    }
-
-    companion object {
-
-        private fun readProperties(file: File): Properties {
-            val properties = Properties()
-            try {
-                FileInputStream(file).use { fis ->
-                    InputStreamReader(
-                        fis,
-                        Charsets.UTF_8
-                    ).use { reader -> properties.load(reader) }
-                }
-            } catch (ignored: FileNotFoundException) {
-                // ignore since we check up front and we don't want to fail on it anyway
-                // in case there's an env var.
-            } catch (e: IOException) {
-                throw RuntimeException(String.format("Unable to read %1\$s.", file), e)
-            }
-
-            return properties
-        }
-
-        @VisibleForTesting
-        @JvmStatic
-        fun findRevision(ndkDirectory: File): FindRevisionResult {
-            val sourceProperties = File(ndkDirectory, "source.properties")
-            if (!sourceProperties.exists()) {
-                val releaseTxt = ndkDirectory.resolve("RELEASE.TXT")
-                return if (releaseTxt.exists()) {
-                    FindRevisionResult.Error("NDK at $ndkDirectory is not supported (pre-r11)")
-                } else {
-                    // This should never happen for a valid install of the NDK. Presumably it's
-                    // either corrupted or possibly so old that it doesn't even have a RELEASE.TXT.
-                    FindRevisionResult.Error("$sourceProperties does not exist")
-                }
-            }
-
-            val properties = readProperties(sourceProperties)
-            val version = properties.getProperty("Pkg.Revision")
-            return if (version != null) {
-                FindRevisionResult.Found(parseRevision(version))
-            } else {
-                FindRevisionResult.Error("Could not parse Pkg.Revision from $sourceProperties")
-            }
-        }
-    }
+        get() = getNdkPlatform(downloadOkay = false)
 }
