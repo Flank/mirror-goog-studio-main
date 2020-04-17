@@ -1,4 +1,4 @@
-def fake_android_test(name, srcs = [], deps = [], data = [], runtime_deps = [], tags = [], size = "small", jvm_flags = []):
+def fake_android_test(name, srcs = [], deps = [], data = [], runtime_deps = [], tags = [], shard_count = 1, size = "small", jvm_flags = []):
     native.java_test(
         name = name,
         runtime_deps = runtime_deps + [
@@ -20,7 +20,7 @@ def fake_android_test(name, srcs = [], deps = [], data = [], runtime_deps = [], 
             "-Dart.boot.location=prebuilts/tools/linux-x86_64/art/framework/x86_64/",
             "-Dart.lib64.location=prebuilts/tools/linux-x86_64/art/lib64",
         ],
-        shard_count = 1,
+        shard_count = shard_count,
         test_class = "com.android.testutils.JarTestSuite",
         visibility = ["//visibility:public"],
         size = size,
