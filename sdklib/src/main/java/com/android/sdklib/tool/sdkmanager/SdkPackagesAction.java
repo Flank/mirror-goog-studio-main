@@ -44,8 +44,13 @@ public abstract class SdkPackagesAction extends SdkAction {
         if (arg.startsWith(PKG_FILE_ARG)) {
             String packageFile = arg.substring(PKG_FILE_ARG.length());
             try {
-                mPackages.addAll(
-                        Files.readAllLines(mSettings.getFileSystem().getPath(packageFile)));
+                for (String path :
+                        Files.readAllLines(mSettings.getFileSystem().getPath(packageFile))) {
+                    String trimmed = path.trim();
+                    if (!trimmed.isEmpty()) {
+                        mPackages.add(trimmed);
+                    }
+                }
             } catch (IOException e) {
                 progress.logWarning(
                         String.format(

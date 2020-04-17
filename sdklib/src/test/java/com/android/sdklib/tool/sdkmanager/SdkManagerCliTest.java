@@ -1007,7 +1007,7 @@ public class SdkManagerCliTest {
 
     @Test
     public void packageFile() {
-        mFileOp.recordExistingFile("/foo.bar", "package1\r\npackage2\r\n");
+        mFileOp.recordExistingFile("/foo.bar", "package1\r\n package2 \r\n\r\n");
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--package_file=/foo.bar", "--sdk_root=/sdk"),
