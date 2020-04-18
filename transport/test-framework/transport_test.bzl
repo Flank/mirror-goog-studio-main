@@ -64,8 +64,8 @@ def transport_test(name,
                    jvm_flags = [],
                    data = [],
                    tags = [],
-                   shard_count = 1,
-                   size = "small"):
+                   shard_count = None,
+                   size = None):
     app_runtime_deps = app_runtime_deps + [
         "//tools/base/profiler/app:perfa",
         "//tools/base/transport/native/agent:libjvmtiagent.so",

@@ -1,4 +1,4 @@
-def fake_android_test(name, srcs = [], deps = [], data = [], runtime_deps = [], tags = [], shard_count = 1, size = "small", jvm_flags = []):
+def fake_android_test(name, srcs = [], deps = [], data = [], runtime_deps = [], tags = [], shard_count = None, size = None, jvm_flags = []):
     native.java_test(
         name = name,
         runtime_deps = runtime_deps + [
