@@ -76,4 +76,44 @@ public class ConsoleProgressIndicatorTest {
                         + System.lineSeparator(),
                 err.toString());
     }
+
+    @Test
+    public void dumb() {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        ConsoleProgressIndicator progressIndicator =
+                new ConsoleProgressIndicator(new PrintStream(out), new PrintStream(err), true);
+
+        progressIndicator.setText("foo");
+        progressIndicator.setFraction(0.1);
+        progressIndicator.setText("bar");
+        progressIndicator.setFraction(0.2);
+        progressIndicator.logInfo("Info msg");
+        progressIndicator.setText("baz");
+        progressIndicator.setFraction(0.2999);
+        progressIndicator.setFraction(0.3);
+        progressIndicator.setSecondaryText("second");
+        progressIndicator.logWarning("warning");
+        progressIndicator.setText("");
+        progressIndicator.setSecondaryText("");
+        progressIndicator.setFraction(0.1);
+        progressIndicator.setFraction(0.1);
+        progressIndicator.setFraction(0.1);
+        progressIndicator.logError("error");
+        progressIndicator.setFraction(1);
+
+        String expected =
+                "                                                                                \r"
+                        + "Info: Info msg"
+                        + System.lineSeparator()
+                        + "                                                                                \r"
+                        + "                                                                                \r";
+        assertEquals(expected, out.toString());
+        assertEquals(
+                "Warning: warning"
+                        + System.lineSeparator()
+                        + "Error: error"
+                        + System.lineSeparator(),
+                err.toString());
+    }
 }
