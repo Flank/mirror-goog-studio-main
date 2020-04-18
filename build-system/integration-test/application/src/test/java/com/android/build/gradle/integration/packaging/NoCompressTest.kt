@@ -104,6 +104,7 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .withFile("src/main/res/raw/r_not_weird_chars2.ac", content)
                 .withFile("src/main/res/raw/r_not_weird_chars3.aa(b)c", content)
                 .withFile("src/main/res/raw/r_jpg.jpg", content)
+                .withFile("src/main/res/raw/r_variant_api_no.variantApiNo", content)
         ).setApkCreatorType(apkCreatorType)
         .create()
 
@@ -166,6 +167,7 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
             zf.expectCompressionMethodOf("res/raw/r_not_weird_chars2.ac").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("res/raw/r_not_weird_chars3.aa(b)c").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("res/raw/r_jpg.jpg").isEqualTo(CompressionMethod.STORE)
+            zf.expectCompressionMethodOf("res/raw/r_variant_api_no.variantApiNo").isEqualTo(CompressionMethod.STORE)
         }
     }
 

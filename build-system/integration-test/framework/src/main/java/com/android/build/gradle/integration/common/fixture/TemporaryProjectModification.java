@@ -170,6 +170,12 @@ public class TemporaryProjectModification {
         TestUtils.waitForFileSystemTick();
     }
 
+    public void appendToFile(
+            @NonNull String relativePath,
+            @NonNull String toAppend) throws IOException, InterruptedException {
+        modifyFile(relativePath, input -> input + "\n" + toAppend + "\n");
+    }
+
     public void modifyFile(
             @NonNull String relativePath, @NonNull Function<String, String> modification)
             throws IOException, InterruptedException {

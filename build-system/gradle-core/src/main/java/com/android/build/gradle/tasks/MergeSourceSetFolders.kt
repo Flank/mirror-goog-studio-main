@@ -371,6 +371,11 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             if (creationConfig is ApkCreationConfig) {
                 task.ignoreAssetsPatterns.set(creationConfig.aaptOptions.ignoreAssetsPatterns)
+            } else {
+                // support ignoring asset patterns in library modules via DSL
+                creationConfig.globalScope.extension.aaptOptions.ignoreAssetsPattern?.let {
+                    task.ignoreAssetsPatterns.set(it.split(':'))
+                }
             }
             task.ignoreAssetsPatterns.disallowChanges()
 
