@@ -21,6 +21,7 @@ import static com.android.tools.agent.app.inspection.NativeTransport.sendService
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseSuccess;
 
 import android.util.Pair;
+import androidx.annotation.NonNull;
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorEnvironment.EntryHook;
@@ -35,7 +36,10 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 /** This service controls all app inspectors */
-@SuppressWarnings("unused") // invoked via jni
+// Suppress Convert2Lambda: Lambdas may incur penalty hit on older Android devices
+// Suppress unused: Methods invoked via jni
+// Suppress rawtypes: Service doesn't care about specific types, works with Objects
+@SuppressWarnings({"Convert2Lambda", "unused", "rawtypes"})
 public class AppInspectionService {
     private static final String MAIN_THREAD_NAME = "main";
 
@@ -53,17 +57,15 @@ public class AppInspectionService {
     // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
     private final long mNativePtr;
 
-    private final Map<String, InspectorContext> mInspectorContexts =
-            new HashMap<String, InspectorContext>();
+    private final Map<String, InspectorContext> mInspectorContexts = new HashMap<>();
 
-    Map<String, List<HookInfo<ExitHook>>> mExitTransforms =
-            new ConcurrentHashMap<String, List<HookInfo<ExitHook>>>();
-    Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
-            new ConcurrentHashMap<String, List<HookInfo<EntryHook>>>();
+    private final Map<String, List<HookInfo<ExitHook>>> mExitTransforms = new ConcurrentHashMap<>();
+    private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
+            new ConcurrentHashMap<>();
 
     // it keeps reference only to pending commands.
-    private ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
-            new ConcurrentHashMap<Integer, CommandCallbackImpl>();
+    private final ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
+            new ConcurrentHashMap<>();
 
     /**
      * Construct an instance referencing some native (JVMTI) resources.
@@ -86,7 +88,6 @@ public class AppInspectionService {
      * @param projectName the name of the studio project that is trying to launch the inspector
      * @param commandId unique id of this command in the context of app inspection service
      */
-    @SuppressWarnings("unused") // invoked via jni
     public void createInspector(
             String inspectorId, String dexPath, String projectName, int commandId) {
         if (failNull("inspectorId", inspectorId, commandId)) {
@@ -146,7 +147,6 @@ public class AppInspectionService {
         }
     }
 
-    @SuppressWarnings("unused") // invoked via jni
     public void disposeInspector(String inspectorId, int commandId) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
@@ -162,7 +162,6 @@ public class AppInspectionService {
         sendServiceResponseSuccess(commandId);
     }
 
-    @SuppressWarnings("unused") // invoked via jni
     public void sendCommand(String inspectorId, int commandId, byte[] rawCommand) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
@@ -189,7 +188,6 @@ public class AppInspectionService {
         }
     }
 
-    @SuppressWarnings("unused") // invoked via jni
     public void cancelCommand(int cancelledCommandId) {
         CommandCallbackImpl callback = mIdToCommandCallback.get(cancelledCommandId);
         if (callback != null) {
@@ -226,15 +224,14 @@ public class AppInspectionService {
         private final Object mLock = new Object();
         private volatile Status mStatus = Status.PENDING;
         private final int mCommandId;
-        private final List<Pair<Executor, Runnable>> mCancellationListeners =
-                new ArrayList<Pair<Executor, Runnable>>();
+        private final List<Pair<Executor, Runnable>> mCancellationListeners = new ArrayList<>();
 
         CommandCallbackImpl(int commandId) {
             mCommandId = commandId;
         }
 
         @Override
-        public void reply(byte[] bytes) {
+        public void reply(@NonNull byte[] bytes) {
             synchronized (mLock) {
                 if (mStatus == Status.PENDING) {
                     mStatus = Status.REPLIED;
@@ -245,12 +242,13 @@ public class AppInspectionService {
         }
 
         @Override
-        public void addCancellationListener(Executor executor, Runnable runnable) {
+        public void addCancellationListener(
+                @NonNull Executor executor, @NonNull Runnable runnable) {
             synchronized (mLock) {
                 if (mStatus == Status.CANCELLED) {
                     executor.execute(runnable);
                 } else {
-                    mCancellationListeners.add(new Pair<Executor, Runnable>(executor, runnable));
+                    mCancellationListeners.add(new Pair<>(executor, runnable));
                 }
             }
         }
@@ -261,7 +259,7 @@ public class AppInspectionService {
                 if (mStatus == Status.PENDING) {
                     mStatus = Status.CANCELLED;
                     mIdToCommandCallback.remove(mCommandId);
-                    listeners = new ArrayList<Pair<Executor, Runnable>>(mCancellationListeners);
+                    listeners = new ArrayList<>(mCancellationListeners);
                 }
             }
             if (listeners != null) {
@@ -310,10 +308,10 @@ public class AppInspectionService {
                             @Override
                             public List<HookInfo<EntryHook>> apply(String key) {
                                 nativeRegisterEntryHook(sInstance.mNativePtr, origin, method);
-                                return new CopyOnWriteArrayList<HookInfo<EntryHook>>();
+                                return new CopyOnWriteArrayList<>();
                             }
                         });
-        hooks.add(new HookInfo<EntryHook>(inspectorId, hook));
+        hooks.add(new HookInfo<>(inspectorId, hook));
     }
 
     public static void addExitHook(
@@ -329,10 +327,10 @@ public class AppInspectionService {
                             @Override
                             public List<HookInfo<ExitHook>> apply(String key) {
                                 nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
-                                return new CopyOnWriteArrayList<HookInfo<ExitHook>>();
+                                return new CopyOnWriteArrayList<>();
                             }
                         });
-        hooks.add(new HookInfo<ExitHook>(inspectorId, hook));
+        hooks.add(new HookInfo<>(inspectorId, hook));
     }
 
     private static Object onExitInternal(Object returnObject) {
@@ -351,6 +349,7 @@ public class AppInspectionService {
             return returnObject;
         }
         for (HookInfo<ExitHook> info : hooks) {
+            //noinspection unchecked
             returnObject = info.hook.onExit(returnObject);
         }
         return returnObject;
@@ -365,15 +364,15 @@ public class AppInspectionService {
     }
 
     public static int onExit(int result) {
-        return ((Integer) onExitInternal(result)).intValue();
+        return (Integer) onExitInternal(result);
     }
 
     public static long onExit(long result) {
-        return ((Long) onExitInternal(result)).longValue();
+        return (Long) onExitInternal(result);
     }
 
     public static boolean onExit(boolean result) {
-        return ((Boolean) onExitInternal(result)).booleanValue();
+        return (Boolean) onExitInternal(result);
     }
 
     /**
