@@ -31,7 +31,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @NonNull private final String mySourceGenTaskName;
     @NonNull private final Collection<File> myGeneratedResourceFolders = new ArrayList<>();
     @NonNull private final Collection<File> myAdditionalRuntimeApks;
-    @NonNull private final Map<String, ClassField> myBuildConfigFields;
     @NonNull private final Map<String, ClassField> myResValues;
     @NonNull private final InstantRun myInstantRun;
     @Nullable private final TestOptions myTestOptions;
@@ -50,7 +49,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myOutputs = Lists.newArrayList(new AndroidArtifactOutputStub());
         myApplicationId = "applicationId";
         mySourceGenTaskName = "sourceGenTaskName";
-        myBuildConfigFields = ImmutableMap.of("buildConfigField", new ClassFieldStub());
         myResValues = ImmutableMap.of("resValue", new ClassFieldStub());
         myInstantRun = new InstantRunStub();
         mySigningConfigName = "signingConfigName";
@@ -118,7 +116,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myOutputs = outputs;
         myApplicationId = applicationId;
         mySourceGenTaskName = sourceGenTaskName;
-        myBuildConfigFields = buildConfigFields;
         myResValues = resValues;
         myInstantRun = run;
         mySigningConfigName = signingConfigName;
@@ -157,12 +154,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @NonNull
     public Collection<File> getGeneratedResourceFolders() {
         return myGeneratedResourceFolders;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, ClassField> getBuildConfigFields() {
-        return myBuildConfigFields;
     }
 
     @Override
@@ -278,7 +269,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 && Objects.equals(getSourceGenTaskName(), artifact.getSourceGenTaskName())
                 && Objects.equals(
                         getGeneratedResourceFolders(), artifact.getGeneratedResourceFolders())
-                && Objects.equals(getBuildConfigFields(), artifact.getBuildConfigFields())
                 && Objects.equals(getResValues(), artifact.getResValues())
                 && equals(artifact, AndroidArtifact::getInstantRun)
                 && Objects.equals(getSigningConfigName(), artifact.getSigningConfigName())
@@ -316,7 +306,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 getApplicationId(),
                 getSourceGenTaskName(),
                 getGeneratedResourceFolders(),
-                getBuildConfigFields(),
                 getResValues(),
                 getInstantRun(),
                 getSigningConfigName(),
@@ -345,8 +334,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 + '\''
                 + ", myGeneratedResourceFolders="
                 + myGeneratedResourceFolders
-                + ", myBuildConfigFields="
-                + myBuildConfigFields
                 + ", myResValues="
                 + myResValues
                 + ", myInstantRun="

@@ -109,14 +109,6 @@ public interface AndroidArtifact extends BaseArtifact {
     Collection<NativeLibrary> getNativeLibraries();
 
     /**
-     * Map of Build Config Fields where the key is the field name.
-     *
-     * @return a non-null map of class fields (possibly empty).
-     */
-    @NonNull
-    Map<String, ClassField> getBuildConfigFields();
-
-    /**
      * Map of generated res values where the key is the res name.
      *
      * @return a non-null map of class fields (possibly empty).

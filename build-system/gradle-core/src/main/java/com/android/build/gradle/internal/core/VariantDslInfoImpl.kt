@@ -733,30 +733,6 @@ open class VariantDslInfoImpl internal constructor(
 // will replace lower priority ones.
 
     /**
-     * Return the merged build config fields for the variant.
-     *
-     *
-     * This is made of the variant-specific fields overlaid on top of the build type ones, the
-     * flavors ones, and the default config ones.
-     *
-     * @return a map of merged fields
-     */
-    override val mergedBuildConfigFields: Map<String, ClassField>
-        get() {
-            val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
-
-            // start from the lowest priority and just add it all. Higher priority fields
-            // will replace lower priority ones.
-            mergedMap.putAll(defaultConfig.buildConfigFields)
-            for (i in productFlavorList.indices.reversed()) {
-                mergedMap.putAll(productFlavorList[i].buildConfigFields)
-            }
-            mergedMap.putAll(buildTypeObj.buildConfigFields)
-            mergedMap.putAll(mBuildConfigFields)
-            return mergedMap
-        }
-
-    /**
      * Return the merged res values for the variant.
      *
      *

@@ -278,17 +278,6 @@ interface VariantDslInfo {
     val buildConfigItems: List<Any>
 
     /**
-     * Return the merged build config fields for the variant.
-     *
-     *
-     * This is made of the variant-specific fields overlaid on top of the build type ones, the
-     * flavors ones, and the default config ones.
-     *
-     * @return a map of merged fields
-     */
-    val mergedBuildConfigFields: Map<String, ClassField>
-
-    /**
      * Return the merged res values for the variant.
      *
      *
