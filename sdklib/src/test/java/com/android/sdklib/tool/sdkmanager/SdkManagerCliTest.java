@@ -102,9 +102,6 @@ public class SdkManagerCliTest {
 
         // Doesn't actually need to provide anything, since the remote loader gets them directly.
         repoManager.registerSourceProvider(new FakeRepositorySourceProvider(null));
-
-        repoManager.loadSynchronously(0, new FakeProgressIndicator(), mDownloader,
-                new FakeSettingsController(false));
     }
 
     private void createLocalRepo(@NonNull RepoManager repoManager) throws IOException {
@@ -217,6 +214,30 @@ public class SdkManagerCliTest {
                         + "  ID      | Installed | Available\n"
                         + "  ------- | -------   | -------  \n"
                         + "  upgrade | 1         | 2        \n";
+        assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
+    }
+
+    /** List the packages we have installed only. */
+    @Test
+    public void listInstalled() throws Exception {
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--list_installed", "--sdk_root=/sdk"),
+                        mFileOp.getFileSystem());
+        assertNotNull("Arguments should be valid", settings);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        SdkManagerCli downloader =
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
+        downloader.run(new FakeProgressIndicator());
+        String expected =
+                "Installed packages:\n"
+                        + "  Path    | Version | Description | Location\n"
+                        + "  ------- | ------- | -------     | ------- \n"
+                        + "  test;p1 | 1       | package 1   | test"
+                        + File.separator
+                        + "p1 \n"
+                        + "  upgrade | 1       | upgrade v1  | upgrade \n";
         assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
     }
 
@@ -462,6 +483,14 @@ public class SdkManagerCliTest {
                         ImmutableList.of("--update", "--sdk_root=/sdk"), mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
+        mSdkHandler
+                .getSdkManager(new FakeProgressIndicator())
+                .loadSynchronously(
+                        0,
+                        new FakeProgressIndicator(),
+                        mDownloader,
+                        new FakeSettingsController(false));
+
         assertEquals(1,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
         assertNotNull("Arguments should be valid", settings);
@@ -547,6 +576,13 @@ public class SdkManagerCliTest {
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
+        mSdkHandler
+                .getSdkManager(progress)
+                .loadSynchronously(
+                        0,
+                        new FakeProgressIndicator(),
+                        mDownloader,
+                        new FakeSettingsController(false));
         assertEquals(1,
                 mSdkHandler.getLocalPackage("upgrade", progress).getVersion().getMajor());
         assertNotNull("Arguments should be valid", settings);
@@ -576,6 +612,13 @@ public class SdkManagerCliTest {
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator();
+        mSdkHandler
+                .getSdkManager(progress)
+                .loadSynchronously(
+                        0,
+                        new FakeProgressIndicator(),
+                        mDownloader,
+                        new FakeSettingsController(false));
         assertEquals(3,
                 mSdkHandler.getSdkManager(progress).getPackages().getLocalPackages().size());
         assertNotNull(mSdkHandler.getLocalPackage("obsolete", progress));
@@ -603,6 +646,13 @@ public class SdkManagerCliTest {
                         mFileOp.getFileSystem());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
+        mSdkHandler
+                .getSdkManager(progress)
+                .loadSynchronously(
+                        0,
+                        new FakeProgressIndicator(),
+                        mDownloader,
+                        new FakeSettingsController(false));
         assertEquals(3,
                 mSdkHandler.getSdkManager(progress).getPackages().getLocalPackages().size());
         assertNotNull("Arguments should be valid", settings);

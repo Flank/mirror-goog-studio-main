@@ -134,6 +134,7 @@ public class SdkManagerCli {
                         + "[--package_file=<file>] [<packages>...]");
         out.println("  sdkmanager --update [<common args>]");
         out.println("  sdkmanager --list [<common args>]");
+        out.println("  sdkmanager --list_installed [<common args>]");
         out.println("  sdkmanager --licenses [<common args>]");
         out.println("  sdkmanager --version");
         out.println();
@@ -152,6 +153,8 @@ public class SdkManagerCli {
         out.println("With --update, all installed packages are updated to the latest version.");
         out.println();
         out.println("With --list, all installed and available packages are printed out.");
+        out.println();
+        out.println("With --list_installed, all installed packages are printed out.");
         out.println();
         out.println("With --licenses, show and offer the option to accept licenses for all");
         out.println("     available packages that have not already been accepted.");

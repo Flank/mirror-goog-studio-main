@@ -64,6 +64,7 @@ class SdkCommandLineToolsSmokeTest {
                   sdkmanager [--uninstall] [<common args>] [--package_file=<file>] [<packages>...]
                   sdkmanager --update [<common args>]
                   sdkmanager --list [<common args>]
+                  sdkmanager --list_installed [<common args>]
                   sdkmanager --licenses [<common args>]
                   sdkmanager --version
 
@@ -82,6 +83,8 @@ class SdkCommandLineToolsSmokeTest {
                 With --update, all installed packages are updated to the latest version.
 
                 With --list, all installed and available packages are printed out.
+
+                With --list_installed, all installed packages are printed out.
 
                 With --licenses, show and offer the option to accept licenses for all
                      available packages that have not already been accepted.

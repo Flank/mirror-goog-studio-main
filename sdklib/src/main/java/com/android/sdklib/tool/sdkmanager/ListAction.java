@@ -32,7 +32,10 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 class ListAction extends SdkAction {
-    private static final String ACTION_ARG = "--list";
+    private static final String LIST_ARG = "--list";
+    private static final String LIST_INSTALLED_ARG = "--list_installed";
+
+    private boolean installedOnly = false;
 
     private ListAction(@NonNull SdkManagerCliSettings settings) {
         super(settings);
@@ -41,7 +44,8 @@ class ListAction extends SdkAction {
     @Override
     public void execute(@NonNull ProgressIndicator progress) {
         progress.setText("Loading package information...");
-        getRepoManager().loadSynchronously(0, progress, getDownloader(), mSettings);
+        getRepoManager()
+                .loadSynchronously(0, progress, installedOnly ? null : getDownloader(), mSettings);
 
         RepositoryPackages packages = getRepoManager().getPackages();
 
@@ -76,7 +80,14 @@ class ListAction extends SdkAction {
 
     public static void register(
             @NonNull Map<String, Function<SdkManagerCliSettings, SdkAction>> argToFactory) {
-        argToFactory.put(ACTION_ARG, ListAction::new);
+        argToFactory.put(LIST_ARG, ListAction::new);
+        argToFactory.put(
+                LIST_INSTALLED_ARG,
+                settings -> {
+                    ListAction action = new ListAction(settings);
+                    action.installedOnly = true;
+                    return action;
+                });
     }
 
     private void printListVerbose(
