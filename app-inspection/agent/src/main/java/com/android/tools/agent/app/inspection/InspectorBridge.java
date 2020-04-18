@@ -108,7 +108,8 @@ public final class InspectorBridge {
                 new InspectorContext(
                         inspectorId,
                         project,
-                        new InspectorExecutorsImpl(primaryExecutor, ioExecutor));
+                        new InspectorExecutorsImpl(primaryExecutor, ioExecutor),
+                        crashConsumer);
 
         return new InspectorBridge(primaryExecutor, context);
     }
