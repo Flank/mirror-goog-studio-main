@@ -934,6 +934,27 @@ public class SdkManagerCliTest {
     }
 
     @Test
+    public void unknownPackage() {
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "test;bad"), mFileOp.getFileSystem());
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        SdkManagerCli downloader =
+                new SdkManagerCli(
+                        settings,
+                        new PrintStream(new ByteArrayOutputStream()),
+                        new ByteArrayInputStream(new byte[0]),
+                        mDownloader,
+                        mSdkHandler);
+        try {
+            downloader.run(progress);
+            fail("expected exception");
+        } catch (SdkManagerCli.CommandFailedException expected) {
+            assertTrue(progress.getWarnings().contains("Failed to find package 'test;bad'"));
+        }
+    }
+
+    @Test
     public void proxySettings() throws MalformedURLException {
         final String HTTP_PROXY = "http://studio-unittest.name:2340";
         final String HTTPS_PROXY = "https://studio-other-unittest.name:2341";
