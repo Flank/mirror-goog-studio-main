@@ -14,29 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.tools.mlkit;
+package com.android.tools.mlkit.exception;
 
-/** Exception to throw if model has invalid data. */
-public class ModelParsingException extends Exception {
+/** Exception to throw if TensorFlow Lite Model is invalid or unsupported. */
+public abstract class TfliteModelException extends Exception {
 
-    public enum ErrorType {
-        UNKNOWN,
-        INVALID_METADATA,
-        INVALID_IMAGE_TENSOR,
-        INVALID_PARAM_NAME,
-        UNSUPPORTED_SUBGRAPH,
-        UNSUPPORTED_DATA_TYPE,
-        PARAM_NAME_CONFLICT
-    }
-
-    private final ErrorType errorType;
-
-    public ModelParsingException(ErrorType errorType, String errorMessage) {
+    public TfliteModelException(String errorMessage) {
         super(errorMessage);
-        this.errorType = errorType;
-    }
-
-    public ErrorType getErrorType() {
-        return errorType;
     }
 }

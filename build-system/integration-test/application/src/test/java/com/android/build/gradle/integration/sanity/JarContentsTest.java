@@ -465,6 +465,7 @@ public class JarContentsTest {
                 "com/android/tools/build/libraries/",
                 "com/android/tools/build/libraries/metadata/",
                 "com/android/tools/mlkit/",
+                "com/android/tools/mlkit/exception/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "META-INF/gradle-plugins/",

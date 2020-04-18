@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
+import com.android.tools.mlkit.exception.TfliteModelException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -32,10 +33,10 @@ public class ModelInfoTest {
 
     @Test
     public void testQuantMetadataModelExtractedCorrectly()
-            throws ModelParsingException, IOException {
+            throws TfliteModelException, IOException {
         ModelInfo modelInfo =
                 ModelInfo.buildFrom(
-                        createExtractorFromModel(
+                        extractByteBufferFromModel(
                                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
 
         assertEquals(modelInfo.getInputs().size(), 1);
@@ -69,10 +70,10 @@ public class ModelInfoTest {
     }
 
     @Test
-    public void testQuantModelExtractedCorrectly() throws ModelParsingException, IOException {
+    public void testQuantModelExtractedCorrectly() throws TfliteModelException, IOException {
         ModelInfo modelInfo =
                 ModelInfo.buildFrom(
-                        createExtractorFromModel(
+                        extractByteBufferFromModel(
                                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_no_metadata.tflite"));
 
         assertEquals(modelInfo.getInputs().size(), 1);
@@ -82,12 +83,12 @@ public class ModelInfoTest {
         assertEquals(modelInfo.getOutputs().get(0).getName(), "outputFeature0");
     }
 
-    private static MetadataExtractor createExtractorFromModel(String filePath) throws IOException {
+    private static ByteBuffer extractByteBufferFromModel(String filePath) throws IOException {
         File modelFile = TestUtils.getWorkspaceFile(filePath);
         RandomAccessFile f = new RandomAccessFile(modelFile, "r");
         byte[] data = new byte[(int) f.length()];
         f.readFully(data);
         f.close();
-        return new MetadataExtractor(ByteBuffer.wrap(data));
+        return ByteBuffer.wrap(data);
     }
 }
