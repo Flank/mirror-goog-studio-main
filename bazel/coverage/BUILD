@@ -96,6 +96,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "database-inspector",
+    srcpath_include = [
+        "tools/adt/idea/android-debuggers",
+    ],
+    tests = [
+        "//tools/adt/idea/android-debuggers:intellij.android.debuggers.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "databinding",
     srcpath_include = [
         "tools/adt/idea/android-lang-databinding",
@@ -389,6 +399,7 @@ combine_report_definitions(
         "android-apk",
         "build-attribution",
         "custom-views-preview",
+        "database-inspector",
         "databinding",
         "designtools",
         "dsl",
