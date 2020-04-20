@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.apksig.ApkSignerEngine;
 import com.android.apksig.DefaultApkSignerEngine;
 import com.android.apksig.apk.ApkFormatException;
+import com.android.apksig.internal.util.FileChannelDataSource;
 import com.android.apksig.util.DataSource;
 import com.android.apksig.util.DataSources;
 import com.android.zipflinger.Archive;
@@ -35,6 +36,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -58,6 +62,8 @@ public class SignedApk implements Archive {
     static final String MANIFEST_CREATED_BY = "Created-By";
     static final String MANIFEST_BUILT_BY = "Built-By";
     static final String MANIFEST_VERSION = "Manifest-Version";
+
+    private static final boolean FAIL_ON_V4_ERROR = true;
 
     public SignedApk(@NonNull File file, @NonNull SignedApkOptions options)
             throws InvalidKeyException, IOException {
@@ -156,13 +162,36 @@ public class SignedApk implements Archive {
     @Override
     public void close() throws IOException {
         try {
+            finishSigning();
+            // At this point the archive has been closed.
+            // V4 can be done if needed.
+            signV4();
+        } finally {
+            signer.close();
+        }
+    }
+
+    private void finishSigning() throws IOException {
+        try {
             finishV1();
             finishV2andV3();
         } finally {
-            signer.close();
             if (!archive.isClosed()) {
                 archive.close();
             }
+        }
+    }
+
+    private void signV4() throws IOException {
+        if (!options.v4Enabled) {
+            return;
+        }
+        Path path = archive.getFile().toPath();
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            FileChannelDataSource dataSource = new FileChannelDataSource(channel);
+            signer.signV4(dataSource, options.v4Output, FAIL_ON_V4_ERROR);
+        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+            throw new IllegalStateException("V4 Signing error", e);
         }
     }
 

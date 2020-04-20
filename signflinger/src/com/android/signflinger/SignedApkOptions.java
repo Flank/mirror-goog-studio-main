@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.apksig.SigningCertificateLineage;
 import com.android.apksig.util.RunnablesExecutor;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -59,6 +60,9 @@ public class SignedApkOptions {
     final boolean v3Enabled;
     final SigningCertificateLineage v3SigningCertificateLineage;
 
+    final boolean v4Enabled;
+    final File v4Output;
+
     final String v1CreatedBy;
     final String v1BuiltBy;
     final boolean v1TrustManifest;
@@ -75,6 +79,8 @@ public class SignedApkOptions {
             boolean v2Enabled,
             boolean v3Enabled,
             SigningCertificateLineage v3SigningCertificateLineage,
+            boolean v4Enabled,
+            File v4Output,
             String v1CreatedBy,
             String v1BuiltBy,
             boolean v1TrustManifest,
@@ -87,6 +93,8 @@ public class SignedApkOptions {
         this.v2Enabled = v2Enabled;
         this.v3Enabled = v3Enabled;
         this.v3SigningCertificateLineage = v3SigningCertificateLineage;
+        this.v4Enabled = v4Enabled;
+        this.v4Output = v4Output;
         this.v1CreatedBy = v1CreatedBy;
         this.v1BuiltBy = v1BuiltBy;
         this.v1TrustManifest = v1TrustManifest;
@@ -137,6 +145,8 @@ public class SignedApkOptions {
         boolean v2Enabled = true;
         boolean v3Enabled = false;
         SigningCertificateLineage v3SigningCertificateLineage;
+        boolean v4Enabled = false;
+        File v4Output = null;
         String v1CreatedBy = "Signflinger";
         String v1BuiltBy = "Signflinger";
         boolean v1TrustManifest;
@@ -183,6 +193,16 @@ public class SignedApkOptions {
             return this;
         }
 
+        public Builder setV4Enabled(boolean enabled) {
+            this.v4Enabled = enabled;
+            return this;
+        }
+
+        public Builder setV4Output(File output) {
+            this.v4Output = output;
+            return this;
+        }
+
         public Builder setV1CreatedBy(@NonNull String creator) {
             v1CreatedBy = creator;
             return this;
@@ -214,6 +234,8 @@ public class SignedApkOptions {
                     v2Enabled,
                     v3Enabled,
                     v3SigningCertificateLineage,
+                    v4Enabled,
+                    v4Output,
                     v1CreatedBy,
                     v1BuiltBy,
                     v1TrustManifest,
