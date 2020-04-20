@@ -18,12 +18,12 @@ package com.android.tools.lint.detector.api
 import com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT
+import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
+import com.android.SdkConstants.LEANBACK_V17_ARTIFACT
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
-import com.android.tools.lint.model.LmDependencies
-import com.android.tools.lint.model.LmJavaLibrary
 import com.android.tools.lint.model.LmLibrary
 import com.android.tools.lint.model.LmMavenName
 import com.android.tools.lint.model.LmModule
@@ -35,7 +35,6 @@ import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 import java.util.ArrayList
-import java.util.LinkedHashSet
 
 /**
  * Lint project for a project backed by a [LmModule] (which could be an app, a library,
@@ -58,9 +57,6 @@ open class LmModuleProject(
         manifestMinSdk = variant.minSdkVersion
         manifestTargetSdk = variant.targetSdkVersion
     }
-
-    @JvmField
-    var kotlinSourceFolders: List<File>? = null
 
     fun setExternalLibrary(external: Boolean) {
         externalLibrary = external
@@ -157,30 +153,14 @@ open class LmModuleProject(
         return assetFolders
     }
 
-    private fun addUnique(file: File, result: MutableList<File>, uniqueFiles: MutableSet<File>) {
-        val canonical = try {
-            file.canonicalFile
-        } catch (e: IOException) {
-            file
-        }
-        if (uniqueFiles.add(canonical)) {
-            result.add(file)
-        }
-    }
-
     override fun getJavaSourceFolders(): List<File> {
         if (javaSourceFolders == null) {
             javaSourceFolders = Lists.newArrayList()
-            // The Kotlin source folders might overlap with the Java source folders.
-            val uniqueFiles: MutableSet<File> = LinkedHashSet()
             sourceProviders.forEach { provider ->
-                // Model returns path whether or not it exists.
+                // model returns path whether or not it exists
                 provider.javaDirectories.asSequence().filter { it.exists() }.forEach {
-                    addUnique(it, javaSourceFolders, uniqueFiles)
+                    javaSourceFolders.add(it)
                 }
-            }
-            kotlinSourceFolders?.asSequence()?.filter { it.exists() }?.forEach {
-                addUnique(it, javaSourceFolders, uniqueFiles)
             }
         }
         return javaSourceFolders
@@ -198,7 +178,7 @@ open class LmModuleProject(
     override fun getTestSourceFolders(): List<File> {
         if (testSourceFolders == null) {
             testSourceFolders = Lists.newArrayList()
-            testSourceProviders?.forEach { provider ->
+            testSourceProviders.forEach { provider ->
                 // model returns path whether or not it exists
                 provider.javaDirectories.asSequence().filter { it.exists() }.forEach {
                     testSourceFolders.add(it)
@@ -242,15 +222,16 @@ open class LmModuleProject(
     override fun getJavaLibraries(includeProvided: Boolean): List<File> {
         return if (includeProvided) {
             if (javaLibraries == null) {
-                val dependencies = variant.mainArtifact.dependencies
                 // TODO: Why direct here and all in test libraries? And shouldn't
                 // this be tied to checkDependencies somehow? If we're creating
                 // project from the android libraries then I'll get the libraries there
                 // right?
-                val direct = dependencies.direct
+                val dependencies = variant.mainArtifact.dependencies
+                val direct = dependencies.compileDependencies.roots
                 javaLibraries = Lists.newArrayListWithExpectedSize(direct.size)
-                for (library in direct) {
-                    (library as? LmJavaLibrary)?.addJars(javaLibraries, false)
+                for (graphItem in direct) {
+                    val library = graphItem.findLibrary() ?: continue
+                    library.addJars(javaLibraries, false)
                 }
             }
             javaLibraries
@@ -258,10 +239,11 @@ open class LmModuleProject(
             // Skip provided libraries?
             if (nonProvidedJavaLibraries == null) {
                 val dependencies = variant.mainArtifact.dependencies
-                val direct = dependencies.direct
+                val direct = dependencies.packageDependencies.roots
                 nonProvidedJavaLibraries = Lists.newArrayListWithExpectedSize(direct.size)
-                for (library in direct) {
-                    (library as? LmJavaLibrary)?.addJars(nonProvidedJavaLibraries, true)
+                for (graphItem in direct) {
+                    val library = graphItem.findLibrary() ?: continue
+                    library.addJars(nonProvidedJavaLibraries, true)
                 }
             }
             nonProvidedJavaLibraries
@@ -272,7 +254,7 @@ open class LmModuleProject(
         if (testLibraries == null) {
             testLibraries = Lists.newArrayListWithExpectedSize(6)
             variant.androidTestArtifact?.let { artifact ->
-                for (library in artifact.dependencies.all) {
+                for (library in artifact.dependencies.getAll()) {
                     // Note that we don't filter out AndroidLibraries here like
                     // // for getJavaLibraries, but we need to include them
                     // for tests since we don't keep them otherwise
@@ -281,7 +263,7 @@ open class LmModuleProject(
                 }
             }
             variant.testArtifact?.let { artifact ->
-                for (library in artifact.dependencies.all) {
+                for (library in artifact.dependencies.getAll()) {
                     library.addJars(testLibraries, false)
                 }
             }
@@ -335,67 +317,50 @@ open class LmModuleProject(
         return when (id) {
             ANDROIDX_SUPPORT_LIB_ARTIFACT -> {
                 if (supportLib == null) {
-                    // OR,
-                    // androidx.legacy:legacy-support-v4
-                    val dependencies = variant.mainArtifact.dependencies
-                    supportLib = dependsOn(dependencies, ANDROIDX_SUPPORT_LIB_ARTIFACT)
+                    val a = variant.mainArtifact
+                    supportLib = a.findCompileDependency(ANDROIDX_SUPPORT_LIB_ARTIFACT) != null ||
+                            a.findCompileDependency("com.android.support:support-v4") != null
                 }
                 supportLib
             }
             ANDROIDX_APPCOMPAT_LIB_ARTIFACT -> {
                 if (appCompat == null) {
-                    val dependencies = variant.mainArtifact.dependencies
-                    appCompat = dependsOn(dependencies, ANDROIDX_APPCOMPAT_LIB_ARTIFACT)
+                    val a = variant.mainArtifact
+                    appCompat = a.findCompileDependency(ANDROIDX_APPCOMPAT_LIB_ARTIFACT) != null ||
+                            a.findCompileDependency(APPCOMPAT_LIB_ARTIFACT) != null
                 }
                 appCompat
             }
             ANDROIDX_LEANBACK_ARTIFACT -> {
                 if (leanback == null) {
-                    val dependencies = variant.mainArtifact.dependencies
-                    leanback = dependsOn(dependencies, ANDROIDX_LEANBACK_ARTIFACT)
+                    val a = variant.mainArtifact
+                    leanback = a.findCompileDependency(ANDROIDX_LEANBACK_ARTIFACT) != null ||
+                            a.findCompileDependency(LEANBACK_V17_ARTIFACT) != null
                 }
                 leanback
             }
             else -> super.dependsOn(id)
         }
     }
+}
 
-    companion object {
-        fun dependsOn(
-            dependencies: LmDependencies,
-            artifact: String
-        ): Boolean {
-            for (library in dependencies.all) {
-                if (libraryMatches(artifact, library)) {
-                    return true
-                }
-            }
-            return false
-        }
+/**
+ * Adds all the jar files from this library into the given list, skipping provided
+ * libraries if requested
+ */
+fun LmLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
+    if (skipped) {
+        return
+    }
+    if (skipProvided && provided) {
+        return
+    }
 
-        fun dependsOn(
-            library: LmLibrary,
-            artifact: String?
-        ): Boolean {
-            if (libraryMatches(artifact!!, library)) {
-                return true
+    for (jar in jarFiles) {
+        if (!list.contains(jar)) {
+            if (jar.exists()) {
+                list.add(jar)
             }
-            for (dependency in library.dependencies) {
-                if (dependsOn(dependency, artifact)) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        private fun libraryMatches(
-            artifact: String,
-            lib: LmLibrary
-        ): Boolean {
-            val (groupId, artifactId) = lib.resolvedCoordinates
-            var c = "$groupId:$artifactId"
-            c = AndroidxNameUtils.getCoordinateMapping(c)
-            return artifact == c
         }
     }
 }

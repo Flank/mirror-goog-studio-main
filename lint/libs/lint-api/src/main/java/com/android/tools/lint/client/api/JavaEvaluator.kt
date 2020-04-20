@@ -896,7 +896,7 @@ class JavaEvaluator {
     open fun findOwnerLibrary(jarFile: String): LmLibrary? {
         val dependencies = dependencies
         if (dependencies != null) {
-            val match = findOwnerLibrary(dependencies.all, jarFile)
+            val match = findOwnerLibrary(dependencies.getAll(), jarFile)
             if (match != null) {
                 return match
             }
@@ -918,7 +918,7 @@ class JavaEvaluator {
                         val prefix = jarFile.substring(0, prefixEnd)
                         val suffix = jarFile.substring(suffixStart)
 
-                        val prefixMatch = findOwnerLibrary(dependencies.all, prefix, suffix)
+                        val prefixMatch = findOwnerLibrary(dependencies.getAll(), prefix, suffix)
                         if (prefixMatch != null) {
                             return prefixMatch
                         }

@@ -22,6 +22,16 @@ interface LmArtifact {
     val name: String
     val dependencies: LmDependencies
     val classFolders: List<File>
+
+    /**
+     * Finds the library with the given [mavenName] (group id and artifact id)
+     * in any transitive compile-dependency.
+     *
+     * Convenience method for accessing the compile dependencies and then looking up
+     * the library there, since this is a very common operation.
+     */
+    fun findCompileDependency(mavenName: String): LmLibrary? =
+        dependencies.compileDependencies.findLibrary(mavenName, direct = false)
 }
 
 interface LmJavaArtifact : LmArtifact

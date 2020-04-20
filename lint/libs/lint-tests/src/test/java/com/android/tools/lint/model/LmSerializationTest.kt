@@ -18,6 +18,7 @@ package com.android.tools.lint.model
 
 import com.android.tools.lint.checks.infrastructure.GradleModelMocker
 import com.android.tools.lint.checks.infrastructure.GradleModelMockerTest
+import com.android.tools.lint.model.LmSerialization.TargetFile
 import com.android.utils.XmlUtils
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
@@ -139,68 +140,68 @@ class LmSerializationTest {
 
         checkSerialization(
             mocker,
-            """
-            <lint-module
-                format="1"
-                dir=""
-                name="test_project"
-                type="APP"
-                maven="com.android.tools.demo:test_project:"
-                gradle="4.0.0-beta01"
-                buildFolder="build"
-                javaSourceLevel="1.7"
-                compileTarget="android-25"
-                neverShrinking="true">
-              <buildFeatures
-                  viewBinding="true"/>
-              <lintOptions
-                  lintConfig="default-lint.xml"
-                  baselineFile="baseline.xml"
-                  checkDependencies="true"
-                  checkTestSources="true"
-                  abortOnError="true"
-                  absolutePaths="true"
-                  checkReleaseBuilds="true"
-                  explainIssues="true"
-                  htmlReport="true"
-                  xmlReport="true">
-                <severities>
-                  <severity
-                    id="FooBar"
-                    severity="WARNING" />
-                  <severity
-                    id="LogConditional"
-                    severity="INFORMATIONAL" />
-                  <severity
-                    id="RtlCompat"
-                    severity="WARNING" />
-                  <severity
-                    id="RtlEnabled"
-                    severity="WARNING" />
-                  <severity
-                    id="RtlHardcoded"
-                    severity="WARNING" />
-                  <severity
-                    id="TypographyFractions"
-                    severity="IGNORE" />
-                  <severity
-                    id="TypographyQuotes"
-                    severity="IGNORE" />
-                </severities>
-              </lintOptions>
-              <variant name="freeBetaDebug"/>
-              <variant name="betaDebug"/>
-              <variant name="normalDebug"/>
-              <variant name="freeDebug"/>
-              <variant name="paidDebug"/>
-              <variant name="betaRelease"/>
-              <variant name="normalRelease"/>
-              <variant name="freeRelease"/>
-              <variant name="paidRelease"/>
-            </lint-module>
-            """,
             mapOf(
-                "freeBetaDebug" to """
+                "module" to """
+                <lint-module
+                    format="1"
+                    dir="＄ROOT"
+                    name="test_project"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="build"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                  <buildFeatures
+                      viewBinding="true"/>
+                  <lintOptions
+                      lintConfig="default-lint.xml"
+                      baselineFile="baseline.xml"
+                      checkDependencies="true"
+                      checkTestSources="true"
+                      abortOnError="true"
+                      absolutePaths="true"
+                      checkReleaseBuilds="true"
+                      explainIssues="true"
+                      htmlReport="true"
+                      xmlReport="true">
+                    <severities>
+                      <severity
+                        id="FooBar"
+                        severity="WARNING" />
+                      <severity
+                        id="LogConditional"
+                        severity="INFORMATIONAL" />
+                      <severity
+                        id="RtlCompat"
+                        severity="WARNING" />
+                      <severity
+                        id="RtlEnabled"
+                        severity="WARNING" />
+                      <severity
+                        id="RtlHardcoded"
+                        severity="WARNING" />
+                      <severity
+                        id="TypographyFractions"
+                        severity="IGNORE" />
+                      <severity
+                        id="TypographyQuotes"
+                        severity="IGNORE" />
+                    </severities>
+                  </lintOptions>
+                  <variant name="freeBetaDebug"/>
+                  <variant name="betaDebug"/>
+                  <variant name="normalDebug"/>
+                  <variant name="freeDebug"/>
+                  <variant name="paidDebug"/>
+                  <variant name="betaRelease"/>
+                  <variant name="normalRelease"/>
+                  <variant name="freeRelease"/>
+                  <variant name="paidRelease"/>
+                </lint-module>
+                """,
+                "variant-freeBetaDebug" to """
                 <variant
                     name="freeBetaDebug"
                     versionCode="2"
@@ -285,326 +286,273 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                      <library
-                          jars="build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1/jars/classes.jar"
-                          requested="com.android.support:appcompat-v7:25.0.1"
-                          resolved="com.android.support:appcompat-v7:25.0.1"
-                          folder="build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1"
-                          manifest="AndroidManifest.xml"
-                          resFolder="res"
-                          assetsFolder="assets"
-                          lintJar="lint.jar"
-                          publicResources="public.txt"
-                          symbolFile="R.txt"
-                          externalAnnotations="annotations.zip"
-                          proguardRules="proguard.pro">
-                        <dependencies>
-                          <library
-                              jars="build/intermediates/exploded-aar/com.android.support/support-v4/25.0.1/jars/classes.jar"
-                              requested="com.android.support:support-v4:25.0.1"
-                              resolved="com.android.support:support-v4:25.0.1"
-                              folder="build/intermediates/exploded-aar/com.android.support/support-v4/25.0.1"
-                              manifest="AndroidManifest.xml"
-                              resFolder="res"
-                              assetsFolder="assets"
-                              lintJar="lint.jar"
-                              publicResources="public.txt"
-                              symbolFile="R.txt"
-                              externalAnnotations="annotations.zip"
-                              proguardRules="proguard.pro">
-                            <dependencies>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-compat:25.0.1"
-                                  resolved="com.android.support:support-compat:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro"/>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-media-compat:25.0.1"
-                                  resolved="com.android.support:support-media-compat:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro">
-                                <dependencies>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-compat:25.0.1"
-                                      resolved="com.android.support:support-compat:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                </dependencies>
-                              </library>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-core-utils:25.0.1"
-                                  resolved="com.android.support:support-core-utils:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro">
-                                <dependencies>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-compat:25.0.1"
-                                      resolved="com.android.support:support-compat:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                </dependencies>
-                              </library>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-core-ui:25.0.1"
-                                  resolved="com.android.support:support-core-ui:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro">
-                                <dependencies>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-compat:25.0.1"
-                                      resolved="com.android.support:support-compat:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                </dependencies>
-                              </library>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-fragment/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-fragment:25.0.1"
-                                  resolved="com.android.support:support-fragment:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-fragment/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro">
-                                <dependencies>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-compat:25.0.1"
-                                      resolved="com.android.support:support-compat:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-media-compat:25.0.1"
-                                      resolved="com.android.support:support-media-compat:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-core-ui:25.0.1"
-                                      resolved="com.android.support:support-core-ui:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                  <library
-                                      jars="build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1/jars/classes.jar"
-                                      requested="com.android.support:support-core-utils:25.0.1"
-                                      resolved="com.android.support:support-core-utils:25.0.1"
-                                      folder="build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1"
-                                      manifest="AndroidManifest.xml"
-                                      resFolder="res"
-                                      assetsFolder="assets"
-                                      lintJar="lint.jar"
-                                      publicResources="public.txt"
-                                      symbolFile="R.txt"
-                                      externalAnnotations="annotations.zip"
-                                      proguardRules="proguard.pro"/>
-                                </dependencies>
-                              </library>
-                            </dependencies>
-                          </library>
-                          <library
-                              jars="build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1/jars/classes.jar"
-                              requested="com.android.support:support-vector-drawable:25.0.1"
-                              resolved="com.android.support:support-vector-drawable:25.0.1"
-                              folder="build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1"
-                              manifest="AndroidManifest.xml"
-                              resFolder="res"
-                              assetsFolder="assets"
-                              lintJar="lint.jar"
-                              publicResources="public.txt"
-                              symbolFile="R.txt"
-                              externalAnnotations="annotations.zip"
-                              proguardRules="proguard.pro">
-                            <dependencies>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-compat:25.0.1"
-                                  resolved="com.android.support:support-compat:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro"/>
-                            </dependencies>
-                          </library>
-                          <library
-                              jars="build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/25.0.1/jars/classes.jar"
-                              requested="com.android.support:animated-vector-drawable:25.0.1"
-                              resolved="com.android.support:animated-vector-drawable:25.0.1"
-                              folder="build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/25.0.1"
-                              manifest="AndroidManifest.xml"
-                              resFolder="res"
-                              assetsFolder="assets"
-                              lintJar="lint.jar"
-                              publicResources="public.txt"
-                              symbolFile="R.txt"
-                              externalAnnotations="annotations.zip"
-                              proguardRules="proguard.pro">
-                            <dependencies>
-                              <library
-                                  jars="build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1/jars/classes.jar"
-                                  requested="com.android.support:support-vector-drawable:25.0.1"
-                                  resolved="com.android.support:support-vector-drawable:25.0.1"
-                                  folder="build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1"
-                                  manifest="AndroidManifest.xml"
-                                  resFolder="res"
-                                  assetsFolder="assets"
-                                  lintJar="lint.jar"
-                                  publicResources="public.txt"
-                                  symbolFile="R.txt"
-                                  externalAnnotations="annotations.zip"
-                                  proguardRules="proguard.pro"/>
-                            </dependencies>
-                          </library>
-                        </dependencies>
-                      </library>
-                      <library
-                          jars="build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-beta3/jars/classes.jar"
-                          requested="com.android.support.constraint:constraint-layout:1.0.0-beta3"
-                          resolved="com.android.support.constraint:constraint-layout:1.0.0-beta3"
-                          folder="build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-beta3"
-                          manifest="AndroidManifest.xml"
-                          resFolder="res"
-                          assetsFolder="assets"
-                          lintJar="lint.jar"
-                          publicResources="public.txt"
-                          symbolFile="R.txt"
-                          externalAnnotations="annotations.zip"
-                          proguardRules="proguard.pro"/>
-                      <library
-                          jars="caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-jdk7-1.3.0.jar"
-                          requested="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"
-                          resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0">
-                        <dependencies>
-                          <library
-                              jars="caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-1.3.0.jar"
-                              requested="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"
-                              resolved="org.jetbrains.kotlin:kotlin-stdlib:1.3.0">
-                            <dependencies>
-                              <library
-                                  jars="caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-common-1.3.0.jar"
-                                  requested="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"
-                                  resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
-                              <library
-                                  jars="caches/modules-2/files-2.1/org.jetbrains/annotations/13.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/annotations-13.0.jar"
-                                  requested="org.jetbrains:annotations:13.0"
-                                  resolved="org.jetbrains:annotations:13.0"/>
-                            </dependencies>
-                          </library>
-                        </dependencies>
-                      </library>
-                      <library
-                          jars="caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-1.3.0.jar"
-                          requested="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"
-                          resolved="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
-                      <library
-                          jars="caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-common-1.3.0.jar"
-                          requested="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"
-                          resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
-                    </dependencies>
                   </mainArtifact>
                   <androidTestArtifact
                       name="_android_test_"
                       classFolders="instrumentation-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </androidTestArtifact>
                   <testArtifact
                       name="_unit_test_"
                       classFolders="test-classes">
-                    <dependencies>
-                    </dependencies>
                   </testArtifact>
                 </variant>
               """,
-                "betaDebug" to """
+
+                "dependencies-freeBetaDebug-mainArtifact" to """
+                    <dependencies>
+                      <compile
+                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0">
+                        <dependency
+                            name="com.android.support:appcompat-v7:25.0.1"
+                            dependencies="com.android.support:support-v4:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-v4:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-media-compat:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-utils:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-ui:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-fragment:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-core-utils:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-vector-drawable:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:animated-vector-drawable:25.0.1"
+                            dependencies="com.android.support:support-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout:1.0.0-beta3"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                      </compile>
+                      <package
+                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0">
+                        <dependency
+                            name="com.android.support:appcompat-v7:25.0.1"
+                            dependencies="com.android.support:support-v4:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-v4:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-media-compat:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-utils:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-ui:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-fragment:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-core-utils:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-vector-drawable:25.0.1"
+                            dependencies="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:animated-vector-drawable:25.0.1"
+                            dependencies="com.android.support:support-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout:1.0.0-beta3"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                      </package>
+                    </dependencies>
+                """,
+                "dependencies-freeBetaDebug-testArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+                "dependencies-freeBetaDebug-androidTestArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+                "dependencies-betaDebug-mainArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+                "dependencies-betaDebug-testArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+                "dependencies-betaDebug-androidTestArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+                "library_table-freeBetaDebug-mainArtifact" to """
+                <libraries>
+                  <library
+                      name="com.android.support:appcompat-v7:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:appcompat-v7:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-v4:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-v4/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-v4:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-v4/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-compat:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-compat:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-media-compat:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-media-compat:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-core-utils:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-core-utils:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-core-ui:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-core-ui:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-fragment:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-fragment/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-fragment:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-fragment/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-vector-drawable:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-vector-drawable:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:animated-vector-drawable:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:animated-vector-drawable:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support.constraint:constraint-layout:1.0.0-beta3"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-beta3/jars/classes.jar"
+                      resolved="com.android.support.constraint:constraint-layout:1.0.0-beta3"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-beta3"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"
+                      jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-jdk7-1.3.0.jar"
+                      resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
+                  <library
+                      name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"
+                      jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-1.3.0.jar"
+                      resolved="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
+                  <library
+                      name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"
+                      jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-common-1.3.0.jar"
+                      resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                </libraries>
+                """,
+                "library_table-freeBetaDebug-testArtifact" to """
+                <libraries>
+                </libraries>
+                """,
+                "library_table-freeBetaDebug-androidTestArtifact" to """
+                <libraries>
+                </libraries>
+                """,
+
+                "variant-betaDebug" to """
                 <variant
                     name="betaDebug"
                     versionCode="0"
@@ -658,12 +606,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "normalDebug" to """
+                "variant-normalDebug" to """
                 <variant
                     name="normalDebug"
                     versionCode="0"
@@ -717,12 +663,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "freeDebug" to """
+                "variant-freeDebug" to """
                 <variant
                     name="freeDebug"
                     versionCode="0"
@@ -776,12 +720,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "paidDebug" to """
+                "variant-paidDebug" to """
                 <variant
                     name="paidDebug"
                     versionCode="0"
@@ -835,12 +777,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "betaRelease" to """
+                "variant-betaRelease" to """
                 <variant
                     name="betaRelease"
                     versionCode="0"
@@ -891,12 +831,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "normalRelease" to """
+                "variant-normalRelease" to """
                 <variant
                     name="normalRelease"
                     versionCode="0"
@@ -947,12 +885,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "freeRelease" to """
+                "variant-freeRelease" to """
                 <variant
                     name="freeRelease"
                     versionCode="0"
@@ -1003,12 +939,10 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """,
-                "paidRelease" to """
+                "variant-paidRelease" to """
                 <variant
                     name="paidRelease"
                     versionCode="0"
@@ -1059,8 +993,6 @@ class LmSerializationTest {
                       name="_main_"
                       classFolders="main-classes"
                       applicationId="com.android.tools.test">
-                    <dependencies>
-                    </dependencies>
                   </mainArtifact>
                 </variant>
               """
@@ -1128,7 +1060,7 @@ class LmSerializationTest {
     ) {
         try {
             val reader = StringReader(xml)
-            LmSerialization.read(LmSerializationStringAdapter(reader = { reader }))
+            LmSerialization.readModule(LmSerializationStringAdapter(reader = { _, _, _ -> reader }))
             if (expectedErrors != null) {
                 fail("Expected failure, got valid module instead")
             }
@@ -1144,8 +1076,7 @@ class LmSerializationTest {
 
     private fun checkSerialization(
         mocker: GradleModelMocker,
-        @Language("XML") expectedModuleXml: String,
-        expectedVariantXml: Map<String, String>
+        expectedXml: Map<String, String>
     ) {
         val project = mocker.project
         val dir = mocker.projectDir
@@ -1157,46 +1088,37 @@ class LmSerializationTest {
         val module = LmFactory().create(project, dir)
         val xml = writeModule(module)
 
-        val moduleXml = xml[""]!!
-        assertThat(moduleXml.cleanup()).isEqualTo(expectedModuleXml.trimIndent().trim())
-
-        // Make sure the XML is valid
-        assertValidXml(moduleXml)
-
-        for (variant in module.variants) {
-            val variantXml: String = xml[variant.name] ?: continue
-            assertValidXml(variantXml)
-            val expected = expectedVariantXml[variant.name] ?: continue
-            assertThat(variantXml.cleanup()).isEqualTo(expected.trimIndent().trim())
+        // Make sure all the generated XML is valid
+        for ((_, s) in xml) {
+            assertValidXml(s)
         }
 
-        val newModule = LmSerialization.read(LmSerializationStringAdapter(reader = { variantName ->
-            val contents = xml[variantName]!!
-            StringReader(contents)
-        }))
+        for (fileType in TargetFile.values()) {
+            for (variant in module.variants) {
+                for (artifactName in listOf(
+                    "mainArtifact",
+                    "testArtifact",
+                    "androidTestArtifact"
+                )) {
+                    val mapKey = getMapKey(fileType, variant.name, artifactName)
+                    val writtenXml: String = xml[mapKey] ?: continue
+                    assertValidXml(writtenXml)
+                    val expected = expectedXml[mapKey] ?: continue
+                    assertThat(writtenXml.cleanup()).isEqualTo(expected.trimIndent().trim())
+                }
+            }
+        }
+
+        val newModule =
+            LmSerialization.readModule(LmSerializationStringAdapter(reader = { target, variantName, artifact ->
+                val contents = xml[getMapKey(target, variantName, artifact)]!!
+                StringReader(contents)
+            }))
         val newXml = writeModule(newModule)
-        for ((variantName, contents) in xml) {
+        for ((key, contents) in xml) {
             assertEquals(
-                "XML parsed and written back out does not match original",
-                contents, newXml[variantName]
-            )
-        }
-
-        // Also check using relative path: make sure that if we strip out the project prefix
-        // and read it back with a root specified, paths are resolved properly
-        val newModule2 = LmSerialization.read(
-            LmSerializationStringAdapter(
-                reader = { variantName ->
-                    val s = xml[variantName]!!
-                    val relative = s.replace(mocker.projectDir.path + File.separator, "")
-                    StringReader(relative)
-                }), variantNames = null
-        )
-        val newXml2 = writeModule(newModule2)
-        for ((variantName, contents) in xml) {
-            assertEquals(
-                "XML parsed and written back out does not match original",
-                contents, newXml2[variantName]
+                "XML parsed and written back out does not match original for file " + key,
+                contents, newXml[key]
             )
         }
     }
@@ -1214,11 +1136,35 @@ class LmSerializationTest {
         }
     }
 
+    private fun getMapKey(
+        target: TargetFile,
+        variantName: String = "",
+        artifactName: String = ""
+    ): String {
+        val key = StringBuilder(target.name.toLowerCase())
+        if (variantName.isNotEmpty() && target != TargetFile.MODULE) {
+            key.append("-")
+            key.append(variantName)
+            if (artifactName.isNotEmpty() &&
+                (target == TargetFile.DEPENDENCIES || target == TargetFile.LIBRARY_TABLE)
+            ) {
+                key.append("-")
+                key.append(artifactName)
+            }
+        }
+
+        return key.toString()
+    }
+
     private fun writeModule(module: LmModule): Map<String, String> {
         val map = mutableMapOf<String, StringWriter>()
-        LmSerialization.write(module, LmSerializationStringAdapter(writer = { variantName ->
-            map[variantName] ?: StringWriter().also { map[variantName] = it }
-        }))
+        LmSerialization.writeModule(
+            module,
+            LmSerializationStringAdapter(writer = { target, variantName, artifactName ->
+                val key = getMapKey(target, variantName, artifactName)
+                map[key] ?: StringWriter().also { map[key] = it }
+            })
+        )
         return map.mapValues {
             it.value.toString()
         }
@@ -1226,25 +1172,30 @@ class LmSerializationTest {
 
     private fun writeVariant(variant: LmVariant): String {
         val writer = StringWriter()
-        LmSerialization.write(variant, LmSerializationStringAdapter(writer = { writer }))
+        LmSerialization.writeVariant(variant, LmSerializationStringAdapter(writer = { _, _, _ ->
+            writer
+        }))
         return writer.toString()
     }
 
     private class LmSerializationStringAdapter(
         private val root: File? = null,
-        private val reader: (String) -> Reader = { StringReader("<error>") },
-        private val writer: (String) -> Writer = { StringWriter() }
+        private val reader: (TargetFile, String, String) -> Reader = { _, _, _ -> StringReader("<error>") },
+        private val writer: (TargetFile, String, String) -> Writer = { _, _, _ -> StringWriter() }
     ) : LmSerialization.LmSerializationAdapter {
         override fun root(): File? = root
-        override fun file(variantName: String?): File? {
-            return if (variantName != null)
+        override fun file(target: TargetFile, variantName: String, artifactName: String): File {
+            return if (variantName.isNotEmpty())
                 File("variant-$variantName.xml")
             else
                 File("testfile.xml")
         }
 
-        override fun getReader(variantName: String?): Reader = reader(variantName ?: "")
-        override fun getWriter(variantName: String?): Writer = writer(variantName ?: "")
+        override fun getReader(target: TargetFile, variantName: String, artifactName: String) =
+            reader(target, variantName, artifactName)
+
+        override fun getWriter(target: TargetFile, variantName: String, artifactName: String) =
+            writer(target, variantName, artifactName)
     }
 
     private fun assertNoTextNodes(element: Element) {

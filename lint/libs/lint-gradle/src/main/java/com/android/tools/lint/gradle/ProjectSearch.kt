@@ -15,22 +15,19 @@
  */
 package com.android.tools.lint.gradle
 
-import com.android.builder.model.AndroidProject
-import com.android.ide.common.gradle.model.IdeAndroidProject
-import com.android.ide.common.gradle.model.IdeAndroidProjectImpl
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory
 import com.android.tools.lint.detector.api.LmModuleAndroidLibraryProject
 import com.android.tools.lint.detector.api.LmModuleJavaLibraryProject
 import com.android.tools.lint.detector.api.LmModuleLibraryProject
 import com.android.tools.lint.detector.api.LmModuleProject
 import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.gradle.api.ToolingRegistryProvider
 import com.android.tools.lint.model.DefaultLmMavenName
 import com.android.tools.lint.model.LmAndroidLibrary
+import com.android.tools.lint.model.LmDependency
 import com.android.tools.lint.model.LmFactory
 import com.android.tools.lint.model.LmJavaLibrary
 import com.android.tools.lint.model.LmMavenName
 import com.android.tools.lint.model.LmModule
+import com.android.tools.lint.model.LmModuleLoaderProvider
 import com.android.tools.lint.model.LmVariant
 import com.intellij.pom.java.LanguageLevel
 import org.gradle.api.artifacts.ExternalDependency
@@ -38,7 +35,6 @@ import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import java.io.File
 import org.gradle.api.Project as GradleProject
 
@@ -56,9 +52,12 @@ class ProjectSearch {
     private val appProjects = mutableMapOf<GradleProject, Project>()
     private val gradleProjects = mutableMapOf<GradleProject, LmModule>()
 
-    private fun getBuildModule(gradleProject: GradleProject): LmModule? {
+    private fun getBuildModule(
+        lintClient: LintGradleClient,
+        gradleProject: GradleProject
+    ): LmModule? {
         return gradleProjects[gradleProject] ?: run {
-            val newModel = createLintBuildModel(gradleProject)
+            val newModel = createLintBuildModel(lintClient, gradleProject)
             if (newModel != null) {
                 gradleProjects[gradleProject] = newModel
             }
@@ -75,7 +74,7 @@ class ProjectSearch {
         gradleProject: GradleProject,
         variantName: String?
     ): Project? {
-        val module = getBuildModule(gradleProject)
+        val module = getBuildModule(lintClient, gradleProject)
         if (module != null && variantName != null) {
             val variant = module.findVariant(variantName)
             if (variant != null) {
@@ -196,20 +195,16 @@ class ProjectSearch {
         val dir = gradleProject.projectDir
         val manifest = client.mergedManifest
         val lintProject = LmModuleProject(client, dir, dir, variant, manifest)
-        lintProject.kotlinSourceFolders = client.getKotlinSourceFolders(gradleProject)
         appProjects[gradleProject] = lintProject
         lintProject.gradleProject = true
 
         // DELIBERATELY calling getDependencies here (and Dependencies#getProjects() below) :
         // the new hierarchical model is not working yet.
-        val dependencies = variant.mainArtifact.dependencies
-        for (library in dependencies.direct) {
-            if (library.project != null) {
-                // Handled below
-                continue
-            }
+        val dependencies = variant.mainArtifact.dependencies.compileDependencies
+        for (item in dependencies.roots) {
+            val library = item.findLibrary() ?: continue // local project dependency: handled below
             if (library is LmAndroidLibrary) {
-                lintProject.addDirectLibrary(getLibrary(client, library, gradleProject, variant))
+                lintProject.addDirectLibrary(getLibrary(client, item, library, gradleProject, variant))
             }
         }
 
@@ -238,9 +233,10 @@ class ProjectSearch {
                 }
             }
         }
-        for (library in dependencies.direct) {
+        for (libraryItem in dependencies.roots) {
+            val library = libraryItem.findLibrary()
             if (library is LmJavaLibrary) {
-                val projectName = library.project
+                val projectName = library.projectPath
                 if (projectName != null) {
                     if (processedProjects != null && processedProjects.contains(projectName)) {
                         continue
@@ -252,7 +248,7 @@ class ProjectSearch {
                         continue
                     }
                 }
-                lintProject.addDirectLibrary(getLibrary(client, library))
+                lintProject.addDirectLibrary(getLibrary(client, libraryItem, library))
             }
         }
         return lintProject
@@ -281,6 +277,7 @@ class ProjectSearch {
 
     private fun getLibrary(
         client: LintGradleClient,
+        libraryItem: LmDependency,
         library: LmAndroidLibrary,
         gradleProject: GradleProject,
         variant: LmVariant
@@ -294,27 +291,27 @@ class ProjectSearch {
         if (cached != null) {
             return cached
         }
-        if (library.project != null) {
+        if (library.projectPath != null) {
             val project =
-                getProject(client, library.project!!, gradleProject, variant.name)
+                getProject(client, library.projectPath!!, gradleProject, variant.name)
             if (project != null) {
                 libraryProjects[library] = project
                 return project
             }
         }
         val dir = library.folder
-        val project = LmModuleAndroidLibraryProject(client, dir, dir, library)
-        project.kotlinSourceFolders = client.getKotlinSourceFolders(library.project)
+        val project = LmModuleAndroidLibraryProject(client, dir, dir, libraryItem, library)
         project.setMavenCoordinates(coordinates)
-        if (library.project == null) {
+        if (library.projectPath == null) {
             project.isExternalLibrary = true
         }
         libraryProjects[library] = project
         libraryProjectsByCoordinate[coordinates] = project
-        for (dependent in library.dependencies) {
+        for (dependentItem in libraryItem.dependencies) {
+            val dependent = dependentItem.findLibrary() ?: continue
             if (dependent is LmAndroidLibrary) {
                 project.addDirectLibrary(
-                    getLibrary(client, dependent, gradleProject, variant)
+                    getLibrary(client, dependentItem, dependent, gradleProject, variant)
                 )
             } else {
                 // TODO What do we do here? Do we create a wrapper JavaLibrary project?
@@ -323,7 +320,11 @@ class ProjectSearch {
         return project
     }
 
-    private fun getLibrary(client: LintGradleClient, library: LmJavaLibrary): Project {
+    private fun getLibrary(
+        client: LintGradleClient,
+        libraryItem: LmDependency,
+        library: LmJavaLibrary
+    ): Project {
         var cached = javaLibraryProjects[library]
         if (cached != null) {
             return cached
@@ -334,16 +335,17 @@ class ProjectSearch {
             return cached
         }
         val dir = library.jarFiles.first()
-        val project = LmModuleJavaLibraryProject(client, dir, dir, library)
+        val project = LmModuleJavaLibraryProject(client, dir, dir, libraryItem, library)
         project.setMavenCoordinates(coordinates)
         project.isExternalLibrary = true
         javaLibraryProjects[library] = project
         javaLibraryProjectsByCoordinate[coordinates] = project
-        for (dependent in library.dependencies) {
+        for (dependentItem in libraryItem.dependencies) {
+            val dependent = dependentItem.findLibrary() ?: continue
             // just a sanity check; Java libraries cannot depend on Android libraries
             if (dependent is LmJavaLibrary) {
                 project.addDirectLibrary(
-                    getLibrary(client, dependent)
+                    getLibrary(client, dependentItem, dependent)
                 )
             }
         }
@@ -351,40 +353,23 @@ class ProjectSearch {
     }
 
     private fun createLintBuildModel(
+        client: LintGradleClient,
         gradleProject: GradleProject
     ): LmModule? {
         val pluginContainer = gradleProject.plugins
         for (p in pluginContainer) {
-            val provider = p as? ToolingRegistryProvider ?: continue
-            val registry: ToolingModelBuilderRegistry = provider.modelBuilderRegistry
-            val project = createAndroidProject(gradleProject, registry)
-            return LmFactory().create(project, gradleProject.rootDir)
+            val provider = p as? LmModuleLoaderProvider ?: continue
+            val factory = LmFactory()
+            // This should not be necessary, but here until AGP includes all the folders
+            // necessary via the builder-model (or better yet, via XML serialization)
+            factory.kotlinSourceFolderLookup = { variantName ->
+                client.getKotlinSourceFolders(gradleProject, variantName)
+                    // It also includes default Java source providers which are redundant
+                    .filter { it.name != "java" }
+            }
+
+            return provider.getModuleLoader().getModule(gradleProject.path, factory)
         }
         return null
-    }
-
-    private fun createAndroidProject(
-        project: GradleProject,
-        toolingRegistry: ToolingModelBuilderRegistry
-    ): IdeAndroidProject {
-        val modelName = AndroidProject::class.java.name
-        val modelBuilder = toolingRegistry.getBuilder(modelName)
-        val ext = project.extensions.extraProperties
-        // setup the level 3 sync.
-        // Ensure that projects are constructed serially since otherwise
-        // it's possible for a race condition on the below property
-        // to trigger occasional NPE's like the one in b.android.com/38117575
-        synchronized(ext) {
-            ext[AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED] =
-                AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD.toString()
-            return try {
-                val model = modelBuilder.buildAll(modelName, project) as AndroidProject
-                val factory = IdeDependenciesFactory()
-                // Sync issues are not used in lint.
-                IdeAndroidProjectImpl.create(model, factory, model.variants, emptyList())
-            } finally {
-                ext[AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED] = null
-            }
-        }
     }
 }

@@ -802,10 +802,12 @@ class LintDriver
         }
 
         for ((file, project) in fileToProject) {
+            //noinspection FileComparisons
             if (file != project.dir) {
                 if (file.isDirectory) {
                     try {
                         val dir = file.canonicalFile
+                        //noinspection FileComparisons
                         if (dir == project.dir) {
                             continue
                         }
@@ -2025,7 +2027,6 @@ class LintDriver
                             fileCount++
                             resourceFileCount++
                         })
-
                     }
                 }
             } else if (binaryChecks != null && file.isFile && isBitmapFile(file)) {
@@ -2075,7 +2076,7 @@ class LintDriver
 
     /** Notifies listeners, if any, that the given event has occurred  */
     private fun fireEvent(
-        type: LintListener.EventType,
+        type: EventType,
         context: Context? = null,
         project: Project? = context?.project
     ) {
@@ -2252,7 +2253,7 @@ class LintDriver
         override fun getCacheDir(name: String?, create: Boolean): File? =
             delegate.getCacheDir(name, create)
 
-        override fun getClassPath(project: Project): LintClient.ClassPathInfo =
+        override fun getClassPath(project: Project): ClassPathInfo =
             delegate.performGetClassPath(project)
 
         override fun log(
@@ -2729,7 +2730,6 @@ class LintDriver
         // Workaround: Kotlin AST is missing these annotations (IDEA-234749)
         if (clause is KotlinUCatchClause) {
             clause.sourcePsi.catchParameter?.annotationEntries?.forEach { annotation ->
-                val argList = annotation.valueArgumentList
                 if (annotation.shortName?.asString() == SUPPRESS_LINT) {
                     for (arg in annotation.valueArguments) {
                         val expression = arg.getArgumentExpression()
@@ -2946,6 +2946,7 @@ class LintDriver
      */
     fun getResourceFolderVersion(resourceFile: File): Int {
         val parent = resourceFile.parentFile ?: return -1
+        //noinspection FileComparisons
         if (parent == cachedFolder) {
             return cachedFolderVersion
         }
@@ -2978,14 +2979,6 @@ class LintDriver
         const val STUDIO_ID_PREFIX = "AndroidLint"
 
         private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
-
-        private val DEFAULT_SUPPRESS_ANNOTATIONS = setOf(
-            FQCN_SUPPRESS_LINT,
-            SUPPRESS_WARNINGS_FQCN,
-            KOTLIN_SUPPRESS,
-            // When missing imports
-            SUPPRESS_LINT
-        )
 
         /**
          * For testing only: returns the number of exceptions thrown during Java AST analysis
@@ -3158,7 +3151,7 @@ class LintDriver
                     } else {
                         className
                     }
-                    return kotlin.Pair(detector, issues)
+                    return Pair(detector, issues)
                 }
             }
 
@@ -3418,6 +3411,7 @@ class LintDriver
          */
         @JvmStatic
         fun isSuppressed(issue: Issue, annotated: UAnnotated): Boolean {
+            //noinspection ExternalAnnotations
             val annotations = annotated.uAnnotations
             if (annotations.isEmpty()) {
                 return false
@@ -3482,6 +3476,7 @@ class LintDriver
             annotated: UAnnotated,
             names: Set<String>
         ): Boolean {
+            //noinspection ExternalAnnotations
             val annotations = annotated.uAnnotations
             if (annotations.isEmpty()) {
                 return false

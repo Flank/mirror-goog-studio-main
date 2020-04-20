@@ -59,7 +59,7 @@ iml_module(
     name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
     iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
-    lint_baseline = "libs/lint-api/lint_baseline.xml",
+    lint_baseline = "libs/lint-api/empty_baseline.xml",
     # do not sort: must match IML order
     test_runtime_deps = [
         "//tools/idea/plugins/IntelliLang/intellilang-jps-plugin:intellij.java.langInjection.jps",

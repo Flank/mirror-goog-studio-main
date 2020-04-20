@@ -27,13 +27,19 @@ import java.io.File
  * Not all build systems have the same capabilities. The LintModel skews
  * a bit towards Gradle and some concepts provided by the Android
  * Gradle plugin, such as "variants", "product flavors" and so on.
+ *
+ * This is called a "module" to match the Android Studio and IntelliJ notion of
+ * what a module is. Lint itself (but not this model) calls modules projects,
+ * which matches the older Eclipse and Gradle terminology.
  */
 interface LmModule {
+    val loader: LmModuleLoader?
+
     /** The root location of this module */
     val dir: File
 
-    /** Name of the module */
-    val moduleName: String
+    /** Build-system specific path of the module */
+    val modulePath: String
 
     /** Type of the model */
     val type: LmModuleType
@@ -116,9 +122,31 @@ interface LmModule {
     }
 }
 
+/** Provider which can provide a module loader */
+interface LmModuleLoaderProvider {
+    fun getModuleLoader(): LmModuleLoader
+}
+
+/**
+ * A provider which loads modules given various keys
+ */
+interface LmModuleLoader {
+    /** Loads a module from a file */
+    fun getModule(file: File): LmModule {
+        return LmSerialization.readModule(file)
+    }
+
+    /** Loads a module from a dependency in a dependency graph */
+    fun getModule(library: LmDependency): LmModule? = null
+
+    /** Loads a module from a project path */
+    fun getModule(path: String, factory: LmFactory? = null): LmModule? = null
+}
+
 class DefaultLmModule(
+    override val loader: LmModuleLoader?,
     override val dir: File,
-    override val moduleName: String,
+    override val modulePath: String,
     override val type: LmModuleType,
     override val mavenName: LmMavenName?,
     override val gradleVersion: GradleVersion?,
@@ -142,6 +170,6 @@ class DefaultLmModule(
 /**
  * Writes this module model to the given file
  */
-fun LmModule.write(xmlFile: File, createdBy: String? = null) {
-    LmSerialization.write(this, destination = xmlFile, createdBy = createdBy)
+fun LmModule.writeModule(xmlFile: File, createdBy: String? = null) {
+    LmSerialization.writeModule(this, destination = xmlFile, createdBy = createdBy)
 }

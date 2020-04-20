@@ -1,6 +1,6 @@
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants
+import com.android.SdkConstants.SUPPORT_LIB_ARTIFACT
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.tools.lint.detector.api.Category
@@ -62,25 +62,18 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
             return
         }
 
-        val dependencies = GradleDetector.getCompileDependencies(context.project) ?: return
-        for (library in dependencies.direct) {
-            val mc = library.resolvedCoordinates
-            if (mc.groupId == SdkConstants.SUPPORT_LIB_GROUP_ID &&
-                mc.artifactId == "support-v4" &&
-                mc.version.isNotBlank()
-            ) {
-                val libVersion = GradleCoordinate.parseVersionOnly(mc.version)
-                if (COMPARE_PLUS_HIGHER.compare(libVersion, MIN_SUPPORT_V4_VERSION) < 0) {
-
-                    val location = guessGradleLocation(
-                        context.client, context.project.dir,
-                        "${mc.groupId}:${mc.artifactId}:${mc.version}"
-                    )
-
-                    val message = "Using a version of the class that is not forward compatible"
-                    context.report(ISSUE, location, message)
-                }
-                break
+        val library = context.project.buildVariant?.mainArtifact
+            ?.findCompileDependency(SUPPORT_LIB_ARTIFACT) ?: return
+        val mc = library.resolvedCoordinates
+        if (mc.version.isNotBlank()) {
+            val libVersion = GradleCoordinate.parseVersionOnly(mc.version)
+            if (COMPARE_PLUS_HIGHER.compare(libVersion, MIN_SUPPORT_V4_VERSION) < 0) {
+                val location = guessGradleLocation(
+                    context.client, context.project.dir,
+                    "${mc.groupId}:${mc.artifactId}:${mc.version}"
+                )
+                val message = "Using a version of the class that is not forward compatible"
+                context.report(ISSUE, location, message)
             }
         }
     }

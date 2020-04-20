@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT
 import com.android.SdkConstants.ATTR_CONSTRAINT_LAYOUT_DESCRIPTION
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
@@ -24,6 +25,7 @@ import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.CONSTRAINT_LAYOUT
+import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT
 import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID
 import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID
 import com.android.SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION
@@ -67,19 +69,17 @@ class ConstraintLayoutDetector : LayoutDetector() {
         val variant = context.mainProject.buildVariant
         var latestAvailable: GradleCoordinate? = null
         if (variant != null) {
-            val dependencies = variant.mainArtifact.dependencies
-            for (library in dependencies.direct) {
+            val dependencies = variant.mainArtifact.dependencies.compileDependencies
+            val library = dependencies.findLibrary(CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
+                ?: dependencies.findLibrary(ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
+            if (library != null) {
                 val rc = library.resolvedCoordinates
                 if (CONSTRAINT_LAYOUT_LIB_GROUP_ID == rc.groupId &&
                     CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId) {
                     if (latestAvailable == null) {
                         latestAvailable = getLatestVersion(context)
                     }
-                    val version = GradleCoordinate(
-                        CONSTRAINT_LAYOUT_LIB_GROUP_ID,
-                        CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID,
-                        rc.version
-                    )
+                    val version = GradleCoordinate(rc.groupId, rc.artifactId, rc.version)
                     if (COMPARE_PLUS_LOWER.compare(latestAvailable, version) > 0) {
                         val message = "Using version ${version.revision} of the constraint library, which is obsolete"
                         val fix = fix().data(ConstraintLayoutDetector::class.java)

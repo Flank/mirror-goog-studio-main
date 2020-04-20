@@ -36,20 +36,6 @@ public class IdeLibraryTest {
     }
 
     @Test
-    public void model1_dot_5() {
-        Library original =
-                new LibraryStub() {
-                    @Override
-                    public boolean isProvided() {
-                        throw new UnsupportedOperationException(
-                                "Unsupported method: AndroidLibrary.isProvided()");
-                    }
-                };
-        IdeLibrary library = new IdeLibrary(original, new ModelCache()) {};
-        expectUnsupportedOperationException(library::isProvided);
-    }
-
-    @Test
     public void model1_dot_5WithNullCoordinate() {
         //noinspection NullableProblems
         Library original =

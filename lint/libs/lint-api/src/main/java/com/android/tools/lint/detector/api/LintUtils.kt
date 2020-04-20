@@ -639,6 +639,7 @@ fun getCommonParent(files: List<File>): File? {
  */
 fun getCommonParent(file1: File, file2: File): File? {
     when {
+        //noinspection FileComparisons
         file1 == file2 -> return file1
         file1.path.startsWith(file2.path) -> return file2
         file2.path.startsWith(file1.path) -> return file1
@@ -648,6 +649,7 @@ fun getCommonParent(file1: File, file2: File): File? {
             while (first != null) {
                 var second: File? = file2.parentFile
                 while (second != null) {
+                    //noinspection FileComparisons
                     if (first == second) {
                         return first
                     }

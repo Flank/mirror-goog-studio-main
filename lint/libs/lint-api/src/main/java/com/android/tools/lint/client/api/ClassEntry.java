@@ -40,7 +40,6 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 
 /** A class, present either as a .class file on disk, or inside a .jar file. */
-@VisibleForTesting
 class ClassEntry implements Comparable<ClassEntry> {
     public final File file;
     public final File jarFile;

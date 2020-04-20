@@ -455,8 +455,6 @@ abstract class LintClient {
     open fun getSdkHome(): File? {
         val binDir = lintBinDir
         if (binDir != null) {
-            assert(binDir.name == "tools")
-
             val root = binDir.parentFile
             if (root != null && root.isDirectory) {
                 return root
@@ -1221,7 +1219,7 @@ abstract class LintClient {
                 val variant = project.buildVariant
                 if (variant != null) {
                     val rules = ArrayList<File>(4)
-                    addLintJarsFromDependencies(rules, variant.mainArtifact.dependencies.all)
+                    addLintJarsFromDependencies(rules, variant.mainArtifact.dependencies.getAll())
                     val model = variant.module
 
                     // Locally packaged jars
@@ -1293,7 +1291,7 @@ abstract class LintClient {
         val lintJar = library.lintJar
         if (lintJar.exists()) {
             lintJars.add(lintJar)
-        } else if (library.projectId != null) {
+        } else if (library.projectPath != null) {
             // Local project: might have locally packaged lint jar
             // Kept for backward compatibility, see b/66166521
             val buildDir = library.folder.path.substringBefore("intermediates")
@@ -1681,7 +1679,7 @@ abstract class LintClient {
         val files = Lists.newArrayListWithExpectedSize<File>(2)
         for (project in projects) {
             val variant = project.buildVariant ?: continue
-            for (library in variant.mainArtifact.dependencies.all) {
+            for (library in variant.mainArtifact.dependencies.getAll()) {
                 if (library is LmAndroidLibrary) {
                     // As of 1.2 this is available in the model:
                     //  https://android-review.googlesource.com/#/c/137750/

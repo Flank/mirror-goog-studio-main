@@ -75,6 +75,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.tools.lint.model.LmDependencies;
+import com.android.tools.lint.model.LmDependencyGraph;
 import com.android.tools.lint.model.LmLibrary;
 import com.android.tools.lint.model.LmMavenName;
 import com.android.tools.lint.model.LmSourceProvider;
@@ -810,18 +812,14 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 }
                 // Ensure that the play-services-wearable version dependency is >= 8.2.0
                 LmVariant variant = context.getMainProject().getBuildVariant();
-                if (variant != null) {
-                    for (LmLibrary library : variant.getMainArtifact().getDependencies().getAll()) {
-                        if (hasWearableGmsDependency(library)) {
-                            context.report(
-                                    WEARABLE_BIND_LISTENER,
-                                    bindListenerAttr,
-                                    context.getLocation(bindListenerAttr),
-                                    "The `com.google.android.gms.wearable.BIND_LISTENER`"
-                                            + " action is deprecated");
-                            return;
-                        }
-                    }
+                if (variant != null&& hasWearableGmsDependency(variant)) {
+                    context.report(
+                            WEARABLE_BIND_LISTENER,
+                            bindListenerAttr,
+                            context.getLocation(bindListenerAttr),
+                            "The `com.google.android.gms.wearable.BIND_LISTENER`"
+                                    + " action is deprecated");
+                    return;
                 }
 
                 // It's possible they are using an older version of play services so
@@ -1188,17 +1186,19 @@ public class ManifestDetector extends Detector implements XmlScanner {
         return false;
     }
 
+    private static final String PLAY_SERVICES_WEARABLE = GMS_GROUP_ID + ":play-services-wearable";
+
     // Method to check if the app has a gms wearable dependency that
     // matches the specific criteria i.e >= MIN_WEARABLE_GMS_VERSION
-    private static boolean hasWearableGmsDependency(LmLibrary library) {
-        LmMavenName mc = library.getResolvedCoordinates();
-        if (mc.getGroupId().equals(GMS_GROUP_ID)
-                && mc.getArtifactId().equals("play-services-wearable")) {
-            GradleCoordinate gc = GradleCoordinate.parseVersionOnly(mc.getVersion());
-            return COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0;
+    private static boolean hasWearableGmsDependency(@NonNull LmVariant variant) {
+        LmLibrary library = variant.getMainArtifact().findCompileDependency(PLAY_SERVICES_WEARABLE);
+        if (library == null) {
+            return false;
         }
 
-        return false;
+        LmMavenName mc = library.getResolvedCoordinates();
+        GradleCoordinate gc = GradleCoordinate.parseVersionOnly(mc.getVersion());
+        return COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0;
     }
 
     /**

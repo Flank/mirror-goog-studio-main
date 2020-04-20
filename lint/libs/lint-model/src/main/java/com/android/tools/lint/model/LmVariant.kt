@@ -49,6 +49,13 @@ interface LmVariant {
 
     val debuggable: Boolean
     val shrinkable: Boolean
+
+    /**
+     * Lookup from artifact address in a [LmDependencyGraph] to a [LmLibrary].
+     * The libraries are shared across modules and variants, only the dependency graphs
+     * pointing to the libraries by address are per artifact.
+     */
+    val libraryResolver: LmLibraryResolver
 }
 
 class DefaultLmVariant(
@@ -87,6 +94,7 @@ class DefaultLmVariant(
 
     override val debuggable: Boolean,
     override val shrinkable: Boolean,
+    override val libraryResolver: LmLibraryResolver,
 
     // For temporary backwards compatibility
     override val oldVariant: com.android.builder.model.Variant?

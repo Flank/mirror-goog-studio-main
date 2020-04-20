@@ -16,9 +16,13 @@
 package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants
+import com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT
+import com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT
+import com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.model.LmAndroidLibrary
+import com.android.tools.lint.model.LmDependency
 import com.android.tools.lint.model.LmJavaLibrary
 import com.android.tools.lint.model.LmMavenName
 import com.android.utils.XmlUtils
@@ -30,7 +34,8 @@ import java.io.IOException
 open class LmModuleLibraryProject(
     client: LintClient,
     dir: File,
-    referenceDir: File
+    referenceDir: File,
+    val dependency: LmDependency
 ) : Project(client, dir, referenceDir) {
 
     init {
@@ -82,8 +87,9 @@ open class LmModuleJavaLibraryProject(
     client: LintClient,
     dir: File,
     referenceDir: File,
+    dependency: LmDependency,
     private val javaLibrary: LmJavaLibrary
-) : LmModuleLibraryProject(client, dir, referenceDir) {
+) : LmModuleLibraryProject(client, dir, referenceDir, dependency) {
 
     override fun getJavaLibraries(includeProvided: Boolean): List<File> {
         if (!includeProvided && javaLibrary.provided) {
@@ -102,8 +108,9 @@ open class LmModuleAndroidLibraryProject(
     client: LintClient,
     dir: File,
     referenceDir: File,
+    dependency: LmDependency,
     private val androidLibrary: LmAndroidLibrary
-) : LmModuleLibraryProject(client, dir, referenceDir) {
+) : LmModuleLibraryProject(client, dir, referenceDir, dependency) {
     init {
         androidLibrary.manifest.let { manifest ->
             if (manifest.exists()) {
@@ -119,9 +126,6 @@ open class LmModuleAndroidLibraryProject(
     }
 
     override fun getBuildLibraryModel(): LmAndroidLibrary = androidLibrary
-
-    @JvmField
-    var kotlinSourceFolders: List<File>? = null
 
     override fun getManifestFiles(): List<File> {
         if (manifestFiles == null) {
@@ -187,34 +191,42 @@ open class LmModuleAndroidLibraryProject(
         }
     }
 
+    fun LmDependency.hasDependency(name: String): Boolean {
+        if (artifactName == name) {
+            return true
+        }
+
+        for (dependency in dependencies) {
+            if (dependency.hasDependency(name)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     override fun dependsOn(artifact: String): Boolean? {
         @Suppress("MoveVariableDeclarationIntoWhen") // used in super call as well
         val id = AndroidxNameUtils.getCoordinateMapping(artifact)
         return when (id) {
-            SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT -> {
+            ANDROIDX_SUPPORT_LIB_ARTIFACT -> {
                 if (supportLib == null) {
-                    supportLib = LmModuleProject.dependsOn(
-                        androidLibrary,
-                        SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT
-                    )
+                    supportLib = dependency.hasDependency(ANDROIDX_SUPPORT_LIB_ARTIFACT) ||
+                            dependency.hasDependency("com.android.support:support-v4")
                 }
                 supportLib
             }
-            SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT -> {
+            ANDROIDX_APPCOMPAT_LIB_ARTIFACT -> {
                 if (appCompat == null) {
-                    appCompat = LmModuleProject.dependsOn(
-                        androidLibrary,
-                        SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT
-                    )
+                    appCompat = dependency.hasDependency(ANDROIDX_APPCOMPAT_LIB_ARTIFACT) ||
+                            dependency.hasDependency(SdkConstants.APPCOMPAT_LIB_ARTIFACT)
                 }
                 appCompat
             }
-            SdkConstants.ANDROIDX_LEANBACK_ARTIFACT -> {
+            ANDROIDX_LEANBACK_ARTIFACT -> {
                 if (leanback == null) {
-                    leanback = LmModuleProject.dependsOn(
-                        androidLibrary,
-                        SdkConstants.ANDROIDX_LEANBACK_ARTIFACT
-                    )
+                    leanback = dependency.hasDependency(ANDROIDX_LEANBACK_ARTIFACT) ||
+                            dependency.hasDependency(SdkConstants.LEANBACK_V17_ARTIFACT)
                 }
                 leanback
             }

@@ -507,7 +507,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 // match
                 run {
                     val matchingName =
-                        "set${badGetter!!.name.removePrefix("is").removePrefix("get").removePrefix("has")}"
+                        "set${badGetter!!.name.removePrefix("is").removePrefix("get")
+                            .removePrefix("has")}"
 
                     methodName == matchingName || cls.methods.none { it.name == matchingName }
                 }
@@ -732,17 +733,13 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         private fun initializeAnnotationNames(context: JavaContext) {
             if (nonNullAnnotation == null) {
-                val libraries = context.mainProject.buildVariant?.mainArtifact?.dependencies?.all
-                    ?: emptyList()
-                for (library in libraries) {
-                    val coordinates = library.resolvedCoordinates
-                    if (coordinates.groupId.startsWith("androidx")) {
-                        nonNullAnnotation = "@androidx.annotation.NonNull"
-                        nullableAnnotation = "@androidx.annotation.Nullable"
-                        return
-                    }
+                val library = context.mainProject.buildVariant?.mainArtifact
+                    ?.findCompileDependency("androidx.annotation:annotation")
+                if (library != null) {
+                    nonNullAnnotation = "@androidx.annotation.NonNull"
+                    nullableAnnotation = "@androidx.annotation.Nullable"
+                    return
                 }
-
                 nonNullAnnotation = "@android.support.annotation.NonNull"
                 nullableAnnotation = "@android.support.annotation.Nullable"
             }

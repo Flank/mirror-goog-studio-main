@@ -23,6 +23,18 @@ concepts such as product flavors and build types; these
 attributes from these have been merged and folded into the
 variants directly.
 
+Concept mapping:
+
+```
+AndroidProject         -> LmModule
+ProjectType            -> LmModuleType
+Variant                -> LmVariant
+DependencyGraphs       -> LmDependencies
+GraphIten              -> LmDependency
+GlobalLibraryMap       -> LmLibraryResolver
+MavenCoordinates       -> LmMavenName
+```
+
 TODO
 ----
 * Hook persistence up to AGP.
@@ -41,5 +53,17 @@ TODO
   instrumentation and unit tests, as described in the javadoc.
 * LintCliClient#addBootClassPath should use the bootclasspath
   from the lint model
-* Investigate Kotlin-only source sets and make sure they're
-  correctly included in IDE projects!
+* Replace the Project.dependsOn implementations and the various
+  findLibrary lookups to make sure they're correct in terms
+  of AndroidX handling; see AndroidxNameUtils.getCoordinateMapping(c)
+* LmModuleProject has this question which is good:
+    // TODO: Why direct here and all in test libraries? And shouldn't
+    // this be tied to checkDependencies somehow? If we're creating
+    // project from the android libraries then I'll get the libraries there
+    // right?
+* I've stubbed in the DependencyGraphs builder-model bridge but it's not
+  hooked up beyond the getDependencies(DependencyGraphs, GlobalLibraryMap)
+  method
+* Lazily construct File instances from Strings
+* Look more deeply into *project* dependencies and how we model those
+* Use switch statement in LmSerialization to more quickly multiplex

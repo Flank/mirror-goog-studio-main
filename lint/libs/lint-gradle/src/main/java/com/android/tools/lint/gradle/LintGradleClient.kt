@@ -66,21 +66,8 @@ class LintGradleClient(
     private val isAndroid: Boolean
     private val resolver: KotlinSourceFoldersResolver
 
-    // TODO: Move this into the model?
-    fun getKotlinSourceFolders(projectPath: String?): List<File> {
-        return if (projectPath == null || variantName == null) {
-            emptyList()
-        } else resolver.getKotlinSourceFolders(
-            variantName, gradleProject.findProject(projectPath)
-        )
-    }
-
-    fun getKotlinSourceFolders(project: GradleProject?): List<File> {
-        return if (variantName == null) {
-            emptyList()
-        } else {
-            resolver.getKotlinSourceFolders(variantName, project)
-        }
+    fun getKotlinSourceFolders(project: GradleProject, variantName: String): List<File> {
+        return resolver.getKotlinSourceFolders(variantName, project)
     }
 
     override fun getClientRevision(): String? = version

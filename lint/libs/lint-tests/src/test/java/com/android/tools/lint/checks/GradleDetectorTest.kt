@@ -1447,7 +1447,7 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testWearableConsistency3() {
         // Regression test 3 for b/29006320.
         val expected = "" +
-                "build.gradle:4: Error: This dependency should be marked as provided, not compile [GradleCompatible]\n" +
+                "build.gradle:4: Error: This dependency should be marked as compileOnly, not compile [GradleCompatible]\n" +
                 "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "1 errors, 0 warnings\n"
@@ -2275,7 +2275,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .issues(DUPLICATE_CLASSES)
             .run()
             .expect(
-                "build.gradle:2: Error: myname depends on a library (json) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: my.indirect.dependency:myname → org.json:json)  [DuplicatePlatformClasses]\n" +
+                "build.gradle:2: Error: myname depends on a library (org.json:json) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: my.indirect.dependency:myname → org.json:json)  [DuplicatePlatformClasses]\n" +
                         "    implementation 'my.indirect.dependency:myname:1.2.3'\n" +
                         "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "build.gradle:3: Error: xpp3 defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
@@ -2293,13 +2293,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "build.gradle:7: Error: opengl-api defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
                         "    implementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'\n" +
                         "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                        "build.gradle:8: Error: android depends on a library (json) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: com.google.android:android → org.json:json)  [DuplicatePlatformClasses]\n" +
+                        "build.gradle:8: Error: android depends on a library (org.json:json) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: com.google.android:android → org.json:json)  [DuplicatePlatformClasses]\n" +
                         "    implementation 'com.google.android:android:4.1.1.4'\n" +
                         "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                        "build.gradle:9: Error: httpclient depends on a library (commons-logging) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: org.apache.httpcomponents:httpclient → commons-logging:commons-logging)  [DuplicatePlatformClasses]\n" +
+                        "build.gradle:9: Error: httpclient depends on a library (commons-logging:commons-logging) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: org.apache.httpcomponents:httpclient → commons-logging:commons-logging)  [DuplicatePlatformClasses]\n" +
                         "    compile group: 'org.apache.httpcomponents',\n" +
                         "    ^\n" +
-                        "8 errors, 0 warnings\n"
+                        "8 errors, 0 warnings"
             )
             .expectFixDiffs(
                 "" +

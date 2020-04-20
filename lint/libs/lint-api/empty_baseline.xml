@@ -1,0 +1,10 @@
+<!--
+This is an empty baseline file, used by modules that don't have any preexisting Lint issues.
+
+It exists, because providing a baseline is how Bazel targets opt into running Lint on their
+source code.
+
+Please don't add anything here. If your change introduces a Lint warning, suppress it with
+@Suppress (in Koltin) or @SuppressWarnings (in Java) and include a comment explaining why
+Lint was wrong. Please also consider fixing Lint if you see false positives.
+-->

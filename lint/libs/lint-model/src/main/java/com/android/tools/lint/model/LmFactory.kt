@@ -19,6 +19,7 @@ package com.android.tools.lint.model
 import com.android.AndroidProjectTypes
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidBundle
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
@@ -34,17 +35,21 @@ import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
+import com.android.builder.model.level2.DependencyGraphs
+import com.android.builder.model.level2.GlobalLibraryMap
+import com.android.builder.model.level2.GraphItem
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import java.io.File
+import com.android.builder.model.level2.Library as LibraryL2
 
 /**
  * Converter from the builder model library to lint's own model.
  */
-class LmFactory {
+class LmFactory : LmModuleLoader {
     init {
         // We're just copying by value so make sure our constants match
         assert(LmMavenName.LOCAL_AARS == IdeMavenCoordinates.LOCAL_AARS)
@@ -58,11 +63,21 @@ class LmFactory {
      */
     private val libraryMap = LinkedHashMap<Library, LmLibrary>()
 
+    private val libraryResolverMap = mutableMapOf<String, LmLibrary>()
+    private val libraryResolver = DefaultLmLibraryResolver(libraryResolverMap)
+
+    /**
+     * Kotlin source folders to merge in for the main source set. This should <b>not</b>
+     * be necessary but is here temporarily since it's missing from the builder model.
+     * This should be removed ASAP.
+     */
+    var kotlinSourceFolderLookup: ((variantName: String) -> List<File>)? = null
+
     /**
      * Factory from an XML file to a [LmModule].
-     * The file was previously saved by [LmSerialization.write].
+     * The file was previously saved by [LmSerialization.writeModule].
      */
-    fun create(xmlFile: File): LmModule = LmSerialization.read(xmlFile)
+    fun create(xmlFile: File): LmModule = LmSerialization.readModule(xmlFile)
 
     /**
      * Converter from the builder model library to lint's own model.
@@ -82,10 +97,11 @@ class LmFactory {
         return if (deep) {
             val variantList = mutableListOf<LmVariant>()
             val module = DefaultLmModule(
+                loader = this,
                 dir = dir,
-                moduleName = project.name,
+                modulePath = project.name,
                 type = getModuleType(project.projectType),
-                mavenName = getMavenCoordinate(project),
+                mavenName = getMavenName(project),
                 gradleVersion = gradleVersion,
                 buildFolder = project.buildFolder,
                 lintOptions = getLintOptions(project),
@@ -95,8 +111,8 @@ class LmFactory {
                 bootClassPath = project.bootClasspath.map { File(it) },
                 javaSourceLevel = project.javaCompileOptions.sourceCompatibility,
                 compileTarget = project.compileTarget,
-                variants = variantList,
                 neverShrinking = isNeverShrinking(project),
+                variants = variantList,
                 oldProject = project
             )
 
@@ -107,6 +123,7 @@ class LmFactory {
             module
         } else {
             LazyLmModule(
+                loader = this,
                 project = project,
                 dir = dir,
                 gradleVersion = gradleVersion
@@ -115,69 +132,235 @@ class LmFactory {
     }
 
     private fun getDependencies(
+        graph: DependencyGraphs,
+        globalLibraryMap: GlobalLibraryMap
+    ): LmDependencies {
+        val provided = graph.providedLibraries.toSet()
+        val skipped = graph.skippedLibraries.toSet()
+
+        // Populate library resolver
+        globalLibraryMap.libraries.mapValues {
+            val address = it.key
+            val library = getLibrary(
+                library = it.value,
+                provided = provided.contains(address),
+                skipped = skipped.contains(address)
+            )
+            libraryResolverMap[library.artifactAddress] = library
+        }
+
+        val compileDependencies = getDependencies(
+            items = graph.compileDependencies,
+            graph = graph,
+            libraryResolver = libraryResolver
+        )
+
+        val packageDependencies = getDependencies(
+            items = graph.packageDependencies,
+            graph = graph,
+            libraryResolver = libraryResolver
+        )
+
+        return DefaultLmDependencies(
+            compileDependencies = compileDependencies,
+            packageDependencies = packageDependencies,
+            libraryResolver = libraryResolver
+        )
+    }
+
+    private fun getLibrary(library: LibraryL2, provided: Boolean, skipped: Boolean): LmLibrary {
+        return when (library.type) {
+            LibraryL2.LIBRARY_ANDROID -> {
+                // TODO: Construct file objects lazily!
+                DefaultLmAndroidLibrary(
+                    artifactAddress = library.artifactAddress,
+                    manifest = File(library.manifest),
+                    // TODO - expose compile jar vs impl jar?
+                    jarFiles = (library.localJars + library.jarFile).map { File(it) },
+                    folder = library.folder, // Needed for workaround for b/66166521
+                    resFolder = File(library.resFolder),
+                    assetsFolder = File(library.assetsFolder),
+                    lintJar = File(library.lintJar),
+                    publicResources = File(library.publicResources),
+                    symbolFile = File(library.symbolFile),
+                    externalAnnotations = File(library.externalAnnotations),
+                    project = library.projectPath,
+                    provided = provided,
+                    skipped = skipped,
+                    resolvedCoordinates = getMavenName(library.artifactAddress),
+                    proguardRules = File(library.proguardRules)
+                )
+            }
+            LibraryL2.LIBRARY_JAVA -> {
+                DefaultLmJavaLibrary(
+                    artifactAddress = library.artifactAddress,
+                    // TODO - expose compile jar vs impl jar?
+                    jarFiles = (library.localJars + library.jarFile).map { File(it) },
+                    project = library.projectPath,
+                    provided = provided,
+                    skipped = skipped,
+                    resolvedCoordinates = getMavenName(library.artifactAddress)
+                )
+            }
+            LibraryL2.LIBRARY_MODULE -> {
+                error("Not yet implemented: library of type ${library.type}")
+            }
+            else -> {
+                error("Unexpected library type ${library.type}")
+            }
+        }
+    }
+
+    private fun getDependencies(
+        items: List<GraphItem>,
+        graph: DependencyGraphs,
+        libraryResolver: LmLibraryResolver
+    ): LmDependencyGraph {
+        val list = getGraphItems(items, graph, libraryResolver)
+        return DefaultLmDependencyGraph(roots = list, libraryResolver = libraryResolver)
+    }
+
+    private fun getGraphItems(
+        items: List<GraphItem>,
+        graph: DependencyGraphs,
+        libraryResolver: LmLibraryResolver
+    ): List<LmDependency> {
+        return when {
+            items.isEmpty() -> emptyList()
+            else -> items.map {
+                getGraphItem(it, graph, libraryResolver)
+            }
+        }
+    }
+
+    private fun getGraphItem(
+        graphItem: GraphItem,
+        graph: DependencyGraphs,
+        libraryResolver: LmLibraryResolver
+    ): LmDependency {
+        return DefaultLmDependency(
+            artifactName = getArtifactName(graphItem),
+            artifactAddress = graphItem.artifactAddress,
+            requestedCoordinates = graphItem.requestedCoordinates,
+            // Deep copy
+            dependencies = getGraphItems(
+                graphItem.dependencies,
+                graph,
+                libraryResolver
+            ),
+            libraryResolver = libraryResolver
+        )
+    }
+
+    private fun getArtifactName(graphItem: GraphItem): String {
+        val artifactAddress = graphItem.artifactAddress
+        return getArtifactName(artifactAddress)
+    }
+
+    private fun getArtifactName(artifactAddress: String): String {
+        val index = artifactAddress.indexOf(':')
+        val index2 = artifactAddress.indexOf(':', index + 1)
+        return if (index == -1) {
+            // not a Maven library, e.g. a local project reference
+            artifactAddress
+        } else {
+            artifactAddress.substring(0, index2)
+        }
+    }
+
+    private fun getGraphItem(
+        library: Library,
+        skipProvided: Boolean
+    ): LmDependency {
+        val artifactAddress = getArtifactAddress(library.resolvedCoordinates)
+
+        libraryResolverMap[artifactAddress] ?: run {
+            libraryResolverMap[artifactAddress] = getLibrary(library)
+        }
+
+        return DefaultLmDependency(
+            artifactName = getArtifactName(artifactAddress),
+            artifactAddress = artifactAddress,
+            requestedCoordinates = library.requestedCoordinates?.toString(),
+            // Deep copy
+            dependencies = getGraphItems(
+                if (library is AndroidBundle) {
+                    library.libraryDependencies + library.javaDependencies
+                } else {
+                    emptyList()
+                },
+                skipProvided = skipProvided
+            ),
+            libraryResolver = libraryResolver
+        )
+    }
+
+    private fun getGraphItems(
+        items: List<Library>,
+        skipProvided: Boolean
+    ): List<LmDependency> {
+        return if (items.isEmpty()) {
+            emptyList()
+        } else {
+            items.mapNotNull {
+                if (!skipProvided || !it.isProvided)
+                    getGraphItem(it, skipProvided = skipProvided)
+                else
+                    null
+            }
+        }
+    }
+
+    private fun getDependencies(
         artifact: BaseArtifact
     ): LmDependencies {
+        val compileItems = ArrayList<LmDependency>()
+        val packagedItems = ArrayList<LmDependency>()
         val dependencies = artifact.dependencies
-        val libraries = ArrayList<LmLibrary>()
         for (dependency in dependencies.libraries) {
             if (dependency.isValid()) {
-                libraries.add(toLibrary(dependency))
+                compileItems.add(getGraphItem(dependency, skipProvided = false))
+                if (!dependency.isProvided) {
+                    packagedItems.add(getGraphItem(dependency, skipProvided = true))
+                }
             }
         }
         for (dependency in dependencies.javaLibraries) {
             if (dependency.isValid()) {
-                libraries.add(toLibrary(dependency))
+                compileItems.add(getGraphItem(dependency, skipProvided = false))
+                if (!dependency.isProvided) {
+                    packagedItems.add(getGraphItem(dependency, skipProvided = true))
+                }
             }
         }
 
-        // TODO java modules? Not currently used by lint:
-        //   for (module in buildModelDependencies.javaModules) {
-        //      modules += convert(module)
-        //   }
+        // TODO: Module dependencies, but this is only available in 3.1
+        // for (module in dependencies.javaModules) {
+        // }
 
-        val all = collectAllDependencies(libraries)
-        return DefaultLmDependencies(direct = libraries, all = all)
+        val compileDependencies = DefaultLmDependencyGraph(compileItems, libraryResolver)
+        val packageDependencies = DefaultLmDependencyGraph(packagedItems, libraryResolver)
+
+        return DefaultLmDependencies(
+            compileDependencies = compileDependencies,
+            packageDependencies = packageDependencies,
+            libraryResolver = libraryResolver
+        )
     }
 
-    private fun collectAllDependencies(libraries: ArrayList<LmLibrary>): MutableList<LmLibrary> {
-        val all = mutableListOf<LmLibrary>()
-        val seen = LinkedHashSet<LmLibrary>()
-        for (library in libraries) {
-            addLibraries(all, library, seen)
-        }
-        return all
-    }
-
-    private fun addLibraries(
-        all: MutableList<LmLibrary>,
-        library: LmLibrary,
-        seen: MutableSet<LmLibrary>
-    ) {
-        if (seen.contains(library)) {
-            return
-        }
-        all.add(library)
-        for (dependency in library.dependencies) {
-            if (!seen.contains(dependency)) {
-                addLibraries(all, dependency, seen)
-            }
-        }
-    }
-
-    private fun toLibrary(library: JavaLibrary): LmLibrary {
+    private fun getLibrary(library: JavaLibrary): LmLibrary {
         libraryMap[library]?.let { return it }
         val dependencies = ArrayList<LmLibrary>()
         for (javaLibrary in library.dependencies) {
-            dependencies.add(toLibrary(javaLibrary))
+            dependencies.add(getLibrary(javaLibrary))
         }
         val new = DefaultLmJavaLibrary(
+            artifactAddress = getArtifactAddress(library.resolvedCoordinates),
             project = library.project,
             jarFiles = listOf(library.jarFile),
             provided = isProvided(library),
             skipped = isSkipped(library),
-            requestedCoordinates = library.requestedCoordinates?.let { getMavenCoordinate(it) },
-            resolvedCoordinates = getMavenCoordinate(library.resolvedCoordinates),
-            dependencies = dependencies
+            resolvedCoordinates = getMavenName(library.resolvedCoordinates)
         )
         libraryMap[library] = new
         return new
@@ -188,9 +371,17 @@ class LmFactory {
         return resolvedCoordinates != null
     }
 
-    private fun toLibrary(library: AndroidLibrary): LmLibrary {
+    private fun getLibrary(library: Library): LmLibrary {
         libraryMap[library]?.let { return it }
-        val dependencies = ArrayList<LmLibrary>()
+        return when (library) {
+            is AndroidLibrary -> getLibrary(library)
+            is JavaLibrary -> getLibrary(library)
+            else -> error("Unexpected builder model library type ${library.javaClass}")
+        }
+    }
+
+    private fun getLibrary(library: AndroidLibrary): LmLibrary {
+        libraryMap[library]?.let { return it }
 
         @Suppress("DEPRECATION")
         val new = DefaultLmAndroidLibrary(
@@ -203,30 +394,15 @@ class LmFactory {
             publicResources = library.publicResources,
             symbolFile = library.symbolFile,
             externalAnnotations = library.externalAnnotations,
-            projectId = library.project,
+            project = library.project,
             provided = isProvided(library),
             skipped = isSkipped(library),
-            requestedCoordinates = library.requestedCoordinates?.let { getMavenCoordinate(it) },
-            resolvedCoordinates = getMavenCoordinate(library.resolvedCoordinates),
+            resolvedCoordinates = getMavenName(library.resolvedCoordinates),
             proguardRules = library.proguardRules,
-            project = library.project,
-            dependencies = dependencies
+            artifactAddress = getArtifactAddress(library.resolvedCoordinates)
         )
-        libraryMap[library] = new
 
-        // We're processing dependencies after inserting the main library,
-        // such that the all libraries list has the direct dependencies before
-        // the indirect dependencies in general
-        for (dependency in library.libraryDependencies) {
-            if (dependency.isValid()) {
-                dependencies.add(toLibrary(dependency))
-            }
-        }
-        for (dependency in library.javaDependencies) {
-            if (dependency.isValid()) {
-                dependencies.add(toLibrary(dependency))
-            }
-        }
+        libraryMap[library] = new
 
         return new
     }
@@ -325,7 +501,8 @@ class LmFactory {
             sourceProviders = computeSourceProviders(project, variant),
             testSourceProviders = computeTestSourceProviders(project, variant),
             debuggable = buildType.isDebuggable,
-            shrinkable = buildType.isMinifyEnabled
+            shrinkable = buildType.isMinifyEnabled,
+            libraryResolver = libraryResolver
         )
     }
 
@@ -369,7 +546,35 @@ class LmFactory {
         variant: Variant
     ): List<LmSourceProvider> {
         val providers = mutableListOf<LmSourceProvider>()
-        providers.add(getSourceProvider(project.defaultConfig.sourceProvider))
+
+        // Instead of just
+        //  providers.add(getSourceProvider(project.defaultConfig.sourceProvider))
+        // we need to merge in any Kotlin source folders for now
+        var mainProvider: LmSourceProvider? = null
+        val kotlinSourceFolders = kotlinSourceFolderLookup?.invoke(variant.name)
+            ?: emptyList()
+        if (kotlinSourceFolders.isNotEmpty()) {
+            val provider = project.defaultConfig.sourceProvider
+            if (!provider.javaDirectories.containsAll(kotlinSourceFolders)) {
+                val extra = kotlinSourceFolders.toMutableList()
+                extra.removeAll(provider.javaDirectories)
+                if (extra.isNotEmpty()) {
+                    mainProvider = DefaultLmSourceProvider(
+                        manifestFile = provider.manifestFile,
+                        javaDirectories = provider.javaDirectories + extra,
+                        resDirectories = provider.resDirectories,
+                        assetsDirectories = provider.assetsDirectories,
+                        unitTestOnly = false,
+                        instrumentationTestOnly = false,
+                        debugOnly = false
+                    )
+                }
+            }
+        }
+        if (mainProvider == null) {
+            mainProvider = getSourceProvider(project.defaultConfig.sourceProvider)
+        }
+        providers.add(mainProvider)
 
         for (flavorContainer in project.productFlavors) {
             if (variant.productFlavors.contains(flavorContainer.productFlavor.name)) {
@@ -599,15 +804,31 @@ class LmFactory {
         }
     }
 
-    private fun getMavenCoordinate(androidProject: IdeAndroidProject): LmMavenName? {
+    private fun getMavenName(androidProject: IdeAndroidProject): LmMavenName? {
         val groupId = androidProject.groupId ?: return null
         return DefaultLmMavenName(groupId, androidProject.name, "")
     }
 
-    private fun getMavenCoordinate(c: MavenCoordinates): LmMavenName {
+    private fun getMavenName(c: MavenCoordinates): LmMavenName {
         @Suppress("USELESS_ELVIS") // See https://issuetracker.google.com/37124607
         val groupId = c.groupId ?: ""
         return DefaultLmMavenName(groupId, c.artifactId, c.version)
+    }
+
+    private fun getMavenName(artifactAddress: String): LmMavenName {
+        val artifactIndex = artifactAddress.indexOf(':')
+        val versionIndex = artifactAddress.indexOf(':', artifactIndex + 1)
+        val versionEnd = artifactAddress.indexOf(':', versionIndex + 1).let {
+            if (it == -1) artifactAddress.length else it
+        }
+        val group = artifactAddress.substring(0, artifactIndex)
+        val artifact = artifactAddress.substring(artifactIndex + 1, versionIndex)
+        val version = artifactAddress.substring(versionIndex + 1, versionEnd)
+        return DefaultLmMavenName(group, artifact, version)
+    }
+
+    private fun getArtifactAddress(c: MavenCoordinates): String {
+        return "${c.groupId}:${c.artifactId}:${c.version}"
     }
 
     private fun getLintOptions(project: IdeAndroidProject): LmLintOptions =
@@ -665,16 +886,17 @@ class LmFactory {
      * for example.
      */
     inner class LazyLmModule(
+        override val loader: LmModuleLoader,
         private val project: IdeAndroidProject,
         override val dir: File,
         override val gradleVersion: GradleVersion?
     ) : LmModule {
-        override val moduleName: String
+        override val modulePath: String
             get() = project.name
         override val type: LmModuleType
             get() = getModuleType(project.projectType)
         override val mavenName: LmMavenName?
-            get() = getMavenCoordinate(project)
+            get() = getMavenName(project)
         override val buildFolder: File
             get() = project.buildFolder
         override val resourcePrefix: String?
@@ -715,7 +937,7 @@ class LmFactory {
                     // (Not just using findVariant since that searches linearly
                     // through variant list to match by name)
                     variantMap[variant.name]
-                        ?: LazyLmVariant(this, project, variant).also {
+                        ?: LazyLmVariant(this, project, variant, libraryResolver).also {
                             variantMap[it.name] = it
                         }
                 }.also {
@@ -728,7 +950,7 @@ class LmFactory {
         override fun findVariant(name: String): LmVariant? = variantMap[name] ?: run {
             val buildVariant = project.variants.firstOrNull { it.name == name }
             buildVariant?.let {
-                LazyLmVariant(this, project, it)
+                LazyLmVariant(this, project, it, libraryResolver)
             }?.also {
                 variantMap[name] = it
             }
@@ -742,7 +964,8 @@ class LmFactory {
     inner class LazyLmVariant(
         override val module: LmModule,
         private val project: IdeAndroidProject,
-        private val variant: Variant
+        private val variant: Variant,
+        override val libraryResolver: LmLibraryResolver
     ) : LmVariant {
         private val buildType = getBuildType(project, variant)
 

@@ -39,6 +39,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
+import org.jetbrains.uast.UInstanceExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
@@ -388,7 +389,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
         if (depth == 4) {
             return true
         }
-        if (argument is ULiteralExpression) {
+        if (argument is ULiteralExpression || argument is UInstanceExpression) {
             return false
         }
         if (argument is UPolyadicExpression) {
