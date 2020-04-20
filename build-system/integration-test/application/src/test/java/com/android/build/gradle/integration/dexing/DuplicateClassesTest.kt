@@ -69,6 +69,6 @@ class DuplicateClassesTest {
         val result = project.executor().expectFailure().run("clean", ":app:checkDebugDuplicateClasses")
 
         assertThat(result.failureMessage).contains(
-            "Duplicate class com.example.A found in the following modules: classes (project :app), jar1 (jar1.jar) and jar2 (jar2.jar)$lineSeparator${lineSeparator}Go to the documentation to learn how to <a href=\"d.android.com/r/tools/classpath-sync-errors\">Fix dependency resolution errors</a>.")
+            "Duplicate class com.example.A found in modules jar1 (jar1.jar) and jar2 (jar2.jar)$lineSeparator${lineSeparator}Go to the documentation to learn how to <a href=\"d.android.com/r/tools/classpath-sync-errors\">Fix dependency resolution errors</a>.")
     }
 }
