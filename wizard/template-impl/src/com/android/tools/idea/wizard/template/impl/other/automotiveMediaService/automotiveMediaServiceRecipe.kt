@@ -20,7 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.res.values.stylesXml
+import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.res.values.themesXml
 import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.res.xml.automotiveAppDescXml
 import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.src.app_package.musicServiceJava
 import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.src.app_package.musicServiceKt
@@ -33,7 +33,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
   useCustomTheme: Boolean,
   customThemeName: String
 ) {
-  val (projectData, srcOut, resOut, _) = moduleData
+  val projectData = moduleData.projectTemplateData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
@@ -87,7 +87,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
            serviceManifestOut.resolve("AndroidManifest.xml"))
 
   if (useCustomTheme) {
-    mergeXml(stylesXml(customThemeName), serviceResOut.resolve("values/styles.xml"))
+    mergeXml(themesXml(customThemeName), serviceResOut.resolve("values/themes.xml"))
   }
   mergeXml(automotiveAppDescXml(), serviceResOut.resolve("xml/automotive_app_desc.xml"))
 
@@ -98,6 +98,6 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
   save(musicService, serviceSrcOut.resolve("${mediaBrowserServiceName}.${ktOrJavaExt}"))
   open(serviceSrcOut.resolve("${mediaBrowserServiceName}.${ktOrJavaExt}"))
   if (useCustomTheme) {
-    open(serviceResOut.resolve("values/styles.xml"))
+    open(serviceResOut.resolve("values/themes.xml"))
   }
 }
