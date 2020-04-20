@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values
+package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night
 
-fun stylesXml() =
+import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetThemeOverlay
+
+fun themesXml(themeName: String) =
   """<resources>
-    <style name="AppWidgetContainer">
-        <item name="android:background">@color/light_blue600</item>
-    </style>
-
-    <style name="AppWidgetTextView" parent="Widget.AppCompat.TextView">
-        <item name="android:textColor">@color/light_blue50</item>
+    <style name="${getAppWidgetThemeOverlay(themeName)}" parent="">
+        <item name="appWidgetBackgroundColor">@color/${LIGHT_BLUE_900.colorName}</item>
+        <item name="appWidgetTextColor">@color/${LIGHT_BLUE_200.colorName}</item>
     </style>
 </resources>
 """
+
