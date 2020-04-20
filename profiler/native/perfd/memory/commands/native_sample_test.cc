@@ -25,6 +25,8 @@
 #include "perfd/memory/native_heap_manager.h"
 #include "utils/fake_clock.h"
 #include "utils/fs/memory_file_system.h"
+#include "utils/device_info_helper.h"
+#include "utils/device_info.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -69,83 +71,115 @@ class TestEventWriter final : public EventWriter {
   std::condition_variable* cv_;
 };
 
+class NativeSampleTest : public testing::Test {
+  public:
+  NativeSampleTest()
+      : clock_(), event_buffer_(&clock_) {}
+  void SetUp() override {
+    proto::DaemonConfig config_proto = proto::DaemonConfig::default_instance();
+    DaemonConfig config(config_proto);
+
+    DeviceInfoHelper::SetDeviceInfo(DeviceInfo::P);
+    FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                         "/");
+    daemon_ = std::unique_ptr<Daemon>(
+        new Daemon(&clock_, &config, &file_cache, &event_buffer_));
+
+    auto* manager = SessionsManager::Instance();
+    proto::BeginSession begin_session;
+    manager->BeginSession(daemon_.get(), 0, 0, begin_session);
+
+    // Start the event writer to listen for incoming events on a separate
+    // thread.
+    writer_ =
+        std::unique_ptr<TestEventWriter>(new TestEventWriter(&events_, &cv_));
+    read_thread_ = std::unique_ptr<std::thread>(new std::thread(
+        [this] { event_buffer_.WriteEventsTo(writer_.get()); }));
+  }
+
+  void TearDown() override {
+    // Kill read thread to cleanly exit test.
+    event_buffer_.InterruptWriteEvents();
+    read_thread_->join();
+    read_thread_ = nullptr;
+    // Clean up any sessions we created.
+    SessionsManager::Instance()->ClearSessions();
+  }
+
+  FakeClock clock_;
+  EventBuffer event_buffer_;
+  std::unique_ptr<Daemon> daemon_;
+  std::vector<proto::Event> events_;
+  std::condition_variable cv_;
+  std::unique_ptr<std::thread> read_thread_;
+  std::unique_ptr<TestEventWriter> writer_;
+};
+
 // Test that we receive the start and end events for a successful heap dump.
-TEST(NativeSampleTest, CommandsGeneratesEvents) {
-  FakeClock clock;
+TEST_F(NativeSampleTest, CommandsGeneratesEvents) {
   DaemonConfig config(proto::DaemonConfig::default_instance());
   FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                        "/");
-  EventBuffer event_buffer(&clock);
   std::mutex mutex;
   proto::Command command;
-  Daemon daemon(&clock, &config, &file_cache, &event_buffer);
   std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
   PerfettoManager perfetto_manager(perfetto);
   MockNativeHeapManager heap_manager(&file_cache, perfetto_manager);
   EXPECT_CALL(heap_manager, StartSample(_, _, _)).WillRepeatedly(Return(true));
   EXPECT_CALL(heap_manager, StopSample(_, _)).WillRepeatedly(Return(true));
 
-  // Start the event writer to listen for incoming events on a separate
-  // thread.
-  std::condition_variable cv;
-  std::vector<proto::Event> events;
-  TestEventWriter writer(&events, &cv);
-  std::thread read_thread(
-      [&writer, &event_buffer] { event_buffer.WriteEventsTo(&writer); });
-
   // Execute the start command
-  clock.SetCurrentTime(10);
+  clock_.SetCurrentTime(10);
   command.set_type(proto::Command::START_NATIVE_HEAP_SAMPLE);
-  StartNativeSample::Create(command, &heap_manager)->ExecuteOn(&daemon);
+  auto* manager = SessionsManager::Instance();
+  StartNativeSample::Create(command, &heap_manager, manager)
+      ->ExecuteOn(daemon_.get());
   {
     std::unique_lock<std::mutex> lock(mutex);
     // Expect that we receive events before the timeout.
-    // We should expect a status, start and end event
-    EXPECT_TRUE(cv.wait_for(lock, std::chrono::milliseconds(1000),
-                            [&events] { return events.size() == 2; }));
+    // We should expect a session, status, start.
+    EXPECT_TRUE(cv_.wait_for(lock, std::chrono::milliseconds(1000),
+                            [this] { return events_.size() == 3; }));
   }
-  EXPECT_EQ(events[0].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
-  EXPECT_TRUE(events[0].has_memory_native_sample());
-  EXPECT_EQ(events[0].memory_native_sample().start_time(), 10);
-  EXPECT_EQ(events[0].memory_native_sample().end_time(), LLONG_MAX);
+  // event 0 is the Session we can skip it.
+  EXPECT_EQ(events_[1].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
+  EXPECT_TRUE(events_[1].has_memory_native_sample());
+  EXPECT_EQ(events_[1].memory_native_sample().start_time(), 10);
+  EXPECT_EQ(events_[1].memory_native_sample().end_time(), LLONG_MAX);
 
-  EXPECT_EQ(events[1].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_STATUS);
-  EXPECT_TRUE(events[1].has_memory_native_tracking_status());
-  EXPECT_EQ(events[1].memory_native_tracking_status().status(),
+  EXPECT_EQ(events_[2].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_STATUS);
+  EXPECT_TRUE(events_[2].has_memory_native_tracking_status());
+  EXPECT_EQ(events_[2].memory_native_tracking_status().status(),
             MemoryNativeTrackingData::SUCCESS);
-  EXPECT_EQ(events[1].memory_native_tracking_status().start_time(), 10);
-  EXPECT_EQ(events[1].memory_native_tracking_status().failure_message(), "");
-
+  EXPECT_EQ(events_[2].memory_native_tracking_status().start_time(), 10);
+  EXPECT_EQ(events_[2].memory_native_tracking_status().failure_message(), "");
 
   // Execute the stop command
-  clock.SetCurrentTime(20);
+  clock_.SetCurrentTime(20);
   command.set_type(proto::Command::STOP_NATIVE_HEAP_SAMPLE);
   command.mutable_stop_native_sample()->set_start_time(10);
-  StopNativeSample::Create(command, &heap_manager)->ExecuteOn(&daemon);
+  StopNativeSample::Create(command, &heap_manager)->ExecuteOn(daemon_.get());
   {
     std::unique_lock<std::mutex> lock(mutex);
     // Expect that we receive events before the timeout.
-    // We should expect a status, start and end event
-    EXPECT_TRUE(cv.wait_for(lock, std::chrono::milliseconds(1000),
-                            [&events] { return events.size() == 4; }));
+    // We should expect a session, status, start and end event
+    EXPECT_TRUE(cv_.wait_for(lock, std::chrono::milliseconds(1000),
+                            [this] { return events_.size() == 5; }));
   }
 
-  EXPECT_EQ(events[2].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_STATUS);
-  EXPECT_TRUE(events[2].has_memory_native_tracking_status());
-  EXPECT_EQ(events[2].memory_native_tracking_status().status(),
+  EXPECT_EQ(events_[3].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_STATUS);
+  EXPECT_TRUE(events_[3].has_memory_native_tracking_status());
+  EXPECT_EQ(events_[3].memory_native_tracking_status().status(),
             MemoryNativeTrackingData::NOT_RECORDING);
-  EXPECT_EQ(events[2].memory_native_tracking_status().start_time(), 10);
-  EXPECT_EQ(events[2].memory_native_tracking_status().failure_message(), "");
-  EXPECT_TRUE(events[2].is_ended());
+  EXPECT_EQ(events_[3].memory_native_tracking_status().start_time(), 10);
+  EXPECT_EQ(events_[3].memory_native_tracking_status().failure_message(), "");
+  EXPECT_TRUE(events_[3].is_ended());
 
-  EXPECT_EQ(events[3].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
-  EXPECT_TRUE(events[3].has_memory_native_sample());
-  EXPECT_EQ(events[3].memory_native_sample().start_time(), 10);
-  EXPECT_EQ(events[3].memory_native_sample().end_time(), 20);
-  EXPECT_TRUE(events[3].is_ended());
-
-  // Kill read thread to cleanly exit test.
-  event_buffer.InterruptWriteEvents();
-  read_thread.join();
+  EXPECT_EQ(events_[4].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
+  EXPECT_TRUE(events_[4].has_memory_native_sample());
+  EXPECT_EQ(events_[4].memory_native_sample().start_time(), 10);
+  EXPECT_EQ(events_[4].memory_native_sample().end_time(), 20);
+  EXPECT_TRUE(events_[4].is_ended());
 }
+
 }  // namespace profiler

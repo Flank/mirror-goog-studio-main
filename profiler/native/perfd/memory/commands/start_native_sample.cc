@@ -32,7 +32,7 @@ Status StartNativeSample::ExecuteOn(Daemon* daemon) {
   string error_message;
   bool sample_started =
       heap_sampler_->StartSample(start_timestamp, config, &error_message);
-
+  std::vector<Event> events_to_send;
   Event status_event;
   status_event.set_pid(command().pid());
   status_event.set_kind(Event::MEMORY_NATIVE_SAMPLE_STATUS);
@@ -55,14 +55,19 @@ Status StartNativeSample::ExecuteOn(Daemon* daemon) {
     auto* dump_info = start_event.mutable_memory_native_sample();
     dump_info->set_start_time(start_timestamp);
     dump_info->set_end_time(LLONG_MAX);
-    daemon->buffer()->Add(start_event);
+    events_to_send.push_back(start_event);
 
   } else {
     status->set_status(MemoryNativeTrackingData::FAILURE);
     status->set_failure_message(error_message);
   }
-  daemon->buffer()->Add(status_event);
-
+  events_to_send.push_back(status_event);
+  // For the case of startup tracing, the command could be sent before 
+  // the session is created. Either send the events if the session
+  // is already alive or queue the events to be sent when the session is
+  // created.
+  sessions_manager_->SendOrQueueEventsForSession(daemon, config.app_name(),
+                                                 events_to_send);
   return Status::OK;
 }
 
