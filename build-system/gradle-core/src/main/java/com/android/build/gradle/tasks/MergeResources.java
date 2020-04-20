@@ -545,7 +545,10 @@ public abstract class MergeResources extends ResourceAwareTask {
                 }
                 return getProcessor()
                         .processSingleFile(
-                                normalizedInputFile, outputFile, getViewBindingEnabled().get());
+                                normalizedInputFile,
+                                outputFile,
+                                getViewBindingEnabled().get(),
+                                getDataBindingEnabled().get());
             }
 
             /**

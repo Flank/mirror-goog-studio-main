@@ -96,6 +96,9 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     @get:Input
     var enableViewBinding: Boolean = false
         private set
+    @get:Input
+    var enableDataBinding: Boolean = false
+        private set
 
     @TaskAction
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
@@ -155,7 +158,8 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 artifactFolder = classInfoBundleDir.get().asFile,
                 v1ArtifactsFolder = v1Artifacts.orNull?.asFile,
                 useAndroidX = useAndroidX,
-                enableViewBinding = enableViewBinding
+                enableViewBinding = enableViewBinding,
+                enableDataBinding = enableDataBinding
         )
     }
 
@@ -209,6 +213,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             task.encodeErrors = creationConfig.services
                 .projectOptions[BooleanOption.IDE_INVOKED_FROM_IDE]
             task.enableViewBinding = creationConfig.buildFeatures.viewBinding
+            task.enableDataBinding = creationConfig.buildFeatures.dataBinding
         }
     }
 
