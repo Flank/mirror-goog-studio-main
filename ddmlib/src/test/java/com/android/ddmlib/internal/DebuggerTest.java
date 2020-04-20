@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.ClientTracker;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.JdwpHandshake;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.Debugger;
 import com.android.ddmlib.internal.DeviceImpl;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpAgent;

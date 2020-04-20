@@ -21,7 +21,7 @@ import com.android.ddmlib.ClientData;
 import com.android.ddmlib.ClientData.AllocationTrackingStatus;
 import com.android.ddmlib.ClientData.IHprofDumpHandler;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;

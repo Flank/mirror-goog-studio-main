@@ -22,7 +22,7 @@ import com.android.ddmlib.ByteBufferUtil;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.DebugViewDumpHandler;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.ByteBuffer;

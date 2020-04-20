@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
+import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.DdmJdwpExtension;
+import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpExtension;
@@ -85,7 +89,7 @@ public final class MonitorThread extends Thread {
     /**
      * Creates and return the singleton instance of the client monitor thread.
      */
-    static MonitorThread createInstance() {
+    public static MonitorThread createInstance() {
         return sInstance = new MonitorThread();
     }
 
@@ -97,7 +101,7 @@ public final class MonitorThread extends Thread {
 
     /** Sets or changes the port number for "debug selected". */
     @Deprecated
-    synchronized void setDebugSelectedPort(int port) throws IllegalStateException {
+    public synchronized void setDebugSelectedPort(int port) throws IllegalStateException {
         if (sInstance == null) {
             return;
         }
@@ -454,7 +458,7 @@ public final class MonitorThread extends Thread {
     /**
      * Tell the thread to stop. Called from UI thread.
      */
-    synchronized void quit() {
+    public synchronized void quit() {
         mQuit = true;
         wakeup();
         Log.d("ddms", "Waiting for Monitor thread");

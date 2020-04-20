@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.ddmlib.internal.Debugger;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.Lists;
 import com.sun.jdi.ArrayReference;
@@ -61,7 +62,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
      * @param portNumber This is the port number of the socket on the host that the debugger should
      *     attach to. Generally, it should be the host port where ADB forwards to the device's JDWP
      *     port number. This can also be the port number that the {@link
-     *     com.android.ddmlib.Debugger} is listening to.
+     *     Debugger} is listening to.
      * @return JDI Virtual Machine representation of the debugger or null if connection was not
      *     successful.
      */

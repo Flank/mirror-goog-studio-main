@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.ddmlib;
+package com.android.ddmlib.internal;
 
-import static com.android.ddmlib.Debugger.ConnectionState.ST_AWAIT_SHAKE;
-import static com.android.ddmlib.Debugger.ConnectionState.ST_NOT_CONNECTED;
-import static com.android.ddmlib.Debugger.ConnectionState.ST_READY;
+import static com.android.ddmlib.internal.Debugger.ConnectionState.ST_AWAIT_SHAKE;
+import static com.android.ddmlib.internal.Debugger.ConnectionState.ST_NOT_CONNECTED;
+import static com.android.ddmlib.internal.Debugger.ConnectionState.ST_READY;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.ClientData.DebuggerStatus;
-import com.android.ddmlib.internal.ClientImpl;
-import com.android.ddmlib.internal.DebugPortManager;
-import com.android.ddmlib.internal.DeviceImpl;
+import com.android.ddmlib.JdwpHandshake;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.google.common.annotations.VisibleForTesting;

@@ -17,7 +17,7 @@
 package com.android.ddmlib.internal.jdwp.chunkhandler;
 
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.ByteBuffer;

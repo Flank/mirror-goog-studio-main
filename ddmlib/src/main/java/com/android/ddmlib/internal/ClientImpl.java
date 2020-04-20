@@ -24,11 +24,9 @@ import com.android.ddmlib.ClientData;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.DebugViewDumpHandler;
-import com.android.ddmlib.Debugger;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.ThreadInfo;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleExit;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHeap;
@@ -177,8 +175,7 @@ public class ClientImpl extends JdwpAgent implements Client {
     }
 
     /** Return the Debugger object associated with this client. */
-    @Override
-    public Debugger getDebugger() {
+    Debugger getDebugger() {
         return mDebugger;
     }
 

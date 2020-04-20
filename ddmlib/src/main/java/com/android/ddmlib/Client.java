@@ -17,6 +17,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.Debugger;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -97,9 +98,6 @@ public interface Client {
 
     /** Returns <code>true</code> if a debugger is currently attached to the client. */
     boolean isDebuggerAttached();
-
-    /** Return the Debugger object associated with this client. */
-    Debugger getDebugger();
 
     ///////////////////////// PROFILER METHODS ///////////////////////////////////////////
     /** Forces the client to execute its garbage collector. */

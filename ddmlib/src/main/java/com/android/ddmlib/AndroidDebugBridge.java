@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DeviceMonitor;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleAppName;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHeap;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;

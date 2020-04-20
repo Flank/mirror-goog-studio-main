@@ -24,7 +24,6 @@ import com.android.ddmlib.ClientData;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
 import com.android.ddmlib.utils.DebuggerPorts;
