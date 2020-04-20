@@ -109,11 +109,13 @@ public interface AndroidArtifact extends BaseArtifact {
     Collection<NativeLibrary> getNativeLibraries();
 
     /**
-     * Map of generated res values where the key is the res name.
+     * Map of generated res values where the key is the res name. This method is deprecated and will
+     * always return an empty map
      *
-     * @return a non-null map of class fields (possibly empty).
+     * @return empty map
      */
     @NonNull
+    @Deprecated
     Map<String, ClassField> getResValues();
 
     /**

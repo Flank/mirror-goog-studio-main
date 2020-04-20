@@ -279,17 +279,6 @@ interface VariantDslInfo {
     fun getBuildConfigFields(): Map<String, BuildConfigField>
 
     /**
-     * Return the merged res values for the variant.
-     *
-     *
-     * This is made of the variant-specific fields overlaid on top of the build type ones, the
-     * flavors ones, and the default config ones.
-     *
-     * @return a map of merged fields
-     */
-    val mergedResValues: Map<String, ClassField>
-
-    /**
      * Returns a list of generated resource values.
      *
      *

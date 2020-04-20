@@ -926,7 +926,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantDslInfo.getSupportedAbis(),
-                variantDslInfo.getMergedResValues(),
                 instantRun,
                 testOptions,
                 taskContainer.getConnectedTask() == null

@@ -721,29 +721,6 @@ open class VariantDslInfoImpl internal constructor(
     }
 
     /**
-     * Return the merged res values for the variant.
-     *
-     *
-     * This is made of the variant-specific fields overlaid on top of the build type ones, the
-     * flavors ones, and the default config ones.
-     *
-     * @return a map of merged fields
-     */
-    override val mergedResValues: Map<String, ClassField>
-        get() {
-            // start from the lowest priority and just add it all. Higher priority fields
-            // will replace lower priority ones.
-            val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
-            mergedMap.putAll(defaultConfig.resValues)
-            for (i in productFlavorList.indices.reversed()) {
-                mergedMap.putAll(productFlavorList[i].resValues)
-            }
-            mergedMap.putAll(buildTypeObj.resValues)
-            mergedMap.putAll(mResValues)
-            return mergedMap
-        }
-
-    /**
      * Returns a list of generated resource values.
      *
      *

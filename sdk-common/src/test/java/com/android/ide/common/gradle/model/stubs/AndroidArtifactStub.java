@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.*;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -31,7 +30,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @NonNull private final String mySourceGenTaskName;
     @NonNull private final Collection<File> myGeneratedResourceFolders = new ArrayList<>();
     @NonNull private final Collection<File> myAdditionalRuntimeApks;
-    @NonNull private final Map<String, ClassField> myResValues;
     @NonNull private final InstantRun myInstantRun;
     @Nullable private final TestOptions myTestOptions;
     @Nullable private final String mySigningConfigName;
@@ -49,7 +47,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myOutputs = Lists.newArrayList(new AndroidArtifactOutputStub());
         myApplicationId = "applicationId";
         mySourceGenTaskName = "sourceGenTaskName";
-        myResValues = ImmutableMap.of("resValue", new ClassFieldStub());
         myInstantRun = new InstantRunStub();
         mySigningConfigName = "signingConfigName";
         myAbiFilters = Sets.newHashSet("filter");
@@ -116,7 +113,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myOutputs = outputs;
         myApplicationId = applicationId;
         mySourceGenTaskName = sourceGenTaskName;
-        myResValues = resValues;
         myInstantRun = run;
         mySigningConfigName = signingConfigName;
         myAbiFilters = filters;
@@ -159,9 +155,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Override
     @NonNull
     public Map<String, ClassField> getResValues() {
-        return myResValues;
+        return Collections.emptyMap();
     }
-
+    
     @Override
     @NonNull
     public InstantRun getInstantRun() {
@@ -269,7 +265,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 && Objects.equals(getSourceGenTaskName(), artifact.getSourceGenTaskName())
                 && Objects.equals(
                         getGeneratedResourceFolders(), artifact.getGeneratedResourceFolders())
-                && Objects.equals(getResValues(), artifact.getResValues())
                 && equals(artifact, AndroidArtifact::getInstantRun)
                 && Objects.equals(getSigningConfigName(), artifact.getSigningConfigName())
                 && Objects.equals(getAbiFilters(), artifact.getAbiFilters())
@@ -306,7 +301,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 getApplicationId(),
                 getSourceGenTaskName(),
                 getGeneratedResourceFolders(),
-                getResValues(),
                 getInstantRun(),
                 getSigningConfigName(),
                 getAbiFilters(),
@@ -334,8 +328,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 + '\''
                 + ", myGeneratedResourceFolders="
                 + myGeneratedResourceFolders
-                + ", myResValues="
-                + myResValues
                 + ", myInstantRun="
                 + myInstantRun
                 + ", mySigningConfigName='"
