@@ -32,6 +32,10 @@ java_library(
         "test/src/com/android/signflinger/Utils.java",
         "test/src/com/android/signflinger/Workspace.java",
     ],
+    data = [
+        "test/resources/AndroidManifest.xml",
+        ":test_keys_and_certs",
+    ],
     visibility = [
         "//tools/base/signflinger/tools:__subpackages__",
     ],
@@ -60,10 +64,6 @@ java_test(
         "test/src/com/android/signflinger/BenchmarkTest.java",
         "test/src/com/android/signflinger/V2Signer.java",
     ],
-    data = [
-        "test/resources/AndroidManifest.xml",
-        ":test_keys_and_certs",
-    ],
     jvm_flags = ["-Dtest.suite.jar=benchmarkV2.jar"],
     tags = [
         "manual",
@@ -88,9 +88,7 @@ java_test(
     ],
     data = [
         "test/resources/1-2-3files.zip",
-        "test/resources/AndroidManifest.xml",
         "test/resources/test1.txt",
-        ":test_keys_and_certs",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV1Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -113,9 +111,7 @@ java_test(
         "test/src/com/android/signflinger/V2SigningTest.java",
     ],
     data = [
-        "test/resources/AndroidManifest.xml",
         "test/resources/test1.txt",
-        ":test_keys_and_certs",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV2Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -139,9 +135,7 @@ java_test(
     ],
     data = [
         "test/resources/1-2-3files.zip",
-        "test/resources/AndroidManifest.xml",
         "test/resources/test1.txt",
-        ":test_keys_and_certs",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV1andV2Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -163,9 +157,7 @@ java_test(
         "test/src/com/android/signflinger/V3SigningTest.java",
     ],
     data = [
-        "test/resources/AndroidManifest.xml",
         "test/resources/test1.txt",
-        ":test_keys_and_certs",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV3Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -185,10 +177,6 @@ java_test(
     size = "small",
     srcs = [
         "test/src/com/android/signflinger/V4SigningTest.java",
-    ],
-    data = [
-        "test/resources/AndroidManifest.xml",
-        ":test_keys_and_certs",
     ],
     jvm_flags = ["-Dtest.suite.jar=testV4Signing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
