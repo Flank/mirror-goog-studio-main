@@ -18,5 +18,6 @@ package com.android.build.api.artifact
 
 enum class FileNames(val fileName: String) {
 
-    ANDROID_MANIFEST_XML("AndroidManifest.xml")
+    ANDROID_MANIFEST_XML("AndroidManifest.xml"),
+    OBFUSCATION_MAPPING_FILE("mapping.txt")
 }

@@ -273,4 +273,78 @@ expected result : "Got an APK...." message.
             )
         }
     }
+
+    @Test
+    fun getMappingFile() {
+        given {
+            tasksToInvoke.add(":app:debugMappingFileUpload")
+            addModule(":app") {
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=kotlin
+                    """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.TaskAction
+
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import com.android.build.api.artifact.ArtifactTypes
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+
+            abstract class MappingFileUploadTask: DefaultTask() {
+
+                @get:InputFile
+                abstract val mappingFile: RegularFileProperty
+
+                @TaskAction
+                fun taskAction() {
+                    println("Uploading ${'$'}{mappingFile.get().asFile.absolutePath} to fantasy server...")
+                }
+            }
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+                buildTypes {
+                    getByName("debug") {
+                        isMinifyEnabled = true
+                    }
+                }
+                
+                onVariantProperties {
+                    project.tasks.register<MappingFileUploadTask>("${ '$' }{name}MappingFileUpload") {
+                        mappingFile.set(operations.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))
+                    }
+                }
+            }
+        """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        withDocs {
+            index =
+                    // language=markdown
+                """
+# Operations.get in Kotlin
+
+This sample show how to obtain the obfuscation mapping file from the AGP. 
+The [onVariantProperties] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
+the Operations.get call with the right ArtifactTypes
+`mapping.set(operations.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))`
+## To Run
+/path/to/gradle debugMappingFileUpload 
+expected result : "Uploading .... to a fantasy server...s" message.
+            """.trimIndent()
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("Uploading")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+        }
+    }
 }
