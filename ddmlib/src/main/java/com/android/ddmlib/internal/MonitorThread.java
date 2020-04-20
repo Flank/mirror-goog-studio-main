@@ -26,12 +26,8 @@ import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import java.io.IOException;
-import java.net.BindException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.nio.BufferOverflowException;
 import java.nio.channels.CancelledKeyException;
-import java.nio.channels.NotYetBoundException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -59,16 +55,6 @@ public final class MonitorThread extends Thread {
 
     private final List<JdwpExtension> mJdwpExtensions;
 
-    // port for "debug selected"
-    private ServerSocketChannel mDebugSelectedChan;
-
-    private int mNewDebugSelectedPort;
-
-    private int mDebugSelectedPort = -1;
-
-    /** "Selected" client setup to answer debugging connection to the mNewDebugSelectedPort port. */
-    private ClientImpl mSelectedClient = null;
-
     // singleton
     private static MonitorThread sInstance;
 
@@ -77,12 +63,9 @@ public final class MonitorThread extends Thread {
      */
     private MonitorThread() {
         super("Monitor");
-        mClientList = new ArrayList<ClientImpl>();
-
-        mNewDebugSelectedPort = DdmPreferences.getSelectedDebugPort();
-
+        mClientList = new ArrayList<>();
         mDdmJdwpExtension = new DdmJdwpExtension();
-        mJdwpExtensions = new LinkedList<JdwpExtension>();
+        mJdwpExtensions = new LinkedList<>();
         mJdwpExtensions.add(mDdmJdwpExtension);
     }
 
@@ -97,61 +80,6 @@ public final class MonitorThread extends Thread {
     public static MonitorThread getInstance() {
         return sInstance;
     }
-
-
-    /** Sets or changes the port number for "debug selected". */
-    @Deprecated
-    public synchronized void setDebugSelectedPort(int port) throws IllegalStateException {
-        if (sInstance == null) {
-            return;
-        }
-
-        if (!AndroidDebugBridge.getClientSupport()) {
-            return;
-        }
-
-        if (mDebugSelectedChan != null) {
-            Log.d("ddms", "Changing debug-selected port to " + port);
-            mNewDebugSelectedPort = port;
-            wakeup();
-        } else {
-            // we set mNewDebugSelectedPort instead of mDebugSelectedPort so that it's automatically
-            // opened on the first run loop.
-            mNewDebugSelectedPort = port;
-        }
-    }
-
-    /**
-     * Sets the client to accept debugger connection on the custom "Selected debug port".
-     *
-     * @param selectedClient the client. Can be null.
-     */
-    @Deprecated
-    public synchronized void setSelectedClient(ClientImpl selectedClient) {
-        if (sInstance == null) {
-            return;
-        }
-
-        if (mSelectedClient != selectedClient) {
-            ClientImpl oldClient = mSelectedClient;
-            mSelectedClient = selectedClient;
-
-            if (oldClient != null) {
-                oldClient.update(ClientImpl.CHANGE_PORT);
-            }
-
-            if (mSelectedClient != null) {
-                mSelectedClient.update(ClientImpl.CHANGE_PORT);
-            }
-        }
-    }
-
-    /** Returns the client accepting debugger connection on the custom "Selected debug port". */
-    @Deprecated
-    public ClientImpl getSelectedClient() {
-        return mSelectedClient;
-    }
-
 
     /**
      * Returns "true" if we want to retry connections to clients if we get a bad JDWP handshake
@@ -203,25 +131,6 @@ public final class MonitorThread extends Thread {
                 synchronized (mClientList) {
                 }
 
-                // (re-)open the "debug selected" port, if it's not opened yet or
-                // if the port changed.
-                try {
-                    if (AndroidDebugBridge.getClientSupport()) {
-                        if ((mDebugSelectedChan == null ||
-                                mNewDebugSelectedPort != mDebugSelectedPort) &&
-                                mNewDebugSelectedPort != -1) {
-                            if (reopenDebugSelectedPort()) {
-                                mDebugSelectedPort = mNewDebugSelectedPort;
-                            }
-                        }
-                    }
-                } catch (IOException ioe) {
-                    Log.e("ddms",
-                            "Failed to reopen debug port for Selected Client to: " + mNewDebugSelectedPort);
-                    Log.e("ddms", ioe);
-                    mNewDebugSelectedPort = mDebugSelectedPort; // no retry
-                }
-
                 int count;
                 try {
                     count = mSelector.select();
@@ -252,9 +161,6 @@ public final class MonitorThread extends Thread {
                         else if (key.attachment() instanceof Debugger) {
                             processDebuggerActivity(key);
                         }
-                        else if (key.attachment() instanceof MonitorThread) {
-                            processDebugSelectedActivity(key);
-                        }
                         else {
                             Log.e("ddms", "unknown activity key");
                         }
@@ -272,14 +178,6 @@ public final class MonitorThread extends Thread {
                 Log.e("ddms", e);
             }
         }
-    }
-
-
-    /**
-     * Returns the port on which the selected client listen for debugger
-     */
-    int getDebugSelectedPort() {
-        return mDebugSelectedPort;
     }
 
     /*
@@ -415,7 +313,6 @@ public final class MonitorThread extends Thread {
 
             if (chan != null) {
                 chan.socket().setTcpNoDelay(true);
-
                 wakeup();
 
                 try {
@@ -474,11 +371,6 @@ public final class MonitorThread extends Thread {
                 mClientList.clear();
             }
 
-            if (mDebugSelectedChan != null) {
-                mDebugSelectedChan.close();
-                mDebugSelectedChan.socket().close();
-                mDebugSelectedChan = null;
-            }
             if (mSelector != null) {
                 mSelector.close();
             }
@@ -533,94 +425,6 @@ public final class MonitorThread extends Thread {
                 ioe.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Opens (or reopens) the "debug selected" port and listen for connections.
-     * @return true if the port was opened successfully.
-     * @throws IOException
-     */
-    private boolean reopenDebugSelectedPort() throws IOException {
-
-        Log.d("ddms", "reopen debug-selected port: " + mNewDebugSelectedPort);
-        if (mDebugSelectedChan != null) {
-            mDebugSelectedChan.close();
-        }
-
-        mDebugSelectedChan = ServerSocketChannel.open();
-        mDebugSelectedChan.configureBlocking(false); // required for Selector
-
-        InetSocketAddress addr = new InetSocketAddress(
-                InetAddress.getByName("localhost"), //$NON-NLS-1$
-                mNewDebugSelectedPort);
-        mDebugSelectedChan.socket().setReuseAddress(true); // enable SO_REUSEADDR
-
-        try {
-            mDebugSelectedChan.socket().bind(addr);
-            if (mSelectedClient != null) {
-                mSelectedClient.update(ClientImpl.CHANGE_PORT);
-            }
-
-            mDebugSelectedChan.register(mSelector, SelectionKey.OP_ACCEPT, this);
-
-            return true;
-        } catch (BindException e) {
-            displayDebugSelectedBindError(mNewDebugSelectedPort);
-
-            // do not attempt to reopen it.
-            mDebugSelectedChan = null;
-            mNewDebugSelectedPort = -1;
-
-            return false;
-        }
-    }
-
-    /*
-     * We have some activity on the "debug selected" port. Handle it.
-     */
-    private void processDebugSelectedActivity(SelectionKey key) {
-        assert key.isAcceptable();
-
-        ServerSocketChannel acceptChan = (ServerSocketChannel)key.channel();
-
-        /*
-         * Find the debugger associated with the currently-selected client.
-         */
-        if (mSelectedClient != null) {
-            Debugger dbg = mSelectedClient.getDebugger();
-
-            if (dbg != null) {
-                Log.d("ddms", "Accepting connection on 'debug selected' port");
-                try {
-                    acceptNewDebugger(dbg, acceptChan);
-                } catch (IOException ioe) {
-                    // client should be gone, keep going
-                }
-
-                return;
-            }
-        }
-
-        Log.w("ddms",
-                "Connection on 'debug selected' port, but none selected");
-        try {
-            SocketChannel chan = acceptChan.accept();
-            chan.close();
-        } catch (IOException ioe) {
-            // not expected; client should be gone, keep going
-        } catch (NotYetBoundException e) {
-            displayDebugSelectedBindError(mDebugSelectedPort);
-        }
-    }
-
-    private static void displayDebugSelectedBindError(int port) {
-        String message =
-                "Could not open Selected VM debug port ("
-                        + port
-                        + "). Make sure you do not have another instance of Android Studio or the Android plugin running. "
-                        + "If it's being used by something else, choose a new port number in the preferences.";
-
-        Log.logAndDisplay(LogLevel.ERROR, "ddms", message);
     }
 
     public DdmJdwpExtension getDdmExtension() {

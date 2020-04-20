@@ -21,8 +21,6 @@ import com.android.ddmlib.ByteBufferUtil;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
-import com.android.ddmlib.internal.DebugPortManager;
-import com.android.ddmlib.internal.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.internal.DeviceImpl;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
@@ -174,30 +172,6 @@ public abstract class ChunkHandler extends JdwpInterceptor {
         buf.putInt(0x04, chunkLen);
 
         packet.finishPacket(DDMS_CMD_SET, DDMS_CMD, CHUNK_HEADER_LEN + chunkLen);
-    }
-
-    /**
-     * Check that the client is opened with the proper debugger port for the specified application
-     * name, and if not, reopen it.
-     *
-     * @param client
-     * @param appName
-     * @return
-     */
-    protected static ClientImpl checkDebuggerPortForAppName(ClientImpl client, String appName) {
-        IDebugPortProvider provider = DebugPortManager.getProvider();
-        if (provider != null) {
-            DeviceImpl device = client.getDeviceImpl();
-            int newPort = provider.getPort(device, appName);
-
-            if (newPort != IDebugPortProvider.NO_STATIC_PORT
-                    && newPort != client.getDebuggerListenPort()) {
-                device.getClientTracker().trackClientToDropAndReopen(client, newPort);
-                client = null;
-            }
-        }
-
-        return client;
     }
 
     public void handlePacket(ClientImpl client, JdwpPacket packet) {

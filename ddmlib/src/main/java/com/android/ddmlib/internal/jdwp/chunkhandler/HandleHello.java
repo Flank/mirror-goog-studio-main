@@ -187,8 +187,6 @@ public final class HandleHello extends ChunkHandler {
                     "Received pid (" + pid + ") does not match client pid (" + cd.getPid() + ")");
         }
 
-        client = checkDebuggerPortForAppName(client, processName);
-
         if (client != null) {
             client.update(ClientImpl.CHANGE_NAME);
         }

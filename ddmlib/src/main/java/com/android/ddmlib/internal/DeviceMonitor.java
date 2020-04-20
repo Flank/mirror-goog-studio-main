@@ -134,9 +134,9 @@ public final class DeviceMonitor implements ClientTracker {
     }
 
     @Override
-    public void trackClientToDropAndReopen(@NonNull ClientImpl client, int port) {
+    public void trackClientToDropAndReopen(@NonNull ClientImpl client) {
         assert myDeviceClientMonitorTask != null;
-        myDeviceClientMonitorTask.registerClientToDropAndReopen(client, port);
+        myDeviceClientMonitorTask.registerClientToDropAndReopen(client);
     }
 
     @Override

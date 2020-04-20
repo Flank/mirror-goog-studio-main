@@ -35,10 +35,6 @@ public final class DdmPreferences {
     public static final boolean DEFAULT_INITIAL_THREAD_UPDATE = false;
     /** Default value for heap update flag upon client connection. */
     public static final boolean DEFAULT_INITIAL_HEAP_UPDATE = false;
-    /** Default value for the selected client debug port */
-    public static final int DEFAULT_SELECTED_DEBUG_PORT = 8700;
-    /** Default value for the debug port base */
-    public static final int DEFAULT_DEBUG_PORT_BASE = 8600;
     /** Default value for the logcat {@link LogLevel} */
     public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
     /** Default timeout values for adb connection (milliseconds) */
@@ -52,8 +48,6 @@ public final class DdmPreferences {
     private static boolean sThreadUpdate = DEFAULT_INITIAL_THREAD_UPDATE;
     private static boolean sInitialHeapUpdate = DEFAULT_INITIAL_HEAP_UPDATE;
 
-    private static int sSelectedDebugPort = DEFAULT_SELECTED_DEBUG_PORT;
-    private static int sDebugPortBase = DEFAULT_DEBUG_PORT_BASE;
     private static LogLevel sLogLevel = DEFAULT_LOG_LEVEL;
     private static int sTimeOut = DEFAULT_TIMEOUT;
     private static int sProfilerBufferSizeMb = DEFAULT_PROFILER_BUFFER_SIZE_MB;
@@ -93,45 +87,6 @@ public final class DdmPreferences {
      */
     public static void setInitialHeapUpdate(boolean state) {
         sInitialHeapUpdate = state;
-    }
-
-    /**
-     * Returns the debug port used by the selected {@link Client}.
-     */
-    public static int getSelectedDebugPort() {
-        return sSelectedDebugPort;
-    }
-
-    /**
-     * Sets the debug port used by the selected {@link Client}.
-     * <p>This change takes effect right away.
-     * @param port the new port to use.
-     */
-    public static void setSelectedDebugPort(int port) {
-        sSelectedDebugPort = port;
-
-        MonitorThread monitorThread = MonitorThread.getInstance();
-        if (monitorThread != null) {
-            monitorThread.setDebugSelectedPort(port);
-        }
-    }
-
-    /**
-     * Returns the debug port used by the first {@link Client}. Following clients, will use the
-     * next port.
-     */
-    public static int getDebugPortBase() {
-        return sDebugPortBase;
-    }
-
-    /**
-     * Sets the debug port used by the first {@link Client}.
-     * <p>Once a port is used, the next Client will use port + 1. Quitting applications will
-     * release their debug port, and new clients will be able to reuse them.
-     * <p>This must be called before {@link AndroidDebugBridge#init(boolean)}.
-     */
-    public static void setDebugPortBase(int port) {
-        sDebugPortBase = port;
     }
 
     /**

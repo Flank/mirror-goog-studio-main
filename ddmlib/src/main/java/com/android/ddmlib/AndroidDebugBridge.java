@@ -668,18 +668,6 @@ public class AndroidDebugBridge {
     }
 
     /**
-     * Sets the client to accept debugger connection on the custom "Selected debug port".
-     *
-     * @param selectedClient the client. Can be null.
-     */
-    public void setSelectedClient(ClientImpl selectedClient) {
-        MonitorThread monitorThread = MonitorThread.getInstance();
-        if (monitorThread != null) {
-            monitorThread.setSelectedClient(selectedClient);
-        }
-    }
-
-    /**
      * Returns whether the {@link AndroidDebugBridge} object is still connected to the adb daemon.
      */
     public boolean isConnected() {

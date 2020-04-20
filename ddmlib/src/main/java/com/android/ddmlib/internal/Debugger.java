@@ -75,19 +75,25 @@ public class Debugger extends JdwpAgent {
     /* this goes up and down; synchronize methods that access the field */
     private SocketChannel mChannel;
 
-    /** Create a new Debugger object, configured to listen for connections on a specific port. */
-    public Debugger(ClientImpl client, int listenPort) throws IOException {
+    /**
+     * Create a new Debugger object, configured to listen for connections on a specific port.
+     */
+    public Debugger(ClientImpl client) throws IOException {
+        this(client, 0);
+    }
+
+    @VisibleForTesting
+    Debugger(ClientImpl client, int listenPort) throws IOException {
         super(client.getJdwpProtocol());
         mClient = client;
-        mListenPort = listenPort;
 
         mListenChannel = ServerSocketChannel.open();
         mListenChannel.configureBlocking(false);        // required for Selector
 
         InetSocketAddress addr =
-                new InetSocketAddress(
-                        InetAddress.getByName("localhost"), //$NON-NLS-1$
-                        listenPort);
+          new InetSocketAddress(
+            InetAddress.getByName("localhost"), //$NON-NLS-1$
+            listenPort);
         mListenChannel.socket().setReuseAddress(true);  // enable SO_REUSEADDR
         mListenChannel.socket().bind(addr);
         mListenPort = mListenChannel.socket().getLocalPort();
@@ -99,7 +105,6 @@ public class Debugger extends JdwpAgent {
         Log.d("ddms", "Created: " + this.toString());
     }
 
-    @VisibleForTesting
     int getListenPort() {
         return mListenPort;
     }
@@ -125,7 +130,7 @@ public class Debugger extends JdwpAgent {
     }
 
     /** Returns "true" if a debugger is currently attached to us. */
-    public boolean isDebuggerAttached() {
+    boolean isDebuggerAttached() {
         return mChannel != null;
     }
 
@@ -156,9 +161,9 @@ public class Debugger extends JdwpAgent {
 
     /**
      * Accept a new connection, but only if we don't already have one.
-     *
+     * <p>
      * Must be synchronized with other uses of mChannel and mPreBuffer.
-     *
+     * <p>
      * Returns "null" if we're already talking to somebody.
      */
     synchronized SocketChannel accept() throws IOException {
@@ -169,13 +174,13 @@ public class Debugger extends JdwpAgent {
      * Accept a new connection from the specified listen channel.  This
      * is so we can listen on a dedicated port for the "current" client,
      * where "current" is constantly in flux.
-     *
+     * <p>
      * Must be synchronized with other uses of mChannel and mPreBuffer.
-     *
+     * <p>
      * Returns "null" if we're already talking to somebody.
      */
     synchronized SocketChannel accept(ServerSocketChannel listenChan)
-        throws IOException {
+      throws IOException {
 
         if (listenChan != null) {
             SocketChannel newChan;
@@ -183,7 +188,7 @@ public class Debugger extends JdwpAgent {
             newChan = listenChan.accept();
             if (mChannel != null) {
                 Log.w("ddms", "debugger already talking to " + mClient
-                    + " on " + mListenPort);
+                              + " on " + mListenPort);
                 newChan.close();
                 return null;
             }
@@ -219,7 +224,7 @@ public class Debugger extends JdwpAgent {
      * Close the socket that's listening for new connections and (if we're connected) the debugger
      * data socket.
      */
-    public synchronized void close() {
+    synchronized void close() {
         try {
             if (mListenChannel != null) {
                 mListenChannel.close();
@@ -278,8 +283,7 @@ public class Debugger extends JdwpAgent {
             // This is done by the DeviceMonitor.
             ((DeviceImpl) client.getDevice())
                     .getClientTracker()
-                    .trackClientToDropAndReopen(
-                            client, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
+                    .trackClientToDropAndReopen(client);
         }
     }
 
@@ -443,4 +447,3 @@ public class Debugger extends JdwpAgent {
         }
     }
 }
-

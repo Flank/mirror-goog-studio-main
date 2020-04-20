@@ -32,9 +32,8 @@ public interface ClientTracker {
     /**
      * Callback for indicating that a client was dropped but an attempt should be made to reopen the connection with the client.
      * @param client that was dropped.
-     * @param port that the debugger was using and when reopened should continue using.
      */
-    void trackClientToDropAndReopen(@NonNull ClientImpl client, int port);
+    void trackClientToDropAndReopen(@NonNull ClientImpl client);
 
     /**
      * Callback to indicate that a device was dropped. An attempt should be made to reopen the connection with the device and

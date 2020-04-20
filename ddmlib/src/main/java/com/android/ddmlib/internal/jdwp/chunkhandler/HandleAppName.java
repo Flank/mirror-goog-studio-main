@@ -110,8 +110,6 @@ public final class HandleAppName extends ChunkHandler {
         ClientData cd = client.getClientData();
         cd.setNames(names);
 
-        client = checkDebuggerPortForAppName(client, names.mProcessName);
-
         if (client != null) {
             client.update(ClientImpl.CHANGE_NAME);
         }

@@ -61,7 +61,6 @@ public class ClientImpl extends JdwpAgent implements Client {
 
     // debugger we're associated with, if any
     private Debugger mDebugger;
-    private int mDebuggerListenPort;
 
     // chunk handlers stash state data in here
     private ClientData mClientData;
@@ -141,7 +140,7 @@ public class ClientImpl extends JdwpAgent implements Client {
     /** Returns the debugger port for this client. */
     @Override
     public int getDebuggerListenPort() {
-        return mDebuggerListenPort;
+        return getDebugger() == null ? -1 : getDebugger().getListenPort();
     }
 
     /**
@@ -171,7 +170,7 @@ public class ClientImpl extends JdwpAgent implements Client {
     /** Returns <code>true</code> if a debugger is currently attached to the client. */
     @Override
     public boolean isDebuggerAttached() {
-        return mDebugger.isDebuggerAttached();
+        return mDebugger != null && mDebugger.isDebuggerAttached();
     }
 
     /** Return the Debugger object associated with this client. */
@@ -516,43 +515,11 @@ public class ClientImpl extends JdwpAgent implements Client {
     }
 
     /**
-     * Sets the client to accept debugger connection on the "selected debugger port".
-     *
-     * @see AndroidDebugBridge#setSelectedClient(ClientImpl)
-     * @see DdmPreferences#setSelectedDebugPort(int)
-     */
-    public void setAsSelectedClient() {
-        MonitorThread monitorThread = MonitorThread.getInstance();
-        if (monitorThread != null) {
-            monitorThread.setSelectedClient(this);
-        }
-    }
-
-    /**
-     * Returns whether this client is the current selected client, accepting debugger connection on
-     * the "selected debugger port".
-     *
-     * @see #setAsSelectedClient()
-     * @see AndroidDebugBridge#setSelectedClient(ClientImpl)
-     * @see DdmPreferences#setSelectedDebugPort(int)
-     */
-    @Deprecated
-    public boolean isSelectedClient() {
-        MonitorThread monitorThread = MonitorThread.getInstance();
-        if (monitorThread != null) {
-            return monitorThread.getSelectedClient() == this;
-        }
-
-        return false;
-    }
-
-    /**
      * Tell the client to open a server socket channel and listen for connections on the specified
      * port.
      */
-    public void listenForDebugger(int listenPort) throws IOException {
-        mDebuggerListenPort = listenPort;
-        mDebugger = new Debugger(this, listenPort);
+    void listenForDebugger() throws IOException {
+        mDebugger = new Debugger(this);
     }
 
     /**
@@ -703,9 +670,7 @@ public class ClientImpl extends JdwpAgent implements Client {
                     if (MonitorThread.getInstance().getRetryOnBadHandshake()) {
                         // we should drop the client, but also attempt to reopen it.
                         // This is done by the DeviceMonitor.
-                        mDevice.getClientTracker()
-                                .trackClientToDropAndReopen(
-                                        this, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
+                        mDevice.getClientTracker().trackClientToDropAndReopen(this);
                     } else {
                         // mark it as bad, close the socket, and don't retry
                         mConnState = ST_NOT_JDWP;
@@ -840,9 +805,7 @@ public class ClientImpl extends JdwpAgent implements Client {
 
     @Override
     public void notifyVmMirrorExited() {
-        mDevice.getClientTracker()
-                .trackClientToDropAndReopen(
-                        this, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
+        mDevice.getClientTracker().trackClientToDropAndReopen(this);
     }
 
     @Override
