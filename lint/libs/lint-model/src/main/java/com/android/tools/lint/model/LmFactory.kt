@@ -1063,6 +1063,8 @@ class LmFactory : LmModuleLoader {
                 AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP -> LmModuleType.INSTANT_APP
                 AndroidProjectTypes.PROJECT_TYPE_FEATURE -> LmModuleType.FEATURE
                 AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE -> LmModuleType.DYNAMIC_FEATURE
+                // 999: Special value defined in GradleModelMocker#PROJECT_TYPE_JAVA_LIBRARY
+                999 -> LmModuleType.JAVA_LIBRARY
                 else -> throw IllegalArgumentException("The value $typeId is not a valid project type ID")
             }
         }

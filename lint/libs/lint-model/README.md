@@ -67,3 +67,4 @@ TODO
 * Lazily construct File instances from Strings
 * Look more deeply into *project* dependencies and how we model those
 * Use switch statement in LmSerialization to more quickly multiplex
+* Get rid of late-binding for Gradle model!

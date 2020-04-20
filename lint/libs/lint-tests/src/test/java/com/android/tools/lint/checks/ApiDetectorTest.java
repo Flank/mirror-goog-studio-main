@@ -3195,7 +3195,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(4),
-                        mVector,
+                        xml("src/main/" + mVector.targetRelativePath, mVector.contents),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -3306,7 +3306,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest().minSdk(14),
                         xml(
-                                "res/drawable/gradient.xml",
+                                "src/main/res/drawable/gradient.xml",
                                 ""
                                         + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "        xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
@@ -4506,7 +4506,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest().minSdk(1),
                         xml(
-                                "res/layout/foo.xml",
+                                "src/main/res/layout/foo.xml",
                                 ""
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
@@ -4527,7 +4527,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(
-                        "res/layout/foo.xml:8: Warning: Attribute fontFamily is only used in API level 16 and higher (current min is 1) Did you mean app:fontFamily ? [UnusedAttribute]\n"
+                        "src/main/res/layout/foo.xml:8: Warning: Attribute fontFamily is only used in API level 16 and higher (current min is 1) Did you mean app:fontFamily ? [UnusedAttribute]\n"
                                 + "        android:fontFamily=\"@font/my_font\"\n"
                                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "0 errors, 1 warnings");

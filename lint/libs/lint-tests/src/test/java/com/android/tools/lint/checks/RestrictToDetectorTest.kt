@@ -120,10 +120,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar",
                 LIBRARY_BYTE_CODE
             ),
-            classpath(
-                AbstractCheckTest.SUPPORT_JAR_PATH,
-                "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"
-            ),
             gradle(
                 """
                 apply plugin: 'com.android.application'
@@ -303,10 +299,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             base64gzip(
                 "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar",
                 LIBRARY_BYTE_CODE
-            ),
-            classpath(
-                AbstractCheckTest.SUPPORT_JAR_PATH,
-                "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"
             ),
             gradle(
                 """
@@ -885,10 +877,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                         "    compile 'my.group.id:mylib:25.0.0-SNAPSHOT'\n" +
                         "}"
             ),
-            classpath(
-                AbstractCheckTest.SUPPORT_JAR_PATH,
-                "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar"
-            ),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1117,10 +1105,9 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                         "    }\n" +
                         "}\n"
             ),
-
             base64gzip(path1, LIBRARY_BYTE_CODE),
-            classpath(AbstractCheckTest.SUPPORT_JAR_PATH, path1),
             SUPPORT_ANNOTATIONS_JAR,
+            classpath(SUPPORT_JAR_PATH, path1),
             gradle(
                 "" +
                         "apply plugin: 'com.android.application'\n" +
@@ -1131,6 +1118,14 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             )
         )
         lint().projects(project)
+            // This test does something tricky: it switches out the classpath of the
+            // dependency model after lint has already added it to its classpath, such
+            // that when lint tries to find the library for a resolved symbol it
+            // searches not just by exact match but by prefix and suffix. This is
+            // inherently not going to work with the new dependency model where
+            // these are not decoupled (we'll use exactly the same path), so for now
+            // use the old project implementation to check this behavior
+            .useTestProjectImplementation(true)
             .modifyGradleMocks { p, variant ->
                 val dependencies = variant.mainArtifact.dependencies
                 val libraries = dependencies.libraries

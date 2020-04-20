@@ -114,28 +114,28 @@ public class VectorDetectorTest extends AbstractCheckTest {
     public void testWarn() {
         String expected =
                 ""
-                        + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "        android:autoMirrored=\"true\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:7: Warning: Resource references will not work correctly in images generated for this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:7: Warning: Resource references will not work correctly in images generated for this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "        android:tint=\"?attr/colorControlActivated\">\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:11: Warning: Update Gradle plugin version to 1.5+ to correctly handle <group> tags in generated bitmaps [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:11: Warning: Update Gradle plugin version to 1.5+ to correctly handle <group> tags in generated bitmaps [VectorRaster]\n"
                         + "    <group\n"
                         + "     ~~~~~\n"
-                        + "res/drawable/foo.xml:19: Warning: Resource references will not work correctly in images generated for this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:19: Warning: Resource references will not work correctly in images generated for this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "            android:strokeColor=\"@color/white\"\n"
                         + "                                 ~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:23: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:23: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "            android:trimPathEnd=\"0\"\n"
                         + "            ~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:24: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:24: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "            android:trimPathOffset=\"0\"\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:25: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:25: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "            android:trimPathStart=\"0\" />\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 8 warnings";
@@ -143,7 +143,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(14),
-                        xml("res/drawable/foo.xml", VECTOR),
+                        xml("src/main/res/drawable/foo.xml", VECTOR),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -159,7 +159,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(21),
-                        xml("res/drawable/foo.xml", VECTOR),
+                        xml("src/main/res/drawable/foo.xml", VECTOR),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -174,7 +174,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
     public void testNoWarningsInV21Folder() {
         lint().files(
                         manifest().minSdk(14),
-                        xml("res/drawable-v21/foo.xml", VECTOR),
+                        xml("src/main/res/drawable-v21/foo.xml", VECTOR),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -190,7 +190,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest().minSdk(14),
                         xml(
-                                "res/drawable/foo.xml",
+                                "src/main/res/drawable/foo.xml",
                                 ""
                                         + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "        android:height=\"76dp\"\n"
@@ -217,7 +217,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         // Regression test for https://code.google.com/p/android/issues/detail?id=206005
         lint().files(
                         manifest().minSdk(14),
-                        xml("res/drawable/foo.xml", VECTOR),
+                        xml("src/main/res/drawable/foo.xml", VECTOR),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -233,13 +233,13 @@ public class VectorDetectorTest extends AbstractCheckTest {
     public void testWarnWithGradient() {
         String expected =
                 ""
-                        + "res/drawable/foo.xml:7: Warning: This attribute is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:7: Warning: This attribute is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "        android:autoMirrored=\"true\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:8: Warning: Resource references will not work correctly in images generated for this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:8: Warning: Resource references will not work correctly in images generated for this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "        android:tint=\"?attr/colorControlActivated\">\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:10: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:10: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings\n";
@@ -247,7 +247,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(23),
-                        xml("res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
+                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -263,7 +263,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(24),
-                        xml("res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
+                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -278,13 +278,13 @@ public class VectorDetectorTest extends AbstractCheckTest {
     public void testWarnWithFillType() {
         String expected =
                 ""
-                        + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "        android:autoMirrored=\"true\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:7: Warning: Resource references will not work correctly in images generated for this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:7: Warning: Resource references will not work correctly in images generated for this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "        android:tint=\"?attr/colorControlActivated\">\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                        + "src/main/res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings\n";
@@ -292,7 +292,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(23),
-                        xml("res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -308,7 +308,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(24),
-                        xml("res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
                         gradle(
                                 ""
                                         + "buildscript {\n"
@@ -324,7 +324,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(23),
-                        xml("res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
                         gradle(
                                 ""
                                         + "buildscript {\n"

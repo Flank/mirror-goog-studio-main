@@ -750,8 +750,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                             + "0 errors, 1 warnings\n";
 
             lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
+                            manifest(
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

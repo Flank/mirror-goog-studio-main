@@ -67,6 +67,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.model.LmFactory;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -118,6 +119,12 @@ import org.mockito.stubbing.OngoingStubbing;
  * dependencies etc)
  */
 public class GradleModelMocker {
+    /**
+     * Extension to {@link AndroidProjectTypes} for non-Android project types, consumed in {@link
+     * LmFactory}
+     */
+    public static final int PROJECT_TYPE_JAVA_LIBRARY = 999;
+
     private static Pattern configurationPattern =
             Pattern.compile(
                     "^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*");
@@ -250,7 +257,7 @@ public class GradleModelMocker {
 
     public boolean isLibrary() {
         return project.getProjectType() == AndroidProjectTypes.PROJECT_TYPE_LIBRARY
-                || hasJavaLibraryPlugin();
+                || project.getProjectType() == PROJECT_TYPE_JAVA_LIBRARY;
     }
 
     /** Whether the Gradle file applied the java-library plugin */
@@ -333,6 +340,9 @@ public class GradleModelMocker {
         Dependencies androidTestDependencies = mock(Dependencies.class);
 
         when(dependencies.getLibraries()).thenReturn(androidLibraries);
+
+        addLocalLibs(new File(projectDir, "libs"));
+
         when(testDependencies.getLibraries()).thenReturn(testAndroidLibraries);
         when(androidTestDependencies.getLibraries()).thenReturn(androidTestAndroidLibraries);
 
@@ -407,14 +417,6 @@ public class GradleModelMocker {
         AndroidArtifact artifact = mock(AndroidArtifact.class);
         JavaArtifact testArtifact = mock(JavaArtifact.class);
         AndroidArtifact androidTestArtifact = mock(AndroidArtifact.class);
-
-        when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
-        when(testArtifact.getName()).thenReturn(ARTIFACT_NAME_UNIT_TEST);
-        when(androidTestArtifact.getName()).thenReturn(ARTIFACT_NAME_ANDROID_TEST);
-        when(artifact.getClassesFolder()).thenReturn(new File(projectDir, "main-classes"));
-        when(testArtifact.getClassesFolder()).thenReturn(new File(projectDir, "test-classes"));
-        when(androidTestArtifact.getClassesFolder())
-                .thenReturn(new File(projectDir, "instrumentation-classes"));
 
         String applicationId = project.getDefaultConfig().getProductFlavor().getApplicationId();
         if (applicationId == null) {
@@ -505,6 +507,24 @@ public class GradleModelMocker {
         }
         setVariantName(defaultVariantName);
         when(project.getDefaultVariant()).thenReturn(defaultVariantName);
+
+        when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
+        when(testArtifact.getName()).thenReturn(ARTIFACT_NAME_UNIT_TEST);
+        when(androidTestArtifact.getName()).thenReturn(ARTIFACT_NAME_ANDROID_TEST);
+        when(artifact.getClassesFolder())
+                .thenReturn(
+                        new File(
+                                projectDir,
+                                "build/intermediates/javac/" + defaultVariantName + "/classes"));
+        when(artifact.getAdditionalClassesFolders())
+                .thenReturn(
+                        Collections.singleton(
+                                new File(
+                                        projectDir,
+                                        "build/tmp/kotlin-classes/" + defaultVariantName)));
+        when(testArtifact.getClassesFolder()).thenReturn(new File(projectDir, "test-classes"));
+        when(androidTestArtifact.getClassesFolder())
+                .thenReturn(new File(projectDir, "instrumentation-classes"));
 
         // Generated sources: Special test support under folder "generated" instead of "src"
         File generated = new File(projectDir, "generated");
@@ -598,7 +618,18 @@ public class GradleModelMocker {
                     artifact = mock(AndroidArtifact.class);
                     when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
                     when(artifact.getClassesFolder())
-                            .thenReturn(new File(projectDir, "main-classes"));
+                            .thenReturn(
+                                    new File(
+                                            projectDir,
+                                            "build/intermediates/javac/"
+                                                    + variantName
+                                                    + "/classes"));
+                    when(artifact.getAdditionalClassesFolders())
+                            .thenReturn(
+                                    Collections.singleton(
+                                            new File(
+                                                    projectDir,
+                                                    "build/tmp/kotlin-classes/" + variantName)));
                     when(artifact.getApplicationId()).thenReturn(applicationId);
                     dependencies = mock(Dependencies.class);
                     when(dependencies.getLibraries()).thenReturn(Collections.emptyList());
@@ -612,6 +643,55 @@ public class GradleModelMocker {
             }
         }
         when(project.getVariants()).thenReturn(variants);
+    }
+
+    private static int libraryVersion = 0;
+
+    private void addLocalLibs(File libsDir) {
+        File[] libs = libsDir.listFiles();
+        if (libs != null) {
+            for (File lib : libs) {
+                if (lib.isDirectory()) {
+                    addLocalLibs(lib);
+                } else {
+                    String path = lib.getPath();
+                    if (path.endsWith(DOT_JAR)) {
+                        String name = StringsKt.removeSuffix(lib.getName(), DOT_JAR);
+                        String coordinateString = "locallibs:" + name + ":" + libraryVersion++;
+
+                        // See if this might be an Android library instead of a Java library
+                        int index = path.indexOf("exploded-aar");
+                        if (index != -1) {
+                            int jars = path.indexOf("jars");
+                            if (jars != -1) {
+                                coordinateString =
+                                        path.substring(index + 13, jars - 1)
+                                                .replace("/", ":")
+                                                .replace("\\", ":");
+                                AndroidLibrary library =
+                                        createAndroidLibrary(coordinateString, false);
+                                when(library.getJarFile()).thenReturn(lib);
+                                androidLibraries.add(library);
+                                return;
+                            }
+                        }
+                        index = path.indexOf(".aar/");
+                        if (index == -1) {
+                            index = path.indexOf(".aar\\");
+                        }
+                        if (index != -1) {
+                            AndroidLibrary library = createAndroidLibrary(coordinateString, false);
+                            when(library.getJarFile()).thenReturn(lib);
+                            androidLibraries.add(library);
+                            return;
+                        }
+                        JavaLibrary library = createJavaLibrary(coordinateString, false);
+                        when(library.getJarFile()).thenReturn(lib);
+                        javaLibraries.add(library);
+                    }
+                }
+            }
+        }
     }
 
     @NonNull
@@ -903,12 +983,10 @@ public class GradleModelMocker {
 
         if (line.equals("apply plugin: 'com.android.library'")
                 || line.equals("apply plugin: 'android-library'")) {
-            //noinspection deprecation
             when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
             return;
         } else if (line.equals("apply plugin: 'com.android.application'")
                 || line.equals("apply plugin: 'android'")) {
-            //noinspection deprecation
             when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_APP);
             return;
         } else if (line.equals("apply plugin: 'com.android.feature'")) {
@@ -918,9 +996,11 @@ public class GradleModelMocker {
             when(project.getProjectType()).thenReturn(AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP);
             return;
         } else if (line.equals("apply plugin: 'java'")) {
+            when(project.getProjectType()).thenReturn(PROJECT_TYPE_JAVA_LIBRARY);
             javaPlugin = true;
             return;
         } else if (line.equals("apply plugin: 'java-library'")) {
+            when(project.getProjectType()).thenReturn(PROJECT_TYPE_JAVA_LIBRARY);
             javaLibraryPlugin = true;
             return;
         } else if (context.equals("buildscript.repositories")

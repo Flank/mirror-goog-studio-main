@@ -127,7 +127,7 @@ class MemoryLeakTest {
             """).indented(),
 
             xml(
-                "res/layout/activity_main.xml",
+                "src/main/res/layout/activity_main.xml",
                 """
                 <androidx.constraintlayout.widget.ConstraintLayout
                         xmlns:android="http://schemas.android.com/apk/res/android"

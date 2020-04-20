@@ -94,7 +94,9 @@ open class LmModuleProject(
 
     override fun getBuildModule(): LmModule = variant.module
     override fun getBuildVariant(): LmVariant? = variant
-    override fun isLibrary(): Boolean = model.type === LmModuleType.LIBRARY
+    override fun isLibrary(): Boolean = model.type === LmModuleType.LIBRARY ||
+            model.type === LmModuleType.JAVA_LIBRARY
+    override fun isAndroidProject(): Boolean = type != LmModuleType.JAVA_LIBRARY
     override fun hasDynamicFeatures(): Boolean =
         model.type === LmModuleType.APP && model.dynamicFeatures.isNotEmpty()
 

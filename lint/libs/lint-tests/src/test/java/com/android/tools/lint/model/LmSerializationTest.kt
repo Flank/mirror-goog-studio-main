@@ -284,7 +284,7 @@ class LmSerializationTest {
                   </manifestPlaceholders>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/freeBetaDebug/classes:build/tmp/kotlin-classes/freeBetaDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                   <androidTestArtifact
@@ -604,7 +604,7 @@ class LmSerializationTest {
                   </manifestPlaceholders>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/betaDebug/classes:build/tmp/kotlin-classes/betaDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -661,7 +661,7 @@ class LmSerializationTest {
                   </manifestPlaceholders>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/normalDebug/classes:build/tmp/kotlin-classes/normalDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -718,7 +718,7 @@ class LmSerializationTest {
                   </manifestPlaceholders>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/freeDebug/classes:build/tmp/kotlin-classes/freeDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -775,7 +775,7 @@ class LmSerializationTest {
                   </manifestPlaceholders>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/paidDebug/classes:build/tmp/kotlin-classes/paidDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -829,7 +829,7 @@ class LmSerializationTest {
                   </resValues>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/betaRelease/classes:build/tmp/kotlin-classes/betaRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -883,7 +883,7 @@ class LmSerializationTest {
                   </resValues>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/normalRelease/classes:build/tmp/kotlin-classes/normalRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -937,7 +937,7 @@ class LmSerializationTest {
                   </resValues>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/freeRelease/classes:build/tmp/kotlin-classes/freeRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -991,7 +991,7 @@ class LmSerializationTest {
                   </resValues>
                   <mainArtifact
                       name="_main_"
-                      classFolders="main-classes"
+                      classFolders="build/intermediates/javac/paidRelease/classes:build/tmp/kotlin-classes/paidRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>

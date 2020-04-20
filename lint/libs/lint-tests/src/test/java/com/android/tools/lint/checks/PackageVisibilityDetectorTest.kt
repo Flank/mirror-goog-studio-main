@@ -85,7 +85,7 @@ class PackageVisibilityDetectorTest : AbstractCheckTest() {
                            ~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 2 warnings
                 """
-            );
+            )
     }
 
     fun testCanQueryAllPackages() {
@@ -110,7 +110,7 @@ class PackageVisibilityDetectorTest : AbstractCheckTest() {
                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
-            );
+            )
     }
 
     fun testTargetSdkTooLow() {
@@ -120,7 +120,7 @@ class PackageVisibilityDetectorTest : AbstractCheckTest() {
             kotlin(ACTIVITY_WITH_APP_QUERIES).indented()
         )
             .run()
-            .expectClean();
+            .expectClean()
     }
 
     @Language("kotlin")

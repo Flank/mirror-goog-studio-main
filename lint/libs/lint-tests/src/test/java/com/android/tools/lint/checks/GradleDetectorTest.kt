@@ -17,7 +17,6 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION
 import com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION
-import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.repository.GoogleMavenRepository.Companion.MAVEN_GOOGLE_CACHE_DIR_KEY
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
@@ -1064,7 +1063,6 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testIgnoresGStringsInDependencies() {
-
         lint().files(
             gradle(
                 "" +
@@ -1462,36 +1460,6 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "}\n"
             )
         ).issues(COMPATIBILITY).incremental().run().expect(expected)
-    }
-
-    fun testWearableConsistency4() {
-        // Regression test for 226240; gracefully handle null resolved coordinates.
-        val expected = "No warnings."
-        lint().files(
-            gradle(
-                "" +
-                        "apply plugin: 'android'\n" +
-                        "\n" +
-                        "dependencies {\n" +
-                        "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n" +
-                        "    compile \"com.google.android.wearable:wearable:2.0.0-alpha3\"\n" +
-                        "}\n"
-            )
-        )
-            .issues(COMPATIBILITY)
-            .incremental()
-            .modifyGradleMocks { _, variant ->
-                // Null out the resolved coordinates in the result to simulate the
-                // observed failure in issue 226240
-
-                val dependencies = variant.mainArtifact.dependencies
-                val library1 = dependencies.libraries.iterator().next()
-                val library2 = dependencies.javaLibraries.iterator().next()
-                `when`<MavenCoordinates>(library1.resolvedCoordinates).thenReturn(null)
-                `when`<MavenCoordinates>(library2.resolvedCoordinates).thenReturn(null)
-            }
-            .run()
-            .expect(expected)
     }
 
     fun testSupportLibraryConsistencyNonIncremental() {

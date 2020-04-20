@@ -135,7 +135,9 @@ class NamespaceDetectorTest : AbstractCheckTest() {
 
     fun testGradle_namespaced() {
         // In a namespaced project it's fine (and necessary) to declare custom namespaces.
-        lint().files(mCustomview, gradle("android.aaptOptions.namespaced true"))
+        lint().files(
+            xml("src/main/res/layout/customview.xml", mCustomview.contents),
+            gradle("android.aaptOptions.namespaced true"))
             .run()
             .expectClean()
     }

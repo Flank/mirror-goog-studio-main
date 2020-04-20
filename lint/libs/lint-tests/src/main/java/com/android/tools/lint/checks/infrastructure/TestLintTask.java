@@ -43,12 +43,12 @@ import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LmModuleProject;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.model.LmModule;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
@@ -120,6 +120,7 @@ public class TestLintTask {
     Set<Desugaring> desugaring;
     EnumSet<Platform> platforms;
     boolean checkUInjectionHost = true;
+    boolean useTestProject;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -435,14 +436,25 @@ public class TestLintTask {
     /**
      * This method allows you to add a hook which you can run on a mock builder model to tweak it,
      * such as changing or augmenting the builder model classes
-     *
-     * @deprecated We're moving away from the builder model library and over to {@link LmModule}
-     *     which is not a mock.
      */
-    @Deprecated
     public TestLintTask modifyGradleMocks(@NonNull GradleMockModifier mockModifier) {
         ensurePreRun();
         this.mockModifier = mockModifier;
+        return this;
+    }
+
+    /**
+     * Lint will try to use real production implementations of the lint infrastructure, such as
+     * {@link LmModuleProject}. However, in a few (narrow) cases, we don't want to do this because
+     * we want to simulate certain failure scenario. This flag gives tests a chance to opt back to
+     * the previous test-specific project implementation.
+     *
+     * @param useTestProject whether to use the older test implementation for projects
+     * @return this, for constructor chaining
+     */
+    public TestLintTask useTestProjectImplementation(boolean useTestProject) {
+        ensurePreRun();
+        this.useTestProject = useTestProject;
         return this;
     }
 

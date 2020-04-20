@@ -147,7 +147,7 @@ class CustomRuleTest {
             appCompatTestSource,
             appCompatTestClass
         )
-            .incremental("bin/classes/test/pkg/AppCompatTest.class")
+            .incremental("build/intermediates/javac/debug/classes/test/pkg/AppCompatTest.class")
             .allowDelayedIssueRegistration()
             .issueIds("UnitTestAppCompatMethod")
             .allowObsoleteLintChecks(true)
@@ -232,7 +232,7 @@ class CustomRuleTest {
             appCompatTestSource,
             appCompatTestClass
         )
-            .incremental("bin/classes/test/pkg/AppCompatTest.class")
+            .incremental("build/intermediates/javac/debug/classes/test/pkg/AppCompatTest.class")
             .allowDelayedIssueRegistration()
             .issueIds("UnitTestAppCompatMethod")
             .allowObsoleteLintChecks(false)
@@ -523,7 +523,7 @@ class CustomRuleTest {
     )
 
     private val appCompatTestClass = base64gzip(
-        "bin/classes/test/pkg/AppCompatTest.class", "" +
+        "build/intermediates/javac/debug/classes/test/pkg/AppCompatTest.class", "" +
                 "H4sIAAAAAAAAAJVU21ITQRA9E0ICcRTkjqAogmwisuIF1AASolRRFS1LqKSK" +
                 "t0kyhSNhd92dhPJb/ApfYpUPfoAfZdmzhFzKxOg+nLmd7j7d07M/f33/AeAR" +
                 "XscRYZjSMtC2d3piZzwv6555Qh/RThxRBks4Zd9VZTuoep7ra7u2aQvPszMl" +

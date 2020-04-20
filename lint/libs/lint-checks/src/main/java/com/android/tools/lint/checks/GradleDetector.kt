@@ -2703,6 +2703,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         // (Ignoring the test-only project for this purpose)
                         project.hasDynamicFeatures()
                     LmModuleType.LIBRARY -> true
+                    LmModuleType.JAVA_LIBRARY -> true
                     LmModuleType.FEATURE, LmModuleType.DYNAMIC_FEATURE -> true
                     LmModuleType.TEST -> false
                     LmModuleType.INSTANT_APP -> false

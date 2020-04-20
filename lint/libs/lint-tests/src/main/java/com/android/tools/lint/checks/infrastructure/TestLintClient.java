@@ -19,6 +19,7 @@ package com.android.tools.lint.checks.infrastructure;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
@@ -33,7 +34,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.ResourceFile;
@@ -66,7 +66,6 @@ import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
-import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
@@ -77,6 +76,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LmModuleProject;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
@@ -386,6 +386,9 @@ public class TestLintClient extends LintCliClient {
             if (task.variantName != null) {
                 mocker.setVariantName(task.variantName);
             }
+            if (task.mockModifier != null) {
+                task.mockModifier.modify(mocker.getProject(), mocker.getVariant());
+            }
         }
         if (task.baselineFile != null) {
             flags.setBaselineFile(task.baselineFile);
@@ -394,9 +397,59 @@ public class TestLintClient extends LintCliClient {
             description.type(ProjectDescription.Type.JAVA);
         }
 
-        TestProject project = new TestProject(this, dir, referenceDir, description, mocker);
+        Project project = new TestProject(this, dir, referenceDir, description, mocker);
+
+        // Try to use the real lint model project instead, if possible
+        LmVariant buildVariant = project.getBuildVariant();
+        if (buildVariant != null && !task.useTestProject) {
+            // Make sure the test folders exist; this prevents the common mistake where you
+            // add a gradle() test model but leave the source files in the old src/ and res/
+            // folders instead of the required src/main/java, src/main/res, src/test/java, etc
+            // locations
+            if (hasOldDirectoryLayout(dir)) {
+                fail(
+                        "Warning: This test uses a gradle model mocker but doesn't have a main "
+                                + "source set (src/main/java); that's suspicious; check that the test "
+                                + "file is in (for example) src/main/res/ rather than res/.\n"
+                                + "Alternatively, set useTestProjectImplementation(true) on the "
+                                + "lint task.");
+            }
+            project = new LmModuleProject(this, dir, referenceDir, buildVariant, null);
+        }
+
         registerProject(dir, project);
         return project;
+    }
+
+    private static boolean hasOldDirectoryLayout(File dir) {
+        if (new File(dir, "res").exists()) {
+            // Should probably be src/main/res/
+            return true;
+        }
+
+        if (new File(dir, "src").exists()
+                && !(new File(dir, "src/main").exists())
+                && !(new File(dir, "src/test").exists())) {
+            return true;
+        }
+
+        File[] srcs = new File(dir, "src/main").listFiles();
+        if (srcs != null) {
+            for (File child : srcs) {
+                String name = child.getName();
+                switch (name) {
+                    case FN_ANDROID_MANIFEST_XML:
+                    case "res":
+                    case "java":
+                    case "kotlin":
+                        break;
+                    default:
+                        return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Nullable
@@ -462,29 +515,6 @@ public class TestLintClient extends LintCliClient {
 
         if (task.listener != null) {
             driver.addLintListener(task.listener);
-        }
-
-        if (task.mockModifier != null) {
-            driver.addLintListener(
-                    (driver, type, project, context) -> {
-                        if (type == LintListener.EventType.REGISTERED_PROJECT && project != null) {
-                            LmVariant variant = project.getBuildVariant();
-                            if (variant != null) {
-                                com.android.builder.model.Variant oldVariant =
-                                        variant.getOldVariant();
-                                IdeAndroidProject oldProject = variant.getModule().getOldProject();
-                                if (oldVariant != null && oldProject != null) {
-                                    task.mockModifier.modify(oldProject, oldVariant);
-                                    // Invalidate any cached lint models
-                                    for (Project p : getKnownProjects()) {
-                                        if (p instanceof TestProject) {
-                                            ((TestProject) p).builderModelUpdated();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
         }
 
         validateIssueIds();
@@ -1278,6 +1308,7 @@ public class TestLintClient extends LintCliClient {
             LmVariant variant = getBuildVariant();
             if (mocker != null && variant != null) {
                 // Simulate what the Gradle integration does
+                // TODO: Do this more effectively; we have direct library lookup
                 for (LmLibrary lib : variant.getMainArtifact().getDependencies().getAll()) {
                     if (libraryMatches(artifact, lib)) {
                         return true;
@@ -1358,11 +1389,6 @@ public class TestLintClient extends LintCliClient {
         }
 
         @Nullable private LmVariant cachedLintVariant = null;
-
-        // Gradle builder model has been changed after construction.
-        void builderModelUpdated() {
-            cachedLintVariant = null;
-        }
 
         private List<LmSourceProvider> mProviders;
 

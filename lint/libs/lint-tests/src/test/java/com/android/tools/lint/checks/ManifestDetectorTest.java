@@ -1210,7 +1210,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 4 warnings\n";
         lint().files(
-                        mGradle_override,
+                        xml("src/main/" + mGradle_override.targetRelativePath, mGradle_override.contents),
                         gradle(
                                 ""
                                         + "android {\n"

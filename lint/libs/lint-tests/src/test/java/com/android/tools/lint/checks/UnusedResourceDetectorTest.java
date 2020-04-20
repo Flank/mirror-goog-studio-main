@@ -800,7 +800,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
         //noinspection all // Sample code
         lint().files(
-                        mLayout1,
+                        xml("src/main/" + mLayout1.targetRelativePath, mLayout1.contents),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -1471,14 +1471,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"),
                         xml(
-                                "res/layout/activity_demo.xml",
+                                "src/main/res/layout/activity_demo.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
                         xml(
-                                "res/layout/activity_ignored.xml",
+                                "src/main/res/layout/activity_ignored.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -1542,7 +1542,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 CLIENT_GRADLE))
                 .run()
                 .expect(
-                        "res/layout/activity_ignored.xml:2: Warning: The resource R.layout.activity_ignored appears to be unused [UnusedResources]\n"
+                        "src/main/res/layout/activity_ignored.xml:2: Warning: The resource R.layout.activity_ignored appears to be unused [UnusedResources]\n"
                                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                 + "^\n"
                                 + "0 errors, 1 warnings");
@@ -1695,7 +1695,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}"),
                         xml(
-                                "res/values/ids.xml",
+                                "src/main/res/values/ids.xml",
                                 ""
                                         + "<resources>\n"
                                         + "    <item name=\"fab1\" type=\"id\"/>\n"
