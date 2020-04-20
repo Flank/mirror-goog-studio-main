@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
 import com.android.ddmlib.log.LogReceiver;
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -47,6 +48,8 @@ public final class AdbHelper {
     static final int WAIT_TIME = 5; // spin-wait sleep, in ms
 
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
+    public static final String HOST_TRANSPORT = "host:transport:";
 
     /** do not instantiate */
     private AdbHelper() {}
@@ -115,7 +118,7 @@ public final class AdbHelper {
      * Creates and connects a new pass-through socket, from the host to a port on the device.
      *
      * @param adbSockAddr
-     * @param device the device to connect to. Can be null in which case the connection will be to
+     * @param deviceSerialNumber the device serial number to connect to. Can be null or empty in which case the connection will be to
      *     the first available device.
      * @param pid the process pid to connect to.
      * @throws TimeoutException in case of timeout on the connection.
@@ -124,9 +127,8 @@ public final class AdbHelper {
      */
     @Slow
     public static SocketChannel createPassThroughConnection(
-            InetSocketAddress adbSockAddr, IDevice device, int pid)
+      InetSocketAddress adbSockAddr, String deviceSerialNumber, int pid)
             throws TimeoutException, AdbCommandRejectedException, IOException {
-
         SocketChannel adbChan = SocketChannel.open(adbSockAddr);
         try {
             adbChan.socket().setTcpNoDelay(true);
@@ -134,7 +136,7 @@ public final class AdbHelper {
 
             // if the device is not -1, then we first tell adb we're looking to
             // talk to a specific device
-            setDevice(adbChan, device);
+            setDevice(adbChan, deviceSerialNumber);
 
             byte[] req = createJdwpForwardRequest(pid);
             // Log.hexDump(req);
@@ -1063,27 +1065,44 @@ public final class AdbHelper {
      * tells adb to talk to a specific device
      *
      * @param adbChan the socket connection to adb
-     * @param device The device to talk to.
+     * @param deviceSerialNumber  the serial of the device to talk to, if null the default device selected is the device picked by adb.
+     * @throws TimeoutException            in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException                 in case of I/O error on the connection.
+     */
+    public static void setDevice(SocketChannel adbChan, String deviceSerialNumber)
+      throws TimeoutException, AdbCommandRejectedException, IOException {
+        if (Strings.isNullOrEmpty(deviceSerialNumber)) {
+            return;
+        }
+        // tell adb we're looking to talk to a specific device
+        String msg = HOST_TRANSPORT + deviceSerialNumber; //$NON-NLS-1$
+        byte[] device_query = formAdbRequest(msg);
+
+        write(adbChan, device_query);
+
+        AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+        if (!resp.okay) {
+            throw new AdbCommandRejectedException(
+              resp.message, true /*errorDuringDeviceSelection*/);
+        }
+    }
+
+    /**
+     * Given an {@link IDevice} grab the serial number and tell adb to talk to that device.
+     * @param adbChan the socket connection to adb.
+     * @param device the device to talk to.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
     public static void setDevice(SocketChannel adbChan, IDevice device)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
-        // if the device is not -1, then we first tell adb we're looking to talk
-        // to a specific device
-        if (device != null) {
-            String msg = "host:transport:" + device.getSerialNumber(); //$NON-NLS-1$
-            byte[] device_query = formAdbRequest(msg);
-
-            write(adbChan, device_query);
-
-            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
-            if (!resp.okay) {
-                throw new AdbCommandRejectedException(
-                        resp.message, true /*errorDuringDeviceSelection*/);
-            }
+      throws TimeoutException, AdbCommandRejectedException, IOException {
+        // if the device is null, we early out.
+        if (device == null) {
+            return;
         }
+        setDevice(adbChan, device.getSerialNumber());
     }
 
     /**

@@ -341,7 +341,7 @@ class DeviceClientMonitorTask implements Runnable {
         try {
             clientSocket =
                     AdbHelper.createPassThroughConnection(
-                            AndroidDebugBridge.getSocketAddress(), device, pid);
+                            AndroidDebugBridge.getSocketAddress(), device.getSerialNumber(), pid);
 
             // required for Selector
             clientSocket.configureBlocking(false);
