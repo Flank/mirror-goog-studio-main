@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.tools.mlkit.MlConstants
 import com.android.tools.mlkit.MlkitNames
-import com.android.tools.mlkit.exception.TfliteModelException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.FileVisitor
@@ -60,7 +60,9 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
 
                 override fun visitFile(fileVisitDetails: FileVisitDetails) {
                     val modelFile = fileVisitDetails.file
-                    if (modelFile.name.endsWith(DOT_TFLITE)) {
+                    if (modelFile.name.endsWith(DOT_TFLITE)
+                        && modelFile.length() <= MlConstants.MAX_SUPPORTED_MODEL_FILE_SIZE_IN_BYTES
+                    ) {
                         try {
                             val modelGenerator = TfliteModelGenerator(
                                 modelFile,
@@ -68,7 +70,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
                                 fileVisitDetails.relativePath.pathString
                             )
                             modelGenerator.generateBuildClass(sourceOutDir)
-                        } catch (e: TfliteModelException) {
+                        } catch (e: Exception) {
                             Logging.getLogger(this.javaClass).warn(e.message)
                         }
                     }
