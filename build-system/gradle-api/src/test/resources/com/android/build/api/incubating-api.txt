@@ -668,6 +668,11 @@ com.android.build.api.dsl.Splits.getAbiFilters: java.util.Collection<java.lang.S
 com.android.build.api.dsl.Splits.getDensity: DensitySplitT ()
 com.android.build.api.dsl.Splits.getDensityFilters: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.TestBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.TestVariantDimension
+com.android.build.api.dsl.TestBuildType.isCrunchPngs: java.lang.Boolean ()
+com.android.build.api.dsl.TestBuildType.isDebuggable: boolean ()
+com.android.build.api.dsl.TestBuildType.setCrunchPngs: void (java.lang.Boolean)
+com.android.build.api.dsl.TestBuildType.setDebuggable: void (boolean)
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
@@ -682,6 +687,11 @@ com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super UnitTestOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.TestVariantDimension implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.TestVariantDimension.getMultiDexEnabled: java.lang.Boolean ()
+com.android.build.api.dsl.TestVariantDimension.getSigningConfig: SigningConfigT ()
+com.android.build.api.dsl.TestVariantDimension.setMultiDexEnabled: void (java.lang.Boolean)
+com.android.build.api.dsl.TestVariantDimension.setSigningConfig: void (SigningConfigT)
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.TestedExtension.getTestBuildType: java.lang.String ()
 com.android.build.api.dsl.TestedExtension.setTestBuildType: void (java.lang.String)

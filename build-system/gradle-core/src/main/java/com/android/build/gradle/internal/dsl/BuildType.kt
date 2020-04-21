@@ -20,6 +20,7 @@ import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryBuildType
 import com.android.build.api.dsl.Ndk
 import com.android.build.api.dsl.Shaders
+import com.android.build.api.dsl.TestBuildType
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractBuildType
@@ -45,7 +46,8 @@ open class BuildType @Inject constructor(
     AbstractBuildType(), CoreBuildType, Serializable,
     ApplicationBuildType<AnnotationProcessorOptions, SigningConfig>,
     LibraryBuildType<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureBuildType<AnnotationProcessorOptions> {
+    DynamicFeatureBuildType<AnnotationProcessorOptions>,
+    TestBuildType<AnnotationProcessorOptions, SigningConfig> {
 
     /**
      * Name of this build type.

@@ -33,7 +33,7 @@ interface TestExtension<
         AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
+        BuildTypeT : TestBuildType<AnnotationProcessorOptionsT, SigningConfigT>,
         CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
