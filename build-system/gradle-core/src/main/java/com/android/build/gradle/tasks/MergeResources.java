@@ -38,11 +38,10 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey;
-import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.Blocks;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
@@ -990,10 +989,14 @@ public abstract class MergeResources extends ResourceAwareTask {
                             .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
-            task.getAapt2WorkersBuildService()
-                    .set(Aapt2Workers.getAapt2WorkersBuildService(task.getProject()));
-            task.getAapt2DaemonBuildService()
-                    .set(Aapt2Daemon.getAapt2DaemonBuildService(task.getProject()));
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getAapt2WorkersBuildService(),
+                    BuildServicesKt.getBuildService(
+                            task.getProject(), Aapt2WorkersBuildService.class));
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getAapt2DaemonBuildService(),
+                    BuildServicesKt.getBuildService(
+                            task.getProject(), Aapt2DaemonBuildService.class));
         }
     }
 

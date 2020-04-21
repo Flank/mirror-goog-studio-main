@@ -66,8 +66,8 @@ import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.services.Aapt2Daemon;
-import com.android.build.gradle.internal.services.Aapt2Workers;
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
+import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -261,8 +261,8 @@ public abstract class BasePlugin<
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
-        Aapt2Workers.registerAapt2WorkersBuildService(project, projectOptions);
-        Aapt2Daemon.registerAapt2DaemonBuildService(project);
+        new Aapt2WorkersBuildService.RegistrationAction(project, projectOptions).execute();
+        new Aapt2DaemonBuildService.RegistrationAction(project).execute();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
