@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository.legacy;
 
+import static com.android.SdkConstants.FN_SOURCE_PROP;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -49,6 +51,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A {@link FallbackLocalRepoLoader} that uses a {@link LocalSdk} to parse {@link LocalPkgInfo} and
@@ -89,7 +92,7 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
     @Nullable
     public LocalPackage parseLegacyLocalPackage(@NonNull File dir,
             @NonNull ProgressIndicator progress) {
-        if (!mFop.exists(new File(dir, SdkConstants.FN_SOURCE_PROP))) {
+        if (!mFop.exists(new File(dir, FN_SOURCE_PROP))) {
             return null;
         }
         progress.logVerbose(String.format("Parsing legacy package: %s", dir));
@@ -119,7 +122,7 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
 
     @Override
     public boolean shouldParse(@NonNull File root) {
-        return mFop.exists(new File(root, SdkConstants.FN_SOURCE_PROP));
+        return mFop.exists(new File(root, FN_SOURCE_PROP));
     }
 
     /**
@@ -202,6 +205,21 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
         @Override
         @NonNull
         public String getPath() {
+            // First try getting a new-style path from source.properties, in case we have a new
+            // package manually unzipped in a place
+            // recognized as a legacy package (e.g. cmdline-tools being in "tools").
+            File sourcePropsFile = new File(mWrapped.getLocalDir(), FN_SOURCE_PROP);
+            try {
+                Properties sourceProps = new Properties();
+                sourceProps.load(mFop.newFileInputStream(sourcePropsFile));
+                String newPath = sourceProps.getProperty("Pkg.Path");
+                if (newPath != null) {
+                    return newPath;
+                }
+            } catch (IOException e) {
+                // ignore, continue with legacy package logic
+            }
+
             String relativePath = null;
             try {
                 relativePath = FileOpUtils.makeRelative(mWrapped.getLocalSdk().getLocation(),

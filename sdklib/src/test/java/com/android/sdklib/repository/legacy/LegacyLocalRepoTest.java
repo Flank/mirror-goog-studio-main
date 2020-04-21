@@ -81,17 +81,37 @@ public class LegacyLocalRepoTest extends TestCase {
         assertEquals(new Revision(22, 3, 4), local.getVersion());
     }
 
+    public void testReadNewInLegacyLocation() throws Exception {
+        MockFileOp mockFop = new MockFileOp();
+        mockFop.recordExistingFolder("/sdk/tools");
+        mockFop.recordExistingFile(
+                "/sdk/tools/source.properties",
+                "Pkg.Revision=1.2\n"
+                        + "Pkg.Path=cmdline-tools;latest\n"
+                        + "Pkg.Desc=Android SDK Command-line Tools");
+
+        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "tools/package.xml", true);
+
+        assertEquals("cmdline-tools;latest", local.getPath());
+        int[] revision = local.getVersion().toIntArray(false);
+        assertEquals(3, revision.length);
+        assertEquals(1, revision[0]);
+        assertEquals(2, revision[1]);
+        assertEquals(0, revision[2]);
+    }
+
     public void testRewriteLegacyTools() throws Exception {
         MockFileOp mockFop = new MockFileOp();
         mockFop.recordExistingFolder("/sdk/tools");
-        mockFop.recordExistingFile("/sdk/tools/source.properties",
-                "Pkg.License=Terms and Conditions\n" +
-                        "Archive.Os=WINDOWS\n" +
-                        "Pkg.Revision=22.3\n" +
-                        "Platform.MinPlatformToolsRev=18\n" +
-                        "Pkg.LicenseRef=android-sdk-license\n" +
-                        "Archive.Arch=ANY\n" +
-                        "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
+        mockFop.recordExistingFile(
+                "/sdk/tools/source.properties",
+                "Pkg.License=Terms and Conditions\n"
+                        + "Archive.Os=WINDOWS\n"
+                        + "Pkg.Revision=22.3\n"
+                        + "Platform.MinPlatformToolsRev=18\n"
+                        + "Pkg.LicenseRef=android-sdk-license\n"
+                        + "Archive.Arch=ANY\n"
+                        + "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
 
         LocalPackage local = loadLocalPackage(mockFop, "/sdk", "tools/package.xml");
 
@@ -235,11 +255,19 @@ public class LegacyLocalRepoTest extends TestCase {
     }
 
     private static LocalPackage loadLocalPackage(MockFileOp mockFop, String rootPath, String packagePath) throws Exception {
+        return loadLocalPackage(mockFop, rootPath, packagePath, false);
+    }
+
+    private static LocalPackage loadLocalPackage(
+            MockFileOp mockFop, String rootPath, String packagePath, boolean allowWarnings)
+            throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         File root = new File(rootPath);
         RepoManager mgr = new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
 
-        progress.assertNoErrorsOrWarnings();
+        if (!allowWarnings) {
+            progress.assertNoErrorsOrWarnings();
+        }
 
         Collection<SchemaModule<?>> extensions = ImmutableList
           .of(RepoManager.getCommonModule(), RepoManager.getGenericModule(), AndroidSdkHandler.getAddonModule());
@@ -252,7 +280,9 @@ public class LegacyLocalRepoTest extends TestCase {
                                 extensions,
                                 true,
                                 progress);
-        progress.assertNoErrorsOrWarnings();
+        if (!allowWarnings) {
+            progress.assertNoErrorsOrWarnings();
+        }
         LocalPackage local = repo.getLocalPackage();
         local.setInstalledPath(mgr.getLocalPath());
 
