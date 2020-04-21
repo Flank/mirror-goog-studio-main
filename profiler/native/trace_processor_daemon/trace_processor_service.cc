@@ -18,6 +18,7 @@
 
 #include <grpc++/grpc++.h>
 
+#include "counters/counters_request_handler.h"
 #include "memory/memory_request_handler.h"
 #include "perfetto/trace_processor/basic_types.h"
 #include "perfetto/trace_processor/read_trace.h"
@@ -143,6 +144,12 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
         MemoryRequestHandler handler(tp_.get());
         handler.PopulateEvents(
             batch_response->add_result()->mutable_memory_events());
+      } break;
+      case QueryParameters::kCountersRequest: {
+        CountersRequestHandler handler(tp_.get());
+        handler.PopulateCounters(
+            request.counters_request(),
+            batch_response->add_result()->mutable_counters_result());
       } break;
     }
   }

@@ -70,6 +70,7 @@ message QueryParameters {
     TraceEventsParameters trace_events_request = 102;
     SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
+    CountersParameters counters_request = 105;
   }
 
   // Returns metadata information for a set of processes.
@@ -97,6 +98,11 @@ message QueryParameters {
       int64 thread_id = 2;
     }
   }
+
+  // Returns all process counters for the process identified by process_id.
+  message CountersParameters {
+    int64 process_id = 1;
+  }
 }
 
 message QueryResult {
@@ -110,6 +116,7 @@ message QueryResult {
     TraceEventsResult trace_events_result = 102;
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
+    CountersResult counters_result = 105;
   }
 
 }
@@ -192,3 +199,20 @@ message SchedulingEventsResult {
 
 }
 
+message CountersResult {
+  // List of counters.
+  repeated Counter counter = 1;
+
+  message Counter {
+    // The counter name.
+    string name = 1;
+
+    // All entries of this counter, with associated timestamps.
+    repeated CounterValue value = 2;
+  }
+
+  message CounterValue {
+    int64 timestamp_nanoseconds = 1;
+    double value = 2;
+  }
+}
