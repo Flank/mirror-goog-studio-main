@@ -1217,7 +1217,6 @@ class LintDriver
                             context.uastFile = null
                         }
 
-                        uastParser.dispose()
                         fileCount++
                     } else if (file.path.endsWith(DOT_GRADLE)) {
                         val gradleVisitor = project.client.getGradleVisitor()
@@ -1730,7 +1729,6 @@ class LintDriver
 
             val projectContext = Context(this, project, main, project.dir)
             uElementVisitor.visitGroups(projectContext, allContexts)
-            uElementVisitor.dispose()
 
             if (testContexts.isNotEmpty()) {
                 val testScanners = filterTestScanners(uastScanners)
@@ -1752,8 +1750,6 @@ class LintDriver
                             return
                         }
                     }
-
-                    uTestVisitor.dispose()
                 }
             }
         }

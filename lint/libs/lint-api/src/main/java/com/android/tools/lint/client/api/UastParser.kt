@@ -175,21 +175,4 @@ abstract class UastParser {
     abstract fun getNameLocation(context: JavaContext, element: PsiElement): Location
 
     abstract fun getNameLocation(context: JavaContext, element: UElement): Location
-
-    /**
-     * Dispose any data structures held for the given context.
-     *
-     * @param context information about the file previously parsed
-     * @param compilationUnit the compilation unit being disposed
-     */
-    open fun dispose(context: JavaContext, compilationUnit: UFile) {
-    }
-
-    /**
-     * Dispose any remaining data structures held for all contexts.
-     * Typically frees up any resources allocated by
-     * [.prepare]
-     */
-    open fun dispose() {
-    }
 }
