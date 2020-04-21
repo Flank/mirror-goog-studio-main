@@ -15,11 +15,12 @@
  */
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values
 
+import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenButtonBarStyle
 
-fun fullscreenStyles(themeName: String) =
+fun fullscreenStyles(themesData: ThemesData) =
   """<resources>
-    <style name="${getFullscreenButtonBarStyle(themeName)}" parent="">
+    <style name="${getFullscreenButtonBarStyle(themesData.main.name)}" parent="">
         <item name="android:background">@color/black_overlay</item>
         <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
     </style>

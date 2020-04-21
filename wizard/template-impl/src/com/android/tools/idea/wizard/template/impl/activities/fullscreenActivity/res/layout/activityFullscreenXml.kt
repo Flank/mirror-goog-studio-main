@@ -16,17 +16,18 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.layout
 
+import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenButtonBarStyle
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenContainerThemeOverlay
 
 fun activityFullscreenXml(
   activityClass: String,
   packageName: String,
-  themeName: String
+  themesData: ThemesData
 ) =
   """<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:theme="@style/${getFullscreenContainerThemeOverlay(themeName)}"
+    android:theme="@style/${getFullscreenContainerThemeOverlay(themesData.overlay.name)}"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/fullscreenBackgroundColor"
@@ -52,7 +53,7 @@ fun activityFullscreenXml(
         android:fitsSystemWindows="true">
 
         <LinearLayout android:id="@+id/fullscreen_content_controls"
-            style="@style/${getFullscreenButtonBarStyle(themeName)}"
+            style="@style/${getFullscreenButtonBarStyle(themesData.main.name)}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"

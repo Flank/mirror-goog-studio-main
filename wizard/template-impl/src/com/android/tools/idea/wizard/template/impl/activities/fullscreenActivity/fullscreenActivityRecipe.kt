@@ -62,11 +62,11 @@ fun RecipeExecutor.fullscreenActivityRecipe(
 
   mergeXml(fullscreenAttrs(), finalResOut.resolve("values/attrs.xml"))
   mergeXml(fullscreenColors(), finalResOut.resolve("values/colors.xml"))
-  mergeXml(fullscreenStyles(themeName), finalResOut.resolve("values/styles.xml"))
-  mergeXml(fullscreenThemes(themeName), finalResOut.resolve("values/themes.xml"))
-  mergeXml(fullscreenThemesNight(themeName), finalResOut.resolve("values-night/themes.xml"))
+  mergeXml(fullscreenStyles(moduleData.themesData), finalResOut.resolve("values/styles.xml"))
+  mergeXml(fullscreenThemes(moduleData.themesData), finalResOut.resolve("values/themes.xml"))
+  mergeXml(fullscreenThemesNight(moduleData.themesData), finalResOut.resolve("values-night/themes.xml"))
 
-  save(activityFullscreenXml(activityClass, packageName, themeName), resOut.resolve("layout/${layoutName}.xml"))
+  save(activityFullscreenXml(activityClass, packageName, moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
   mergeXml(stringsXml(activityTitle, moduleData.isNewModule, simpleName), finalResOut.resolve("values/strings.xml"))
 
   val actionBarClassFqcn = getMaterialComponentName("android.support.v7.app.ActionBar", useAndroidX)

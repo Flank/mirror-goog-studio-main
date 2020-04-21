@@ -15,12 +15,13 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values_night
 
+import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.MaterialColor
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenContainerThemeOverlay
 
-fun fullscreenThemes(themeName: String) =
+fun fullscreenThemes(themesData: ThemesData) =
   """<resources>
-    <style name="${getFullscreenContainerThemeOverlay(themeName)}" parent="">
+    <style name="${getFullscreenContainerThemeOverlay(themesData.overlay.name)}" parent="">
         <item name="fullscreenBackgroundColor">@color/${MaterialColor.LIGHT_BLUE_900.colorName}</item>
         <item name="fullscreenTextColor">@color/${MaterialColor.LIGHT_BLUE_A400.colorName}</item>
     </style>

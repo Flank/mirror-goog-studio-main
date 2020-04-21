@@ -15,22 +15,25 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values
 
+import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.MaterialColor.*
 
-fun fullscreenThemes(themeName: String) =
-  """<resources>
-   <style name="${getFullscreenTheme(themeName)}" parent="${themeName}">
-        <item name="android:actionBarStyle">@style/${getFullscreenActionBarStyle(themeName)}</item>
+fun fullscreenThemes(themesData: ThemesData): String {
+  val mainThemeName = themesData.main.name
+  return """<resources>
+   <style name="${getFullscreenTheme(mainThemeName)}" parent="${mainThemeName}">
+        <item name="android:actionBarStyle">@style/${getFullscreenActionBarStyle(mainThemeName)}</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowBackground">@null</item>
     </style>
 
-    <style name="${getFullscreenContainerThemeOverlay(themeName)}" parent="">
+    <style name="${getFullscreenContainerThemeOverlay(themesData.overlay.name)}" parent="">
         <item name="fullscreenBackgroundColor">@color/${LIGHT_BLUE_600.colorName}</item>
         <item name="fullscreenTextColor">@color/${LIGHT_BLUE_A200.colorName}</item>
     </style>
 </resources>
 """
+}
 
 fun getFullscreenTheme(themeName: String) = "${themeName}.Fullscreen"
-fun getFullscreenContainerThemeOverlay(themeName: String) = "ThemeOverlay.${themeName}.FullscreenContainer"
+fun getFullscreenContainerThemeOverlay(overlayThemeName: String) = "${overlayThemeName}.FullscreenContainer"

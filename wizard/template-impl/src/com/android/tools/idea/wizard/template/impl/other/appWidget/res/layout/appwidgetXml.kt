@@ -16,11 +16,12 @@
 
 package com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout
 
+import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetThemeOverlay
 
-fun appwidgetXml(themeName: String) = """
+fun appwidgetXml(themesData: ThemesData) = """
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:theme="@style/${getAppWidgetThemeOverlay(themeName)}"
+    android:theme="@style/${getAppWidgetThemeOverlay(themesData.overlay.name)}"
     android:background="?attr/appWidgetBackgroundColor"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

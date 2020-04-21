@@ -15,15 +15,16 @@
  */
 package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values
 
+import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.MaterialColor.*
 
-fun themesXml(themeName: String) =
+fun themesXml(themesData: ThemesData) =
   """<resources>
-    <style name="${getAppWidgetThemeOverlay(themeName)}" parent="">
+    <style name="${getAppWidgetThemeOverlay(themesData.overlay.name)}" parent="">
         <item name="appWidgetBackgroundColor">@color/${LIGHT_BLUE_600.colorName}</item>
         <item name="appWidgetTextColor">@color/${LIGHT_BLUE_50.colorName}</item>
     </style>
 </resources>
 """
 
-fun getAppWidgetThemeOverlay(themeName: String) = "ThemeOverlay.${themeName}.AppWidgetContainer"
+fun getAppWidgetThemeOverlay(overlayThemeName: String) = "${overlayThemeName}.AppWidgetContainer"

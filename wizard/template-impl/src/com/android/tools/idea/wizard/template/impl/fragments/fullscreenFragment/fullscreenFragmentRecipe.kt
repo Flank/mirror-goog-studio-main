@@ -45,10 +45,10 @@ fun RecipeExecutor.fullscreenFragmentRecipe(
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
   mergeXml(fullscreenAttrs(), resOut.resolve("values/attrs.xml"))
   mergeXml(fullScreenColorsXml(), resOut.resolve("values/colors.xml"))
-  mergeXml(fullscreenStyles(themeName), resOut.resolve("values/styles.xml"))
-  mergeXml(fullscreenThemes(themeName), resOut.resolve("values/themes.xml"))
-  mergeXml(fullscreenThemesNight(themeName), resOut.resolve("values-night/themes.xml"))
-  save(fragmentFullscreenXml(fragmentClass, packageName, themeName), resOut.resolve("layout/${layoutName}.xml"))
+  mergeXml(fullscreenStyles(moduleData.themesData), resOut.resolve("values/styles.xml"))
+  mergeXml(fullscreenThemes(moduleData.themesData), resOut.resolve("values/themes.xml"))
+  mergeXml(fullscreenThemesNight(moduleData.themesData), resOut.resolve("values-night/themes.xml"))
+  save(fragmentFullscreenXml(fragmentClass, packageName, moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
 
   val fullscreenFragment = when (projectData.language) {
     Language.Java -> fullscreenFragmentJava(fragmentClass, layoutName, packageName, useAndroidX)

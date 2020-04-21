@@ -55,7 +55,7 @@ fun RecipeExecutor.appWidgetRecipe(
   mergeXml(androidManifestXml(className, configurable, layoutName, packageName), manifestOut.resolve("AndroidManifest.xml"))
 
   copy(File("example_appwidget_preview.png"), resOut.resolve("drawable-nodpi/example_appwidget_preview.png"))
-  save(appwidgetXml(themeName), resOut.resolve("layout/${layoutName}.xml"))
+  save(appwidgetXml(moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
 
   if (configurable) {
     save(appwidgetConfigureXml(), resOut.resolve("layout/${layoutName}_configure.xml"))
@@ -69,8 +69,8 @@ fun RecipeExecutor.appWidgetRecipe(
   mergeXml(attrsXml(), resOut.resolve("values/attrs.xml"))
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
-  mergeXml(themesXml(themeName), resOut.resolve("values/themes.xml"))
-  mergeXml(themesXmlNight(themeName), resOut.resolve("values-night/themes.xml"))
+  mergeXml(themesXml(moduleData.themesData), resOut.resolve("values/themes.xml"))
+  mergeXml(themesXmlNight(moduleData.themesData), resOut.resolve("values-night/themes.xml"))
 
   val appWidget = when (projectData.language) {
     Language.Java -> appWidgetJava(projectData.applicationPackage, className, configurable, layoutName, packageName)
