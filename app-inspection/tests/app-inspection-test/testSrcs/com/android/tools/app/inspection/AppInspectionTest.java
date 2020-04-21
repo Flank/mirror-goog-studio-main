@@ -29,6 +29,7 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.transport.device.SdkLevel;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
@@ -397,16 +398,28 @@ public final class AppInspectionTest {
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
         androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[2]
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[4]
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
 
         String inspectorId = "todo.inspector";
         assertResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
+
         androidDriver.triggerMethod(TODO_ACTIVITY, "getItemsCount");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getByteItemsCount");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getShortItemsCount");
         androidDriver.triggerMethod(TODO_ACTIVITY, "getLongItemsCount");
+
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getActiveGroupTrailingChar");
+
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getAverageItemCount");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "getDoubleAverageItemCount");
+
+        androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
         androidDriver.triggerMethod(TODO_ACTIVITY, "clearAllItems");
         androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
 
@@ -415,7 +428,23 @@ public final class AppInspectionTest {
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(
                             TodoInspectorApi.Event.TODO_GOT_ITEMS_COUNT.toByteArrayWithArg(
-                                    (byte) 1));
+                                    (byte) 3));
+        }
+
+        { // getByteItemsCount
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_BYTE_ITEMS_COUNT.toByteArrayWithArg(
+                                    (byte) 3));
+        }
+
+        { // getShortItemsCount
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_SHORT_ITEMS_COUNT.toByteArrayWithArg(
+                                    (byte) 3));
         }
 
         { // getLongItemsCount
@@ -423,7 +452,42 @@ public final class AppInspectionTest {
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(
                             TodoInspectorApi.Event.TODO_GOT_LONG_ITEMS_COUNT.toByteArrayWithArg(
-                                    (byte) 1));
+                                    (byte) 3));
+        }
+
+        { // getActiveGroupTrailingChar
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_GROUP_TRAILING_CHAR.toByteArrayWithArg(
+                                    (byte) '4')); // "Group #4"
+        }
+
+        { // getAverageItemCount
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_AVERAGE_ITEMS_COUNT.toByteArrayWithArg(
+                                    ByteBuffer.allocate(4)
+                                            .putFloat(0.75f)
+                                            .array())); // 3 items across four groups
+        }
+
+        { // getDoubleAverageItemCount
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GOT_DOUBLE_AVERAGE_ITEMS_COUNT
+                                    .toByteArrayWithArg(
+                                            ByteBuffer.allocate(8).putDouble(0.75).array()));
+        }
+
+        { // hasEmptyTodoList
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST.toByteArrayWithArg(
+                                    (byte) 0));
         }
 
         { // clearAllItems

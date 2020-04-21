@@ -35,7 +35,7 @@ public final class TodoActivity extends TransportTestActivity {
 
     @NonNull
     public TodoGroup newGroup() {
-        TodoGroup group = new TodoGroup("Group #" + groups.size() + 1);
+        TodoGroup group = new TodoGroup("Group #" + (groups.size() + 1));
         groups.add(group);
         activeGroup = group;
         return group;
@@ -46,7 +46,7 @@ public final class TodoActivity extends TransportTestActivity {
         if (activeGroup == null) {
             newGroup();
         }
-        TodoItem item = new TodoItem("Item #" + activeGroup.getItems().size() + 1);
+        TodoItem item = new TodoItem("Item #" + (activeGroup.getItems().size() + 1));
         activeGroup.addItem(item);
         return item;
     }
@@ -78,7 +78,7 @@ public final class TodoActivity extends TransportTestActivity {
     // we have this special internal method instead of simply
     // calling getItemsCount from getLongItemsCount to avoid
     // sending two events once we call getLongItemsCount.
-    public int countItemsInternal() {
+    private int countItemsInternal() {
         int sum = 0;
         for (TodoGroup group : groups) {
             sum += group.getItems().size();
@@ -87,15 +87,49 @@ public final class TodoActivity extends TransportTestActivity {
     }
 
     public int getItemsCount() {
-      return countItemsInternal();
+        return countItemsInternal();
+    }
+
+    public byte getByteItemsCount() {
+        return (byte) countItemsInternal();
+    }
+
+    public short getShortItemsCount() {
+        return (short) countItemsInternal();
     }
 
     public long getLongItemsCount() {
       return countItemsInternal();
     }
 
+    public char getActiveGroupTrailingChar() {
+        if (activeGroup == null || activeGroup.getDescription().length() == 0) return '\0';
+        return activeGroup.getDescription().charAt(activeGroup.getDescription().length() - 1);
+    }
+
     public boolean hasEmptyTodoList() {
         return groups.isEmpty();
+    }
+
+    // we have this special internal method instead of simply calling getAverageItemCount from
+    // getDoubleAverageItemCount
+    // to avoid sending two events once we call getLongItemsCount.
+    private float getAverageItemCountInternal() {
+        if (groups.isEmpty()) return 0f;
+
+        int totalItemCount = 0;
+        for (TodoGroup group : groups) {
+            totalItemCount += group.getItems().size();
+        }
+        return (float) totalItemCount / (float) groups.size();
+    }
+
+    public float getAverageItemCount() {
+        return getAverageItemCountInternal();
+    }
+
+    public double getDoubleAverageItemCount() {
+        return getAverageItemCountInternal();
     }
 
     // this function allocates more than 16 variables

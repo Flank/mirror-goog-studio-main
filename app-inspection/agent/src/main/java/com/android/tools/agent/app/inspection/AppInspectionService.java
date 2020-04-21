@@ -333,7 +333,7 @@ public class AppInspectionService {
         hooks.add(new HookInfo<>(inspectorId, hook));
     }
 
-    private static Object onExitInternal(Object returnObject) {
+    private static <T> T onExitInternal(T returnObject) {
         Error error = new Error();
         error.fillInStackTrace();
         StackTraceElement[] stackTrace = error.getStackTrace();
@@ -350,7 +350,7 @@ public class AppInspectionService {
         }
         for (HookInfo<ExitHook> info : hooks) {
             //noinspection unchecked
-            returnObject = info.hook.onExit(returnObject);
+            returnObject = (T) info.hook.onExit(returnObject);
         }
         return returnObject;
     }
@@ -363,16 +363,36 @@ public class AppInspectionService {
         onExitInternal(null);
     }
 
+    public static boolean onExit(boolean result) {
+        return onExitInternal(result);
+    }
+
+    public static byte onExit(byte result) {
+        return onExitInternal(result);
+    }
+
+    public static char onExit(char result) {
+        return onExitInternal(result);
+    }
+
+    public static short onExit(short result) {
+        return onExitInternal(result);
+    }
+
     public static int onExit(int result) {
-        return (Integer) onExitInternal(result);
+        return onExitInternal(result);
+    }
+
+    public static float onExit(float result) {
+        return onExitInternal(result);
     }
 
     public static long onExit(long result) {
-        return (Long) onExitInternal(result);
+        return onExitInternal(result);
     }
 
-    public static boolean onExit(boolean result) {
-        return (Boolean) onExitInternal(result);
+    public static double onExit(double result) {
+        return onExitInternal(result);
     }
 
     /**
