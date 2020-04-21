@@ -92,7 +92,7 @@ interface DeprecationReporter {
 
         AGP_BUILD_CACHE(
             Version.VERSION_5_0,
-            "It does not do anything and AGP is now using Gradle caching"
+            "It does not do anything and AGP is now using Gradle caching."
         ),
 
         ;

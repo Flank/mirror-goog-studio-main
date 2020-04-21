@@ -168,6 +168,8 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
+import com.android.build.gradle.tasks.CleanBuildCache;
+import com.android.build.gradle.tasks.CleanBuildCacheKt;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -608,6 +610,14 @@ public abstract class TaskManager<
         globalScope.setLintPublish(createCustomLintPublishConfig(project));
 
         globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
+
+        // Register the cleanBuildCache task only for the root project
+        TaskFactory rootProjectTaskFactory =
+                new TaskFactoryImpl(project.getRootProject().getTasks());
+        if (rootProjectTaskFactory.findByName(CleanBuildCacheKt.CLEAN_BUILD_CACHE_TASK_NAME)
+                == null) {
+            rootProjectTaskFactory.register(new CleanBuildCache.CreationAction(globalScope));
+        }
 
         // for testing only.
         taskFactory.register(
