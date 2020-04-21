@@ -21,6 +21,7 @@ import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELET
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
 import static org.junit.Assert.assertEquals;
@@ -31,9 +32,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.res.shrinker.DummyContent;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.CodeShrinker;
@@ -73,25 +74,28 @@ public class ShrinkResourcesTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("shrink").create();
 
-    @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2} useRTxt={3}")
+    @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2} useRTxt={3} useNewShrinker={4}")
     public static Iterable<Object[]> data() {
-        return ImmutableList.of(
-                new Object[] {
-                    CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false
-                },
-                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false},
-                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false},
-                new Object[] {CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false},
-                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, false},
-                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, false},
-                new Object[] {
-                    CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true
-                },
-                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true},
-                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true},
-                new Object[] {CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true},
-                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true},
-                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true});
+        return ImmutableList.of(false, true).stream()
+                .flatMap(useNewShrinker -> Stream.of(
+                        new Object[]{
+                                CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker
+                        },
+                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker},
+                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker},
+                        new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker},
+                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, useNewShrinker},
+                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, useNewShrinker},
+                        new Object[]{
+                                CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker
+                        },
+                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker},
+                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker},
+                        new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker},
+                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, useNewShrinker},
+                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, useNewShrinker}
+                ))
+                .collect(toImmutableList());
     }
 
     @Parameterized.Parameter public CodeShrinker shrinker;
@@ -104,6 +108,9 @@ public class ShrinkResourcesTest {
 
     @Parameterized.Parameter(3)
     public Boolean useRTxt;
+
+    @Parameterized.Parameter(4)
+    public Boolean useNewShrinker;
 
     private enum ApkPipeline {
         NO_BUNDLE("assemble", ""),
@@ -166,9 +173,9 @@ public class ShrinkResourcesTest {
     private byte[] getIntermediateCompressedXml() {
         switch (apkPipeline) {
             case NO_BUNDLE:
-                return ResourceUsageAnalyzer.TINY_BINARY_XML;
+                return DummyContent.TINY_BINARY_XML;
             case BUNDLE:
-                return ResourceUsageAnalyzer.TINY_PROTO_XML;
+                return DummyContent.TINY_PROTO_XML;
         }
         throw new IllegalStateException();
     }
@@ -217,6 +224,7 @@ public class ShrinkResourcesTest {
         project.executor()
                 .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .with(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING, useRTxt)
+                .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, useNewShrinker)
                 .run(
                         "clean",
                         apkPipeline.taskName("Release"),
@@ -767,7 +775,7 @@ public class ShrinkResourcesTest {
                         case "res/raw/unused_icon.png":
                             assertThat(bytes1)
                                     .named(name1)
-                                    .isEqualTo(ResourceUsageAnalyzer.TINY_PNG);
+                                    .isEqualTo(DummyContent.TINY_PNG);
                             break;
                         case "res/raw/unused_index.html":
                             assertThat(bytes1).named(name1).isEmpty();

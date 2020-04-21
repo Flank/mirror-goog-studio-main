@@ -65,6 +65,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -281,7 +282,7 @@ public class ResourceUsageModel {
          * an include; a style reference in a layout references that layout style, and so on. */
         public List<Resource> references;
 
-        public List<File> declarations;
+        public List<Path> declarations;
 
         /** Whether we found a declaration for this resource (otherwise we might have seen
          * a reference to this before we came across its potential declaration, so we added it
@@ -382,10 +383,14 @@ public class ResourceUsageModel {
         }
 
         public void addLocation(@NonNull File file) {
+            addLocation(file.toPath());
+        }
+
+        public void addLocation(@NonNull Path path) {
             if (declarations == null) {
                 declarations = Lists.newArrayList();
             }
-            declarations.add(file);
+            declarations.add(path);
         }
 
         public void addReference(@Nullable Resource resource) {
@@ -551,13 +556,18 @@ public class ResourceUsageModel {
     }
 
     @NonNull
-    public Resource addResource(@NonNull ResourceType type, @NonNull String name,
-            @Nullable String value) {
-        int realValue = value != null ? Integer.decode(value) : -1;
+    public Resource addResource(
+            @NonNull ResourceType type, @NonNull String name, @Nullable String value) {
+        return addResource(type, name, value != null ? Integer.decode(value) : -1);
+    }
+
+    @NonNull
+    public Resource addResource(
+            @NonNull ResourceType type, @NonNull String name, @Nullable int realValue) {
         Resource resource = getResource(type, name);
         if (resource != null) {
             //noinspection VariableNotUsedInsideIf
-            if (value != null) {
+            if (realValue != -1) {
                 if (resource.value == -1) {
                     resource.value = realValue;
                 } else {

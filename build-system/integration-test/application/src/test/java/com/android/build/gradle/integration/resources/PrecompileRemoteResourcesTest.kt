@@ -23,9 +23,9 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage
+import com.android.build.gradle.internal.res.shrinker.DummyContent
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.testutils.apk.Apk
 import com.android.tools.build.apkzlib.zip.ZFile
@@ -258,13 +258,13 @@ class PrecompileRemoteResourcesTest {
 
         ZFile.openReadOnly(compressed).use {
             assertThat(it.get("res/layout/layout_random_name.xml")!!.read()).isEqualTo(
-                ResourceUsageAnalyzer.TINY_BINARY_XML
+                DummyContent.TINY_BINARY_XML
             )
             assertThat(it.get("res/drawable-anydpi-v26/button.xml")!!.read()).isNotEqualTo(
-                ResourceUsageAnalyzer.TINY_BINARY_XML
+                DummyContent.TINY_BINARY_XML
             )
             assertThat(it.get("res/drawable-v26/ic_launcher_background.xml")!!.read()).isNotEqualTo(
-                ResourceUsageAnalyzer.TINY_BINARY_XML
+                DummyContent.TINY_BINARY_XML
             )
         }
     }

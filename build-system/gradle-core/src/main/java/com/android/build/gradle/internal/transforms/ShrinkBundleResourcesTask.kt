@@ -19,6 +19,15 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.res.shrinker.ApkFormat
+import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
+import com.android.build.gradle.internal.res.shrinker.ResourceShrinker
+import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
+import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRFiles
+import com.android.build.gradle.internal.res.shrinker.graph.RawResourcesGraphBuilder
+import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappingsRecorder
+import com.android.build.gradle.internal.res.shrinker.usages.DexClassesUsageRecorder
+import com.android.build.gradle.internal.res.shrinker.usages.XmlAndroidManifestUsageRecorder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -87,13 +96,14 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     @get:Input
     abstract val enableRTxtResourceShrinking: Property<Boolean>
 
+    @get:Input
+    abstract val useNewResourceShrinker: Property<Boolean>
+
     private lateinit var mainSplit: VariantOutput
 
     override fun doTaskAction() {
         val uncompressedResourceFile = uncompressedResources.get().asFile
         val compressedResourceFile= compressedResources.get().asFile
-
-        val classes = dex.files
 
         var reportFile: File? = null
         val mappingFile = mappingFileSrc.orNull?.asFile
@@ -117,18 +127,8 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             ?: throw java.lang.RuntimeException("Cannot find merged manifest file for $mainSplit")
 
         // Analyze resources and usages and strip out unused
-        val analyzer = ResourceUsageAnalyzer(
-            rSource,
-            classes,
-            File(manifestFile.outputFile),
-            mappingFile,
-            resourceDir.get().asFile,
-            reportFile,
-            ResourceUsageAnalyzer.ApkFormat.PROTO
-        )
+        val analyzer = createResourceShrinker(rSource, File(manifestFile.outputFile), reportFile)
         try {
-            analyzer.isVerbose = logger.isEnabled(LogLevel.INFO)
-            analyzer.isDebug = logger.isEnabled(LogLevel.DEBUG)
             try {
                 analyzer.analyze()
             } catch (e: IOException) {
@@ -162,8 +162,59 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 println(sb.toString())
             }
         } finally {
-            analyzer.dispose()
+            analyzer.close()
         }
+    }
+
+    private fun createResourceShrinker(
+        rSource: File,
+        manifestFile: File,
+        reportFile: File?
+    ): ResourceShrinker =
+        when {
+            useNewResourceShrinker.get() -> createNewResourceShrinker(
+                rSource,
+                manifestFile,
+                reportFile
+            )
+            else -> createLegacyResourceShrinker(rSource, manifestFile, reportFile)
+        }
+
+    private fun createLegacyResourceShrinker(
+        rSource: File,
+        manifestFile: File,
+        reportFile: File?
+    ): ResourceUsageAnalyzer {
+        val analyzer = ResourceUsageAnalyzer(
+            rSource,
+            dex.files,
+            manifestFile,
+            mappingFileSrc.orNull?.asFile,
+            resourceDir.get().asFile,
+            reportFile,
+            ApkFormat.PROTO
+        )
+        analyzer.isVerbose = logger.isEnabled(LogLevel.INFO)
+        analyzer.isDebug = logger.isEnabled(LogLevel.DEBUG)
+        return analyzer
+    }
+
+    private fun createNewResourceShrinker(
+        rSource: File,
+        manifestFile: File,
+        reportFile: File?
+    ): ResourceShrinkerImpl {
+        val manifestUsageRecorder = XmlAndroidManifestUsageRecorder(manifestFile.toPath())
+        val dexClassesUsageRecorder = dex.files.map { DexClassesUsageRecorder(it.toPath()) }
+
+        return ResourceShrinkerImpl(
+            ResourcesGathererFromRFiles(rSource, ""),
+            mappingFileSrc.orNull?.asFile?.let { ProguardMappingsRecorder(it.toPath()) },
+            listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
+            RawResourcesGraphBuilder(listOf(resourceDir.get().asFile.toPath())),
+            LoggerAndFileDebugReporter(logger, reportFile),
+            ApkFormat.PROTO
+        )
     }
 
     companion object {
@@ -229,6 +280,11 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             task.enableRTxtResourceShrinking.set(
                 creationConfig.services
                     .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
+            )
+
+            task.useNewResourceShrinker.set(
+                creationConfig.services
+                    .projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
             )
 
             artifacts.setTaskInputToFinalProduct(
