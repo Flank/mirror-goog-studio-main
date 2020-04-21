@@ -69,7 +69,7 @@ val bottomNavigationActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "MainActivity"
-      help = "The name of the activity. For launcher activities, the application title."
+      help = "The name of the activity. For launcher activities, the application title"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }

@@ -34,7 +34,7 @@ val layoutResourceFileTemplate
   get() = template {
     revision = 1
     name = "Layout XML File"
-    description = "Creates a new XML layout file."
+    description = "Creates a new XML layout file"
     minApi = MIN_API
     minBuildApi = MIN_API
 
@@ -45,7 +45,7 @@ val layoutResourceFileTemplate
     val layoutName = stringParameter {
       name = "Layout File Name"
       default = "layout"
-      help = "Name of the layout XML file."
+      help = "Name of the layout XML file"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
     }
 

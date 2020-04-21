@@ -45,7 +45,7 @@ val androidTVActivityTemplate
     name = "Android TV Blank Activity"
     minApi = 21
     minBuildApi = 21
-    description = "Creates a new Android TV activity using Leanback Support library."
+    description = "Creates a new Android TV activity using Leanback Support library"
 
     category = Category.Activity
     formFactor = FormFactor.Tv
@@ -71,7 +71,7 @@ val androidTVActivityTemplate
     val mainFragment = stringParameter {
       name = "Main Fragment"
       default = "MainFragment"
-      help = "The name of the main fragment."
+      help = "The name of the main fragment"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
       suggest = { "MainFragment" }
     }
@@ -79,7 +79,7 @@ val androidTVActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "Title"
-      help = "The name of the activity. For launcher activities, the application title."
+      help = "The name of the activity. For launcher activities, the application title"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }
@@ -88,7 +88,7 @@ val androidTVActivityTemplate
     val detailsActivity = stringParameter {
       name = "Details Activity"
       default = "DetailsActivity"
-      help = "The name of the details activity."
+      help = "The name of the details activity"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
       suggest = { "DetailsActivity" }
     }
@@ -104,7 +104,7 @@ val androidTVActivityTemplate
     val detailsFragment = stringParameter {
       name = "Details Fragment"
       default = "VideoDetailsFragment"
-      help = "The name of the details fragment."
+      help = "The name of the details fragment"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
       suggest = { "VideoDetailsFragment" }
     }

@@ -35,7 +35,7 @@ val aidlFileTemplate
   get() = template {
     revision = 1
     name = "AIDL File"
-    description = "Creates a new Android Interface Description Language file."
+    description = "Creates a new Android Interface Description Language file"
     minApi = MIN_API
     minBuildApi = MIN_API
     category = Category.AIDL
@@ -45,7 +45,7 @@ val aidlFileTemplate
     val interfaceName = stringParameter {
       name = "Interface Name"
       default = "IMyAidlInterface"
-      help = "Name of the Interface. "
+      help = "Name of the Interface"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 

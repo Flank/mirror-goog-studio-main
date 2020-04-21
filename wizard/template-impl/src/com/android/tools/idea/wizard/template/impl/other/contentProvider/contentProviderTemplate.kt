@@ -38,7 +38,7 @@ val contentProviderTemplate
   get() = template {
     revision = 1
     name = "Content Provider"
-    description = "Creates a new content provider component and adds it to your Android manifest."
+    description = "Creates a new content provider component and adds it to your Android manifest"
 
     formFactor = FormFactor.Mobile
     category = Category.Other
@@ -53,20 +53,20 @@ val contentProviderTemplate
     val authorities = stringParameter {
       name = "URI Authorities"
       default = ""
-      help = "A semicolon separated list of one or more URI authorities that identify data under the purview of the content provider. "
+      help = "A semicolon separated list of one or more URI authorities that identify data under the purview of the content provider"
       constraints = listOf(NONEMPTY, URI_AUTHORITY)
     }
 
     val isExported = booleanParameter {
       name = "Exported"
       default = true
-      help = "Whether or not the content provider can be used by components of other applications "
+      help = "Whether or not the content provider can be used by components of other applications"
     }
 
     val isEnabled = booleanParameter {
       name = "Enabled"
       default = true
-      help = "Whether or not the content provider can be instantiated by the system "
+      help = "Whether or not the content provider can be instantiated by the system"
     }
 
     widgets(

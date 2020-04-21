@@ -45,7 +45,7 @@ val scrollActivityTemplate
     name = "Scrolling Activity"
     minApi = MIN_API
     minBuildApi = 22
-    description = "Creates a new vertical scrolling activity."
+    description = "Creates a new vertical scrolling activity"
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
@@ -70,7 +70,7 @@ val scrollActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "ScrollingActivity"
-      help = "The name of the activity. For launcher activities, the application title."
+      help = "The name of the activity. For launcher activities, the application title"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }

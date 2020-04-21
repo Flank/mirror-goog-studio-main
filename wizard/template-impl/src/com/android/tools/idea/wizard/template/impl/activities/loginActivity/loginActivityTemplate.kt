@@ -40,7 +40,7 @@ val loginActivityTemplate
   get() = template {
     revision = 1
     name = "Login Activity"
-    description = "Creates a new login activity, allowing users to enter an email address and password to log in or to register with your application."
+    description = "Creates a new login activity, allowing users to enter an email address and password to log in or to register with your application"
     minApi = MIN_API
     minBuildApi = MIN_API
 
@@ -67,7 +67,7 @@ val loginActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "Sign in"
-      help = "The name of the activity."
+      help = "The name of the activity"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }

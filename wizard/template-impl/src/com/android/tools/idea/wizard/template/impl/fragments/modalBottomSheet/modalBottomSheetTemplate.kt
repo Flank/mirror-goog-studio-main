@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
@@ -44,7 +43,7 @@ val modalBottomSheetTemplate
   get() = template {
     revision = 1
     name = "Modal Bottom Sheet"
-    description = "Creates a new modal bottom sheet fragment containing a list that can be rendered as a grid. Compatible back to API level 14."
+    description = "Creates a new modal bottom sheet fragment containing a list that can be rendered as a grid. Compatible back to API level 14"
     minApi = MIN_API
     minBuildApi = MIN_API
 

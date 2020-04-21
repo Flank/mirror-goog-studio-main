@@ -19,7 +19,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
@@ -50,7 +49,7 @@ val recyclerViewAdapterFragmentTemplate
   get() = template {
     revision = 1
     name = "Adapter with Fragment"
-    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level 14."
+    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level 14"
     minApi = 14
     minBuildApi = 14
 
@@ -125,7 +124,7 @@ val recyclerViewAdapterNoFragmentTemplate
   get() = template {
     revision = 1
     name = "Adapter Only"
-    description = "Generates RecyclerView adapter and other boilerplate codes. Compatible back to API level 14."
+    description = "Generates RecyclerView adapter and other boilerplate codes. Compatible back to API level 14"
     minApi = 14
     minBuildApi = 14
 

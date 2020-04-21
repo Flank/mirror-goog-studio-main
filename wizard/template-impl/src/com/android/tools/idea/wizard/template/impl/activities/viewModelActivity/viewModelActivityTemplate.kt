@@ -69,7 +69,7 @@ val viewModelActivityTemplate
     val fragmentClass = stringParameter {
       name = "Fragment Name"
       default = "MainFragment"
-      help = "The name of the fragment class to create "
+      help = "The name of the fragment class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
       suggest = { "${underscoreToCamelCase(classToResource(activityClass.value))}Fragment" }
     }
@@ -77,7 +77,7 @@ val viewModelActivityTemplate
     val fragmentLayout = stringParameter {
       name = "Fragment Layout Name"
       default = "main_fragment"
-      help = "The name of the layout to create for the fragment "
+      help = "The name of the layout to create for the fragment"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { "${classToResource(fragmentClass.value)}_fragment" }
     }
@@ -85,7 +85,7 @@ val viewModelActivityTemplate
     val viewModelClass = stringParameter {
       name = "ViewModel Name"
       default = "MainViewModel"
-      help = "The name of the view model class to create "
+      help = "The name of the view model class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
       suggest = { "${underscoreToCamelCase(classToResource(fragmentClass.value))}ViewModel" }
     }

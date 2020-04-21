@@ -47,21 +47,21 @@ val automotiveMessagingServiceTemplate
     val serviceName = stringParameter {
       name = "Service class name"
       default = "MyMessagingService"
-      help = "The name of the service that will handle incoming messages and send corresponding notifications. "
+      help = "The name of the service that will handle incoming messages and send corresponding notifications"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val readReceiverName = stringParameter {
       name = "Read receiver class name"
       default = "MessageReadReceiver"
-      help = "The broadcast receiver that will handle Read notifications. "
+      help = "The broadcast receiver that will handle Read notifications"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val replyReceiverName = stringParameter {
       name = "Reply receiver class name"
       default = "MessageReplyReceiver"
-      help = "The broadcast receiver that will handle Reply notifications. "
+      help = "The broadcast receiver that will handle Reply notifications"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 

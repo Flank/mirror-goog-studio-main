@@ -62,13 +62,13 @@ val androidThingsActivityTemplate
     val isThingsLauncher = booleanParameter {
       name = "Launch activity automatically on boot"
       default = false
-      help = "This is the home activity, that is the first activity that is displayed when the device boots."
+      help = "This is the home activity, that is the first activity that is displayed when the device boots"
     }
 
     val generateLayout = booleanParameter {
       name = "Generate a Layout File"
       default = true
-      help = "If true, a layout file will be generated. Android Things devices dont require a display, so UI is optional."
+      help = "If true, a layout file will be generated. Android Things devices don't require a display, so UI is optional"
     }
 
     layoutName = stringParameter {
