@@ -991,7 +991,7 @@ class LintDriver
                 } else {
                     findUastSources(project, main, checks)
                 }
-                prepareUast(project, uastSourceList)
+                prepareUast(uastSourceList)
             }
         }
 
@@ -1004,7 +1004,7 @@ class LintDriver
             } else {
                 findUastSources(project, main, emptyList())
             }
-            prepareUast(project, uastRequest)
+            prepareUast(uastRequest)
         }
 
         if (isCanceled) {
@@ -1188,7 +1188,7 @@ class LintDriver
                         val uastParser = client.getUastParser(currentProject)
                         context.uastParser = uastParser
 
-                        uastParser.prepare(listOf(context), emptyList(),
+                        uastParser.prepare(listOf(context),
                             project.javaLanguageLevel, project.kotlinLanguageLevel)
                         val uFile = uastParser.parse(context)
                         if (uFile != null) {
@@ -1679,19 +1679,13 @@ class LintDriver
         }
     }
 
-    private fun prepareUast(
-        project: Project,
-        sourceList: UastSourceList
-    ) {
+    private fun prepareUast(sourceList: UastSourceList) {
         val parser = sourceList.parser
-        val srcContexts = sourceList.srcContexts
-        val testContexts = sourceList.testContexts
         val allContexts = sourceList.allContexts
-
         for (context in allContexts) {
             context.uastParser = parser
         }
-        parserErrors = !parser.prepare(srcContexts, testContexts)
+        parserErrors = !parser.prepare(allContexts)
     }
 
     /** The lists of production and test files for Kotlin and Java to parse and process */

@@ -67,7 +67,6 @@ abstract class UastParser {
      */
     open fun prepare(
         contexts: List<JavaContext>,
-        testContexts: List<JavaContext>,
         javaLanguageLevel: LanguageLevel? = null,
         kotlinLanguageLevel: LanguageVersionSettings? = null
     ): Boolean {

@@ -649,12 +649,9 @@ public class TestLintClient extends LintCliClient {
             @Override
             public boolean prepare(
                     @NonNull List<? extends JavaContext> contexts,
-                    @NonNull List<? extends JavaContext> testContexts,
                     @Nullable LanguageLevel javaLanguageLevel,
                     @Nullable LanguageVersionSettings kotlinLanguageLevel) {
-                boolean ok =
-                        super.prepare(
-                                contexts, testContexts, javaLanguageLevel, kotlinLanguageLevel);
+                boolean ok = super.prepare(contexts, javaLanguageLevel, kotlinLanguageLevel);
                 if (task.forceSymbolResolutionErrors) {
                     ok = false;
                 }

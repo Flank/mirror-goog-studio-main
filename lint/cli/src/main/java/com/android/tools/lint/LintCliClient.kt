@@ -1338,19 +1338,12 @@ open class LintCliClient : LintClient {
         DefaultUastParser(project, ideaProject!!) {
         override fun prepare(
             contexts: List<JavaContext>,
-            testContexts: List<JavaContext>,
             javaLanguageLevel: LanguageLevel?,
             kotlinLanguageLevel: LanguageVersionSettings?
         ): Boolean {
             // If we're using Kotlin, ensure we initialize the bridge
             val kotlinFiles: MutableList<File> = ArrayList()
             for (context in contexts) {
-                val path = context.file.path
-                if (path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) {
-                    kotlinFiles.add(context.file)
-                }
-            }
-            for (context in testContexts) {
                 val path = context.file.path
                 if (path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) {
                     kotlinFiles.add(context.file)
@@ -1374,8 +1367,8 @@ open class LintCliClient : LintClient {
                     kotlinLanguageLevel
                 )
             }
-            val ok = super.prepare(contexts, testContexts, javaLanguageLevel, kotlinLanguageLevel)
-            if (project == null || contexts.isEmpty() && testContexts.isEmpty()) {
+            val ok = super.prepare(contexts, javaLanguageLevel, kotlinLanguageLevel)
+            if (project == null || contexts.isEmpty()) {
                 return ok
             }
             // Now that we have a project context, ensure that the annotations manager
