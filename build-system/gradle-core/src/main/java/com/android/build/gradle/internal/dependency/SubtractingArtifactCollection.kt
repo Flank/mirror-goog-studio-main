@@ -19,12 +19,12 @@ package com.android.build.gradle.internal.dependency
 import com.google.common.collect.ImmutableSet
 import java.io.File
 import java.util.HashSet
-import java.util.Spliterator
 import java.util.function.Consumer
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 
 /**
@@ -36,7 +36,8 @@ import org.gradle.api.file.FileCollection
  */
 class SubtractingArtifactCollection(
     private val mainArtifacts: ArtifactCollection,
-    private val removedArtifacts: ArtifactCollection
+    private val removedArtifacts: ArtifactCollection,
+    fileCollectionHolder: ConfigurableFileCollection
 ) : ArtifactCollection {
 
     /**
@@ -64,7 +65,9 @@ class SubtractingArtifactCollection(
     }
 
     private val fileCollection: FileCollection =
-        mainArtifacts.artifactFiles.filter { file -> artifactFileSet.contains(file) }
+        fileCollectionHolder.from(
+            mainArtifacts.artifactFiles.filter { file -> artifactFileSet.contains(file) }
+        ).builtBy(mainArtifacts.artifactFiles, removedArtifacts.artifactFiles)
 
     override fun getArtifactFiles() = fileCollection
 
