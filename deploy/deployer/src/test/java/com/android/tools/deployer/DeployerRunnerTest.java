@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
@@ -164,8 +165,7 @@ public class DeployerRunnerTest {
                     name.getMethodName().replace('[', '-').replace("]", "").replace(',', '_');
             benchmark.log(metricName + "_time", timeTaken);
         }
-        System.out.print(
-                new String(Files.readAllBytes(device.getLogcatFile().toPath()), Charsets.UTF_8));
+        System.out.print(getLogcatContent(device));
         device.shutdown();
         Mockito.verifyNoMoreInteractions(service);
         AndroidDebugBridge.terminate();
@@ -1452,6 +1452,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.getAbsolutePath()
                 };
         int retcode = runner.run(args, logger);
+        String logcat = getLogcatContent(device);
 
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
@@ -1494,8 +1495,15 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
+            assertInstrumented(
+                    logcat, "android.app.ActivityThread", "dalvik.system.DexPathList$Element");
         } else {
-            // TODO Add R+ tests.
+            assertInstrumented(
+                    logcat,
+                    "android.app.ActivityThread",
+                    "dalvik.system.DexPathList$Element",
+                    "dalvik.system.DexPathList",
+                    "android.app.ResourcesManager");
         }
 
         TestUtils.eventually(
@@ -1622,6 +1630,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.getAbsolutePath()
                 };
         int retcode = runner.run(args, logger);
+        String logcat = getLogcatContent(device);
 
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
@@ -1664,8 +1673,15 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
+            assertInstrumented(
+                    logcat, "android.app.ActivityThread", "dalvik.system.DexPathList$Element");
         } else {
-            // TODO: Pipeline 2.0 Tests.
+            assertInstrumented(
+                    logcat,
+                    "android.app.ActivityThread",
+                    "dalvik.system.DexPathList$Element",
+                    "dalvik.system.DexPathList",
+                    "android.app.ResourcesManager");
         }
     }
 
@@ -1752,5 +1768,39 @@ public class DeployerRunnerTest {
                         .map(m -> m.getName() + (m.hasStatus() ? ":" + m.getStatus() : ""))
                         .toArray(String[]::new);
         assertArrayEquals(expected, actual);
+    }
+
+    private static String getLogcatContent(FakeDevice device) {
+        try {
+            return new String(Files.readAllBytes(device.getLogcatFile().toPath()), Charsets.UTF_8);
+        } catch (IOException io) {
+            return "";
+        }
+    }
+
+    private static void assertInstrumented(String logcat, String... classes) {
+        assertInLogcat(logcat, "JVMTI::RetransformClasses:", classes);
+    }
+
+    private static void assertInLogcat(String logcat, String prefix, String... expected) {
+        String[] actual = logcat.split("\n");
+        int expectedIndex = 0;
+        for (int i = 0; i < actual.length; ++i) {
+            int idx = actual[i].indexOf(prefix);
+            if (idx == -1) {
+                continue;
+            }
+
+            if (expectedIndex == expected.length) {
+                fail("Unexpected logcat line: " + actual[i]);
+            }
+
+            String trimmed = actual[i].substring(idx);
+            assertEquals("Unexpected logcat line", prefix + expected[expectedIndex], trimmed);
+            ++expectedIndex;
+        }
+        if (expectedIndex != expected.length) {
+            fail("Missing logcat line: " + prefix + expected[expectedIndex]);
+        }
     }
 }

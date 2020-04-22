@@ -42,6 +42,7 @@ public class FakeDeviceLibrary {
         API_26,
         API_27,
         API_28,
+        API_29,
     }
 
     public FakeDevice build(DeviceId id) throws IOException {
@@ -98,6 +99,12 @@ public class FakeDeviceLibrary {
             case API_28:
                 {
                     device = new FakeDevice("9.0", 28);
+                    device.getShell().addCommand(new Cmd());
+                    break;
+                }
+            case API_29:
+                {
+                    device = new FakeDevice("10.0", 29);
                     device.getShell().addCommand(new Cmd());
                     break;
                 }

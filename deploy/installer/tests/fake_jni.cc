@@ -2,9 +2,44 @@
 
 #include <string.h>
 
+#include <algorithm>
+#include <string>
+
 #include "tools/base/deploy/common/log.h"
 
+#define FAKE_JNI_GET_ID(TYPE, NAME)                                  \
+  TYPE FakeJNIEnv::NAME(JNIEnv* env, jclass clazz, const char* name, \
+                        const char* sig) {                           \
+    FakeClass* cls = (FakeClass*)clazz;                              \
+    Log::I("JNI::" #NAME ":%s#%s", cls->name.c_str(), name);         \
+    return (TYPE) new FakeMember(cls->name.c_str(), name,            \
+                                 GetTypeFromSignature(sig));         \
+  }
+
+#define MEMBER_ACCESS(NAME, ID)         \
+  FakeMember* member = (FakeMember*)ID; \
+  Log::I("JNI::" #NAME ":%s#%s", member->clazz.c_str(), member->name.c_str());
+
 namespace deploy {
+
+namespace {
+// Converts a JNI style type signature into a java type name.
+std::string GetTypeFromSignature(const std::string& sig) {
+  size_t start = 0;
+  size_t end = sig.size();
+  size_t pos = sig.find_last_of(')', 0);
+  if (pos != std::string::npos) {
+    start = pos + 1;
+  }
+  if (sig[start] == 'L') {
+    start += 1;
+    end -= 1;
+  }
+  std::string type(sig.begin() + start, sig.end() - start);
+  std::replace(type.begin(), type.end(), '/', '.');
+  return type;
+}
+}  // namespace
 
 FakeJNIEnv::FakeJNIEnv() : functions_{0} {
   functions_.CallObjectMethodA = &CallObjectMethodA;
@@ -17,15 +52,20 @@ FakeJNIEnv::FakeJNIEnv() : functions_{0} {
   functions_.ExceptionClear = &ExceptionClear;
   functions_.ExceptionDescribe = &ExceptionDescribe;
   functions_.FindClass = &FindClass;
-  functions_.GetObjectField = &GetObjectField;
   functions_.GetFieldID = &GetFieldID;
   functions_.GetMethodID = &GetMethodID;
   functions_.GetObjectClass = &GetObjectClass;
+  functions_.GetObjectField = &GetObjectField;
+  functions_.GetStaticFieldID = &GetStaticFieldID;
+  functions_.GetStaticIntField = &GetStaticIntField;
   functions_.GetStaticMethodID = &GetStaticMethodID;
+  functions_.GetStaticObjectField = &GetStaticObjectField;
+  functions_.GetStringUTFChars = &GetStringUTFChars;
   functions_.NewByteArray = &NewByteArray;
   functions_.NewObjectArray = &NewObjectArray;
   functions_.NewStringUTF = &NewStringUTF;
   functions_.RegisterNatives = &RegisterNatives;
+  functions_.ReleaseStringUTFChars = &ReleaseStringUTFChars;
   functions_.SetByteArrayRegion = &SetByteArrayRegion;
   functions_.SetObjectArrayElement = &SetObjectArrayElement;
   functions_.SetObjectField = &SetObjectField;
@@ -34,16 +74,17 @@ FakeJNIEnv::FakeJNIEnv() : functions_{0} {
 }
 
 jclass FakeJNIEnv::FindClass(JNIEnv* env, const char* name) {
-  Log::I("JNI::FindClass");
-  // Behaves like the app is non-JetPack Compose app.
-  // There is test coverage with FakeAndroid / Host ART for those.
-  if (!strcmp(name, "androidx/compose/Compose$HotReloader")) {
-    return nullptr;
-  }
-  jclass ret = new FakeClass();
+  const std::string& clazz = GetTypeFromSignature(name);
+  Log::I("JNI::FindClass:%s", clazz.c_str());
+  jclass ret = new FakeClass(clazz);
   ((FakeJNIEnv*)env)->objects_.insert(ret);
   return ret;
 }
+
+FAKE_JNI_GET_ID(jmethodID, GetStaticMethodID)
+FAKE_JNI_GET_ID(jfieldID, GetStaticFieldID)
+FAKE_JNI_GET_ID(jmethodID, GetMethodID)
+FAKE_JNI_GET_ID(jfieldID, GetFieldID)
 
 jboolean FakeJNIEnv::ExceptionCheck(JNIEnv* env) {
   Log::I("JNI::ExceptionCheck");
@@ -60,8 +101,8 @@ jint FakeJNIEnv::RegisterNatives(JNIEnv* env, jclass clazz,
 }
 
 jstring FakeJNIEnv::NewStringUTF(JNIEnv* env, const char* utf) {
-  Log::I("JNI::NewStringUTF");
-  jstring ret = new FakeString();
+  Log::I("JNI::NewStringUTF:%s", utf);
+  jstring ret = new FakeString(utf);
   ((FakeJNIEnv*)env)->objects_.insert(ret);
   return ret;
 }
@@ -73,26 +114,25 @@ void FakeJNIEnv::DeleteLocalRef(JNIEnv* env, jobject obj) {
 jboolean FakeJNIEnv::CallStaticBooleanMethodA(JNIEnv* env, jclass clazz,
                                               jmethodID methodID,
                                               const jvalue* args) {
-  Log::I("JNI::CallStaticBooleanMethodA");
+  MEMBER_ACCESS(CallStaticBooleanMethodA, methodID)
+  // Always force the agent to instrument.
+  if (member->clazz == "com.android.tools.deploy.instrument.Breadcrumb" &&
+      member->name == "isFinishedInstrumenting") {
+    return false;
+  }
   return true;
 }
 
 jobject FakeJNIEnv::CallStaticObjectMethodA(JNIEnv* env, jclass clazz,
                                             jmethodID methodID,
                                             const jvalue* args) {
-  Log::I("JNI::CallStaticObjectMethodA");
-  return nullptr;
+  MEMBER_ACCESS(CallStaticObjectMethodA, methodID)
+  return (jobject) new FakeObject(member->type);
 }
 
 void FakeJNIEnv::CallStaticVoidMethodA(JNIEnv* env, jclass cls,
                                        jmethodID methodID, const jvalue* args) {
-  Log::I("JNI::CallStaticVoidMethodA");
-}
-
-jmethodID FakeJNIEnv::GetStaticMethodID(JNIEnv* env, jclass clazz,
-                                        const char* name, const char* sig) {
-  Log::I("JNI::GetStaticMethodID");
-  return nullptr;
+  MEMBER_ACCESS(CallStaticVoidMethodA, methodID)
 }
 
 void FakeJNIEnv::ExceptionDescribe(JNIEnv* env) {
@@ -122,40 +162,62 @@ void FakeJNIEnv::SetObjectArrayElement(JNIEnv* env, jobjectArray array,
 
 jobject FakeJNIEnv::CallObjectMethodA(JNIEnv* env, jobject obj,
                                       jmethodID methodID, const jvalue* args) {
-  Log::I("JNI::CallObjectMethodA");
-  return nullptr;
+  MEMBER_ACCESS(CallObjectMethodA, methodID)
+  if (member->name == "findClass") {
+    FakeString* str = (FakeString*)args[0].l;
+    // Behaves like the app is non-JetPack Compose app.
+    // There is test coverage with FakeAndroid / Host ART for those.
+    if (str->value == "androidx/compose/Compose$HotReloader") {
+      return nullptr;
+    }
+    return (jobject) new FakeClass(GetTypeFromSignature(str->value));
+  }
+  return (jobject) new FakeObject(member->type);
 }
 
 void FakeJNIEnv::CallVoidMethodA(JNIEnv* env, jobject obj, jmethodID methodID,
                                  const jvalue* args) {
-  Log::I("JNI::CallVoidMethodA");
+  MEMBER_ACCESS(CallVoidMethodA, methodID)
+  return;
+}
+
+jint FakeJNIEnv::GetStaticIntField(JNIEnv* env, jclass clazz,
+                                   jfieldID fieldID) {
+  MEMBER_ACCESS(GetStaticIntField, fieldID)
+  return 0;
+}
+
+jobject FakeJNIEnv::GetStaticObjectField(JNIEnv* env, jclass clazz,
+                                         jfieldID fieldID) {
+  MEMBER_ACCESS(GetStaticObjectField, fieldID)
+  return (jobject) new FakeObject(member->type);
 }
 
 jobject FakeJNIEnv::GetObjectField(JNIEnv* env, jobject obj, jfieldID fid) {
-  Log::I("JNI::GetObjectField");
-  return nullptr;
-}
-
-jfieldID FakeJNIEnv::GetFieldID(JNIEnv* env, jclass clazz, const char* name,
-                                const char* sig) {
-  Log::I("JNI::GetFieldID");
-  return nullptr;
-}
-
-jmethodID FakeJNIEnv::GetMethodID(JNIEnv* env, jclass clazz, const char* name,
-                                  const char* sig) {
-  Log::I("JNI::GetMethodID");
-  return nullptr;
+  MEMBER_ACCESS(GetObjectField, fid)
+  return (jobject) new FakeObject(member->type);
 }
 
 jclass FakeJNIEnv::GetObjectClass(JNIEnv* env, jobject obj) {
   Log::I("JNI::GetObjectClass");
-  return nullptr;
+  FakeObject* object = (FakeObject*)obj;
+  return (jclass) new FakeClass(object->type);
 }
 
 void FakeJNIEnv::SetObjectField(JNIEnv* env, jobject obj, jfieldID fieldID,
                                 jobject val) {
   Log::I("JNI::SetObjectField");
+}
+
+const char* FakeJNIEnv::GetStringUTFChars(JNIEnv* env, jstring string,
+                                          jboolean* isCopy) {
+  Log::I("JNI::GetStringUTFChars");
+  return "";
+}
+
+void FakeJNIEnv::ReleaseStringUTFChars(JNIEnv* env, jstring str,
+                                       const char* chars) {
+  Log::I("JNI::ReleaseStringUTFChars");
 }
 
 }  // namespace deploy
