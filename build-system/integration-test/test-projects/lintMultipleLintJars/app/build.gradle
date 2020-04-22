@@ -11,7 +11,7 @@ android {
 
     lintOptions {
         xmlOutput file("lint-results.xml")
-        check 'ShortUniqueIdA', 'ShortUniqueIdB'
+        checkOnly 'ShortUniqueIdA', 'ShortUniqueIdB'
         absolutePaths false
     }
 }

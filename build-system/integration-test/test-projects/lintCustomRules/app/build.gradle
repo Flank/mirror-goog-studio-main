@@ -12,7 +12,7 @@ android {
     lintOptions {
         textReport true
         textOutput file("lint-results.txt")
-        check 'UnitTestLintCheck'
+        checkOnly 'UnitTestLintCheck'
         absolutePaths false
     }
 }

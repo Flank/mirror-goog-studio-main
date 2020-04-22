@@ -11,9 +11,9 @@ android {
     lintOptions {
         textReport true
         textOutput file("lint-results.txt")
-        check 'UnitTestLintCheck'
-        check 'UnitTestLintCheck2'
-        check 'UnitTestLintCheck3'
+        checkOnly 'UnitTestLintCheck'
+        checkOnly 'UnitTestLintCheck2'
+        checkOnly 'UnitTestLintCheck3'
         absolutePaths false
     }
 }

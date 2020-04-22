@@ -42,8 +42,8 @@ public class LintCustomLocalAndPublishTest {
         project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
         String appexpected =
                 "build.gradle:15: Error: Unknown issue id \"UnitTestLintCheck2\" [LintError]\n"
-                        + "        check 'UnitTestLintCheck2'\n"
-                        + "               ~~~~~~~~~~~~~~~~~~\n"
+                        + "        checkOnly 'UnitTestLintCheck2'\n"
+                        + "                   ~~~~~~~~~~~~~~~~~~\n"
                         + "src"
                         + File.separator
                         + "main"
@@ -66,8 +66,8 @@ public class LintCustomLocalAndPublishTest {
                         + "3 errors, 0 warnings";
         String libexpected =
                 "build.gradle:16: Error: Unknown issue id \"UnitTestLintCheck\" [LintError]\n"
-                        + "        check 'UnitTestLintCheck'\n"
-                        + "               ~~~~~~~~~~~~~~~~~\n"
+                        + "        checkOnly 'UnitTestLintCheck'\n"
+                        + "                   ~~~~~~~~~~~~~~~~~\n"
                         + "src"
                         + File.separator
                         + "main"

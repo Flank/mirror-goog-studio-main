@@ -179,7 +179,8 @@ abstract class CommonExtensionImpl<
         action.invoke(jacoco)
     }
 
-    override val lintOptions: LintOptions = dslServices.newInstance(LintOptions::class.java)
+    override val lintOptions: LintOptions =
+        dslServices.newInstance(LintOptions::class.java, dslServices)
 
     override fun lintOptions(action: LintOptions.() -> Unit) {
         action.invoke(lintOptions)

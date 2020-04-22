@@ -268,11 +268,33 @@ interface LintOptions {
     /** Sets the optional path to where a text report should be written */
     fun textOutput(textOutput: File)
 
-    /** Adds the id to the set of issues to check. */
+    /** Adds the id to the set of unique issues to check. */
+    @Deprecated(
+        message = "Use checkOnly instead; check will turn off all other checks so the method " +
+                "has been renamed to be more explicit about this",
+        replaceWith = ReplaceWith("checkOnly(id)")
+    )
     fun check(id: String)
 
-    /** Adds the ids to the set of issues to check. */
+    /** Adds the ids to the set of unique issues to check. */
+    @Deprecated(
+        message = "Use checkOnly instead; check will turn off all other checks so the method " +
+                "has been renamed to be more explicit about this",
+        replaceWith = ReplaceWith("checkOnly(ids)")
+    )
     fun check(vararg ids: String)
+
+    /**
+     * Adds the id to the set of issues to check. Note that when using this, all other checks
+     * are turned off.
+     */
+    fun checkOnly(id: String)
+
+    /**
+     * Adds the id to the set of issues to check. Note that when using this, all other checks
+     * are turned off.
+     */
+    fun checkOnly(vararg ids: String)
 
     /** Adds the id to the set of issues to enable. */
     fun enable(id: String)
