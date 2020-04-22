@@ -61,7 +61,7 @@ public class Debugger extends JdwpAgent {
     private static final int MAX_BUF_SIZE = INITIAL_BUF_SIZE << 14; // 16MB
     private ByteBuffer mReadBuffer;
 
-    private static final int PRE_DATA_BUF_SIZE = 256;
+    private static final int PRE_DATA_BUF_SIZE = 1024;
     private ByteBuffer mPreDataBuffer;
 
     /* connection state */

@@ -96,15 +96,12 @@ public class ClientLifecycleIntegrationTest {
     assertThat(AndroidDebugBridge.getBridge().getDevices()).isEmpty();
     DeviceState state = myFakeAdb.connectAndWaitForDevice();
     IDevice device = AndroidDebugBridge.getBridge().getDevices()[0];
-    myFakeAdb.launchAndWaitForProcess(state, true);
+    FakeAdbTestRule.launchAndWaitForProcess(state, true);
     ClientImpl client = (ClientImpl)device.getClient(FakeAdbTestRule.CLIENT_PACKAGE_NAME);
     CountDownLatch hasDebuggerStateChangedEvent = new CountDownLatch(1);
-    AndroidDebugBridge.addClientChangeListener(new AndroidDebugBridge.IClientChangeListener() {
-      @Override
-      public void clientChanged(@NonNull Client client, int changeMask) {
-        if((changeMask & Client.CHANGE_DEBUGGER_STATUS) != 0) {
-          hasDebuggerStateChangedEvent.countDown();
-        }
+    AndroidDebugBridge.addClientChangeListener((client1, changeMask) -> {
+      if((changeMask & Client.CHANGE_DEBUGGER_STATUS) != 0) {
+        hasDebuggerStateChangedEvent.countDown();
       }
     });
     assertThat(client.getDebugger().getListenPort()).isEqualTo(client.getDebuggerListenPort());

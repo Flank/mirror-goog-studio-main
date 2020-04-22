@@ -24,7 +24,6 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,7 +33,6 @@ public class JdwpProxyServerTest {
   public @Rule FakeAdbTestRule myFakeAdb = new FakeAdbTestRule();
 
   @Test
-  @Ignore("Disabled until JdwpProxyServer is enabled")
   public void serverStartsOnPortDefaultPort() throws Exception {
     SocketChannel channel = SocketChannel.open(new InetSocketAddress("localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
     assertThat(channel.isConnected()).isTrue();
@@ -42,7 +40,6 @@ public class JdwpProxyServerTest {
   }
 
   @Test
-  @Ignore("Disabled until JdwpProxyServer is enabled")
   public void secondaryServerStartsInFallbackMode() throws Exception {
     JdwpProxyServer proxy = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
     });
@@ -52,17 +49,16 @@ public class JdwpProxyServerTest {
   }
 
   @Test
-  @Ignore("Disabled until flake is fixed. Hard to repo locally, 100% on build servers")
   public void stateChangeCallbackWhenServerStops() throws Exception {
     CountDownLatch stateChangedLatch = new CountDownLatch(1);
-    JdwpProxyServer server = new JdwpProxyServer(8601, () -> {
+    JdwpProxyServer server = new JdwpProxyServer(0, () -> {
     });
     server.start();
     assertThat(server.IsRunningAsServer()).isTrue();
     assertThat(server.IsConnectedOrListening()).isTrue();
     waitForConnectionOrListening(server, true);
 
-    JdwpProxyServer fallback = new JdwpProxyServer(8601, () -> stateChangedLatch.countDown());
+    JdwpProxyServer fallback = new JdwpProxyServer(server.getBindPort(), () -> stateChangedLatch.countDown());
     fallback.start();
     assertThat(fallback.IsRunningAsServer()).isFalse();
     // Connection happens on separate thread so we need to delay a little to see if we can actually establish a connection.
@@ -71,7 +67,7 @@ public class JdwpProxyServerTest {
     // Kill server and expect fallback to become our primary server.
     server.stop();
     waitForConnectionOrListening(fallback, true);
-    assertThat(stateChangedLatch.await(FakeAdbTestRule.TEST_TIMEOUT_MS, TimeUnit.SECONDS)).isTrue();
+    assertThat(stateChangedLatch.await(FakeAdbTestRule.TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
     assertThat(fallback.IsRunningAsServer()).isTrue();
     fallback.stop();
   }
@@ -82,7 +78,7 @@ public class JdwpProxyServerTest {
       if (server.IsConnectedOrListening() && server.IsRunningAsServer() == expectServer) {
         break;
       }
-      Thread.sleep(100);
+      Thread.sleep(1000);
     }
     assertThat(server.IsConnectedOrListening()).isTrue();
   }

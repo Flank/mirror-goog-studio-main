@@ -39,7 +39,6 @@ import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -105,7 +104,6 @@ public class JdwpClientManagerTest {
   }
 
   @Test
-  @Ignore("Ignored until JdwpProxyServer is enabled.")
   public void proxyClientIsCalledWhenDataIsReceived() throws Throwable {
     // Need to start a server before FakeAdb so we have the actual server instead of the fallback.
     JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
@@ -128,7 +126,6 @@ public class JdwpClientManagerTest {
   }
 
   @Test
-  @Ignore("Ignored until JdwpProxyServer is enabled.")
   public void inspectorIsRunOnWriteAndRead() throws Throwable {
     // Need to start a server before FakeAdb so we have the actual server instead of the fallback.
     JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
@@ -184,7 +181,6 @@ public class JdwpClientManagerTest {
   }
 
   @Test
-  @Ignore("Ignored until JdwpProxyServer is enabled.")
   public void dontWriteWhenFiltered() throws Throwable {
     // Need to start a server before FakeAdb so we have the actual server instead of the fallback.
     JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {

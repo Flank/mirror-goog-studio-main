@@ -104,7 +104,13 @@ public class JdwpClientManager implements JdwpSocketHandler {
         while (!mClients.isEmpty()) {
             // Can't foreach due to concurrency modification exception.
             // Shutdown removes the client from the list.
-            mClients.iterator().next().shutdown();
+            JdwpProxyClient client = mClients.iterator().next();
+            client.shutdown();
+            // Some test use mocks. So when shutdown is called the client isn't removed properly. This ensures that even in the test
+            // case clients are removed from the client list.
+            if (mClients.contains(client)) {
+                mClients.remove(client);
+            }
         }
         if (mAdbSocket != null) {
             mAdbSocket.close();

@@ -51,10 +51,14 @@ public final class AdbHelper {
 
     public static final String HOST_TRANSPORT = "host:transport:";
 
-    /** do not instantiate */
+    /**
+     * do not instantiate
+     */
     private AdbHelper() {}
 
-    /** Response from ADB. */
+    /**
+     * Response from ADB.
+     */
     public static class AdbResponse {
         public AdbResponse() {
             message = "";
@@ -182,9 +186,10 @@ public final class AdbHelper {
     /**
      * Creates a port forwarding request to a jdwp process. This returns an array
      * containing "####jwdp:{pid}".
+     *
      * @param pid the jdwp process pid on the device.
      */
-    private static byte[] createJdwpForwardRequest(int pid) {
+    public static byte[] createJdwpForwardRequest(int pid) {
         String reqStr = String.format("jdwp:%1$d", pid); //$NON-NLS-1$
         return formAdbRequest(reqStr);
     }
