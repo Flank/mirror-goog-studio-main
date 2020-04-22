@@ -13,7 +13,7 @@ readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
 readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
-"${script_dir}/bazel" clean --async
+"${script_dir}/bazel" clean --async  --expunge
 
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
