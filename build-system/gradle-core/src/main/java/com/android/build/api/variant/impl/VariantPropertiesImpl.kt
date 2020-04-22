@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
 
 abstract class VariantPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -78,10 +79,40 @@ abstract class VariantPropertiesImpl(
         )
     }
 
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value the resource value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    override fun addResValue(name: String, type: String, value: String, comment: String?) {
+        resValues.put(ResValue.Key(type, name), ResValue(value, comment))
+    }
+
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value a [Provider] for the value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
+        resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
     val testComponents = mutableMapOf<VariantType, ComponentPropertiesImpl>()
 
+    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
+        internalServices.mapPropertyOf(
+            ResValue.Key::class.java,
+            ResValue::class.java,
+            variantDslInfo.getResValues(),
+            "$name:resValues"
+        )
+    }
 }

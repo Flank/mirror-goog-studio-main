@@ -20,11 +20,11 @@ import com.google.common.truth.Truth
 import org.junit.Test
 import kotlin.test.assertNotNull
 
-class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
+class ResValuesApiTests: VariantApiBaseTest(TestType.Script) {
     private val testingElements= TestingElements(scriptingLanguage)
 
     @Test
-    fun addCustomBuildConfigField() {
+    fun addCustomResValueField() {
         given {
             tasksToInvoke.add("compileDebugSources")
             addModule(":app") {
@@ -37,12 +37,11 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                     kotlin("android")
                     kotlin("android.extensions")
             }
-            import com.android.build.api.variant.BuildConfigField
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
-                    buildConfigFields.put("VariantName", BuildConfigField.make("String", "\"${'$'}{name}\""))
+                    addResValue("VariantName", "string", name, "Variant Name")
                 }
             }
                 """.trimIndent()
@@ -61,7 +60,7 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                         override fun onCreate(savedInstanceState: Bundle?) {
                             super.onCreate(savedInstanceState)
                             val label = TextView(this)
-                            label.setText("Hello ${'$'}{BuildConfig.VariantName}")
+                            label.setText("Hello ${'$'}{R.string.VariantName}")
                             setContentView(label)
                         }
                     }
@@ -72,10 +71,9 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
             index =
                     // language=markdown
                 """
-# Adding a BuildConfig field in Kotlin
+# Adding a ResValue field in Kotlin
 
-This sample show how to add a field in the BuildConfig class for which the value is known at
-configuration time.
+This sample show how to add a Resource value known at configuration time.
 
 The added field is used in the MainActivity.kt file.
             """.trimIndent()
@@ -87,7 +85,7 @@ The added field is used in the MainActivity.kt file.
     }
 
     @Test
-    fun addCustomFieldWithValueFromTask() {
+    fun addCustomResValueFromTask() {
         given {
             tasksToInvoke.add("compileDebugSources")
             addModule(":app") {
@@ -106,7 +104,6 @@ The added field is used in the MainActivity.kt file.
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.variant.BuildConfigField
 
             ${testingElements.getGitVersionTask()}
 
@@ -122,17 +119,17 @@ The added field is used in the MainActivity.kt file.
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
-                    buildConfigFields.put("VariantName", gitVersionProvider.map {  task ->
-                        BuildConfigField.make("String", "\"" + 
-                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8) + "\"")
-                    })
+                    addResValue( "GitVersion", "string", gitVersionProvider.map {  task ->
+                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
+                        }, 
+                        "git version")
                 }
             }""".trimIndent()
-             testingElements.addManifest(this)
-             addSource(
-            "src/main/kotlin/com/android/build/example/minimal/MainActivity.kt",
-            //language=kotlin
-            """
+                testingElements.addManifest(this)
+                addSource(
+                    "src/main/kotlin/com/android/build/example/minimal/MainActivity.kt",
+                    //language=kotlin
+                    """
             package com.android.build.example.minimal
 
             import android.app.Activity
@@ -143,7 +140,7 @@ The added field is used in the MainActivity.kt file.
                 override fun onCreate(savedInstanceState: Bundle?) {
                     super.onCreate(savedInstanceState)
                     val label = TextView(this)
-                    label.setText("Hello ${'$'}{BuildConfig.VariantName}")
+                    label.setText("Hello ${'$'}{R.string.GitVersion}")
                     setContentView(label)
                 }
             }
@@ -154,10 +151,10 @@ The added field is used in the MainActivity.kt file.
             index =
                     // language=markdown
                 """
-# Adding a BuildConfig field in Kotlin
+# Adding a ResValue field in Kotlin
 
-This sample show how to add a field in the BuildConfig class for which the value is known at 
-configuration time.
+This sample show how to add a resource value for which the value is not known at 
+configuration time and will be calculated by a Task.
 
 The added field is used in the MainActivity.kt file.
             """.trimIndent()

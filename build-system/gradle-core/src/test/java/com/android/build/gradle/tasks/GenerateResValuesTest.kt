@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.tasks
 
-
+import com.android.build.api.variant.impl.ResValue
 import com.android.testutils.truth.FileSubject.assertThat
 
 import com.android.builder.compiling.ResValueGenerator
-import com.android.builder.internal.ClassFieldImpl
-import com.google.common.collect.ImmutableList
 import java.io.File
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
@@ -45,7 +43,8 @@ class GenerateResValuesTest {
         val project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         val task = project.tasks.create("test", GenerateResValues::class.java)
-        task.items.set(ImmutableList.of(ClassFieldImpl("string", "VALUE_DEFAULT", "1")))
+        task.items.put(
+            ResValue.Key("string", "VALUE_DEFAULT"), ResValue("1"))
         task.resOutputDir = testDir
 
         task.taskAction()
@@ -58,6 +57,7 @@ class GenerateResValuesTest {
 
                     <!-- Automatically generated file. DO NOT MODIFY -->
 
+                    <!-- Added from the variant API -->
                     <string name="VALUE_DEFAULT" translatable="false">1</string>
 
                 </resources>""".trimIndent()

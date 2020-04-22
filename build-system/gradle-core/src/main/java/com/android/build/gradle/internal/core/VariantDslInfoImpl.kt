@@ -17,6 +17,8 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -729,38 +731,38 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @return a list of items.
      */
-    override val resValues: List<Any>
-        get() {
-            val fullList: MutableList<Any> =
-                Lists.newArrayList()
-            // keep track of the names already added. This is because we show where the items
-            // come from so we cannot just put everything a map and let the new ones override the
-            // old ones.
-            val usedFieldNames: MutableSet<String> = Sets.newHashSet()
-            var list: Collection<ClassField> = mResValues.values
-            if (!list.isEmpty()) {
-                fullList.add("Values from the variant")
-                fillFieldList(fullList, usedFieldNames, list)
+    override fun getResValues(): Map<ResValue.Key, ResValue> {
+        val resValueFields = mutableMapOf<ResValue.Key, ResValue>()
+
+        fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
+            val key = ResValue.Key(classField.type, classField.name)
+            if (!resValueFields.containsKey(key)) {
+                resValueFields[key]= ResValue(
+                        value = classField.value,
+                        comment = comment)
             }
-            list = buildTypeObj.resValues.values
-            if (!list.isEmpty()) {
-                fullList.add("Values from build type: " + buildTypeObj.name)
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            for (flavor in productFlavorList) {
-                list = flavor.resValues.values
-                if (!list.isEmpty()) {
-                    fullList.add("Values from product flavor: " + flavor.name)
-                    fillFieldList(fullList, usedFieldNames, list)
-                }
-            }
-            list = defaultConfig.resValues.values
-            if (!list.isEmpty()) {
-                fullList.add("Values from default config.")
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            return fullList
         }
+
+        mResValues.values.forEach { classField ->
+            addToListIfNotAlreadyPresent(classField, "Value from the variant")
+        }
+
+        buildTypeObj.resValues.values.forEach { classField ->
+            addToListIfNotAlreadyPresent(classField, "Value from build type: ${buildTypeObj.name}")
+        }
+
+        productFlavorList.forEach { flavor ->
+            flavor.resValues.values.forEach { classField ->
+                addToListIfNotAlreadyPresent(classField, "Value from product flavor: ${flavor.name}")
+            }
+        }
+
+        defaultConfig.resValues.values.forEach { classField ->
+            addToListIfNotAlreadyPresent(classField, "Value from default config.")
+        }
+
+        return resValueFields
+    }
 
     override val signingConfig: SigningConfig?
         get() {

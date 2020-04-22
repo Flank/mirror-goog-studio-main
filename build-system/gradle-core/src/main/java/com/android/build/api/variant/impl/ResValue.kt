@@ -14,15 +14,33 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.component
+package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.impl.ResValue
-import org.gradle.api.provider.MapProperty
+import java.io.Serializable
 
-interface VariantCreationConfig: BaseCreationConfig {
+data class ResValue(
+    /**
+     * value for the resource
+     */
+    val value: String,
 
-    val buildConfigFields: MapProperty<String, BuildConfigField>
+    /**
+     * Optional comment.
+     */
+    val comment: String? = "Added from the variant API"): Serializable {
 
-    val resValues: MapProperty<ResValue.Key, ResValue>
+    /**
+     * a generated resource is identified by its type+name as you can create
+     * @string/foo and @dimen/foo,
+     */
+    data class Key(
+        /**
+         * type of the resource like 'string'
+         */
+        val type: String,
+
+        /**
+         * name of the resource.
+         */
+        val name: String): Serializable
 }

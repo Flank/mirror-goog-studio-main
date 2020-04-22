@@ -63,6 +63,8 @@ com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.component.AndroidTestProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)
+com.android.build.api.component.AndroidTestProperties.addResValue: void (java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+com.android.build.api.component.AndroidTestProperties.addResValue: void (java.lang.String, java.lang.String, org.gradle.api.provider.Provider<java.lang.String>, java.lang.String)
 com.android.build.api.component.AndroidTestProperties.getAaptOptions: com.android.build.api.variant.AaptOptions ()
 com.android.build.api.component.AndroidTestProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.component.AndroidTestProperties.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, ? extends com.android.build.api.variant.BuildConfigField> ()
@@ -831,6 +833,8 @@ com.android.build.api.variant.VariantOutputConfiguration$OutputType.values: com.
 com.android.build.api.variant.VariantOutputConfiguration.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
 com.android.build.api.variant.VariantOutputConfiguration.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
 com.android.build.api.variant.VariantProperties implements com.android.build.api.component.ComponentProperties
+com.android.build.api.variant.VariantProperties.addResValue: void (java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+com.android.build.api.variant.VariantProperties.addResValue: void (java.lang.String, java.lang.String, org.gradle.api.provider.Provider<java.lang.String>, java.lang.String)
 com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.VariantProperties.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField> ()
 com.android.build.api.variant.VariantProperties.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()

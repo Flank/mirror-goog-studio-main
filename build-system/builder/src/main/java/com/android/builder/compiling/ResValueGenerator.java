@@ -26,8 +26,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.internal.ClassFieldImpl;
-import com.android.builder.model.ClassField;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
@@ -37,7 +35,6 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -69,8 +66,67 @@ public class ResValueGenerator {
 
     private final File mGenFolder;
 
-    private final List<ClassField> mFields = Lists.newArrayList();
-    private List<Object> mItems = Lists.newArrayList();
+    private final List<Field> requests = Lists.newArrayList();
+
+    private static class Field {
+
+        @NonNull private final String type;
+        @Nullable private final String value;
+        @NonNull private final String name;
+        @Nullable private final String comment;
+
+        private Field(
+                @NonNull String type,
+                @NonNull String name,
+                @Nullable String value,
+                @Nullable String comment) {
+            this.type = type;
+            this.value = value;
+            this.name = name;
+            this.comment = comment;
+        }
+
+        public void emit(@NonNull Document document, @NonNull Node parentNode) {
+
+            if (comment != null) {
+                parentNode.appendChild(document.createTextNode("\n"));
+                parentNode.appendChild(document.createComment(comment));
+                parentNode.appendChild(document.createTextNode("\n"));
+            }
+
+            ResourceType resourceType = ResourceType.fromClassName(type);
+            if (resourceType == null && SdkConstants.TAG_DECLARE_STYLEABLE.equals(type)) {
+                resourceType = ResourceType.STYLEABLE;
+            }
+
+            boolean hasResourceTag =
+                    (resourceType != null && RESOURCES_WITH_TAGS.contains(resourceType));
+
+            Node itemNode = document.createElement(hasResourceTag ? type : TAG_ITEM);
+            Attr nameAttr = document.createAttribute(ATTR_NAME);
+
+            nameAttr.setValue(name);
+            itemNode.getAttributes().setNamedItem(nameAttr);
+
+            if (!hasResourceTag) {
+                Attr typeAttr = document.createAttribute(ATTR_TYPE);
+                typeAttr.setValue(type);
+                itemNode.getAttributes().setNamedItem(typeAttr);
+            }
+
+            if (resourceType == ResourceType.STRING) {
+                Attr translatable = document.createAttribute(ATTR_TRANSLATABLE);
+                translatable.setValue(VALUE_FALSE);
+                itemNode.getAttributes().setNamedItem(translatable);
+            }
+
+            if (value != null && !value.isEmpty()) {
+                itemNode.appendChild(document.createTextNode(value));
+            }
+
+            parentNode.appendChild(itemNode);
+        }
+    }
 
     /**
      * Creates a generator
@@ -81,15 +137,11 @@ public class ResValueGenerator {
     }
 
     public ResValueGenerator addResource(
-            @NonNull String type, @NonNull String name, @NonNull String value) {
-        mFields.add(new ClassFieldImpl(type, name, value));
-        return this;
-    }
-
-    public ResValueGenerator addItems(@Nullable Collection<Object> items) {
-        if (items != null) {
-            mItems.addAll(items);
-        }
+            @NonNull String type,
+            @NonNull String name,
+            @NonNull String value,
+            @Nullable String comment) {
+        requests.add(new Field(type, name, value, comment));
         return this;
     }
 
@@ -129,47 +181,9 @@ public class ResValueGenerator {
         rootNode.appendChild(document.createComment("Automatically generated file. DO NOT MODIFY"));
         rootNode.appendChild(document.createTextNode("\n\n"));
 
-        for (Object item : mItems) {
-            if (item instanceof ClassField) {
-                ClassField field = (ClassField)item;
-
-                ResourceType type = ResourceType.fromClassName(field.getType());
-                if (type == null && SdkConstants.TAG_DECLARE_STYLEABLE.equals(field.getType())) {
-                    type = ResourceType.STYLEABLE;
-                }
-
-                boolean hasResourceTag = (type != null && RESOURCES_WITH_TAGS.contains(type));
-
-                Node itemNode = document.createElement(hasResourceTag ? field.getType() : TAG_ITEM);
-                Attr nameAttr = document.createAttribute(ATTR_NAME);
-
-                nameAttr.setValue(field.getName());
-                itemNode.getAttributes().setNamedItem(nameAttr);
-
-                if (!hasResourceTag) {
-                    Attr typeAttr = document.createAttribute(ATTR_TYPE);
-                    typeAttr.setValue(field.getType());
-                    itemNode.getAttributes().setNamedItem(typeAttr);
-                }
-
-                if (type == ResourceType.STRING) {
-                    Attr translatable = document.createAttribute(ATTR_TRANSLATABLE);
-                    translatable.setValue(VALUE_FALSE);
-                    itemNode.getAttributes().setNamedItem(translatable);
-                }
-
-                if (!field.getValue().isEmpty()) {
-                    itemNode.appendChild(document.createTextNode(field.getValue()));
-                }
-
-                rootNode.appendChild(itemNode);
-            } else if (item instanceof String) {
-                rootNode.appendChild(document.createTextNode("\n"));
-                rootNode.appendChild(document.createComment((String) item));
-                rootNode.appendChild(document.createTextNode("\n"));
-            }
+        for (Field request : requests) {
+            request.emit(document, rootNode);
         }
-
         String content;
         try {
             content = XmlPrettyPrinter.prettyPrint(document, true);

@@ -41,7 +41,8 @@ data class BuildConfigField(
     val value: String,
 
     /**
-     * Optional field comment that will be added to the generated source file.
+     * Optional field comment that will be added to the generated source file or null if no comment
+     * is necessary.
      */
     val comment: String?
 ) : Serializable {
