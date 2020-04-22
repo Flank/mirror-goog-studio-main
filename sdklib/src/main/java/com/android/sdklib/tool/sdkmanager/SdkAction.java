@@ -33,10 +33,6 @@ abstract class SdkAction {
     public abstract void execute(@NonNull ProgressIndicator progress)
             throws SdkManagerCli.CommandFailedException;
 
-    public boolean validate(@NonNull ProgressIndicator progress) {
-        return true;
-    }
-
     boolean consumeArgument(@NonNull String arg, @NonNull ProgressIndicator progress) {
         return false;
     }

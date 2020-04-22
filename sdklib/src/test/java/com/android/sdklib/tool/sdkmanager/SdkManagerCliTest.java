@@ -54,7 +54,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.nio.file.FileSystem;
@@ -175,6 +174,37 @@ public class SdkManagerCliTest {
         mDownloader.registerUrl(new URL(archiveUrl), is);
 
         return new FakeLoader<>(remotes);
+    }
+
+    @Test
+    public void determineRoot() throws Exception {
+        System.setProperty("com.android.sdklib.toolsdir", "/sdk/cmdline-tools/1.0.0");
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--list"), mFileOp.getFileSystem());
+        assertEquals("/sdk", settings.getLocalPath().toString());
+
+        System.setProperty("com.android.sdklib.toolsdir", "/sdk/foo/bar");
+        try {
+            // This is expected to fail, since the path isn't what's expected
+            SdkManagerCliSettings.createSettings(
+                    ImmutableList.of("--list"), mFileOp.getFileSystem());
+            fail();
+        } catch (SdkManagerCliSettings.FailSilentlyException expected) {
+        }
+
+        System.setProperty("com.android.sdklib.toolsdir", "/sdk/foo/bar");
+        settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--list", "--sdk_root=/sdk2"), mFileOp.getFileSystem());
+        assertEquals("/sdk2", settings.getLocalPath().toString());
+
+        // There was a problem when tools was installed directly in the root
+        System.setProperty("com.android.sdklib.toolsdir", "/tools");
+        settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--list", "--sdk_root=/sdk3"), mFileOp.getFileSystem());
+        assertEquals("/sdk3", settings.getLocalPath().toString());
     }
 
     /**
@@ -361,7 +391,7 @@ public class SdkManagerCliTest {
 
     /** Verify that the --channel sets us up with the right channel. */
     @Test
-    public void channel() {
+    public void channel() throws Exception {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--channel=1", "--sdk_root=/sdk"),
@@ -962,29 +992,56 @@ public class SdkManagerCliTest {
 
     @Test
     public void unknownArgument() {
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--foo"), mFileOp.getFileSystem()));
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--list", "foo"),
-                        mFileOp.getFileSystem()));
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--update", "foo"),
-                        mFileOp.getFileSystem()));
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--version", "foo"),
-                        mFileOp.getFileSystem()));
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--licenses", "foo"),
-                        mFileOp.getFileSystem()));
+        assertThrows(
+                SdkManagerCliSettings.ShowUsageException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of("--sdk_root=/sdk", "--foo"),
+                                mFileOp.getFileSystem()));
+        assertThrows(
+                SdkManagerCliSettings.ShowUsageException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of("--sdk_root=/sdk", "--list", "foo"),
+                                mFileOp.getFileSystem()));
+        assertThrows(
+                SdkManagerCliSettings.ShowUsageException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of("--sdk_root=/sdk", "--update", "foo"),
+                                mFileOp.getFileSystem()));
+        assertThrows(
+                SdkManagerCliSettings.ShowUsageException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of("--sdk_root=/sdk", "--version", "foo"),
+                                mFileOp.getFileSystem()));
+        assertThrows(
+                SdkManagerCliSettings.ShowUsageException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of("--sdk_root=/sdk", "--licenses", "foo"),
+                                mFileOp.getFileSystem()));
+    }
+
+    // TODO: remove when we move past junit 4.12 in tools/idea
+    private interface ThrowableRunnable {
+        void run() throws Exception;
+    }
+
+    // TODO: remove when we move past junit 4.12 in tools/idea
+    private void assertThrows(
+            Class<? extends Exception> exceptionClass, ThrowableRunnable runnable) {
+        try {
+            runnable.run();
+            fail("Expected " + exceptionClass.getName());
+        } catch (Exception e) {
+            assertTrue(e.getClass().isAssignableFrom(exceptionClass));
+        }
     }
 
     @Test
-    public void unknownPackage() {
+    public void unknownPackage() throws Exception {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=/sdk", "test;bad"), mFileOp.getFileSystem());
@@ -1005,7 +1062,7 @@ public class SdkManagerCliTest {
     }
 
     @Test
-    public void proxySettings() throws MalformedURLException {
+    public void proxySettings() throws Exception {
         final String HTTP_PROXY = "http://studio-unittest.name:2340";
         final String HTTPS_PROXY = "https://studio-other-unittest.name:2341";
         String httpProxyHost = new URL(HTTP_PROXY).getHost();
@@ -1017,21 +1074,30 @@ public class SdkManagerCliTest {
                         "HTTPS_PROXY", HTTPS_PROXY,
                         "STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY", "1");
 
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--no_proxy", "--proxy_port=80"),
-                        mFileOp.getFileSystem(),
-                        environment));
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--no_proxy", "--proxy_host=foo.bar"),
-                        mFileOp.getFileSystem(),
-                        environment));
-        assertNull(
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--no_proxy", "--proxy=bar.baz"),
-                        mFileOp.getFileSystem(),
-                        environment));
+        assertThrows(
+                SdkManagerCliSettings.FailSilentlyException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of(
+                                        "--sdk_root=/sdk", "--no_proxy", "--proxy_port=80"),
+                                mFileOp.getFileSystem(),
+                                environment));
+        assertThrows(
+                SdkManagerCliSettings.FailSilentlyException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of(
+                                        "--sdk_root=/sdk", "--no_proxy", "--proxy_host=foo.bar"),
+                                mFileOp.getFileSystem(),
+                                environment));
+        assertThrows(
+                SdkManagerCliSettings.FailSilentlyException.class,
+                () ->
+                        SdkManagerCliSettings.createSettings(
+                                ImmutableList.of(
+                                        "--sdk_root=/sdk", "--no_proxy", "--proxy=bar.baz"),
+                                mFileOp.getFileSystem(),
+                                environment));
 
         {
             SdkManagerCliSettings settings =
@@ -1087,17 +1153,18 @@ public class SdkManagerCliTest {
                     ImmutableMap.of(
                             "HTTP_PROXY", "Ти до мене не ходи",
                             "STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY", "1");
-            SdkManagerCliSettings settings =
-                    SdkManagerCliSettings.createSettings(
-                            ImmutableList.of("--sdk_root=/sdk"),
-                            mFileOp.getFileSystem(),
-                            environmentInvalidProxyUrl);
-            assertNull(settings);
+            assertThrows(
+                    SdkManagerCliSettings.FailSilentlyException.class,
+                    () ->
+                            SdkManagerCliSettings.createSettings(
+                                    ImmutableList.of("--sdk_root=/sdk"),
+                                    mFileOp.getFileSystem(),
+                                    environmentInvalidProxyUrl));
         }
     }
 
     @Test
-    public void packageFile() {
+    public void packageFile() throws Exception {
         mFileOp.recordExistingFile("/foo.bar", "package1\r\n package2 \r\n\r\n");
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
