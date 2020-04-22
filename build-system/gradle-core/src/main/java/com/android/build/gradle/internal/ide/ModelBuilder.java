@@ -395,6 +395,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 extension.getResourcePrefix(),
                 ImmutableList.of(),
                 extension.getBuildToolsVersion(),
+                extension.getNdkVersion(),
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 isBaseSplit(),

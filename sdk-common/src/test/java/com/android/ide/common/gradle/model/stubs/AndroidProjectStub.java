@@ -35,6 +35,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final Collection<BuildTypeContainer> myBuildTypes;
     @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
     @NonNull private final String myBuildToolsVersion;
+    @NonNull private final String myNdkVersion;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
     @NonNull private final Collection<Variant> myVariants;
     @NonNull private final Collection<String> myVariantNames;
@@ -69,6 +70,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 Lists.newArrayList(new BuildTypeContainerStub()),
                 Lists.newArrayList(new ProductFlavorContainerStub()),
                 "buildToolsVersion",
+                "ndkVersion",
                 Lists.newArrayList(new SyncIssueStub()),
                 Lists.newArrayList(new VariantStub()),
                 Lists.newArrayList("debug", "release"),
@@ -103,6 +105,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull Collection<BuildTypeContainer> buildTypes,
             @NonNull Collection<ProductFlavorContainer> productFlavors,
             @NonNull String buildToolsVersion,
+            @NonNull String ndkVersion,
             @NonNull Collection<SyncIssue> syncIssues,
             @NonNull Collection<Variant> variants,
             @NonNull Collection<String> variantNames,
@@ -134,6 +137,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myBuildTypes = buildTypes;
         myProductFlavors = productFlavors;
         myBuildToolsVersion = buildToolsVersion;
+        myNdkVersion = ndkVersion;
         mySyncIssues = syncIssues;
         myVariants = variants;
         myVariantNames = variantNames;
@@ -200,6 +204,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull
     public String getBuildToolsVersion() {
         return myBuildToolsVersion;
+    }
+
+    @Override
+    @NonNull
+    public String getNdkVersion() {
+        return myNdkVersion;
     }
 
     @Override
@@ -380,6 +390,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getBuildTypes(), stub.getBuildTypes())
                 && Objects.equals(getProductFlavors(), stub.getProductFlavors())
                 && Objects.equals(getBuildToolsVersion(), stub.getBuildToolsVersion())
+                && Objects.equals(getNdkVersion(), stub.getNdkVersion())
                 && Objects.equals(getSyncIssues(), stub.getSyncIssues())
                 && Objects.equals(getVariants(), stub.getVariants())
                 && Objects.equals(getVariantNames(), stub.getVariantNames())
@@ -411,6 +422,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 getBuildTypes(),
                 getProductFlavors(),
                 getBuildToolsVersion(),
+                getNdkVersion(),
                 getSyncIssues(),
                 getVariants(),
                 getVariantNames(),
@@ -455,6 +467,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myProductFlavors
                 + ", myBuildToolsVersion='"
                 + myBuildToolsVersion
+                + ", myNdkVersion='"
+                + myNdkVersion
                 + '\''
                 + ", mySyncIssues="
                 + mySyncIssues

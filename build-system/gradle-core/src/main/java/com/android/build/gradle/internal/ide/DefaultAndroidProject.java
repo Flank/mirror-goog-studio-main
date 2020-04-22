@@ -78,6 +78,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     private final File buildFolder;
     @NonNull
     private final String buildToolsVersion;
+    @NonNull private final String ndkVersion;
     @Nullable
     private final String resourcePrefix;
     @NonNull
@@ -128,6 +129,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @Nullable String resourcePrefix,
             @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull String buildToolsVersion,
+            @NonNull String ndkVersion,
             int projectType,
             int apiVersion,
             boolean baseSplit,
@@ -160,6 +162,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.apiVersion = apiVersion;
         this.nativeToolchains = nativeToolchains;
         this.buildToolsVersion = buildToolsVersion;
+        this.ndkVersion = ndkVersion;
         this.baseSplit = baseSplit;
         this.dynamicFeatures = ImmutableList.copyOf(dynamicFeatures);
         this.viewBindingOptions = viewBindingOptions;
@@ -327,6 +330,12 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return buildToolsVersion;
     }
 
+    @NonNull
+    @Override
+    public String getNdkVersion() {
+        return ndkVersion;
+    }
+
     @Override
     public int getPluginGeneration() {
         return GENERATION_ORIGINAL;
@@ -391,6 +400,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(lintOptions, that.lintOptions)
                 && Objects.equals(buildFolder, that.buildFolder)
                 && Objects.equals(buildToolsVersion, that.buildToolsVersion)
+                && Objects.equals(ndkVersion, that.ndkVersion)
                 && Objects.equals(resourcePrefix, that.resourcePrefix)
                 && Objects.equals(nativeToolchains, that.nativeToolchains)
                 && Objects.equals(buildTypes, that.buildTypes)
@@ -424,6 +434,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 lintOptions,
                 buildFolder,
                 buildToolsVersion,
+                ndkVersion,
                 resourcePrefix,
                 nativeToolchains,
                 projectType,

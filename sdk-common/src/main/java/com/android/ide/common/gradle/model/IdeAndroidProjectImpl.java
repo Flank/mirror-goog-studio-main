@@ -76,6 +76,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @Nullable private final IdeDependenciesInfo myDependenciesInfo;
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
+    @Nullable private final String myNdkVersion;
     @Nullable private final String myResourcePrefix;
     @Nullable private final String myGroupId;
     private final boolean mySupportsPluginGeneration;
@@ -203,6 +204,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         String buildToolsVersionCopy =
                 IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
 
+        String ndkVersionCopy = IdeModel.copyNewProperty(project::getNdkVersion, null);
+
         String groupId = null;
         if (parsedModelVersion != null
                 && parsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) {
@@ -247,6 +250,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 viewBindingOptionsCopy,
                 dependenciesInfoCopy,
                 buildToolsVersionCopy,
+                ndkVersionCopy,
                 project.getResourcePrefix(),
                 groupId,
                 IdeModel.copyNewProperty(project::getPluginGeneration, null) != null,
@@ -285,6 +289,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myViewBindingOptions = new IdeViewBindingOptions();
         myDependenciesInfo = new IdeDependenciesInfo();
         myBuildToolsVersion = null;
+        myNdkVersion = null;
         myResourcePrefix = null;
         myGroupId = null;
         mySupportsPluginGeneration = false;
@@ -321,6 +326,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @Nullable ViewBindingOptions viewBindingOptions,
             @Nullable IdeDependenciesInfo dependenciesInfo,
             @Nullable String buildToolsVersion,
+            @Nullable String ndkVersion,
             @Nullable String resourcePrefix,
             @Nullable String groupId,
             boolean supportsPluginGeneration,
@@ -353,6 +359,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myViewBindingOptions = viewBindingOptions;
         myDependenciesInfo = dependenciesInfo;
         myBuildToolsVersion = buildToolsVersion;
+        myNdkVersion = ndkVersion;
         myResourcePrefix = resourcePrefix;
         myGroupId = groupId;
         mySupportsPluginGeneration = supportsPluginGeneration;
@@ -459,6 +466,16 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         }
         throw new UnsupportedOperationException(
                 "Unsupported method: AndroidProject.getBuildToolsVersion()");
+    }
+
+    @Override
+    @NonNull
+    public String getNdkVersion() {
+        if (myNdkVersion != null) {
+            return myNdkVersion;
+        }
+        throw new UnsupportedOperationException(
+                "Unsupported method: AndroidProject.getNdkVersion()");
     }
 
     @Override
@@ -644,6 +661,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 && Objects.equals(myBuildTypes, project.myBuildTypes)
                 && Objects.equals(myProductFlavors, project.myProductFlavors)
                 && Objects.equals(myBuildToolsVersion, project.myBuildToolsVersion)
+                && Objects.equals(myNdkVersion, project.myNdkVersion)
                 && Objects.equals(mySyncIssues, project.mySyncIssues)
                 && Objects.equals(myVariants, project.myVariants)
                 && Objects.equals(myVariantNames, project.myVariantNames)
@@ -681,6 +699,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 myBuildTypes,
                 myProductFlavors,
                 myBuildToolsVersion,
+                myNdkVersion,
                 mySyncIssues,
                 myVariants,
                 myVariantNames,
@@ -725,6 +744,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 + myProductFlavors
                 + ", myBuildToolsVersion='"
                 + myBuildToolsVersion
+                + ", myNdkVersion='"
+                + myNdkVersion
                 + '\''
                 + ", mySyncIssues="
                 + mySyncIssues
