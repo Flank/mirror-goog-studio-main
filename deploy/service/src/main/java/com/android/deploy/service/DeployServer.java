@@ -16,11 +16,11 @@
 package com.android.deploy.service;
 
 import static com.android.ddmlib.IDevice.PROP_DEVICE_MODEL;
-import static java.lang.System.currentTimeMillis;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
@@ -30,11 +30,10 @@ import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
-    private static final long ATTACH_DEBUGGER_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
+    private static final int GET_DEBUG_PORT_RETRY_LIMIT = 10;
     private AndroidDebugBridge myActiveBridge;
     private Server myServer;
 
@@ -46,8 +45,8 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
      * @param adbPath full path to adb.exe required by {@link AndroidDebugBridge}.
      */
     public void start(int port, String adbPath) throws InterruptedException, IOException {
-        myActiveBridge = AndroidDebugBridge.createBridge(adbPath, false);
         AndroidDebugBridge.init(true);
+        myActiveBridge = AndroidDebugBridge.createBridge(adbPath, false);
 
         NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(port);
         serverBuilder.addService(this);
@@ -89,40 +88,67 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
     }
 
     @Override
-    public void attachDebugger(
-            Deploy.AttachRequest request, StreamObserver<Deploy.AttachResponse> responseObserver) {
-        Deploy.AttachResponse.Builder response = Deploy.AttachResponse.newBuilder();
-        long currentTime = currentTimeMillis();
-        long timeoutTime = currentTime + ATTACH_DEBUGGER_TIMEOUT_MS;
-        boolean acquired = false;
-        try {
-            while (currentTime < timeoutTime) {
-                for (IDevice device : myActiveBridge.getDevices()) {
-                    if (device.getSerialNumber().equals(request.getDeviceId())) {
-                        for (Client client : device.getClients()) {
-                            if (client.getClientData().getPid() == request.getPid()) {
-                                response.setPort(client.getDebuggerListenPort());
-                                acquired = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (acquired) {
+    public void getDebugPort(
+            Deploy.DebugPortRequest request,
+            StreamObserver<Deploy.DebugPortResponse> responseObserver) {
+        Deploy.DebugPortResponse.Builder response = Deploy.DebugPortResponse.newBuilder();
+        IDevice selectedDevice = null;
+        Client selectedClient = null;
+        for (IDevice device : myActiveBridge.getDevices()) {
+            if (device.getSerialNumber().equals(request.getDeviceId())) {
+                selectedDevice = device;
+                break;
+            }
+        }
+        if (selectedDevice == null) {
+            // TODO (gijosh): Respond with error.
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+            return;
+        }
+        for (Client client : selectedDevice.getClients()) {
+            if (client.getClientData().getPid() == request.getPid()) {
+                selectedClient = client;
+                break;
+            }
+        }
+        if (selectedClient == null) {
+            // TODO (gijosh): Respond with error.
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+            return;
+        }
+        // This logic mirros logic in the ConnectDebuggerTask used by Android Studio
+        // When a client is created it will immediately start a debugging server. The
+        // server then waits for a WAIT jdwp packet to indicicate the client is
+        // waiting for a debugger to attach. If this loop timesout and returns early
+        // the client may connect a debugger to a client that is not in this state.
+        // The behavior at that point is undefined. Most of the time it will work,
+        // some breakpoints may get missed.
+        for (int i = 0; i < GET_DEBUG_PORT_RETRY_LIMIT; i++) {
+            try {
+                // Wait until we receive the WAIT packet.
+                ClientData.DebuggerStatus status =
+                        selectedClient.getClientData().getDebuggerConnectionStatus();
+                if (status == ClientData.DebuggerStatus.WAITING) {
                     break;
                 }
-                Thread.sleep(500);
-                currentTime = currentTimeMillis();
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // Sleep interrupted this is okay.
+                break;
             }
-        } catch (InterruptedException ignored) {
-
         }
+        response.setPort(selectedClient.getDebuggerListenPort());
         responseObserver.onNext(response.build());
         responseObserver.onCompleted();
     }
 
     private static Deploy.Client ddmClientToRpcClient(Client client) {
-        return Deploy.Client.newBuilder().setPid(client.getClientData().getPid()).build();
+        return Deploy.Client.newBuilder()
+                .setPid(client.getClientData().getPid())
+                .setName(client.getClientData().getPackageName())
+                .build();
     }
 
     private Deploy.Device ddmDeviceToRpcDevice(IDevice device) {

@@ -12,10 +12,10 @@
     <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
-    <orderEntry type="module-library" scope="PROVIDED">
+    <orderEntry type="module-library" >
       <library>
         <CLASSES>
-          <root url="jar://$PROJECT_DIR$/../../bazel-bin/tools/base/deploy/service/deploy-service-proto.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/deploy/service/deploy-service-proto.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

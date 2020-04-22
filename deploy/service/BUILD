@@ -33,3 +33,21 @@ iml_module(
         "//tools/base/deploy/service:deploy-service-proto",
     ],
 )
+
+java_binary(
+    name = "deploy.service",
+    main_class = "com.android.deploy.service.DeployServiceMain",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deploy-service-proto",
+        "//tools/base/annotations",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/idea/.idea/libraries:Guava",
+        "//tools/idea/.idea/libraries:protobuf",
+        "//tools/idea/.idea/libraries:studio-grpc",
+        "//tools/idea/.idea/libraries:studio-proto",
+    ],
+)
