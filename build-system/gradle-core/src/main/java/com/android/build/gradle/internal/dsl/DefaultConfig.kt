@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.DynamicFeatureDefaultConfig
 import com.android.build.api.dsl.LibraryDefaultConfig
+import com.android.build.api.dsl.TestDefaultConfig
 import com.android.build.gradle.internal.services.DslServices
 import com.android.resources.Density
 import com.google.common.collect.Sets
@@ -29,7 +30,8 @@ open class DefaultConfig @Inject constructor(name: String, dslServices: DslServi
     BaseFlavor(name, dslServices),
     ApplicationDefaultConfig<AnnotationProcessorOptions, SigningConfig>,
     DynamicFeatureDefaultConfig<AnnotationProcessorOptions>,
-    LibraryDefaultConfig<AnnotationProcessorOptions, SigningConfig> {
+    LibraryDefaultConfig<AnnotationProcessorOptions, SigningConfig>,
+    TestDefaultConfig<AnnotationProcessorOptions, SigningConfig> {
 
     init {
         val densities = Density.getRecommendedValuesForDevice()

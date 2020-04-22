@@ -667,12 +667,20 @@ com.android.build.api.dsl.Splits.getAbi: AbiSplitT ()
 com.android.build.api.dsl.Splits.getAbiFilters: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.Splits.getDensity: DensitySplitT ()
 com.android.build.api.dsl.Splits.getDensityFilters: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.TestBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.TestVariantDimension
+com.android.build.api.dsl.TestBaseFlavor.getMaxSdk: java.lang.Integer ()
+com.android.build.api.dsl.TestBaseFlavor.getTargetSdk: java.lang.Integer ()
+com.android.build.api.dsl.TestBaseFlavor.getTargetSdkPreview: java.lang.String ()
+com.android.build.api.dsl.TestBaseFlavor.setMaxSdk: void (java.lang.Integer)
+com.android.build.api.dsl.TestBaseFlavor.setTargetSdk: void (java.lang.Integer)
+com.android.build.api.dsl.TestBaseFlavor.setTargetSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.TestVariantDimension
 com.android.build.api.dsl.TestBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.TestBuildType.isDebuggable: boolean ()
 com.android.build.api.dsl.TestBuildType.setCrunchPngs: void (java.lang.Boolean)
 com.android.build.api.dsl.TestBuildType.setDebuggable: void (boolean)
+com.android.build.api.dsl.TestDefaultConfig implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
@@ -687,6 +695,7 @@ com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super UnitTestOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.TestProductFlavor implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.TestVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.TestVariantDimension.getMultiDexEnabled: java.lang.Boolean ()
 com.android.build.api.dsl.TestVariantDimension.getSigningConfig: SigningConfigT ()

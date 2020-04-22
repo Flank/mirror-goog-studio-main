@@ -776,7 +776,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.splits: void (kotli
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.useLibrary: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.useLibrary: void (java.lang.String, boolean)
-com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor, com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DynamicFeatureBaseFlavor
+com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor, com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.TestBaseFlavor
 com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.BaseFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
@@ -1072,7 +1072,7 @@ com.android.build.gradle.internal.dsl.DataBindingOptions.setAddDefaultAdapters: 
 com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabledForTests: void (boolean)
 com.android.build.gradle.internal.dsl.DataBindingOptions.setVersion: void (java.lang.String)
-com.android.build.gradle.internal.dsl.DefaultConfig extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationDefaultConfig, com.android.build.api.dsl.DynamicFeatureDefaultConfig, com.android.build.api.dsl.LibraryDefaultConfig
+com.android.build.gradle.internal.dsl.DefaultConfig extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationDefaultConfig, com.android.build.api.dsl.DynamicFeatureDefaultConfig, com.android.build.api.dsl.LibraryDefaultConfig, com.android.build.api.dsl.TestDefaultConfig
 com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gradle.internal.dsl.DefaultConfig (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.DensitySplit
 com.android.build.gradle.internal.dsl.DensitySplitOptions.<init>: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
@@ -1430,7 +1430,7 @@ com.android.build.gradle.internal.dsl.PostProcessingBlock.setRemoveUnusedResourc
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setTestProguardFiles: void (java.util.List<java.lang.Object>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFiles: void (java.lang.Object[])
-com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationProductFlavor, com.android.build.api.dsl.DynamicFeatureProductFlavor, com.android.build.api.dsl.LibraryProductFlavor
+com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationProductFlavor, com.android.build.api.dsl.DynamicFeatureProductFlavor, com.android.build.api.dsl.LibraryProductFlavor, com.android.build.api.dsl.TestProductFlavor
 com.android.build.gradle.internal.dsl.ProductFlavor.<init>: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.ProductFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.ProductFlavor.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()

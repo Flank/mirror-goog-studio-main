@@ -20,6 +20,7 @@ import com.android.build.api.dsl.DynamicFeatureBaseFlavor
 import com.android.build.api.dsl.LibraryBaseFlavor
 import com.android.build.api.dsl.Ndk
 import com.android.build.api.dsl.Shaders
+import com.android.build.api.dsl.TestBaseFlavor
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
@@ -38,8 +39,9 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     AbstractProductFlavor(name),
     CoreProductFlavor,
     ApplicationBaseFlavor<AnnotationProcessorOptions, SigningConfig>,
+    DynamicFeatureBaseFlavor<AnnotationProcessorOptions>,
     LibraryBaseFlavor<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureBaseFlavor<AnnotationProcessorOptions> {
+    TestBaseFlavor<AnnotationProcessorOptions, SigningConfig> {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
