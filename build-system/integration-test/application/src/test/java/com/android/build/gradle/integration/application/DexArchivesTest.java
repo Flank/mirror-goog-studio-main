@@ -98,17 +98,25 @@ public class DexArchivesTest {
     @Test
     public void testChangingExistingFile() throws Exception {
         runTask("assembleDebug");
-
-        long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
         TestFileUtils.addMethod(
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/HelloWorld.java"),
                 "\npublic void addedMethod() {}");
-        TestUtils.waitForFileSystemTick();
 
-        runTask("assembleDebug");
-        assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get()).wasModifiedAt(created);
-        assertThat(FileUtils.find(builderDir(), "HelloWorld.dex").get().lastModified())
-                .isGreaterThan(created);
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
+
+            TestUtils.waitForFileSystemTick();
+            runTask("assembleDebug");
+
+            assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get())
+                    .wasModifiedAt(created);
+            assertThat(FileUtils.find(builderDir(), "HelloWorld.dex").get().lastModified())
+                    .isGreaterThan(created);
+        } else {
+            runTask("assembleDebug");
+        }
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
         assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
@@ -121,13 +129,21 @@ public class DexArchivesTest {
     @Test
     public void testAddingFile() throws Exception {
         runTask("assembleDebug");
-        long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
-        addNewClass();
-        TestUtils.waitForFileSystemTick();
-        runTask("assembleDebug");
-        assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get()).wasModifiedAt(created);
-
+            addNewClass();
+            TestUtils.waitForFileSystemTick();
+            runTask("assembleDebug");
+            assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get())
+                    .wasModifiedAt(created);
+        } else {
+            addNewClass();
+            TestUtils.waitForFileSystemTick();
+            runTask("assembleDebug");
+        }
         List<String> dexEntries = Lists.newArrayList("NewClass.dex");
         dexEntries.addAll(getInitialFolderDexEntries());
         checkIntermediaryDexArchives(dexEntries, getInitialJarDexClasses());
@@ -230,14 +246,18 @@ public class DexArchivesTest {
         assertThat(result.getTask(":dexBuilderDebug")).wasFromCache();
 
         // 3rd build adds a source file
-        long initialBuildTimestamp =
-                FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
-        addNewClass();
-        executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
-        assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
-                .isGreaterThan(initialBuildTimestamp);
-        assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
-                .isGreaterThan(initialBuildTimestamp);
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            long initialBuildTimestamp =
+                    FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
+            addNewClass();
+            executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
+            assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
+                    .isGreaterThan(initialBuildTimestamp);
+            assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
+                    .isGreaterThan(initialBuildTimestamp);
+        }
     }
 
     @Test
@@ -246,15 +266,19 @@ public class DexArchivesTest {
                 project.executor().with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8);
         executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 1).run("assembleDebug");
 
-        addNewClass();
-        long initialBuildTimestamp =
-                FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            addNewClass();
+            long initialBuildTimestamp =
+                    FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
-        executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
-        assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
-                .isGreaterThan(initialBuildTimestamp);
-        assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
-                .isGreaterThan(initialBuildTimestamp);
+            executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
+            assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
+                    .isGreaterThan(initialBuildTimestamp);
+            assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
+                    .isGreaterThan(initialBuildTimestamp);
+        }
     }
 
     private static Stream<String> getDexClasses(Path path) {
@@ -305,7 +329,13 @@ public class DexArchivesTest {
 
     @NonNull
     private List<String> getInitialFolderDexEntries() {
-        return Lists.newArrayList("BuildConfig.dex", "HelloWorld.dex");
+        if (project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            return Lists.newArrayList("HelloWorld.dex");
+        } else {
+            return Lists.newArrayList("BuildConfig.dex", "HelloWorld.dex");
+        }
     }
 
     @NonNull
@@ -319,13 +349,24 @@ public class DexArchivesTest {
 
     @NonNull
     private List<String> getApkDexClasses() {
-        return Lists.newArrayList(
-                "Lcom/example/helloworld/BuildConfig;",
-                "Lcom/example/helloworld/HelloWorld;",
-                "Lcom/example/helloworld/R;",
-                "Lcom/example/helloworld/R$id;",
-                "Lcom/example/helloworld/R$layout;",
-                "Lcom/example/helloworld/R$string;");
+        if (project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            return Lists.newArrayList(
+                    "Lcom/example/helloworld/HelloWorld;",
+                    "Lcom/example/helloworld/R;",
+                    "Lcom/example/helloworld/R$id;",
+                    "Lcom/example/helloworld/R$layout;",
+                    "Lcom/example/helloworld/R$string;");
+        } else {
+            return Lists.newArrayList(
+                    "Lcom/example/helloworld/BuildConfig;",
+                    "Lcom/example/helloworld/HelloWorld;",
+                    "Lcom/example/helloworld/R;",
+                    "Lcom/example/helloworld/R$id;",
+                    "Lcom/example/helloworld/R$layout;",
+                    "Lcom/example/helloworld/R$string;");
+        }
     }
 
     private GradleBuildResult runTask(@NonNull String taskName)

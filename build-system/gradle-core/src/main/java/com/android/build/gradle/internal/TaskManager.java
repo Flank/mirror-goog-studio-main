@@ -1149,9 +1149,15 @@ public abstract class TaskManager<
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask = taskFactory.register(
                     new GenerateBuildConfig.CreationAction(componentProperties));
 
-            TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getSourceGenTask(),
-                    generateBuildConfigTask);
+            if (!componentProperties
+                            .getServices()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
+                    && componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
+                TaskFactoryUtils.dependsOn(
+                        componentProperties.getTaskContainer().getSourceGenTask(),
+                        generateBuildConfigTask);
+            }
         }
     }
 

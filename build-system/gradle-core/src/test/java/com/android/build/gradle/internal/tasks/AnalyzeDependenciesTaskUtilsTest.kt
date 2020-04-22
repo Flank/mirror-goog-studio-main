@@ -39,8 +39,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.nio.charset.Charset
-import java.nio.file.Files
 
 class AnalyzeDependenciesTaskUtilsTest {
 

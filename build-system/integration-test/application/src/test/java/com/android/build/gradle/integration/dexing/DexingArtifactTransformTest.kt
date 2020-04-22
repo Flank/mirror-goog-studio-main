@@ -51,8 +51,12 @@ class DexingArtifactTransformTest {
         assertThat(result.tasks).containsAllIn(listOf(":mergeExtDexDebug", ":mergeDexDebug"))
         assertThat(result.tasks).doesNotContain(":mergeLibDexDebug")
         assertThat(result.tasks).doesNotContain(":mergeProjectDexDebug")
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-            .containsClass("Lcom/example/test/BuildConfig;")
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName(),
+                        "debug", "BuildConfig.jar").exists()) {
+            assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                    .containsClass("Lcom/example/test/BuildConfig;")
+        }
     }
 
     @Test
@@ -72,8 +76,13 @@ class DexingArtifactTransformTest {
             )
         )
         assertThat(result.tasks).doesNotContain(":mergeDexDebug")
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-            .containsClass("Lcom/example/test/BuildConfig;")
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName(),
+                        "debug",
+                        "BuildConfig.jar").exists()) {
+            assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                    .containsClass("Lcom/example/test/BuildConfig;")
+        }
     }
 
     @Test
@@ -92,7 +101,7 @@ class DexingArtifactTransformTest {
         assertThat(result.tasks).doesNotContain(":mergeLibDexDebug")
         assertThat(result.tasks).doesNotContain(":mergeProjectDexDebug")
         assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-            .containsClass("Landroid/support/multidex/MultiDexApplication;")
+                .containsClass("Landroid/support/multidex/MultiDexApplication;")
     }
 
     @Test

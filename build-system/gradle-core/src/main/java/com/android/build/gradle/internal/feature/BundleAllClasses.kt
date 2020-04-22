@@ -66,7 +66,6 @@ abstract class BundleAllClasses : NonIncrementalTask() {
     @get:Optional
     abstract val rClassesJar: RegularFileProperty
 
-
     @get:Input
     lateinit var modulePath: String
         private set

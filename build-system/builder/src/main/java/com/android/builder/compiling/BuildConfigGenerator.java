@@ -15,12 +15,8 @@
  */
 package com.android.builder.compiling;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 import com.squareup.javawriter.JavaWriter;
 import java.io.File;
@@ -41,63 +37,21 @@ public class BuildConfigGenerator implements BuildConfigCreator {
     public static final String BUILD_CONFIG_NAME = "BuildConfig.java";
 
     private static final Set<Modifier> PUBLIC_FINAL = EnumSet.of(Modifier.PUBLIC, Modifier.FINAL);
-    private static final Set<Modifier> PUBLIC_STATIC_FINAL =
-            EnumSet.of(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
 
-    private final File mGenFolder;
+    private final String mGenFolder;
     private final String mBuildConfigPackageName;
 
-    private final List<Field> mFields = Lists.newArrayList();
+    private final List<BuildConfigField> mFields;
 
     /**
      * Creates a generator
-     * @param genFolder the gen folder of the project
-     * @param buildConfigPackageName the package in which to create the class.
+     *
+     * @param buildConfigData BuildConfigData used to derive BuildConfig Java source class
      */
-    public BuildConfigGenerator(@NonNull File genFolder, @NonNull String buildConfigPackageName) {
-        mGenFolder = checkNotNull(genFolder);
-        mBuildConfigPackageName = checkNotNull(buildConfigPackageName);
-    }
-
-    private static class Field {
-
-        @NonNull private final String type;
-        @NonNull private final String value;
-        @NonNull private final String name;
-        @Nullable private final String comment;
-
-        private Field(
-                @NonNull String type,
-                @NonNull String name,
-                @NonNull String value,
-                @Nullable String comment) {
-            this.type = type;
-            this.value = value;
-            this.name = name;
-            this.comment = comment;
-        }
-
-        public void emit(JavaWriter writer) throws IOException {
-            if (comment != null) {
-                writer.emitSingleLineComment(comment);
-            }
-            writer.emitField(type, name, PUBLIC_STATIC_FINAL, value);
-        }
-    }
-
-    public BuildConfigGenerator addField(
-            @NonNull String type, @NonNull String name, @NonNull String value) {
-        addField(type, name, value, null);
-        return this;
-    }
-
-    public BuildConfigGenerator addField(
-            @NonNull String type,
-            @NonNull String name,
-            @NonNull String value,
-            @Nullable String comment) {
-        mFields.add(new Field(type, name, value, comment));
-        return this;
+    public BuildConfigGenerator(@NonNull BuildConfigData buildConfigData) {
+        mBuildConfigPackageName = buildConfigData.getBuildConfigPackageName();
+        mGenFolder = buildConfigData.getOutputPath().toString();
+        mFields = buildConfigData.getBuildConfigFields();
     }
 
     /** Returns a File representing where the BuildConfig class will be. */
@@ -116,7 +70,7 @@ public class BuildConfigGenerator implements BuildConfigCreator {
 
     /** Generates the BuildConfig class. */
     @Override
-    public void generate() throws IOException {
+    public void generate() {
         File pkgFolder = getFolderPath();
         if (!pkgFolder.isDirectory() && !pkgFolder.mkdirs()) {
             throw new RuntimeException("Failed to create " + pkgFolder.getAbsolutePath());
@@ -133,11 +87,13 @@ public class BuildConfigGenerator implements BuildConfigCreator {
                     .emitPackage(mBuildConfigPackageName)
                     .beginType("BuildConfig", "class", PUBLIC_FINAL);
 
-            for (Field Field : mFields) {
-                Field.emit(writer);
+            for (BuildConfigField field : mFields) {
+                field.emit(writer);
             }
 
             writer.endType();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Path
@@ -19,7 +20,8 @@ internal class BuildConfigByteCodeGeneratorTest {
     fun `BuildConfig bytecode is correctly generated, given an sample build configuration`() {
         val packageFolder = temporaryFolder.newFolder("my.app.pkg")
 
-        val generator = getSampleByteCodeGenerator(packageFolder.toPath())
+        val buildConfigData = getSampleByteCodeData(packageFolder.toPath())
+        val generator = BuildConfigByteCodeGenerator(buildConfigData)
 
         generator.generate()
 
@@ -47,7 +49,8 @@ internal class BuildConfigByteCodeGeneratorTest {
     fun `Check JAR contains expected classes`() {
         val packageFolder = temporaryFolder.newFolder("my.app.pkg")
 
-        val generator = getSampleByteCodeGenerator(packageFolder.toPath())
+        val buildConfigData = getSampleByteCodeData(packageFolder.toPath())
+        val generator = BuildConfigByteCodeGenerator(buildConfigData)
         generator.generate()
         val bytecodeJar = generator.getBuildConfigFile()
 
@@ -59,8 +62,8 @@ internal class BuildConfigByteCodeGeneratorTest {
         }
     }
 
-    private fun getSampleByteCodeGenerator(packageFolder: Path): BuildConfigByteCodeGenerator =
-            BuildConfigByteCodeGenerator.Builder()
+    private fun getSampleByteCodeData(packageFolder: Path): BuildConfigData =
+            BuildConfigData.Builder()
                     .setOutputPath(packageFolder)
                     .setBuildConfigPackageName(packageFolder.toFile().name)
                     .setBuildConfigName("BuildConfig")
@@ -68,6 +71,6 @@ internal class BuildConfigByteCodeGeneratorTest {
                     .addStringField("BUILD_TYPE", "debug")
                     .addIntField("VERSION_CODE", 1)
                     .addStringField("VERSION_NAME", "1.0")
-                    .addDebugField("DEBUG", false)
+                    .addBooleanField("DEBUG", false)
                     .build()
 }

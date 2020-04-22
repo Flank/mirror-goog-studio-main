@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -51,7 +52,12 @@ class MergeJavaResourceTaskTest {
             "dependencies { annotationProcessor files('empty.jar') }"
         )
         val build = project.executor().run("clean", ":mergeDebugJavaResource")
-        assertThat(build.didWorkTasks).contains(":compileDebugJavaWithJavac")
+        if (project.getIntermediateFile(
+                InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName()).exists()) {
+            assertThat(build.didWorkTasks).doesNotContain(":compileDebugJavaWithJavac")
+        } else {
+            assertThat(build.didWorkTasks).contains(":compileDebugJavaWithJavac")
+        }
     }
 
     @Test
@@ -65,7 +71,12 @@ class MergeJavaResourceTaskTest {
                 |}""".trimMargin()
         )
         val build = project.executor().run("clean", ":mergeDebugJavaResource")
-        assertThat(build.didWorkTasks).contains(":compileDebugJavaWithJavac")
+        if (project.getIntermediateFile(
+                InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName()).exists()) {
+            assertThat(build.didWorkTasks).doesNotContain(":compileDebugJavaWithJavac")
+        } else {
+            assertThat(build.didWorkTasks).contains(":compileDebugJavaWithJavac")
+        }
     }
 
     @Test

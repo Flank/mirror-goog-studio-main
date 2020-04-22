@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.XmlUtils;
@@ -107,6 +108,11 @@ public class DslTest {
 
     @Test
     public void buildConfigEncoding() throws Exception {
+        if (project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            return;
+        }
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"

@@ -419,13 +419,14 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // File containing all generated proguard rules from Javac (by e.g. dagger) merged together
     object GENERATED_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
 
-    // Directory containing generated BuildConfig Java class.
-    object GENERATED_BUILD_CONFIG_JAVA: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
-
     // File containing unused dependencies and dependencies that can be configured as
     // implementation in the current variant
     object ANALYZE_DEPENDENCIES_REPORT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-
+    // Directory containing generated BuildConfig Java class.
+    object GENERATED_BUILD_CONFIG_JAVA: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
+    // File in JAR format containing compiled .class BuildConfig.
+    object COMPILE_BUILD_CONFIG_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
+    
     // File containing SDK dependency block value.
     object SDK_DEPENDENCY_DATA: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Public file containing SDK dependency (unencrypted).

@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
@@ -119,17 +120,32 @@ public class SwitchMultidexTest {
             }
         }
 
-        assertThat(secondaryClasses)
-                .containsExactly(
-                        "Landroid/support/multidex/BuildConfig;",
-                        "Landroid/support/multidex/R;",
-                        "Lcom/example/helloworld/A0;",
-                        "Lcom/example/helloworld/A1;",
-                        "Lcom/example/helloworld/BuildConfig;",
-                        "Lcom/example/helloworld/R$id;",
-                        "Lcom/example/helloworld/R$layout;",
-                        "Lcom/example/helloworld/R$string;",
-                        "Lcom/example/helloworld/R;");
+        if (project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            assertThat(secondaryClasses)
+                    .containsExactly(
+                            "Landroid/support/multidex/R;",
+                            "Landroid/support/multidex/BuildConfig;",
+                            "Lcom/example/helloworld/A0;",
+                            "Lcom/example/helloworld/A1;",
+                            "Lcom/example/helloworld/R$id;",
+                            "Lcom/example/helloworld/R$layout;",
+                            "Lcom/example/helloworld/R$string;",
+                            "Lcom/example/helloworld/R;");
+        } else {
+            assertThat(secondaryClasses)
+                    .containsExactly(
+                            "Landroid/support/multidex/BuildConfig;",
+                            "Landroid/support/multidex/R;",
+                            "Lcom/example/helloworld/A0;",
+                            "Lcom/example/helloworld/A1;",
+                            "Lcom/example/helloworld/BuildConfig;",
+                            "Lcom/example/helloworld/R$id;",
+                            "Lcom/example/helloworld/R$layout;",
+                            "Lcom/example/helloworld/R$string;",
+                            "Lcom/example/helloworld/R;");
+        }
     }
 
     private void nativeMultidex() throws IOException, InterruptedException {
@@ -144,15 +160,29 @@ public class SwitchMultidexTest {
         Set<String> classes2 = debug.getAllDexes().get(1).getClasses().keySet();
         assertThat(classes2).named("No duplicate class definitions").containsNoneIn(classes);
 
-        assertThat(Sets.union(classes, classes2))
-                .containsExactly(
-                        "Lcom/example/helloworld/A0;",
-                        "Lcom/example/helloworld/A1;",
-                        "Lcom/example/helloworld/BuildConfig;",
-                        "Lcom/example/helloworld/HelloWorld;",
-                        "Lcom/example/helloworld/R$id;",
-                        "Lcom/example/helloworld/R$layout;",
-                        "Lcom/example/helloworld/R$string;",
-                        "Lcom/example/helloworld/R;");
+        if (project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            assertThat(Sets.union(classes, classes2))
+                    .containsExactly(
+                            "Lcom/example/helloworld/A0;",
+                            "Lcom/example/helloworld/A1;",
+                            "Lcom/example/helloworld/HelloWorld;",
+                            "Lcom/example/helloworld/R$id;",
+                            "Lcom/example/helloworld/R$layout;",
+                            "Lcom/example/helloworld/R$string;",
+                            "Lcom/example/helloworld/R;");
+        } else {
+            assertThat(Sets.union(classes, classes2))
+                    .containsExactly(
+                            "Lcom/example/helloworld/A0;",
+                            "Lcom/example/helloworld/A1;",
+                            "Lcom/example/helloworld/BuildConfig;",
+                            "Lcom/example/helloworld/HelloWorld;",
+                            "Lcom/example/helloworld/R$id;",
+                            "Lcom/example/helloworld/R$layout;",
+                            "Lcom/example/helloworld/R$string;",
+                            "Lcom/example/helloworld/R;");
+        }
     }
 }

@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.CodeShrinker;
@@ -283,13 +284,24 @@ public class MinifyTest {
                             .collect(Collectors.toSet()));
         }
 
-        assertThat(allClasses)
-                .containsExactly(
-                        "Lcom/android/tests/basic/MainTest;",
-                        "Lcom/android/tests/basic/UnusedTestClass;",
-                        "Lcom/android/tests/basic/UsedTestClass;",
-                        "Lcom/android/tests/basic/test/BuildConfig;",
-                        "Lcom/android/tests/basic/test/R;");
+        if (project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            assertThat(allClasses)
+                    .containsExactly(
+                            "Lcom/android/tests/basic/MainTest;",
+                            "Lcom/android/tests/basic/UnusedTestClass;",
+                            "Lcom/android/tests/basic/UsedTestClass;",
+                            "Lcom/android/tests/basic/test/R;");
+        } else {
+            assertThat(allClasses)
+                    .containsExactly(
+                            "Lcom/android/tests/basic/MainTest;",
+                            "Lcom/android/tests/basic/UnusedTestClass;",
+                            "Lcom/android/tests/basic/UsedTestClass;",
+                            "Lcom/android/tests/basic/test/BuildConfig;",
+                            "Lcom/android/tests/basic/test/R;");
+        }
 
         assertThat(apk)
                 .hasClass("Lcom/android/tests/basic/MainTest;")

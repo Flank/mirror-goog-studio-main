@@ -67,6 +67,7 @@ import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.builder.compiling.BuildConfigType;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
@@ -1045,7 +1046,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (aidlSources != null) {
             folders.add(aidlSources.getAsFile());
         }
-        folders.add(componentProperties.getPaths().getBuildConfigSourceOutputDir());
+        if (componentProperties.getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
+            folders.add(componentProperties.getPaths().getBuildConfigSourceOutputDir());
+        }
         boolean ndkMode = componentProperties.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =

@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -51,9 +52,17 @@ class DexingArtifactTransformMultiModuleTest {
         executor().run(":app:assembleDebug")
 
         project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
-            assertThatApk(it).containsClass("Lcom/example/app/BuildConfig;")
-            assertThatApk(it).containsClass("Lcom/example/app/R;")
-            assertThatApk(it).containsClass("Lcom/example/lib/R;")
+            if (project.getSubproject("app").getIntermediateFile(
+                            InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName(),
+                            "debug",
+                            "BuildConfig.jar").exists()) {
+                assertThatApk(it).containsClass("Lcom/example/app/R;")
+                assertThatApk(it).containsClass("Lcom/example/lib/R;")
+            } else {
+                assertThatApk(it).containsClass("Lcom/example/app/BuildConfig;")
+                assertThatApk(it).containsClass("Lcom/example/app/R;")
+                assertThatApk(it).containsClass("Lcom/example/lib/R;")
+            }
         }
     }
 
