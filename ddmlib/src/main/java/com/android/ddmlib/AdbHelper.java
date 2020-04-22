@@ -1028,7 +1028,7 @@ public final class AdbHelper {
      * @throws IOException in case of I/O error on the connection.
      */
     @Slow
-    static void write(SocketChannel chan, byte[] data, int length, int timeout) throws TimeoutException, IOException {
+    public static void write(SocketChannel chan, byte[] data, int length, int timeout) throws TimeoutException, IOException {
         ByteBuffer buf = ByteBuffer.wrap(data, 0, length != -1 ? length : data.length);
         int numWaits = 0;
 

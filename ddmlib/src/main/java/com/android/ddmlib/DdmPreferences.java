@@ -17,7 +17,6 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmlib.internal.MonitorThread;
 
 /**
  * Preferences for the ddm library.
@@ -31,42 +30,56 @@ import com.android.ddmlib.internal.MonitorThread;
  */
 public final class DdmPreferences {
 
-    /** Default value for thread update flag upon client connection. */
-    public static final boolean DEFAULT_INITIAL_THREAD_UPDATE = false;
-    /** Default value for heap update flag upon client connection. */
-    public static final boolean DEFAULT_INITIAL_HEAP_UPDATE = false;
-    /** Default value for the logcat {@link LogLevel} */
-    public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
-    /** Default timeout values for adb connection (milliseconds) */
-    public static final int DEFAULT_TIMEOUT = 5000; // standard delay, in ms
-    /** Default profiler buffer size (megabytes) */
-    public static final int DEFAULT_PROFILER_BUFFER_SIZE_MB = 8;
-    /** Default values for the use of the ADBHOST environment variable. */
-    public static final boolean DEFAULT_USE_ADBHOST = false;
-    public static final String DEFAULT_ADBHOST_VALUE = "127.0.0.1";
+  /**
+   * Default value for thread update flag upon client connection.
+   */
+  public static final boolean DEFAULT_INITIAL_THREAD_UPDATE = false;
+  /**
+   * Default value for heap update flag upon client connection.
+   */
+  public static final boolean DEFAULT_INITIAL_HEAP_UPDATE = false;
+  /**
+   * Default value for the logcat {@link LogLevel}
+   */
+  public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
+  public static final int DEFAULT_PROXY_SERVER_PORT = 8599;
+  /**
+   * Default timeout values for adb connection (milliseconds)
+   */
+  public static final int DEFAULT_TIMEOUT = 5000; // standard delay, in ms
+  /**
+   * Default profiler buffer size (megabytes)
+   */
+  public static final int DEFAULT_PROFILER_BUFFER_SIZE_MB = 8;
+  /**
+   * Default values for the use of the ADBHOST environment variable.
+   */
+  public static final boolean DEFAULT_USE_ADBHOST = false;
+  public static final String DEFAULT_ADBHOST_VALUE = "127.0.0.1";
 
-    private static boolean sThreadUpdate = DEFAULT_INITIAL_THREAD_UPDATE;
-    private static boolean sInitialHeapUpdate = DEFAULT_INITIAL_HEAP_UPDATE;
+  private static boolean sThreadUpdate = DEFAULT_INITIAL_THREAD_UPDATE;
+  private static boolean sInitialHeapUpdate = DEFAULT_INITIAL_HEAP_UPDATE;
 
-    private static LogLevel sLogLevel = DEFAULT_LOG_LEVEL;
-    private static int sTimeOut = DEFAULT_TIMEOUT;
-    private static int sProfilerBufferSizeMb = DEFAULT_PROFILER_BUFFER_SIZE_MB;
+  private static LogLevel sLogLevel = DEFAULT_LOG_LEVEL;
+  private static int sTimeOut = DEFAULT_TIMEOUT;
+  private static int sProfilerBufferSizeMb = DEFAULT_PROFILER_BUFFER_SIZE_MB;
 
-    private static boolean sUseAdbHost = DEFAULT_USE_ADBHOST;
-    private static String sAdbHostValue = DEFAULT_ADBHOST_VALUE;
+  private static boolean sUseAdbHost = DEFAULT_USE_ADBHOST;
+  private static String sAdbHostValue = DEFAULT_ADBHOST_VALUE;
 
-    /**
-     * Returns the initial {@link Client} flag for thread updates.
-     * @see #setInitialThreadUpdate(boolean)
-     */
-    public static boolean getInitialThreadUpdate() {
-        return sThreadUpdate;
-    }
+  /**
+   * Returns the initial {@link Client} flag for thread updates.
+   *
+   * @see #setInitialThreadUpdate(boolean)
+   */
+  public static boolean getInitialThreadUpdate() {
+    return sThreadUpdate;
+  }
 
-    /**
-     * Sets the initial {@link Client} flag for thread updates.
-     * <p>This change takes effect right away, for newly created {@link Client} objects.
-     */
+  /**
+   * Sets the initial {@link Client} flag for thread updates.
+   * <p>This change takes effect right away, for newly created {@link Client} objects.
+   */
     public static void setInitialThreadUpdate(boolean state) {
         sThreadUpdate = state;
     }

@@ -81,6 +81,7 @@ public class JarContentsTest {
                 "com/android/ddmlib/internal/",
                 "com/android/ddmlib/internal/jdwp/",
                 "com/android/ddmlib/internal/jdwp/chunkhandler/",
+                "com/android/ddmlib/internal/jdwp/interceptor/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
