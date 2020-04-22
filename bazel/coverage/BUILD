@@ -211,6 +211,22 @@ coverage_report(
 )
 
 coverage_report(
+    name = "ml-model-binding",
+    srcpath_exclude = [
+        "tools/adt/idea/mlkit/testSrc",
+        "tools/base/mlkit-common/src/test",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/mlkit",
+        "tools/base/mlkit-common",
+    ],
+    tests = [
+        "//tools/adt/idea/mlkit:intellij.android.mlkit.tests_tests",
+        "//tools/base/mlkit-common:studio.android.sdktools.mlkit-common_tests",
+    ],
+)
+
+coverage_report(
     name = "motioneditor",
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
@@ -418,6 +434,7 @@ combine_report_definitions(
         "dsl",
         "dynamic-layout-inspector",
         "layouteditor",
+        "ml-model-binding",
         "motioneditor",
         "navigationeditor",
         "navigationpropertyinspector",
@@ -469,6 +486,7 @@ coverage_report(
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
+        "//tools/adt/idea/mlkit:intellij.android.mlkit.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
         "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
@@ -567,6 +585,7 @@ coverage_report(
         "//tools/base/lint:studio-checks-tests.test",
         "//tools/base/lint:tests.test",
         "//tools/base/lint/libs/lint-tests:tests.test",
+        "//tools/base/mlkit-common:studio.android.sdktools.mlkit-common_tests",
         "//tools/base/ninepatch:studio.android.sdktools.ninepatch_tests",
         "//tools/base/perflib:studio.android.sdktools.perflib_tests",
         "//tools/base/pixelprobe:studio.android.sdktools.pixelprobe_tests",
