@@ -27,7 +27,11 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.BadPacketException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
+import com.android.ddmlib.internal.jdwp.interceptor.ClientInitializationInterceptor;
+import com.android.ddmlib.internal.jdwp.interceptor.DebuggerInterceptor;
+import com.android.ddmlib.internal.jdwp.interceptor.HandshakeInterceptor;
 import com.android.ddmlib.internal.jdwp.interceptor.Interceptor;
+import com.android.ddmlib.internal.jdwp.interceptor.NoReplyPacketInterceptor;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.EOFException;
 import java.io.IOException;
@@ -67,6 +71,10 @@ public class JdwpClientManager implements JdwpSocketHandler {
         mAdbSocket = AdbHelper.createPassThroughConnection(AndroidDebugBridge.getSocketAddress(), id.deviceSerial, id.pid);
         mAdbSocket.configureBlocking(false);
         mAdbSocket.register(selector, SelectionKey.OP_READ, this);
+        mInterceptors.add(new NoReplyPacketInterceptor());
+        mInterceptors.add(new HandshakeInterceptor());
+        mInterceptors.add(new ClientInitializationInterceptor());
+        mInterceptors.add(new DebuggerInterceptor());
     }
 
     void addListener(JdwpProxyClient client) {

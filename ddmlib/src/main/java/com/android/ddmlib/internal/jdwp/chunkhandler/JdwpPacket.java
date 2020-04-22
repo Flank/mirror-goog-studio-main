@@ -154,7 +154,7 @@ public final class JdwpPacket {
      * Return the length of a packet.  This includes the header, so an
      * empty packet is 11 bytes long.
      */
-    int getLength() {
+    public int getLength() {
         return mLength;
     }
 
