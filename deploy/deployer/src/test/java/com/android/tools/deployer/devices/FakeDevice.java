@@ -24,6 +24,7 @@ import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.NettyServerBuilder;
@@ -45,6 +46,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -597,6 +599,7 @@ public class FakeDevice {
     public class AndroidProcess {
         private final Process process;
         private final FakeAppGrpc.FakeAppBlockingStub stub;
+        private final ManagedChannel channel;
         public final int pid;
         public final Application application;
 
@@ -614,11 +617,8 @@ public class FakeDevice {
                 throw new IllegalStateException("Invalid first server line");
             }
             int port = Integer.valueOf(matcher.group(1));
-            this.stub =
-                    FakeAppGrpc.newBlockingStub(
-                            NettyChannelBuilder.forAddress("localhost", port)
-                                    .usePlaintext()
-                                    .build());
+            this.channel = NettyChannelBuilder.forAddress("localhost", port).usePlaintext().build();
+            this.stub = FakeAppGrpc.newBlockingStub(channel);
         }
 
         public boolean attachAgent(String agent) {
@@ -636,6 +636,14 @@ public class FakeDevice {
 
         public void shutdown() {
             process.destroyForcibly();
+            channel.shutdownNow();
+            try {
+                if (!channel.awaitTermination(1, TimeUnit.SECONDS)) {
+                    System.err.println("Channel did not terminate properly");
+                }
+            } catch (InterruptedException e) {
+                System.err.println("Channel did not terminate properly: " + e.getMessage());
+            }
         }
     }
 }
