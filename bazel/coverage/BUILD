@@ -404,12 +404,14 @@ coverage_report(
 
 combine_report_definitions(
     prefix = "comps",
+    # keep sorted
     reports = [
-        "all",  # keep this one at the top
+        "all",
         "android-apk",
         "app-inspection",
         "build-attribution",
         "custom-views-preview",
+        "dagger-editing",
         "database-inspector",
         "databinding",
         "designtools",
@@ -428,7 +430,6 @@ combine_report_definitions(
         "systracev2",
         "templates",
         "validation",
-        "dagger-editing",
     ],
 )
 
