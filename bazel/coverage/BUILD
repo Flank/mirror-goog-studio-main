@@ -96,6 +96,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "app-inspection",
+    srcpath_include = ["tools/adt/idea/app-inspection"],
+    tests = [
+        "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
+        "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspector/api:intellij.android.app-inspection.inspector.api_tests",
+    ],
+)
+
+coverage_report(
     name = "database-inspector",
     srcpath_include = [
         "tools/adt/idea/android-debuggers",
@@ -397,6 +407,7 @@ combine_report_definitions(
     reports = [
         "all",  # keep this one at the top
         "android-apk",
+        "app-inspection",
         "build-attribution",
         "custom-views-preview",
         "database-inspector",
@@ -439,6 +450,9 @@ coverage_report(
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
+        "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
+        "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspector/api:intellij.android.app-inspection.inspector.api_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
