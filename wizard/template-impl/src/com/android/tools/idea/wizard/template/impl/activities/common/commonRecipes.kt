@@ -60,31 +60,19 @@ fun RecipeExecutor.generateManifest(
   mainTheme: ThemeData = moduleData.themesData.main,
   manifestOut: File = moduleData.manifestDir,
   baseFeatureResOut: File = moduleData.baseFeature?.resDir ?: moduleData.resDir,
-  requireTheme: Boolean,
-  generateActivityTitle: Boolean,
-  useMaterial2: Boolean
+  generateActivityTitle: Boolean
 ) {
-  if (requireTheme) {
-    generateThemeStyles(
-      themeData = mainTheme,
-      useMaterial2 = useMaterial2,
-      resOut =  baseFeatureResOut
-    )
-  }
-
   generateManifestStrings(activityClass, activityTitle, baseFeatureResOut, isNewModule, generateActivityTitle)
 
   val manifest = androidManifestXml(
-    isNewModule,
-    hasNoActionBar,
-    packageName,
-    activityClass,
-    isLauncher,
-    isLibrary,
-    mainTheme,
-    noActionBarTheme,
-    generateActivityTitle,
-    requireTheme
+    isNewModule = isNewModule,
+    hasNoActionBar = hasNoActionBar,
+    packageName = packageName,
+    activityClass = activityClass,
+    isLauncher = isLauncher,
+    isLibraryProject = isLibrary,
+    hasNoActionBarTheme = noActionBarTheme,
+    generateActivityTitle = generateActivityTitle
   )
 
   mergeXml(manifest, manifestOut.resolve("AndroidManifest.xml"))

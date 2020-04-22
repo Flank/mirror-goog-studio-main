@@ -46,7 +46,6 @@ fun RecipeExecutor.viewModelActivityRecipe(
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   val generateKotlin = projectData.language == Language.Kotlin
   val superClassFqcn = getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)
@@ -55,7 +54,7 @@ fun RecipeExecutor.viewModelActivityRecipe(
   // TODO: Old templates doesn't set requireTheme as true, check if it's not needed
   generateManifest(
     moduleData, activityClass, activityClass, packageName, isLauncher, false,
-    requireTheme = false, generateActivityTitle = false, useMaterial2 = useMaterial2
+    generateActivityTitle = false
   )
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")

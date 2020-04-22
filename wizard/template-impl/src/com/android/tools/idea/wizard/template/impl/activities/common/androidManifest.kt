@@ -26,12 +26,8 @@ fun androidManifestXml(
   activityClass: String,
   isLauncher: Boolean,
   isLibraryProject: Boolean,
-  mainTheme: ThemeData,
   hasNoActionBarTheme: ThemeData,
-  generateActivityTitle: Boolean = true,
-  requireTheme: Boolean = false,
-  // TODO(qumeric): actually pass values to hasApplicationTheme
-  hasApplicationTheme: Boolean = false
+  generateActivityTitle: Boolean = true
 ): String {
   val appName = if (isNewModule) "app_name" else "title_" + activityToLayout(activityClass)
 
@@ -39,7 +35,6 @@ fun androidManifestXml(
 
   val hasActionBarBlock = when {
     hasNoActionBar -> """android:theme = "@style/${hasNoActionBarTheme.name}""""
-    requireTheme && !hasApplicationTheme -> """android:theme = "@style/${mainTheme.name}""""
     else -> ""
   }
 

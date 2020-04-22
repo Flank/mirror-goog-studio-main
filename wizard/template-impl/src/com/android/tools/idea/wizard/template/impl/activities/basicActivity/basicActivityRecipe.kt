@@ -55,8 +55,7 @@ fun RecipeExecutor.generateBasicActivity(
   addAllKotlinDependencies(moduleData)
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
-    requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
-  )
+    generateActivityTitle = true)
   generateAppBar(
     moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX, useMaterial2 = useMaterial2
   )

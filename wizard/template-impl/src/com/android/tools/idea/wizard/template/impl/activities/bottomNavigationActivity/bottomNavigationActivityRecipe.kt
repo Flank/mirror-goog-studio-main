@@ -63,9 +63,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
     packageName,
     isLauncher,
     hasNoActionBar = false,
-    requireTheme = true,
-    generateActivityTitle = true,
-    useMaterial2 = useMaterial2
+    generateActivityTitle = true
   )
 
   val language = projectData.language
