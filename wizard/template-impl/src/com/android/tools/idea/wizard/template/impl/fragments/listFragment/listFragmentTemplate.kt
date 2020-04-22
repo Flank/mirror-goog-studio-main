@@ -50,7 +50,7 @@ val listFragmentTemplate
   get() = template {
     revision = 1
     name = "Fragment (List)"
-    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level 14"
+    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
     minApi = MIN_API
     minBuildApi = MIN_API
 

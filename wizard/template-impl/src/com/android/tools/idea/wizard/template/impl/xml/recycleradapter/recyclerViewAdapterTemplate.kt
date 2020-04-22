@@ -30,6 +30,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.extractLetters
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.ColumnCount
 import com.android.tools.idea.wizard.template.stringParameter
@@ -49,9 +50,9 @@ val recyclerViewAdapterFragmentTemplate
   get() = template {
     revision = 1
     name = "Adapter with Fragment"
-    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level 14"
-    minApi = 14
-    minBuildApi = 14
+    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile
@@ -124,9 +125,9 @@ val recyclerViewAdapterNoFragmentTemplate
   get() = template {
     revision = 1
     name = "Adapter Only"
-    description = "Generates RecyclerView adapter and other boilerplate codes. Compatible back to API level 14"
-    minApi = 14
-    minBuildApi = 14
+    description = "Generates RecyclerView adapter and other boilerplate codes. Compatible back to API level $MIN_API"
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.XML
     formFactor = FormFactor.Mobile

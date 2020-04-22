@@ -37,7 +37,7 @@ val blankFragmentTemplate
   get() = template {
     revision = 1
     name = "Fragment (Blank)"
-    description = "Creates a blank fragment that is compatible back to API level 14"
+    description = "Creates a blank fragment that is compatible back to API level $MIN_API"
     minApi = MIN_API
     minBuildApi = MIN_API
 

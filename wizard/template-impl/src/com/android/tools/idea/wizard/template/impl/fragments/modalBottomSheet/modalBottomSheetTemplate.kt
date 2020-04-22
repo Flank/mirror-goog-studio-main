@@ -43,7 +43,7 @@ val modalBottomSheetTemplate
   get() = template {
     revision = 1
     name = "Modal Bottom Sheet"
-    description = "Creates a new modal bottom sheet fragment containing a list that can be rendered as a grid. Compatible back to API level 14"
+    description = "Creates a new modal bottom sheet fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
     minApi = MIN_API
     minBuildApi = MIN_API
 
