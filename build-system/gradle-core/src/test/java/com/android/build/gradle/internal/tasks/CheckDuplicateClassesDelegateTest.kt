@@ -16,33 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.gradle.internal.dependency.EnumerateClassesDelegate
-import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
-import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
-import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask
-import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.testutils.TestInputsGenerator
-import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import com.google.common.util.concurrent.MoreExecutors
-import com.google.gson.GsonBuilder
-import org.gradle.api.Action
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
-import org.gradle.workers.WorkerExecutor
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 import java.io.File
 import java.nio.file.Path
 import kotlin.test.assertFailsWith
@@ -58,8 +35,6 @@ class CheckDuplicateClassesDelegateTest {
 
     val lineSeparator: String = System.lineSeparator()
 
-    private val emptyEnumeratedClasses get() = makeEnumeratedClasses(tmp.root.toPath().resolve("emptyClasses"), listOf()).toFile()
-
     private fun makeEnumeratedClasses(classesFile: Path, classes: List<String>): Path {
         val outputString = classes.joinToString(separator = "\n")
 
@@ -72,7 +47,7 @@ class CheckDuplicateClassesDelegateTest {
     fun testNoArtifacts() {
         val classesArtifacts = mapOf<String, File>()
 
-        CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+        CheckDuplicateClassesDelegate().run("test", classesArtifacts)
     }
 
     @Test
@@ -84,7 +59,7 @@ class CheckDuplicateClassesDelegateTest {
         val classesArtifacts = mapOf<String, File>("identifier" to jar.toFile())
 
         // Nothing should happen, no fails
-        CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+        CheckDuplicateClassesDelegate().run("test", classesArtifacts)
     }
 
     @Test
@@ -101,7 +76,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier2" to jar2.toFile())
 
         // Nothing should happen, no fails
-        CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+        CheckDuplicateClassesDelegate().run("test", classesArtifacts)
     }
 
     @Test
@@ -118,7 +93,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier2" to jar2.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
@@ -140,7 +115,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier2" to jar2.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
@@ -168,7 +143,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier3" to jar3.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
@@ -194,86 +169,11 @@ class CheckDuplicateClassesDelegateTest {
             "identifier3" to jar3.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", emptyEnumeratedClasses, classesArtifacts)
+            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
             .contains(
                 "Duplicate class test.A found in the following modules: identifier1, identifier2 and identifier3$lineSeparator$lineSeparator$RECOMMENDATION")
     }
-
-    @Test
-    fun test2ArtifactsWithDependencyClasses_noDuplicates() {
-
-        val jar1 = tmp.root.toPath().resolve("jar1")
-        makeEnumeratedClasses(jar1, listOf("test.A"))
-
-        val jar2 = tmp.root.toPath().resolve("jar2")
-        makeEnumeratedClasses(jar2, listOf("test.B"))
-
-        val classesArtifacts = mapOf<String, File>(
-            "identifier1" to jar1.toFile(),
-            "identifier2" to jar2.toFile())
-
-        val moduleEnumeratedClasses = tmp.root.toPath().resolve("classes")
-        makeEnumeratedClasses(moduleEnumeratedClasses, listOf("test.C", "test.D"))
-
-        // Nothing should happen, no fails
-        CheckDuplicateClassesDelegate().run(
-            "test", moduleEnumeratedClasses.toFile(), classesArtifacts)
-    }
-
-    @Test
-    fun test2ArtifactsWithModuleClasses_oneDuplicate() {
-
-        val jar1 = tmp.root.toPath().resolve("jar1")
-        makeEnumeratedClasses(jar1, listOf("test.A"))
-
-        val jar2 = tmp.root.toPath().resolve("jar2")
-        makeEnumeratedClasses(jar2, listOf("test.B"))
-
-        val classesArtifacts = mapOf<String, File>(
-            "identifier1" to jar1.toFile(),
-            "identifier2" to jar2.toFile())
-
-        val moduleEnumeratedClasses = tmp.root.toPath().resolve("classes")
-        makeEnumeratedClasses(moduleEnumeratedClasses, listOf("test.A", "test.D"))
-
-        val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run(
-                "test", moduleEnumeratedClasses.toFile(), classesArtifacts)
-        }
-
-        Truth.assertThat(exception.message)
-            .contains(
-                "Duplicate class test.A found in modules classes (project :test) and identifier1$lineSeparator$lineSeparator$RECOMMENDATION")
-    }
-
-    @Test
-    fun test2ArtifactsWithModuleClasses_multipleDuplicates() {
-
-        val jar1 = tmp.root.toPath().resolve("jar1")
-        makeEnumeratedClasses(jar1, listOf("test.A", "test.B"))
-
-        val jar2 = tmp.root.toPath().resolve("jar2")
-        makeEnumeratedClasses(jar2, listOf("test.B"))
-
-        val classesArtifacts = mapOf<String, File>(
-            "identifier1" to jar1.toFile(),
-            "identifier2" to jar2.toFile())
-
-        val moduleEnumeratedClasses = tmp.root.toPath().resolve("classes")
-        makeEnumeratedClasses(moduleEnumeratedClasses, listOf("test.A", "test.D"))
-
-        val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run(
-                "test", moduleEnumeratedClasses.toFile(), classesArtifacts)
-        }
-
-        Truth.assertThat(exception.message)
-            .contains(
-                "Duplicate class test.A found in modules classes (project :test) and identifier1$lineSeparator"
-                        + "Duplicate class test.B found in modules identifier1 and identifier2$lineSeparator$lineSeparator$RECOMMENDATION")
-    }
-
 }
