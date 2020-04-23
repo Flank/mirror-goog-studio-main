@@ -133,16 +133,29 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
   if (cmd.GetProcessInfo(package_name_, &records)) {
     for (auto& record : records) {
       if (record.crashing) {
+        response->set_status(proto::SwapResponse::PROCESS_CRASHING);
         response->set_extra(record.process_name);
         return;
       }
 
       if (record.not_responding) {
+        response->set_status(proto::SwapResponse::PROCESS_NOT_RESPONDING);
         response->set_extra(record.process_name);
         return;
       }
     }
   }
+
+  for (int pid : request.process_ids()) {
+    const std::string pid_string = to_string(pid);
+    if (access(("/proc/" + pid_string).c_str(), F_OK) != 0) {
+      response->set_status(proto::SwapResponse::PROCESS_TERMINATED);
+      response->set_extra(pid_string);
+      return;
+    }
+  }
+
+  response->set_status(proto::SwapResponse::MISSING_AGENT_RESPONSES);
 }
 
 bool BaseSwapCommand::StartAgentServer(int agent_count, int* server_pid,
