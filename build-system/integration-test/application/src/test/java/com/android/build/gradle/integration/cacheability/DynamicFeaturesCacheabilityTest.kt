@@ -86,7 +86,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugAssets",
                     ":app:mergeDebugJavaResource",
                     ":app:mergeDebugJniLibFolders",
-                    ":app:mergeDebugNativeLibs",
                     ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
                     ":app:multiDexListDebug",
@@ -109,7 +108,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeDebugAssets",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:mergeDebugJniLibFolders",
-                    ":feature1:mergeDebugNativeLibs",
                     ":feature1:mergeDebugShaders",
                     ":feature1:mergeExtDexDebug",
                     ":feature1:mergeLibDexDebug",
@@ -132,7 +130,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeDebugAssets",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:mergeDebugJniLibFolders",
-                    ":feature2:mergeDebugNativeLibs",
                     ":feature2:mergeDebugShaders",
                     ":feature2:mergeExtDexDebug",
                     ":feature2:mergeLibDexDebug",
@@ -149,17 +146,20 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:mergeDebugNativeLibs", /* Intended. See bug 153088766 */
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:processDebugResources", /* Bug 141301405 */
                     ":app:writeDebugModuleMetadata",
 
                     ":feature1:featureDebugWriter",
+                    ":feature1:mergeDebugNativeLibs", /* Intended. See bug 153088766 */
                     ":feature1:mergeDebugResources",
                     ":feature1:packageDebug",
                     ":feature1:processDebugResources",
 
                     ":feature2:featureDebugWriter",
+                    ":feature2:mergeDebugNativeLibs", /* Intended. See bug 153088766 */
                     ":feature2:mergeDebugResources",
                     ":feature2:packageDebug",
                     ":feature2:processDebugResources"

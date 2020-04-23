@@ -71,7 +71,6 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseGeneratedProguardFiles",
                     ":lib:mergeReleaseJavaResource",
                     ":lib:mergeReleaseJniLibFolders",
-                    ":lib:mergeReleaseNativeLibs",
                     ":lib:mergeReleaseShaders",
                     ":lib:mergeReleaseResources",
                     ":lib:packageReleaseAssets",
@@ -87,7 +86,8 @@ class LibraryCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
-                    ":lib:bundleReleaseAar" /*Bug 121275773 */,
+                    ":lib:bundleReleaseAar", /* Bug 121275773 */
+                    ":lib:mergeReleaseNativeLibs",  /* Intended. See bug 153088766 */
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
                 ),
                 SKIPPED to setOf(
