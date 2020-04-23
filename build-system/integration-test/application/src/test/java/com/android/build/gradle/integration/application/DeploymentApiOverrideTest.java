@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
@@ -28,14 +26,9 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import kotlin.Unit;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,59 +81,34 @@ public class DeploymentApiOverrideTest {
     /** Regression test for https://issuetracker.google.com/72085541. */
     @Test
     public void testSwitchingDevices() throws Exception {
-        List<String> userClasses = new ArrayList<>();
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 19).run("assembleIcsDebug");
 
-        Map<String, BuiltArtifacts> outputModels =
-                executeWithDeviceApiVersionAndReturnOutputModels(project, 19, "assembleIcsDebug");
-        try (Apk apk = getApkforVariant(outputModels, "icsDebug")) {
-            assertThat(apk).exists();
-            for (Dex dex : apk.getAllDexes()) {
-                ImmutableSet<String> classNames = dex.getClasses().keySet();
-                for (String className : classNames) {
-                    if (className.startsWith("Lcom/android/tests/basic")) {
-                        userClasses.add(className);
-                    }
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
+        List<String> userClasses = new ArrayList<>();
+        for (Dex dex : apk.getAllDexes()) {
+            ImmutableSet<String> classNames = dex.getClasses().keySet();
+            for (String className : classNames) {
+                if (className.startsWith("Lcom/android/tests/basic")) {
+                    userClasses.add(className);
                 }
             }
         }
 
-        outputModels =
-                executeWithDeviceApiVersionAndReturnOutputModels(project, 27, "assembleIcsDebug");
-        try (Apk apk = getApkforVariant(outputModels, "icsDebug")) {
-            assertThat(apk).exists();
-            // make sure all user classes are still there
-            for (String userClass : userClasses) {
-                assertThat(apk).containsClass(userClass);
-            }
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 27).run("assembleIcsDebug");
+
+        // make sure all user classes are still there
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
+        for (String userClass : userClasses) {
+            assertThat(apk).containsClass(userClass);
         }
     }
 
     @Test
     public void testDexingUsesDeviceApi() throws Exception {
-        Map<String, BuiltArtifacts> outputModels =
-                project.executeAndReturnOutputModels("assembleIcsDebug");
-        assertThat(getApkforVariant(outputModels, "icsDebug")).hasDexVersion(35);
+        project.executor().run("assembleIcsDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics")).hasDexVersion(35);
 
-        outputModels =
-                executeWithDeviceApiVersionAndReturnOutputModels(project, 24, "assembleIcsDebug");
-        assertThat(getApkforVariant(outputModels, "icsDebug")).hasDexVersion(37);
-    }
-
-    private static Map<String, BuiltArtifacts> executeWithDeviceApiVersionAndReturnOutputModels(
-            GradleTestProject project, int deviceApiVersion, String... tasks) {
-        return project.executeAndReturnOutputModels(
-                (BaseGradleExecutor<?> bge) -> {
-                    bge.with(IntegerOption.IDE_TARGET_DEVICE_API, deviceApiVersion);
-                    return Unit.INSTANCE;
-                },
-                tasks);
-    }
-
-    private static Apk getApkforVariant(
-            Map<String, BuiltArtifacts> outputModels, String variantName) throws IOException {
-        String apkFileName =
-                Iterables.getOnlyElement(outputModels.get(variantName).getElements())
-                        .getOutputFile();
-        return new Apk(new File(apkFileName));
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 24).run("assembleIcsDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics")).hasDexVersion(37);
     }
 }
