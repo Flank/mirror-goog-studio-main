@@ -115,6 +115,11 @@ public class ModelBuilderTest {
                 new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
 
         ProjectServices projectServices = FakeServices.createProjectServices(syncIssueReporter);
+        when(gradle.getSharedServices()).thenReturn(projectServices.getBuildServiceRegistry());
+        new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
+                        project, SyncOptions.EvaluationMode.IDE)
+                .execute();
+
         DslServices dslServices = FakeServices.createDslServices(projectServices);
         when(globalScope.getDslServices()).thenReturn(dslServices);
 

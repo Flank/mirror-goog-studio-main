@@ -18,19 +18,28 @@ package com.android.build.gradle.internal.errors
 
 import com.android.annotations.concurrency.Immutable
 import com.android.build.gradle.internal.ide.SyncIssueImpl
+import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.options.SyncOptions.EvaluationMode
 import com.android.builder.errors.EvalIssueException
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.google.common.base.MoreObjects
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Maps
+import org.gradle.api.Project
 import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
+import java.lang.UnsupportedOperationException
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
 
 class SyncIssueReporterImpl(
-        private val mode: EvaluationMode,
-        private val logger: Logger)
-    : SyncIssueReporter() {
+    private val mode: EvaluationMode,
+    private val logger: Logger
+) : SyncIssueReporter() {
 
     @GuardedBy("this")
     private val _syncIssues = Maps.newHashMap<SyncIssueKey, SyncIssue>()
@@ -74,6 +83,57 @@ class SyncIssueReporterImpl(
     @Synchronized
     override fun lockHandler() {
         handlerLocked = true
+    }
+
+    /**
+     * Global, build-scope, sync issue reporter. This instance can be used from build services that
+     * need to report sync issues, such as sdk build service.
+     *
+     * IMPORTANT: In order to avoid duplication of global build-wide sync issues, callers must
+     * invoke [getAllIssuesAndClear] method. This will return list of global sync issues only once,
+     * and any subsequent invocation will return an empty list.
+     */
+    abstract class GlobalSyncIssueService : BuildService<GlobalSyncIssueService.Parameters>,
+        IssueReporter() {
+        interface Parameters : BuildServiceParameters {
+            val mode: Property<EvaluationMode>
+        }
+
+        private val reporter = SyncIssueReporterImpl(
+            parameters.mode.get(),
+            Logging.getLogger(GlobalSyncIssueService::class.java)
+        )
+
+        // Indicates if we should continue reporting issues when queried.
+        private val active = AtomicBoolean(true)
+
+        /**
+         * Returns all reported sync issues for the first invocation of the method. This is to avoid
+         * duplication of sync issues across project when this is queried from the model builder.
+         */
+        fun getAllIssuesAndClear(): ImmutableList<SyncIssue> {
+            return if (active.compareAndSet(true, false)) {
+                reporter.syncIssues
+            } else {
+                ImmutableList.of()
+            }
+        }
+
+        override fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException) {
+            reporter.reportIssue(type, severity, exception)
+        }
+
+        override fun hasIssue(type: Type): Boolean = reporter.hasIssue(type)
+
+        class RegistrationAction(project: Project, private val evaluationMode: EvaluationMode) :
+            ServiceRegistrationAction<GlobalSyncIssueService, Parameters>(
+                project,
+                GlobalSyncIssueService::class.java
+            ) {
+            override fun configure(parameters: Parameters) {
+                parameters.mode.set(evaluationMode)
+            }
+        }
     }
 }
 
