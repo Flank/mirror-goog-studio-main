@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
@@ -117,12 +116,8 @@ class VariantPathHelper(
     val apkLocation: File
         get() {
             val override = dslServices.projectOptions.get(StringOption.IDE_APK_LOCATION)
-            val targetDeviceAPI = dslServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-            val baseDirectory = when {
-                override != null -> dslServices.file(override)
-                targetDeviceAPI != null ->  getDeploymentApkLocation()
-                else -> getDefaultApkLocation()
-            }
+            val baseDirectory =
+                if (override != null) dslServices.file(override) else getDefaultApkLocation()
             return File(baseDirectory, variantDslInfo.dirName)
         }
 
@@ -133,18 +128,6 @@ class VariantPathHelper(
      */
     private fun getDefaultApkLocation(): File {
         return FileUtils.join(outputDir, "apk")
-    }
-
-    /**
-     * Obtains the location for APKs that target a specific device.
-     *
-     * APKs built for a specific device are put in intermediates/ in order to
-     * distinguish them from other APKs
-     *
-     * @return the location for targeted APKs
-     */
-    private fun getDeploymentApkLocation(): File {
-        return FileUtils.join(intermediatesDir, "apk")
     }
 
     val aarLocation: File
