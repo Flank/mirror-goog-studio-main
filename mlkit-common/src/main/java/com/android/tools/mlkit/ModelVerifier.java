@@ -18,6 +18,7 @@ package com.android.tools.mlkit;
 
 import com.android.tools.mlkit.exception.InvalidTfliteException;
 import com.android.tools.mlkit.exception.TfliteModelException;
+import com.android.tools.mlkit.exception.UnsupportedTfliteException;
 import com.android.tools.mlkit.exception.UnsupportedTfliteMetadataException;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.ByteBuffer;
@@ -41,52 +42,52 @@ public class ModelVerifier {
     @VisibleForTesting
     static void verifyModel(MetadataExtractor extractor) throws TfliteModelException {
         ModelMetadata metadata = extractor.getModelMetaData();
-        if (metadata == null) {
-            return;
-        }
 
-        int inputCount = extractor.getInputTensorCount();
         Set<String> inputNameSet = new HashSet<>();
-        for (int i = 0; i < inputCount; i++) {
+        for (int i = 0; i < extractor.getInputTensorCount(); i++) {
             verifyDataType(extractor.getInputTensorType(i), i, TensorInfo.Source.INPUT);
 
-            TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).inputTensorMetadata(i);
-            verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.INPUT);
+            if (metadata != null) {
+                TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).inputTensorMetadata(i);
+                verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.INPUT);
 
-            String formattedName = MlkitNames.computeIdentifierName(tensorMetadata.name());
-            if (inputNameSet.contains(formattedName)) {
-                throw new UnsupportedTfliteMetadataException(
-                        "More than one tensor has same name: " + formattedName);
-            }
-            inputNameSet.add(formattedName);
+                String formattedName = MlkitNames.computeIdentifierName(tensorMetadata.name());
+                if (inputNameSet.contains(formattedName)) {
+                    throw new UnsupportedTfliteMetadataException(
+                            "More than one tensor has same name: " + formattedName);
+                }
+                inputNameSet.add(formattedName);
 
-            if (TensorInfo.extractContentType(tensorMetadata) == TensorInfo.ContentType.IMAGE
-                    && extractor.getInputTensorShape(i).length != 4) {
-                throw new UnsupportedTfliteMetadataException(
-                        "Image tensor shape doesn't have length as 4");
+                if (TensorInfo.extractContentType(tensorMetadata) == TensorInfo.ContentType.IMAGE
+                        && extractor.getInputTensorShape(i).length != 4) {
+                    throw new UnsupportedTfliteMetadataException(
+                            "Image tensor shape doesn't have length as 4");
+                }
             }
         }
 
         Set<String> outputNameSet = new HashSet<>();
-        int outputCount = extractor.getOutputTensorCount();
-        for (int i = 0; i < outputCount; i++) {
+        for (int i = 0; i < extractor.getOutputTensorCount(); i++) {
             verifyDataType(extractor.getOutputTensorType(i), i, TensorInfo.Source.OUTPUT);
 
-            TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).outputTensorMetadata(i);
-            verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.OUTPUT);
+            if (metadata != null) {
+                TensorMetadata tensorMetadata =
+                        metadata.subgraphMetadata(0).outputTensorMetadata(i);
+                verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.OUTPUT);
 
-            String formattedName = MlkitNames.computeIdentifierName(tensorMetadata.name());
-            if (outputNameSet.contains(formattedName)) {
-                throw new UnsupportedTfliteMetadataException(
-                        "More than one tensor has same name: " + formattedName);
+                String formattedName = MlkitNames.computeIdentifierName(tensorMetadata.name());
+                if (outputNameSet.contains(formattedName)) {
+                    throw new UnsupportedTfliteMetadataException(
+                            "More than one tensor has same name: " + formattedName);
+                }
+                outputNameSet.add(formattedName);
             }
-            outputNameSet.add(formattedName);
         }
     }
 
     private static void verifyTensorMetadata(
             TensorMetadata tensorMetadata, int index, TensorInfo.Source source)
-            throws TfliteModelException {
+            throws UnsupportedTfliteMetadataException {
         if (tensorMetadata == null) {
             throw new UnsupportedTfliteMetadataException(
                     String.format(
@@ -101,10 +102,11 @@ public class ModelVerifier {
         }
     }
 
-    private static void verifyDataType(byte dataType, int index, TensorInfo.Source source)
-            throws TfliteModelException {
+    @VisibleForTesting
+    static void verifyDataType(byte dataType, int index, TensorInfo.Source source)
+            throws UnsupportedTfliteException {
         if (TensorInfo.DataType.fromByte(dataType) == null) {
-            throw new UnsupportedTfliteMetadataException(
+            throw new UnsupportedTfliteException(
                     String.format(
                             "Datatype of %s tensor %d is not supported",
                             source == TensorInfo.Source.INPUT ? "input" : "output", index));
