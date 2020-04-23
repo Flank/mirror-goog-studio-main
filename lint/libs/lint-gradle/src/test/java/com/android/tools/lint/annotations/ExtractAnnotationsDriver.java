@@ -26,7 +26,6 @@ import com.android.tools.lint.KotlinLintAnalyzerFacade;
 import com.android.tools.lint.UastEnvironment;
 import com.android.utils.SdkUtils;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -37,11 +36,12 @@ import com.intellij.psi.PsiFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import kotlin.io.FilesKt;
+import kotlin.text.Charsets;
 
 /**
  * The extract annotations driver is a command line interface to extracting annotations from a
@@ -322,7 +322,7 @@ public class ExtractAnnotationsDriver {
             }
 
             try {
-                String source = Files.toString(sourceFile, StandardCharsets.UTF_8);
+                String source = FilesKt.readText(sourceFile, Charsets.UTF_8);
                 Matcher matcher = PACKAGE_PATTERN.matcher(source);
                 boolean foundPackage = matcher.find();
                 if (!foundPackage) {
@@ -347,7 +347,7 @@ public class ExtractAnnotationsDriver {
                                         + path);
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 abort("Couldn't access " + sourceFile);
             }
         }
@@ -371,7 +371,7 @@ public class ExtractAnnotationsDriver {
                     abort(sourcePath + " does not exist");
                 }
                 try {
-                    for (String line : Files.readLines(sourcePath, Charsets.UTF_8)) {
+                    for (String line : FilesKt.readLines(sourcePath, Charsets.UTF_8)) {
                         line = line.trim();
                         if (!line.isEmpty()) {
                             File file = new File(line);
@@ -395,7 +395,7 @@ public class ExtractAnnotationsDriver {
                         }
                     }
                     continue;
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     System.exit(-1);
                 }

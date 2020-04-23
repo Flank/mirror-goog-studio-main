@@ -2,12 +2,36 @@
 #define DEPLOY_INSTALLER_TESTS_FAKE_JNI_H
 
 #include <jni.h>
+
 #include <set>
+#include <string>
 
 namespace deploy {
 
-class FakeClass : public _jclass {};
-class FakeString : public _jstring {};
+class FakeClass : public _jclass {
+ public:
+  const std::string name;
+  FakeClass(const std::string& name) : name(name) {}
+};
+class FakeObject : public _jobject {
+ public:
+  const std::string type;
+  FakeObject(const std::string& type) : type(type) {}
+};
+class FakeMember {
+ public:
+  const std::string clazz;
+  const std::string name;
+  const std::string type;
+  FakeMember(const std::string& clazz, const std::string& name,
+             const std::string& type)
+      : clazz(clazz), name(name), type(type) {}
+};
+class FakeString : public _jstring {
+ public:
+  const std::string value;
+  FakeString(const std::string& value) : value(value) {}
+};
 class FakeJNIEnv : public JNIEnv {
  public:
   FakeJNIEnv();
@@ -63,6 +87,9 @@ class FakeJNIEnv : public JNIEnv {
   static jfieldID GetFieldID(JNIEnv* env, jclass clazz, const char* name,
                              const char* sig);
 
+  static jfieldID GetStaticFieldID(JNIEnv* env, jclass clazz, const char* name,
+                                   const char* sig);
+
   static jmethodID GetMethodID(JNIEnv* env, jclass clazz, const char* name,
                                const char* sig);
 
@@ -70,6 +97,17 @@ class FakeJNIEnv : public JNIEnv {
 
   static void SetObjectField(JNIEnv* env, jobject obj, jfieldID fieldID,
                              jobject val);
+
+  static jint GetStaticIntField(JNIEnv* env, jclass clazz, jfieldID fieldID);
+
+  static jobject GetStaticObjectField(JNIEnv* env, jclass clazz,
+                                      jfieldID fieldID);
+
+  static const char* GetStringUTFChars(JNIEnv* env, jstring string,
+                                       jboolean* isCopy);
+
+  static void ReleaseStringUTFChars(JNIEnv* env, jstring str,
+                                    const char* chars);
 
  private:
   JNINativeInterface_ functions_;

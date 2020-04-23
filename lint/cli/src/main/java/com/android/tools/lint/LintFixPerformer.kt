@@ -28,7 +28,6 @@ import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.XMLNS_PREFIX
-import com.google.common.annotations.VisibleForTesting
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.GroupType
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup
@@ -40,6 +39,7 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.PositionXmlParser
 import com.android.utils.XmlUtils
+import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element

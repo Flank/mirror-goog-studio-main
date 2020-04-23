@@ -112,7 +112,8 @@ int Perfd::Initialize(Daemon* daemon) {
       });
   daemon->RegisterCommandHandler(
       proto::Command::START_NATIVE_HEAP_SAMPLE, [](proto::Command command) {
-        return StartNativeSample::Create(command, &heap_sampler);
+        return StartNativeSample::Create(command, &heap_sampler,
+                                         SessionsManager::Instance());
       });
   daemon->RegisterCommandHandler(
       proto::Command::STOP_NATIVE_HEAP_SAMPLE, [](proto::Command command) {

@@ -25,36 +25,7 @@ import java.io.File
  * That is, [BuildType] and [ProductFlavor] and [DefaultConfig].
  */
 @Incubating
-interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> {
-    /**
-     * Application id suffix. It is appended to the "base" application id when calculating the final
-     * application id for a variant.
-     *
-     * In case there are product flavor dimensions specified, the final application id suffix
-     * will contain the suffix from the default product flavor, followed by the suffix from product
-     * flavor of the first dimension, second dimension and so on. All of these will have a dot in
-     * between e.g. &quot;defaultSuffix.dimension1Suffix.dimensions2Suffix&quot;.
-     */
-    var applicationIdSuffix: String?
-
-    /**
-     * Version name suffix. It is appended to the "base" version name when calculating the final
-     * version name for a variant.
-     *
-     * In case there are product flavor dimensions specified, the final version name suffix will
-     * contain the suffix from the default product flavor, followed by the suffix from product
-     * flavor of the first dimension, second dimension and so on.
-     */
-    var versionNameSuffix: String?
-
-    /**
-     * Returns whether multi-dex is enabled.
-     *
-     * This can be null if the flag is not set, in which case the default value is used.
-     */
-    var multiDexEnabled: Boolean?
-
+interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
     /**
      * Text file with additional ProGuard rules to be used to determine which classes are compiled
      * into the main dex file.
@@ -136,46 +107,6 @@ interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOpti
     fun proguardFiles(vararg files: Any): Any
 
     /**
-     * ProGuard rule files to be included in the published AAR.
-     *
-     * These proguard rule files will then be used by any application project that consumes the
-     * AAR (if ProGuard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    var consumerProguardFiles: MutableList<File>
-
-    /**
-     * Adds a proguard rule file to be included in the published AAR.
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     *
-     * This method has a return value for legacy reasons.
-     */
-    fun consumerProguardFile(proguardFile: Any): Any
-
-    /**
-     * Adds proguard rule files to be included in the published AAR.
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     *
-     * This method has a return value for legacy reasons.
-     */
-    fun consumerProguardFiles(vararg proguardFiles: Any): Any
-
-    /**
      * The collection of proguard rule files to be used when processing test code.
      *
      * Test code needs to be processed to apply the same obfuscation as was done to main code.
@@ -243,9 +174,6 @@ interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOpti
      * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
      */
     fun externalNativeBuild(action: ExternalNativeBuildOptions.() -> Unit)
-
-    /** The associated signing config or null if none are set on the variant dimension. */
-    var signingConfig: SigningConfigT?
 
     /**
      * Adds a new field to the generated BuildConfig class.

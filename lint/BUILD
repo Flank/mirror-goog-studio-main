@@ -5,6 +5,57 @@ load("//tools/base/bazel:utils.bzl", "replace_manifest")
 
 # managed by go/iml_to_build
 iml_module(
+    name = "studio.android.sdktools.lint-model",
+    srcs = ["libs/lint-model/src/main/java"],
+    iml_files = ["libs/lint-model/android.sdktools.lint-model.iml"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
+        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/idea/.idea/libraries:kxml2",
+    ],
+)
+
+kotlin_library(
+    name = "tools.lint-model",
+    srcs = glob([
+        "libs/lint-model/src/main/java/**/*.kt",
+        "libs/lint-model/src/main/java/**/*.java",
+    ]),
+    module_name = "lint-model",
+    pom = "lint-model.pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-model",
+    resources = glob(
+        include = ["libs/lint-model/src/main/java/**"],
+        exclude = [
+            "libs/lint-model/src/main/java/**/*.java",
+            "libs/lint-model/src/main/java/**/*.kt",
+        ],
+    ) + ["libs/lint-model/NOTICE"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/common:tools.common",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    ],
+)
+
+maven_pom(
+    name = "lint-model.pom",
+    artifact = "lint-model",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:base_version",
+)
+
+# managed by go/iml_to_build
+iml_module(
     name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
     iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
@@ -42,7 +93,7 @@ iml_module(
         "//tools/idea/.idea/libraries:asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model",
+        "//tools/base/lint:studio.android.sdktools.lint-model",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
         "//tools/idea/java/java-psi-api:intellij.java.psi",
@@ -75,7 +126,7 @@ iml_module(
         "//tools/idea/.idea/libraries:asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-model[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
@@ -110,6 +161,7 @@ kotlin_library(
     ) + ["libs/lint-api/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
+        ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
@@ -123,6 +175,8 @@ kotlin_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
@@ -210,6 +264,7 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
+        ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
@@ -256,6 +311,7 @@ kotlin_library(
     ) + ["libs/lint-gradle-api/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
+        ":tools.lint-model",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/builder-model",
@@ -295,7 +351,10 @@ kotlin_library(
         # NOTE NOTE NOTE - before changing this, note that lint dependencies
         # must also be reflected in [ReflectiveLintRunner#computeUrls] as well
         # so update both in sync
+        ":tools.lint-api",
+        ":tools.lint-checks",
         ":tools.lint-gradle-api",
+        ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
@@ -308,8 +367,6 @@ kotlin_library(
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-api",
-        "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint/cli",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
@@ -347,7 +404,10 @@ kotlin_test(
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
+        ":tools.lint-api",
+        ":tools.lint-checks",
         ":tools.lint-gradle",
+        ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
@@ -357,8 +417,6 @@ kotlin_test(
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-api",
-        "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint/cli",
         "//tools/base/lint/libs/lint-tests",
         "//tools/base/repository:tools.repository",
@@ -390,6 +448,7 @@ kotlin_library(
     deps = [
         ":tools.lint-api",
         ":tools.lint-checks",
+        ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",

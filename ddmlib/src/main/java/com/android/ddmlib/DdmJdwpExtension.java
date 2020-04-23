@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentMap;
 public class DdmJdwpExtension extends JdwpExtension {
 
     // For broadcasts to message handlers
-    enum Event {
+    public enum Event {
         // CLIENT_CONNECTED,
         CLIENT_READY,
         CLIENT_DISCONNECTED
@@ -52,7 +52,7 @@ public class DdmJdwpExtension extends JdwpExtension {
         mHandlerMap.putIfAbsent(type, handler);
     }
 
-    void broadcast(Event event, @NonNull ClientImpl client) {
+    public void broadcast(Event event, @NonNull ClientImpl client) {
         Log.d("ddms", "broadcast " + event + ": " + client);
 
         /*

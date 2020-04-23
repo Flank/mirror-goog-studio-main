@@ -28,10 +28,8 @@ import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.utils.BuildScriptUtil.findGradleBuildFile;
 
-import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
@@ -51,6 +49,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmModuleType;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.intellij.psi.PsiClass;
@@ -106,7 +106,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
      */
     private static boolean isInstantApp(@NonNull Context context) {
         Project mainProject = context.getMainProject();
-        IdeAndroidProject model = mainProject.getGradleProjectModel();
+        LmModule model = mainProject.getBuildModule();
         if (model == null) {
             return false;
         }
@@ -126,14 +126,9 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
         return project != mainProject && isInstantApp(project);
     }
 
-    /** Checks whether the the given project is an instant app module */
+    /** Checks whether the given project is an instant app module */
     private static boolean isInstantApp(@NonNull Project project) {
-        IdeAndroidProject model = project.getGradleProjectModel();
-        if (model == null) {
-            return false;
-        }
-        int type = model.getProjectType();
-        return type == AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP;
+        return project.getType() == LmModuleType.INSTANT_APP;
     }
 
     @Override

@@ -38,7 +38,7 @@ val viewModelFragmentTemplate
   get() = template {
     revision = 1
     name = "Fragment (with ViewModel)"
-    description = "Creates a Fragment with a ViewModel."
+    description = "Creates a Fragment with a ViewModel"
     minApi = MIN_API
     minBuildApi = MIN_API
 
@@ -49,14 +49,14 @@ val viewModelFragmentTemplate
     val fragmentClass = stringParameter {
       name = "Fragment Name"
       default = "BlankFragment"
-      help = "The name of the fragment class to create "
+      help = "The name of the fragment class to create"
       constraints = listOf(CLASS, NONEMPTY, UNIQUE)
     }
 
     val layoutName = stringParameter {
       name = "Fragment Layout Name"
       default = "blank_fragment"
-      help = "The name of the layout to create "
+      help = "The name of the layout to create"
       constraints = listOf(LAYOUT, NONEMPTY, UNIQUE)
       suggest = { "${classToResource(fragmentClass.value)}_fragment" }
     }
@@ -64,7 +64,7 @@ val viewModelFragmentTemplate
     val viewModelName = stringParameter {
       name = "ViewModel Name"
       default = "BlankViewModel"
-      help = "The name of the ViewModel class to create "
+      help = "The name of the ViewModel class to create"
       constraints = listOf(CLASS, NONEMPTY, UNIQUE)
       suggest = { "${underscoreToCamelCase(classToResource(fragmentClass.value))}ViewModel" }
     }

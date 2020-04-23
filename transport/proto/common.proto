@@ -271,11 +271,14 @@ message Device {
                        // or '' for release
   string boot_id = 9;  // unique ID regenerated each boot time
   bool is_emulator = 10;
-  State state = 11;
+  string build_tags = 11;  // property of IDevice.PROP_BUILD_TAGS
+  string build_type = 12;  // property of IDevice.PROP_BUILD_TYPE
+  string cpu_abi = 13;     // property of IDevice.PROP_DEVICE_CPU_ABI
+  State state = 14;
 
   // Should only be set if the pipeline does not support the device.
   // e.g. pre-Lollipop devices.
-  string unsupported_reason = 12;
+  string unsupported_reason = 15;
 }
 
 message Process {

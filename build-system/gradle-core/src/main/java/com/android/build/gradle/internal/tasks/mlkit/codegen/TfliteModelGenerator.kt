@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getInp
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getOutputProcessorInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getOutputsClassInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getProcessInjector
-import com.android.tools.mlkit.MetadataExtractor
 import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.ModelInfo
 import com.squareup.javapoet.ClassName
@@ -49,9 +48,7 @@ class TfliteModelGenerator(
     private val localModelPath: String
 ) : ModelGenerator {
     private val logger: Logger = Logging.getLogger(this.javaClass)
-    private val modelInfo: ModelInfo = ModelInfo.buildFrom(
-        MetadataExtractor(ByteBuffer.wrap(modelFile.readBytes()))
-    )
+    private val modelInfo: ModelInfo = ModelInfo.buildFrom(ByteBuffer.wrap(modelFile.readBytes()))
     private val className: String = MlkitNames.computeModelClassName(modelFile)
 
     override fun generateBuildClass(outputDirProperty: DirectoryProperty) {

@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -275,18 +276,7 @@ interface VariantDslInfo {
      *
      * @return a list of items.
      */
-    val buildConfigItems: List<Any>
-
-    /**
-     * Return the merged build config fields for the variant.
-     *
-     *
-     * This is made of the variant-specific fields overlaid on top of the build type ones, the
-     * flavors ones, and the default config ones.
-     *
-     * @return a map of merged fields
-     */
-    val mergedBuildConfigFields: Map<String, ClassField>
+    fun getBuildConfigFields(): Map<String, BuildConfigField>
 
     /**
      * Return the merged res values for the variant.

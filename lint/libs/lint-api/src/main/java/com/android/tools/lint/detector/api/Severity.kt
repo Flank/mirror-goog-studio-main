@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.detector.api
 
-import com.android.builder.model.LintOptions
 import com.google.common.annotations.Beta
 
 /**
@@ -83,27 +82,6 @@ enum class Severity constructor(
 
             return null
         }
-
-        /**
-         * Returns a severity corresponding to the various [LintOptions] severity
-         * constants
-         *
-         * @param severity the [LintOptions] severity constant, such as
-         * [LintOptions.SEVERITY_FATAL]
-         *
-         * @return the corresponding lint [Severity]
-         */
-        @JvmStatic
-        fun fromLintOptionSeverity(severity: Int): Severity =
-            when (severity) {
-                LintOptions.SEVERITY_FATAL -> Severity.FATAL
-                LintOptions.SEVERITY_ERROR -> Severity.ERROR
-                LintOptions.SEVERITY_WARNING -> Severity.WARNING
-                LintOptions.SEVERITY_INFORMATIONAL -> Severity.INFORMATIONAL
-                LintOptions.SEVERITY_IGNORE -> Severity.IGNORE
-                LintOptions.SEVERITY_DEFAULT_ENABLED -> Severity.WARNING
-                else -> Severity.IGNORE
-            }
 
         /**
          * Returns the smallest / least severe of the two given severities

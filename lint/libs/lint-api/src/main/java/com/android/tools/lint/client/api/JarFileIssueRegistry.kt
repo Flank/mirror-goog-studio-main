@@ -162,6 +162,11 @@ private constructor(
             }
         }
 
+        /** Clear out any cached jar files */
+        fun clearCache() {
+            cache?.clear()
+        }
+
         /** Combine one or more issue registries into a single one */
         fun join(vararg registries: IssueRegistry): IssueRegistry {
             return if (registries.size == 1) {

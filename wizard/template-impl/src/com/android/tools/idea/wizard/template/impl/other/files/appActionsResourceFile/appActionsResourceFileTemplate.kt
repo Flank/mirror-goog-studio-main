@@ -33,7 +33,7 @@ val appActionsResourceFileTemplate
   get() = template {
     revision = 1
     name = "App Actions XML File"
-    description = "Creates an App Actions XML file. Note: Do not create more than one per app."
+    description = "Creates an App Actions XML file. Note: Do not create more than one per app"
     minApi = MIN_API
     minBuildApi = MIN_API
     category = Category.XML
@@ -43,7 +43,7 @@ val appActionsResourceFileTemplate
     val fileName = stringParameter {
       name = "Actions File Name"
       default = "actions"
-      help = "Name of the App Actions XML file. "
+      help = "Name of the App Actions XML file"
       constraints = listOf(UNIQUE, NONEMPTY)
     }
 

@@ -16,7 +16,7 @@
     <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="library" name="kxml2" level="project" />
     <orderEntry type="library" name="gson" level="project" />
-    <orderEntry type="module" module-name="android.sdktools.builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.model-base" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="library" name="intellij-core" level="project" />

@@ -20,8 +20,6 @@ import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
@@ -33,12 +31,12 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.android.tools.lint.detector.api.UastLintUtils;
+import com.android.tools.lint.model.LmModule;
 import com.google.common.collect.Sets;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
@@ -411,7 +409,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
 
             // Only flag these warnings if minifyEnabled is true in at least one
             // variant?
-            if (!isMinifying(context)) {
+            if (!isShrinking(context)) {
                 return;
             }
 
@@ -539,26 +537,14 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
         return prefix + firstLetter + theRest;
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
-    private static boolean isMinifying(@NonNull JavaContext context) {
-        Project project = context.getMainProject();
-        if (!project.isGradleProject()) {
-            // Not a Gradle project: assume project may be using ProGuard/other shrinking
-            return true;
-        }
-
-        IdeAndroidProject model = project.getGradleProjectModel();
+    private static boolean isShrinking(@NonNull JavaContext context) {
+        LmModule model = context.getMainProject().getBuildModule();
         if (model != null) {
-            for (BuildTypeContainer buildTypeContainer : model.getBuildTypes()) {
-                if (buildTypeContainer.getBuildType().isMinifyEnabled()) {
-                    return true;
-                }
-            }
+            return !model.neverShrinking();
         } else {
-            // No model? Err on the side of caution.
+            // No model? Err on the side of caution;
+            // assume project may be using ProGuard/other shrinking
             return true;
         }
-
-        return false;
     }
 }

@@ -19,7 +19,7 @@ package com.android.ddmlib.internal.jdwp.chunkhandler;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.ByteBufferUtil;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DebugPortManager;
 import com.android.ddmlib.internal.DebugPortManager.IDebugPortProvider;

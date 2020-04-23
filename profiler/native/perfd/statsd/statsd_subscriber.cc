@@ -32,8 +32,10 @@ using profiler::NonBlockingCommandRunner;
 using std::string;
 
 constexpr char const* kStatsdCommand = "/system/bin/cmd";
+// The array of argument strings passed to execve(). It must include a null
+// pointer at the end of the array.
 constexpr char const* kStatsdArgs[] = {kStatsdCommand, "stats",
-                                       "data-subscribe"};
+                                       "data-subscribe", nullptr};
 
 namespace profiler {
 

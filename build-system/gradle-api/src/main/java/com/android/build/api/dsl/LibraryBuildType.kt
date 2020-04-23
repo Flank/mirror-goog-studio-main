@@ -21,7 +21,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface LibraryBuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> :
-    BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
+    BuildType<AnnotationProcessorOptionsT>,
     LibraryVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
     /** Whether this product flavor should be selected in Studio by default  */
     var isDefault: Boolean

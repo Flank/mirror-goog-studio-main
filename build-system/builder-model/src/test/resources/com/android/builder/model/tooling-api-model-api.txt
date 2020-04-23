@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-da4486cf0ed179676def52c2ab3de2a31ec954df00385dba73b89dfd4915529b
+6ccdff83d30a75cc00953995bd0518d514bdafa310b67267c234a04815a17ddc
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -20,7 +20,6 @@ com.android.builder.model.AndroidArtifact.getAdditionalRuntimeApks: java.util.Co
 com.android.builder.model.AndroidArtifact.getApkFromBundleTaskName: java.lang.String ()
 com.android.builder.model.AndroidArtifact.getApkFromBundleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.AndroidArtifact.getApplicationId: java.lang.String ()
-com.android.builder.model.AndroidArtifact.getBuildConfigFields: java.util.Map<java.lang.String, com.android.builder.model.ClassField> ()
 com.android.builder.model.AndroidArtifact.getBundleTaskName: java.lang.String ()
 com.android.builder.model.AndroidArtifact.getBundleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.AndroidArtifact.getCodeShrinker: com.android.builder.model.CodeShrinker ()
@@ -90,6 +89,7 @@ com.android.builder.model.AndroidProject.getLintOptions: com.android.builder.mod
 com.android.builder.model.AndroidProject.getModelVersion: java.lang.String ()
 com.android.builder.model.AndroidProject.getName: java.lang.String ()
 com.android.builder.model.AndroidProject.getNativeToolchains: java.util.Collection<com.android.builder.model.NativeToolchain> ()
+com.android.builder.model.AndroidProject.getNdkVersion: java.lang.String ()
 com.android.builder.model.AndroidProject.getPluginGeneration: int ()
 com.android.builder.model.AndroidProject.getProductFlavors: java.util.Collection<com.android.builder.model.ProductFlavorContainer> ()
 com.android.builder.model.AndroidProject.getProjectType: int ()

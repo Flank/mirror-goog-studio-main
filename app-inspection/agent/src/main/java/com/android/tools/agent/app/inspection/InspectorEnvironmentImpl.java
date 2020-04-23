@@ -22,9 +22,11 @@ import java.util.List;
 
 class InspectorEnvironmentImpl implements InspectorEnvironment {
     private final long mAppInspectionServicePtr;
+    private final String inspectorId;
 
-    InspectorEnvironmentImpl(long mAppInspectionServicePtr) {
+    InspectorEnvironmentImpl(long mAppInspectionServicePtr, String inspectorId) {
         this.mAppInspectionServicePtr = mAppInspectionServicePtr;
+        this.inspectorId = inspectorId;
     }
 
     @Override
@@ -34,22 +36,15 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
 
     @Override
     public void registerEntryHook(Class<?> originClass, String originMethod, EntryHook entryHook) {
-        AppInspectionService.addEntryHook(originClass, originMethod, entryHook);
-        nativeRegisterEntryHook(mAppInspectionServicePtr, originClass, originMethod);
+        AppInspectionService.addEntryHook(inspectorId, originClass, originMethod, entryHook);
     }
 
     @Override
     public <T> void registerExitHook(
             Class<?> originClass, String originMethod, ExitHook<T> exitHook) {
-        AppInspectionService.addExitHook(originClass, originMethod, exitHook);
-        nativeRegisterExitHook(mAppInspectionServicePtr, originClass, originMethod);
+        AppInspectionService.addExitHook(inspectorId, originClass, originMethod, exitHook);
     }
 
     private static native <T> T[] nativeFindInstances(long servicePtr, Class<T> clazz);
-
-    private static native void nativeRegisterEntryHook(
-            long servicePtr, Class<?> originClass, String originMethod);
-
-    private static native void nativeRegisterExitHook(
-            long servicePtr, Class<?> originClass, String originMethod);
 }
+

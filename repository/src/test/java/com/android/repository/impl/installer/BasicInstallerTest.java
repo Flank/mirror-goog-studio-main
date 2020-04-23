@@ -72,9 +72,9 @@ public class BasicInstallerTest extends TestCase {
 
         FakeProgressRunner runner = new FakeProgressRunner();
         // Load the local packages.
-        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, new FakeDownloader(fop), new FakeSettingsController(false), true);
+        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, new FakeDownloader(fop), new FakeSettingsController(false), true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         RepositoryPackages pkgs = mgr.getPackages();
 
@@ -161,9 +161,9 @@ public class BasicInstallerTest extends TestCase {
 
         // Load
         mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, downloader, new FakeSettingsController(false), true);
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
 
         // Ensure we picked up the local package.
         RepositoryPackages pkgs = mgr.getPackages();
@@ -188,9 +188,9 @@ public class BasicInstallerTest extends TestCase {
 
         runner = new FakeProgressRunner();
         // Reload the packages.
-        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, downloader, new FakeSettingsController(false), true);
+        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         File[] contents = fop.listFiles(new File(root, "dummy"));
 
@@ -245,8 +245,8 @@ public class BasicInstallerTest extends TestCase {
 
         // Load
         mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                 ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                 ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
                  runner, downloader, new FakeSettingsController(false), true);
 
         // Ensure we picked up the local package.
@@ -275,8 +275,8 @@ public class BasicInstallerTest extends TestCase {
 
         runner = new FakeProgressRunner();
         // Reload the packages.
-        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                 ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
+        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
                  runner, downloader, new FakeSettingsController(false), true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         File[] contents = fop.listFiles(new File(root, "dummy"));
@@ -352,9 +352,9 @@ public class BasicInstallerTest extends TestCase {
 
         // Load
         mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, downloader, new FakeSettingsController(false), true);
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         RepositoryPackages pkgs = mgr.getPackages();
 
@@ -375,9 +375,9 @@ public class BasicInstallerTest extends TestCase {
         basicInstaller.complete(progress);
 
         // Reload the repo
-        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, downloader, new FakeSettingsController(false), true);
+        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
         // Ensure the files are still there
@@ -468,9 +468,9 @@ public class BasicInstallerTest extends TestCase {
 
         // Load
         mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, downloader, new FakeSettingsController(false), true);
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
 
         // Install one of the packages.
         RemotePackage p = mgr.getPackages().getRemotePackages().get("dummy;bar");
@@ -520,9 +520,9 @@ public class BasicInstallerTest extends TestCase {
         secondInstallProgress.assertNoErrorsOrWarnings();
 
         // Reload the packages.
-        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
-                ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
-                runner, downloader, new FakeSettingsController(false), true);
+        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedListener>of(),
+                 ImmutableList.<RepoManager.RepoLoadedListener>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         File[] contents = fop.listFiles(new File(root, "dummy"));
 

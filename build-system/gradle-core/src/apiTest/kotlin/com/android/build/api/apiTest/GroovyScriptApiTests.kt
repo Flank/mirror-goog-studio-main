@@ -32,28 +32,23 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             tasksToInvoke.add(":app:debugDisplayApks")
 
             addModule(":app") {
-                buildFile =
-                    """
-                    plugins {
-                        id 'com.android.application'
+                buildFile = """
+            plugins {
+                id 'com.android.application'
+            }
+
+            ${testingElements.getDisplayApksTask()}
+
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+
+                onVariantProperties {
+                    project.tasks.register(it.getName() + "DisplayApks", DisplayApksTask.class) {
+                        it.apkFolder.set(operations.get(ArtifactTypes.APK.INSTANCE))
+                        it.builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
                     }
-
-                    ${testingElements.getDisplayApksTask()}
-
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
-
-                        onVariantProperties {
-                            project.tasks.register(it.getName() + "DisplayApks", DisplayApksTask.class) {
-                                it.apkFolder.set(operations.get(ArtifactTypes.APK.INSTANCE))
-                                it.builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
-                            }
-                        }
-                    }
+                }
+            }
                 """.trimIndent()
 
                 testingElements.addManifest(this)
@@ -73,45 +68,40 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             tasksToInvoke.add(":app:processDebugResources")
 
             addModule(":app") {
-                buildFile =
-                    """
-                plugins {
-                    id 'com.android.application'
-                } 
-                ${testingElements.getGitVersionTask()}
-                ${testingElements.getManifestProducerTask()}
+                buildFile = """
+            plugins {
+                id 'com.android.application'
+            }
+            ${testingElements.getGitVersionTask()}
+            ${testingElements.getManifestProducerTask()}
 
-                import com.android.build.api.artifact.ArtifactTypes
-
-                android {
-                    compileSdkVersion 29
-                    defaultConfig {
-                        minSdkVersion 21
-                        targetSdkVersion 29
+            import com.android.build.api.artifact.ArtifactTypes
+    
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+    
+                onVariantProperties {
+                    TaskProvider gitVersionProvider = tasks.register(it.getName() + 'GitVersionProvider', GitVersionTask) {
+                        task ->
+                            task.gitVersionOutputFile.set(
+                                new File(project.buildDir, "intermediates/gitVersionProvider/output")
+                            )
+                            task.outputs.upToDateWhen { false }
                     }
-
-                    onVariantProperties {
-                        TaskProvider gitVersionProvider = tasks.register(it.getName() + 'GitVersionProvider', GitVersionTask) {
-                            task ->
-                                task.gitVersionOutputFile.set(
-                                    new File(project.buildDir, "intermediates/gitVersionProvider/output")
-                                )
-                                task.outputs.upToDateWhen { false }
-                        }
-
-                        TaskProvider manifestProducer = tasks.register(it.getName() + 'ManifestProducer', ManifestProducerTask) {
-                            task ->
-                                task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
-                                task.outputManifest.set(
-                                    new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
-                                )
-                        }
-                        it.operations.replace(manifestProducer,
-                                { it.outputManifest })
-                        .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
+    
+                    TaskProvider manifestProducer = tasks.register(it.getName() + 'ManifestProducer', ManifestProducerTask) {
+                        task ->
+                            task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
+                            task.outputManifest.set(
+                                new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
+                            )
                     }
+                    it.operations.replace(manifestProducer,
+                            { it.outputManifest })
+                    .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
                 }
-                """.trimIndent()
+            }
+            """.trimIndent()
 
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
@@ -140,42 +130,38 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
 
             addModule(":app") {
                 buildFile =
-                    """
-                plugins {
-                    id 'com.android.application'
+            """
+            plugins {
+                id 'com.android.application'
+            }
+            ${testingElements.getGitVersionTask()}
+            ${testingElements.getManifestTransformerTask()}
+
+            import com.android.build.api.artifact.ArtifactTypes
+
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+
+                TaskProvider gitVersionProvider = tasks.register('gitVersionProvider', GitVersionTask) {
+                    task ->
+                        task.gitVersionOutputFile.set(
+                            new File(project.buildDir, "intermediates/gitVersionProvider/output")
+                        )
+                        task.outputs.upToDateWhen { false }
                 }
-                ${testingElements.getGitVersionTask()}
-                ${testingElements.getManifestTransformerTask()}
 
-                import com.android.build.api.artifact.ArtifactTypes
-
-                android {
-                    compileSdkVersion 29
-                    defaultConfig {
-                        minSdkVersion 21
-                        targetSdkVersion 29
-                    }
-
-                    TaskProvider gitVersionProvider = tasks.register('gitVersionProvider', GitVersionTask) {
+                onVariantProperties {
+                    TaskProvider manifestUpdater = tasks.register(it.getName() + 'ManifestUpdater', ManifestTransformerTask) {
                         task ->
-                            task.gitVersionOutputFile.set(
-                                new File(project.buildDir, "intermediates/gitVersionProvider/output")
-                            )
-                            task.outputs.upToDateWhen { false }
+                            task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
                     }
-
-                    onVariantProperties {
-                        TaskProvider manifestUpdater = tasks.register(it.getName() + 'ManifestUpdater', ManifestTransformerTask) {
-                            task ->
-                                task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
-                        }
-                        it.operations.transform(manifestUpdater,
-                                { it.mergedManifest },
-                                { it.updatedManifest })
-                        .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
-                    }
+                    it.operations.transform(manifestUpdater,
+                            { it.mergedManifest },
+                            { it.updatedManifest })
+                    .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
                 }
-                """.trimIndent()
+            }
+            """.trimIndent()
 
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
@@ -202,62 +188,57 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
         given {
             tasksToInvoke.add(":app:copyDebugApks")
             addModule(":app") {
-                buildFile =
-                    """
-                    plugins {
-                        id 'com.android.application'
-                    }
-                    import java.io.Serializable
-                    import javax.inject.Inject
-                    import org.gradle.api.DefaultTask
-                    import org.gradle.api.file.RegularFileProperty
-                    import org.gradle.api.tasks.InputFile
-                    import org.gradle.api.tasks.OutputFile
-                    import org.gradle.api.tasks.TaskAction
-                    import org.gradle.workers.WorkerExecutor
-                    import com.android.build.api.artifact.ArtifactTypes 
-                    import com.android.build.api.artifact.ArtifactTransformationRequest
-                    import com.android.build.api.variant.BuiltArtifact
+                buildFile = """
+            plugins {
+                id 'com.android.application'
+            }
+            import java.io.Serializable
+            import javax.inject.Inject
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
+            import org.gradle.workers.WorkerExecutor
+            import com.android.build.api.artifact.ArtifactTypes 
+            import com.android.build.api.artifact.ArtifactTransformationRequest
+            import com.android.build.api.variant.BuiltArtifact
 
-                    import com.android.build.api.artifact.ArtifactKind
-                    import com.android.build.api.artifact.ArtifactType
-                    import com.android.build.api.artifact.ArtifactType.Replaceable
-                    import com.android.build.api.artifact.ArtifactType.ContainsMany
-                    import com.android.build.api.artifact.ArtifactTransformationRequest
+            import com.android.build.api.artifact.ArtifactKind
+            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.ArtifactType.Replaceable
+            import com.android.build.api.artifact.ArtifactType.ContainsMany
+            import com.android.build.api.artifact.ArtifactTransformationRequest
 
-                    class ACME_APK extends ArtifactType<Directory> implements Replaceable, ContainsMany {
-                            ACME_APK() {
-                                super(ArtifactKind.DIRECTORY.INSTANCE)
-                            }
-
+            class ACME_APK extends ArtifactType<Directory> implements Replaceable, ContainsMany {
+                    ACME_APK() {
+                        super(ArtifactKind.DIRECTORY.INSTANCE)
                     }
 
-                    ACME_APK acme_apk_instance = new ACME_APK()
+            }
+
+            ACME_APK acme_apk_instance = new ACME_APK()
 
 
-                    ${testingElements.getCopyApksTask()}
+            ${testingElements.getCopyApksTask()}
 
-                    android {
-                        compileSdkVersion(29)
-                        defaultConfig {
-                            minSdkVersion(21)
-                            targetSdkVersion(29)
-                        }
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
 
-                        onVariantProperties {
-                            TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
+                onVariantProperties {
+                    TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
 
-                            ArtifactTransformationRequest request = 
-                                it.operations.use(copyApksProvider)
-                                .toRead(ArtifactTypes.APK.INSTANCE, { it.getApkFolder() })
-                                .andWrite(acme_apk_instance, { it.getOutFolder()}, "${outFolderForApk.absolutePath}")
+                    ArtifactTransformationRequest request =
+                        it.operations.use(copyApksProvider)
+                        .toRead(ArtifactTypes.APK.INSTANCE, { it.getApkFolder() })
+                        .andWrite(acme_apk_instance, { it.getOutFolder()}, "${outFolderForApk.absolutePath}")
 
-                            copyApksProvider.configure {
-                                it.transformationRequest.set(request)
-                            }
-                        }
-                    } 
-                """.trimIndent()
+                    copyApksProvider.configure {
+                        it.transformationRequest.set(request)
+                    }
+                }
+            }
+            """.trimIndent()
                 testingElements.addManifest(this)
             }
         }

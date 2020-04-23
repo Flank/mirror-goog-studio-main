@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer;
 
+import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.tools.deployer.tasks.TaskRunner;
@@ -163,7 +164,7 @@ public class DeployerRunner {
     }
 
     private AndroidDebugBridge initDebugBridge() {
-        AndroidDebugBridge.init(false);
+        AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
         AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
         while (!bridge.hasInitialDeviceList()) {
             try {

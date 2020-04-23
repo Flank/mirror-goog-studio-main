@@ -33,40 +33,16 @@ class DynamicFeatureExtensionImpl(
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 )  :
     TestedExtensionImpl<
-            AnnotationProcessorOptions,
             DynamicFeatureBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig,
             DynamicFeatureVariant<DynamicFeatureVariantProperties>,
             DynamicFeatureVariantProperties>(
         dslServices,
         dslContainers
     ),
-
-    DynamicFeatureExtension<
-            AaptOptions,
-            AbiSplitOptions,
-            AdbOptions,
-            AndroidSourceSet,
-            AnnotationProcessorOptions,
-            BuildType,
-            CmakeOptions,
-            CompileOptions,
-            DataBindingOptions,
-            DefaultConfig,
-            DensitySplitOptions,
-            ExternalNativeBuild,
-            JacocoOptions,
-            LintOptions,
-            NdkBuildOptions,
-            PackagingOptions,
-            ProductFlavor,
-            SigningConfig,
-            Splits,
-            TestOptions,
-            TestOptions.UnitTestOptions> {
+    InternalDynamicFeatureExtension {
 
     override val buildFeatures: DynamicFeatureBuildFeatures =
         dslServices.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)

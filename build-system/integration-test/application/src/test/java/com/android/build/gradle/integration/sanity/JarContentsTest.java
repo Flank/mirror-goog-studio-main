@@ -465,6 +465,7 @@ public class JarContentsTest {
                 "com/android/tools/build/libraries/",
                 "com/android/tools/build/libraries/metadata/",
                 "com/android/tools/mlkit/",
+                "com/android/tools/mlkit/exception/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "META-INF/gradle-plugins/",
@@ -1140,6 +1141,16 @@ public class JarContentsTest {
                 "com/android/tools/lint/",
                 "com/android/tools/lint/gradle/",
                 "com/android/tools/lint/gradle/api/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+        expected.putAll(
+                "com/android/tools/lint/lint-model",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/lint/",
+                "com/android/tools/lint/model/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");

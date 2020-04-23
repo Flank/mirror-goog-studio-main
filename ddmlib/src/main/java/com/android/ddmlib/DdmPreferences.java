@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.internal.MonitorThread;
 
 /**
  * Preferences for the ddm library.

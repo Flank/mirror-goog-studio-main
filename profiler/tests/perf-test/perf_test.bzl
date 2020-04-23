@@ -14,7 +14,7 @@ def perf_test(name,
               data = [],
               tags = [],
               app_runtime_deps = [],
-              size = "small"):
+              size = None):
     # Copy the undexed version of the test app and transform its bytecode with
     # profiler hooks. This is how profilers work when targetting devices that
     # don't support jvmti.

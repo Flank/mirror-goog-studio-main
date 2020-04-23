@@ -43,7 +43,7 @@ fun RecipeExecutor.generateThemeStyles(
   themeData: ThemeData, useMaterial2: Boolean, resOut: File
 ) {
   if (!themeData.exists) {
-    mergeXml(themeStyles(themeData.name, useMaterial2), resOut.resolve("values/styles.xml"))
+    mergeXml(themeStyles(themeData.name, useMaterial2), resOut.resolve("values/themes.xml"))
   }
 }
 
@@ -151,10 +151,10 @@ fun RecipeExecutor.generateNoActionBarStyles(baseFeatureResOut: File?, resDir: F
   """.trimIndent()
 
   if (baseFeatureResOut != null) {
-    mergeXml(noActionBarStylesContent, baseFeatureResOut.resolve("values/styles.xml"))
+    mergeXml(noActionBarStylesContent, baseFeatureResOut.resolve("values/themes.xml"))
   }
   else {
-    mergeXml(noActionBarStylesContent, resDir.resolve("values/styles.xml"))
+    mergeXml(noActionBarStylesContent, resDir.resolve("values/themes.xml"))
   }
 }
 

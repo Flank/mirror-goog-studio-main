@@ -63,6 +63,13 @@ class FakeJvmtiEnv : public jvmtiEnv {
       jvmtiEnv* env, jint* extension_count_ptr,
       jvmtiExtensionFunctionInfo** extensions);
 
+  static jvmtiError SetEventNotificationMode(jvmtiEnv* env, jvmtiEventMode mode,
+                                             jvmtiEvent event_type,
+                                             jthread event_thread, ...);
+
+  static jvmtiError RetransformClasses(jvmtiEnv* jvmtiEnv, jint class_count,
+                                       const jclass* classes);
+
  private:
   jvmtiInterface_1_ functions_;
 };

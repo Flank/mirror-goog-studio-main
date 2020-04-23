@@ -16,8 +16,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.MavenCoordinates;
-import com.android.ide.common.gradle.model.IdeMavenCoordinates;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ClassScanner;
@@ -30,6 +28,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.helpers.DefaultJavaEvaluator;
+import com.android.tools.lint.model.LmMavenName;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
@@ -264,9 +263,9 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
 
             Project project = context.getProject();
             DefaultJavaEvaluator evaluator = new DefaultJavaEvaluator(null, project);
-            MavenCoordinates library = evaluator.getLibrary(jarFile);
+            LmMavenName library = evaluator.getLibrary(jarFile);
             String libraryString;
-            if (library != null && !IdeMavenCoordinates.LOCAL_AARS.equals(library.getGroupId())) {
+            if (library != null && !LmMavenName.LOCAL_AARS.equals(library.getGroupId())) {
                 libraryString = library.getGroupId() + ':' + library.getArtifactId();
             } else {
                 libraryString = "library";

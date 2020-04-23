@@ -67,6 +67,7 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":profiler_memory",
+        "//tools/base/profiler/native/perfd",
         "//tools/base/profiler/native/perfd/common:perfetto",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/tests/test:testutils",

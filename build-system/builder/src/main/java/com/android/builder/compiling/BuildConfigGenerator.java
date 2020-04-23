@@ -19,10 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.internal.ClassFieldImpl;
-import com.android.builder.model.ClassField;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 import com.squareup.javawriter.JavaWriter;
@@ -30,7 +27,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -51,8 +47,7 @@ public class BuildConfigGenerator implements BuildConfigCreator {
     private final File mGenFolder;
     private final String mBuildConfigPackageName;
 
-    private final List<ClassField> mFields = Lists.newArrayList();
-    private final List<Object> mItems = Lists.newArrayList();
+    private final List<Field> mFields = Lists.newArrayList();
 
     /**
      * Creates a generator
@@ -64,36 +59,55 @@ public class BuildConfigGenerator implements BuildConfigCreator {
         mBuildConfigPackageName = checkNotNull(buildConfigPackageName);
     }
 
+    private static class Field {
+
+        @NonNull private final String type;
+        @NonNull private final String value;
+        @NonNull private final String name;
+        @Nullable private final String comment;
+
+        private Field(
+                @NonNull String type,
+                @NonNull String name,
+                @NonNull String value,
+                @Nullable String comment) {
+            this.type = type;
+            this.value = value;
+            this.name = name;
+            this.comment = comment;
+        }
+
+        public void emit(JavaWriter writer) throws IOException {
+            if (comment != null) {
+                writer.emitSingleLineComment(comment);
+            }
+            writer.emitField(type, name, PUBLIC_STATIC_FINAL, value);
+        }
+    }
+
     public BuildConfigGenerator addField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
-        mFields.add(new ClassFieldImpl(type, name, value));
+        addField(type, name, value, null);
         return this;
     }
 
-    public BuildConfigGenerator addDeprecatedField(
+    public BuildConfigGenerator addField(
             @NonNull String type,
             @NonNull String name,
             @NonNull String value,
-            @NonNull String documentation) {
-        mFields.add(
-                new ClassFieldImpl(
-                        type, name, value, documentation, ImmutableSet.of("Deprecated")));
-        return this;
-    }
-
-    public BuildConfigGenerator addItems(@Nullable Collection<Object> items) {
-        if (items != null) {
-            mItems.addAll(items);
-        }
+            @Nullable String comment) {
+        mFields.add(new Field(type, name, value, comment));
         return this;
     }
 
     /** Returns a File representing where the BuildConfig class will be. */
+    @NonNull
     @Override
     public File getFolderPath() {
         return new File(mGenFolder, mBuildConfigPackageName.replace('.', File.separatorChar));
     }
 
+    @NonNull
     @Override
     public File getBuildConfigFile() {
         File folder = getFolderPath();
@@ -110,8 +124,7 @@ public class BuildConfigGenerator implements BuildConfigCreator {
 
         File buildConfigJava = new File(pkgFolder, BUILD_CONFIG_NAME);
 
-        Closer closer = Closer.create();
-        try {
+        try (Closer closer = Closer.create()) {
             FileOutputStream fos = closer.register(new FileOutputStream(buildConfigJava));
             OutputStreamWriter out = closer.register(new OutputStreamWriter(fos, Charsets.UTF_8));
             JavaWriter writer = closer.register(new JavaWriter(out));
@@ -120,38 +133,11 @@ public class BuildConfigGenerator implements BuildConfigCreator {
                     .emitPackage(mBuildConfigPackageName)
                     .beginType("BuildConfig", "class", PUBLIC_FINAL);
 
-            for (ClassField field : mFields) {
-                emitClassField(writer, field);
-            }
-
-            for (Object item : mItems) {
-                if (item instanceof ClassField) {
-                    emitClassField(writer, (ClassField) item);
-                } else if (item instanceof String) {
-                    writer.emitSingleLineComment((String) item);
-                }
+            for (Field Field : mFields) {
+                Field.emit(writer);
             }
 
             writer.endType();
-        } catch (Throwable e) {
-            throw closer.rethrow(e);
-        } finally {
-            closer.close();
         }
-    }
-
-    private static void emitClassField(JavaWriter writer, ClassField field) throws IOException {
-        String documentation = field.getDocumentation();
-        if (!documentation.isEmpty()) {
-            writer.emitJavadoc(documentation);
-        }
-        for (String annotation : field.getAnnotations()) {
-            writer.emitAnnotation(annotation);
-        }
-        writer.emitField(
-                field.getType(),
-                field.getName(),
-                PUBLIC_STATIC_FINAL,
-                field.getValue());
     }
 }

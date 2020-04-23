@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.fakeadbserver.DeviceState;
@@ -93,7 +94,7 @@ public class ApkVerifierTrackerTest {
         List<FakeDevice> fakeDevices = Lists.newArrayList(oDevice, rDeviceDp1, rDeviceDp2, rDevice);
 
         // Get the bridge synchronously, since we're in test mode.
-        AndroidDebugBridge.init(false);
+        AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
         bridge = AndroidDebugBridge.createBridge();
 
         // Wait for ADB.

@@ -299,10 +299,15 @@ public class TestFiles {
                     || name.endsWith("lint-api.jar") // blaze
                     || name.endsWith(".lint.checks-base") // IJ
                     || name.endsWith("lint-checks.jar")
+                    || name.endsWith(".lint-model-base") // IJ
+                    || name.endsWith("lint-model.jar") // blaze
+                    || name.startsWith("lint-model") // Gradle
                     || name.endsWith(".testutils")
                     || name.endsWith("testutils.jar")
+                    || name.startsWith("testutils-")
                     || name.endsWith(".lint.tests")
-                    || name.endsWith("lint-tests.jar")
+                    || name.endsWith("lint-tests.jar") // blaze
+                    || (name.equals("main") && path.contains("lint-tests")) // Gradle
                     || name.endsWith(".lint.cli")) {
                 TestFile testFile = new LibraryReferenceTestFile(file);
                 paths.add(testFile);

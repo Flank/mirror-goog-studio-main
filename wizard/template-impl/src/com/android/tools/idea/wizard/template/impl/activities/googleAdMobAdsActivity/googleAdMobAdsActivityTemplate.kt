@@ -52,7 +52,7 @@ val googleAdMobAdsActivityTemplate
     constraints = listOf(TemplateConstraint.AndroidX)
     minApi = MIN_API
     minBuildApi = MIN_API
-    description = "Creates an activity with AdMob Ad fragment."
+    description = "Creates an activity with AdMob Ad fragment"
 
     category = Category.Google
     formFactor = FormFactor.Mobile
@@ -78,7 +78,7 @@ val googleAdMobAdsActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "MainActivity"
-      help = "The name of the activity. For launcher activities, the application title."
+      help = "The name of the activity. For launcher activities, the application title"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }

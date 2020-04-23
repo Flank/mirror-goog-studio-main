@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.builder.core.VariantType
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ArtifactMetaData
+import com.android.builder.model.BuildTypeContainer
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.Variant
@@ -67,6 +68,11 @@ fun AndroidProject.getArtifactMetaData(name: String): ArtifactMetaData {
 fun AndroidProject.getProductFlavor(name: String): ProductFlavorContainer {
     return searchForExistingItem(
             productFlavors, name, { it.productFlavor.name }, "ProductFlavorContainer")
+}
+
+fun AndroidProject.getBuildType(name: String): BuildTypeContainer {
+    return searchForExistingItem(
+        buildTypes, name, { it.buildType.name }, "BuildTypeContainer")
 }
 
 fun AndroidProject.findTestedBuildType(): String? {

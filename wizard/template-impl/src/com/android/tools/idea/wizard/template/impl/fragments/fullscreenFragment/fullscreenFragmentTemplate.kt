@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
@@ -40,7 +39,7 @@ val fullscreenFragmentTemplate
   get() = template {
     revision = 1
     name = "Fullscreen Fragment"
-    description = "Creates a new fragment that toggles the visibility of the system UI (status and navigation bars) and action bar upon user interaction."
+    description = "Creates a new fragment that toggles the visibility of the system UI (status and navigation bars) and action bar upon user interaction"
     minApi = MIN_API
     minBuildApi = MIN_API
     category = Category.Fragment

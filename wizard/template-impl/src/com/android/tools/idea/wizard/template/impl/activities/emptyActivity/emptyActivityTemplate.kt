@@ -43,7 +43,7 @@ val emptyActivityTemplate get() = template {
   name = "Empty Activity"
   minApi = MIN_API
   minBuildApi = MIN_API
-  description = "Creates a new empty activity."
+  description = "Creates a new empty activity"
 
   category = Category.Activity
   formFactor = FormFactor.Mobile
@@ -52,7 +52,7 @@ val emptyActivityTemplate get() = template {
   val generateLayout: BooleanParameter = booleanParameter {
     name = "Generate a Layout File"
     default = true
-    help = "If true, a layout file will be generated."
+    help = "If true, a layout file will be generated"
   }
   lateinit var layoutName: StringParameter
   val activityClass: StringParameter = stringParameter {

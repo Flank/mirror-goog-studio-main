@@ -43,12 +43,6 @@ import com.android.SdkConstants.TAG_LAYOUT
 import com.android.SdkConstants.TAG_VARIABLE
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.UTF_8
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.ApiVersion
-import com.android.builder.model.SourceProvider
-import com.android.builder.model.SourceProviderContainer
-import com.android.builder.model.Variant
-import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceValue
 import com.android.ide.common.rendering.api.ResourceValueImpl
@@ -62,9 +56,6 @@ import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.resources.ResourceUrl
-import com.android.sdklib.AndroidVersion
-import com.android.sdklib.IAndroidTarget
-import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines
 import com.android.sdklib.SdkVersionInfo.underlinesToCamelCase
 import com.android.tools.lint.client.api.LintClient
@@ -89,7 +80,6 @@ import com.android.utils.PositionXmlParser
 import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
 import com.android.utils.findGradleBuildFile
-import com.google.common.base.Charsets
 import com.google.common.base.MoreObjects
 import com.google.common.base.Objects
 import com.google.common.base.Splitter
@@ -145,14 +135,6 @@ import java.util.HashSet
 import java.util.Locale
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
-
-/**
- * Whether we should attempt to look up the prefix from the model. Set to false if we encounter
- * a model which is too old.
- *
- * This is public such that code which for example syncs to a new gradle model can reset it.
- */
-var tryPrefixLookup = true
 
 fun getInternalName(psiClass: PsiClass): String? {
     if (psiClass is PsiAnonymousClass) {
@@ -1203,22 +1185,6 @@ fun isSameResourceFile(file1: File?, file2: File?): Boolean {
     return false
 }
 
-/** Looks up the resource prefix for the given Gradle project, if possible  */
-fun computeResourcePrefix(project: IdeAndroidProject?): String? {
-    try {
-        if (tryPrefixLookup && project != null) {
-            return project.resourcePrefix
-        }
-    } catch (e: Exception) {
-        // This happens if we're talking to an older model than 0.10
-        // Ignore; fall through to normal handling and never try again.
-
-        tryPrefixLookup = false
-    }
-
-    return null
-}
-
 /** Computes a suggested name given a resource prefix and resource name  */
 fun computeResourceName(
     prefix: String,
@@ -1262,28 +1228,6 @@ fun computeResourceName(
         newPrefix.endsWith("_") -> newPrefix + newName
         else -> newPrefix + Character.toUpperCase(newName[0]) + newName.substring(1)
     }
-}
-
-/**
- * Convert an [com.android.builder.model.ApiVersion] to a [ ]. The chief problem here is that the [ ], when using a codename, will not encode the
- * corresponding API level (it just reflects the string entered by the user in the gradle file)
- * so we perform a search here (since lint really wants to know the actual numeric API level)
- *
- * @param api the api version to convert
- * @param targets if known, the installed targets (used to resolve platform codenames, only
- * needed to resolve platforms newer than the tools since [     ] knows the rest)
- * @return the corresponding version
- */
-fun convertVersion(
-    api: ApiVersion,
-    targets: Array<IAndroidTarget>?
-): AndroidVersion {
-    val codename = api.codename
-    if (codename != null) {
-        val version = SdkVersionInfo.getVersion(codename, targets)
-        return version ?: AndroidVersion(api.apiLevel, codename)
-    }
-    return AndroidVersion(api.apiLevel, null)
 }
 
 /** Returns true if the given Gradle model is older than the given version number  */
@@ -1742,98 +1686,9 @@ fun resolvePlaceHolder(
     project: Project?,
     name: String
 ): String? {
-    val variant = project?.currentVariant
-    if (variant != null) {
-        val placeHolders = variant.mergedFlavor.manifestPlaceholders
-        val newValue = placeHolders[name]
-        if (newValue is String) {
-            return newValue.toString()
-        }
-    }
-    return null
-}
-
-fun getSourceProviders(
-    project: IdeAndroidProject,
-    variant: Variant
-): List<SourceProvider> {
-    val providers = ArrayList<SourceProvider>()
-    val mainArtifact = variant.mainArtifact
-
-    providers.add(project.defaultConfig.sourceProvider)
-
-    for (flavorName in variant.productFlavors) {
-        for (flavor in project.productFlavors) {
-            if (flavorName == flavor.productFlavor.name) {
-                providers.add(flavor.sourceProvider)
-                break
-            }
-        }
-    }
-
-    val multiProvider = mainArtifact.multiFlavorSourceProvider
-    if (multiProvider != null) {
-        providers.add(multiProvider)
-    }
-
-    val buildTypeName = variant.buildType
-    for (buildType in project.buildTypes) {
-        if (buildTypeName == buildType.buildType.name) {
-            providers.add(buildType.sourceProvider)
-            break
-        }
-    }
-
-    val variantProvider = mainArtifact.variantSourceProvider
-    if (variantProvider != null) {
-        providers.add(variantProvider)
-    }
-
-    return providers
-}
-
-private fun isTestArtifact(extra: SourceProviderContainer): Boolean {
-    val artifactName = extra.artifactName
-    return AndroidProject.ARTIFACT_ANDROID_TEST == artifactName || AndroidProject.ARTIFACT_UNIT_TEST == artifactName
-}
-
-fun getTestSourceProviders(
-    project: IdeAndroidProject,
-    variant: Variant
-): List<SourceProvider> {
-    val providers = ArrayList<SourceProvider>()
-
-    val defaultConfig = project.defaultConfig
-    for (extra in defaultConfig.extraSourceProviders) {
-        if (isTestArtifact(extra)) {
-            providers.add(extra.sourceProvider)
-        }
-    }
-
-    for (flavorName in variant.productFlavors) {
-        for (flavor in project.productFlavors) {
-            if (flavorName == flavor.productFlavor.name) {
-                for (extra in flavor.extraSourceProviders) {
-                    if (isTestArtifact(extra)) {
-                        providers.add(extra.sourceProvider)
-                    }
-                }
-            }
-        }
-    }
-
-    val buildTypeName = variant.buildType
-    for (buildType in project.buildTypes) {
-        if (buildTypeName == buildType.buildType.name) {
-            for (extra in buildType.extraSourceProviders) {
-                if (isTestArtifact(extra)) {
-                    providers.add(extra.sourceProvider)
-                }
-            }
-        }
-    }
-
-    return providers
+    val variant = project?.buildVariant ?: return null
+    val placeHolders = variant.manifestPlaceholders
+    return placeHolders[name]
 }
 
 /** Returns true if the given string is a reserved Java keyword */
@@ -2532,18 +2387,6 @@ object LintUtils {
         folderType: ResourceFolderType? = null
     ): String {
         return com.android.tools.lint.detector.api.computeResourceName(prefix, name, folderType)
-    }
-
-    @JvmStatic
-    @Deprecated(
-        "Use package function instead",
-        replaceWith = ReplaceWith("com.android.tools.lint.detector.api.convertVersion(api, targets)")
-    )
-    fun convertVersion(
-        api: ApiVersion,
-        targets: Array<IAndroidTarget>?
-    ): AndroidVersion {
-        return com.android.tools.lint.detector.api.convertVersion(api, targets)
     }
 
     @JvmStatic

@@ -34,39 +34,16 @@ class TestExtensionImpl(
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     CommonExtensionImpl<
-            AnnotationProcessorOptions,
             TestBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig,
             TestVariant<TestVariantProperties>,
             TestVariantProperties>(
         dslServices,
         dslContainers
     ),
-    TestExtension<
-            AaptOptions,
-            AbiSplitOptions,
-            AdbOptions,
-            AndroidSourceSet,
-            AnnotationProcessorOptions,
-            BuildType,
-            CmakeOptions,
-            CompileOptions,
-            DataBindingOptions,
-            DefaultConfig,
-            DensitySplitOptions,
-            ExternalNativeBuild,
-            JacocoOptions,
-            LintOptions,
-            NdkBuildOptions,
-            PackagingOptions,
-            ProductFlavor,
-            SigningConfig,
-            Splits,
-            TestOptions,
-            TestOptions.UnitTestOptions> {
+    InternalTestExtension {
 
     override val buildFeatures: TestBuildFeatures =
         dslServices.newInstance(TestBuildFeaturesImpl::class.java)

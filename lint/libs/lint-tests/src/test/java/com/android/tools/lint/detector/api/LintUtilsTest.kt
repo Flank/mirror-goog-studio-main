@@ -24,7 +24,6 @@ import com.android.SdkConstants.DOT_KT
 import com.android.builder.model.ApiVersion
 import com.android.ide.common.repository.GradleVersion
 import com.android.resources.ResourceFolderType
-import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliClient
@@ -454,21 +453,6 @@ class LintUtilsTest : TestCase() {
         assertEquals(
             "MyPrefixMyStyle",
             computeResourceName("myPrefix_", "MyStyle", ResourceFolderType.VALUES)
-        )
-    }
-
-    fun testConvertVersion() {
-        assertEquals(
-            AndroidVersion(5, null), convertVersion(DefaultApiVersion(5, null), null)
-        )
-        assertEquals(
-            AndroidVersion(19, null),
-            convertVersion(DefaultApiVersion(19, null), null)
-        )
-
-        assertEquals(
-            AndroidVersion(18, "KITKAT"), // a preview platform API level is not final
-            convertVersion(DefaultApiVersion(0, "KITKAT"), null)
         )
     }
 

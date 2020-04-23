@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -688,73 +689,36 @@ open class VariantDslInfoImpl internal constructor(
 // come from so we cannot just put everything a map and let the new ones override the
 // old ones.
 
-    /**
-     * Returns a list of items for the BuildConfig class.
-     *
-     *
-     * Items can be either fields (instance of [com.android.builder.model.ClassField]) or
-     * comments (instance of String).
-     *
-     * @return a list of items.
-     */
-    override val buildConfigItems: List<Any>
-        get() {
-            val fullList: MutableList<Any> =
-                Lists.newArrayList()
-            // keep track of the names already added. This is because we show where the items
-            // come from so we cannot just put everything a map and let the new ones override the
-            // old ones.
-            val usedFieldNames = mutableSetOf<String>()
+    override fun getBuildConfigFields(): Map<String, BuildConfigField> {
+        val buildConfigFieldsMap = mutableMapOf<String, BuildConfigField>()
 
-            var list: Collection<ClassField> = mBuildConfigFields.values
-            if (!list.isEmpty()) {
-                fullList.add("Fields from the variant")
-                fillFieldList(fullList, usedFieldNames, list)
+        fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
+            if (!buildConfigFieldsMap.containsKey(classField.name)) {
+                buildConfigFieldsMap[classField.name] = BuildConfigField(
+                    type = classField.type,
+                    value = classField.value,
+                    comment = comment)
             }
-            list = buildTypeObj.buildConfigFields.values
-            if (!list.isEmpty()) {
-                fullList.add("Fields from build type: " + buildTypeObj.name)
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            for (flavor in productFlavorList) {
-                list = flavor.buildConfigFields.values
-                if (!list.isEmpty()) {
-                    fullList.add("Fields from product flavor: " + flavor.name)
-                    fillFieldList(fullList, usedFieldNames, list)
-                }
-            }
-            list = defaultConfig.buildConfigFields.values
-            if (!list.isEmpty()) {
-                fullList.add("Fields from default config.")
-                fillFieldList(fullList, usedFieldNames, list)
-            }
-            return fullList
-        } // start from the lowest priority and just add it all. Higher priority fields
-// will replace lower priority ones.
-
-    /**
-     * Return the merged build config fields for the variant.
-     *
-     *
-     * This is made of the variant-specific fields overlaid on top of the build type ones, the
-     * flavors ones, and the default config ones.
-     *
-     * @return a map of merged fields
-     */
-    override val mergedBuildConfigFields: Map<String, ClassField>
-        get() {
-            val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
-
-            // start from the lowest priority and just add it all. Higher priority fields
-            // will replace lower priority ones.
-            mergedMap.putAll(defaultConfig.buildConfigFields)
-            for (i in productFlavorList.indices.reversed()) {
-                mergedMap.putAll(productFlavorList[i].buildConfigFields)
-            }
-            mergedMap.putAll(buildTypeObj.buildConfigFields)
-            mergedMap.putAll(mBuildConfigFields)
-            return mergedMap
         }
+
+        mBuildConfigFields.values.forEach { classField ->
+            addToListIfNotAlreadyPresent(classField, "Field from the variant API")
+        }
+
+        buildTypeObj.buildConfigFields.values.forEach {classField ->
+            addToListIfNotAlreadyPresent(classField, "Field from build type: ${buildTypeObj.name}")
+        }
+
+        for (flavor in productFlavorList) {
+            flavor.buildConfigFields.values.forEach { classField ->
+                addToListIfNotAlreadyPresent(classField, "Field from product flavor: ${flavor.name}")
+            }
+        }
+        defaultConfig.buildConfigFields.values.forEach { classField ->
+            addToListIfNotAlreadyPresent(classField, "Field from default config.")
+        }
+        return buildConfigFieldsMap
+    }
 
     /**
      * Return the merged res values for the variant.

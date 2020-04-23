@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.w3c.dom.ls.LSResourceResolver;
@@ -131,12 +132,12 @@ public class RepoManagerImpl extends RepoManager {
     /**
      * Listeners that will be called when the known local packages change.
      */
-    private final List<RepoLoadedCallback> mLocalListeners = Lists.newArrayList();
+    private final List<RepoLoadedListener> mLocalListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Listeners that will be called when the known remote packages change.
      */
-    private final List<RepoLoadedCallback> mRemoteListeners = Lists.newArrayList();
+    private final List<RepoLoadedListener> mRemoteListeners = new CopyOnWriteArrayList<>();
 
     /**
      * How long we should let a load task run before assuming that it's dead.
@@ -308,8 +309,8 @@ public class RepoManagerImpl extends RepoManager {
     // TODO: and contains current valid or invalid packages as they are cached here.
     @Override
     public void load(long cacheExpirationMs,
-            @Nullable List<RepoLoadedCallback> onLocalComplete,
-            @Nullable List<RepoLoadedCallback> onSuccess,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
             @Nullable List<Runnable> onError,
             @NonNull ProgressRunner runner,
             @Nullable Downloader downloader,
@@ -397,13 +398,23 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     @Override
-    public void registerLocalChangeListener(@NonNull RepoLoadedCallback listener) {
+    public void addLocalChangeListener(@NonNull RepoLoadedListener listener) {
         mLocalListeners.add(listener);
     }
 
     @Override
-    public void registerRemoteChangeListener(@NonNull RepoLoadedCallback listener) {
+    public void removeLocalChangeListener(@NonNull RepoLoadedListener listener) {
+        mLocalListeners.remove(listener);
+    }
+
+    @Override
+    public void addRemoteChangeListener(@NonNull RepoLoadedListener listener) {
         mRemoteListeners.add(listener);
+    }
+
+    @Override
+    public void removeRemoteChangeListener(@NonNull RepoLoadedListener listener) {
+        mRemoteListeners.remove(listener);
     }
 
     @Override
@@ -435,11 +446,11 @@ public class RepoManagerImpl extends RepoManager {
          */
         private class Callback {
 
-            private RepoLoadedCallback mCallback;
+            private RepoLoadedListener mCallback;
 
             private ProgressRunner mRunner;
 
-            public Callback(@NonNull RepoLoadedCallback callback, @Nullable ProgressRunner runner) {
+            public Callback(@NonNull RepoLoadedListener callback, @Nullable ProgressRunner runner) {
                 mCallback = callback;
                 mRunner = runner;
             }
@@ -448,7 +459,7 @@ public class RepoManagerImpl extends RepoManager {
                 return mRunner == null ? defaultRunner : mRunner;
             }
 
-            public RepoLoadedCallback getCallback() {
+            public RepoLoadedListener getCallback() {
                 return mCallback;
             }
         }
@@ -468,8 +479,8 @@ public class RepoManagerImpl extends RepoManager {
         private final long mCacheExpirationMs;
 
         public LoadTask(long cacheExpirationMs,
-                @NonNull List<RepoLoadedCallback> onLocalComplete,
-                @NonNull List<RepoLoadedCallback> onSuccess,
+                @NonNull List<RepoLoadedListener> onLocalComplete,
+                @NonNull List<RepoLoadedListener> onSuccess,
                 @NonNull List<Runnable> onError,
                 @Nullable Downloader downloader,
                 @Nullable SettingsController settings) {
@@ -484,14 +495,14 @@ public class RepoManagerImpl extends RepoManager {
          * Downloader, SettingsController, boolean)} is called again while a task is already
          * running.
          */
-        public void addCallbacks(@NonNull List<RepoLoadedCallback> onLocalComplete,
-                @NonNull List<RepoLoadedCallback> onSuccess,
+        public void addCallbacks(@NonNull List<RepoLoadedListener> onLocalComplete,
+                @NonNull List<RepoLoadedListener> onSuccess,
                 @NonNull List<Runnable> onError,
                 @Nullable ProgressRunner runner) {
-            for (RepoLoadedCallback local : onLocalComplete) {
+            for (RepoLoadedListener local : onLocalComplete) {
                 mOnLocalCompletes.add(new Callback(local, runner));
             }
-            for (RepoLoadedCallback success : onSuccess) {
+            for (RepoLoadedListener success : onSuccess) {
                 mOnSuccesses.add(new Callback(success, runner));
             }
             mOnErrors.addAll(onError);
@@ -523,8 +534,8 @@ public class RepoManagerImpl extends RepoManager {
                     mPackages.setLocalPkgInfos(newLocals.values());
                     mLastLocalRefreshMs = System.currentTimeMillis();
                     if (fireListeners) {
-                        for (RepoLoadedCallback listener : mLocalListeners) {
-                            listener.doRun(mPackages);
+                        for (RepoLoadedListener listener : mLocalListeners) {
+                            listener.loaded(mPackages);
                         }
                     }
                 }
@@ -559,8 +570,8 @@ public class RepoManagerImpl extends RepoManager {
                     mPackages.setRemotePkgInfos(remotes.values());
                     mLastRemoteRefreshMs = System.currentTimeMillis();
                     if (fireListeners) {
-                        for (RepoLoadedCallback callback : mRemoteListeners) {
-                            callback.doRun(mPackages);
+                        for (RepoLoadedListener callback : mRemoteListeners) {
+                            callback.loaded(mPackages);
                         }
                     }
                 }
@@ -649,16 +660,16 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * A {@link Runnable} that wraps a {@link RepoLoadedCallback} and calls it with the appropriate
+     * A {@link Runnable} that wraps a {@link RepoLoadedListener} and calls it with the appropriate
      * args.
      */
     private static class CallbackRunnable implements Runnable {
 
-        RepoLoadedCallback mCallback;
+        RepoLoadedListener mCallback;
 
         RepositoryPackages mPackages;
 
-        public CallbackRunnable(@NonNull RepoLoadedCallback callback,
+        public CallbackRunnable(@NonNull RepoLoadedListener callback,
                 @NonNull RepositoryPackages packages) {
             mCallback = callback;
             mPackages = packages;
@@ -666,7 +677,7 @@ public class RepoManagerImpl extends RepoManager {
 
         @Override
         public void run() {
-            mCallback.doRun(mPackages);
+            mCallback.loaded(mPackages);
         }
     }
 }

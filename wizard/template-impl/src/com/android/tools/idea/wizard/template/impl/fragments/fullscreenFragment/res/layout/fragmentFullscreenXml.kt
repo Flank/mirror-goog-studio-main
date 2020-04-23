@@ -16,16 +16,21 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.layout
 
+import com.android.tools.idea.wizard.template.ThemesData
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenButtonBarStyle
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenContainerThemeOverlay
 
 fun fragmentFullscreenXml(
   fragmentClass: String,
-  packageName: String
+  packageName: String,
+  themesData: ThemesData
 ) = """
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:theme="@style/${getFullscreenContainerThemeOverlay(themesData.overlay.name)}"
+    android:background="?attr/fullscreenBackgroundColor"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
     tools:context="${packageName}.${fragmentClass}">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -35,9 +40,9 @@ fun fragmentFullscreenXml(
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:keepScreenOn="true"
-        android:textColor="#33b5e5"
         android:textStyle="bold"
         android:textSize="50sp"
+        android:textColor="?attr/fullscreenTextColor"
         android:gravity="center"
         android:text="@string/dummy_content" />
 
@@ -48,11 +53,10 @@ fun fragmentFullscreenXml(
         android:fitsSystemWindows="true">
 
         <LinearLayout android:id="@+id/fullscreen_content_controls"
-            style="?android:attr/buttonBarStyle"
+            style="@style/${getFullscreenButtonBarStyle(themesData.main.name)}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/black_overlay"
             android:orientation="horizontal"
             tools:ignore="UselessParent">
 

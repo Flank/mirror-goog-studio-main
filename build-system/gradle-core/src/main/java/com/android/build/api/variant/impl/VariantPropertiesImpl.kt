@@ -17,6 +17,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -32,6 +33,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
+import org.gradle.api.provider.MapProperty
 
 abstract class VariantPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -67,6 +69,14 @@ abstract class VariantPropertiesImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
+    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+        internalServices.mapPropertyOf(
+            String::class.java,
+            BuildConfigField::class.java,
+            variantDslInfo.getBuildConfigFields(),
+            "$name:buildConfigs"
+        )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

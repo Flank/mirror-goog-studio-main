@@ -22,6 +22,6 @@ import org.gradle.api.Incubating
 interface LibraryDefaultConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> :
     LibraryBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-    DefaultConfig<AnnotationProcessorOptionsT, SigningConfigT> {
+    DefaultConfig<AnnotationProcessorOptionsT> {
     // TODO(b/140406102)
 }

@@ -48,13 +48,6 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
@@ -69,13 +62,18 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.DefaultMavenCoordinates;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
+import com.android.tools.lint.model.LmAndroidLibrary;
+import com.android.tools.lint.model.LmLibrary;
+import com.android.tools.lint.model.LmMavenName;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmModuleType;
+import com.android.tools.lint.model.LmNamespacingMode;
+import com.android.tools.lint.model.LmVariant;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -89,13 +87,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import kotlin.io.FilesKt;
+import kotlin.text.Charsets;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -158,10 +157,7 @@ public class Project {
     protected Boolean supportLib;
     protected Boolean appCompat;
     protected Boolean leanback;
-    protected GradleVersion gradleVersion;
-    protected MavenCoordinates mavenCoordinates = null;
     protected Set<Desugaring> desugaring;
-    protected Boolean coreLibraryDesugaringEnabled;
     private Map<String, String> superClassMap;
     private ResourceVisibilityLookup resourceVisibility;
     private Revision buildToolsRevision;
@@ -205,13 +201,39 @@ public class Project {
     }
 
     /**
-     * Returns the project model for this project if it corresponds to a Gradle project. This is the
-     * case if {@link #isGradleProject()} is true and {@link #isLibrary()} is false.
+     * Returns the project model for this project if supported by the build system.
      *
      * @return the project model, or null
      */
     @Nullable
-    public IdeAndroidProject getGradleProjectModel() {
+    public LmModule getBuildModule() {
+        LmVariant variant = getBuildVariant();
+        if (variant != null) {
+            return variant.getModule();
+        }
+        return null;
+    }
+
+    /**
+     * Returns the current selected variant, if any.
+     *
+     * <p>This can be used by incremental lint rules to warn about problems in the current context.
+     * Lint rules should however strive to perform cross variant analysis and warn about problems in
+     * any configuration.
+     *
+     * @return the selected variant, or null
+     */
+    @Nullable
+    public LmVariant getBuildVariant() {
+        return null;
+    }
+
+    /**
+     * Returns the project model for this project if it corresponds to a library with a lint model.
+     *
+     * @return the library model, or null
+     */
+    public LmAndroidLibrary getBuildLibraryModel() {
         return null;
     }
 
@@ -229,16 +251,9 @@ public class Project {
     }
 
     public boolean isCoreLibraryDesugaringEnabled() {
-        if (coreLibraryDesugaringEnabled == null) {
-            IdeAndroidProject projectModel = getGradleProjectModel();
-            if (projectModel != null) {
-                coreLibraryDesugaringEnabled =
-                        projectModel.getJavaCompileOptions().isCoreLibraryDesugaringEnabled();
-            } else {
-                coreLibraryDesugaringEnabled = false;
-            }
-        }
-        return coreLibraryDesugaringEnabled;
+        LmModule buildModel = getBuildModule();
+        return buildModel != null
+                && buildModel.getBuildFeatures().getCoreLibraryDesugaringEnabled();
     }
 
     /** Returns the corresponding IDE project. */
@@ -259,39 +274,12 @@ public class Project {
      */
     @Nullable
     public GradleVersion getGradleModelVersion() {
-        if (gradleVersion == null && isGradleProject()) {
-            IdeAndroidProject gradleProjectModel = getGradleProjectModel();
-            if (gradleProjectModel != null) {
-                gradleVersion = GradleVersion.tryParse(gradleProjectModel.getModelVersion());
-            }
+        LmModule gradleProjectModel = getBuildModule();
+        if (gradleProjectModel != null) {
+            return gradleProjectModel.getGradleVersion();
+        } else {
+            return null;
         }
-
-        return gradleVersion;
-    }
-
-    /**
-     * Returns the project model for this project if it corresponds to a Gradle library. This is the
-     * case if both {@link #isGradleProject()} and {@link #isLibrary()} return true.
-     *
-     * @return the project model, or null
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    @Nullable
-    public AndroidLibrary getGradleLibraryModel() {
-        return null;
-    }
-
-    /**
-     * Returns the current selected variant, if any (and if the current project is a Gradle
-     * project). This can be used by incremental lint rules to warn about problems in the current
-     * context. Lint rules should however strive to perform cross variant analysis and warn about
-     * problems in any configuration.
-     *
-     * @return the select variant, or null
-     */
-    @Nullable
-    public Variant getCurrentVariant() {
-        return null;
     }
 
     /**
@@ -426,12 +414,12 @@ public class Project {
 
     /** Gets the namespacing mode used for this project */
     @NonNull
-    private AaptOptions.Namespacing getNamespacingMode() {
-        IdeAndroidProject model = getGradleProjectModel();
+    private LmNamespacingMode getNamespacingMode() {
+        LmModule model = getBuildModule();
         if (model != null) {
-            return model.getAaptOptions().getNamespacing();
+            return model.getBuildFeatures().getNamespacingMode();
         } else {
-            return AaptOptions.Namespacing.DISABLED;
+            return LmNamespacingMode.DISABLED;
         }
     }
 
@@ -442,7 +430,7 @@ public class Project {
     public ResourceNamespace getResourceNamespace() {
         if (namespace == null) {
             String packageName = getPackage();
-            if (packageName == null || getNamespacingMode() == AaptOptions.Namespacing.DISABLED) {
+            if (packageName == null || getNamespacingMode() == LmNamespacingMode.DISABLED) {
                 namespace = ResourceNamespace.RES_AUTO;
             } else {
                 namespace = ResourceNamespace.fromPackageName(packageName);
@@ -788,36 +776,12 @@ public class Project {
      */
     @Nullable
     public String getApplicationId() {
-        Variant currentVariant = getCurrentVariant();
-        if (currentVariant != null) {
-            return currentVariant.getMainArtifact().getApplicationId();
+        LmVariant variant = getBuildVariant();
+        if (variant != null) {
+            return variant.getMainArtifact().getApplicationId();
         }
 
         return getPackage();
-    }
-
-    /**
-     * Returns all application ids, if known
-     *
-     * @return all application ids, if known
-     */
-    @NonNull
-    public Set<String> getAllApplicationIds() {
-        Set<String> ids = new HashSet<>();
-        IdeAndroidProject model = getGradleProjectModel();
-        if (model != null) {
-            for (Variant variant : model.getVariants()) {
-                String applicationId = variant.getMergedFlavor().getApplicationId();
-                if (applicationId != null) {
-                    ids.add(applicationId);
-                }
-            }
-        }
-        String pkg = getPackage();
-        if (pkg != null) {
-            ids.add(pkg);
-        }
-        return ids;
     }
 
     /**
@@ -967,8 +931,6 @@ public class Project {
         pkg = root.getAttribute(ATTR_PACKAGE);
 
         // Initialize minSdk and targetSdk
-        manifestMinSdk = AndroidVersion.DEFAULT;
-        manifestTargetSdk = AndroidVersion.DEFAULT;
         NodeList usesSdks = root.getElementsByTagName(TAG_USES_SDK);
         if (usesSdks.getLength() > 0) {
             Element element = (Element) usesSdks.item(0);
@@ -977,16 +939,28 @@ public class Project {
             if (element.hasAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION)) {
                 minSdk = element.getAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION);
             }
-            if (minSdk != null) {
-                IAndroidTarget[] targets = client.getTargets();
-                manifestMinSdk = SdkVersionInfo.getVersion(minSdk, targets);
+            if (minSdk != null && !minSdk.isEmpty()) {
+                if (Character.isDigit(minSdk.charAt(0))) {
+                    // If the minSdk version is a number we don't need to look up
+                    // SDK targets to resolve code names (and computing the target list
+                    // is expensive)
+                    manifestMinSdk = SdkVersionInfo.getVersion(minSdk, null);
+                } else {
+                    IAndroidTarget[] targets = client.getTargets();
+                    manifestMinSdk = SdkVersionInfo.getVersion(minSdk, targets);
+                }
             }
 
             if (element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
                 String targetSdk = element.getAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
-                if (targetSdk != null) {
-                    IAndroidTarget[] targets = client.getTargets();
-                    manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, targets);
+                if (targetSdk != null && !targetSdk.isEmpty()) {
+                    if (Character.isDigit(targetSdk.charAt(0))) {
+                        // See minSdk comment above
+                        manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, null);
+                    } else {
+                        IAndroidTarget[] targets = client.getTargets();
+                        manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, targets);
+                    }
                 }
             } else {
                 manifestTargetSdk = manifestMinSdk;
@@ -1016,20 +990,19 @@ public class Project {
         return externalLibrary;
     }
 
+    protected LmMavenName mavenCoordinates = null;
+
     /**
-     * Returns the Maven coordinates of this project, if known.
+     * Returns the Maven coordinate of this project, if known.
      *
-     * @return the maven coordinates, or null
+     * @return the maven coordinate, or null
      */
     @Nullable
-    public MavenCoordinates getMavenCoordinates() {
+    public LmMavenName getMavenCoordinate() {
         if (mavenCoordinates == null) {
-            IdeAndroidProject androidProject = getGradleProjectModel();
-            if (androidProject != null) {
-                String groupId = androidProject.getGroupId();
-                if (groupId != null) {
-                    mavenCoordinates = new DefaultMavenCoordinates(groupId, "", "");
-                }
+            LmModule model = getBuildModule();
+            if (model != null) {
+                mavenCoordinates = model.getMavenName();
             }
         }
         return mavenCoordinates;
@@ -1046,6 +1019,16 @@ public class Project {
     }
 
     /**
+     * Sets the list of library projects referenced by this project. This should only be set during
+     * project initialization.
+     *
+     * @param libraries the new library list.
+     */
+    public void setDirectLibraries(@NonNull List<Project> libraries) {
+        directLibraries = libraries;
+    }
+
+    /**
      * Returns the transitive closure of the library projects for this project
      *
      * @return the transitive closure of the library projects for this project
@@ -1054,7 +1037,8 @@ public class Project {
     public List<Project> getAllLibraries() {
         if (allLibraries == null) {
             if (directLibraries.isEmpty()) {
-                return directLibraries;
+                allLibraries = Collections.emptyList();
+                return allLibraries;
             }
 
             List<Project> all = new ArrayList<>();
@@ -1101,13 +1085,45 @@ public class Project {
         }
     }
 
+    /**
+     * The type of artifact produced by this Android project.
+     *
+     * @deprecated Use {@link #getType()} instead!
+     */
+    @NonNull
+    @Deprecated
+    public final ProjectType getProjectType() {
+        LmModuleType type = getType();
+        switch (type) {
+            case APP:
+                //noinspection DuplicateBranchesInSwitch
+                return ProjectType.APP;
+            case LIBRARY:
+                return ProjectType.LIBRARY;
+            case TEST:
+                return ProjectType.TEST;
+            case INSTANT_APP:
+                return ProjectType.INSTANT_APP;
+            case FEATURE:
+                return ProjectType.FEATURE;
+            case DYNAMIC_FEATURE:
+                return ProjectType.DYNAMIC_FEATURE;
+            default:
+                return ProjectType.APP;
+        }
+    }
+
     /** The type of artifact produced by this Android project. */
     @NonNull
-    public ProjectType getProjectType() {
+    public LmModuleType getType() {
+        LmModule buildModule = getBuildModule();
+        if (buildModule != null) {
+            return buildModule.getType();
+        }
         if (isLibrary()) {
-            return ProjectType.LIBRARY;
+            return LmModuleType.LIBRARY;
         } else {
-            return ProjectType.APP;
+            return LmModuleType.APP;
         }
     }
 
@@ -1356,6 +1372,7 @@ public class Project {
      * @param dir the project directory to check.
      * @return true if this is the frameworks project.
      */
+    @SuppressWarnings("FileComparisons")
     public static boolean isAospFrameworksProject(@NonNull File dir) {
         String top = getAospTop();
         if (top != null) {
@@ -1482,26 +1499,21 @@ public class Project {
         boolean found = false;
         File makefile = new File(dir, "Android.mk");
         if (makefile.exists()) {
-            try {
-                List<String> lines = Files.readLines(makefile, Charsets.UTF_8);
-                Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)");
-                for (String line : lines) {
-                    line = line.trim();
-                    Matcher matcher = p.matcher(line);
-                    if (matcher.matches()) {
-                        found = true;
-                        String version = matcher.group(1);
-                        if (version.equals("current")) {
-                            manifestMinSdk = findCurrentAospVersion();
-                        } else {
-                            manifestMinSdk =
-                                    SdkVersionInfo.getVersion(version, client.getTargets());
-                        }
-                        break;
+            List<String> lines = FilesKt.readLines(makefile, Charsets.UTF_8);
+            Pattern p = Pattern.compile("LOCAL_SDK_VERSION\\s*:=\\s*(.*)");
+            for (String line : lines) {
+                line = line.trim();
+                Matcher matcher = p.matcher(line);
+                if (matcher.matches()) {
+                    found = true;
+                    String version = matcher.group(1);
+                    if (version.equals("current")) {
+                        manifestMinSdk = findCurrentAospVersion();
+                    } else {
+                        manifestMinSdk = SdkVersionInfo.getVersion(version, client.getTargets());
                     }
+                    break;
                 }
-            } catch (IOException ioe) {
-                client.log(ioe, null);
             }
         }
 
@@ -1638,40 +1650,21 @@ public class Project {
             //     }
             // }
             // ...then we should only enforce hdpi densities, not all these others!
-            if (isGradleProject()
-                    && getGradleProjectModel() != null
-                    && getCurrentVariant() != null) {
+            LmVariant variant = getBuildVariant();
+            if (variant != null) {
                 Set<String> relevantDensities = Sets.newHashSet();
-                Variant variant = getCurrentVariant();
-                List<String> variantFlavors = variant.getProductFlavors();
-                IdeAndroidProject gradleProjectModel = getGradleProjectModel();
-
-                addResConfigsFromFlavor(
-                        relevantDensities, null, getGradleProjectModel().getDefaultConfig());
-                for (ProductFlavorContainer container : gradleProjectModel.getProductFlavors()) {
-                    addResConfigsFromFlavor(relevantDensities, variantFlavors, container);
-                }
-
-                // Are there any splits that specify densities?
-                /* Hotfix for b/148602190
-                if (relevantDensities.isEmpty()) {
-                    AndroidArtifact mainArtifact = variant.getMainArtifact();
-                    Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
-                    for (AndroidArtifactOutput output : outputs) {
-                        final String DENSITY_NAME = VariantOutput.FilterType.DENSITY.name();
-                        if (output.getFilterTypes().contains(DENSITY_NAME)) {
-                            for (FilterData data : output.getFilters()) {
-                                if (DENSITY_NAME.equals(data.getFilterType())) {
-                                    relevantDensities.add(data.getIdentifier());
-                                }
-                            }
-                        }
+                for (String densityName : variant.getResourceConfigurations()) {
+                    Density density = Density.getEnum(densityName);
+                    if (density != null
+                            && density.isRecommended()
+                            && density != Density.NODPI
+                            && density != Density.ANYDPI) {
+                        relevantDensities.add(densityName);
                     }
                 }
-                */
-
                 if (!relevantDensities.isEmpty()) {
-                    mCachedApplicableDensities = Lists.newArrayListWithExpectedSize(10);
+                    mCachedApplicableDensities =
+                            Lists.newArrayListWithExpectedSize(relevantDensities.size());
                     for (String density : relevantDensities) {
                         String folder = ResourceFolderType.DRAWABLE.getName() + '-' + density;
                         mCachedApplicableDensities.add(folder);
@@ -1704,30 +1697,6 @@ public class Project {
     }
 
     /**
-     * Adds in the resConfig values specified by the given flavor container, assuming it's in one of
-     * the relevant variantFlavors, into the given set
-     */
-    private static void addResConfigsFromFlavor(
-            @NonNull Set<String> relevantDensities,
-            @Nullable List<String> variantFlavors,
-            @NonNull ProductFlavorContainer container) {
-        ProductFlavor flavor = container.getProductFlavor();
-        if (variantFlavors == null || variantFlavors.contains(flavor.getName())) {
-            if (!flavor.getResourceConfigurations().isEmpty()) {
-                for (String densityName : flavor.getResourceConfigurations()) {
-                    Density density = Density.getEnum(densityName);
-                    if (density != null
-                            && density.isRecommended()
-                            && density != Density.NODPI
-                            && density != Density.ANYDPI) {
-                        relevantDensities.add(densityName);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Returns a shared {@link ResourceVisibilityLookup}
      *
      * @return a shared provider for looking up resource visibility
@@ -1735,29 +1704,38 @@ public class Project {
     @NonNull
     public ResourceVisibilityLookup getResourceVisibility() {
         if (resourceVisibility == null) {
-            if (isGradleProject()) {
-                IdeAndroidProject project = getGradleProjectModel();
-                Variant variant = getCurrentVariant();
-                if (project != null && variant != null) {
-                    resourceVisibility =
-                            client.getResourceVisibilityProvider().get(project, variant);
-
-                } else if (getGradleLibraryModel() != null) {
-                    try {
-                        resourceVisibility =
-                                client.getResourceVisibilityProvider().get(getGradleLibraryModel());
-                    } catch (Exception ignore) {
-                        // Handle talking to older Gradle plugins (where we don't
-                        // have access to the model version to check up front
+            LmVariant variant = getBuildVariant();
+            if (variant != null) {
+                Collection<LmLibrary> libraries =
+                        variant.getMainArtifact().getDependencies().getAll();
+                List<ResourceVisibilityLookup> list = new ArrayList<>(libraries.size());
+                for (LmLibrary library : libraries) {
+                    if (library instanceof LmAndroidLibrary) {
+                        LmAndroidLibrary l = (LmAndroidLibrary) library;
+                        ResourceVisibilityLookup lookup = createLibraryVisibilityLookup(l);
+                        list.add(lookup);
                     }
                 }
-            }
-            if (resourceVisibility == null) {
+                resourceVisibility = ResourceVisibilityLookup.create(list);
+            } else if (getBuildLibraryModel() != null) {
+                LmAndroidLibrary library = getBuildLibraryModel();
+                resourceVisibility = createLibraryVisibilityLookup(library);
+            } else {
                 resourceVisibility = ResourceVisibilityLookup.NONE;
             }
         }
 
         return resourceVisibility;
+    }
+
+    @NonNull
+    private ResourceVisibilityLookup createLibraryVisibilityLookup(
+            LmAndroidLibrary androidLibrary) {
+        File publicResources = androidLibrary.getPublicResources();
+        File symbolFile = androidLibrary.getSymbolFile();
+        LmMavenName c = androidLibrary.getResolvedCoordinates();
+        String key = c.getGroupId() + ":" + c.getArtifactId() + ":" + c.getVersion();
+        return ResourceVisibilityLookup.create(publicResources, symbolFile, key);
     }
 
     /**
@@ -1768,5 +1746,33 @@ public class Project {
     @NonNull
     public LintClient getClient() {
         return client;
+    }
+
+    /**
+     * Merge in source folders from the given project. This is only intended to be used by the lint
+     * infrastructure.
+     */
+    public void mergeFolders(@NonNull Project p) {
+        javaSourceFolders = merge(getJavaSourceFolders(), p.getJavaSourceFolders());
+        resourceFolders = merge(getResourceFolders(), p.getResourceFolders());
+        generatedResourceFolders =
+                merge(getGeneratedResourceFolders(), p.getGeneratedResourceFolders());
+        testSourceFolders = merge(getTestSourceFolders(), p.getTestSourceFolders());
+        testLibraries = merge(getTestLibraries(), p.getTestLibraries());
+        nonProvidedJavaLibraries = merge(getJavaLibraries(false), p.getJavaLibraries(false));
+        javaLibraries = merge(getJavaLibraries(true), p.getJavaLibraries(true));
+    }
+
+    private static List<File> merge(List<File> existing, List<File> additional) {
+        if (additional.isEmpty()) {
+            return existing;
+        } else if (existing.isEmpty()) {
+            return additional;
+        } else {
+            List<File> newList = new ArrayList<File>(existing.size() + additional.size());
+            newList.addAll(existing);
+            newList.addAll(additional);
+            return newList;
+        }
     }
 }

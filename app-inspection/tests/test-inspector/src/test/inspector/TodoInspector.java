@@ -47,6 +47,7 @@ public final class TodoInspector extends TestInspector {
     private final Class<?> classItem;
     private final Class<?> classGroup;
     private final Class<?> classActivity;
+    private boolean isDisposed;
 
     TodoInspector(@NonNull Connection connection, @NonNull InspectorEnvironment environment) {
         super(connection, environment);
@@ -204,6 +205,63 @@ public final class TodoInspector extends TestInspector {
                                                 severity.byteValue()));
                     }
                 });
+
+        environment.registerEntryHook(
+                classActivity,
+                "selectFirstGroup()V",
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        if (isDisposed) {
+                            throw new AssertionError(
+                                    "entry hook shouldn't be called after onDipose");
+                        }
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "selectFirstGroup()V",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        if (isDisposed) {
+                            throw new AssertionError(
+                                    "exit hook shouldn't be called after onDipose");
+                        }
+                        return returnValue;
+                    }
+                });
+
+        for (byte i = 0; i < 2; i++) {
+            final byte hookId = i;
+            environment.registerEntryHook(
+                    classActivity,
+                    "selectLastGroup()V",
+                    new InspectorEnvironment.EntryHook() {
+                        @Override
+                        public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                            getConnection()
+                                    .sendEvent(
+                                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTING
+                                                    .toByteArrayWithArg(hookId));
+                        }
+                    });
+
+            environment.registerExitHook(
+                    classActivity,
+                    "selectLastGroup()V",
+                    new InspectorEnvironment.ExitHook<Object>() {
+                        @Override
+                        public Object onExit(Object returnValue) {
+                            getConnection()
+                                    .sendEvent(
+                                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTED
+                                                    .toByteArrayWithArg(hookId));
+                            return returnValue;
+                        }
+                    });
+        }
     }
 
     @NonNull
@@ -222,5 +280,10 @@ public final class TodoInspector extends TestInspector {
         }
 
         return TestInspectorApi.Reply.ERROR.toByteArray();
+    }
+
+    @Override
+    protected void handleDispose() {
+        isDisposed = true;
     }
 }

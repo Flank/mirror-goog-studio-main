@@ -17,6 +17,7 @@
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity
 
 import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenTheme
 
 fun androidManifestXml(
   activityClass: String,
@@ -24,7 +25,8 @@ fun androidManifestXml(
   simpleName: String,
   isLauncher: Boolean,
   isLibrary: Boolean,
-  isNewModule: Boolean
+  isNewModule: Boolean,
+  themeName: String
 ): String {
   val activityLabel = if (isNewModule) """android:label="@string/app_name"""" else """android:label="@string/title_${simpleName}""""
   val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
@@ -35,7 +37,7 @@ fun androidManifestXml(
         <activity android:name="${packageName}.${activityClass}"
             android:configChanges="orientation|keyboardHidden|screenSize"
             $activityLabel
-            android:theme="@style/FullscreenTheme">
+            android:theme="@style/${getFullscreenTheme(themeName)}">
             $activityBody
         </activity>
     </application>

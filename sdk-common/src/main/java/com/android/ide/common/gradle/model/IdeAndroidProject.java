@@ -232,6 +232,14 @@ public interface IdeAndroidProject extends Serializable {
     String getBuildToolsVersion();
 
     /**
+     * Returns the NDK version used by this module.
+     *
+     * @return the NDK version.
+     */
+    @NonNull
+    String getNdkVersion();
+
+    /**
      * Returns true if this is the base feature split.
      *
      * @return true if this is the base feature split

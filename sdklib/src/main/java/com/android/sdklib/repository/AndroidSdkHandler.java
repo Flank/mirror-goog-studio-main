@@ -298,7 +298,7 @@ public final class AndroidSdkHandler {
                                 mFop);
                 // Invalidate system images, targets, the latest build tool, and the legacy local
                 // package manager when local packages change
-                result.registerLocalChangeListener(packages -> {
+                result.addLocalChangeListener(packages -> {
                     mSystemImageManager = null;
                     mAndroidTargetManager = null;
                     mLatestBuildTool = null;

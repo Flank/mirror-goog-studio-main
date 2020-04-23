@@ -732,11 +732,11 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         private fun initializeAnnotationNames(context: JavaContext) {
             if (nonNullAnnotation == null) {
-                val libraries = GradleDetector.getAndroidLibraries(context.mainProject)
+                val libraries = context.mainProject.buildVariant?.mainArtifact?.dependencies?.all
+                    ?: emptyList()
                 for (library in libraries) {
                     val coordinates = library.resolvedCoordinates
-                    @Suppress("UNNECESSARY_SAFE_CALL") // API has been observed to lie
-                    if (coordinates.groupId?.startsWith("androidx") ?: false) {
+                    if (coordinates.groupId.startsWith("androidx")) {
                         nonNullAnnotation = "@androidx.annotation.NonNull"
                         nullableAnnotation = "@androidx.annotation.Nullable"
                         return

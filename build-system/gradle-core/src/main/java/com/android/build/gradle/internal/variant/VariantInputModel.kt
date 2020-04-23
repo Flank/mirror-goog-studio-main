@@ -25,9 +25,9 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
  * Model containing the inputs for the variants to be created.
  */
 interface VariantInputModel<
-        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<*, *>,
-        BuildTypeT : com.android.build.api.dsl.BuildType<*, *>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<*, *>,
+        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<*>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<*>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<*>,
         SigningConfigT : com.android.build.api.dsl.SigningConfig> {
 
     val defaultConfigData: DefaultConfigData<DefaultConfigT>

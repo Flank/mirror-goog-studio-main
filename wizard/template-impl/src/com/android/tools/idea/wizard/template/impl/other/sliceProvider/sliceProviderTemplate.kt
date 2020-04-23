@@ -39,7 +39,7 @@ val sliceProviderTemplate
     name = "Slice Provider"
     minBuildApi = 28
     constraints = listOf(TemplateConstraint.AndroidX)
-    description = "Creates a new SliceProvider component and adds it to your Android manifest."
+    description = "Creates a new SliceProvider component and adds it to your Android manifest"
 
     formFactor = FormFactor.Mobile
     category = Category.Other
@@ -54,7 +54,7 @@ val sliceProviderTemplate
     val authorities = stringParameter {
       name = "URI Authorities"
       default = ""
-      help = "A semicolon separated list of one or more URI authorities that identify data under the purview of the SliceProvider."
+      help = "A semicolon separated list of one or more URI authorities that identify data under the purview of the SliceProvider"
       constraints = listOf(NONEMPTY, URI_AUTHORITY)
       suggest = { packageName }
     }
@@ -62,7 +62,7 @@ val sliceProviderTemplate
     val hostUrl = stringParameter {
       name = "Host URL"
       default = ""
-      help = "An HTTP URL that will expose the SliceProvider."
+      help = "An HTTP URL that will expose the SliceProvider"
       constraints = listOf(NONEMPTY)
       suggest = { packageNameToDomain(packageName) }
     }
@@ -70,7 +70,7 @@ val sliceProviderTemplate
     val pathPrefix = stringParameter {
       name = "Path Prefix"
       default = "/"
-      help = "A partial path in the URL that is matched to the SliceProvider."
+      help = "A partial path in the URL that is matched to the SliceProvider"
       constraints = listOf(NONEMPTY)
     }
 

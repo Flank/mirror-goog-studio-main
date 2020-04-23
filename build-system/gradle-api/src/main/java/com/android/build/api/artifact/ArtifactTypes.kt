@@ -42,13 +42,15 @@ sealed class ArtifactTypes<T : FileSystemLocation>(
      * APK directory where final APK files will be located.
      */
     @Incubating
-    object APK: ArtifactTypes<Directory>(DIRECTORY), Replaceable, ContainsMany
+    object APK: ArtifactTypes<Directory>(DIRECTORY), Single, Replaceable, ContainsMany
 
     /**
      * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.
      */
     @Incubating
-    object MERGED_MANIFEST: ArtifactTypes<RegularFile>(FILE, FileNames.ANDROID_MANIFEST_XML), Replaceable, Transformable
+    object MERGED_MANIFEST: ArtifactTypes<RegularFile>(FILE, FileNames.ANDROID_MANIFEST_XML), Single, Replaceable, Transformable
 
+    @Incubating
+    object OBFUSCATION_MAPPING_FILE: ArtifactTypes<RegularFile>(FILE, FileNames.OBFUSCATION_MAPPING_FILE), Single
 
 }

@@ -19,8 +19,7 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface DynamicFeatureBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    BaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-    DynamicFeatureVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
+interface DynamicFeatureBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
+    BaseFlavor<AnnotationProcessorOptionsT>,
+    DynamicFeatureVariantDimension<AnnotationProcessorOptionsT> {
 }

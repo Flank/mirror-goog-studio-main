@@ -49,7 +49,10 @@ public final class TodoInspectorApi {
         TODO_HAS_EMPTY_TODO_LIST,
 
         TODO_ITEMS_PREFILLING,
-        TODO_LOGGING_ITEM;
+        TODO_LOGGING_ITEM,
+
+        TODO_LAST_ITEM_SELECTING,
+        TODO_LAST_ITEM_SELECTED;
 
         @NonNull
         public byte[] toByteArray() {

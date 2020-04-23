@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
@@ -42,7 +41,7 @@ val scrollFragmentTemplate
     name = "Scrolling Fragment"
     minApi = MIN_API
     minBuildApi = 22
-    description = "Creates a new vertical scrolling fragment."
+    description = "Creates a new vertical scrolling fragment"
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile

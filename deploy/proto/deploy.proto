@@ -67,6 +67,13 @@ message OverlaySwapRequest {
   bool structural_redefinition = 11;
 }
 
+message OverlayIdPush {
+  string package_name = 1;
+  string prev_oid = 2;
+  string next_oid = 3;
+  bool wipe_overlays = 4;
+}
+
 message ClassDef {
   message FieldReInitState {
     enum VariableState {
@@ -126,13 +133,13 @@ message AgentSwapResponse {
     SET_CAPABILITIES_FAILED = 9;  // JVMTI capabilities could not be set.
 
     // JVMTI supports the swap but some variables cannot be reinit.
-    UNSUPPORTED_REINIT = 10; 
-    UNSUPPORTED_REINIT_STATIC_PRIMITIVE = 11; 
-    UNSUPPORTED_REINIT_STATIC_OBJECT = 12; 
-    UNSUPPORTED_REINIT_STATIC_ARRAY = 13; 
-    UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE = 14; 
-    UNSUPPORTED_REINIT_NON_STATIC_OBJECT = 15; 
-    UNSUPPORTED_REINIT_NON_STATIC_ARRAY = 16; 
+    UNSUPPORTED_REINIT = 10;
+    UNSUPPORTED_REINIT_STATIC_PRIMITIVE = 11;
+    UNSUPPORTED_REINIT_STATIC_OBJECT = 12;
+    UNSUPPORTED_REINIT_STATIC_ARRAY = 13;
+    UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE = 14;
+    UNSUPPORTED_REINIT_NON_STATIC_OBJECT = 15;
+    UNSUPPORTED_REINIT_NON_STATIC_ARRAY = 16;
   }
 
   // The state of the swap that was requested.

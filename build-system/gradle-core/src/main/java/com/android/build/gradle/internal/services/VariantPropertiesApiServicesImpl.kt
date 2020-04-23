@@ -21,7 +21,9 @@ import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.provider.HasConfigurableValue
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -32,9 +34,7 @@ class VariantPropertiesApiServicesImpl(
 ): BaseServicesImpl(projectServices),
     VariantPropertiesApiServices {
     // list of properties to lock when [.lockProperties] is called.
-    private val properties = mutableListOf<Property<*>>()
-    // [ListProperty] list to lock when [.lockProperties] is called.
-    private val listProperties = mutableListOf<ListProperty<*>>()
+    private val properties = mutableListOf<HasConfigurableValue>()
     // whether the properties have been locked already
     private var propertiesLockStatus = false
 
@@ -132,6 +132,23 @@ class VariantPropertiesApiServicesImpl(
         id: String
     ): ListProperty<T> {
         return projectServices.objectFactory.listProperty(type).also {
+            it.set(value)
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
+    override fun <K, V> mapPropertyOf(
+        keyType: Class<K>,
+        valueType: Class<V>,
+        value: Map<K, V>,
+        id: String
+    ): MapProperty<K, V> {
+        return projectServices.objectFactory.mapProperty(keyType, valueType).also {
             it.set(value)
             it.finalizeValueOnRead()
 
@@ -277,32 +294,17 @@ class VariantPropertiesApiServicesImpl(
             property.disallowChanges()
         }
         properties.clear()
-        for (listProperty in listProperties) {
-            listProperty.disallowChanges()
-        }
-        listProperties.clear()
         propertiesLockStatus = true
     }
 
     // register a property to be locked later.
     // if the properties have already been locked, the property is locked right away.
     // (this can happen for objects that are lazily created)
-    private fun delayedLock(property: Property<*>) {
+    private fun delayedLock(property: HasConfigurableValue) {
         if (propertiesLockStatus) {
             property.disallowChanges()
         } else {
             properties.add(property)
-        }
-    }
-
-    // register a [ListProperty] to be locked later.
-    // if the properties have already been locked, listProperty is locked right away.
-    // (this can happen for objects that are lazily created)
-    private fun delayedLock(listProperty: ListProperty<*>) {
-        if (propertiesLockStatus) {
-            listProperty.disallowChanges()
-        } else {
-            listProperties.add(listProperty)
         }
     }
 
@@ -329,5 +331,4 @@ class VariantPropertiesApiServicesImpl(
             projectServices.objectFactory.property(type)
         }
     }
-
 }

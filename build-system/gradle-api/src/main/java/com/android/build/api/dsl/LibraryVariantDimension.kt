@@ -17,10 +17,58 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
+import java.io.File
 
 @Incubating
 interface LibraryVariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    VariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
-    // TODO(b/140406102)
+        SigningConfigT : SigningConfig> : VariantDimension<AnnotationProcessorOptionsT> {
+    /**
+     * Returns whether multi-dex is enabled.
+     *
+     * This can be null if the flag is not set, in which case the default value is used.
+     */
+    var multiDexEnabled: Boolean?
+
+    /**
+     * ProGuard rule files to be included in the published AAR.
+     *
+     * These proguard rule files will then be used by any application project that consumes the
+     * AAR (if ProGuard is enabled).
+     *
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
+     *
+     * This is only valid for Library project. This is ignored in Application project.
+     */
+    var consumerProguardFiles: MutableList<File>
+
+    /**
+     * Adds a proguard rule file to be included in the published AAR.
+     *
+     * This proguard rule file will then be used by any application project that consume the AAR
+     * (if proguard is enabled).
+     *
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
+     *
+     * This is only valid for Library project. This is ignored in Application project.
+     *
+     * This method has a return value for legacy reasons.
+     */
+    fun consumerProguardFile(proguardFile: Any): Any
+
+    /**
+     * Adds proguard rule files to be included in the published AAR.
+     *
+     * This proguard rule file will then be used by any application project that consume the AAR
+     * (if proguard is enabled).
+     *
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
+     *
+     * This is only valid for Library project. This is ignored in Application project.
+     *
+     * This method has a return value for legacy reasons.
+     */
+    fun consumerProguardFiles(vararg proguardFiles: Any): Any
+
+    /** The associated signing config or null if none are set on the variant dimension. */
+    var signingConfig: SigningConfigT?
 }

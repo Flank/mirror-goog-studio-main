@@ -31,6 +31,7 @@ android {
     }
 
     lintOptions {
+        disable "GradleDependency" // such that we don't flag newly available Kotlin versions etc
         xmlReport true
         xmlOutput file("lint-report.xml")
         textReport true

@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.InternalTestExtension
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.PackagingOptions
@@ -57,28 +58,7 @@ open class TestExtension(
     extraModelInfo,
     false
 ), TestAndroidConfig,
-    com.android.build.api.dsl.TestExtension<
-            AaptOptions,
-            AbiSplitOptions,
-            AdbOptions,
-            AndroidSourceSet,
-            AnnotationProcessorOptions,
-            BuildType,
-            CmakeOptions,
-            CompileOptions,
-            DataBindingOptions,
-            DefaultConfig,
-            DensitySplitOptions,
-            ExternalNativeBuild,
-            JacocoOptions,
-            LintOptions,
-            NdkBuildOptions,
-            PackagingOptions,
-            ProductFlavor,
-            SigningConfig,
-            Splits,
-            TestOptions,
-            TestOptions.UnitTestOptions> by publicExtensionImpl,
+    InternalTestExtension by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =

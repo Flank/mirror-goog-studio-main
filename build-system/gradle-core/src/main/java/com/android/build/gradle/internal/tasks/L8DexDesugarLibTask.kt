@@ -117,7 +117,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.globalScope.project))
             task.androidJar.set(creationConfig.globalScope.sdkComponents.androidJarProvider)
             task.minSdkVersion.set(
-                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
+                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
 
             val attributes = getDexingArtifactConfiguration(creationConfig).getAttributes()
 

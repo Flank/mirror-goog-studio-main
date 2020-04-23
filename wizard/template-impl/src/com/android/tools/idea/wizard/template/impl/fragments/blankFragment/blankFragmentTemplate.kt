@@ -37,7 +37,7 @@ val blankFragmentTemplate
   get() = template {
     revision = 1
     name = "Fragment (Blank)"
-    description = "Creates a blank fragment that is compatible back to API level 14."
+    description = "Creates a blank fragment that is compatible back to API level $MIN_API"
     minApi = MIN_API
     minBuildApi = MIN_API
 
@@ -48,14 +48,14 @@ val blankFragmentTemplate
     val className = stringParameter {
       name = "Fragment Name"
       default = "BlankFragment"
-      help = "The name of the fragment class to create "
+      help = "The name of the fragment class to create"
       constraints = listOf(CLASS, NONEMPTY, UNIQUE)
     }
 
     val layoutName = stringParameter {
       name = "Fragment Layout Name"
       default = "fragment_blank"
-      help = "The name of the layout to create "
+      help = "The name of the layout to create"
       constraints = listOf(LAYOUT, NONEMPTY, UNIQUE)
       suggest = { fragmentToLayout(className.value) }
     }

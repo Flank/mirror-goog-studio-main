@@ -46,7 +46,7 @@ val basicActivityTemplate get() = template {
   name = "Basic Activity"
   minApi = MIN_API
   minBuildApi = MIN_API
-  description = "Creates a new basic activity with the Navigation component."
+  description = "Creates a new basic activity with the Navigation component"
 
   category = Category.Activity
   formFactor = FormFactor.Mobile
@@ -74,7 +74,7 @@ val basicActivityTemplate get() = template {
     constraints = listOf(NONEMPTY)
     suggest = { activityClass.value }
     default = "MainActivity"
-    help = "The name of the activity. For launcher activities, the application title."
+    help = "The name of the activity. For launcher activities, the application title"
   }
 
   val menuName: StringParameter = stringParameter {

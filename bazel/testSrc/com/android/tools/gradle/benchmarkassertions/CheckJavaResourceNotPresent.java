@@ -26,15 +26,17 @@ public class CheckJavaResourceNotPresent implements BenchmarkProjectAssertion {
 
     private final String apk;
     private final String name;
+    private final String apkFromStudio;
 
-    public CheckJavaResourceNotPresent(String apk, String name) {
+    public CheckJavaResourceNotPresent(String apk, String apkFromStudio, String name) {
         this.apk = apk;
+        this.apkFromStudio = apkFromStudio;
         this.name = name;
     }
 
     @Override
-    public void checkProject(Path projectRoot) throws Exception {
-        try (Apk apk = new Apk(projectRoot.resolve(this.apk))) {
+    public void checkProject(Path projectRoot, boolean fromStudio) throws Exception {
+        try (Apk apk = new Apk(projectRoot.resolve(fromStudio ? this.apkFromStudio : this.apk))) {
             assertThat(apk).doesNotContain(name);
         }
     }

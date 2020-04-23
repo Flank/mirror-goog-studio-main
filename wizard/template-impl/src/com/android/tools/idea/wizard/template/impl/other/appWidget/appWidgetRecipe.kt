@@ -23,11 +23,12 @@ import com.android.tools.idea.wizard.template.camelCaseToUnderlines
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout.appwidgetConfigureXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout.appwidgetXml
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.attrsXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.colorsXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.stylesXml
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night.stylesXml as stylesXmlNight
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.themesXml
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night.themesXml as themesXmlNight
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.xml.appwidgetInfoXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package.appWidgetConfigureActivityJava
 import com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package.appWidgetConfigureActivityKt
@@ -48,12 +49,13 @@ fun RecipeExecutor.appWidgetRecipe(
   val ktOrJavaExt = projectData.language.extension
   val packageName = moduleData.packageName
   val layoutName = camelCaseToUnderlines(className)
+  val themeName = moduleData.themesData.main.name
   addAllKotlinDependencies(moduleData)
 
   mergeXml(androidManifestXml(className, configurable, layoutName, packageName), manifestOut.resolve("AndroidManifest.xml"))
 
   copy(File("example_appwidget_preview.png"), resOut.resolve("drawable-nodpi/example_appwidget_preview.png"))
-  save(appwidgetXml(), resOut.resolve("layout/${layoutName}.xml"))
+  save(appwidgetXml(moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
 
   if (configurable) {
     save(appwidgetConfigureXml(), resOut.resolve("layout/${layoutName}_configure.xml"))
@@ -64,10 +66,11 @@ fun RecipeExecutor.appWidgetRecipe(
   save(appwidgetInfoXml(minHeightDp, minWidthDp, className, configurable, layoutName, packageName, placement, resizable),
        resOut.resolve("xml/${layoutName}_info.xml"))
   mergeXml(stringsXml(configurable), resOut.resolve("values/strings.xml"))
+  mergeXml(attrsXml(), resOut.resolve("values/attrs.xml"))
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
-  mergeXml(stylesXml(), resOut.resolve("values/styles.xml"))
-  mergeXml(stylesXmlNight(), resOut.resolve("values-night/styles.xml"))
+  mergeXml(themesXml(moduleData.themesData), resOut.resolve("values/themes.xml"))
+  mergeXml(themesXmlNight(moduleData.themesData), resOut.resolve("values-night/themes.xml"))
 
   val appWidget = when (projectData.language) {
     Language.Java -> appWidgetJava(projectData.applicationPackage, className, configurable, layoutName, packageName)

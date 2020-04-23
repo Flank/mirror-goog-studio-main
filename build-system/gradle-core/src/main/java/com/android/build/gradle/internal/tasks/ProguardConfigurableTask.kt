@@ -16,16 +16,15 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.FileNames
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -196,14 +195,13 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig
-                .artifacts
-                .producesFile(
-                    APK_MAPPING,
-                    taskProvider,
-                    ProguardConfigurableTask::mappingFile,
-                    "mapping.txt"
-                )
+            creationConfig.operations
+                .setInitialProvider(taskProvider,
+                ProguardConfigurableTask::mappingFile)
+                .withName(FileNames.OBFUSCATION_MAPPING_FILE.fileName)
+                .on(APK_MAPPING)
+
+            creationConfig.operations.republish(APK_MAPPING, ArtifactTypes.OBFUSCATION_MAPPING_FILE)
         }
 
         override fun configure(

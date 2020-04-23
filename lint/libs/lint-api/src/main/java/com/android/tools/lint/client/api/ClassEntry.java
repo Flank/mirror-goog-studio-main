@@ -196,7 +196,7 @@ class ClassEntry implements Comparable<ClassEntry> {
                                     File file = new File(entry.getName());
                                     entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
                                 }
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 client.log(e, null);
                             }
                         }
@@ -302,7 +302,7 @@ class ClassEntry implements Comparable<ClassEntry> {
     private static class SuperclassVisitor extends ClassVisitor {
         private final Map<String, String> mMap;
 
-        public SuperclassVisitor(Map<String, String> map) {
+        SuperclassVisitor(Map<String, String> map) {
             super(ASM5);
             mMap = map;
         }

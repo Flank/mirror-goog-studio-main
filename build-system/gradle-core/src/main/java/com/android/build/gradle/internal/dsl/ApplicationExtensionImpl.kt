@@ -37,39 +37,16 @@ class ApplicationExtensionImpl(
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     TestedExtensionImpl<
-            AnnotationProcessorOptions,
             ApplicationBuildFeatures,
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            SigningConfig,
             ApplicationVariant<ApplicationVariantProperties>,
             ApplicationVariantProperties>(
         dslServices,
         dslContainers
     ),
-    ApplicationExtension<
-            AaptOptions,
-            AbiSplitOptions,
-            AdbOptions,
-            AndroidSourceSet,
-            AnnotationProcessorOptions,
-            BuildType,
-            CmakeOptions,
-            CompileOptions,
-            DataBindingOptions,
-            DefaultConfig,
-            DensitySplitOptions,
-            ExternalNativeBuild,
-            JacocoOptions,
-            LintOptions,
-            NdkBuildOptions,
-            PackagingOptions,
-            ProductFlavor,
-            SigningConfig,
-            Splits,
-            TestOptions,
-            TestOptions.UnitTestOptions> {
+    InternalApplicationExtension {
 
     override val buildFeatures: ApplicationBuildFeatures =
         dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java)

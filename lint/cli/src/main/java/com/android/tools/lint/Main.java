@@ -41,11 +41,15 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LmModuleProject;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmSerialization;
+import com.android.tools.lint.model.LmVariant;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
@@ -64,6 +68,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,6 +80,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.ApiVersion;
 import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
@@ -116,6 +122,8 @@ public class Main {
     private static final String ARG_JDK_HOME = "--jdk-home";
     private static final String ARG_FATAL = "--fatalOnly";
     private static final String ARG_PROJECT = "--project";
+    private static final String ARG_LINT_MODEL = "--lint-model";
+    private static final String ARG_VARIANT = "--variant";
     private static final String ARG_CLASSES = "--classpath";
     private static final String ARG_SOURCES = "--sources";
     private static final String ARG_RESOURCES = "--resources";
@@ -174,6 +182,8 @@ public class Main {
 
         Ref<LanguageLevel> javaLanguageLevel = new Ref<>(null);
         Ref<LanguageVersionSettings> kotlinLanguageLevel = new Ref<>(null);
+        List<LmModule> modules = new ArrayList<>();
+        String variantName = null;
 
         // When running lint from the command line, warn if the project is a Gradle project
         // since those projects may have custom project configuration that the command line
@@ -360,11 +370,8 @@ public class Main {
 
                     private ProjectMetadata metadata;
 
-                    /** Creates a lint request */
                     @Override
-                    @NonNull
-                    protected LintRequest createLintRequest(@NonNull List<? extends File> files) {
-                        LintRequest request = super.createLintRequest(files);
+                    protected void configureLintRequest(@NotNull LintRequest request) {
                         File descriptor = flags.getProjectDescriptorOverride();
                         if (descriptor != null) {
                             metadata = ProjectInitializerKt.computeMetadata(this, descriptor);
@@ -395,8 +402,6 @@ public class Main {
                                 request.setPlatform(metadata.getPlatforms());
                             }
                         }
-
-                        return request;
                     }
 
                     @NonNull
@@ -986,6 +991,45 @@ public class Main {
                     }
                     flags.setProjectDescriptorOverride(input);
                 }
+            } else if (arg.equals(ARG_VARIANT)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing variant name after " + ARG_VARIANT);
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                variantName = args[++index];
+            } else if (arg.equals(ARG_LINT_MODEL)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing lint model argument after " + ARG_LINT_MODEL);
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                String paths = args[++index];
+                for (String path : Lint.splitPath(paths)) {
+                    File input = getInArgumentPath(path);
+                    if (!input.exists()) {
+                        System.err.println("Lint model " + input + " does not exist.");
+                        exit(ERRNO_INVALID_ARGS);
+                    }
+                    if (!input.isFile()) {
+                        System.err.println(
+                                "Lint model "
+                                        + input
+                                        + " should be an XML descriptor file"
+                                        + (input.isDirectory() ? ", not a directory" : ""));
+                        exit(ERRNO_INVALID_ARGS);
+                    }
+                    try {
+                        LmSerialization reader = LmSerialization.INSTANCE;
+                        LmModule module = reader.read(input);
+                        modules.add(module);
+                    } catch (Throwable error) {
+                        System.err.println(
+                                "Could not deserialize "
+                                        + input
+                                        + " to a lint model: "
+                                        + error.toString());
+                        exit(ERRNO_INVALID_ARGS);
+                    }
+                }
             } else if (arg.equals(ARG_SDK_HOME)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing SDK home directory");
@@ -1107,10 +1151,46 @@ public class Main {
             }
         }
 
+        LintRequest lintRequest;
+        if (!modules.isEmpty()) {
+            if (!files.isEmpty()) {
+                System.err.println(
+                        "Do not specify both files and lint models: lint models should instead include the files");
+                exit(ERRNO_INVALID_ARGS);
+            }
+            List<Project> projects = new ArrayList<>();
+            for (LmModule module : modules) {
+                File dir = module.getDir();
+                LmVariant variant = null;
+                if (variantName != null) {
+                    variant = module.findVariant(variantName);
+                    if (variant == null) {
+                        System.err.println(
+                                "Warning: Variant "
+                                        + variantName
+                                        + " not found in lint model for "
+                                        + dir);
+                    }
+                }
+                if (variant == null) {
+                    variant = module.defaultVariant();
+                }
+                LmModuleProject project = new LmModuleProject(client, dir, dir, variant, null);
+                client.registerProject(project.getDir(), project);
+                projects.add(project);
+            }
+            lintRequest = new LintRequest(client, Collections.emptyList());
+            lintRequest.setProjects(projects);
+            // TODO: What about dynamic features? See LintGradleProject#configureLintRequest
+        } else {
+            lintRequest = client.createLintRequest(files);
+        }
+
         try {
             // Not using globalIssueRegistry; LintClient will do its own registry merging
             // also including project rules.
-            int exitCode = client.run(new BuiltinIssueRegistry(), files);
+
+            int exitCode = client.run(new BuiltinIssueRegistry(), lintRequest);
             exit(exitCode);
         } catch (IOException e) {
             log(e, null);

@@ -10,6 +10,7 @@
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.model-base" />
     <orderEntry type="library" scope="TEST" name="groovy" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.checks-base" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.lint-api-base" />

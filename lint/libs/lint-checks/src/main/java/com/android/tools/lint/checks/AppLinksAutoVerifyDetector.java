@@ -31,7 +31,6 @@ import static com.android.xml.AndroidManifest.NODE_INTENT;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.Variant;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -40,6 +39,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.tools.lint.model.LmVariant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -332,17 +332,14 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
     private static String resolvePlaceHolder(
             @NonNull XmlContext context, @NonNull String hostname) {
         assert hostname.startsWith(SdkConstants.MANIFEST_PLACEHOLDER_PREFIX);
-        Variant variant = context.getProject().getCurrentVariant();
+        LmVariant variant = context.getProject().getBuildVariant();
         if (variant != null) {
-            Map<String, Object> placeHolders = variant.getMergedFlavor().getManifestPlaceholders();
+            Map<String, String> placeHolders = variant.getManifestPlaceholders();
             String name =
                     hostname.substring(
                             MANIFEST_PLACEHOLDER_PREFIX.length(),
                             hostname.length() - MANIFEST_PLACEHOLDER_SUFFIX.length());
-            Object value = placeHolders.get(name);
-            if (value instanceof String) {
-                return value.toString();
-            }
+            return placeHolders.get(name);
         }
         return null;
     }

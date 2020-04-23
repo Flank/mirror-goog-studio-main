@@ -657,7 +657,7 @@ class ProjectInitializerTest {
         MainTest.checkDriver(
             "" +
                     "src/main/java/test/pkg/Private.java".replace('/', File.separatorChar) +
-                    ":5: Warning: The resource @string/my_private_string is marked as private in the library [PrivateResource]\n" +
+                    ":5: Warning: The resource @string/my_private_string is marked as private in foo-bar.aar [PrivateResource]\n" +
                     "                            int x = R.string.my_private_string; // ERROR\n" +
                     "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings\n", "",

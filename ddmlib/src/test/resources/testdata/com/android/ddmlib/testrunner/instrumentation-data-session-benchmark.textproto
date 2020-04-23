@@ -1,0 +1,204 @@
+# This proto is an output from the following tests.
+#
+# @RunWith(AndroidJUnit4::class)
+# class MyBenchmarkTest {
+#   @get:Rule
+#   val benchmarkRule = BenchmarkRule()
+#
+#   @Test
+#   fun benchmarkSomeWork() = benchmarkRule.measureRepeated {
+#     Thread.sleep(30)
+#   }
+#
+#   @Test
+#   fun benchmarkSomeWork2() = benchmarkRule.measureRepeated {
+#     Thread.sleep(30)
+#   }
+#}
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.benchmarkexample.MyBenchmarkTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 2
+    }
+    entries {
+      key: "stream"
+      value_string: "\ncom.example.myapplication.benchmarkexample.MyBenchmarkTest:"
+    }
+    entries {
+      key: "test"
+      value_string: "benchmarkSomeWork"
+    }
+  }
+}
+
+test_status {
+  result_code: -1
+  results {
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_count"
+      value_long: 1
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_mean"
+      value_long: 31965740
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_median"
+      value_long: 31793000
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_min"
+      value_long: 30377000
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_standardDeviation"
+      value_long: 1156200
+    }
+    entries {
+      key: "android.studio.display.benchmark"
+      value_string: "WARNING: Debuggable Benchmark\nbenchmark:     Benchmark is running with debuggable=true, which drastically reduces\nbenchmark:     runtime performance in order to support debugging features. Run\nbenchmark:     benchmarks with debuggable=false. Debuggable affects execution speed\nbenchmark:     in ways that mean benchmark improvements might not carry over to a\nbenchmark:     real user\'s experience (or even regress release performance). \nbenchmark: \nbenchmark: WARNING: Running on Emulator\nbenchmark:     Benchmark is running on an emulator, which is not representative of\nbenchmark:     real user devices. Use a physical device to benchmark. Emulator\nbenchmark:     benchmark improvements might not carry over to a real user\'s\nbenchmark:     experience (or even regress real device performance). \nbenchmark: \nbenchmark: WARNING: Unlocked CPU clocks\nbenchmark:     Benchmark appears to be running on a rooted device with unlocked CPU\nbenchmark:     clocks. Unlocked CPU clocks can lead to inconsistent results due to\nbenchmark:     dynamic frequency scaling, and thermal throttling. On a rooted device,\nbenchmark:     lock your device clocks to a stable frequency with `./gradlew lockClocks` \nbenchmark: \nbenchmark: WARNING: Not using IsolationActivity via AndroidBenchmarkRunner\nbenchmark:     AndroidBenchmarkRunner should be used to isolate benchmarks from interference\nbenchmark:     from other visible apps. To fix this, add the following to your module-level\nbenchmark:     build.gradle:\nbenchmark:         android.defaultConfig.testInstrumentationRunner\nbenchmark:             = \"androidx.benchmark.junit4.AndroidBenchmarkRunner\" \nbenchmark: \nbenchmark:    30,377,000 ns DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_MyBenchmarkTest.benchmarkSomeWork"
+    }
+  }
+  logcat: "--------- beginning of main\n04-17 13:48:29.853 10135 20721 20721 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n04-17 13:48:29.859 10135 20721 20752 I GrantPermissionCallable: Permission: android.permission.READ_EXTERNAL_STORAGE is already granted!\n04-17 13:48:29.860 10135 20721 20752 I GrantPermissionCallable: Permission: android.permission.WRITE_EXTERNAL_STORAGE is already granted!\n04-17 13:48:29.860 10135 20721 20752 I BenchmarkRule: Running com.example.myapplication.benchmarkexample.MyBenchmarkTest#benchmarkSomeWork\n--------- beginning of system\n04-17 13:48:29.887  1000  2049  5782 W AppOps  : Noting op not finished: uid 10102 pkg com.google.android.gms code 41 time=1587156504086 duration=0\n04-17 13:48:29.989 10135 20721 20752 D Benchmark: Clocks not locked: online cores with min freq == min avail freq\n04-17 13:48:29.989 10135 20721 20752 D Benchmark: cpu0 CoreDir(online=true, availableFreqs=[-1], currentMinFreq=-1, maxFreqKhz=-1)\n04-17 13:48:29.989 10135 20721 20752 D Benchmark: cpu1 CoreDir(online=true, availableFreqs=[-1], currentMinFreq=-1, maxFreqKhz=-1)\n04-17 13:48:29.989 10135 20721 20752 D Benchmark: cpu2 CoreDir(online=true, availableFreqs=[-1], currentMinFreq=-1, maxFreqKhz=-1)\n04-17 13:48:29.990 10135 20721 20752 D Benchmark: cpu3 CoreDir(online=true, availableFreqs=[-1], currentMinFreq=-1, maxFreqKhz=-1)\n04-17 13:48:30.008 10135 20721 20752 W Benchmark: \n04-17 13:48:30.008 10135 20721 20752 W Benchmark: WARNING: Debuggable Benchmark\n04-17 13:48:30.008 10135 20721 20752 W Benchmark:     Benchmark is running with debuggable=true, which drastically reduces\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     runtime performance in order to support debugging features. Run\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     benchmarks with debuggable=false. Debuggable affects execution speed\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     in ways that mean benchmark improvements might not carry over to a\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     real user\'s experience (or even regress release performance). \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: WARNING: Running on Emulator\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     Benchmark is running on an emulator, which is not representative of\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     real user devices. Use a physical device to benchmark. Emulator\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     benchmark improvements might not carry over to a real user\'s\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     experience (or even regress real device performance). \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: WARNING: Unlocked CPU clocks\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     Benchmark appears to be running on a rooted device with unlocked CPU\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     clocks. Unlocked CPU clocks can lead to inconsistent results due to\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     dynamic frequency scaling, and thermal throttling. On a rooted device,\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     lock your device clocks to a stable frequency with `./gradlew lockClocks` \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: WARNING: Not using IsolationActivity via AndroidBenchmarkRunner\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     AndroidBenchmarkRunner should be used to isolate benchmarks from interference\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     from other visible apps. To fix this, add the following to your module-level\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:     build.gradle:\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:         android.defaultConfig.testInstrumentationRunner\n04-17 13:48:30.009 10135 20721 20752 W Benchmark:             = \"androidx.benchmark.junit4.AndroidBenchmarkRunner\" \n04-17 13:48:30.009 10135 20721 20752 W Benchmark: \n04-17 13:48:30.036 10135 20721 20752 I enchmarkexampl: Explicit concurrent copying GC freed 11246(1853KB) AllocSpace objects, 3(60KB) LOS objects, 57% free, 1153KB/2689KB, paused 1.321ms total 24.350ms\n04-17 13:48:30.410 10092  2949  3881 E ActivityThread: Failed to find provider info for com.google.android.apps.wellbeing.api\n04-17 13:48:30.809   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: a: input svInfo.flags is 8\n04-17 13:48:30.809   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: b: input svInfo.flags is 8\n04-17 13:48:31.069  1000  2049  5782 E memtrack: Couldn\'t load memtrack module\n04-17 13:48:31.069  1000  2049  5782 W android.os.Debug: failed to get memory consumption info: -1\n04-17 13:48:31.366 10135 20721 20752 D WarmupManager: Complete: t=1.329, iter=42, fastAvg=31847862, slowAvg=31684248\n04-17 13:48:31.439 10106  3656  3813 I MicroDetectionWorker: #startMicroDetector [speakerMode: 0]\n04-17 13:48:31.440 10106  3656  3813 W ErrorReporter: reportError [type: 211, code: 393244, bug: 0]: errorCode: 393244, engine: 0\n04-17 13:48:31.441 10106  3656  3813 I MicroDetector: Keeping mic open: false\n04-17 13:48:31.442 10106  3656  3813 I MicroDetectionWorker: #onError(false)\n04-17 13:48:31.814   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: a: input svInfo.flags is 8\n04-17 13:48:31.814   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: b: input svInfo.flags is 8\n04-17 13:48:32.283 10102  3375  3395 W ocess.gservice: Reducing the number of considered missed Gc histogram windows from 320 to 100\n04-17 13:48:32.311  root  1967  1967 E wifi_forwarder: RemoteConnection failed to initialize: RemoteConnection failed to open pipe\n04-17 13:48:32.815   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: a: input svInfo.flags is 8\n04-17 13:48:32.815   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: b: input svInfo.flags is 8\n04-17 13:48:32.975 10135 20721 20752 I Benchmark: DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_MyBenchmarkTest.benchmarkSomeWorkSummary: median=31793000ns, mean=31965740ns, min=30377000ns, stddev=1156200ns, count=1\n"
+}
+test_status {
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.benchmarkexample.MyBenchmarkTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 2
+    }
+    entries {
+      key: "stream"
+      value_string: "."
+    }
+    entries {
+      key: "test"
+      value_string: "benchmarkSomeWork"
+    }
+  }
+}
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.benchmarkexample.MyBenchmarkTest"
+    }
+    entries {
+      key: "current"
+      value_int: 2
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 2
+    }
+    entries {
+      key: "stream"
+    }
+    entries {
+      key: "test"
+      value_string: "benchmarkSomeWork2"
+    }
+  }
+}
+
+test_status {
+  result_code: -1
+  results {
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_count"
+      value_long: 1
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_mean"
+      value_long: 31797760
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_median"
+      value_long: 31578500
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_min"
+      value_long: 30557000
+    }
+    entries {
+      key: "DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_standardDeviation"
+      value_long: 908908
+    }
+    entries {
+      key: "android.studio.display.benchmark"
+      value_string: "   30,557,000 ns DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_MyBenchmarkTest.benchmarkSomeWork2"
+    }
+  }
+  logcat: "--------- beginning of main\n04-17 13:48:33.096 10135 20721 20752 I TestRunner: started: benchmarkSomeWork2(com.example.myapplication.benchmarkexample.MyBenchmarkTest)\n04-17 13:48:33.097 10135 20721 20721 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n04-17 13:48:33.098 10135 20721 20752 I GrantPermissionCallable: Permission: android.permission.READ_EXTERNAL_STORAGE is already granted!\n04-17 13:48:33.098 10135 20721 20752 I GrantPermissionCallable: Permission: android.permission.WRITE_EXTERNAL_STORAGE is already granted!\n04-17 13:48:33.098 10135 20721 20752 I BenchmarkRule: Running com.example.myapplication.benchmarkexample.MyBenchmarkTest#benchmarkSomeWork2\n04-17 13:48:33.106 10135 20721 20752 I enchmarkexampl: Explicit concurrent copying GC freed 913(111KB) AllocSpace objects, 0(0B) LOS objects, 57% free, 1154KB/2690KB, paused 544us total 7.332ms\n04-17 13:48:33.818   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: a: input svInfo.flags is 8\n04-17 13:48:33.819   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: b: input svInfo.flags is 8\n04-17 13:48:34.447 10135 20721 20752 D WarmupManager: Complete: t=1.341, iter=42, fastAvg=31835814, slowAvg=32226032\n04-17 13:48:34.823   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: a: input svInfo.flags is 8\n04-17 13:48:34.823   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: b: input svInfo.flags is 8\n--------- beginning of system\n04-17 13:48:34.831  1000  2049  5782 W AppOps  : Noting op not finished: uid 10102 pkg com.google.android.gms code 41 time=1587156509887 duration=0\n04-17 13:48:35.827   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: a: input svInfo.flags is 8\n04-17 13:48:35.827   gps  1799  2521 E GnssHAL_GnssInterface: gnssSvStatusCb: b: input svInfo.flags is 8\n04-17 13:48:36.041 10135 20721 20752 I Benchmark: DEBUGGABLE_EMULATOR_UNLOCKED_ACTIVITY-MISSING_MyBenchmarkTest.benchmarkSomeWork2Summary: median=31578500ns, mean=31797760ns, min=30557000ns, stddev=908908ns, count=1\n"
+}
+test_status {
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.benchmarkexample.MyBenchmarkTest"
+    }
+    entries {
+      key: "current"
+      value_int: 2
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 2
+    }
+    entries {
+      key: "stream"
+      value_string: "."
+    }
+    entries {
+      key: "test"
+      value_string: "benchmarkSomeWork2"
+    }
+  }
+}
+
+session_status {
+  result_code: -1
+  results {
+    entries {
+      key: "stream"
+      value_string: "\n\nTime: 6.46\n\nOK (2 tests)\n\n"
+    }
+  }
+}

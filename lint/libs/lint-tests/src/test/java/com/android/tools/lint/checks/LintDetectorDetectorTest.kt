@@ -285,60 +285,6 @@ class LintDetectorDetectorTest {
                         }
                     """
                 ).indented(),
-                kotlin(
-                    """
-                        package test.pkg
-                        import com.android.tools.lint.checks.infrastructure.LintDetectorTest
-                        import com.android.tools.lint.detector.api.Detector
-
-                        class MyKotlinLintDetectorTest : LintDetectorTest() {
-                            override fun getDetector(): Detector {
-                                return MyKotlinLintDetector()
-                            }
-
-                            fun testBasic() {
-                                val expected = ""${'"'}
-                                    src/test/pkg/AlarmTest.java:9: Warning: Value will be forced up to 5000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]
-                                            alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 50, 10, null); // ERROR
-                                                                                                     ~~
-                                    0 errors, 1 warnings
-                                    ""${'"'}
-
-                                lint().files(
-                                    kotlin(
-                                        ""${'"'}
-                                        fun test() {
-                                            println("Value=${"$"}{"$"}")
-                                        }
-                                        ""${'"'}
-                                    ),
-                                    java(
-                                        "src/test/pkg/AlarmTest.java",
-                                        ""${'"'}
-                                            package test.pkg;
-
-                                            import android.app.AlarmManager;
-                                            @SuppressWarnings("ClassNameDiffersFromFileName")
-                                            public class AlarmTest {
-                                                public void test(AlarmManager alarmManager) {
-                                                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 5000, 60000, null); // OK
-                                                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 6000, 70000, null); // OK
-                                                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 50, 10, null); // ERROR
-                                                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 5000,  // ERROR
-                                                            OtherClass.MY_INTERVAL, null);                          // ERROR
-                                                }
-
-                                                private static class OtherClass {
-                                                    public static final long MY_INTERVAL = 1000L;
-                                                }
-                                            }
-                                            ""${'"'}.trimIndent()
-                                    )
-                                ).run().expect(expected)
-                            }
-                        }
-                    """
-                ).indented(),
                 *getLintClassPath()
             )
             .issues(

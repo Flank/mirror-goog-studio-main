@@ -19,7 +19,6 @@ package com.android.tools.idea.wizard.template.impl.other.customView
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
@@ -37,7 +36,7 @@ val customViewTemplate
   get() = template {
     revision = 1
     name = "Custom View"
-    description = "Creates a new custom view that extends android.view.View and exposes custom attributes."
+    description = "Creates a new custom view that extends android.view.View and exposes custom attributes"
 
     formFactor = FormFactor.Mobile
     category = Category.UiComponent

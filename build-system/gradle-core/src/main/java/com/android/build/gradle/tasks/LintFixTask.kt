@@ -60,6 +60,8 @@ open class LintFixTask : LintBaseTask() {
         override fun getVariantInputs(variantName: String): LintBaseTask.VariantInputs? {
             return variantInputMap!![variantName]
         }
+
+        override fun getVariantNames(): Set<String> = variantInputMap?.keys ?: emptySet()
     }
 
     class GlobalCreationAction(

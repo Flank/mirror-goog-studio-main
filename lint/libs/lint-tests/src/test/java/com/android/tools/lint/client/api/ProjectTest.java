@@ -97,7 +97,7 @@ public class ProjectTest extends AbstractCheckTest {
     public void testInvalidLibraryReferences1() {
         TestClient client = new TestClient();
         File dir = new File("project");
-        TestProject project1 = new TestProject(client, dir);
+        Project project1 = Project.create(client, dir, dir);
         client.registerProject(dir, project1);
         project1.setDirectLibraries(Collections.singletonList(project1));
         List<Project> libraries = project1.getAllLibraries();
@@ -111,9 +111,9 @@ public class ProjectTest extends AbstractCheckTest {
         TestClient client = new TestClient();
         File dir1 = new File("project1");
         File dir2 = new File("project2");
-        TestProject project1 = new TestProject(client, dir1);
+        Project project1 = Project.create(client, dir1, dir1);
         client.registerProject(dir1, project1);
-        TestProject project2 = new TestProject(client, dir2);
+        Project project2 = Project.create(client, dir2, dir2);
         client.registerProject(dir2, project2);
         project2.setDirectLibraries(Collections.singletonList(project1));
         project1.setDirectLibraries(Collections.singletonList(project2));
@@ -133,11 +133,11 @@ public class ProjectTest extends AbstractCheckTest {
         File dir1 = new File("project1");
         File dir2 = new File("project2");
         File dir3 = new File("project3");
-        TestProject project1 = new TestProject(client, dir1);
+        Project project1 = Project.create(client, dir1, dir1);
         client.registerProject(dir1, project1);
-        TestProject project2 = new TestProject(client, dir2);
+        Project project2 = Project.create(client, dir2, dir2);
         client.registerProject(dir2, project2);
-        TestProject project3 = new TestProject(client, dir3);
+        Project project3 = Project.create(client, dir3, dir3);
         client.registerProject(dir3, project3);
         project1.setDirectLibraries(Arrays.asList(project2, project3));
         project2.setDirectLibraries(Collections.singletonList(project3));
@@ -170,16 +170,6 @@ public class ProjectTest extends AbstractCheckTest {
 
         public String getLoggedOutput() {
             return mLog.toString();
-        }
-    }
-
-    private static class TestProject extends Project {
-        protected TestProject(@NonNull LintClient client, @NonNull File dir) {
-            super(client, dir, dir);
-        }
-
-        public void setDirectLibraries(List<Project> libraries) {
-            directLibraries = libraries;
         }
     }
 

@@ -68,7 +68,7 @@ val settingsActivityTemplate
     val multipleScreens = booleanParameter {
       name = "Split settings hierarchy into separate sub-screens"
       default = false
-      help = "If true, this activity will have a main settings screen that links to separate settings screens. "
+      help = "If true, this activity will have a main settings screen that links to separate settings screens"
     }
 
     val packageName = defaultPackageNameParameter

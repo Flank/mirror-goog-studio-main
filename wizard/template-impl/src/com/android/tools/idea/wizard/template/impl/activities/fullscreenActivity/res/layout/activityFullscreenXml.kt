@@ -16,15 +16,21 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.layout
 
+import com.android.tools.idea.wizard.template.ThemesData
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenButtonBarStyle
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenContainerThemeOverlay
 
 fun activityFullscreenXml(
   activityClass: String,
-  packageName: String) =
+  packageName: String,
+  themesData: ThemesData
+) =
   """<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:theme="@style/${getFullscreenContainerThemeOverlay(themesData.overlay.name)}"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
+    android:background="?attr/fullscreenBackgroundColor"
     tools:context="${packageName}.${activityClass}">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -33,8 +39,8 @@ fun activityFullscreenXml(
     <TextView android:id="@+id/fullscreen_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:textColor="?attr/fullscreenTextColor"
         android:keepScreenOn="true"
-        android:textColor="#33b5e5"
         android:textStyle="bold"
         android:textSize="50sp"
         android:gravity="center"
@@ -47,16 +53,15 @@ fun activityFullscreenXml(
         android:fitsSystemWindows="true">
 
         <LinearLayout android:id="@+id/fullscreen_content_controls"
-            style="?metaButtonBarStyle"
+            style="@style/${getFullscreenButtonBarStyle(themesData.main.name)}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/black_overlay"
             android:orientation="horizontal"
             tools:ignore="UselessParent">
 
             <Button android:id="@+id/dummy_button"
-                style="?metaButtonBarButtonStyle"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

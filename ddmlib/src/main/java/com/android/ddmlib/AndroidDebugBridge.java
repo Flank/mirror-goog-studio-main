@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DeviceMonitor;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleAppName;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHeap;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
@@ -67,7 +68,7 @@ import java.util.stream.Collectors;
  * <p>This is the central point to communicate with any devices, emulators, or the applications
  * running on them.
  *
- * <p><b>{@link #init(boolean)} must be called before anything is done.</b>
+ * <p><b>{@link #init} must be called before anything is done.</b>
  */
 public class AndroidDebugBridge {
     /**
@@ -106,7 +107,7 @@ public class AndroidDebugBridge {
     private static AndroidDebugBridge sThis;
     private static boolean sInitialized = false;
     private static boolean sClientSupport;
-    private static Map<String, String> sEnv; // env vars to set while launching adb
+    private static Map<String, String> sAdbEnvVars; // env vars to set while launching adb
 
     /** Full path to adb. */
     private String mAdbOsLocation = null;
@@ -216,18 +217,17 @@ public class AndroidDebugBridge {
     }
 
     /**
-     * Initialized the library only if needed.
+     * Initialized the library only if needed; deprecated for non-test usages.
      *
      * @param clientSupport Indicates whether the library should enable the monitoring and
-     *                      interaction with applications running on the devices.
-     *
+     *     interaction with applications running on the devices.
      * @see #init(boolean)
      */
+    @Deprecated
     public static synchronized void initIfNeeded(boolean clientSupport) {
         if (sInitialized) {
             return;
         }
-
         init(clientSupport);
     }
 
@@ -235,24 +235,6 @@ public class AndroidDebugBridge {
      * Initializes the <code>ddm</code> library.
      *
      * <p>This must be called once <b>before</b> any call to {@link #createBridge(String, boolean)}.
-     *
-     * <p>The library can be initialized in 2 ways:
-     *
-     * <ul>
-     *   <li>Mode 1: <var>clientSupport</var> == <code>true</code>.<br>
-     *       The library monitors the devices and the applications running on them. It will connect
-     *       to each application, as a debugger of sort, to be able to interact with them through
-     *       JDWP packets.
-     *   <li>Mode 2: <var>clientSupport</var> == <code>false</code>.<br>
-     *       The library only monitors devices. The applications are left untouched, letting other
-     *       tools built on <code>ddmlib</code> to connect a debugger to them.
-     * </ul>
-     *
-     * <p><b>Only one tool can run in mode 1 at the same time.</b>
-     *
-     * <p>Note that mode 1 does not prevent debugging of applications running on devices. Mode 1
-     * lets debuggers connect to <code>ddmlib</code> which acts as a proxy between the debuggers and
-     * the applications to debug. See {@link ClientImpl#getDebuggerListenPort()}.
      *
      * <p>The preferences of <code>ddmlib</code> should also be initialized with whatever default
      * values were changed from the default values.
@@ -265,7 +247,7 @@ public class AndroidDebugBridge {
      * @see DdmPreferences
      */
     public static synchronized void init(boolean clientSupport) {
-        init(clientSupport, ImmutableMap.of());
+        init(clientSupport, false, ImmutableMap.of());
     }
 
     /**
@@ -273,19 +255,19 @@ public class AndroidDebugBridge {
      */
     public static synchronized void init(
       boolean clientSupport, boolean useLibusb, @NonNull Map<String, String> env) {
-        init(clientSupport, new ImmutableMap.Builder<String, String>()
-          .putAll(env)
-          .put("ADB_LIBUSB", useLibusb ? "1" : "0")
-          .build());
+        init(AdbInitOptions.builder()
+               .withEnv(env)
+               .setClientSupportEnabled(clientSupport)
+               .withEnv("ADB_LIBUSB", useLibusb ? "1" : "0").build());
     }
 
     /** Similar to {@link #init(boolean)}, with ability to pass a custom set of env. variables. */
-    public static synchronized void init(boolean clientSupport, @NonNull Map<String, String> env) {
+    public static synchronized void init(AdbInitOptions options) {
         Preconditions.checkState(
                 !sInitialized, "AndroidDebugBridge.init() has already been called.");
         sInitialized = true;
-        sClientSupport = clientSupport;
-        sEnv = env;
+        sClientSupport = options.clientSupport;
+        sAdbEnvVars = options.adbEnvVars;
         String userManagedAdbModeSetting = System.getenv(USER_MANAGED_ADB_ENV_VAR);
         if (userManagedAdbModeSetting != null) {
             sUserManagedAdbMode = Boolean.parseBoolean(userManagedAdbModeSetting);
@@ -1251,7 +1233,7 @@ public class AndroidDebugBridge {
             Log.d(DDMS, String.format("Launching '%1$s' to ensure ADB is running.", commandString));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Map<String, String> env = processBuilder.environment();
-            sEnv.forEach(env::put);
+            sAdbEnvVars.forEach(env::put);
             if (DdmPreferences.getUseAdbHost()) {
                 String adbHostValue = DdmPreferences.getAdbHostValue();
                 if (adbHostValue != null && !adbHostValue.isEmpty()) {

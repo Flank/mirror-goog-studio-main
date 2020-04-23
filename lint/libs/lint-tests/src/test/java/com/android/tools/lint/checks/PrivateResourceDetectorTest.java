@@ -125,7 +125,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     public void testPrivateInXml() {
         String expected =
                 ""
-                        + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
+                        + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library:1.0.0 [PrivateResource]\n"
                         + "            android:text=\"@string/my_private_string\" />\n"
                         + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -159,7 +159,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     public void testPrivateInJava() {
         String expected =
                 ""
-                        + "src/main/java/test/pkg/Private.java:4: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
+                        + "src/main/java/test/pkg/Private.java:4: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library:1.0.0 [PrivateResource]\n"
                         + "        int x = R.string.my_private_string; // ERROR\n"
                         + "                         ~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -214,17 +214,17 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     public void testOverride() {
         String expected =
                 ""
-                        + "res/layout/my_private_layout.xml: Warning: Overriding @layout/my_private_layout which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
-                        + "res/values/strings.xml:5: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "res/layout/my_private_layout.xml: Warning: Overriding @layout/my_private_layout which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "res/values/strings.xml:5: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                         + "    <string name=\"my_private_string\">String 1</string>\n"
                         + "                  ~~~~~~~~~~~~~~~~~\n"
-                        + "res/values/strings.xml:9: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "res/values/strings.xml:9: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                         + "    <item type=\"string\" name=\"my_private_string\">String 1</item>\n"
                         + "                              ~~~~~~~~~~~~~~~~~\n"
-                        + "res/values/strings.xml:12: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "res/values/strings.xml:12: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                         + "    <string tools:override=\"false\" name=\"my_private_string\">String 2</string>\n"
                         + "                                         ~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n";
+                        + "0 errors, 4 warnings";
 
         lint().files(
                         xml(

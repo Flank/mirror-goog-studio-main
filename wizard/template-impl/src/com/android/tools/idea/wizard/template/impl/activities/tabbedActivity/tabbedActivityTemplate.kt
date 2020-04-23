@@ -46,7 +46,7 @@ val tabbedActivityTemplate
     name = "Tabbed Activity"
     minApi = MIN_API
     minBuildApi = MIN_API
-    description = "Creates a new blank activity with tabs."
+    description = "Creates a new blank activity with tabs"
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
@@ -80,7 +80,7 @@ val tabbedActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "MainActivity"
-      help = "The name of the activity. For launcher activities, the application title."
+      help = "The name of the activity. For launcher activities, the application title"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }

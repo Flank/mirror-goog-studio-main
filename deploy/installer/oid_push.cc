@@ -31,15 +31,21 @@ const int kRwFileMode =
 const int kRxFileMode =
     S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
-// Only one argument, the OID is expected.
+// 4 Arguments:
+//   Package Name
+//   Previous OID
+//   Next OID
+//   Clear Overlays (true/false)
 void OverlayIdPushCommand::ParseParameters(int argc, char** argv) {
-  if (argc < 3) {
+  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
+  std::string data;
+  if (!wrapper.Read(&data)) {
     return;
   }
 
-  package_name_ = argv[0];
-  oid_ = argv[1];
-  clear_overlays_ = strcmp(argv[2], "true") == 0;
+  if (!request_.ParseFromString(data)) {
+    return;
+  }
 
   ready_to_run_ = true;
 }
@@ -121,14 +127,14 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   proto::InstallServerRequest install_request;
   install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
   auto update_request = install_request.mutable_overlay_request();
-  update_request->set_overlay_id(oid_);
-  update_request->set_expected_overlay_id("");
+  update_request->set_expected_overlay_id(request_.prev_oid());
+  update_request->set_overlay_id(request_.next_oid());
   update_request->set_overlay_path("code_cache");
-  update_request->set_wipe_all_files(clear_overlays_);
+  update_request->set_wipe_all_files(request_.wipe_overlays());
 
   std::unique_ptr<InstallClient> client_ = StartInstallServer(
       workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
-      package_name_, kInstallServer + "-" + workspace_.GetVersion());
+      request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_->Write(install_request)) {
     // TODO Error Handling.

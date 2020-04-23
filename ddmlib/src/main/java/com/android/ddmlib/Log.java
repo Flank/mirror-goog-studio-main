@@ -18,6 +18,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -251,7 +252,7 @@ public final class Log {
         }
     }
 
-    static void setLevel(LogLevel logLevel) {
+    public static void setLevel(LogLevel logLevel) {
         sLevel = logLevel;
     }
 

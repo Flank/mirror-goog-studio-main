@@ -39,7 +39,7 @@ val navigationDrawerActivityTemplate = template {
   name = "Navigation Drawer Activity"
   minApi = MIN_API
   minBuildApi = MIN_API
-  description = "Creates a new Activity with a Navigation Drawer."
+  description = "Creates a new Activity with a Navigation Drawer"
 
   category = Category.Activity
   formFactor = FormFactor.Mobile
@@ -66,7 +66,7 @@ val navigationDrawerActivityTemplate = template {
   val activityTitle = stringParameter {
     name = "Title"
     default = "MainActivity"
-    help = "The name of the activity. For launcher activities, the application title."
+    help = "The name of the activity. For launcher activities, the application title"
     constraints = listOf(Constraint.NONEMPTY)
     suggest = { activityClass.value }
     visible = { false }

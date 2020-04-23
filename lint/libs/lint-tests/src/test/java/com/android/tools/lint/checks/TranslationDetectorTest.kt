@@ -916,13 +916,13 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         flavorDimensions  "pricing", "releaseType"
                         productFlavors {
                             beta {
-                                flavorDimension "releaseType"
+                                dimension "releaseType"
                                 resConfig "en", "de"
                                 resConfigs "nodpi", "hdpi"
                             }
-                            normal { flavorDimension "releaseType" }
-                            free { flavorDimension "pricing" }
-                            paid { flavorDimension "pricing" }
+                            normal { dimension "releaseType" }
+                            free { dimension "pricing" }
+                            paid { dimension "pricing" }
                         }
                     }"""
             )
@@ -958,13 +958,13 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         flavorDimensions  "pricing", "releaseType"
                         productFlavors {
                             beta {
-                                flavorDimension "releaseType"
+                                dimension "releaseType"
                                 resConfig "en", "de"
                                 resConfigs "nodpi", "hdpi"
                             }
-                            normal { flavorDimension "releaseType" }
-                            free { flavorDimension "pricing" }
-                            paid { flavorDimension "pricing" }
+                            normal { dimension "releaseType" }
+                            free { dimension "pricing" }
+                            paid { dimension "pricing" }
                         }
                     }"""
             )

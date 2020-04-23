@@ -9,10 +9,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProductFlavor;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -38,7 +38,7 @@ public class BuildConfigTest {
     private static AndroidProject model;
 
     @BeforeClass
-    public static void setUp() throws IOException, InterruptedException {
+    public static void setUp() throws IOException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -104,7 +104,20 @@ public class BuildConfigTest {
     }
 
     @Test
-    public void builFlavor1Debug() throws IOException {
+    public void modelDefaultConfig() {
+        Map<String, String> map = Maps.newHashMap();
+        map.put("VALUE_DEFAULT", "1");
+        map.put("VALUE_FLAVOR", "1");
+        map.put("VALUE_DEBUG", "1");
+        map.put("VALUE_VARIANT", "1");
+        checkMaps(
+                map,
+                model.getDefaultConfig().getProductFlavor().getBuildConfigFields(),
+                "defaultConfig");
+    }
+
+    @Test
+    public void buildFlavor1Debug() throws IOException {
         String expected =
                 "/**\n"
                         + " * Automatically generated file. DO NOT MODIFY\n"
@@ -118,26 +131,25 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor1\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from the variant\n"
-                        + "  public static final int VALUE_VARIANT = 1000;\n"
-                        + "  // Fields from build type: debug\n"
+                        + "  // Field from build type: debug\n"
                         + "  public static final int VALUE_DEBUG = 100;\n"
-                        + "  // Fields from product flavor: flavor1\n"
-                        + "  public static final int VALUE_FLAVOR = 10;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor1\n"
+                        + "  public static final int VALUE_FLAVOR = 10;\n"
+                        + "  // Field from the variant API\n"
+                        + "  public static final int VALUE_VARIANT = 1000;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor1/debug");
     }
 
     @Test
-    public void modelFlavor1Debug() {
+    public void modelFlavor1() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
         map.put("VALUE_FLAVOR", "10");
-        map.put("VALUE_DEBUG", "100");
-        map.put("VALUE_VARIANT", "1000");
-        checkVariant(model, "flavor1Debug", map);
+        map.put("VALUE_DEBUG", "10");
+        map.put("VALUE_VARIANT", "10");
+        checkFlavor(model, "flavor1", map);
     }
 
     @Test
@@ -155,26 +167,26 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor2\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from the variant\n"
-                        + "  public static final int VALUE_VARIANT = 1000;\n"
-                        + "  // Fields from build type: debug\n"
+                        + "  // Field from build type: debug\n"
                         + "  public static final int VALUE_DEBUG = 100;\n"
-                        + "  // Fields from product flavor: flavor2\n"
-                        + "  public static final int VALUE_FLAVOR = 20;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor2\n"
+                        + "  public static final int VALUE_FLAVOR = 20;\n"
+                        + "  // Field from the variant API\n"
+                        + "  public static final int VALUE_VARIANT = 1000;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor2/debug");
     }
 
     @Test
-    public void modelFlavor2Debug() {
+    public void modelDebug() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
-        map.put("VALUE_FLAVOR", "20");
+        //        map.put("VALUE_DEFAULT", "1");
+        // map.put("VALUE_FLAVOR", "20");
         map.put("VALUE_DEBUG", "100");
-        map.put("VALUE_VARIANT", "1000");
-        checkVariant(model, "flavor2Debug", map);
+        map.put("VALUE_VARIANT", "100");
+        checkBuildType(model, "debug", map);
     }
 
     @Test
@@ -192,24 +204,26 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor1\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from product flavor: flavor1\n"
+                        + "  // Field from product flavor: flavor1\n"
                         + "  public static final int VALUE_DEBUG = 10;\n"
-                        + "  public static final int VALUE_FLAVOR = 10;\n"
-                        + "  public static final int VALUE_VARIANT = 10;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor1\n"
+                        + "  public static final int VALUE_FLAVOR = 10;\n"
+                        + "  // Field from product flavor: flavor1\n"
+                        + "  public static final int VALUE_VARIANT = 10;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor1/release");
     }
 
     @Test
-    public void modelFlavor1Release() {
+    public void modelFlavor2() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
+        //        map.put("VALUE_DEFAULT", "1");
         map.put("VALUE_FLAVOR", "10");
         map.put("VALUE_DEBUG", "10");
         map.put("VALUE_VARIANT", "10");
-        checkVariant(model, "flavor1Release", map);
+        checkFlavor(model, "flavor1", map);
     }
 
     @Test
@@ -227,24 +241,22 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor2\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
-                        + "  // Fields from product flavor: flavor2\n"
+                        + "  // Field from product flavor: flavor2\n"
                         + "  public static final int VALUE_DEBUG = 20;\n"
-                        + "  public static final int VALUE_FLAVOR = 20;\n"
-                        + "  public static final int VALUE_VARIANT = 20;\n"
-                        + "  // Fields from default config.\n"
+                        + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from product flavor: flavor2\n"
+                        + "  public static final int VALUE_FLAVOR = 20;\n"
+                        + "  // Field from product flavor: flavor2\n"
+                        + "  public static final int VALUE_VARIANT = 20;\n"
                         + "}\n";
         doCheckBuildConfig(expected, "flavor2/release");
     }
 
     @Test
-    public void modelFlavor2Release() {
+    public void modelRelease() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
-        map.put("VALUE_FLAVOR", "20");
-        map.put("VALUE_DEBUG", "20");
-        map.put("VALUE_VARIANT", "20");
-        checkVariant(model, "flavor2Release", map);
+        checkBuildType(model, "release", map);
     }
 
     private static void doCheckBuildConfig(@NonNull String expected, @NonNull String variantDir)
@@ -267,27 +279,40 @@ public class BuildConfigTest {
         assertEquals(expected, Files.asByteSource(outputFile).asCharSource(Charsets.UTF_8).read());
     }
 
-    private static void checkVariant(
+    private static void checkFlavor(
             @NonNull AndroidProject androidProject,
-            @NonNull final String variantName,
+            @NonNull final String flavorName,
             @Nullable Map<String, String> valueMap) {
-        Variant variant = AndroidProjectUtils.findVariantByName(androidProject, variantName);
-        assertNotNull(variantName + " variant null-check", variant);
+        ProductFlavor productFlavor =
+                AndroidProjectUtils.getProductFlavor(androidProject, flavorName).getProductFlavor();
+        assertNotNull(flavorName + " flavor null-check", productFlavor);
 
-        AndroidArtifact artifact = variant.getMainArtifact();
-        assertNotNull(variantName + " main artifact null-check", artifact);
+        checkMaps(valueMap, productFlavor.getBuildConfigFields(), flavorName);
+    }
 
-        Map<String, ClassField> value = artifact.getBuildConfigFields();
+    private static void checkBuildType(
+            @NonNull AndroidProject androidProject,
+            @NonNull final String buildTypeName,
+            @Nullable Map<String, String> valueMap) {
+        BuildType buildType =
+                AndroidProjectUtils.getBuildType(androidProject, buildTypeName).getBuildType();
+        assertNotNull(buildTypeName + " flavor null-check", buildType);
+
+        checkMaps(valueMap, buildType.getBuildConfigFields(), buildTypeName);
+    }
+
+    private static void checkMaps(
+            @Nullable Map<String, String> valueMap,
+            @Nullable Map<String, ClassField> value,
+            @NonNull String name) {
         assertNotNull(value);
 
         // check the map against the expected one.
         assertEquals(valueMap.keySet(), value.keySet());
         for (String key : valueMap.keySet()) {
             ClassField field = value.get(key);
-            assertNotNull(variantName + ": expected field " + key, field);
-            assertEquals(
-                    variantName + ": check Value of " + key, valueMap.get(key), field.getValue());
+            assertNotNull(name + ": expected field " + key, field);
+            assertEquals(name + ": check Value of " + key, valueMap.get(key), field.getValue());
         }
-
     }
 }

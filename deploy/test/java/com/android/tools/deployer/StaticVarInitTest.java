@@ -185,7 +185,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                         "app/StaticVarInit$AddStaticFinalPrimitives.dex",
                         false,
                         Deploy.ClassDef.FieldReInitState.newBuilder()
-                                .setName("STATjC")
+                                .setName("STATIC")
                                 .setType("Z")
                                 .setStaticVar(true)
                                 .setValue("true")

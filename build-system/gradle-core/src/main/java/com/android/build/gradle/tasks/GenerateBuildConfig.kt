@@ -15,19 +15,20 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.compiling.BuildConfigGenerator
-import com.android.builder.model.ClassField
 import com.android.utils.FileUtils
-import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -89,27 +90,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     @get:Internal
     abstract val hasVersionInfo: Property<Boolean>
 
-    val itemValues: List<String>
-        @Input
-        get() {
-            val resolvedItems = items.get()
-            val list = Lists.newArrayListWithCapacity<String>(resolvedItems.size * 3)
-
-            for (item in resolvedItems) {
-                when (item) {
-                    is String -> list.add(item)
-                    is ClassField -> list.apply {
-                        add(item.type)
-                        add(item.name)
-                        add(item.value)
-                    }
-                }
-            }
-            return list
-        }
-
-    @get:Internal // handled by getItemValues()
-    abstract val items: ListProperty<Any>
+    @get:Input
+    abstract val items: MapProperty<String, BuildConfigField>
 
     @get:InputFiles
     @get:Optional
@@ -188,8 +170,10 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 )
         }
 
-        // user generated items
-        generator.addItems(items.get())
+        // user generated items, order them by field name so generation is stable.
+        items.get().toSortedMap().forEach { (name, buildConfigField) ->
+            generator.addField(buildConfigField.type, name, buildConfigField.value, buildConfigField.comment)
+        }
 
         generator.generate()
     }
@@ -253,7 +237,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 variantDslInfo.flavorNamesWithDimensionNames
             })
 
-            task.items.setDisallowChanges(project.provider { variantDslInfo.buildConfigItems })
+            if (creationConfig is VariantCreationConfig) {
+                task.items.set(creationConfig.buildConfigFields)
+            }
 
             if (creationConfig.variantType.isTestComponent) {
                 creationConfig.operations.setTaskInputToFinalProduct(

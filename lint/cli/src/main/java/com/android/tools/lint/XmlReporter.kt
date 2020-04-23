@@ -25,7 +25,6 @@ import com.android.tools.lint.detector.api.TextFormat.RAW
 import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils.toXmlAttributeValue
 import com.google.common.annotations.Beta
-import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.io.Files
 import java.io.BufferedWriter

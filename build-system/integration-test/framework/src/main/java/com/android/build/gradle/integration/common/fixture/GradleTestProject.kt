@@ -1319,12 +1319,14 @@ allprojects { proj ->
      * failure.
      *
      * @param tasks Variadic list of tasks to execute.
+     * @param setupBlock Setup function for the GradleTaskExecutor and ModelBuilder
      * @return the output models for the project as map of output model name (variant name +
      * artifact name) to the associated [BuiltArtifacts]
      */
-    fun executeAndReturnOutputModels(vararg tasks: String): Map<String, BuiltArtifacts> {
-        executor().run(*tasks)
-        val androidProjectModelContainer = model().ignoreSyncIssues().fetchAndroidProjects()
+    @JvmOverloads
+    fun executeAndReturnOutputModels(setupBlock: (BaseGradleExecutor<*>) -> Unit = {}, vararg tasks: String): Map<String, BuiltArtifacts> {
+        executor().also(setupBlock).run(*tasks)
+        val androidProjectModelContainer = model().also(setupBlock).ignoreSyncIssues().fetchAndroidProjects()
         val onlyModel = androidProjectModelContainer.onlyModel
         val mapOfVariantOutputs = ImmutableMap.builder<String, BuiltArtifacts>()
         for (variant in onlyModel.variants) {
@@ -1341,8 +1343,8 @@ allprojects { proj ->
                 if (!extraModelFile.isEmpty()) {
                     val extraBuiltArtifacts: BuiltArtifacts? =
                         loadFromFile(
-                            File(postModelFile),
-                            File(postModelFile).parentFile.toPath()
+                            File(extraModelFile),
+                            File(extraModelFile).parentFile.toPath()
                         )
                     if (extraBuiltArtifacts != null) {
                         mapOfVariantOutputs.put(

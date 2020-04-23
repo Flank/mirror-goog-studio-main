@@ -15,7 +15,9 @@
  */
 package com.android.tools.mlkit;
 
+import com.android.tools.mlkit.exception.TfliteModelException;
 import com.google.common.base.Strings;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
@@ -80,8 +82,13 @@ public class ModelInfo {
         return metaDataExisted;
     }
 
-    public static ModelInfo buildFrom(MetadataExtractor extractor) throws ModelParsingException {
-        ModelVerifier.verifyModel(extractor);
+    public static ModelInfo buildFrom(ByteBuffer byteBuffer) throws TfliteModelException {
+        ModelVerifier.verifyModel(byteBuffer);
+        return buildWithoutVerification(byteBuffer);
+    }
+
+    public static ModelInfo buildWithoutVerification(ByteBuffer byteBuffer) {
+        MetadataExtractor extractor = new MetadataExtractor(byteBuffer);
 
         ModelInfo modelInfo = new ModelInfo();
         int inputLength = extractor.getInputTensorCount(0);

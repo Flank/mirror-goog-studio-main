@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 /**
- * Properties for a the main Variant of an application.
+ * Properties for the main Variant of an application.
  */
 @Incubating
 interface ApplicationVariantProperties : VariantProperties {
@@ -48,5 +48,4 @@ interface ApplicationVariantProperties : VariantProperties {
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
     fun aaptOptions(action: AaptOptions.() -> Unit)
-
 }

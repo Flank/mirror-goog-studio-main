@@ -18,6 +18,10 @@ package com.android.tools.mlkit;
 
 import static org.mockito.Mockito.when;
 
+import com.android.tools.mlkit.exception.InvalidTfliteException;
+import com.android.tools.mlkit.exception.TfliteModelException;
+import com.android.tools.mlkit.exception.UnsupportedTfliteException;
+import java.nio.ByteBuffer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Answers;
@@ -34,15 +38,20 @@ public class ModelVerifierTest {
         when(metadataExtractor.getSubgraphCount()).thenReturn(1);
     }
 
-    @Test(expected = ModelParsingException.class)
-    public void testMultiGraphThrowException() throws ModelParsingException {
+    @Test(expected = UnsupportedTfliteException.class)
+    public void testMultiGraphThrowException() throws TfliteModelException {
         when(metadataExtractor.getSubgraphCount()).thenReturn(2);
         ModelVerifier.verifyModel(metadataExtractor);
     }
 
     @Test
-    public void testInvalidMetadataNotThrowException() throws ModelParsingException {
+    public void testEmptyMetadataNotThrowException() throws TfliteModelException {
         when(metadataExtractor.getModelMetaData()).thenReturn(null);
         ModelVerifier.verifyModel(metadataExtractor);
+    }
+
+    @Test(expected = InvalidTfliteException.class)
+    public void testInvalidModelThrowException() throws TfliteModelException {
+        ModelVerifier.verifyModel(ByteBuffer.wrap(new byte[] {1, 2, 4, 6}));
     }
 }

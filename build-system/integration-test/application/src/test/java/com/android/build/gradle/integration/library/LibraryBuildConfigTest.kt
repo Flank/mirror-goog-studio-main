@@ -19,8 +19,10 @@ package com.android.build.gradle.integration.library
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.utils.findVariantByName
+import com.android.build.gradle.integration.common.utils.getBuildType
+import com.android.build.gradle.integration.common.utils.getProductFlavor
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.ClassField
 import com.google.common.base.Charsets
 import com.google.common.collect.Maps
 import com.google.common.io.Files
@@ -124,14 +126,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "debug";
               public static final String FLAVOR = "flavor1";
-              // Fields from the variant
-              public static final int VALUE_VARIANT = 1000;
-              // Fields from build type: debug
+              // Field from build type: debug
               public static final int VALUE_DEBUG = 100;
-              // Fields from product flavor: flavor1
-              public static final int VALUE_FLAVOR = 10;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor1
+              public static final int VALUE_FLAVOR = 10;
+              // Field from the variant API
+              public static final int VALUE_VARIANT = 1000;
             }
 
             """.trimIndent()
@@ -139,13 +141,22 @@ class LibraryBuildConfigTest {
     }
 
     @Test
-    fun modelFlavor1Debug() {
+    fun modelDefaultConfig() {
         val map = Maps.newHashMap<String, String>()
         map["VALUE_DEFAULT"] = "1"
+        map["VALUE_FLAVOR"] = "1"
+        map["VALUE_DEBUG"] = "1"
+        map["VALUE_VARIANT"] = "1"
+        checkMaps(map, model.defaultConfig.productFlavor.buildConfigFields, "defaultConfig")
+    }
+
+    @Test
+    fun modelFlavor1() {
+        val map = Maps.newHashMap<String, String>()
         map["VALUE_FLAVOR"] = "10"
-        map["VALUE_DEBUG"] = "100"
-        map["VALUE_VARIANT"] = "1000"
-        checkVariant(model, "flavor1Debug", map)
+        map["VALUE_DEBUG"] = "10"
+        map["VALUE_VARIANT"] = "10"
+        checkFlavor(model, "flavor1", map)
     }
 
     @Test
@@ -162,14 +173,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "debug";
               public static final String FLAVOR = "flavor2";
-              // Fields from the variant
-              public static final int VALUE_VARIANT = 1000;
-              // Fields from build type: debug
+              // Field from build type: debug
               public static final int VALUE_DEBUG = 100;
-              // Fields from product flavor: flavor2
-              public static final int VALUE_FLAVOR = 20;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor2
+              public static final int VALUE_FLAVOR = 20;
+              // Field from the variant API
+              public static final int VALUE_VARIANT = 1000;
             }
 
             """).trimIndent()
@@ -177,13 +188,12 @@ class LibraryBuildConfigTest {
     }
 
     @Test
-    fun modelFlavor2Debug() {
+    fun modelFlavor2() {
         val map = Maps.newHashMap<String, String>()
-        map["VALUE_DEFAULT"] = "1"
         map["VALUE_FLAVOR"] = "20"
-        map["VALUE_DEBUG"] = "100"
-        map["VALUE_VARIANT"] = "1000"
-        checkVariant(model, "flavor2Debug", map)
+        map["VALUE_DEBUG"] = "20"
+        map["VALUE_VARIANT"] = "20"
+        checkFlavor(model, "flavor2", map)
     }
 
     @Test
@@ -199,12 +209,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "release";
               public static final String FLAVOR = "flavor1";
-              // Fields from product flavor: flavor1
+              // Field from product flavor: flavor1
               public static final int VALUE_DEBUG = 10;
-              public static final int VALUE_FLAVOR = 10;
-              public static final int VALUE_VARIANT = 10;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor1
+              public static final int VALUE_FLAVOR = 10;
+              // Field from product flavor: flavor1
+              public static final int VALUE_VARIANT = 10;
             }
 
             """.trimIndent()
@@ -212,13 +224,11 @@ class LibraryBuildConfigTest {
     }
 
     @Test
-    fun modelFlavor1Release() {
+    fun modelDebug() {
         val map = Maps.newHashMap<String, String>()
-        map["VALUE_DEFAULT"] = "1"
-        map["VALUE_FLAVOR"] = "10"
-        map["VALUE_DEBUG"] = "10"
-        map["VALUE_VARIANT"] = "10"
-        checkVariant(model, "flavor1Release", map)
+        map["VALUE_DEBUG"] = "100"
+        map["VALUE_VARIANT"] = "100"
+        checkBuildType(model, "debug", map)
     }
 
     @Test
@@ -235,12 +245,14 @@ class LibraryBuildConfigTest {
               public static final String LIBRARY_PACKAGE_NAME = "com.example.helloworld";
               public static final String BUILD_TYPE = "release";
               public static final String FLAVOR = "flavor2";
-              // Fields from product flavor: flavor2
+              // Field from product flavor: flavor2
               public static final int VALUE_DEBUG = 20;
-              public static final int VALUE_FLAVOR = 20;
-              public static final int VALUE_VARIANT = 20;
-              // Fields from default config.
+              // Field from default config.
               public static final int VALUE_DEFAULT = 1;
+              // Field from product flavor: flavor2
+              public static final int VALUE_FLAVOR = 20;
+              // Field from product flavor: flavor2
+              public static final int VALUE_VARIANT = 20;
             }
 
             """.trimIndent()
@@ -248,13 +260,8 @@ class LibraryBuildConfigTest {
     }
 
     @Test
-    fun modelFlavor2Release() {
-        val map = Maps.newHashMap<String, String>()
-        map["VALUE_DEFAULT"] = "1"
-        map["VALUE_FLAVOR"] = "20"
-        map["VALUE_DEBUG"] = "20"
-        map["VALUE_VARIANT"] = "20"
-        checkVariant(model, "flavor2Release", map)
+    fun modelRelease() {
+        checkBuildType(model, "release", emptyMap())
     }
 
     private fun doCheckBuildConfig(expected: String, variantDir: String) {
@@ -271,30 +278,42 @@ class LibraryBuildConfigTest {
         )
     }
 
-    private fun checkVariant(
+    private fun checkFlavor(
         androidProject: AndroidProject,
-        variantName: String,
+        flavorName: String,
         valueMap: Map<String, String>?
     ) {
-        val variant = androidProject.findVariantByName(variantName)
-        assertNotNull("$variantName variant null-check", variant)
+        val productFlavor = androidProject.getProductFlavor(flavorName).productFlavor
+        assertNotNull("$flavorName variant null-check", productFlavor)
 
-        val artifact = variant!!.mainArtifact
-        assertNotNull("$variantName main artifact null-check", artifact)
+        checkMaps(valueMap, productFlavor.buildConfigFields, flavorName)
+    }
 
-        val value = artifact.buildConfigFields
+    private fun checkBuildType(
+        androidProject: AndroidProject,
+        buildTypeName: String,
+        valueMap: Map<String, String>?
+    ) {
+        val buildType = androidProject.getBuildType(buildTypeName).buildType
+        assertNotNull("$buildTypeName flavor null-check", buildType)
+        checkMaps(valueMap, buildType.buildConfigFields, buildTypeName)
+    }
+
+    private fun checkMaps(
+        valueMap: Map<String, String>?,
+        value: Map<String, ClassField>?,
+        name: String
+    ) {
         assertNotNull(value)
 
         // check the map against the expected one.
-        assertEquals(valueMap!!.keys, value.keys)
+        assertEquals(valueMap!!.keys, value!!.keys)
         for (key in valueMap.keys) {
             val field = value[key]
-            assertNotNull("$variantName: expected field $key", field)
+            assertNotNull("$name: expected field $key", field)
             assertEquals(
-                "$variantName: check Value of $key", valueMap[key], field?.value
+                "$name: check Value of $key", valueMap[key], field!!.value
             )
         }
-
-
     }
 }

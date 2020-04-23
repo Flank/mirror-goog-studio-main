@@ -26,8 +26,6 @@ import static com.android.SdkConstants.TAG_VECTOR;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.ResourceItem;
@@ -48,6 +46,8 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -106,9 +106,8 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     @Override
     public void beforeCheckRootProject(@NonNull Context context) {
-        IdeAndroidProject model = context.getProject().getGradleProjectModel();
-
-        if (model == null) {
+        LmVariant variant = context.getProject().getBuildVariant();
+        if (variant == null) {
             mSkipChecks = true;
             return;
         }
@@ -124,17 +123,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
             return;
         }
 
-        Variant currentVariant = context.getProject().getCurrentVariant();
-
-        if (currentVariant == null) {
-            mSkipChecks = true;
-            return;
-        }
-
-        if (Boolean.TRUE.equals(
-                currentVariant.getMergedFlavor().getVectorDrawables().getUseSupportLibrary())) {
-            mUseSupportLibrary = true;
-        }
+        mUseSupportLibrary = variant.getUseSupportLibraryVectorDrawables();
     }
 
     @Override
@@ -228,9 +217,9 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
             Location location = context.getNameLocation(attribute);
             Project project = context.getProject();
             String path = "build.gradle";
-            IdeAndroidProject model = project.getGradleProjectModel();
+            LmModule model = project.getBuildModule();
             if (model != null) {
-                path = model.getName() + File.separator + path;
+                path = model.getModuleName() + File.separator + path;
             }
             String message =
                     "To use VectorDrawableCompat, you need to set "

@@ -109,7 +109,7 @@ class MlGeneratedClassTest {
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
-                    "getSegmentationmasksAsTensorBuffer",
+                    "getSegmentationMasksAsTensorBuffer",
                     TENSOR_BUFFER
                 )
             )
@@ -167,7 +167,7 @@ class MlGeneratedClassTest {
                     "getLocationsAsTensorBuffer", TENSOR_BUFFER
                 ),
                 createOutputGetterMethodReference(
-                    "getNumberofdetectionsAsTensorBuffer", TENSOR_BUFFER
+                    "getNumberOfDetectionsAsTensorBuffer", TENSOR_BUFFER
                 ),
                 createOutputGetterMethodReference(
                     "getScoresAsTensorBuffer", TENSOR_BUFFER

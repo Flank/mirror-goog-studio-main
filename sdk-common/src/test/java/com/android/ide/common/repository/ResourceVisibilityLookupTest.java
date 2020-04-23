@@ -387,8 +387,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
     public static AndroidLibrary createMockLibrary(String name, String allResources,
             String publicResources)
             throws IOException {
-        return createMockLibrary(name, allResources, publicResources,
-                Collections.<AndroidLibrary>emptyList());
+        return createMockLibrary(name, allResources, publicResources, Collections.emptyList());
     }
 
 
@@ -400,13 +399,16 @@ public class ResourceVisibilityLookupTest extends TestCase {
         // can't access each other
         final File tempDir = TestUtils.createTempDirDeletedOnExit();
 
-        Files.asCharSink(new File(tempDir, FN_RESOURCE_TEXT), Charsets.UTF_8).write(allResources);
+        File rFile = new File(tempDir, FN_RESOURCE_TEXT);
+        Files.asCharSink(rFile, Charsets.UTF_8).write(allResources);
         File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
         if (publicResources != null) {
             Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
         }
         AndroidLibrary library = mock(AndroidLibrary.class);
         when(library.getPublicResources()).thenReturn(publicTxtFile);
+        when(library.getSymbolFile()).thenReturn(rFile);
+
         GradleCoordinate c = GradleCoordinate.parseCoordinateString(name);
         assertNotNull(c);
         MavenCoordinates coordinates = mock(MavenCoordinates.class);

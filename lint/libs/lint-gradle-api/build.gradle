@@ -15,7 +15,7 @@ compileKotlin {
 
 dependencies {
     compile project(':base:sdklib')
-    compile project(':base:builder-model')
+    compile project(':base:lint-model')
     compileOnly gradleApi()
     compile project(':base:gradle-api')
     compile libs.kotlin_reflect

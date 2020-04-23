@@ -64,7 +64,8 @@ def transport_test(name,
                    jvm_flags = [],
                    data = [],
                    tags = [],
-                   size = "small"):
+                   shard_count = None,
+                   size = None):
     app_runtime_deps = app_runtime_deps + [
         "//tools/base/profiler/app:perfa",
         "//tools/base/transport/native/agent:libjvmtiagent.so",
@@ -90,6 +91,7 @@ def transport_test(name,
         ],
         runtime_deps = runtime_deps,
         tags = tags,
+        shard_count = shard_count,
         size = size,
         jvm_flags = jvm_flags + [
             "-Dtransport.daemon.location=$(location //tools/base/transport:transport_main)",

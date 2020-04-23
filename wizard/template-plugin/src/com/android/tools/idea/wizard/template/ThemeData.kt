@@ -26,10 +26,10 @@ data class ThemeData(
 /**
  * Information about project themes.
  */
-data class ThemesData(
-  // TODO: Check if App can be replaced with an actual app name
-  val main: ThemeData = ThemeData("Theme.App", false),
-  val noActionBar: ThemeData = ThemeData("Theme.App.NoActionBar", false),
-  val appBarOverlay: ThemeData = ThemeData("Theme.App.AppBarOverlay", false),
-  val popupOverlay: ThemeData = ThemeData("Theme.App.PopupOverlay", false)
+data class ThemesData(private val appName: String? = "App",
+  val main: ThemeData = ThemeData("Theme.$appName", false),
+  val overlay: ThemeData = ThemeData("ThemeOverlay.$appName", false),
+  val noActionBar: ThemeData = ThemeData("Theme.$appName.NoActionBar", false),
+  val appBarOverlay: ThemeData = ThemeData("Theme.$appName.AppBarOverlay", false),
+  val popupOverlay: ThemeData = ThemeData("Theme.$appName.PopupOverlay", false)
 )

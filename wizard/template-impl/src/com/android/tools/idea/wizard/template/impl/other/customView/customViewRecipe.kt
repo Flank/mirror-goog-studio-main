@@ -23,6 +23,9 @@ import com.android.tools.idea.wizard.template.camelCaseToUnderlines
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.other.customView.res.layout.sampleXml
 import com.android.tools.idea.wizard.template.impl.other.customView.res.values.attrsXml
+import com.android.tools.idea.wizard.template.impl.other.customView.res.values.colorsXml
+import com.android.tools.idea.wizard.template.impl.other.customView.res.values.stylesXml
+import com.android.tools.idea.wizard.template.impl.other.customView.res.values_night.stylesXml as stylesXmlNight
 import com.android.tools.idea.wizard.template.impl.other.customView.src.app_package.customViewJava
 import com.android.tools.idea.wizard.template.impl.other.customView.src.app_package.customViewKt
 
@@ -31,13 +34,17 @@ fun RecipeExecutor.customViewRecipe(
   packageName: String,
   viewClass: String
 ) {
-  val (projectData, srcOut, resOut, manifestOut) = moduleData
+  val (projectData, srcOut, resOut) = moduleData
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
   val snakeCaseViewClass= camelCaseToUnderlines(viewClass)
+  val themeName = moduleData.themesData.main.name
   mergeXml(attrsXml(viewClass), resOut.resolve("values/attrs_${snakeCaseViewClass}.xml"))
-  save(sampleXml(packageName, viewClass), resOut.resolve("layout/sample_${snakeCaseViewClass}.xml"))
+  mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
+  mergeXml(stylesXml(themeName), resOut.resolve("values/styles.xml"))
+  mergeXml(stylesXmlNight(themeName), resOut.resolve("values-night/styles.xml"))
+  save(sampleXml(packageName, themeName, viewClass), resOut.resolve("layout/sample_${snakeCaseViewClass}.xml"))
 
   val customView = when (projectData.language) {
     Language.Java -> customViewJava(projectData.applicationPackage, packageName, viewClass)

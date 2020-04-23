@@ -208,11 +208,16 @@ message AllocationStack {
     string class_name = 2;
     string method_name = 3;
 
-    // Pre-O only. File name info is unavailable in JVMTI.
-    // TODO: investigate/feature request.
+    // Legacy recording as file name info is unavailable in JVMTI.
+    // Native memory sampling also sets this when able to symbolize
     string file_name = 4;
 
     int32 line_number = 5;
+
+    // If a module name is given via heapprofd this field is populated,
+    // for use in the native memory UI. A module referrs to a c++ module
+    // typically broken down by individual .so files. eg libart.so
+    string module_name = 6;
   }
 
   // Proto format for storing and transmitting O+ stack data efficiently.

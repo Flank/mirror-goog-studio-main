@@ -32,10 +32,6 @@ import static com.android.tools.lint.detector.api.Lint.coalesce;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.Variant;
 import com.android.ide.common.fonts.FontDetail;
 import com.android.ide.common.fonts.FontFamily;
 import com.android.ide.common.fonts.FontLoader;
@@ -55,6 +51,9 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.model.LmLibrary;
+import com.android.tools.lint.model.LmMavenName;
+import com.android.tools.lint.model.LmVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.intellij.openapi.util.text.StringUtil;
@@ -208,13 +207,12 @@ public class FontDetector extends ResourceXmlDetector {
 
     private static void checkSupportLibraryVersion(
             @NonNull XmlContext context, @NonNull Element element) {
-        Variant variant = context.getMainProject().getCurrentVariant();
+        LmVariant variant = context.getMainProject().getBuildVariant();
         if (variant == null) {
             return;
         }
-        Dependencies dependencies = variant.getMainArtifact().getDependencies();
-        for (AndroidLibrary library : dependencies.getLibraries()) {
-            MavenCoordinates rc = library.getResolvedCoordinates();
+        for (LmLibrary library : variant.getMainArtifact().getDependencies().getDirect()) {
+            LmMavenName rc = library.getResolvedCoordinates();
             if (SUPPORT_LIB_GROUP_ID.equals(rc.getGroupId())
                     && APPCOMPAT_LIB_ARTIFACT_ID.equals(rc.getArtifactId())) {
                 GradleCoordinate version =

@@ -48,6 +48,7 @@ import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.model.LmModule;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
@@ -434,7 +435,11 @@ public class TestLintTask {
     /**
      * This method allows you to add a hook which you can run on a mock builder model to tweak it,
      * such as changing or augmenting the builder model classes
+     *
+     * @deprecated We're moving away from the builder model library and over to {@link LmModule}
+     *     which is not a mock.
      */
+    @Deprecated
     public TestLintTask modifyGradleMocks(@NonNull GradleMockModifier mockModifier) {
         ensurePreRun();
         this.mockModifier = mockModifier;
@@ -734,8 +739,9 @@ public class TestLintTask {
             platforms = computePlatforms(getCheckedIssues());
         }
 
-        if (impliedProject &&
-                platforms.contains(Platform.JDK) && !platforms.contains(Platform.ANDROID)) {
+        if (impliedProject
+                && platforms.contains(Platform.JDK)
+                && !platforms.contains(Platform.ANDROID)) {
             for (ProjectDescription project : projects) {
                 project.setType(ProjectDescription.Type.JAVA);
             }
@@ -971,6 +977,9 @@ public class TestLintTask {
     @NonNull
     public List<Issue> getCheckedIssues() {
         if (checkedIssues == null) {
+            // Ensure custom rules don't linger from test to test
+            JarFileIssueRegistry.Factory.clearCache();
+
             if (issues != null) {
                 return checkedIssues = Arrays.asList(this.issues);
             }
@@ -1148,7 +1157,10 @@ public class TestLintTask {
      * TestFiles#gradle(String)} test file.
      *
      * <p>Register this modifier via {@link #modifyGradleMocks(GradleMockModifier)}.
+     *
+     * @deprecated Builder-model is going away
      */
+    @Deprecated
     public interface GradleMockModifier {
         void modify(@NonNull IdeAndroidProject project, @NonNull Variant variant);
     }

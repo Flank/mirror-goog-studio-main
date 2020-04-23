@@ -47,28 +47,7 @@ internal open class DynamicFeatureExtension(
     dslServices,
      globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
-), DynamicFeatureExtension<
-        AaptOptions,
-        AbiSplitOptions,
-        AdbOptions,
-        AndroidSourceSet,
-        AnnotationProcessorOptions,
-        BuildType,
-        CmakeOptions,
-        CompileOptions,
-        DataBindingOptions,
-        DefaultConfig,
-        DensitySplitOptions,
-        ExternalNativeBuild,
-        JacocoOptions,
-        LintOptions,
-        NdkBuildOptions,
-        PackagingOptions,
-        ProductFlavor,
-        SigningConfig,
-        Splits,
-        TestOptions,
-        TestOptions.UnitTestOptions> by publicExtensionImpl,
+), InternalDynamicFeatureExtension by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant<DynamicFeatureVariantProperties>, DynamicFeatureVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =

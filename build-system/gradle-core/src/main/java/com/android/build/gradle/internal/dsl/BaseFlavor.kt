@@ -39,7 +39,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     CoreProductFlavor,
     ApplicationBaseFlavor<AnnotationProcessorOptions, SigningConfig>,
     LibraryBaseFlavor<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureBaseFlavor<AnnotationProcessorOptions, SigningConfig> {
+    DynamicFeatureBaseFlavor<AnnotationProcessorOptions> {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)

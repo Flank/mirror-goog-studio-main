@@ -20,9 +20,6 @@ import static com.android.utils.CharSequences.regionMatches;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -37,6 +34,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.model.LmVariant;
 import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UComment;
@@ -210,15 +208,9 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     @Nullable
     private static Boolean getReleaseMode(@NonNull Context context) {
         Project project = context.getMainProject();
-        IdeAndroidProject model = project.getGradleProjectModel();
-        Variant variant = project.getCurrentVariant();
-        if (model != null && variant != null) {
-            String buildType = variant.getBuildType();
-            for (BuildTypeContainer container : model.getBuildTypes()) {
-                if (buildType.equals(container.getBuildType().getName())) {
-                    return !container.getBuildType().isDebuggable();
-                }
-            }
+        LmVariant variant = project.getBuildVariant();
+        if (variant != null) {
+            return !variant.getDebuggable();
         }
 
         return null;

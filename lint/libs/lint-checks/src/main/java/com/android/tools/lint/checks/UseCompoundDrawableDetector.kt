@@ -25,8 +25,6 @@ import com.android.SdkConstants.ATTR_SCALE_TYPE
 import com.android.SdkConstants.IMAGE_VIEW
 import com.android.SdkConstants.LINEAR_LAYOUT
 import com.android.SdkConstants.TEXT_VIEW
-import com.android.utils.XmlUtils.getFirstSubTag
-import com.android.utils.XmlUtils.getNextTag
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -34,6 +32,8 @@ import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.utils.XmlUtils.getFirstSubTag
+import com.android.utils.XmlUtils.getNextTag
 import org.w3c.dom.Element
 
 /** Checks whether the current node can be replaced by a TextView using compound drawables. */

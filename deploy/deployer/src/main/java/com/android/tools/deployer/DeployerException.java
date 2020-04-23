@@ -239,6 +239,12 @@ public class DeployerException extends Exception {
         INSTALLER_IO_EXCEPTION(
                 "IOException occurred within Installer", "%s", "Retry", ResolutionAction.RETRY),
 
+        APP_OVERLAY_IN_UNKNOWN_STATE(
+                "The target app on the device is in a state unknown to Studio",
+                "",
+                "Retry",
+                ResolutionAction.RETRY),
+
         UNKNOWN_JVMTI_ERROR("Invalid error code %s", "", "Retry", ResolutionAction.RETRY),
 
         JDWP_REDEFINE_CLASSES_EXCEPTION(
@@ -477,6 +483,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException installerIoException(IOException e) {
         return new DeployerException(Error.INSTALLER_IO_EXCEPTION, NO_ARGS, e.getMessage());
+    }
+
+    public static DeployerException overlayIdMisMatch() {
+        return new DeployerException(Error.APP_OVERLAY_IN_UNKNOWN_STATE, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException unknownJvmtiError(String type) {

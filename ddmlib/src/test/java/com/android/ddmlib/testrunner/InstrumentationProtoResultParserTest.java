@@ -274,6 +274,29 @@ public class InstrumentationProtoResultParserTest {
     }
 
     @Test
+    public void testBenchmarkTest() throws Exception {
+        TestIdentifier testcase1 =
+                new TestIdentifier(
+                        "com.example.myapplication.benchmarkexample.MyBenchmarkTest",
+                        "benchmarkSomeWork");
+        TestIdentifier testcase2 =
+                new TestIdentifier(
+                        "com.example.myapplication.benchmarkexample.MyBenchmarkTest",
+                        "benchmarkSomeWork2");
+
+        readSession("instrumentation-data-session-benchmark.textproto");
+
+        InOrder inOrder = inOrder(mockListener);
+        inOrder.verify(mockListener).testRunStarted(eq("myTestRun"), eq(2));
+        inOrder.verify(mockListener).testStarted(eq(testcase1));
+        inOrder.verify(mockListener).testEnded(eq(testcase1), anyMap());
+        inOrder.verify(mockListener).testStarted(eq(testcase2));
+        inOrder.verify(mockListener).testEnded(eq(testcase2), anyMap());
+        inOrder.verify(mockListener).testRunEnded(eq(6460L), eq(emptyMap()));
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
     public void addOutputShouldHandleIncompleteInput() throws Exception {
         InstrumentationData.Session session = getSession("instrumentation-data-session.textproto");
         byte[] serializedSession = session.toByteArray();

@@ -50,7 +50,6 @@ import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -103,6 +102,8 @@ import java.util.jar.JarOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import kotlin.io.FilesKt;
+import kotlin.text.Charsets;
 import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UAnonymousClass;
@@ -363,7 +364,7 @@ public class Extractor {
         }
         FileUtils.deleteIfExists(file);
         Files.createParentDirs(file);
-        Files.asCharSink(file, Charsets.UTF_8).write(desc);
+        FilesKt.writeText(file, desc, Charsets.UTF_8);
     }
 
     public static void removeTypedefClasses(
@@ -1000,9 +1001,9 @@ public class Extractor {
                 mergeFromJar(file);
             } else if (file.getPath().endsWith(DOT_XML)) {
                 try {
-                    String xml = Files.asCharSource(file, Charsets.UTF_8).read();
+                    String xml = FilesKt.readText(file, Charsets.UTF_8);
                     mergeAnnotationsXml(file.getPath(), xml);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     error("Aborting: I/O problem during transform: " + e.toString());
                 }
             }

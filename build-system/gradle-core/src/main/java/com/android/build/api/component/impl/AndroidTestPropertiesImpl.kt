@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
@@ -34,9 +35,9 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
@@ -134,5 +135,14 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
+
+    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+        internalServices.mapPropertyOf(
+            String::class.java,
+            BuildConfigField::class.java,
+            variantDslInfo.getBuildConfigFields(),
+            "$name:buildConfigs"
+        )
+    }
 }
 

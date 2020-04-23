@@ -37,7 +37,7 @@ val intentServiceTemplate
   get() = template {
     revision = 1
     name = "Service (IntentService)"
-    description = "Creates a new intent service class."
+    description = "Creates a new intent service class"
     minApi = MIN_API
     minBuildApi = MIN_API
 

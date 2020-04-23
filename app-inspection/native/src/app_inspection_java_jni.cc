@@ -242,7 +242,7 @@ Java_com_android_tools_agent_app_inspection_AppInspectionService_createAppInspec
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterEntryHook(
+Java_com_android_tools_agent_app_inspection_AppInspectionService_nativeRegisterEntryHook(
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
     jstring originMethod) {
   app_inspection::AddEntryTransformation(env, servicePtr, originClass,
@@ -250,7 +250,7 @@ Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegis
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterExitHook(
+Java_com_android_tools_agent_app_inspection_AppInspectionService_nativeRegisterExitHook(
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
     jstring originMethod) {
   app_inspection::AddExitTransformation(env, servicePtr, originClass,

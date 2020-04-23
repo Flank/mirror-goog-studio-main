@@ -25,12 +25,13 @@ import com.android.tools.lint.client.api.IssueRegistry
  * value, not read the current value from the hosting lint environment
  * when the custom lint checks are loaded into lint.
  */
-const val CURRENT_API = 7
+const val CURRENT_API = 8
 
 /** Describes the given API level */
 fun describeApi(api: Int): String {
     return when (api) {
-        7 -> "4.0+" // 4.0.0-alpha08
+        8 -> "4.1+" // 4.1.0-alpha06
+        7 -> "4.0" // 4.0.0-alpha08
         6 -> "3.6" // 3.6.0-alpha06
         5 -> "3.5" // 3.5.0-alpha07
         4 -> "3.4" // 3.4.0-alpha03

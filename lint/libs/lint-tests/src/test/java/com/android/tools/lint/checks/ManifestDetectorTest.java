@@ -1323,13 +1323,13 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
                                         + "    productFlavors {\n"
                                         + "        beta {\n"
-                                        + "            flavorDimension \"releaseType\"\n"
+                                        + "            dimension \"releaseType\"\n"
                                         + "            resConfig \"en\", \"de\"\n"
                                         + "            resConfigs \"nodpi\", \"hdpi\"\n"
                                         + "        }\n"
-                                        + "        normal { flavorDimension \"releaseType\" }\n"
-                                        + "        free { flavorDimension \"pricing\" }\n"
-                                        + "        paid { flavorDimension \"pricing\" }\n"
+                                        + "        normal { dimension \"releaseType\" }\n"
+                                        + "        free { dimension \"pricing\" }\n"
+                                        + "        paid { dimension \"pricing\" }\n"
                                         + "    }\n"
                                         + "}\n"))
                 .issues(ManifestDetector.MIPMAP)
@@ -1806,8 +1806,12 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "</manifest>\n"),
                         gradle(
                                 ""
+                                        + "\n"
                                         + "apply plugin: 'com.android.application'\n"
                                         + "\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 19\n"
+                                        + "}\n"
                                         + "dependencies {\n"
                                         + "    compile 'com.google.android.gms:play-services-wearable:8.1.+'\n"
                                         + "}"))
@@ -1964,6 +1968,33 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .issues(ManifestDetector.SET_VERSION)
                 .run()
                 .expectClean();
+    }
+
+    public void testProviderTag() throws Exception {
+        // Regression test for b/154309642
+        lint().files(
+                        manifest(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "    <provider android:authorities=\"com.example.provider\" /><!-- ERROR -->\n"
+                                        + "    <application>\n"
+                                        + "        <provider android:authorities=\"com.example.provider\" /><!-- OK -->\n"
+                                        + "    </application>\n"
+                                        + "    <queries>\n"
+                                        + "        <provider android:authorities=\"com.example.provider\" /><!-- OK -->\n"
+                                        + "    </queries>\n"
+                                        + "</manifest>\n"))
+                .issues(ManifestDetector.WRONG_PARENT)
+                .run()
+                .expect(
+                        ""
+                                + "AndroidManifest.xml:4: Error: The <provider> element must be a direct child of the <application> element or the <queries> element [WrongManifestParent]\n"
+                                + "    <provider android:authorities=\"com.example.provider\" /><!-- ERROR -->\n"
+                                + "     ~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     private File getMockSupportLibraryInstallation() {

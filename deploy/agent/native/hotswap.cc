@@ -276,7 +276,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
     std::string error_msg = "no error";
     SwapResult::Status variableCheck =
-        var_reinit.GatherPreviousState(def[i].klass, class_def, error_msg);
+        var_reinit.GatherPreviousState(def[i].klass, class_def, &error_msg);
     if (variableCheck != SwapResult::SUCCESS) {
       result.status = variableCheck;
       result.error_details = error_msg;
@@ -329,7 +329,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
     std::string error_msg = "no error";
     SwapResult::Status variableCheck =
-        var_reinit.ReinitializeVariables(error_msg);
+        var_reinit.ReinitializeVariables(&error_msg);
     if (variableCheck != SwapResult::SUCCESS) {
       result.status = variableCheck;
       result.error_details = error_msg;

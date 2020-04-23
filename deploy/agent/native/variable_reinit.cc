@@ -81,7 +81,7 @@ bool isArray(const std::string& jvm_type) {
 }  // namespace
 
 SwapResult::Status VariableReinitializer::GatherPreviousState(
-    jclass clz, const proto::ClassDef& def, std::string& error_msg) {
+    jclass clz, const proto::ClassDef& def, std::string* error_msg) {
   // Create the entry. If there is nothing to do,
   // we just don't add to the work list later.
   auto newVars = new std::vector<proto::ClassDef::FieldReInitState>();
@@ -116,7 +116,7 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
         std::ostringstream msg;
         msg << "Adding non-static variable " << state.name()
             << " is not currently supported" << std::endl;
-        error_msg = msg.str();
+        *error_msg = msg.str();
         if (isPrimitive(state.type())) {
           return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE;
         } else if (isArray(state.type())) {
@@ -133,25 +133,25 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
         if (isArray(state.type())) {
           std::ostringstream msg;
           msg << "Adding static array " << state.name() << std::endl;
-          error_msg = msg.str();
+          *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_STATIC_ARRAY;
         } else if (isObject(state.type())) {
           std::ostringstream msg;
           msg << "Adding static object " << state.name() << std::endl;
-          error_msg = msg.str();
+          *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_STATIC_OBJECT;
 
-          // Primitives. Supported should they be compile time constants.
         } else if (isPrimitive(state.type())) {
+          // Primitives. Supported should they be compile time constants.
           if (state.state() != proto::ClassDef::FieldReInitState::CONSTANT) {
             std::ostringstream msg;
             msg << "Adding variable " << state.name()
-                << " no known to be compile time constant" << std::endl;
-            error_msg = msg.str();
+                << " not known to be compile time constant" << std::endl;
+            *error_msg = msg.str();
             return SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE;
           }
         } else {
-          error_msg = "unknown error";
+          *error_msg = "unknown error";
           return SwapResult::UNSUPPORTED_REINIT;  // should not be reachable.
         }
       }
@@ -167,7 +167,7 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
 }
 
 SwapResult::Status VariableReinitializer::ReinitializeVariables(
-    std::string& error_msg) {
+    std::string* error_msg) {
   for (auto& work_item : new_static_vars_) {
     jclass& cls = work_item->klass;
     std::vector<proto::ClassDef::FieldReInitState>& vars = work_item->states;
@@ -248,7 +248,7 @@ SwapResult::Status VariableReinitializer::ReinitializeVariables(
             jni_->GetStaticFieldID(cls, var.name().c_str(), var.type().c_str());
         jni_->SetStaticBooleanField(cls, fid, result);
       } else {
-        error_msg = "unknown error";
+        *error_msg = "unknown error";
         return SwapResult::UNSUPPORTED_REINIT;  // should not be reachable.
       }
     }

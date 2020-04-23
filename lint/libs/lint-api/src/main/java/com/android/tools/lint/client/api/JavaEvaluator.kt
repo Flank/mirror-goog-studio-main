@@ -17,13 +17,12 @@
 package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.CONSTRUCTOR_NAME
-import com.android.builder.model.AndroidLibrary
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
-import com.android.builder.model.Library
-import com.android.builder.model.MavenCoordinates
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.model.DefaultLmMavenName
+import com.android.tools.lint.model.LmDependencies
+import com.android.tools.lint.model.LmLibrary
+import com.android.tools.lint.model.LmMavenName
 import com.google.common.collect.Maps
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
@@ -84,14 +83,14 @@ const val TYPE_CHARACTER_WRAPPER = "java.lang.Character"
 
 abstract // Some of these methods may be overridden by LintClients
 class JavaEvaluator {
-    abstract val dependencies: Dependencies?
+    abstract val dependencies: LmDependencies?
 
     private var relevantAnnotations: Set<String>? = null
 
     /**
      * Cache for [.getLibrary]
      */
-    private var jarToGroup: MutableMap<String, MavenCoordinates>? = null
+    private var jarToGroup: MutableMap<String, LmMavenName>? = null
 
     abstract fun extendsClass(
         cls: PsiClass?,
@@ -779,6 +778,7 @@ class JavaEvaluator {
      * @param owner the owner potentially declaring the annotation
      * @return true if the annotation is inherited rather than being declared directly on this owner
      */
+    @SuppressWarnings("ExternalAnnotations")
     open fun isInherited(annotation: UAnnotation, owner: UAnnotated): Boolean {
         return owner.uAnnotations.contains(annotation)
     }
@@ -802,9 +802,9 @@ class JavaEvaluator {
      * Return the Gradle group id for the given element, **if** applicable. For example, for
      * a method in the appcompat library, this would return "com.android.support".
      */
-    open fun getLibrary(element: PsiElement): MavenCoordinates? {
+    open fun getLibrary(element: PsiElement): LmMavenName? {
         if (element !is PsiCompiledElement) {
-            return getProject(element)?.mavenCoordinates
+            return getProject(element)?.mavenCoordinate
         }
         return getLibrary(findJarPath(element))
     }
@@ -813,13 +813,13 @@ class JavaEvaluator {
      * Return the Gradle group id for the given element, **if** applicable. For example, for
      * a method in the appcompat library, this would return "com.android.support".
      */
-    open fun getLibrary(element: UElement): MavenCoordinates? {
+    open fun getLibrary(element: UElement): LmMavenName? {
         if (element !is PsiCompiledElement) {
             val psi = element.sourcePsi
-            if (psi != null) {
-                return getProject(psi)?.mavenCoordinates
+            return if (psi != null) {
+                getProject(psi)?.mavenCoordinate
             } else {
-                return null
+                null
             }
         }
         return getLibrary(findJarPath(element as UElement))
@@ -827,20 +827,20 @@ class JavaEvaluator {
 
     /** Disambiguate between UElement and PsiElement since a UMethod is both  */
     @Suppress("unused")
-    open fun getLibrary(element: UMethod): MavenCoordinates? {
+    open fun getLibrary(element: UMethod): LmMavenName? {
         return getLibrary(element as PsiElement)
     }
 
-    fun getLibrary(file: File): MavenCoordinates? {
+    fun getLibrary(file: File): LmMavenName? {
         return getLibrary(file.path)
     }
 
-    private fun getLibrary(jarFile: String?): MavenCoordinates? {
+    private fun getLibrary(jarFile: String?): LmMavenName? {
         if (jarFile != null) {
             if (jarToGroup == null) {
                 jarToGroup = Maps.newHashMap()
             }
-            var coordinates: MavenCoordinates? = jarToGroup!![jarFile]
+            var coordinates: LmMavenName? = jarToGroup!![jarFile]
             if (coordinates == null) {
                 val library = findOwnerLibrary(jarFile.replace('/', File.separatorChar))
                 if (library != null) {
@@ -868,8 +868,7 @@ class JavaEvaluator {
                                         val artifactId = jarFile.substring(i, j)
                                         val versionEnd = jarFile.indexOf(c, j + 1)
                                         val version = if (versionEnd != -1) jarFile.substring(j + 1, versionEnd) else ""
-                                        coordinates =
-                                            DefaultMavenCoordinates(
+                                        coordinates = DefaultLmMavenName(
                                                 groupId,
                                                 artifactId,
                                                 version
@@ -884,26 +883,22 @@ class JavaEvaluator {
                     }
                 }
                 if (coordinates == null) {
-                    coordinates = DefaultMavenCoordinates.NONE
+                    coordinates = LmMavenName.NONE
                 }
                 jarToGroup!![jarFile] = coordinates
             }
-            return if (coordinates === DefaultMavenCoordinates.NONE) null else coordinates
+            return if (coordinates === LmMavenName.NONE) null else coordinates
         }
 
         return null
     }
 
-    open fun findOwnerLibrary(jarFile: String): Library? {
+    open fun findOwnerLibrary(jarFile: String): LmLibrary? {
         val dependencies = dependencies
         if (dependencies != null) {
-            val aarMatch = findOwnerLibrary(dependencies.libraries, jarFile)
-            if (aarMatch != null) {
-                return aarMatch
-            }
-            val jarMatch = findOwnerJavaLibrary(dependencies.javaLibraries, jarFile)
-            if (jarMatch != null) {
-                return jarMatch
+            val match = findOwnerLibrary(dependencies.all, jarFile)
+            if (match != null) {
+                return match
             }
 
             // Fallback: There are cases, particularly on Windows (see issue 70565382) where we end up with
@@ -923,15 +918,9 @@ class JavaEvaluator {
                         val prefix = jarFile.substring(0, prefixEnd)
                         val suffix = jarFile.substring(suffixStart)
 
-                        val aarPrefixMatch =
-                            findOwnerLibrary(dependencies.libraries, prefix, suffix)
-                        if (aarPrefixMatch != null) {
-                            return aarPrefixMatch
-                        }
-                        val jarPrefixMatch =
-                            findOwnerJavaLibrary(dependencies.javaLibraries, prefix, suffix)
-                        if (jarPrefixMatch != null) {
-                            return jarPrefixMatch
+                        val prefixMatch = findOwnerLibrary(dependencies.all, prefix, suffix)
+                        if (prefixMatch != null) {
+                            return prefixMatch
                         }
                     }
                 }
@@ -941,93 +930,32 @@ class JavaEvaluator {
         return null
     }
 
-    private fun findOwnerJavaLibrary(
-        dependencies: Collection<JavaLibrary>,
-        jarFile: String
-    ): Library? {
-        for (library in dependencies) {
-            if (jarFile == library.jarFile.path) {
-                return library
-            }
-            val match = findOwnerJavaLibrary(library.dependencies, jarFile)
-            if (match != null) {
-                return match
-            }
-        }
-
-        return null
-    }
-
-    private fun findOwnerJavaLibrary(
-        dependencies: Collection<JavaLibrary>,
-        pathPrefix: String,
-        pathSuffix: String
-    ): Library? {
-        for (library in dependencies) {
-            val path = library.jarFile.path
-            if (path.startsWith(pathPrefix) && path.endsWith(pathSuffix)) {
-                return library
-            }
-            val match = findOwnerJavaLibrary(library.dependencies, pathPrefix, pathSuffix)
-            if (match != null) {
-                return match
-            }
-        }
-
-        return null
-    }
-
     private fun findOwnerLibrary(
-        dependencies: Collection<AndroidLibrary>,
+        dependencies: Collection<LmLibrary>,
         jarFile: String
-    ): Library? {
+    ): LmLibrary? {
         for (library in dependencies) {
-            if (jarFile == library.jarFile.path) {
-                return library
-            }
-            for (jar in library.localJars) {
+            for (jar in library.jarFiles) {
                 if (jarFile == jar.path) {
                     return library
                 }
             }
-            var match = findOwnerLibrary(library.libraryDependencies, jarFile)
-            if (match != null) {
-                return match
-            }
-
-            match = findOwnerJavaLibrary(library.javaDependencies, jarFile)
-            if (match != null) {
-                return match
-            }
         }
 
         return null
     }
 
     private fun findOwnerLibrary(
-        dependencies: Collection<AndroidLibrary>,
+        dependencies: Collection<LmLibrary>,
         pathPrefix: String,
         pathSuffix: String
-    ): Library? {
+    ): LmLibrary? {
         for (library in dependencies) {
-            val path = library.jarFile.path
-            if (path.startsWith(pathPrefix) && path.endsWith(pathSuffix)) {
-                return library
-            }
-            for (jar in library.localJars) {
-                val localPath = jar.path
-                if (localPath.startsWith(pathPrefix) && localPath.endsWith(pathSuffix)) {
+            for (jar in library.jarFiles) {
+                val path = jar.path
+                if (path.startsWith(pathPrefix) && path.endsWith(pathSuffix)) {
                     return library
                 }
-            }
-            var match = findOwnerLibrary(library.libraryDependencies, pathPrefix, pathSuffix)
-            if (match != null) {
-                return match
-            }
-
-            match = findOwnerJavaLibrary(library.javaDependencies, pathPrefix, pathSuffix)
-            if (match != null) {
-                return match
             }
         }
 

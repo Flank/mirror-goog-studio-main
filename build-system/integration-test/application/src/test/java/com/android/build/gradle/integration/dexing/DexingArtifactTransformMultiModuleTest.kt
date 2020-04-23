@@ -109,15 +109,7 @@ class DexingArtifactTransformMultiModuleTest {
 
     @Test
     fun testJavaLib() {
-        project.getSubproject("javaLib").mainSrcDir.resolve("com/Data.java").let {
-            it.parentFile.mkdirs()
-            it.writeText(
-                """
-                package com;
-                public class Data { }
-            """.trimIndent()
-            )
-        }
+        addSourceToJavaLib()
         executor().run(":app:assembleDebug")
 
         project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
@@ -218,15 +210,7 @@ class DexingArtifactTransformMultiModuleTest {
             android.defaultConfig.minSdkVersion = 21
         """.trimIndent()
         )
-        project.getSubproject("javaLib").mainSrcDir.resolve("com/Data.java").let {
-            it.parentFile.mkdirs()
-            it.writeText(
-                """
-                package com;
-                public class Data { }
-            """.trimIndent()
-            )
-        }
+        addSourceToJavaLib()
         project.executor().with(
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
             false
@@ -234,6 +218,32 @@ class DexingArtifactTransformMultiModuleTest {
 
         project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
             assertThatApk(it).containsClass("Lcom/Data;")
+        }
+    }
+
+    /** Regression test for b/154545489. */
+    @Test
+    fun testAndroidTestDependencySubtraction() {
+        project.getSubproject("app").buildFile.appendText(
+            """
+            dependencies {
+                androidTestImplementation project(':javaLib')
+            }
+        """.trimIndent()
+        )
+        addSourceToJavaLib()
+        project.executor().run(":app:assembleDebugAndroidTest")
+    }
+
+    private fun addSourceToJavaLib() {
+        project.getSubproject("javaLib").mainSrcDir.resolve("com/Data.java").let {
+            it.parentFile.mkdirs()
+            it.writeText(
+                """
+                    package com;
+                    public class Data { }
+                """.trimIndent()
+            )
         }
     }
 

@@ -16,11 +16,9 @@
 
 package com.android.tools.lint.checks
 
-import com.android.builder.model.AndroidLibrary
-import com.android.builder.model.JavaLibrary
-import com.android.builder.model.Library
 import com.android.tools.lint.checks.GradleDetector.Companion.getCompileDependencies
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.model.LmLibrary
 import java.util.ArrayDeque
 
 data class Coordinate(val group: String, val artifact: String) : Comparable<Coordinate> {
@@ -39,14 +37,12 @@ data class Coordinate(val group: String, val artifact: String) : Comparable<Coor
  */
 class BlacklistedDeps(val project: Project) {
 
-    private var map: MutableMap<Coordinate, List<Library>>? = null
+    private var map: MutableMap<Coordinate, List<LmLibrary>>? = null
 
     init {
         val dependencies = getCompileDependencies(project)
         if (dependencies != null) {
-            val stack = ArrayDeque<Library>()
-            visitAndroidLibraries(stack, dependencies.libraries)
-            visitJavaLibraries(stack, dependencies.javaLibraries)
+            visitLibraries(ArrayDeque(), dependencies.direct)
         }
     }
 
@@ -55,7 +51,7 @@ class BlacklistedDeps(val project: Project) {
      * or null if this dependency is not blacklisted. If [remove] is true, the
      * dependency is removed from the map after this.
      */
-    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<Library>? {
+    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LmLibrary>? {
         val map = this.map ?: return null
         val coordinate = Coordinate(groupId, artifactId)
         val path = map[coordinate] ?: return null
@@ -70,60 +66,34 @@ class BlacklistedDeps(val project: Project) {
      * blacklisted dependency. Each list is a list from the root dependency
      * to the blacklisted dependency.
      */
-    fun getBlacklistedDependencies(): List<List<Library>> {
+    fun getBlacklistedDependencies(): List<List<LmLibrary>> {
         val map = this.map ?: return emptyList()
         return map.values.toMutableList().sortedBy { it[0].resolvedCoordinates.groupId }
     }
 
-    private fun visitAndroidLibraries(
-        stack: ArrayDeque<Library>,
-        libraries: Collection<AndroidLibrary>
+    private fun visitLibraries(
+        stack: ArrayDeque<LmLibrary>,
+        libraries: List<LmLibrary>
     ) {
         for (library in libraries) {
-            visitAndroidLibrary(stack, library)
+            visitLibrary(stack, library)
         }
     }
 
-    private fun visitJavaLibraries(
-        stack: ArrayDeque<Library>,
-        libraries: Collection<JavaLibrary>
-    ) {
-        for (library in libraries) {
-            visitJavaLibrary(stack, library)
-        }
-    }
-
-    private fun visitAndroidLibrary(stack: ArrayDeque<Library>, library: AndroidLibrary) {
+    private fun visitLibrary(stack: ArrayDeque<LmLibrary>, library: LmLibrary) {
         stack.addLast(library)
         checkLibrary(stack, library)
-        visitAndroidLibraries(stack, library.libraryDependencies)
-        visitJavaLibraries(stack, library.javaDependencies)
+        visitLibraries(stack, library.dependencies)
         stack.removeLast()
     }
 
-    private fun visitJavaLibrary(stack: ArrayDeque<Library>, library: JavaLibrary) {
-        stack.addLast(library)
-        checkLibrary(stack, library)
-        visitJavaLibraries(stack, library.dependencies)
-        stack.removeLast()
-    }
-
-    private fun checkLibrary(stack: ArrayDeque<Library>, library: Library) {
+    private fun checkLibrary(stack: ArrayDeque<LmLibrary>, library: LmLibrary) {
         // Provided dependencies are fine
-        if (library.isProvided/* && stack.size == 1*/) {
+        if (library.provided /* && stack.size == 1*/) {
             return
         }
 
         val coordinates = library.resolvedCoordinates
-
-        // This shouldn't be necessary according to the nullability annotations on this API,
-        // but it's been observed in practice during IDE sessions, probably after failed syncs?
-        // Playing it safe.
-        @Suppress("NullChecksToSafeCall", "SENSELESS_COMPARISON")
-        if (coordinates == null || coordinates.groupId == null || coordinates.artifactId == null) {
-            return
-        }
-
         if (isBlacklistedDependency(coordinates.groupId, coordinates.artifactId)) {
             if (map == null) {
                 map = HashMap()

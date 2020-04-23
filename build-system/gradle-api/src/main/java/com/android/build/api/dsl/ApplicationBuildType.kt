@@ -21,7 +21,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface ApplicationBuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> :
-    BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
+    BuildType<AnnotationProcessorOptionsT>,
     ApplicationVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
     /** Whether this build type should generate a debuggable apk. */
     var isDebuggable: Boolean

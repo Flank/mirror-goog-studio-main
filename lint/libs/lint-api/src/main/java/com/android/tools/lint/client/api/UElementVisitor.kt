@@ -121,16 +121,16 @@ internal class UElementVisitor constructor(
 ) {
 
     private val methodDetectors =
-        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(90)
+        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(120)
     private val constructorDetectors =
-        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(12)
+        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(16)
     private val referenceDetectors =
-        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(10)
+        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(12)
     private val resourceFieldDetectors = ArrayList<VisitingDetector>()
     private val allDetectors: MutableList<VisitingDetector>
     private val nodePsiTypeDetectors =
         Maps.newHashMapWithExpectedSize<Class<out UElement>, MutableList<VisitingDetector>>(25)
-    private val superClassDetectors = HashMap<String, MutableList<VisitingDetector>>()
+    private val superClassDetectors = HashMap<String, MutableList<VisitingDetector>>(40)
     private val annotationHandler: AnnotationHandler?
     private val callGraphDetectors = ArrayList<SourceCodeScanner>()
 

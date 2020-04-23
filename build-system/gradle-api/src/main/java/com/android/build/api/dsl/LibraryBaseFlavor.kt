@@ -21,6 +21,6 @@ import org.gradle.api.Incubating
 @Incubating
 interface LibraryBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> :
-    BaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
+    BaseFlavor<AnnotationProcessorOptionsT>,
     LibraryVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
 }

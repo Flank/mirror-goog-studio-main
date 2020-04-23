@@ -27,11 +27,11 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.OtherFileScanner;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
+import kotlin.text.Charsets;
 
 /** Looks for packaged private key files. */
 public class PrivateKeyDetector extends Detector implements OtherFileScanner {
@@ -58,7 +58,7 @@ public class PrivateKeyDetector extends Detector implements OtherFileScanner {
         }
 
         try {
-            String firstLine = Files.readFirstLine(file, Charsets.US_ASCII);
+            String firstLine = Files.asCharSource(file, Charsets.US_ASCII).readFirstLine();
             return firstLine != null
                     && firstLine.startsWith("---")
                     && firstLine.contains("PRIVATE KEY");

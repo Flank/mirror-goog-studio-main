@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.apksig.ApkSignerEngine;
 import com.android.apksig.DefaultApkSignerEngine;
 import com.android.apksig.apk.ApkFormatException;
+import com.android.apksig.internal.util.FileChannelDataSource;
 import com.android.apksig.util.DataSource;
 import com.android.apksig.util.DataSources;
 import com.android.zipflinger.Archive;
@@ -35,6 +36,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -59,6 +63,8 @@ public class SignedApk implements Archive {
     static final String MANIFEST_BUILT_BY = "Built-By";
     static final String MANIFEST_VERSION = "Manifest-Version";
 
+    private static final boolean FAIL_ON_V4_ERROR = true;
+
     public SignedApk(@NonNull File file, @NonNull SignedApkOptions options)
             throws InvalidKeyException, IOException {
         this.options = options;
@@ -79,7 +85,8 @@ public class SignedApk implements Archive {
                 new DefaultApkSignerEngine.Builder(signerConfigs, options.minSdkVersion)
                         .setV1SigningEnabled(options.v1Enabled)
                         .setV2SigningEnabled(options.v2Enabled)
-                        .setV3SigningEnabled(false)
+                        .setV3SigningEnabled(options.v3Enabled)
+                        .setSigningCertificateLineage(options.v3SigningCertificateLineage)
                         .setCreatedBy(options.v1CreatedBy)
                         .setOtherSignersSignaturesPreserved(false)
                         .build();
@@ -155,13 +162,36 @@ public class SignedApk implements Archive {
     @Override
     public void close() throws IOException {
         try {
-            finishV1();
-            finishV2();
+            finishSigning();
+            // At this point the archive has been closed.
+            // V4 can be done if needed.
+            signV4();
         } finally {
             signer.close();
+        }
+    }
+
+    private void finishSigning() throws IOException {
+        try {
+            finishV1();
+            finishV2andV3();
+        } finally {
             if (!archive.isClosed()) {
                 archive.close();
             }
+        }
+    }
+
+    private void signV4() throws IOException {
+        if (!options.v4Enabled) {
+            return;
+        }
+        Path path = archive.getFile().toPath();
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            FileChannelDataSource dataSource = new FileChannelDataSource(channel);
+            signer.signV4(dataSource, options.v4Output, FAIL_ON_V4_ERROR);
+        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+            throw new IllegalStateException("V4 Signing error", e);
         }
     }
 
@@ -177,14 +207,14 @@ public class SignedApk implements Archive {
         return os.toByteArray();
     }
 
-    private void finishV2() throws IOException {
-        if (!options.v2Enabled) {
+    private void finishV2andV3() throws IOException {
+        if (!options.v2Enabled && !options.v3Enabled) {
             return;
         }
 
         ZipInfo zipInfo = archive.closeWithInfo();
         try (RandomAccessFile raf = new RandomAccessFile(archive.getFile(), "rw")) {
-            byte[] sigBlock = v2Sign(raf, zipInfo);
+            byte[] sigBlock = v2andV3Sign(raf, zipInfo);
             sigBlock =
                     SigningBlockUtils.addToSigningBlock(
                             sigBlock, options.sdkDependencies, DEPENDENCY_INFO_BLOCK_ID);
@@ -243,7 +273,7 @@ public class SignedApk implements Archive {
     }
 
     @NonNull
-    private byte[] v2Sign(@NonNull RandomAccessFile raf, @NonNull ZipInfo zipInfo)
+    private byte[] v2andV3Sign(@NonNull RandomAccessFile raf, @NonNull ZipInfo zipInfo)
             throws ApkFormatException, SignatureException, NoSuchAlgorithmException,
                     InvalidKeyException, IOException {
         DataSource beforeCentralDir =

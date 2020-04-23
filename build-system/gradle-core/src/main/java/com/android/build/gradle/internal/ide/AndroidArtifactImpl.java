@@ -54,7 +54,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull private final String sourceGenTaskName;
     @NonNull private final List<File> generatedResourceFolders;
     @NonNull private final List<File> additionalRuntimeApks;
-    @NonNull private final Map<String, ClassField> buildConfigFields;
     @NonNull private final Map<String, ClassField> resValues;
     @NonNull private final InstantRun instantRun;
     @Nullable private final String signingConfigName;
@@ -88,7 +87,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders,
             @Nullable Set<String> abiFilters,
-            @NonNull Map<String, ClassField> buildConfigFields,
             @NonNull Map<String, ClassField> resValues,
             @NonNull InstantRun instantRun,
             @Nullable TestOptions testOptions,
@@ -120,7 +118,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.generatedResourceFolders = generatedResourceFolders;
         this.additionalRuntimeApks = additionalRuntimeApks;
         this.abiFilters = abiFilters;
-        this.buildConfigFields = buildConfigFields;
         this.resValues = resValues;
         this.instantRun = instantRun;
         this.testOptions = testOptions;
@@ -193,12 +190,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
 
     @NonNull
     @Override
-    public Map<String, ClassField> getBuildConfigFields() {
-        return buildConfigFields;
-    }
-
-    @NonNull
-    @Override
     public Map<String, ClassField> getResValues() {
         return resValues;
     }
@@ -233,7 +224,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(sourceGenTaskName, that.sourceGenTaskName)
                 && Objects.equals(generatedResourceFolders, that.generatedResourceFolders)
                 && Objects.equals(abiFilters, that.abiFilters)
-                && Objects.equals(buildConfigFields, that.buildConfigFields)
                 && Objects.equals(resValues, that.resValues)
                 && Objects.equals(instantRun, that.instantRun)
                 && Objects.equals(additionalRuntimeApks, that.additionalRuntimeApks)
@@ -258,7 +248,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 sourceGenTaskName,
                 generatedResourceFolders,
                 abiFilters,
-                buildConfigFields,
                 resValues,
                 instantRun,
                 additionalRuntimeApks,
@@ -281,7 +270,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("sourceGenTaskName", sourceGenTaskName)
                 .add("generatedResourceFolders", generatedResourceFolders)
                 .add("abiFilters", abiFilters)
-                .add("buildConfigFields", buildConfigFields)
                 .add("resValues", resValues)
                 .add("instantRun", instantRun)
                 .add("testOptions", testOptions)

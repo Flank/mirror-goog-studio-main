@@ -22,7 +22,7 @@ import com.android.ddmlib.ClientData.IMethodProfilingHandler;
 import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
+import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
 import java.io.IOException;
 import java.nio.ByteBuffer;

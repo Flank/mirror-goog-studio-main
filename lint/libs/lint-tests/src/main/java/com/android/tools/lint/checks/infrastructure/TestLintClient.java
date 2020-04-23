@@ -25,6 +25,7 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
@@ -32,16 +33,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.Library;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.MergingException;
@@ -91,6 +82,12 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.model.LmFactory;
+import com.android.tools.lint.model.LmLibrary;
+import com.android.tools.lint.model.LmMavenName;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmSourceProvider;
+import com.android.tools.lint.model.LmVariant;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
@@ -143,7 +140,7 @@ public class TestLintClient extends LintCliClient {
     protected final StringWriter writer = new StringWriter();
     protected File incrementalCheck;
     /** Managed by the {@link TestLintTask} */
-    @SuppressWarnings("NullableProblems")
+    @SuppressWarnings({"NotNullFieldNotInitialized"})
     @NonNull
     TestLintTask task;
 
@@ -471,10 +468,20 @@ public class TestLintClient extends LintCliClient {
             driver.addLintListener(
                     (driver, type, project, context) -> {
                         if (type == LintListener.EventType.REGISTERED_PROJECT && project != null) {
-                            IdeAndroidProject model = project.getGradleProjectModel();
-                            Variant variant = project.getCurrentVariant();
-                            if (model != null && variant != null) {
-                                task.mockModifier.modify(model, variant);
+                            LmVariant variant = project.getBuildVariant();
+                            if (variant != null) {
+                                com.android.builder.model.Variant oldVariant =
+                                        variant.getOldVariant();
+                                IdeAndroidProject oldProject = variant.getModule().getOldProject();
+                                if (oldVariant != null && oldProject != null) {
+                                    task.mockModifier.modify(oldProject, oldVariant);
+                                    // Invalidate any cached lint models
+                                    for (Project p : getKnownProjects()) {
+                                        if (p instanceof TestProject) {
+                                            ((TestProject) p).builderModelUpdated();
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
@@ -790,10 +797,19 @@ public class TestLintClient extends LintCliClient {
             Warning prev = null;
             for (Warning warning : getWarnings()) {
                 assertNotSame(warning, prev);
-                //noinspection PointlessNullCheck
-                assertTrue(
-                        "Warning (message, location) reported more than once: " + warning,
-                        prev == null || !warning.equals(prev));
+                assertNotEquals(
+                        ""
+                                + "Warning (message, location) reported more than once; this "
+                                + "typically means that your detector is incorrectly reaching "
+                                + "the same element twice (for example, visiting each call of a method "
+                                + "and reporting the error on the method itself), or that you should "
+                                + "incorporate more details in your error message such as specific names "
+                                + "of methods or variables to make each message unique if overlapping "
+                                + "errors are expected. Identical error encountered at the same location "
+                                + "more  than once: "
+                                + warning,
+                        warning,
+                        prev);
                 prev = warning;
             }
         }
@@ -1236,12 +1252,6 @@ public class TestLintClient extends LintCliClient {
             return mocker != null || super.isGradleProject();
         }
 
-        @Nullable
-        @Override
-        public Variant getCurrentVariant() {
-            return mocker != null ? mocker.getVariant() : null;
-        }
-
         @Override
         public boolean isLibrary() {
             if (mocker != null && mocker.isLibrary()) {
@@ -1268,14 +1278,10 @@ public class TestLintClient extends LintCliClient {
         public Boolean dependsOn(@NonNull String artifact) {
             artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
 
-            if (mocker != null) {
-                Dependencies deps = mocker.getVariant().getMainArtifact().getDependencies();
-                for (AndroidLibrary lib : deps.getLibraries()) {
-                    if (libraryMatches(artifact, lib)) {
-                        return true;
-                    }
-                }
-                for (JavaLibrary lib : deps.getJavaLibraries()) {
+            LmVariant variant = getBuildVariant();
+            if (mocker != null && variant != null) {
+                // Simulate what the Gradle integration does
+                for (LmLibrary lib : variant.getMainArtifact().getDependencies().getAll()) {
                     if (libraryMatches(artifact, lib)) {
                         return true;
                     }
@@ -1285,8 +1291,8 @@ public class TestLintClient extends LintCliClient {
             return super.dependsOn(artifact);
         }
 
-        private static boolean libraryMatches(@NonNull String artifact, Library lib) {
-            MavenCoordinates coordinates = lib.getResolvedCoordinates();
+        private static boolean libraryMatches(@NonNull String artifact, LmLibrary lib) {
+            LmMavenName coordinates = lib.getResolvedCoordinates();
             String c = coordinates.getGroupId() + ':' + coordinates.getArtifactId();
             c = AndroidxNameUtils.getCoordinateMapping(c);
             return artifact.equals(c);
@@ -1332,53 +1338,45 @@ public class TestLintClient extends LintCliClient {
 
         @Nullable
         @Override
-        public IdeAndroidProject getGradleProjectModel() {
-            return mocker != null ? mocker.getProject() : null;
-        }
-
-        private List<SourceProvider> mProviders;
-
-        private List<SourceProvider> getSourceProviders() {
-            if (mProviders == null) {
-                IdeAndroidProject project = getGradleProjectModel();
-                Variant variant = getCurrentVariant();
-                if (project == null || variant == null) {
-                    return Collections.emptyList();
-                }
-
-                List<SourceProvider> providers = Lists.newArrayList();
-                AndroidArtifact mainArtifact = variant.getMainArtifact();
-
-                providers.add(project.getDefaultConfig().getSourceProvider());
-
-                for (String flavorName : variant.getProductFlavors()) {
-                    for (ProductFlavorContainer flavor : project.getProductFlavors()) {
-                        if (flavorName.equals(flavor.getProductFlavor().getName())) {
-                            providers.add(flavor.getSourceProvider());
-                            break;
-                        }
-                    }
-                }
-
-                SourceProvider multiProvider = mainArtifact.getMultiFlavorSourceProvider();
-                if (multiProvider != null) {
-                    providers.add(multiProvider);
-                }
-
-                String buildTypeName = variant.getBuildType();
-                for (BuildTypeContainer buildType : project.getBuildTypes()) {
-                    if (buildTypeName.equals(buildType.getBuildType().getName())) {
-                        providers.add(buildType.getSourceProvider());
+        public LmVariant getBuildVariant() {
+            if (cachedLintVariant != null) {
+                return cachedLintVariant;
+            }
+            if (mocker != null) {
+                LmModule module =
+                        new LmFactory().create(mocker.getProject(), mocker.getProjectDir(), true);
+                cachedLintVariant = null;
+                for (LmVariant variant : module.getVariants()) {
+                    if (variant.getOldVariant() == mocker.getVariant()) {
+                        cachedLintVariant = variant;
                         break;
                     }
                 }
-
-                SourceProvider variantProvider = mainArtifact.getVariantSourceProvider();
-                if (variantProvider != null) {
-                    providers.add(variantProvider);
+                if (cachedLintVariant == null) {
+                    cachedLintVariant = module.findVariant(mocker.getVariant().getName());
                 }
+            }
 
-                mProviders = providers;
+            return cachedLintVariant;
+        }
+
+        @Nullable private LmVariant cachedLintVariant = null;
+
+        // Gradle builder model has been changed after construction.
+        void builderModelUpdated() {
+            cachedLintVariant = null;
+        }
+
+        private List<LmSourceProvider> mProviders;
+
+        private List<LmSourceProvider> getSourceProviders() {
+            if (mProviders == null) {
+                LmVariant variant = getBuildVariant();
+                if (variant == null) {
+                    mProviders = Collections.emptyList();
+                } else {
+                    mProviders = variant.getSourceProviders();
+                }
             }
 
             return mProviders;
@@ -1390,7 +1388,7 @@ public class TestLintClient extends LintCliClient {
             if (manifestFiles == null) {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
-                    for (SourceProvider provider : getSourceProviders()) {
+                    for (LmSourceProvider provider : getSourceProviders()) {
                         File manifestFile = provider.getManifestFile();
                         if (manifestFile.exists()) { // model returns path whether or not it exists
                             if (manifestFiles == null) {
@@ -1415,7 +1413,7 @@ public class TestLintClient extends LintCliClient {
             if (resourceFolders == null) {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
-                    for (SourceProvider provider : getSourceProviders()) {
+                    for (LmSourceProvider provider : getSourceProviders()) {
                         Collection<File> list = provider.getResDirectories();
                         for (File file : list) {
                             if (file.exists()) { // model returns path whether or not it exists
@@ -1442,7 +1440,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     List<File> list = Lists.newArrayList();
-                    for (SourceProvider provider : getSourceProviders()) {
+                    for (LmSourceProvider provider : getSourceProviders()) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
                         for (File srcDir : srcDirs) {
@@ -1469,9 +1467,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedSourceFolders =
-                            mocker.getVariant()
-                                    .getMainArtifact()
-                                    .getGeneratedSourceFolders()
+                            mocker.getVariant().getMainArtifact().getGeneratedSourceFolders()
                                     .stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList());
@@ -1492,9 +1488,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedResourceFolders =
-                            mocker.getVariant()
-                                    .getMainArtifact()
-                                    .getGeneratedResourceFolders()
+                            mocker.getVariant().getMainArtifact().getGeneratedResourceFolders()
                                     .stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList());
@@ -1511,20 +1505,18 @@ public class TestLintClient extends LintCliClient {
         @Override
         public List<File> getTestSourceFolders() {
             if (testSourceFolders == null) {
-                //noinspection VariableNotUsedInsideIf
-                if (mocker != null) {
+                LmVariant variant = getBuildVariant();
+                if (mocker != null && variant != null) {
                     testSourceFolders = Lists.newArrayList();
-                    for (SourceProvider provider :
-                            Lint.getTestSourceProviders(mocker.getProject(), mocker.getVariant())) {
+
+                    for (LmSourceProvider provider : variant.getTestSourceProviders()) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
-                        List<File> list = new ArrayList<>();
                         for (File srcDir : srcDirs) {
                             if (srcDir.exists()) {
-                                list.add(srcDir);
+                                testSourceFolders.add(srcDir);
                             }
                         }
-                        testSourceFolders.addAll(list);
                     }
                 }
                 if (testSourceFolders == null || testSourceFolders.isEmpty()) {

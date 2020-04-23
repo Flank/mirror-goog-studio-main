@@ -30,9 +30,7 @@ class OverlayIdPushCommand : public Command {
   virtual void Run(proto::InstallerResponse* response);
 
  private:
-  std::string package_name_ = "";
-  std::string oid_ = "";
-  bool clear_overlays_ = false;
+  proto::OverlayIdPush request_;
 
   // TODO: Share this with base_swap.h
   bool ExtractBinaries(const std::string& target_dir,

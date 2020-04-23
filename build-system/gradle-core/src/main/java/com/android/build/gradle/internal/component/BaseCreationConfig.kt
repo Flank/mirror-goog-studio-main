@@ -121,5 +121,4 @@ interface BaseCreationConfig : ComponentIdentity {
      * if there is no tested variant this does nothing and returns null.
      */
     fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T?
-
 }

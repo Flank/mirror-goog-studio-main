@@ -249,22 +249,29 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
             // If both test class name and method name are missing, assume the previous test is
             // the current one. This happens if your test sends custom test status by
             // Instrumentation.sendStatus() method.
+            // Also, we should ignore reported test ResultCode from sendStatus() call because
+            // it is often misused and Activity.RESULT_OK (= -1) is set. -1 means ERROR here
+            // which causes ddmlib to fail.
+            Optional<Integer> resultCodeOverride = Optional.empty();
             if (isNullOrEmpty(testClassName) && isNullOrEmpty(testMethodName)) {
-                TestIdentifier previousTestCase =
-                        mTestStatuses
-                                .keySet()
-                                .stream()
-                                .findFirst()
-                                .orElse(new TestIdentifier("", ""));
-                testClassName = previousTestCase.getClassName();
-                testMethodName = previousTestCase.getTestName();
+                Optional<Map.Entry<TestIdentifier, TestStatus>> previousTestStatus =
+                        mTestStatuses.entrySet().stream().reduce((first, second) -> second);
+                if (previousTestStatus.isPresent()) {
+                    testClassName = previousTestStatus.get().getKey().getClassName();
+                    testMethodName = previousTestStatus.get().getKey().getTestName();
+                    resultCodeOverride =
+                            Optional.of(previousTestStatus.get().getValue().mTestResultCode);
+                } else {
+                    testClassName = "";
+                    testMethodName = "";
+                }
             }
 
             if (!isNullOrEmpty(testClassName) && !isNullOrEmpty(testMethodName)) {
                 updateTestState(
                         testClassName,
                         testMethodName,
-                        status.getResultCode(),
+                        resultCodeOverride.orElse(status.getResultCode()),
                         status.getLogcat(),
                         stackTrace,
                         testMetrics);

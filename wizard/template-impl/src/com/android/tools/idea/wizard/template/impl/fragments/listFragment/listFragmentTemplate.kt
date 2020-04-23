@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
@@ -51,7 +50,7 @@ val listFragmentTemplate
   get() = template {
     revision = 1
     name = "Fragment (List)"
-    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level 14."
+    description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
     minApi = MIN_API
     minBuildApi = MIN_API
 

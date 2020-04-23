@@ -51,7 +51,7 @@ public class LintOptions
     private boolean checkReleaseBuilds = true;
     private boolean explainIssues = true;
     private boolean checkTestSources;
-    private boolean ignoreTestSources = false;
+    private boolean ignoreTestSources;
     private boolean checkGeneratedSources;
     private boolean checkDependencies;
     @Nullable

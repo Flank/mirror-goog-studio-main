@@ -392,6 +392,14 @@ public interface AndroidProject {
     String getBuildToolsVersion();
 
     /**
+     * Returns the NDK version used by this module.
+     *
+     * @return the NDK version.
+     */
+    @NonNull
+    String getNdkVersion();
+
+    /**
      * Returns the generation of the plugin.
      *
      * <p>1 is original plugin, 2 is component based plugin (AKA experimental, not used anymore)

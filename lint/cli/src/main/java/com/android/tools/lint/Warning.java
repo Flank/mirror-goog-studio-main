@@ -17,8 +17,6 @@
 package com.android.tools.lint;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
@@ -31,7 +29,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -48,7 +45,6 @@ public class Warning implements Comparable<Warning> {
     public final String message;
     public final Severity severity;
     public final Project project;
-    public IdeAndroidProject gradleProject;
     public Location location;
     public File file;
     public String path;
@@ -57,7 +53,8 @@ public class Warning implements Comparable<Warning> {
     public int endOffset = -1;
     public String errorLine;
     public CharSequence fileContents;
-    public Set<Variant> variants;
+    public Set<String> allVariants;
+    public Set<String> variants;
     public LintFix quickfixData;
     public boolean wasAutoFixed;
 
@@ -121,13 +118,13 @@ public class Warning implements Comparable<Warning> {
     }
 
     public boolean isVariantSpecific() {
-        return variants != null && variants.size() < gradleProject.getVariants().size();
+        return variants != null && variants.size() < allVariants.size();
     }
 
     public boolean includesMoreThanExcludes() {
         assert isVariantSpecific();
         int variantCount = variants.size();
-        int allVariantCount = gradleProject.getVariants().size();
+        int allVariantCount = allVariants.size();
         return variantCount <= allVariantCount - variantCount;
     }
 
@@ -135,9 +132,7 @@ public class Warning implements Comparable<Warning> {
         assert isVariantSpecific();
         List<String> names = new ArrayList<>();
         if (variants != null) {
-            for (Variant variant : variants) {
-                names.add(variant.getName());
-            }
+            names.addAll(variants);
         }
         Collections.sort(names);
         return names;
@@ -145,11 +140,6 @@ public class Warning implements Comparable<Warning> {
 
     public List<String> getExcludedVariantNames() {
         assert isVariantSpecific();
-        Collection<Variant> variants = gradleProject.getVariants();
-        Set<String> allVariants = new HashSet<>(variants.size());
-        for (Variant variant : variants) {
-            allVariants.add(variant.getName());
-        }
         Set<String> included = new HashSet<>(getIncludedVariantNames());
         Set<String> excluded = Sets.difference(allVariants, included);
         List<String> sorted = Lists.newArrayList(excluded);

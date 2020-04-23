@@ -39,7 +39,7 @@ val masterDetailFlowTemplate
     name = "Master/Detail Flow"
     minApi = MIN_API
     minBuildApi = MIN_API
-    description = "Creates a new master/detail flow, allowing users to view a collection of objects as well as details for each object. This flow is presented using two columns on tablet-size screens and one column on handsets and smaller screens. This template creates two activities, a master fragment, and a detail fragment."
+    description = "Creates a new master/detail flow, allowing users to view a collection of objects as well as details for each object. This flow is presented using two columns on tablet-size screens and one column on handsets and smaller screens. This template creates two activities, a master fragment, and a detail fragment"
 
     category = Category.Activity
     formFactor = FormFactor.Mobile

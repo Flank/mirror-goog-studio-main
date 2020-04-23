@@ -149,59 +149,59 @@ private fun getSimpleFolderTemplate(
 internal val folderTemplates = listOf(
   getSourceSetFolderTemplate(
     "AIDL Folder",
-    "Creates a source root for Android Interface Description Language files.",
+    "Creates a source root for Android Interface Description Language files",
     SourceSetType.AIDL,
     "aidl"
   ),
   getSourceSetFolderTemplate(
     "Assets Folder",
-    "Creates a source root for assets which will be included in the APK.",
+    "Creates a source root for assets which will be included in the APK",
     SourceSetType.ASSETS,
     "assets"
   ),
   getSimpleFolderTemplate(
     "Font Folder",
-    "Font Resources Folder.",
+    "Font Resources Folder",
     "font"
   ),
   getSourceSetFolderTemplate(
     "Java Folder",
-    "Creates a source root for Java files.",
+    "Creates a source root for Java files",
     SourceSetType.JAVA,
     "java"
   ),
   getSourceSetFolderTemplate(
     "JNI Folder",
-    "Creates a source root for Java Native Interface files.",
+    "Creates a source root for Java Native Interface files",
     SourceSetType.JNI,
     "jni"
   ),
   getSimpleFolderTemplate(
     "Raw Resources Folder",
-    "Creates a folder for resources included in the APK in their raw form.",
+    "Creates a folder for resources included in the APK in their raw form",
     "raw"
   ),
   getSourceSetFolderTemplate(
     "Res Folder",
-    "Creates a source root for Android Resource files.",
+    "Creates a source root for Android Resource files",
     SourceSetType.RES,
     "res"
   ),
   getSourceSetFolderTemplate(
     "Java Resources Folder",
-    "Creates a source root for Java Resource (NOT Android resource) files.",
+    "Creates a source root for Java Resource (NOT Android resource) files",
     SourceSetType.RESOURCES,
     "resources"
   ),
   getSourceSetFolderTemplate(
     "RenderScript Folder",
-    "Creates a source root for RenderScript files.",
+    "Creates a source root for RenderScript files",
     SourceSetType.RENDERSCRIPT,
     "rs"
   ),
   getSimpleFolderTemplate(
     "XML Resources Folder",
-    "Creates a folder for arbitrary XML files to be included in the APK.",
+    "Creates a folder for arbitrary XML files to be included in the APK",
     "xml"
   )
 )

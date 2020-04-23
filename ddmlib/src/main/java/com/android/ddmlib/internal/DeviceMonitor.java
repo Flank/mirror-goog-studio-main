@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2007 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,83 +19,47 @@ package com.android.ddmlib.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.ddmlib.AdbCommandRejectedException;
-import com.android.ddmlib.AdbHelper;
-import com.android.ddmlib.AdbHelper.AdbResponse;
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.ClientTracker;
-import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.MonitorThread;
-import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.internal.DebugPortManager.IDebugPortProvider;
-import com.android.ddmlib.utils.DebuggerPorts;
-import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousCloseException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The {@link DeviceMonitor} monitors devices attached to adb.
  *
- * <p>On one thread, it runs the {@link DeviceMonitor.DeviceListMonitorTask}. This establishes a
- * socket connection to the adb host, and issues a {@link #ADB_TRACK_DEVICES_COMMAND}. It then
- * monitors that socket for all changes about device connection and device state.
+ * <p>On one thread, it runs the {@link DeviceListMonitorTask}. This establishes a
+ * socket connection to the adb host, and issues a {@link DeviceListMonitorTask.ADB_TRACK_DEVICES_COMMAND}. It then
+ * monitors that socket for all changes about device connection and device state. If {@link AndroidDebugBridge::getClientSupport}
+ * is not enabled the {@link DeviceClientMonitorTask} is not run, and devices are not registered.
  *
- * <p>For each device that is detected to be online, it then opens a new socket connection to adb,
- * and issues a "track-jdwp" command to that device. On this connection, it monitors active clients
- * on the device. Note: a single thread monitors jdwp connections from all devices. The different
- * socket connections to adb (one per device) are multiplexed over a single selector.
+ * <p>On another thread it runs the {@link DeviceClientMonitorTask}. This establishes
+ * a socket connection to the adb host per registered device and issues a {@link DeviceClientMonitorTask.ADB_TRACK_JDWP_COMMAND}.
+ * On this connection, it monitors active clients on the device. Note: a single thread monitors jdwp connections from all devices.
+ * The different socket connections to adb (one per device) are multiplexed over a single selector.
  */
 public final class DeviceMonitor implements ClientTracker {
-    private static final String ADB_TRACK_DEVICES_COMMAND = "host:track-devices";
-    private static final String ADB_TRACK_JDWP_COMMAND = "track-jdwp";
-
-    private final byte[] mLengthBuffer2 = new byte[4];
-
-    private volatile boolean mQuit = false;
-
     private final AndroidDebugBridge mServer;
     private DeviceListMonitorTask mDeviceListMonitorTask;
-
-    private Selector mSelector;
+    @Nullable
+    private DeviceClientMonitorTask myDeviceClientMonitorTask;
 
     private final Object mDevicesGuard = new Object();
 
     @GuardedBy("mDevicesGuard")
     private ImmutableList<DeviceImpl> mDevices = ImmutableList.of();
-
-    private final DebuggerPorts mDebuggerPorts =
-            new DebuggerPorts(DdmPreferences.getDebugPortBase());
-    private final Map<ClientImpl, Integer> mClientsToReopen = new HashMap<ClientImpl, Integer>();
-    private final BlockingQueue<Pair<SocketChannel, DeviceImpl>> mChannelsToRegister =
-            Queues.newLinkedBlockingQueue();
 
     /**
      * Creates a new {@link DeviceMonitor} object and links it to the running {@link
@@ -109,21 +73,28 @@ public final class DeviceMonitor implements ClientTracker {
 
     /** Starts the monitoring. */
     public void start() {
-        mDeviceListMonitorTask = new DeviceListMonitorTask(mServer, new DeviceListUpdateListener());
-        new Thread(mDeviceListMonitorTask, "Device List Monitor").start(); //$NON-NLS-1$
+        try {
+            // To terminate thread call stop on each respective task.
+            mDeviceListMonitorTask = new DeviceListMonitorTask(mServer, new DeviceListUpdateListener());
+            if (AndroidDebugBridge.getClientSupport()) {
+                myDeviceClientMonitorTask = new DeviceClientMonitorTask();
+                new Thread(myDeviceClientMonitorTask, "Device Client Monitor").start();
+            }
+            new Thread(mDeviceListMonitorTask, "Device List Monitor").start(); //$NON-NLS-1$
+        } catch (IOException ex) {
+            // Not expected.
+            Log.e("DeviceMonitor", ex);
+        }
     }
 
     /** Stops the monitoring. */
     public void stop() {
-        mQuit = true;
-
         if (mDeviceListMonitorTask != null) {
             mDeviceListMonitorTask.stop();
         }
 
-        // wake up the secondary loop by closing the selector.
-        if (mSelector != null) {
-            mSelector.wakeup();
+        if (myDeviceClientMonitorTask != null) {
+            myDeviceClientMonitorTask.stop();
         }
     }
 
@@ -164,35 +135,28 @@ public final class DeviceMonitor implements ClientTracker {
 
     @Override
     public void trackClientToDropAndReopen(@NonNull ClientImpl client, int port) {
-        synchronized (mClientsToReopen) {
-            Log.d(
-                    "DeviceMonitor",
-                    "Adding " + client + " to list of client to reopen (" + port + ").");
-            if (mClientsToReopen.get(client) == null) {
-                mClientsToReopen.put(client, port);
-            }
-        }
-        mSelector.wakeup();
+        assert myDeviceClientMonitorTask != null;
+        myDeviceClientMonitorTask.registerClientToDropAndReopen(client, port);
     }
 
-    /**
-     * Attempts to connect to the debug bridge server.
-     * @return a connect socket if success, null otherwise
-     */
-    @Nullable
-    private static SocketChannel openAdbConnection() {
-        try {
-            SocketChannel adbChannel = SocketChannel.open(AndroidDebugBridge.getSocketAddress());
-            adbChannel.socket().setTcpNoDelay(true);
-            return adbChannel;
-        } catch (IOException e) {
-            Log.e(
-                    "DeviceMonitor",
-                    "Unable to open connection to: "
-                            + AndroidDebugBridge.getSocketAddress()
-                            + ", due to: "
-                            + e);
-            return null;
+    @Override
+    public void trackDisconnectedClient(@NonNull ClientImpl client) {
+        assert myDeviceClientMonitorTask != null;
+        myDeviceClientMonitorTask.free(client);
+    }
+
+    @Override
+    public void trackDeviceToDropAndReopen(@NonNull DeviceImpl device) {
+        boolean hasDevice;
+        synchronized (mDevicesGuard) {
+            hasDevice = mDevices.contains(device);
+        }
+        // restart the monitoring of that device
+        if (hasDevice && AndroidDebugBridge.getClientSupport() && myDeviceClientMonitorTask != null) {
+            Log.d("DeviceMonitor", "Restarting monitoring service for " + device);
+            if (!myDeviceClientMonitorTask.register(device)) {
+                Log.e("DeviceMonitor", "Failed to start monitoring " + device.getSerialNumber());
+            }
         }
     }
 
@@ -257,7 +221,7 @@ public final class DeviceMonitor implements ClientTracker {
 
         if (AndroidDebugBridge.getClientSupport()) {
             for (DeviceImpl device : newlyOnline) {
-                if (!startMonitoringDevice(device)) {
+                if (!myDeviceClientMonitorTask.register(device)) {
                     Log.e(
                             "DeviceMonitor",
                             "Failed to start monitoring " + device.getSerialNumber());
@@ -298,407 +262,6 @@ public final class DeviceMonitor implements ClientTracker {
             device.setAvdName(console.getAvdName());
             console.close();
         }
-    }
-
-    /**
-     * Starts a monitoring service for a device.
-     *
-     * @param device the device to monitor.
-     * @return true if success.
-     */
-    private boolean startMonitoringDevice(@NonNull DeviceImpl device) {
-        SocketChannel socketChannel = openAdbConnection();
-
-        if (socketChannel != null) {
-            try {
-                boolean result = sendDeviceMonitoringRequest(socketChannel, device);
-                if (result) {
-
-                    if (mSelector == null) {
-                        startDeviceMonitorThread();
-                    }
-
-                    device.setClientMonitoringSocket(socketChannel);
-
-                    socketChannel.configureBlocking(false);
-
-                    try {
-                        mChannelsToRegister.put(Pair.of(socketChannel, device));
-                    } catch (InterruptedException e) {
-                        // the queue is unbounded, and isn't going to block
-                    }
-                    mSelector.wakeup();
-
-                    return true;
-                }
-            } catch (TimeoutException e) {
-                try {
-                    // attempt to close the socket if needed.
-                    socketChannel.close();
-                } catch (IOException e1) {
-                    // we can ignore that one. It may already have been closed.
-                }
-                Log.d("DeviceMonitor",
-                        "Connection Failure when starting to monitor device '"
-                        + device + "' : timeout");
-            } catch (AdbCommandRejectedException e) {
-                try {
-                    // attempt to close the socket if needed.
-                    socketChannel.close();
-                } catch (IOException e1) {
-                    // we can ignore that one. It may already have been closed.
-                }
-                Log.d("DeviceMonitor",
-                        "Adb refused to start monitoring device '"
-                        + device + "' : " + e.getMessage());
-            } catch (IOException e) {
-                try {
-                    // attempt to close the socket if needed.
-                    socketChannel.close();
-                } catch (IOException e1) {
-                    // we can ignore that one. It may already have been closed.
-                }
-                Log.d("DeviceMonitor",
-                        "Connection Failure when starting to monitor device '"
-                        + device + "' : " + e.getMessage());
-            }
-        }
-
-        return false;
-    }
-
-    private void startDeviceMonitorThread() throws IOException {
-        mSelector = Selector.open();
-        new Thread("Device Client Monitor") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                deviceClientMonitorLoop();
-            }
-        }.start();
-    }
-
-    private void deviceClientMonitorLoop() {
-        do {
-            try {
-                int count = mSelector.select();
-
-                if (mQuit) {
-                    return;
-                }
-
-                synchronized (mClientsToReopen) {
-                    if (!mClientsToReopen.isEmpty()) {
-                        Set<ClientImpl> clients = mClientsToReopen.keySet();
-                        MonitorThread monitorThread = MonitorThread.getInstance();
-
-                        for (ClientImpl client : clients) {
-                            DeviceImpl device = (DeviceImpl) client.getDevice();
-                            int pid = client.getClientData().getPid();
-
-                            monitorThread.dropClient(client, false /* notify */);
-
-                            // This is kinda bad, but if we don't wait a bit, the client
-                            // will never answer the second handshake!
-                            Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-
-                            int port = mClientsToReopen.get(client);
-
-                            if (port == IDebugPortProvider.NO_STATIC_PORT) {
-                                port = getNextDebuggerPort();
-                            }
-                            Log.d("DeviceMonitor", "Reopening " + client);
-                            openClient(device, pid, port, monitorThread);
-                            device.update(IDevice.CHANGE_CLIENT_LIST);
-                        }
-
-                        mClientsToReopen.clear();
-                    }
-                }
-
-                // register any new channels
-                while (!mChannelsToRegister.isEmpty()) {
-                    try {
-                        Pair<SocketChannel, DeviceImpl> data = mChannelsToRegister.take();
-                        data.getFirst().register(mSelector, SelectionKey.OP_READ, data.getSecond());
-                    } catch (InterruptedException e) {
-                        // doesn't block: this thread is the only reader and it reads only when
-                        // there is data
-                    }
-                }
-
-                if (count == 0) {
-                    continue;
-                }
-
-                Set<SelectionKey> keys = mSelector.selectedKeys();
-                Iterator<SelectionKey> iter = keys.iterator();
-
-                while (iter.hasNext()) {
-                    SelectionKey key = iter.next();
-                    iter.remove();
-
-                    if (key.isValid() && key.isReadable()) {
-                        Object attachment = key.attachment();
-
-                        if (attachment instanceof DeviceImpl) {
-                            DeviceImpl device = (DeviceImpl) attachment;
-
-                            SocketChannel socket = device.getClientMonitoringSocket();
-
-                            if (socket != null) {
-                                try {
-                                    int length = readLength(socket, mLengthBuffer2);
-
-                                    processIncomingJdwpData(device, socket, length);
-                                } catch (IOException ioe) {
-                                    Log.d(
-                                            "DeviceMonitor",
-                                            "Error reading jdwp list: " + ioe.getMessage());
-                                    socket.close();
-
-                                    boolean hasDevice;
-                                    synchronized (mDevicesGuard) {
-                                        hasDevice = mDevices.contains(device);
-                                    }
-                                    // restart the monitoring of that device
-                                    if (hasDevice) {
-                                        Log.d(
-                                                "DeviceMonitor",
-                                                "Restarting monitoring service for " + device);
-                                        startMonitoringDevice(device);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                Log.e("DeviceMonitor", "Connection error while monitoring clients.");
-            }
-        } while (!mQuit);
-    }
-
-    private static boolean sendDeviceMonitoringRequest(
-            @NonNull SocketChannel socket, @NonNull DeviceImpl device)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
-
-        try {
-            AdbHelper.setDevice(socket, device);
-            AdbHelper.write(socket, AdbHelper.formAdbRequest(ADB_TRACK_JDWP_COMMAND));
-            AdbResponse resp = AdbHelper.readAdbResponse(socket, false);
-
-            if (!resp.okay) {
-                // request was refused by adb!
-                Log.e("DeviceMonitor", "adb refused request: " + resp.message);
-            }
-
-            return resp.okay;
-        } catch (TimeoutException e) {
-            Log.e("DeviceMonitor", "Sending jdwp tracking request timed out!");
-            throw e;
-        } catch (IOException e) {
-            Log.e("DeviceMonitor", "Sending jdwp tracking request failed!");
-            throw e;
-        }
-    }
-
-    private void processIncomingJdwpData(
-            @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
-            throws IOException {
-
-        // This methods reads @length bytes from the @monitorSocket channel.
-        // These bytes correspond to the pids of the current set of processes on the device.
-        // It takes this set of pids and compares them with the existing set of clients
-        // for the device. Clients that correspond to pids that are not alive anymore are
-        // dropped, and new clients are created for pids that don't have a corresponding Client.
-
-        if (length >= 0) {
-            // array for the current pids.
-            Set<Integer> newPids = new HashSet<Integer>();
-
-            // get the string data if there are any
-            if (length > 0) {
-                byte[] buffer = new byte[length];
-                String result = read(monitorSocket, buffer);
-
-                // split each line in its own list and create an array of integer pid
-                String[] pids = result == null ? new String[0] : result.split("\n"); //$NON-NLS-1$
-
-                for (String pid : pids) {
-                    try {
-                        newPids.add(Integer.valueOf(pid));
-                    } catch (NumberFormatException nfe) {
-                        // looks like this pid is not really a number. Lets ignore it.
-                        continue;
-                    }
-                }
-            }
-
-            MonitorThread monitorThread = MonitorThread.getInstance();
-
-            List<ClientImpl> clients = device.getClientList();
-            Map<Integer, ClientImpl> existingClients = new HashMap<Integer, ClientImpl>();
-
-            synchronized (clients) {
-                for (ClientImpl c : clients) {
-                    existingClients.put(c.getClientData().getPid(), c);
-                }
-            }
-
-            Set<ClientImpl> clientsToRemove = new HashSet<ClientImpl>();
-            for (Integer pid : existingClients.keySet()) {
-                if (!newPids.contains(pid)) {
-                    clientsToRemove.add(existingClients.get(pid));
-                }
-            }
-
-            Set<Integer> pidsToAdd = new HashSet<Integer>(newPids);
-            pidsToAdd.removeAll(existingClients.keySet());
-
-            monitorThread.dropClients(clientsToRemove, false);
-
-            // at this point whatever pid is left in the list needs to be converted into Clients.
-            for (int newPid : pidsToAdd) {
-                openClient(device, newPid, getNextDebuggerPort(), monitorThread);
-            }
-
-            if (!pidsToAdd.isEmpty() || !clientsToRemove.isEmpty()) {
-                AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_CLIENT_LIST);
-            }
-        }
-    }
-
-    /** Opens and creates a new client. */
-    private static void openClient(
-            @NonNull DeviceImpl device, int pid, int port, @NonNull MonitorThread monitorThread) {
-
-        SocketChannel clientSocket;
-        try {
-            clientSocket =
-                    AdbHelper.createPassThroughConnection(
-                            AndroidDebugBridge.getSocketAddress(), device, pid);
-
-            // required for Selector
-            clientSocket.configureBlocking(false);
-        } catch (UnknownHostException uhe) {
-            Log.d("DeviceMonitor", "Unknown Jdwp pid: " + pid);
-            return;
-        } catch (TimeoutException e) {
-            Log.w("DeviceMonitor", "Failed to connect to client '" + pid + "': timeout");
-            return;
-        } catch (AdbCommandRejectedException e) {
-            Log.d(
-                    "DeviceMonitor",
-                    "Adb rejected connection to client '" + pid + "': " + e.getMessage());
-            return;
-        } catch (IOException ioe) {
-            Log.w(
-                    "DeviceMonitor",
-                    "Failed to connect to client '" + pid + "': " + ioe.getMessage());
-            return;
-        }
-
-        createClient(device, pid, clientSocket, port, monitorThread);
-    }
-
-    /** Creates a client and register it to the monitor thread */
-    private static void createClient(
-            @NonNull DeviceImpl device,
-            int pid,
-            @NonNull SocketChannel socket,
-            int debuggerPort,
-            @NonNull MonitorThread monitorThread) {
-
-        /*
-         * Successfully connected to something. Create a Client object, add
-         * it to the list, and initiate the JDWP handshake.
-         */
-
-        ClientImpl client = new ClientImpl(device, socket, pid);
-
-        if (client.sendHandshake()) {
-            try {
-                if (AndroidDebugBridge.getClientSupport()) {
-                    client.listenForDebugger(debuggerPort);
-                    String msg = String.format(Locale.US, "Opening a debugger listener at port %1$d for client with pid %2$d",
-                                               debuggerPort, pid);
-                    Log.d("ddms", msg);
-                }
-            } catch (IOException ioe) {
-                client.getClientData().setDebuggerConnectionStatus(DebuggerStatus.ERROR);
-                Log.e("ddms", "Can't bind to local " + debuggerPort + " for debugger");
-                // oh well
-            }
-
-            client.requestAllocationStatus();
-        } else {
-            Log.e("ddms", "Handshake with " + client + " failed!");
-            /*
-             * The handshake send failed. We could remove it now, but if the
-             * failure is "permanent" we'll just keep banging on it and
-             * getting the same result. Keep it in the list with its "error"
-             * state so we don't try to reopen it.
-             */
-        }
-
-        if (client.isValid()) {
-            device.addClient(client);
-            monitorThread.addClient(client);
-        }
-    }
-
-    private int getNextDebuggerPort() {
-        return mDebuggerPorts.next();
-    }
-
-    @Override
-    public void trackDisconnectedClient(@NonNull ClientImpl client) {
-        mDebuggerPorts.free(client.getDebuggerListenPort());
-    }
-
-    /**
-     * Reads the length of the next message from a socket.
-     * @param socket The {@link SocketChannel} to read from.
-     * @return the length, or 0 (zero) if no data is available from the socket.
-     * @throws IOException if the connection failed.
-     */
-    private static int readLength(@NonNull SocketChannel socket, @NonNull byte[] buffer)
-            throws IOException {
-        String msg = read(socket, buffer);
-
-        if (msg != null) {
-            try {
-                return Integer.parseInt(msg, 16);
-            } catch (NumberFormatException nfe) {
-                // we'll throw an exception below.
-            }
-        }
-
-        // we receive something we can't read. It's better to reset the connection at this point.
-        throw new IOException("Unable to read length");
-    }
-
-    /**
-     * Fills a buffer by reading data from a socket.
-     *
-     * @return the content of the buffer as a string, or null if it failed to convert the buffer.
-     * @throws IOException if there was not enough data to fill the buffer
-     */
-    @NonNull
-    private static String read(@NonNull SocketChannel socket, @NonNull byte[] buffer)
-            throws IOException {
-        ByteBuffer buf = ByteBuffer.wrap(buffer, 0, buffer.length);
-
-        while (buf.position() != buf.limit()) {
-            int count;
-
-            count = socket.read(buf);
-            if (count < 0) {
-                throw new IOException("EOF");
-            }
-        }
-
-        return new String(buffer, 0, buf.position(), AdbHelper.DEFAULT_CHARSET);
     }
 
     private class DeviceListUpdateListener implements DeviceListMonitorTask.UpdateListener {
@@ -780,185 +343,6 @@ public final class DeviceMonitor implements ClientTracker {
             }
 
             return null;
-        }
-    }
-
-    @VisibleForTesting
-    public static class DeviceListMonitorTask implements Runnable {
-        private final byte[] mLengthBuffer = new byte[4];
-
-        private final AndroidDebugBridge mBridge;
-        private final UpdateListener mListener;
-
-        private SocketChannel mAdbConnection = null;
-        private boolean mMonitoring = false;
-        private int mConnectionAttempt = 0;
-        private int mRestartAttemptCount = 0;
-        private boolean mInitialDeviceListDone = false;
-
-        private volatile boolean mQuit;
-
-        private interface UpdateListener {
-            void connectionError(@NonNull Exception e);
-            void deviceListUpdate(@NonNull Map<String,DeviceState> devices);
-        }
-
-        public DeviceListMonitorTask(@NonNull AndroidDebugBridge bridge,
-                @NonNull UpdateListener listener) {
-            mBridge = bridge;
-            mListener = listener;
-        }
-
-        @Override
-        public void run() {
-            do {
-                if (mAdbConnection == null) {
-                    Log.d("DeviceMonitor", "Opening adb connection");
-                    mAdbConnection = openAdbConnection();
-                    if (mAdbConnection == null) {
-                        mConnectionAttempt++;
-                        Log.e("DeviceMonitor", "Connection attempts: " + mConnectionAttempt);
-                        if (AndroidDebugBridge.isUserManagedAdbMode()) {
-                            Log.i("DeviceMonitor", "User managed ADB mode: Waiting for ADB connection to be re-established");
-                        } else if (mConnectionAttempt > 10) {
-                            if (!mBridge.startAdb(
-                                    AndroidDebugBridge.DEFAULT_START_ADB_TIMEOUT_MILLIS,
-                                    TimeUnit.MILLISECONDS)) {
-                                mRestartAttemptCount++;
-                                Log.e("DeviceMonitor",
-                                        "adb restart attempts: " + mRestartAttemptCount);
-                            } else {
-                                Log.i("DeviceMonitor", "adb restarted");
-                                mRestartAttemptCount = 0;
-                            }
-                        }
-                        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-                    } else {
-                        Log.d("DeviceMonitor", "Connected to adb for device monitoring");
-                        mConnectionAttempt = 0;
-                    }
-                }
-
-                try {
-                    if (mAdbConnection != null && !mMonitoring) {
-                        mMonitoring = sendDeviceListMonitoringRequest();
-                    }
-
-                    if (mMonitoring) {
-                        int length = readLength(mAdbConnection, mLengthBuffer);
-
-                        if (length >= 0) {
-                            // read the incoming message
-                            processIncomingDeviceData(length);
-
-                            // flag the fact that we have build the list at least once.
-                            mInitialDeviceListDone = true;
-                        }
-                    }
-                } catch (AsynchronousCloseException ace) {
-                    // this happens because of a call to Quit. We do nothing, and the loop will break.
-                } catch (TimeoutException ioe) {
-                    handleExceptionInMonitorLoop(ioe);
-                } catch (IOException ioe) {
-                    handleExceptionInMonitorLoop(ioe);
-                }
-            } while (!mQuit);
-        }
-
-        private boolean sendDeviceListMonitoringRequest() throws TimeoutException, IOException {
-            byte[] request = AdbHelper.formAdbRequest(ADB_TRACK_DEVICES_COMMAND);
-
-            try {
-                AdbHelper.write(mAdbConnection, request);
-                AdbResponse resp = AdbHelper.readAdbResponse(mAdbConnection, false);
-                if (!resp.okay) {
-                    // request was refused by adb!
-                    Log.e("DeviceMonitor", "adb refused request: " + resp.message);
-                }
-
-                return resp.okay;
-            } catch (IOException e) {
-                Log.e("DeviceMonitor", "Sending Tracking request failed!");
-                mAdbConnection.close();
-                throw e;
-            }
-        }
-
-        private void handleExceptionInMonitorLoop(@NonNull Exception e) {
-            if (!mQuit) {
-                if (e instanceof TimeoutException) {
-                    Log.e("DeviceMonitor", "Adb connection Error: timeout");
-                } else {
-                    Log.e("DeviceMonitor", "Adb connection Error:" + e.getMessage());
-                }
-                mMonitoring = false;
-                if (mAdbConnection != null) {
-                    try {
-                        mAdbConnection.close();
-                    } catch (IOException ioe) {
-                        // we can safely ignore that one.
-                    }
-                    mAdbConnection = null;
-
-                    mListener.connectionError(e);
-                }
-            }
-        }
-
-        /** Processes an incoming device message from the socket */
-        private void processIncomingDeviceData(int length) throws IOException {
-            Map<String, DeviceState> result;
-            if (length <= 0) {
-                result = Collections.emptyMap();
-            } else {
-                String response = read(mAdbConnection, new byte[length]);
-                result = parseDeviceListResponse(response);
-            }
-
-            mListener.deviceListUpdate(result);
-        }
-
-        @VisibleForTesting
-        public static Map<String, DeviceState> parseDeviceListResponse(@Nullable String result) {
-            Map<String, DeviceState> deviceStateMap = Maps.newHashMap();
-            String[] devices = result == null ? new String[0] : result.split("\n"); //$NON-NLS-1$
-
-            for (String d : devices) {
-                String[] param = d.split("\t"); //$NON-NLS-1$
-                if (param.length == 2) {
-                    // new adb uses only serial numbers to identify devices
-                    deviceStateMap.put(param[0], DeviceState.getState(param[1]));
-                }
-            }
-            return deviceStateMap;
-        }
-
-        boolean isMonitoring() {
-            return mMonitoring;
-        }
-
-        boolean hasInitialDeviceList() {
-            return mInitialDeviceListDone;
-        }
-
-        int getConnectionAttemptCount() {
-            return mConnectionAttempt;
-        }
-
-        int getRestartAttemptCount() {
-            return mRestartAttemptCount;
-        }
-
-        public void stop() {
-            mQuit = true;
-
-            // wakeup the main loop thread by closing the main connection to adb.
-            if (mAdbConnection != null) {
-                try {
-                    mAdbConnection.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.android.ide.common.gradle.model.IdeLibraries.computeRequestedCoordinate;
 import static com.android.ide.common.gradle.model.IdeLibraries.computeResolvedCoordinate;
 
 import com.android.annotations.NonNull;
@@ -26,9 +27,10 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link Library}. */
 public abstract class IdeLibrary implements Library, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final IdeMavenCoordinates myResolvedCoordinates;
+    @Nullable private final IdeMavenCoordinates myRequestedCoordinates;
     @Nullable private final String myBuildId;
     @Nullable private final String myProject;
     @Nullable private final String myName;
@@ -39,6 +41,7 @@ public abstract class IdeLibrary implements Library, Serializable {
     // Used for serialization by the IDE.
     IdeLibrary() {
         myResolvedCoordinates = new IdeMavenCoordinates();
+        myRequestedCoordinates = new IdeMavenCoordinates();
         myBuildId = null;
         myProject = null;
         myName = null;
@@ -50,6 +53,7 @@ public abstract class IdeLibrary implements Library, Serializable {
 
     protected IdeLibrary(@NonNull Library library, @NonNull ModelCache modelCache) {
         myResolvedCoordinates = computeResolvedCoordinate(library, modelCache);
+        myRequestedCoordinates = computeRequestedCoordinate(library);
         myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
         myProject = IdeModel.copyNewProperty(library::getProject, null);
         myName =
@@ -63,7 +67,7 @@ public abstract class IdeLibrary implements Library, Serializable {
     @Override
     @Nullable
     public IdeMavenCoordinates getRequestedCoordinates() {
-        throw new UnusedModelMethodException("getRequestedCoordinates");
+        return myRequestedCoordinates;
     }
 
     @Override
@@ -119,6 +123,7 @@ public abstract class IdeLibrary implements Library, Serializable {
                 && Objects.equals(myIsSkipped, library.myIsSkipped)
                 && Objects.equals(myProvided, library.myProvided)
                 && Objects.equals(myResolvedCoordinates, library.myResolvedCoordinates)
+                && Objects.equals(myRequestedCoordinates, library.myRequestedCoordinates)
                 && Objects.equals(myBuildId, library.myBuildId)
                 && Objects.equals(myProject, library.myProject)
                 && Objects.equals(myName, library.myName);
@@ -136,13 +141,15 @@ public abstract class IdeLibrary implements Library, Serializable {
 
     protected int calculateHashCode() {
         return Objects.hash(
-                myResolvedCoordinates, myBuildId, myProject, myName, myProvided, myIsSkipped);
+                myResolvedCoordinates, myRequestedCoordinates, myBuildId, myProject, myName, myProvided, myIsSkipped);
     }
 
     @Override
     public String toString() {
         return "myResolvedCoordinates="
                 + myResolvedCoordinates
+                + ", myRequestedCoordinates='"
+                + myRequestedCoordinates
                 + ", myBuildId='"
                 + myBuildId
                 + '\''

@@ -16,10 +16,9 @@
 package com.android.tools.lint.client.api
 
 import com.android.manifmerger.Actions
-import com.android.manifmerger.XmlNode
 import com.android.manifmerger.ManifestModel
+import com.android.manifmerger.XmlNode
 import com.android.utils.Pair
-import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.io.Files
