@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -33,6 +33,8 @@ import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.Splits
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
@@ -155,7 +157,7 @@ open class BasicModuleModelMock {
     )
 
     val sdkComponents = mock(
-        SdkComponents::class.java,
+        SdkComponentsBuildService::class.java,
         throwUnmocked
     )
     val projectOptions = mock(
@@ -310,10 +312,10 @@ open class BasicModuleModelMock {
         projectRootDir.mkdirs()
         sdkDir.mkdirs()
 
-        doReturn(sdkComponents).`when`(global).sdkComponents
+        doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
         doReturn(projectOptions).`when`(global).projectOptions
 
-        doReturn(sdkDir).`when`(sdkComponents).getSdkDirectory()
+        doReturn(FakeGradleProvider(FakeGradleDirectory(sdkDir))).`when`(sdkComponents).sdkDirectoryProvider
         doReturn(false).`when`(projectOptions)
             .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
         doReturn(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION.defaultValue).`when`(projectOptions)
@@ -330,7 +332,7 @@ open class BasicModuleModelMock {
         doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
         doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
 
-        doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
+        doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
         doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
 

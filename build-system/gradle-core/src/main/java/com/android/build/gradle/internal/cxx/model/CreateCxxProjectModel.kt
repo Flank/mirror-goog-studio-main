@@ -47,7 +47,7 @@ fun createCxxProjectModel(componentProperties: ComponentPropertiesImpl) : CxxPro
         override val rootBuildGradleFolder
             get() = global.project.rootDir
         override val sdkFolder by lazy {
-            global.sdkComponents.getSdkDirectory()
+            global.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile
         }
         override val isNativeCompilerSettingsCacheEnabled by lazy {
             option(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)

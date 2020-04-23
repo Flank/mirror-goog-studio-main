@@ -31,6 +31,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
@@ -556,7 +557,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                         javaProcessExecutor,
                                         task.getExecutorServiceAdapter(),
                                         project.getConfigurations(),
-                                        globalScope.getSdkComponents(),
+                                        globalScope.getSdkComponents().get(),
                                         projectOptions.get(
                                                 BooleanOption.ANDROID_TEST_USES_RETENTION));
             } else {
@@ -614,7 +615,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
             task.splitSelectExecProvider =
-                    globalScope.getSdkComponents().getSplitSelectExecutableProvider();
+                    globalScope
+                            .getSdkComponents()
+                            .flatMap(SdkComponentsBuildService::getSplitSelectExecutableProvider);
 
             String rootLocation = globalScope.getExtension().getTestOptions().getResultsDir();
             if (rootLocation == null) {

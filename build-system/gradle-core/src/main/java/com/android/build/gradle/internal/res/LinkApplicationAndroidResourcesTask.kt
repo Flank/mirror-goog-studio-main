@@ -26,6 +26,7 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -235,10 +236,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var isLibrary: Boolean = false
         private set
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
 
     @get:Input
     var useFinalIds: Boolean = true
@@ -514,8 +513,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.projectBaseName = baseName!!
             task.isLibrary = isLibrary
 
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
-
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
@@ -526,6 +523,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
 
@@ -889,8 +889,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val variantName: String = task.name
         val packageId: Int? = task.resOffset.orNull
         val incrementalFolder: File = task.incrementalFolder!!
-        val androidJarPath: String =
-            task.androidJar.get().absolutePath
+        val androidJarPath: String = task.androidJarInput.getAndroidJar().get().absolutePath
         val inputResourcesDir: File? = task.inputResourcesDir.orNull?.asFile
         val mergeBlameFolder: File = task.mergeBlameLogFolder.get().asFile
         val isLibrary: Boolean = task.isLibrary

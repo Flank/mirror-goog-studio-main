@@ -17,11 +17,12 @@
 @file:JvmName("FakeServices")
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildServiceRegistry
 import java.io.File
@@ -64,7 +66,7 @@ fun createProjectServices(
 fun createDslServices(
     projectServices: ProjectServices = createProjectServices(),
     dslVariableFactory: DslVariableFactory = DslVariableFactory(projectServices.issueReporter),
-    sdkComponents: SdkComponents? = null
+    sdkComponents: Provider<SdkComponentsBuildService> = FakeGradleProvider(null)
 ): DslServices {
     return DslServicesImpl(projectServices, dslVariableFactory, sdkComponents)
 }

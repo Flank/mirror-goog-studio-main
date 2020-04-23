@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.AndroidVersion
@@ -44,7 +46,7 @@ import java.io.File
 class UtpConfigFactoryTest {
     @get:Rule var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
     @Mock lateinit var mockConfigurationContainer: ConfigurationContainer
-    @Mock lateinit var mockSdkComponents: SdkComponents
+    @Mock lateinit var mockSdkComponents: SdkComponentsBuildService
     @Mock
     lateinit var mockAppApk: File
     @Mock
@@ -112,7 +114,11 @@ class UtpConfigFactoryTest {
         `when`(mockAppApk.absolutePath).thenReturn("mockAppApkPath")
         `when`(mockTestApk.absolutePath).thenReturn("mockTestApkPath")
         `when`(mockHelperApk.absolutePath).thenReturn("mockHelperApkPath")
-        `when`(mockSdkComponents.getSdkDirectory()).thenReturn(mockSdkDir)
+        `when`(mockSdkComponents.sdkDirectoryProvider).thenReturn(
+            FakeGradleProvider(
+                FakeGradleDirectory(mockSdkDir)
+            )
+        )
         `when`(mockSdkDir.absolutePath).thenReturn("mockSdkDirPath")
         `when`(mockSdkComponents.adbExecutableProvider).thenReturn(mockAdbProvider)
         `when`(mockAdbProvider.get()).thenReturn(mockAdb)

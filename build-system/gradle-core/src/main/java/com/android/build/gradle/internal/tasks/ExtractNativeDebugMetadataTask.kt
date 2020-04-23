@@ -21,12 +21,14 @@ import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_DEBUG_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBOL_TABLES
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -44,6 +46,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -70,13 +73,15 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     @get:Inject
     abstract val execOperations: ExecOperations
 
-    @get:Input
-    lateinit var ndkRevision: Provider<Revision>
-        private set
+    @Input
+    fun getNdkRevision(): Provider<Revision> = sdkBuildService.flatMap { it.ndkRevisionProvider }
 
     @get:Input
     lateinit var debugSymbolLevel: DebugSymbolLevel
         private set
+
+    @get:Internal
+    abstract val sdkBuildService: Property<SdkComponentsBuildService>
 
     // We need this inputFiles property because SkipWhenEmpty doesn't work for inputDir because it's
     // a DirectoryProperty
@@ -85,15 +90,13 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputFiles: Property<FileTree>
 
-    private lateinit var objcopyExecutableMapProvider: Provider<Map<Abi, File>>
-
     override fun doTaskAction() {
         getWorkerFacadeWithThreads(useGradleExecutor = false).use { workers ->
             ExtractNativeDebugMetadataDelegate(
                 workers,
                 inputDir.get().asFile,
                 outputDir.get().asFile,
-                objcopyExecutableMapProvider.get(),
+                sdkBuildService.get().objcopyExecutableMapProvider.get(),
                 debugSymbolLevel,
                 GradleProcessExecutor(execOperations::exec)
             ).run()
@@ -113,13 +116,13 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
-            task.ndkRevision = creationConfig.globalScope.sdkComponents.ndkRevisionProvider
-            task.objcopyExecutableMapProvider =
-                creationConfig.globalScope.sdkComponents.objcopyExecutableMapProvider
             task.inputFiles.setDisallowChanges(
                 creationConfig.globalScope.project.provider {
                     creationConfig.globalScope.project.layout.files(task.inputDir).asFileTree
                 }
+            )
+            task.sdkBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }
     }

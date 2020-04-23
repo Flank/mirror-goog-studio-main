@@ -16,24 +16,25 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.AdbExecutableInput;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.utils.ILogger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskProvider;
 
 public abstract class UninstallTask extends NonIncrementalTask {
@@ -43,7 +44,6 @@ public abstract class UninstallTask extends NonIncrementalTask {
     private Provider<String> applicationId;
 
     private int mTimeOutInMs = 0;
-    private Provider<RegularFile> adbExecutableProvider;
 
     public UninstallTask() {
         this.getOutputs().upToDateWhen(task -> {
@@ -60,7 +60,8 @@ public abstract class UninstallTask extends NonIncrementalTask {
 
         final ILogger iLogger = new LoggerWrapper(getLogger());
         final DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(adbExecutableProvider, getTimeOutInMs(), iLogger);
+                new ConnectedDeviceProvider(
+                        getAdbExecutableInput().getAdbExecutable(), getTimeOutInMs(), iLogger);
 
         deviceProvider.use(
                 () -> {
@@ -88,16 +89,13 @@ public abstract class UninstallTask extends NonIncrementalTask {
                 });
     }
 
-    @InputFile
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    public RegularFile getAdbExe() {
-        return adbExecutableProvider.get();
-    }
-
     @Input
     public int getTimeOutInMs() {
         return mTimeOutInMs;
     }
+
+    @Nested
+    public abstract AdbExecutableInput getAdbExecutableInput();
 
     public void setTimeOutInMs(int timeoutInMs) {
         mTimeOutInMs = timeoutInMs;
@@ -137,8 +135,11 @@ public abstract class UninstallTask extends NonIncrementalTask {
                             .getAdbOptions()
                             .getTimeOutInMs());
 
-            task.adbExecutableProvider =
-                    creationConfig.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getAdbExecutableInput().getSdkBuildService(),
+                    BuildServicesKt.getBuildService(
+                            creationConfig.getServices().getBuildServiceRegistry(),
+                            SdkComponentsBuildService.class));
         }
 
         @Override

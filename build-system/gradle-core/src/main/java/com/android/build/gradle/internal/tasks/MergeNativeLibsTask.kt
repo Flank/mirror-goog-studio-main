@@ -244,12 +244,12 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
                 project.files(artifacts.get(RENDERSCRIPT_LIB))
-        val rsLibs = globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
+        val rsLibs = globalScope.sdkComponents.get().supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)
         }
         if (componentProperties.variantDslInfo.renderscriptSupportModeBlasEnabled) {
-            val rsBlasLib = globalScope.sdkComponents.supportBlasLibFolderProvider.orNull
+            val rsBlasLib = globalScope.sdkComponents.get().supportBlasLibFolderProvider.orNull
             if (rsBlasLib == null || !rsBlasLib.isDirectory) {
                 throw GradleException(
                     "Renderscript BLAS support mode is not supported in BuildTools $rsBlasLib"

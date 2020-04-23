@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.BaseTestRunner
 import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
@@ -55,7 +55,7 @@ class UtpTestRunner @JvmOverloads constructor(
         private val javaProcessExecutor: JavaProcessExecutor,
         executor: ExecutorServiceAdapter,
         private val configurations: ConfigurationContainer,
-        private val sdkComponents: SdkComponents,
+        private val sdkComponents: SdkComponentsBuildService,
         private val usesIcebox: Boolean,
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
     : BaseTestRunner(splitSelectExec, processExecutor, executor) {

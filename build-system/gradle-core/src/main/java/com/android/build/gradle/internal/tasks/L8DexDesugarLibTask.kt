@@ -17,10 +17,13 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
@@ -34,9 +37,9 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -61,15 +64,15 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     @get:Classpath
     abstract val desugarLibJar: ConfigurableFileCollection
 
-    @get:CompileClasspath
-    abstract val androidJar: Property<File>
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val keepRulesFiles: ConfigurableFileCollection
 
     @get:Input
     abstract val keepRulesConfigurations: ListProperty<String>
+
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
 
     @get:OutputDirectory
     abstract val desugarLibDex: DirectoryProperty
@@ -82,7 +85,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                     desugarLibJar.files,
                     desugarLibDex.get().asFile,
                     libConfiguration.get(),
-                    androidJar.get(),
+                    androidJarInput.getAndroidJar().get(),
                     minSdkVersion.get(),
                     keepRulesFiles.files,
                     keepRulesConfigurations.orNull
@@ -116,7 +119,9 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             super.configure(task)
             task.libConfiguration.set(getDesugarLibConfig(creationConfig.globalScope.project))
             task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.globalScope.project))
-            task.androidJar.set(creationConfig.globalScope.sdkComponents.androidJarProvider)
+            task.androidJarInput.sdkBuildService.set(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
             task.minSdkVersion.set(
                 creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
 

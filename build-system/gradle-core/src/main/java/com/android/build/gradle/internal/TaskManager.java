@@ -465,7 +465,11 @@ public abstract class TaskManager<
         if (variantProperties.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
             final ConfigurableFileCollection fileCollection =
                     project.files(
-                            globalScope.getSdkComponents().getRenderScriptSupportJarProvider());
+                            globalScope
+                                    .getSdkComponents()
+                                    .flatMap(
+                                            SdkComponentsBuildService
+                                                    ::getRenderScriptSupportJarProvider));
             project.getDependencies()
                     .add(variantDependencies.getCompileClasspath().getName(), fileCollection);
             if (variantType.isApk() && !variantType.isForTesting()) {
@@ -516,7 +520,9 @@ public abstract class TaskManager<
                             project.files(
                                     globalScope
                                             .getSdkComponents()
-                                            .getRenderScriptSupportJarProvider()));
+                                            .flatMap(
+                                                    SdkComponentsBuildService
+                                                            ::getRenderScriptSupportJarProvider)));
         }
 
         if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
@@ -786,7 +792,9 @@ public abstract class TaskManager<
                                         () ->
                                                 globalScope
                                                         .getSdkComponents()
-                                                        .getAndroidJarProvider()
+                                                        .flatMap(
+                                                                SdkComponentsBuildService
+                                                                        ::getAndroidJarProvider)
                                                         .getOrNull()));
 
         // Adding this task to help the IDE find the mockable JAR.
@@ -2054,7 +2062,11 @@ public abstract class TaskManager<
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 androidTestProperties,
                                 new ConnectedDeviceProvider(
-                                        globalScope.getSdkComponents().getAdbExecutableProvider(),
+                                        globalScope
+                                                .getSdkComponents()
+                                                .flatMap(
+                                                        SdkComponentsBuildService
+                                                                ::getAdbExecutableProvider),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(logger)),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type

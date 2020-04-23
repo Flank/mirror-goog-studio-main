@@ -37,7 +37,6 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 
 /**
@@ -53,7 +52,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
     public static final String EXT_COMP = "comp";
 
     @Nullable private final WorkerExecutorFacade workers;
-    @Nullable private Supplier<File> mNdkLocation;
+    @NonNull private File mNdkLocation;
     @NonNull
     private File mSourceFolder;
     @NonNull
@@ -73,7 +72,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
     private File mGlslcLocation;
 
     public ShaderProcessor(
-            @NonNull Supplier<File> ndkLocation,
+            @NonNull File ndkLocation,
             @NonNull File sourceFolder,
             @NonNull File outputDir,
             @NonNull List<String> defaultArgs,
@@ -98,14 +97,12 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
             throw new IllegalStateException("NDK location is missing. It is required to compile shaders.");
         }
 
-        File ndkFolder = mNdkLocation.get();
-
-        if (ndkFolder == null || !ndkFolder.isDirectory()) {
+        if (mNdkLocation == null || !mNdkLocation.isDirectory()) {
             throw new IllegalStateException("NDK location does not exist. It is required to compile shaders: " + mNdkLocation);
         }
 
         // find the location of the compiler.
-        File glslcRootFolder = new File(ndkFolder, SdkConstants.FD_SHADER_TOOLS);
+        File glslcRootFolder = new File(mNdkLocation, SdkConstants.FD_SHADER_TOOLS);
 
         switch (currentPlatform()) {
             case PLATFORM_DARWIN:

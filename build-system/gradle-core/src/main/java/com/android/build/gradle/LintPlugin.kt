@@ -52,7 +52,8 @@ open class LintPlugin : Plugin<Project> {
 
         createProjectServices(project)
         dslServices = DslServicesImpl(
-            projectServices, DslVariableFactory(syncIssueReporter), null
+            projectServices, DslVariableFactory(syncIssueReporter),
+            project.providers.provider { null }
         )
 
         createExtension(project)

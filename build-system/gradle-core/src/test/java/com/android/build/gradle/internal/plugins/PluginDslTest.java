@@ -30,12 +30,13 @@ import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.errors.SyncIssueReporter;
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
@@ -670,12 +671,20 @@ public class PluginDslTest {
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
         plugin.createAndroidTasks();
-        assertThat(plugin.globalScope.getSdkComponents().getBuildToolsRevisionProvider().get())
+        assertThat(
+                        plugin.globalScope
+                                .getSdkComponents()
+                                .get()
+                                .getBuildToolsRevisionProvider()
+                                .get())
                 .isEqualTo(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.
-        final SyncIssueReporter issueReporter =
-                (SyncIssueReporter) plugin.dslServices.getIssueReporter();
-        Collection<SyncIssue> syncIssues = issueReporter.getSyncIssues();
+        SyncIssueReporterImpl.GlobalSyncIssueService issueReporter =
+                BuildServicesKt.getBuildService(
+                                project.getGradle().getSharedServices(),
+                                SyncIssueReporterImpl.GlobalSyncIssueService.class)
+                        .get();
+        Collection<SyncIssue> syncIssues = issueReporter.getAllIssuesAndClear();
         assertThat(syncIssues).hasSize(1);
         SyncIssue issue = Iterables.getOnlyElement(syncIssues);
         assertThat(issue.getType()).isEqualTo(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);

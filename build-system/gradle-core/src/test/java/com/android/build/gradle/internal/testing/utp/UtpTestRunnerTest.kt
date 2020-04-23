@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
@@ -64,7 +64,7 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockJavaProcessExecutor: JavaProcessExecutor
     @Mock lateinit var mockExecutorServiceAdapter: ExecutorServiceAdapter
     @Mock lateinit var mockConfigurationContainer: ConfigurationContainer
-    @Mock lateinit var mockSdkComponents: SdkComponents
+    @Mock lateinit var mockSdkComponents: SdkComponentsBuildService
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
     @Mock lateinit var mockTestApk: File
@@ -103,7 +103,7 @@ class UtpTestRunnerTest {
                 any(StaticTestData::class.java),
                 anyIterable(),
                 any(ConfigurationContainer::class.java),
-                any(SdkComponents::class.java),
+                any(SdkComponentsBuildService::class.java),
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),

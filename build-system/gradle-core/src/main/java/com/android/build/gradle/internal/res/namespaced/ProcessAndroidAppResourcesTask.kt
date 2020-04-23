@@ -17,7 +17,9 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
@@ -43,9 +45,9 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -80,11 +82,6 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     @get:Internal
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
-
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory abstract val rClassSource: DirectoryProperty
     @get:OutputFile abstract val resourceApUnderscoreDirectory: DirectoryProperty
@@ -96,6 +93,9 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     @get:Optional
     abstract val noCompress: ListProperty<String>
 
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
+
     override fun doTaskAction() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.add(thisSubProjectStaticLibrary.get().asFile)
@@ -105,7 +105,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
         else (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML))
 
         val config = AaptPackageConfig(
-                androidJarPath = androidJar.get().absolutePath,
+                androidJarPath = androidJarInput.getAndroidJar().get().absolutePath,
                 manifestFile = manifestFile,
                 options = AaptOptions(noCompress.orNull, additionalParameters = null),
                 staticLibraryDependencies = staticLibraries.build(),
@@ -183,7 +183,9 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 creationConfig.services.projectOptions
             )

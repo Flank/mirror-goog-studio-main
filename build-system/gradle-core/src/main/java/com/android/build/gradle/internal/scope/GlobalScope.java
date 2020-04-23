@@ -28,7 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.SdkComponents;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.services.DslServices;
@@ -58,7 +58,7 @@ public class GlobalScope {
     @NonNull private final Project project;
     @NonNull private final DataBindingBuilder dataBindingBuilder;
     @NonNull private BaseExtension extension;
-    @NonNull private final SdkComponents sdkComponents;
+    @NonNull private final Provider<SdkComponentsBuildService> sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final MessageReceiver messageReceiver;
@@ -80,7 +80,7 @@ public class GlobalScope {
             @NonNull Project project,
             @NonNull String createdBy,
             @NonNull DslServices dslServices,
-            @NonNull SdkComponents sdkComponents,
+            @NonNull Provider<SdkComponentsBuildService> sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull MessageReceiver messageReceiver,
             @NonNull SoftwareComponentFactory componentFactory) {
@@ -89,7 +89,7 @@ public class GlobalScope {
         this.project = checkNotNull(project);
         this.createdBy = createdBy;
         this.dslServices = checkNotNull(dslServices);
-        this.sdkComponents = checkNotNull(sdkComponents);
+        this.sdkComponents = sdkComponents;
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps =
                 checkNotNull(dslServices.getProjectOptions().getOptionalCompilationSteps());
@@ -140,7 +140,7 @@ public class GlobalScope {
     }
 
     @NonNull
-    public SdkComponents getSdkComponents() {
+    public Provider<SdkComponentsBuildService> getSdkComponents() {
         return sdkComponents;
     }
 
@@ -340,10 +340,9 @@ public class GlobalScope {
                                         .getTargetCompatibility()
                                         .isJava8Compatible()) {
                                     builder.add(
-                                            project.getLayout()
-                                                    .file(
-                                                            getSdkComponents()
-                                                                    .getCoreLambdaStubsProvider())
+                                            getSdkComponents()
+                                                    .get()
+                                                    .getCoreLambdaStubsProvider()
                                                     .get());
                                 }
                                 return builder.build();
@@ -364,11 +363,14 @@ public class GlobalScope {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
                 getDslServices().getIssueReporter(),
-                getSdkComponents().getTargetBootClasspathProvider(),
-                getSdkComponents().getTargetAndroidVersionProvider(),
-                getSdkComponents().getAdditionalLibrariesProvider(),
-                getSdkComponents().getOptionalLibrariesProvider(),
-                getSdkComponents().getAnnotationsJarProvider(),
+                getSdkComponents()
+                        .flatMap(SdkComponentsBuildService::getTargetBootClasspathProvider),
+                getSdkComponents()
+                        .flatMap(SdkComponentsBuildService::getTargetAndroidVersionProvider),
+                getSdkComponents()
+                        .flatMap(SdkComponentsBuildService::getAdditionalLibrariesProvider),
+                getSdkComponents().flatMap(SdkComponentsBuildService::getOptionalLibrariesProvider),
+                getSdkComponents().flatMap(SdkComponentsBuildService::getAnnotationsJarProvider),
                 false,
                 ImmutableList.copyOf(getExtension().getLibraryRequests()));
     }
@@ -386,11 +388,26 @@ public class GlobalScope {
                         .computeClasspath(
                                 project,
                                 getDslServices().getIssueReporter(),
-                                getSdkComponents().getTargetBootClasspathProvider(),
-                                getSdkComponents().getTargetAndroidVersionProvider(),
-                                getSdkComponents().getAdditionalLibrariesProvider(),
-                                getSdkComponents().getOptionalLibrariesProvider(),
-                                getSdkComponents().getAnnotationsJarProvider(),
+                                getSdkComponents()
+                                        .flatMap(
+                                                SdkComponentsBuildService
+                                                        ::getTargetBootClasspathProvider),
+                                getSdkComponents()
+                                        .flatMap(
+                                                SdkComponentsBuildService
+                                                        ::getTargetAndroidVersionProvider),
+                                getSdkComponents()
+                                        .flatMap(
+                                                SdkComponentsBuildService
+                                                        ::getAdditionalLibrariesProvider),
+                                getSdkComponents()
+                                        .flatMap(
+                                                SdkComponentsBuildService
+                                                        ::getOptionalLibrariesProvider),
+                                getSdkComponents()
+                                        .flatMap(
+                                                SdkComponentsBuildService
+                                                        ::getAnnotationsJarProvider),
                                 true,
                                 ImmutableList.of())
                         .get());

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
@@ -32,11 +33,10 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -56,10 +56,8 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val manifestsDirectory: DirectoryProperty
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
 
     @get:Input
     lateinit var aapt2Version: String
@@ -81,7 +79,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         for (manifestFile: File in manifestsDirectory.asFileTree.files) {
             val assetPackName = manifestFile.parentFile.name
             val config = AaptPackageConfig(
-                androidJarPath = androidJar.get().absolutePath,
+                androidJarPath = androidJarInput.getAndroidJar().get().absolutePath,
                 generateProtos = true,
                 manifestFile = manifestFile,
                 options = AaptOptions(),
@@ -142,8 +140,10 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
             task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }

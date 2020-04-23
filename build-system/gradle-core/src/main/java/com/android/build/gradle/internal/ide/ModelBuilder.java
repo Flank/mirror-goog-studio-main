@@ -257,7 +257,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         allIssues.addAll(syncIssueReporter.getSyncIssues());
         allIssues.addAll(
                 BuildServicesKt.getBuildService(
-                                globalScope.getProject(),
+                                globalScope.getProject().getGradle().getSharedServices(),
                                 SyncIssueReporterImpl.GlobalSyncIssueService.class)
                         .get()
                         .getAllIssuesAndClear());
@@ -285,7 +285,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
-        if (globalScope.getSdkComponents().getSdkSetupCorrectly().get()) {
+        if (globalScope.getSdkComponents().get().getSdkSetupCorrectly().get()) {
             bootClasspath =
                     globalScope.getFilteredBootClasspath().get().stream()
                             .map(it -> it.getAsFile().getAbsolutePath())

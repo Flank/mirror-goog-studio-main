@@ -38,11 +38,17 @@ import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
+import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.DefaultIssueReporter;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.tools.lint.model.LmFactory;
@@ -71,6 +77,7 @@ import org.gradle.api.internal.HasConvention;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -84,7 +91,6 @@ public abstract class LintBaseTask extends DefaultTask {
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
 
     @Nullable FileCollection lintClassPath;
-    protected Provider<Revision> buildToolsRevisionProvider;
 
     /** Lint classpath */
     @InputFiles
@@ -116,8 +122,11 @@ public abstract class LintBaseTask extends DefaultTask {
     // No influence on output, this is to give access to the build tools version.
     @NonNull
     private Revision getBuildToolsRevision() {
-        return buildToolsRevisionProvider.get();
+        return getSdkBuildService().get().getBuildToolsRevisionProvider().get();
     }
+
+    @Internal
+    public abstract Property<SdkComponentsBuildService> getSdkBuildService();
 
     protected abstract class LintBaseTaskDescriptor extends
             com.android.tools.lint.gradle.api.LintExecutionRequest {
@@ -423,11 +432,17 @@ public abstract class LintBaseTask extends DefaultTask {
         public void configure(@NonNull T lintTask) {
             lintTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             lintTask.lintOptions = globalScope.getExtension().getLintOptions();
-            lintTask.sdkHome = globalScope.getSdkComponents().getSdkDirectory();
+            lintTask.sdkHome =
+                    SdkComponentsKt.getSdkDir(
+                            lintTask.getProject().getRootDir(),
+                            new DefaultIssueReporter(LoggerWrapper.getLogger(LintBaseTask.class)));
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
-            lintTask.buildToolsRevisionProvider =
-                    globalScope.getSdkComponents().getBuildToolsRevisionProvider();
+            HasConfigurableValuesKt.setDisallowChanges(
+                    lintTask.getSdkBuildService(),
+                    BuildServicesKt.getBuildService(
+                            lintTask.getProject().getGradle().getSharedServices(),
+                            SdkComponentsBuildService.class));
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);

@@ -51,7 +51,8 @@ fun createCxxAbiModel(
             val minSdkVersion = componentProperties.minSdkVersion
             global
                 .sdkComponents
-                .ndkHandlerSupplier.get()
+                .get()
+                .ndkHandler
                 .ndkPlatform
                 .getOrThrow()
                 .ndkInfo
