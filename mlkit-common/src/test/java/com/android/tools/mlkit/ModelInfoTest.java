@@ -39,34 +39,34 @@ public class ModelInfoTest {
                         extractByteBufferFromModel(
                                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
 
-        assertEquals(modelInfo.getInputs().size(), 1);
-        assertEquals(modelInfo.getOutputs().size(), 1);
+        assertEquals(1, modelInfo.getInputs().size());
+        assertEquals(1, modelInfo.getOutputs().size());
         assertTrue(modelInfo.isMetadataExisted());
 
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
-        assertEquals(inputTensorInfo.getContentType(), TensorInfo.ContentType.IMAGE);
-        assertEquals(inputTensorInfo.getName(), "image1");
+        assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
+        assertEquals("image1", inputTensorInfo.getName());
         assertEquals(
-                inputTensorInfo.getImageProperties().colorSpaceType,
-                TensorInfo.ImageProperties.ColorSpaceType.RGB);
+                TensorInfo.ImageProperties.ColorSpaceType.RGB,
+                inputTensorInfo.getImageProperties().colorSpaceType);
         MetadataExtractor.NormalizationParams inputNormalization =
                 inputTensorInfo.getNormalizationParams();
-        assertEquals(inputNormalization.getMean()[0], 127.5f, DELTA);
-        assertEquals(inputNormalization.getStd()[0], 127.5f, DELTA);
-        assertEquals(inputNormalization.getMin()[0], 0f, DELTA);
-        assertEquals(inputNormalization.getMax()[0], 255f, DELTA);
+        assertEquals(127.5f, inputNormalization.getMean()[0], DELTA);
+        assertEquals(127.5f, inputNormalization.getStd()[0], DELTA);
+        assertEquals(0f, inputNormalization.getMin()[0], DELTA);
+        assertEquals(255f, inputNormalization.getMax()[0], DELTA);
         MetadataExtractor.QuantizationParams inputQuantization =
                 inputTensorInfo.getQuantizationParams();
-        assertEquals(inputQuantization.getZeroPoint(), 128f, DELTA);
-        assertEquals(inputQuantization.getScale(), 0.0078125f, DELTA);
+        assertEquals(128f, inputQuantization.getZeroPoint(), DELTA);
+        assertEquals(0.0078125f, inputQuantization.getScale(), DELTA);
 
         TensorInfo outputTensorInfo = modelInfo.getOutputs().get(0);
-        assertEquals(outputTensorInfo.getName(), "probability");
-        assertEquals(outputTensorInfo.getFileType(), TensorInfo.FileType.TENSOR_AXIS_LABELS);
+        assertEquals("probability", outputTensorInfo.getName());
+        assertEquals(TensorInfo.FileType.TENSOR_AXIS_LABELS, outputTensorInfo.getFileType());
         MetadataExtractor.QuantizationParams outputQuantization =
                 outputTensorInfo.getQuantizationParams();
-        assertEquals(outputQuantization.getZeroPoint(), 0, DELTA);
-        assertEquals(outputQuantization.getScale(), 0.00390625, DELTA);
+        assertEquals(0, outputQuantization.getZeroPoint(), DELTA);
+        assertEquals(0.00390625, outputQuantization.getScale(), DELTA);
     }
 
     @Test
@@ -76,19 +76,19 @@ public class ModelInfoTest {
                         extractByteBufferFromModel(
                                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_no_metadata.tflite"));
 
-        assertEquals(modelInfo.getInputs().size(), 1);
-        assertEquals(modelInfo.getOutputs().size(), 1);
+        assertEquals(1, modelInfo.getInputs().size());
+        assertEquals(1, modelInfo.getOutputs().size());
         assertFalse(modelInfo.isMetadataExisted());
-        assertEquals(modelInfo.getInputs().get(0).getName(), "inputFeature0");
-        assertEquals(modelInfo.getOutputs().get(0).getName(), "outputFeature0");
+        assertEquals("inputFeature0", modelInfo.getInputs().get(0).getName());
+        assertEquals("outputFeature0", modelInfo.getOutputs().get(0).getName());
     }
 
     private static ByteBuffer extractByteBufferFromModel(String filePath) throws IOException {
         File modelFile = TestUtils.getWorkspaceFile(filePath);
-        RandomAccessFile f = new RandomAccessFile(modelFile, "r");
-        byte[] data = new byte[(int) f.length()];
-        f.readFully(data);
-        f.close();
-        return ByteBuffer.wrap(data);
+        try (RandomAccessFile f = new RandomAccessFile(modelFile, "r")) {
+            byte[] data = new byte[(int) f.length()];
+            f.readFully(data);
+            return ByteBuffer.wrap(data);
+        }
     }
 }

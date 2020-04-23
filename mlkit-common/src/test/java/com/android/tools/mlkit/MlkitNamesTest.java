@@ -25,55 +25,55 @@ public class MlkitNamesTest {
 
     @Test
     public void computeModelClassName_validName_justReturn() {
-        assertEquals(MlkitNames.computeModelClassName("validModel.tflite"), "ValidModel");
-        assertEquals(MlkitNames.computeModelClassName("validModel.tflite"), "ValidModel");
+        assertEquals("ValidModel", MlkitNames.computeModelClassName("validModel.tflite"));
+        assertEquals("ValidModel", MlkitNames.computeModelClassName("validModel.tflite"));
     }
 
     @Test
     public void computeModelClassName_nameWithInvalidCharacters_correctIt() {
-        assertEquals(MlkitNames.computeModelClassName(" valid_model%$.tflite"), "ValidModel");
-        assertEquals(MlkitNames.computeModelClassName("valid_model.tflite"), "ValidModel");
-        assertEquals(MlkitNames.computeModelClassName("valid-model.tflite"), "ValidModel");
-        assertEquals(MlkitNames.computeModelClassName("valid-_model.tflite"), "ValidModel");
-        assertEquals(MlkitNames.computeModelClassName("valid model.tflite"), "ValidModel");
+        assertEquals("ValidModel", MlkitNames.computeModelClassName(" valid_model%$.tflite"));
+        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid_model.tflite"));
+        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid-model.tflite"));
+        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid-_model.tflite"));
+        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid model.tflite"));
     }
 
     @Test
     public void computeModelClassName_nameAllWithInvalidCharacters_returnModelWithHashcode() {
-        assertEquals(MlkitNames.computeModelClassName(" %$.tflite"), "AutoModel40");
+        assertEquals("AutoModel40", MlkitNames.computeModelClassName(" %$.tflite"));
     }
 
     @Test
     public void computeModelClassName_nameStartWithDigit_correctIt() {
-        assertEquals(MlkitNames.computeModelClassName("012.tflite"), "AutoModel012");
+        assertEquals("AutoModel012", MlkitNames.computeModelClassName("012.tflite"));
     }
 
     @Test
     public void computeIdentifierName_nameStartWithDigit_returnHashedName() {
-        assertEquals(MlkitNames.computeIdentifierName("012abc"), "name250");
+        assertEquals("name250", MlkitNames.computeIdentifierName("012abc"));
     }
 
     @Test
     public void computeIdentifierName_nameIsKeyword_returnHashedName() {
-        assertEquals(MlkitNames.computeIdentifierName("class"), "name158");
+        assertEquals("name158", MlkitNames.computeIdentifierName("class"));
     }
 
     @Test
     public void computeIdentifierNameWithDefault_nameIsKeyword_returnDefaultName() {
-        assertEquals(MlkitNames.computeIdentifierName("class", "defaultName"), "defaultName");
+        assertEquals("defaultName", MlkitNames.computeIdentifierName("class", "defaultName"));
     }
 
     @Test
     public void computeIdentifierName_nameWithInvalidCharacters_correctIt() {
-        assertEquals(MlkitNames.computeIdentifierName("%tensorName"), "tensorName");
-        assertEquals(MlkitNames.computeIdentifierName("tensor name"), "tensorName");
-        assertEquals(MlkitNames.computeIdentifierName("tensor-name"), "tensorName");
-        assertEquals(MlkitNames.computeIdentifierName("tensor_name"), "tensorName");
+        assertEquals("tensorName", MlkitNames.computeIdentifierName("%tensorName"));
+        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensor name"));
+        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensor-name"));
+        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensor_name"));
     }
 
     @Test
     public void computeIdentifierName_nameValid_returnName() {
-        assertEquals(MlkitNames.computeIdentifierName("tensorName"), "tensorName");
+        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensorName"));
     }
 
     @Test

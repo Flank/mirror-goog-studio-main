@@ -267,11 +267,11 @@ public class TensorInfo {
 
         // Deal with data from original model
         if (source == Source.INPUT) {
-            builder.setShape(extractor.getInputTensorShape(0, index));
-            builder.setDataType(DataType.fromByte(extractor.getInputTensorType(0, index)));
+            builder.setShape(extractor.getInputTensorShape(index));
+            builder.setDataType(DataType.fromByte(extractor.getInputTensorType(index)));
         } else {
-            builder.setShape(extractor.getOutputTensorShape(0, index));
-            builder.setDataType(DataType.fromByte(extractor.getOutputTensorType(0, index)));
+            builder.setShape(extractor.getOutputTensorShape(index));
+            builder.setDataType(DataType.fromByte(extractor.getOutputTensorType(index)));
         }
         builder.setSource(source);
 
@@ -288,8 +288,8 @@ public class TensorInfo {
                             : metadata.subgraphMetadata(0).outputTensorMetadata(index);
             Tensor tensor =
                     source == Source.INPUT
-                            ? extractor.getInputTensor(0, index)
-                            : extractor.getOutputTensor(0, index);
+                            ? extractor.getInputTensor(index)
+                            : extractor.getOutputTensor(index);
 
             AssociatedFile file = tensorMetadata.associatedFiles(0);
             if (file != null) {

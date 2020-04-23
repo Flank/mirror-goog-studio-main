@@ -15,6 +15,7 @@
  */
 package com.android.tools.mlkit;
 
+import com.android.annotations.NonNull;
 import com.android.tools.mlkit.exception.TfliteModelException;
 import com.google.common.base.Strings;
 import java.nio.ByteBuffer;
@@ -24,38 +25,40 @@ import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 
 /** Stores necessary data for one model. */
 public class ModelInfo {
+
+    private final boolean metadataExisted;
+    private final String modelName;
+    private final String modelDescription;
+    private final String modelVersion;
+    private final String modelAuthor;
+    private final String modelLicense;
+
     /** Stores necessary data for model input. */
-    private final List<TensorInfo> inputs;
+    private final List<TensorInfo> inputs = new ArrayList<>();
 
     /** Stores necessary data for model output. */
-    private final List<TensorInfo> outputs;
+    private final List<TensorInfo> outputs = new ArrayList<>();
 
-    /** Stores necessary data for subgraphs. */
-    private final List<SubGraphInfo> subGraphInfos;
-
-    private String modelName = "";
-    private String modelDescription = "";
-    private String modelVersion = "";
-    private String modelAuthor = "";
-    private String modelLicense = "";
-    private boolean metaDataExisted;
-
-    private ModelInfo() {
-        inputs = new ArrayList<>();
-        outputs = new ArrayList<>();
-        subGraphInfos = new ArrayList<>();
+    public ModelInfo() {
+        metadataExisted = false;
+        modelName = "";
+        modelDescription = "";
+        modelVersion = "";
+        modelAuthor = "";
+        modelLicense = "";
     }
 
-    public List<TensorInfo> getInputs() {
-        return inputs;
+    public ModelInfo(@NonNull ModelMetadata modelMetadata) {
+        metadataExisted = true;
+        modelName = Strings.nullToEmpty(modelMetadata.name());
+        modelDescription = Strings.nullToEmpty(modelMetadata.description());
+        modelVersion = Strings.nullToEmpty(modelMetadata.version());
+        modelAuthor = Strings.nullToEmpty(modelMetadata.author());
+        modelLicense = Strings.nullToEmpty(modelMetadata.license());
     }
 
-    public List<TensorInfo> getOutputs() {
-        return outputs;
-    }
-
-    public List<SubGraphInfo> getSubGraphInfos() {
-        return subGraphInfos;
+    public boolean isMetadataExisted() {
+        return metadataExisted;
     }
 
     public String getModelName() {
@@ -78,8 +81,12 @@ public class ModelInfo {
         return modelLicense;
     }
 
-    public boolean isMetadataExisted() {
-        return metaDataExisted;
+    public List<TensorInfo> getInputs() {
+        return inputs;
+    }
+
+    public List<TensorInfo> getOutputs() {
+        return outputs;
     }
 
     public static ModelInfo buildFrom(ByteBuffer byteBuffer) throws TfliteModelException {
@@ -89,34 +96,18 @@ public class ModelInfo {
 
     public static ModelInfo buildWithoutVerification(ByteBuffer byteBuffer) {
         MetadataExtractor extractor = new MetadataExtractor(byteBuffer);
+        ModelMetadata modelMetadata = extractor.getModelMetaData();
+        ModelInfo modelInfo =
+                modelMetadata != null ? new ModelInfo(modelMetadata) : new ModelInfo();
 
-        ModelInfo modelInfo = new ModelInfo();
-        int inputLength = extractor.getInputTensorCount(0);
+        int inputLength = extractor.getInputTensorCount();
         for (int i = 0; i < inputLength; i++) {
             modelInfo.inputs.add(TensorInfo.parseFrom(extractor, TensorInfo.Source.INPUT, i));
         }
 
-        int outputLength = extractor.getOutputTensorCount(0);
+        int outputLength = extractor.getOutputTensorCount();
         for (int i = 0; i < outputLength; i++) {
             modelInfo.outputs.add(TensorInfo.parseFrom(extractor, TensorInfo.Source.OUTPUT, i));
-        }
-
-        ModelMetadata modelMetadata = extractor.getModelMetaData();
-
-        // TODO(jackqdyulei): consider to remove this check and make fields not null.
-        if (modelMetadata != null) {
-            modelInfo.modelName = Strings.nullToEmpty(modelMetadata.name());
-            modelInfo.modelDescription = Strings.nullToEmpty(modelMetadata.description());
-            modelInfo.modelVersion = Strings.nullToEmpty(modelMetadata.version());
-            modelInfo.modelAuthor = Strings.nullToEmpty(modelMetadata.author());
-            modelInfo.modelLicense = Strings.nullToEmpty(modelMetadata.license());
-            modelInfo.metaDataExisted = true;
-
-            int subgraphLength = modelMetadata.subgraphMetadataLength();
-            for (int i = 0; i < subgraphLength; i++) {
-                modelInfo.subGraphInfos.add(
-                        SubGraphInfo.buildFrom(modelMetadata.subgraphMetadata(i)));
-            }
         }
 
         return modelInfo;

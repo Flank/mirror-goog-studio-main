@@ -18,7 +18,6 @@ package com.android.tools.mlkit;
 
 import com.android.tools.mlkit.exception.InvalidTfliteException;
 import com.android.tools.mlkit.exception.TfliteModelException;
-import com.android.tools.mlkit.exception.UnsupportedTfliteException;
 import com.android.tools.mlkit.exception.UnsupportedTfliteMetadataException;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.ByteBuffer;
@@ -41,19 +40,15 @@ public class ModelVerifier {
 
     @VisibleForTesting
     static void verifyModel(MetadataExtractor extractor) throws TfliteModelException {
-        if (extractor.getSubgraphCount() != 1) {
-            throw new UnsupportedTfliteException("Only support for model with 1 subgraph");
-        }
-
         ModelMetadata metadata = extractor.getModelMetaData();
         if (metadata == null) {
             return;
         }
 
-        int inputCount = extractor.getInputTensorCount(0);
+        int inputCount = extractor.getInputTensorCount();
         Set<String> inputNameSet = new HashSet<>();
         for (int i = 0; i < inputCount; i++) {
-            verifyDataType(extractor.getInputTensorType(0, i), i, TensorInfo.Source.INPUT);
+            verifyDataType(extractor.getInputTensorType(i), i, TensorInfo.Source.INPUT);
 
             TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).inputTensorMetadata(i);
             verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.INPUT);
@@ -66,16 +61,16 @@ public class ModelVerifier {
             inputNameSet.add(formattedName);
 
             if (TensorInfo.extractContentType(tensorMetadata) == TensorInfo.ContentType.IMAGE
-                    && extractor.getInputTensorShape(0, i).length != 4) {
+                    && extractor.getInputTensorShape(i).length != 4) {
                 throw new UnsupportedTfliteMetadataException(
                         "Image tensor shape doesn't have length as 4");
             }
         }
 
         Set<String> outputNameSet = new HashSet<>();
-        int outputCount = extractor.getOutputTensorCount(0);
+        int outputCount = extractor.getOutputTensorCount();
         for (int i = 0; i < outputCount; i++) {
-            verifyDataType(extractor.getOutputTensorType(0, i), i, TensorInfo.Source.OUTPUT);
+            verifyDataType(extractor.getOutputTensorType(i), i, TensorInfo.Source.OUTPUT);
 
             TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).outputTensorMetadata(i);
             verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.OUTPUT);

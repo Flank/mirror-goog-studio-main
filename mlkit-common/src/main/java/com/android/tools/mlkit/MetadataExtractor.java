@@ -37,93 +37,70 @@ public class MetadataExtractor {
     /**
      * Creates a {@link MetadataExtractor} with TFLite FlatBuffer {@code buffer}.
      *
-     * @throws NullPointerException if {@code buffer} is null.
+     * @throws IllegalArgumentException if the model contains no or more than one subgraph.
      */
     public MetadataExtractor(ByteBuffer buffer) {
-
         this.bufferModel = Model.getRootAsModel(buffer);
+        if (bufferModel.subgraphsLength() != 1) {
+            throw new IllegalArgumentException("Only model with one subgraph is supported.");
+        }
     }
 
-    /** Gets the count of subgraphs in the model. */
-    public int getSubgraphCount() {
-        return bufferModel.subgraphsLength();
+    /** Gets the count of input tensors. */
+    public int getInputTensorCount() {
+        return bufferModel.subgraphs(0).inputsLength();
     }
 
-    /** Gets the count of input tensors in the subgraph with {@code subgraphIndex}. */
-    public int getInputTensorCount(int subgraphIndex) {
-        SubGraph subgraph = getSubGraph(subgraphIndex);
-        return subgraph.inputsLength();
+    /** Gets the count of output tensors. */
+    public int getOutputTensorCount() {
+        return bufferModel.subgraphs(0).outputsLength();
     }
 
-    /** Gets the count of output tensors in the subgraph with {@code subgraphIndex}. */
-    public int getOutputTensorCount(int subgraphIndex) {
-        SubGraph subgraph = getSubGraph(subgraphIndex);
-        return subgraph.outputsLength();
-    }
-
-    /** Gets shape of the input tensor with {@code subgraphIndex} and {@code inputIndex}. */
-    public int[] getInputTensorShape(int subgraphIndex, int inputIndex) {
-        Tensor tensor = getInputTensor(subgraphIndex, inputIndex);
+    /** Gets shape of the input tensor with {@code inputIndex}. */
+    public int[] getInputTensorShape(int inputIndex) {
+        Tensor tensor = getInputTensor(inputIndex);
         return getShape(tensor);
     }
 
-    /**
-     * Gets {@link TensorType} of the input tensor with {@code subgraphIndex} and {@code
-     * inputIndex}.
-     */
-    public byte getInputTensorType(int subgraphIndex, int inputIndex) {
-        Tensor tensor = getInputTensor(subgraphIndex, inputIndex);
+    /** Gets {@link TensorType} of the input tensor with and {@code inputIndex}. */
+    public byte getInputTensorType(int inputIndex) {
+        Tensor tensor = getInputTensor(inputIndex);
         return tensor.type();
     }
 
-    /** Gets shape of the output tensor with {@code subgraphIndex} and {@code outputIndex}. */
-    public int[] getOutputTensorShape(int subgraphIndex, int outputIndex) {
-        Tensor tensor = getOutputTensor(subgraphIndex, outputIndex);
+    /** Gets shape of the output tensor with {@code outputIndex}. */
+    public int[] getOutputTensorShape(int outputIndex) {
+        Tensor tensor = getOutputTensor(outputIndex);
         return getShape(tensor);
     }
 
-    /**
-     * Gets {@link TensorType} of the output tensor with {@code subgraphIndex} and {@code
-     * outputIndex}.
-     */
-    public byte getOutputTensorType(int subgraphIndex, int outputIndex) {
-        Tensor tensor = getOutputTensor(subgraphIndex, outputIndex);
+    /** Gets {@link TensorType} of the output tensor with {@code outputIndex}. */
+    public byte getOutputTensorType(int outputIndex) {
+        Tensor tensor = getOutputTensor(outputIndex);
         return tensor.type();
     }
 
-    /**
-     * Gets the subgraph with {@code subgraphIndex}.
-     *
-     * @throws IllegalArgumentException if {@code subgraphIndex} is out of bounds.
-     */
-    private SubGraph getSubGraph(int subgraphIndex) {
-        return this.bufferModel.subgraphs(subgraphIndex);
+    /** Gets the input tensor with {@code inputIndex}. */
+    public Tensor getInputTensor(int inputIndex) {
+        return getTensor(inputIndex, true);
     }
 
-    /** Gets the input tensor with {@code subgraphIndex} and {@code inputIndex}. */
-    public Tensor getInputTensor(int subgraphIndex, int inputIndex) {
-        return getTensor(subgraphIndex, inputIndex, true);
-    }
-
-    /** Gets the output tensor with {@code subgraphIndex} and {@code outputIndex}. */
-    public Tensor getOutputTensor(int subgraphIndex, int outputIndex) {
-        return getTensor(subgraphIndex, outputIndex, false);
+    /** Gets the output tensor with {@code outputIndex}. */
+    public Tensor getOutputTensor(int outputIndex) {
+        return getTensor(outputIndex, false);
     }
 
     /**
-     * Gets the input/output tensor with {@code subgraphIndex} and {@code tensorIndex}.
+     * Gets the input/output tensor with {@code tensorIndex}.
      *
      * @param isInput indicates the tensor is input or output.
      * @throws IllegalArgumentException if {@code tensorIndex} is out of bounds.
      */
-    private Tensor getTensor(int subgraphIndex, int tensorIndex, boolean isInput) {
-        SubGraph subgraph = getSubGraph(subgraphIndex);
-
+    private Tensor getTensor(int tensorIndex, boolean isInput) {
+        SubGraph subgraph = bufferModel.subgraphs(0);
         if (isInput) {
-            // Input tensor.
             return subgraph.tensors(subgraph.inputs(tensorIndex));
         } else {
-            // Output tensor.
             return subgraph.tensors(subgraph.outputs(tensorIndex));
         }
     }
