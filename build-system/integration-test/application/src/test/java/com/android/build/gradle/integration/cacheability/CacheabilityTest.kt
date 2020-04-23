@@ -66,6 +66,7 @@ class CacheabilityTest {
                     ":app:compileDebugUnitTestJavaWithJavac",
                     ":app:createDebugCompatibleScreenManifests",
                     ":app:dexBuilderDebug",
+                    ":app:enumerateDebugClasses",
                     ":app:extractDeepLinksDebug",
                     ":app:generateDebugBuildConfig",
                     ":app:generateDebugResValues",

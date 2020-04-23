@@ -18,16 +18,19 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ENUMERATED_RUNTIME_CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -43,6 +46,10 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val dummyOutputDirectory: DirectoryProperty
 
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:InputFiles
+    abstract val enumeratedMainModuleClasses: RegularFileProperty
+
     private lateinit var enumeratedClassesArtifacts: ArtifactCollection
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -53,6 +60,7 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(CheckDuplicatesRunnable::class.java) { params ->
             params.projectName.set(projectName)
+            params.enumeratedMainModuleClasses.set(enumeratedMainModuleClasses)
             params.enumeratedClasses.set(enumeratedClassesArtifacts.artifacts.map { it.id.displayName to it.file }.toMap())
         }
     }
@@ -82,6 +90,10 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
             task: CheckDuplicateClassesTask
         ) {
             super.configure(task)
+
+            creationConfig.operations.setTaskInputToFinalProduct(
+                InternalArtifactType.ENUMERATED_CLASSES,
+                task.enumeratedMainModuleClasses)
 
             task.enumeratedClassesArtifacts = creationConfig.variantDependencies
                     .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, ENUMERATED_RUNTIME_CLASSES)

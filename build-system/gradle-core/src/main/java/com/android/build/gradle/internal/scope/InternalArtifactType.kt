@@ -411,6 +411,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // Config file specifying how to protect app's integrity
     object APP_INTEGRITY_CONFIG: InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    // The outputs of EnumerateClassesTask
+    object ENUMERATED_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // A dummy output (folder) result of CheckDuplicateClassesTask execution
     object DUPLICATE_CLASSES_CHECK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
