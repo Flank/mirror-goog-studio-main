@@ -20,9 +20,9 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleLayout
+import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityWithCppSupportJava
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityWithCppSupportKt
@@ -51,7 +51,7 @@ fun RecipeExecutor.generateEmptyActivity(
   addAllKotlinDependencies(moduleData)
 
   if (generateLayout || includeCppSupport) {
-    generateSimpleLayout(moduleData, activityClass, layoutName, true, packageName, includeCppSupport = includeCppSupport)
+    generateSimpleLayout(moduleData, activityClass, layoutName, includeCppSupport = includeCppSupport)
   }
 
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")

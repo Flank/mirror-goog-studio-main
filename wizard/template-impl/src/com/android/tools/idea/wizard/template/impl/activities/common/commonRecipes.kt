@@ -16,17 +16,17 @@
 package com.android.tools.idea.wizard.template.impl.activities.common
 
 import com.android.tools.idea.wizard.template.ModuleTemplateData
+import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.ThemeData
-import com.android.tools.idea.wizard.template.impl.activities.common.res.menu.simpleMenu
-import com.android.tools.idea.wizard.template.impl.activities.common.res.values.themeStyles
-import java.io.File
-import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.res.layout.simpleLayoutXml
+import com.android.tools.idea.wizard.template.impl.activities.common.res.menu.simpleMenu
 import com.android.tools.idea.wizard.template.impl.activities.common.res.values.manifestStrings
+import com.android.tools.idea.wizard.template.impl.activities.common.res.values.themeStyles
 import com.android.tools.idea.wizard.template.renderIf
+import java.io.File
 
 fun RecipeExecutor.generateSimpleMenu(packageName: PackageName, activityClass: String, resDir: File, menuName: String) {
   val simpleMenuStrings = """
@@ -79,15 +79,13 @@ fun RecipeExecutor.generateManifest(
 }
 
 fun RecipeExecutor.generateSimpleLayout(
-  moduleData: ModuleTemplateData, activityClass: String, simpleLayoutName: String, excludeMenu: Boolean, packageName: PackageName,
-  menuName: String? = null, openLayout: Boolean = true, includeCppSupport: Boolean = false
+  moduleData: ModuleTemplateData, activityClass: String, simpleLayoutName: String,
+  openLayout: Boolean = true, includeCppSupport: Boolean = false
 ) {
-  if (menuName == null) {
-    require(!moduleData.isNewModule || excludeMenu)
-  }
   val projectData = moduleData.projectTemplateData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val resOut = moduleData.resDir
+
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
@@ -97,12 +95,7 @@ fun RecipeExecutor.generateSimpleLayout(
   )
 
   val layoutFile = resOut.resolve("layout/$simpleLayoutName.xml")
-
   save(simpleLayout, layoutFile)
-
-  if (moduleData.isNewModule && !excludeMenu) {
-    generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName!!)
-  }
 
   if (openLayout) {
     open(layoutFile)
