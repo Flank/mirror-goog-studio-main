@@ -87,6 +87,10 @@ interface Template {
   val revision: Int
   val description: String
   /**
+   * Address of an external website with more details about the template.
+   */
+  val documentationUrl: String?
+  /**
    * Minimum sdk version required to build this template.
    * If minSdkVersion in build.gradle is less than [minSdk], the template will not be available (e.g. action will be disabled).
    */
@@ -123,6 +127,7 @@ interface Template {
     override val revision: Int = 1
     override val name: String = "No Activity"
     override val description: String = "Creates a new empty project"
+    override val documentationUrl: String? = null
     override val minSdk: Int = 1
     override val minCompileSdk: Int = 1
     override val category: Category = Category.Activity
