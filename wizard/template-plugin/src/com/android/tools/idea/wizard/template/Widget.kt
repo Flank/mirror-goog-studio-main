@@ -37,6 +37,11 @@ sealed class ParameterWidget<T>(val parameter: Parameter<T>): Widget<T>
 data class TextFieldWidget(val p: StringParameter): ParameterWidget<String>(p)
 
 /**
+ * An ordinary text label.
+ */
+data class LabelWidget(val text: String): Widget<String>
+
+/**
  * Drop down menu for selecting a language (Kotlin or Java).
  *
  * Exists alongside with [EnumWidget] because it may require special treatment.
