@@ -50,7 +50,6 @@ class LanguageWidget: Widget<String>
  */
 data class PackageNameWidget(val p: StringParameter): ParameterWidget<String>(p)
 
-
 /**
  * Drop down menu for any kind of [Enum]. Will include all possbile enum values.
  */
@@ -60,6 +59,11 @@ data class EnumWidget<T : Enum<T>>(val p: EnumParameter<T>): ParameterWidget<T>(
  * An ordinary checkbox.
  */
 data class CheckBoxWidget(val p: BooleanParameter): ParameterWidget<Boolean>(p)
+
+/**
+ * A Text label with a link to and external website.
+ */
+data class UrlLinkWidget(val urlName:String, val urlAddress: String): Widget<String>
 
 /**
  * Horizontal separator. Has no functionality.
