@@ -165,7 +165,7 @@ class TfliteModelGenerator(
         val byteBufferList: MutableList<String> = ArrayList()
         for (tensorInfo in modelInfo.inputs) {
             val processedTypeName = getProcessedTypeName(tensorInfo)
-            val parameterSpec = ParameterSpec.builder(getParameterType(tensorInfo), tensorInfo.name)
+            val parameterSpec = ParameterSpec.builder(getParameterType(tensorInfo), tensorInfo.identifierName)
                 .addAnnotation(ClassNames.NON_NULL)
                 .build()
             methodBuilder.addParameter(parameterSpec)

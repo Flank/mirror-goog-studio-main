@@ -105,7 +105,7 @@ public class ModelVerifier {
     @VisibleForTesting
     static void verifyDataType(byte dataType, int index, TensorInfo.Source source)
             throws UnsupportedTfliteException {
-        if (TensorInfo.DataType.fromByte(dataType) == null) {
+        if (TensorInfo.DataType.fromByte(dataType) == TensorInfo.DataType.UNKNOWN) {
             throw new UnsupportedTfliteException(
                     String.format(
                             "Datatype of %s tensor %d is not supported",

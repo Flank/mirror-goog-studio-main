@@ -30,7 +30,7 @@ class ImageGetMethodInjector : MethodInjector() {
         val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
             MlkitNames.formatGetterName(
-                tensorInfo.name, returnType.simpleName()
+                tensorInfo.identifierName, returnType.simpleName()
             )
         )
             .addModifiers(Modifier.PUBLIC)
@@ -39,7 +39,7 @@ class ImageGetMethodInjector : MethodInjector() {
             .addStatement(
                 "return \$L.process(\$L)",
                 getProcessorName(tensorInfo),
-                tensorInfo.name
+                tensorInfo.identifierName
             )
             .build()
         classBuilder.addMethod(methodSpec)

@@ -16,7 +16,6 @@
 package com.android.tools.mlkit;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.CharMatcher;
@@ -80,8 +79,8 @@ public class MlkitNames {
     }
 
     @NonNull
-    public static String computeIdentifierName(@Nullable String name, @NonNull String defaultName) {
-        if (name == null) {
+    public static String computeIdentifierName(@NonNull String name, @NonNull String defaultName) {
+        if (name.isEmpty()) {
             return defaultName;
         }
 
@@ -113,8 +112,8 @@ public class MlkitNames {
     }
 
     @NonNull
-    public static String computeIdentifierName(@Nullable String name) {
-        String defaultName = name == null ? "name" : "name" + getHashValue(name);
+    public static String computeIdentifierName(@NonNull String name) {
+        String defaultName = "name" + getHashValue(name);
         return computeIdentifierName(name, defaultName);
     }
 }

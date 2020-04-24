@@ -28,7 +28,7 @@ class DefaultProcessInjector : CodeBlockInjector() {
             "\$T \$L = \$L",
             getParameterType(tensorInfo),
             getProcessedTypeName(tensorInfo),
-            tensorInfo.name
+            tensorInfo.identifierName
         )
     }
 }

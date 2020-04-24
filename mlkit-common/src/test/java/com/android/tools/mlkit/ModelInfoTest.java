@@ -45,7 +45,7 @@ public class ModelInfoTest {
 
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
         assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
-        assertEquals("image1", inputTensorInfo.getName());
+        assertEquals("image1", inputTensorInfo.getIdentifierName());
         assertEquals(
                 TensorInfo.ImageProperties.ColorSpaceType.RGB,
                 inputTensorInfo.getImageProperties().colorSpaceType);
@@ -61,7 +61,7 @@ public class ModelInfoTest {
         assertEquals(0.0078125f, inputQuantization.getScale(), DELTA);
 
         TensorInfo outputTensorInfo = modelInfo.getOutputs().get(0);
-        assertEquals("probability", outputTensorInfo.getName());
+        assertEquals("probability", outputTensorInfo.getIdentifierName());
         assertEquals(TensorInfo.FileType.TENSOR_AXIS_LABELS, outputTensorInfo.getFileType());
         MetadataExtractor.QuantizationParams outputQuantization =
                 outputTensorInfo.getQuantizationParams();
@@ -79,8 +79,8 @@ public class ModelInfoTest {
         assertEquals(1, modelInfo.getInputs().size());
         assertEquals(1, modelInfo.getOutputs().size());
         assertFalse(modelInfo.isMetadataExisted());
-        assertEquals("inputFeature0", modelInfo.getInputs().get(0).getName());
-        assertEquals("outputFeature0", modelInfo.getOutputs().get(0).getName());
+        assertEquals("inputFeature0", modelInfo.getInputs().get(0).getIdentifierName());
+        assertEquals("outputFeature0", modelInfo.getOutputs().get(0).getIdentifierName());
     }
 
     private static ByteBuffer extractByteBufferFromModel(String filePath) throws IOException {
