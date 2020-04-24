@@ -16,7 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values
 
-import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.MaterialColor.*
 
 fun colorsXml() = """
 <resources>

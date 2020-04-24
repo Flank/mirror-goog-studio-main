@@ -16,7 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.other.customView.res.values_night
 
-import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.MaterialColor.*
 import com.android.tools.idea.wizard.template.impl.other.customView.res.values.getCustomViewStyle
 
 fun stylesXml(themeName: String) ="""

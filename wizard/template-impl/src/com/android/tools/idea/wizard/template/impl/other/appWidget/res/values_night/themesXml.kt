@@ -16,7 +16,7 @@
 package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night
 
 import com.android.tools.idea.wizard.template.ThemesData
-import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.MaterialColor.*
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetThemeOverlay
 
 fun themesXml(themesData: ThemesData) =

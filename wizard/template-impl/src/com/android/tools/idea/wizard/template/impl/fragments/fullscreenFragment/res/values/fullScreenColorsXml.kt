@@ -16,7 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values
 
-import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.MaterialColor.*
 
 fun fullScreenColorsXml() = """
 <resources>

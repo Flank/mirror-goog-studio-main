@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl
+package com.android.tools.idea.wizard.template
 
 enum class MaterialColor(val colorName: String, val color: String) {
   GRAY_400("gray_400", "#BDBDBD"),
@@ -24,7 +24,14 @@ enum class MaterialColor(val colorName: String, val color: String) {
   LIGHT_BLUE_600("light_blue_600", "#039BE5"),
   LIGHT_BLUE_900("light_blue_900", "#01579B"),
   LIGHT_BLUE_A200("light_blue_A200", "#40C4FF"),
-  LIGHT_BLUE_A400("light_blue_A400", "#00B0FF");
+  LIGHT_BLUE_A400("light_blue_A400", "#00B0FF"),
+  PURPLE_200("purple_200", "#BB86FC"),
+  PURPLE_500("purple_500", "#6200EE"),
+  PURPLE_700("purple_700", "#3700B3"),
+  TEEL_200("teel_200", "#03DAC6"),
+  TEEL_700("teel_700", "#018786"),
+  BLACK("black", "#000000"),
+  WHITE("white", "#FFFFFF");
 
   fun xmlElement(): String = """<color name="$colorName">$color</color>"""
 }

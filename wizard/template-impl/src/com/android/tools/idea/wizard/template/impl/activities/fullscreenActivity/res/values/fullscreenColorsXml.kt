@@ -15,7 +15,7 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values
 
-import com.android.tools.idea.wizard.template.impl.MaterialColor.*
+import com.android.tools.idea.wizard.template.MaterialColor.*
 
 fun fullscreenColors() =
   """<resources>
