@@ -36,6 +36,7 @@ def main():
   env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', config, 'ndk-bundle')
   env['TERM'] = os.environ.get('TERM', '')
   env['SHELL'] = os.environ.get('SHELL', '')
+  env['HOME'] = os.environ.get('HOME')
   if 'QA_ANDROID_SDK_ROOT' in os.environ:
     env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':
@@ -61,6 +62,7 @@ def main():
     env['SYSTEMROOT'] = 'C:\\Windows'
     env['TMP'] = os.environ.get('TMP','')
     env['PATH'] = os.environ.get('PATH','')
+    env['USERPROFILE'] = os.environ.get('USERPROFILE')
 
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
