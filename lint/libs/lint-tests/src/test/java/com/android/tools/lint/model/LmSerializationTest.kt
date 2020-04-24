@@ -18,6 +18,7 @@ package com.android.tools.lint.model
 
 import com.android.tools.lint.checks.infrastructure.GradleModelMocker
 import com.android.tools.lint.checks.infrastructure.GradleModelMockerTest
+import com.android.tools.lint.model.LmSerialization.LmSerializationFileAdapter
 import com.android.tools.lint.model.LmSerialization.TargetFile
 import com.android.utils.XmlUtils
 import com.google.common.truth.Truth.assertThat
@@ -204,8 +205,6 @@ class LmSerializationTest {
                 "variant-freeBetaDebug" to """
                 <variant
                     name="freeBetaDebug"
-                    versionCode="2"
-                    versionName="MyName"
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true"
@@ -283,18 +282,15 @@ class LmSerializationTest {
                         value="com.example.manifest_merger_example.flavor" />
                   </manifestPlaceholders>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/freeBetaDebug/classes:build/tmp/kotlin-classes/freeBetaDebug"
+                      classOutputs="build/intermediates/javac/freeBetaDebug/classes:build/tmp/kotlin-classes/freeBetaDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                   <androidTestArtifact
-                      name="_android_test_"
-                      classFolders="instrumentation-classes"
+                      classOutputs="instrumentation-classes"
                       applicationId="com.android.tools.test">
                   </androidTestArtifact>
                   <testArtifact
-                      name="_unit_test_"
-                      classFolders="test-classes">
+                      classOutputs="test-classes">
                   </testArtifact>
                 </variant>
               """,
@@ -555,7 +551,6 @@ class LmSerializationTest {
                 "variant-betaDebug" to """
                 <variant
                     name="betaDebug"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
@@ -603,8 +598,7 @@ class LmSerializationTest {
                         value="debug" />
                   </manifestPlaceholders>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/betaDebug/classes:build/tmp/kotlin-classes/betaDebug"
+                      classOutputs="build/intermediates/javac/betaDebug/classes:build/tmp/kotlin-classes/betaDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -612,7 +606,6 @@ class LmSerializationTest {
                 "variant-normalDebug" to """
                 <variant
                     name="normalDebug"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
@@ -660,8 +653,7 @@ class LmSerializationTest {
                         value="debug" />
                   </manifestPlaceholders>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/normalDebug/classes:build/tmp/kotlin-classes/normalDebug"
+                      classOutputs="build/intermediates/javac/normalDebug/classes:build/tmp/kotlin-classes/normalDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -669,7 +661,6 @@ class LmSerializationTest {
                 "variant-freeDebug" to """
                 <variant
                     name="freeDebug"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
@@ -717,8 +708,7 @@ class LmSerializationTest {
                         value="debug" />
                   </manifestPlaceholders>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/freeDebug/classes:build/tmp/kotlin-classes/freeDebug"
+                      classOutputs="build/intermediates/javac/freeDebug/classes:build/tmp/kotlin-classes/freeDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -726,7 +716,6 @@ class LmSerializationTest {
                 "variant-paidDebug" to """
                 <variant
                     name="paidDebug"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
@@ -774,8 +763,7 @@ class LmSerializationTest {
                         value="debug" />
                   </manifestPlaceholders>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/paidDebug/classes:build/tmp/kotlin-classes/paidDebug"
+                      classOutputs="build/intermediates/javac/paidDebug/classes:build/tmp/kotlin-classes/paidDebug"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -783,7 +771,6 @@ class LmSerializationTest {
                 "variant-betaRelease" to """
                 <variant
                     name="betaRelease"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16">
                   <sourceProviders>
@@ -828,8 +815,7 @@ class LmSerializationTest {
                         value="Some Release Data 2" />
                   </resValues>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/betaRelease/classes:build/tmp/kotlin-classes/betaRelease"
+                      classOutputs="build/intermediates/javac/betaRelease/classes:build/tmp/kotlin-classes/betaRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -837,7 +823,6 @@ class LmSerializationTest {
                 "variant-normalRelease" to """
                 <variant
                     name="normalRelease"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16">
                   <sourceProviders>
@@ -882,8 +867,7 @@ class LmSerializationTest {
                         value="Some Release Data 2" />
                   </resValues>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/normalRelease/classes:build/tmp/kotlin-classes/normalRelease"
+                      classOutputs="build/intermediates/javac/normalRelease/classes:build/tmp/kotlin-classes/normalRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -891,7 +875,6 @@ class LmSerializationTest {
                 "variant-freeRelease" to """
                 <variant
                     name="freeRelease"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16">
                   <sourceProviders>
@@ -936,8 +919,7 @@ class LmSerializationTest {
                         value="Some Release Data 2" />
                   </resValues>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/freeRelease/classes:build/tmp/kotlin-classes/freeRelease"
+                      classOutputs="build/intermediates/javac/freeRelease/classes:build/tmp/kotlin-classes/freeRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -945,7 +927,6 @@ class LmSerializationTest {
                 "variant-paidRelease" to """
                 <variant
                     name="paidRelease"
-                    versionCode="0"
                     minSdkVersion="5"
                     targetSdkVersion="16">
                   <sourceProviders>
@@ -990,8 +971,7 @@ class LmSerializationTest {
                         value="Some Release Data 2" />
                   </resValues>
                   <mainArtifact
-                      name="_main_"
-                      classFolders="build/intermediates/javac/paidRelease/classes:build/tmp/kotlin-classes/paidRelease"
+                      classOutputs="build/intermediates/javac/paidRelease/classes:build/tmp/kotlin-classes/paidRelease"
                       applicationId="com.android.tools.test">
                   </mainArtifact>
                 </variant>
@@ -1048,6 +1028,32 @@ class LmSerializationTest {
             """,
             "Unexpected tag `<foobar>` at testfile.xml:10"
         )
+    }
+
+    @Test
+    fun testPathVariables() {
+        val root = temporaryFolder.root
+        fun String.cleanup() = replace(root.path, "＄ROOT").trim()
+        val moduleFile = File(root, "module.xml")
+        val folder1 = temporaryFolder.newFolder()
+        val folder2 = temporaryFolder.newFolder()
+        val file1 = File(folder1, "file1")
+        file1.createNewFile()
+        val file2 = File(folder2, "file2")
+        file2.createNewFile()
+
+        val pathVariables: MutableList<Pair<String, File>> = mutableListOf()
+        pathVariables.add(Pair("SDK", folder1))
+        pathVariables.add(Pair("GRADLE", folder2))
+        val adapter = LmSerializationFileAdapter(moduleFile, pathVariables)
+
+        assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
+        assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
+        assertEquals("\$GRADLE/file2", adapter.toPathString(file2, root))
+
+        assertEquals(moduleFile, adapter.fromPathString("module.xml", root))
+        assertEquals(file1, adapter.fromPathString("\$SDK/file1", root))
+        assertEquals(file2, adapter.fromPathString("\$GRADLE/file2", root))
     }
 
     // ----------------------------------------------------------------------------------
@@ -1179,11 +1185,11 @@ class LmSerializationTest {
     }
 
     private class LmSerializationStringAdapter(
-        private val root: File? = null,
+        override val root: File? = null,
         private val reader: (TargetFile, String, String) -> Reader = { _, _, _ -> StringReader("<error>") },
-        private val writer: (TargetFile, String, String) -> Writer = { _, _, _ -> StringWriter() }
+        private val writer: (TargetFile, String, String) -> Writer = { _, _, _ -> StringWriter() },
+        override val pathVariables: LmPathVariables = emptyList()
     ) : LmSerialization.LmSerializationAdapter {
-        override fun root(): File? = root
         override fun file(target: TargetFile, variantName: String, artifactName: String): File {
             return if (variantName.isNotEmpty())
                 File("variant-$variantName.xml")

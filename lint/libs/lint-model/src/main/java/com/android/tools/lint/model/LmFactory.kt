@@ -439,12 +439,11 @@ class LmFactory : LmModuleLoader {
         artifact: AndroidArtifact
     ): LmAndroidArtifact {
         return DefaultLmAndroidArtifact(
-            name = artifact.name,
             applicationId = artifact.applicationId,
             dependencies = getDependencies(artifact),
             generatedSourceFolders = artifact.generatedSourceFolders,
             generatedResourceFolders = artifact.generatedResourceFolders,
-            classFolders = artifact.getClassFolders()
+            classOutputs = artifact.getClassFolders()
         )
     }
 
@@ -452,7 +451,6 @@ class LmFactory : LmModuleLoader {
         artifact: JavaArtifact
     ): LmJavaArtifact {
         return DefaultLmJavaArtifact(
-            name = artifact.name,
             dependencies = getDependencies(artifact),
             classFolders = artifact.getClassFolders()
         )
@@ -489,8 +487,6 @@ class LmFactory : LmModuleLoader {
             androidTestArtifact = getAndroidTestArtifact(variant),
             oldVariant = variant,
             `package` = null, // not in the old builder model
-            versionCode = variant.mergedFlavor.versionCode,
-            versionName = variant.mergedFlavor.versionName,
             minSdkVersion = variant.mergedFlavor.minSdkVersion?.toAndroidVersion(),
             targetSdkVersion = variant.mergedFlavor.targetSdkVersion?.toAndroidVersion(),
             resValues = getResValues(variant.mergedFlavor, buildType),
@@ -977,10 +973,6 @@ class LmFactory : LmModuleLoader {
             get() = variant
         override val `package`: String?
             get() = null // no in the old builder model
-        override val versionCode: Int?
-            get() = variant.mergedFlavor.versionCode
-        override val versionName: String?
-            get() = variant.mergedFlavor.versionName
         override val minSdkVersion: AndroidVersion?
             get() = variant.mergedFlavor.minSdkVersion?.toAndroidVersion()
         override val targetSdkVersion: AndroidVersion?

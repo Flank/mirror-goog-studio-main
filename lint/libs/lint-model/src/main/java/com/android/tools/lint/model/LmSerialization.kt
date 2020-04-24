@@ -22,6 +22,7 @@ import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
+import com.android.tools.lint.model.LmSerialization.LmSerializationAdapter
 import com.android.tools.lint.model.LmSerialization.TargetFile
 import com.android.tools.lint.model.LmSerialization.readDependencies
 import com.android.utils.XmlUtils
@@ -58,6 +59,9 @@ object LmSerialization : LmModuleLoader {
     }
 
     interface LmSerializationAdapter {
+        /** Any path mapping to directory variables */
+        val pathVariables: LmPathVariables
+
         /**
          * The file we're reading/writing from if known (only used for error message display)
          */
@@ -65,7 +69,7 @@ object LmSerialization : LmModuleLoader {
             null
 
         /** The root folder for the project; used only for making paths relative in persistence */
-        fun root(): File? = null
+        val root: File?
 
         /** Returns the reader to use to read the given target file */
         fun getReader(
@@ -80,25 +84,81 @@ object LmSerialization : LmModuleLoader {
             variantName: String = "",
             artifactName: String = ""
         ): Writer
+
+        /**
+         * For a given [file], produce a path with variables which applies the path
+         * variable mapping and root file. If [relativeTo] is specified, it will also
+         * consider that as a potential root to make the path relative to (without
+         * a path variable).  This allows some paths to have a local "root" (this is
+         * for example useful for libraries where all the various files (classes,
+         * lint jar, etc) are relative to the library root.)
+         */
+        fun toPathString(file: File, relativeTo: File? = root): String {
+            val fullPath = file.path
+
+            for ((prefix, root) in pathVariables) {
+                if (fullPath.startsWith(root.path) &&
+                    fullPath.length > root.path.length &&
+                    fullPath[root.path.length] == File.separatorChar
+                ) {
+                    val relative = fullPath.substring(root.path.length)
+                    return "\$$prefix$relative"
+                }
+            }
+
+            if (relativeTo != null &&
+                fullPath.startsWith(relativeTo.path) &&
+                fullPath.length > relativeTo.path.length &&
+                fullPath[relativeTo.path.length] == File.separatorChar
+            ) {
+                return fullPath.substring(relativeTo.path.length + 1)
+            }
+
+            return fullPath
+        }
+
+        /** Reverses the path string computed by [toPathString] */
+        fun fromPathString(path: String, relativeTo: File? = null): File {
+            if (path.startsWith("$")) {
+                for (i in 1 until path.length) {
+                    val c = path[i]
+                    if (!c.isJavaIdentifierPart()) {
+                        val name = path.substring(1, i)
+                        val dir = pathVariables.firstOrNull { it.first == name }?.second
+                            ?: error("Path variable \$$name referenced in $path not provided to XML reader")
+                        val relativeStart = if (c == '/' || c == '\\') i + 1 else i
+                        return File(dir, path.substring(relativeStart))
+                    }
+                }
+            }
+
+            val file = File(path)
+            return if (relativeTo != null && !file.isAbsolute) {
+                File(relativeTo, path)
+            } else {
+                file
+            }
+        }
     }
 
     /** Default implementation of [LmSerializationAdapter] which uses files */
-    class LmSerializationFileAdapter(private val moduleFile: File) : LmSerializationAdapter {
-        override fun root(): File {
-            return moduleFile.parentFile
-        }
+    class LmSerializationFileAdapter(
+        private val moduleFile: File,
+        override val pathVariables: LmPathVariables = emptyList()
+    ) : LmSerializationAdapter {
+        override val root: File = moduleFile.parentFile
 
         override fun file(target: TargetFile, variantName: String, artifactName: String): File {
             return when (target) {
                 TargetFile.MODULE -> moduleFile
-                TargetFile.VARIANT -> File(root(), getVariantFileName(moduleFile, variantName))
+                TargetFile.VARIANT -> File(root, getVariantFileName(variantName))
                 TargetFile.DEPENDENCIES -> File(
-                    root(),
-                    getDependenciesFileName(moduleFile, variantName, artifactName)
+                    root,
+                    getDependenciesFileName(variantName, artifactName)
                 )
                 TargetFile.LIBRARY_TABLE -> File(
-                    root(),
-                    getLibrariesFileName(moduleFile, variantName, artifactName)
+                    root,
+                    getLibrariesFileName(variantName, artifactName)
                 )
             }
         }
@@ -128,9 +188,14 @@ object LmSerialization : LmModuleLoader {
 
     /**
      * Reads an XML descriptor from the given [xmlFile] and returns a lint model.
+     * The [pathVariables] must include any path variables passed into [writeModule]
+     * when the module was written.
      */
-    fun readModule(xmlFile: File): LmModule {
-        return readModule(LmSerializationFileAdapter(xmlFile))
+    fun readModule(
+        xmlFile: File,
+        pathVariables: LmPathVariables = emptyList()
+    ): LmModule {
+        return readModule(LmSerializationFileAdapter(xmlFile, pathVariables))
     }
 
     /** Reads in the dependencies. If an (optional) library resolver is provided, merge
@@ -140,9 +205,13 @@ object LmSerialization : LmModuleLoader {
      */
     fun readDependencies(
         xmlFile: File,
-        resolver: DefaultLmLibraryResolver? = null
+        resolver: DefaultLmLibraryResolver? = null,
+        pathVariables: LmPathVariables = emptyList()
     ): LmDependencies {
-        return readDependencies(LmSerializationFileAdapter(xmlFile))
+        return readDependencies(
+            reader = LmSerializationFileAdapter(xmlFile, pathVariables),
+            resolver = resolver
+        )
     }
 
     /** Reads in the library definitions. If an (optional) library resolver is provided, merge
@@ -152,9 +221,13 @@ object LmSerialization : LmModuleLoader {
      */
     fun readLibraries(
         xmlFile: File,
-        resolver: DefaultLmLibraryResolver? = null
+        resolver: DefaultLmLibraryResolver? = null,
+        pathVariables: LmPathVariables = emptyList()
     ): LmLibraryResolver {
-        return readLibraries(LmSerializationFileAdapter(xmlFile))
+        return readLibraries(
+            reader = LmSerializationFileAdapter(xmlFile, pathVariables),
+            resolver = resolver
+        )
     }
 
     /**
@@ -162,7 +235,10 @@ object LmSerialization : LmModuleLoader {
      * If [variantNames] is not null, limit the variants read into the model to just
      * the specified ones.
      */
-    fun readModule(reader: LmSerializationAdapter, variantNames: List<String>? = null): LmModule {
+    fun readModule(
+        reader: LmSerializationAdapter,
+        variantNames: List<String>? = null
+    ): LmModule {
         return LmModuleReader(reader).readModule(variantNames)
     }
 
@@ -229,7 +305,8 @@ object LmSerialization : LmModuleLoader {
         writeDependencies: Boolean = true,
         createdBy: String? = null
     ) {
-        LmModuleWriter(destination).writeModule(module, writeVariants, writeDependencies, createdBy)
+        val writer = LmModuleWriter(destination)
+        writer.writeModule(module, writeVariants, writeDependencies, createdBy)
     }
 
     /**
@@ -272,7 +349,10 @@ object LmSerialization : LmModuleLoader {
      * Writes a lint [module] to the given [destination]. If [writeVariants] is not null,
      * it will also write the given variants into files next to the module file. By
      * default this includes all module variants. If [writeDependencies] is set, the dependencies
-     * and library files are written as well.
+     * and library files are written as well. The [pathVariables] list lets you
+     * specify an ordered list of directories that should have a logical name in the
+     * XML file instead. The [readModule] call needs to define the same variable names.
+     * This allows the XML files to be relocatable.
      *
      * If applicable, you can also record which tool wrote this file (in the case of lint
      * for example, use LintClient.getClientDisplayRevision()) via the [createdBy] string.
@@ -282,11 +362,12 @@ object LmSerialization : LmModuleLoader {
         destination: File,
         writeVariants: List<LmVariant>? = module.variants,
         writeDependencies: Boolean = true,
+        pathVariables: LmPathVariables = emptyList(),
         createdBy: String? = null
     ) {
         writeModule(
             module,
-            LmSerializationFileAdapter(destination),
+            LmSerializationFileAdapter(destination, pathVariables),
             writeVariants,
             writeDependencies,
             createdBy
@@ -302,42 +383,41 @@ object LmSerialization : LmModuleLoader {
         variant: LmVariant,
         destination: File,
         writeDependencies: Boolean = true,
+        pathVariables: LmPathVariables = emptyList(),
         createdBy: String? = null
     ) {
         writeVariant(
             variant,
-            LmSerializationFileAdapter(destination),
+            LmSerializationFileAdapter(destination, pathVariables),
             writeDependencies,
             createdBy
         )
     }
 
-    private fun getVariantFileName(moduleFile: File, variantName: String): String {
-        return "${moduleFile.name}-${variantName}$DOT_XML"
+    private fun getVariantFileName(variantName: String): String {
+        return "${variantName}$DOT_XML"
     }
 
     private fun getDependenciesFileName(
-        moduleFile: File,
         variantName: String,
         artifactName: String
     ): String {
-        return "${moduleFile.name}-$variantName-$artifactName-dependencies-$DOT_XML"
+        return "$variantName-$artifactName-dependencies$DOT_XML"
     }
 
     private fun getLibrariesFileName(
-        moduleFile: File,
         variantName: String,
         artifactName: String
     ): String {
-        return "${moduleFile.name}-$variantName-$artifactName-libraries-$DOT_XML"
+        return "$variantName-$artifactName-libraries$DOT_XML"
     }
 }
 
 private open class LmWriter(
-    protected val adapter: LmSerialization.LmSerializationAdapter,
+    protected val adapter: LmSerializationAdapter,
     protected val printer: PrintWriter
 ) {
-    protected var root: File? = adapter.root()
+    protected var root: File? = adapter.root
 
     protected fun indent(level: Int) {
         for (i in 0 until level) {
@@ -368,17 +448,7 @@ private open class LmWriter(
     ) {
         file ?: return
 
-        val fullPath = file.path
-        val path = if (relativeTo != null && fullPath.startsWith(relativeTo.path)) {
-            if (fullPath.length > relativeTo.path.length && fullPath[relativeTo.path
-                    .length] == File.separatorChar
-            )
-                fullPath.substring(relativeTo.path.length + 1)
-            else
-                fullPath.substring(relativeTo.path.length)
-        } else {
-            fullPath
-        }
+        val path = adapter.toPathString(file, relativeTo)
         printAttribute(name, path, indent)
     }
 
@@ -393,17 +463,7 @@ private open class LmWriter(
             return
         }
         printAttribute(name, path.joinToString(File.pathSeparator) {
-            val fullPath = it.path
-            if (relativeTo != null && fullPath.startsWith(relativeTo.path)) {
-                if (fullPath.length > relativeTo.path.length && fullPath[relativeTo.path
-                        .length] == File.separatorChar
-                )
-                    fullPath.substring(relativeTo.path.length + 1)
-                else
-                    fullPath.substring(relativeTo.path.length)
-            } else {
-                fullPath
-            }
+            adapter.toPathString(it, relativeTo)
         }, indent)
     }
 
@@ -463,8 +523,11 @@ private open class LmWriter(
 }
 
 private class LmModuleWriter(
-    adapter: LmSerialization.LmSerializationAdapter
-) : LmWriter(adapter, PrintWriter(adapter.getWriter(TargetFile.MODULE))) {
+    adapter: LmSerializationAdapter
+) : LmWriter(
+    adapter,
+    PrintWriter(adapter.getWriter(TargetFile.MODULE))
+) {
     fun writeModule(
         module: LmModule,
         writeVariants: List<LmVariant>? = module.variants,
@@ -503,7 +566,9 @@ private class LmModuleWriter(
             for (variant in writeVariants) {
                 writeVariantReference(variant, indent + 1)
 
-                LmSerialization.writeVariant(variant, adapter, writeDependencies, createdBy)
+                LmSerialization.writeVariant(
+                    variant, adapter, writeDependencies, createdBy
+                )
             }
         }
 
@@ -647,9 +712,12 @@ private class LmModuleWriter(
 }
 
 private class LmVariantWriter(
-    adapter: LmSerialization.LmSerializationAdapter,
+    adapter: LmSerializationAdapter,
     private val variantName: String
-) : LmWriter(adapter, PrintWriter(adapter.getWriter(TargetFile.VARIANT, variantName))) {
+) : LmWriter(
+    adapter,
+    PrintWriter(adapter.getWriter(TargetFile.VARIANT, variantName))
+) {
     fun writeVariant(
         variant: LmVariant,
         writeDependencies: Boolean = true,
@@ -666,8 +734,6 @@ private class LmVariantWriter(
         }
         // These used to be on the mergedFlavor
         variant.`package`?.let { printer.printAttribute("package", it, indent) }
-        variant.versionCode?.let { printer.printAttribute("versionCode", it.toString(), indent) }
-        variant.versionName?.let { printer.printAttribute("versionName", it, indent) }
         variant.minSdkVersion?.let { printer.printAttribute("minSdkVersion", it.apiString, indent) }
         variant.targetSdkVersion
             ?.let { printer.printAttribute("targetSdkVersion", it.apiString, indent) }
@@ -749,8 +815,7 @@ private class LmVariantWriter(
         printer.print("<")
         printer.print(tag)
 
-        printer.printName(artifact.name, indent)
-        printer.printFiles("classFolders", artifact.classFolders, indent)
+        printer.printFiles("classOutputs", artifact.classOutputs, indent)
         if (artifact is LmAndroidArtifact) {
             printer.printAttribute("applicationId", artifact.applicationId, indent)
             printer.printFiles("generatedSourceFolders", artifact.generatedSourceFolders, indent)
@@ -780,8 +845,10 @@ private class LmVariantWriter(
     }
 }
 
+typealias LmPathVariables = List<Pair<String, File>>
+
 private class LmDependenciesWriter(
-    adapter: LmSerialization.LmSerializationAdapter,
+    adapter: LmSerializationAdapter,
     variantName: String,
     artifactName: String
 ) : LmWriter(
@@ -857,7 +924,7 @@ private class LmDependenciesWriter(
 }
 
 private class LmLibrariesWriter(
-    adapter: LmSerialization.LmSerializationAdapter,
+    adapter: LmSerializationAdapter,
     variantName: String,
     artifactName: String
 ) : LmWriter(
@@ -926,11 +993,11 @@ private class LmLibrariesWriter(
 }
 
 private abstract class LmReader(
-    protected val adapter: LmSerialization.LmSerializationAdapter,
+    protected val adapter: LmSerializationAdapter,
     reader: Reader
 ) {
     protected abstract val path: String
-    protected var root: File? = adapter.root()
+    protected var root: File? = adapter.root
     protected val parser = KXmlParser()
 
     init {
@@ -989,22 +1056,12 @@ private abstract class LmReader(
 
     protected fun getOptionalFile(attribute: String): File? {
         val path = getOptionalAttribute(attribute) ?: return null
-        val file = File(path)
-        return if (root != null && !file.isAbsolute) {
-            File(root, path)
-        } else {
-            file
-        }
+        return adapter.fromPathString(path, root)
     }
 
     protected fun getRequiredFile(attribute: String, relativeTo: File? = root): File {
         val path = getRequiredAttribute(attribute)
-        val file = File(path)
-        return if (relativeTo != null && !file.isAbsolute) {
-            File(relativeTo, path)
-        } else {
-            file
-        }
+        return adapter.fromPathString(path, relativeTo)
     }
 
     protected fun getOptionalBoolean(
@@ -1077,7 +1134,7 @@ private abstract class LmReader(
 }
 
 private class LmModuleReader(
-    adapter: LmSerialization.LmSerializationAdapter
+    adapter: LmSerializationAdapter
 ) : LmReader(adapter, adapter.getReader(TargetFile.MODULE)) {
     override val path: String
         get() = adapter.file(TargetFile.MODULE)?.path ?: "<unknown>"
@@ -1307,7 +1364,7 @@ private class LmModuleReader(
 }
 
 private class LmVariantReader(
-    adapter: LmSerialization.LmSerializationAdapter,
+    adapter: LmSerializationAdapter,
     private val variantName: String
 ) : LmReader(adapter, adapter.getReader(TargetFile.VARIANT, variantName)) {
     override val path: String
@@ -1386,8 +1443,7 @@ private class LmVariantReader(
     private fun readArtifact(tag: String, android: Boolean): LmArtifact {
         expectTag(tag)
 
-        val name = getName()
-        val classFolders = getFiles("classFolders")
+        val classOutputs = getFiles("classOutputs")
 
         val applicationId: String
         val generatedSourceFolders: Collection<File>
@@ -1411,19 +1467,17 @@ private class LmVariantReader(
             artifactName = tag, resolver = resolver
         )
 
-        if (android) {
-            return DefaultLmAndroidArtifact(
-                name = name,
+        return if (android) {
+            DefaultLmAndroidArtifact(
                 applicationId = applicationId,
                 generatedResourceFolders = generatedResourceFolders,
                 generatedSourceFolders = generatedSourceFolders,
-                classFolders = classFolders,
+                classOutputs = classOutputs,
                 dependencies = dependencies
             )
         } else {
-            return DefaultLmJavaArtifact(
-                name = name,
-                classFolders = classFolders,
+            DefaultLmJavaArtifact(
+                classFolders = classOutputs,
                 dependencies = dependencies
             )
         }
@@ -1443,8 +1497,6 @@ private class LmVariantReader(
             val oldVariant: com.android.builder.model.Variant? = null
 
             val packageName = getOptionalAttribute("package")
-            val versionCode = getOptionalAttribute("versionCode")?.toInt()
-            val versionName = getOptionalAttribute("versionName")
             val minSdkVersion = getOptionalAttribute("minSdkVersion")?.toApiVersion()
             val targetSdkVersion = getOptionalAttribute("targetSdkVersion")?.toApiVersion()
             val debuggable = getOptionalBoolean("debuggable", false)
@@ -1493,8 +1545,6 @@ private class LmVariantReader(
                 testArtifact = testArtifact,
                 oldVariant = oldVariant,
                 `package` = packageName,
-                versionCode = versionCode,
-                versionName = versionName,
                 minSdkVersion = minSdkVersion,
                 targetSdkVersion = targetSdkVersion,
                 proguardFiles = proguardFiles,
@@ -1516,7 +1566,7 @@ private class LmVariantReader(
 
 // per variant: <variant.xml>, <libraries.xml>, <dependencies.xml>
 private class LmDependenciesReader(
-    adapter: LmSerialization.LmSerializationAdapter,
+    adapter: LmSerializationAdapter,
     libraryResolver: DefaultLmLibraryResolver? = null,
     private val variantName: String,
     private val artifactName: String
@@ -1639,7 +1689,7 @@ private class LmDependenciesReader(
 
 // per variant: <variant.xml>, <libraries.xml>, <dependencies.xml>
 private class LmLibrariesReader(
-    adapter: LmSerialization.LmSerializationAdapter,
+    adapter: LmSerializationAdapter,
     libraryResolver: DefaultLmLibraryResolver? = null,
     private val variantName: String,
     private val artifactName: String

@@ -194,7 +194,7 @@ open class LmModuleProject(
         if (javaClassFolders == null) {
             javaClassFolders = ArrayList(3) // common: javac, kotlinc, R.jar
             var mainArtifact = variant.mainArtifact
-            for (outputClassFolder in mainArtifact.classFolders) {
+            for (outputClassFolder in mainArtifact.classOutputs) {
                 if (outputClassFolder.exists()) {
                     javaClassFolders.add(outputClassFolder)
                 }
@@ -205,7 +205,7 @@ open class LmModuleProject(
                     if (variant != this.variant) {
                         mainArtifact = variant.mainArtifact
                         var found = false
-                        for (outputClassFolder in mainArtifact.classFolders) {
+                        for (outputClassFolder in mainArtifact.classOutputs) {
                             if (outputClassFolder.exists()) {
                                 javaClassFolders.add(outputClassFolder)
                                 found = true

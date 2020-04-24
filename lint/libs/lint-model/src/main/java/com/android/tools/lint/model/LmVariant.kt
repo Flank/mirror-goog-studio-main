@@ -34,8 +34,6 @@ interface LmVariant {
 
     // In builder-model these are coming from the merged flavor, plus buildType merged in
     val `package`: String?
-    val versionCode: Int?
-    val versionName: String?
     val minSdkVersion: AndroidVersion?
     val targetSdkVersion: AndroidVersion?
     val resValues: Map<String, LmResourceField>
@@ -67,8 +65,6 @@ class DefaultLmVariant(
     override val testArtifact: LmJavaArtifact?,
     override val androidTestArtifact: LmAndroidArtifact?,
     override val `package`: String?,
-    override val versionCode: Int?,
-    override val versionName: String?,
     override val minSdkVersion: AndroidVersion?,
     override val targetSdkVersion: AndroidVersion?,
 

@@ -631,9 +631,6 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     fix);
         }
 
-        checkOverride(context, element, ATTR_VERSION_CODE);
-        checkOverride(context, element, ATTR_VERSION_NAME);
-
         Attr pkgNode = element.getAttributeNode(ATTR_PACKAGE);
         if (pkgNode != null) {
             String pkg = pkgNode.getValue();
@@ -669,13 +666,6 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 } else if (ATTR_TARGET_SDK_VERSION.equals(attributeName)) {
                     AndroidVersion targetSdkVersion = variant.getTargetSdkVersion();
                     gradleValue = targetSdkVersion != null ? targetSdkVersion.getApiString() : null;
-                } else if (ATTR_VERSION_CODE.equals(attributeName)) {
-                    Integer versionCode = variant.getVersionCode();
-                    if (versionCode != null) {
-                        gradleValue = versionCode.toString();
-                    }
-                } else if (ATTR_VERSION_NAME.equals(attributeName)) {
-                    gradleValue = variant.getVersionName();
                 } else {
                     assert false : attributeName;
                     return;
