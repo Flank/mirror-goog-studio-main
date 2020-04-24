@@ -471,11 +471,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @Override
     @NonNull
     public String getNdkVersion() {
-        if (myNdkVersion != null) {
-            return myNdkVersion;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: AndroidProject.getNdkVersion()");
+        return myNdkVersion;
     }
 
     @Override
