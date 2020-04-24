@@ -1356,7 +1356,7 @@ public abstract class TaskManager<
                     .getArtifacts()
                     .appendToAllClasses(
                             project.files(
-                                    artifacts.getFinalProductAsFileCollection(
+                                    artifacts.getFinalProduct(
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                                     .INSTANCE)));
         }
@@ -1741,10 +1741,10 @@ public abstract class TaskManager<
             return;
         }
 
-        Provider<FileCollection> rClassJar =
+        Provider<RegularFile> rClassJar =
                 componentProperties
                         .getArtifacts()
-                        .getFinalProductAsFileCollection(
+                        .getFinalProduct(
                                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                         .INSTANCE);
 
@@ -2950,9 +2950,14 @@ public abstract class TaskManager<
                 creationConfig
                         .getArtifacts()
                         .getFinalProduct(InternalArtifactType.FEATURE_DEX.INSTANCE);
+
+        DirectoryProperty artifactDirectory =
+                creationConfig.getGlobalScope().getProject().getObjects().directoryProperty();
+        artifactDirectory.set(artifact);
+
         for (String modulePath : modulePaths) {
             Provider<RegularFile> file =
-                    artifact.map(directory -> directory.file(getFeatureFileName(modulePath, null)));
+                    artifactDirectory.file(getFeatureFileName(modulePath, null));
             Map<Attribute<String>, String> attributeMap =
                     ImmutableMap.of(MODULE_PATH, project.absoluteProjectPath(modulePath));
             publishArtifactToConfiguration(

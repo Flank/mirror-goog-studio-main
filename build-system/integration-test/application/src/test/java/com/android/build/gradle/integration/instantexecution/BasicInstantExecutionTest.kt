@@ -36,7 +36,7 @@ class BasicInstantExecutionTest {
     @JvmField
     @Rule
     var project = GradleTestProject.builder()
-        .setTargetGradleVersion("6.4-20200312124006+0000")
+        .setTargetGradleVersion("6.4-rc-2")
         .fromTestApp(
             MultiModuleTestProject.builder()
                 .subproject(":app", app)

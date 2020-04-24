@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
+import java.util.concurrent.Callable;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -116,6 +117,10 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     public Provider<FileCollection> getFinalArtifact(
             @NonNull ArtifactType<? extends FileSystemLocation> artifactType) {
         BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        return artifacts.getFinalProductAsFileCollection((InternalArtifactType) artifactType);
+        return componentProperties.getGlobalScope().getProject().getProviders().provider(
+                () -> componentProperties.getServices().fileCollection(
+                        artifacts.getFinalProduct((InternalArtifactType) artifactType)
+                )
+        );
     }
 }

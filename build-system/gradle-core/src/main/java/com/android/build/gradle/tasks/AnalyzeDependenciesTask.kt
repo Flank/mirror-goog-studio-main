@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
@@ -43,8 +44,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var variantArtifact: Provider<FileCollection>
-        private set
+    abstract val variantArtifact: ConfigurableFileCollection
 
     private lateinit var externalArtifactCollection: ArtifactCollection
 
@@ -65,7 +65,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         val variantDepsHolder = VariantDependenciesHolder(
             allDirectDependencies,
             apiDirectDependenciesConfiguration?.allDependencies)
-        val variantClassHolder = VariantClassesHolder(variantArtifact.get())
+        val variantClassHolder = VariantClassesHolder(variantArtifact)
         val classFinder = ClassFinder(externalArtifactCollection)
         val resourcesFinder = ResourcesFinder(externalArtifactCollection)
 
@@ -175,8 +175,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.variantArtifact = creationConfig.artifacts
-                .getFinalProductAsFileCollection(AnchorOutputType.ALL_CLASSES)
+            task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
 
             task.externalArtifactCollection = creationConfig
                 .variantDependencies.getArtifactCollection(

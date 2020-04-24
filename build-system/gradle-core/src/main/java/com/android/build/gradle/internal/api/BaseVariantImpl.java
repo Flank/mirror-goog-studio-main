@@ -499,9 +499,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
-        return componentProperties
-                .getArtifacts()
-                .getFinalProductAsFileCollection(InternalArtifactType.APK_MAPPING.INSTANCE);
+        return componentProperties.getGlobalScope().getProject().getProviders().provider(
+                () -> componentProperties.getServices().fileCollection(
+                        componentProperties.getArtifacts().getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)
+                )
+        );
     }
 
     @Override

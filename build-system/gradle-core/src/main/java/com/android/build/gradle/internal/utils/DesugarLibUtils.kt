@@ -34,11 +34,14 @@ import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ValueSource
+import org.gradle.api.provider.ValueSourceParameters
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -81,6 +84,27 @@ fun getDesugarLibDexFromTransform(creationConfig: BaseCreationConfig): FileColle
         creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
 }
 
+/** Implementation of provider holding JSON file value. */
+abstract class DesugarConfigJson: ValueSource<String, DesugarConfigJson.Parameters> {
+    interface Parameters: ValueSourceParameters {
+        val desugarJson: ConfigurableFileCollection
+    }
+
+    override fun obtain(): String? {
+        val jsonFiles = parameters.desugarJson.files
+        return if (jsonFiles.isEmpty()) {
+            null
+        } else {
+            val content = StringBuilder()
+            val dirs = jsonFiles.map { it.toPath() }
+            dirs.forEach {
+                content.append(String(Files.readAllBytes(it), StandardCharsets.UTF_8))
+            }
+            content.toString()
+        }
+    }
+}
+
 /**
  * Returns a provider which represents the content of desugar.json file extracted from
  * desugar lib configuration jars
@@ -89,17 +113,9 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
     val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
 
     registerDesugarLibConfigTransform(project)
-    return getDesugarLibConfigFromTransform(configuration).elements.map{ locations ->
-        if (locations.isEmpty()) {
-            null
-        } else {
-            val content = StringBuilder()
-            val dirs = locations.map { it.asFile.toPath() }
-            dirs.forEach {
-                content.append(String(Files.readAllBytes(it), StandardCharsets.UTF_8))
-            }
-            content.toString()
-        }
+
+    return project.providers.of(DesugarConfigJson::class.java) {
+        it.parameters.desugarJson.setFrom(getDesugarLibConfigFromTransform(configuration))
     }
 }
 

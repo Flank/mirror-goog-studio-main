@@ -60,7 +60,9 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, component.name)
 
         task.classpath = task.project.files()
-        task.source(component.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_SOURCES))
+        if (component.variantType.isTestComponent || component.variantType.isApk) {
+            task.source(component.artifacts.getFinalProduct(RUNTIME_R_CLASS_SOURCES))
+        }
         task.setDestinationDir(output.asFile)
 
         // manually declare our output directory as a Task output since it's not annotated as

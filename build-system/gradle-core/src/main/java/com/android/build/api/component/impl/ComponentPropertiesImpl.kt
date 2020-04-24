@@ -499,7 +499,7 @@ abstract class ComponentPropertiesImpl(
                     )
 
                     internalServices.fileCollection(
-                        artifacts.getFinalProductAsFileCollection(
+                        artifacts.getFinalProduct(
                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                         )
                     )

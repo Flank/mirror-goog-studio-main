@@ -189,26 +189,6 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Returns a [Provider] of a [FileCollection] for the passed [ArtifactType].
-     * The [FileCollection] will represent the final value of the built artifact irrespective of
-     * when this call is made as long as the [Provider] is resolved at execution time.
-     *
-     * @param  artifactType the identifier for the built artifact.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProductAsFileCollection(artifactType: ARTIFACT_TYPE): Provider<FileCollection>
-        where ARTIFACT_TYPE:  ArtifactType<T>,
-              ARTIFACT_TYPE: ArtifactType.Single {
-
-        if (artifactType == AnchorOutputType.ALL_CLASSES) {
-            return project.provider { getAllClasses() }
-        }
-
-        return getFinalProduct(artifactType).map {
-            project.files(it) as FileCollection
-        }.orElse(project.files())
-    }
-
-    /**
      * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.
      *
      * @param files the [FileCollection] to add.
