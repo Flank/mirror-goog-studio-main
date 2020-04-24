@@ -21,7 +21,6 @@ import com.android.utils.StringHelper;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
-import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
 import com.google.common.primitives.UnsignedBytes;
@@ -45,15 +44,10 @@ public class MlkitNames {
                 + StringHelper.usLocaleCapitalize(type);
     }
 
-    public static String computeModelClassName(String relativeModelFilePath) {
+    @NonNull
+    public static String computeModelClassName(@NonNull String relativeModelFilePath) {
         Path filePath = Paths.get(relativeModelFilePath);
-        String fileName = filePath.getFileName().toString();
 
-        // Indicates whether model is in sub directory. Empty string if it is in root directory.
-        String relativePathIndicator = relativeModelFilePath;
-        if (relativeModelFilePath == null || relativeModelFilePath.equals(fileName)) {
-            relativePathIndicator = "";
-        }
         String formattedName =
                 MoreFiles.getNameWithoutExtension(filePath).trim().replaceAll("[- ]+", "_");
         if (formattedName.contains("_")) {
@@ -69,14 +63,15 @@ public class MlkitNames {
 
         if (className.isEmpty()) {
             // If we can't interpret a valid class name from file name, then create name from
-            // fileName hashcode(i.e. Model75)
-            return MODEL_NAME_PREFIX + getHashValue(fileName + relativePathIndicator);
+            // fileName hashcode(i.e. AutoModel75)
+            return MODEL_NAME_PREFIX + getHashValue(relativeModelFilePath);
         }
 
         // If model is in sub directory, add a hashcode in model class name.
-        if (!Strings.isNullOrEmpty(relativePathIndicator)) {
-            className += getHashValue(relativePathIndicator);
+        if (filePath.getParent() != null) {
+            className += getHashValue(relativeModelFilePath);
         }
+
         if (SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className)) {
             return className;
         } else {
