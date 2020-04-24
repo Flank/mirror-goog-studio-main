@@ -33,6 +33,9 @@ public class Apk {
     // most common in the form of an instrumented unit test run from studio.
     public final List<String> targetPackages;
 
+    // The list of service classes running in isolated processes in this APK.
+    public final List<String> isolatedServices;
+
     public final Map<String, ApkEntry> apkEntries;
 
     private Apk(
@@ -41,12 +44,14 @@ public class Apk {
             String path,
             String packageName,
             List<String> targetPackages,
+            List<String> isolatedServices,
             Map<String, ApkEntry> apkEntries) {
         this.name = name;
         this.checksum = checksum;
         this.path = path;
         this.packageName = packageName;
         this.targetPackages = targetPackages;
+        this.isolatedServices = isolatedServices;
         this.apkEntries = apkEntries;
     }
 
@@ -60,6 +65,7 @@ public class Apk {
         private String path;
         private String packageName;
         private List<String> targetPackages;
+        private List<String> isolatedServices;
         private ImmutableMap.Builder<String, ApkEntry> apkEntries;
 
         public Builder() {
@@ -68,6 +74,7 @@ public class Apk {
             this.path = "";
             this.packageName = "";
             this.targetPackages = null;
+            this.isolatedServices = null;
             this.apkEntries = ImmutableMap.builder();
         }
 
@@ -96,6 +103,11 @@ public class Apk {
             return this;
         }
 
+        public Builder setIsolatedServices(List<String> isolatedServices) {
+            this.isolatedServices = isolatedServices;
+            return this;
+        }
+
         @VisibleForTesting
         public Builder addApkEntry(String name, long checksum) {
             this.apkEntries.put(name, new ApkEntry(name, checksum, null));
@@ -109,8 +121,16 @@ public class Apk {
 
         public Apk build() {
             targetPackages = targetPackages == null ? ImmutableList.of() : targetPackages;
+            isolatedServices = isolatedServices == null ? ImmutableList.of() : isolatedServices;
             Apk apk =
-                    new Apk(name, checksum, path, packageName, targetPackages, apkEntries.build());
+                    new Apk(
+                            name,
+                            checksum,
+                            path,
+                            packageName,
+                            targetPackages,
+                            isolatedServices,
+                            apkEntries.build());
             apk.apkEntries.values().forEach(entry -> entry.setApk(apk));
             return apk;
         }
