@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.attribution
 
+import com.android.build.gradle.internal.utils.getBuildSrcPlugins
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
@@ -53,7 +54,8 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
             AndroidGradlePluginAttributionData(
                 taskNameToClassNameMap = taskNameToClassNameMap,
                 tasksSharingOutput = outputFileToTasksMap.filter { it.value.size > 1 },
-                garbageCollectionData = gcData
+                garbageCollectionData = gcData,
+                buildSrcPlugins = getBuildSrcPlugins(this.javaClass.classLoader)
             )
         )
         AttributionListenerInitializer.unregister(buildResult.gradle)
