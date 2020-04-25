@@ -418,6 +418,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for Embedded Emulator.
+coverage_report(
+    name = "emulator",
+    srcpath_include = [
+        "tools/adt/idea/emulator/src/com/android/tools/idea/emulator",
+    ],
+    tests = [
+        "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -433,6 +444,7 @@ combine_report_definitions(
         "designtools",
         "dsl",
         "dynamic-layout-inspector",
+        "emulator",
         "layouteditor",
         "ml-model-binding",
         "motioneditor",
@@ -481,6 +493,7 @@ coverage_report(
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
+        "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
         #TODO(b/116407505) too flaky for coverage runs
         #"//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
