@@ -21,7 +21,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
+import com.android.tools.mlkit.TensorInfo.ImageProperties;
+import com.android.tools.mlkit.TensorInfo.ImageProperties.ColorSpaceType;
 import com.android.tools.mlkit.exception.TfliteModelException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -46,9 +52,7 @@ public class ModelInfoTest {
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
         assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
         assertEquals("image1", inputTensorInfo.getIdentifierName());
-        assertEquals(
-                TensorInfo.ImageProperties.ColorSpaceType.RGB,
-                inputTensorInfo.getImageProperties().colorSpaceType);
+        assertEquals(new ImageProperties(ColorSpaceType.RGB), inputTensorInfo.getImageProperties());
         MetadataExtractor.NormalizationParams inputNormalization =
                 inputTensorInfo.getNormalizationParams();
         assertEquals(127.5f, inputNormalization.getMean()[0], DELTA);
@@ -81,6 +85,24 @@ public class ModelInfoTest {
         assertFalse(modelInfo.isMetadataExisted());
         assertEquals("inputFeature0", modelInfo.getInputs().get(0).getIdentifierName());
         assertEquals("outputFeature0", modelInfo.getOutputs().get(0).getIdentifierName());
+    }
+
+    @Test
+    public void testModelInfoSerialization() throws TfliteModelException, IOException {
+        ModelInfo originalModelInfo =
+                ModelInfo.buildFrom(
+                        extractByteBufferFromModel(
+                                "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
+
+        byte[] serializedBytes;
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            originalModelInfo.save(new DataOutputStream(byteArrayOutputStream));
+            serializedBytes = byteArrayOutputStream.toByteArray();
+        }
+
+        ModelInfo deserializedModelInfo =
+                new ModelInfo(new DataInputStream(new ByteArrayInputStream(serializedBytes)));
+        assertEquals(originalModelInfo, deserializedModelInfo);
     }
 
     private static ByteBuffer extractByteBufferFromModel(String filePath) throws IOException {

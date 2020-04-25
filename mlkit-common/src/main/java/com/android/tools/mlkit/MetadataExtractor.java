@@ -16,8 +16,17 @@
 
 package com.android.tools.mlkit;
 
+import static com.android.tools.mlkit.DataInputOutputUtils.readFloatArray;
+import static com.android.tools.mlkit.DataInputOutputUtils.writeFloatArray;
+
+import com.android.annotations.NonNull;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
+import java.util.Objects;
 import org.tensorflow.lite.schema.Metadata;
 import org.tensorflow.lite.schema.Model;
 import org.tensorflow.lite.schema.QuantizationParameters;
@@ -165,9 +174,19 @@ public class MetadataExtractor {
          * @param scale The scale value used in dequantization.
          * @param zeroPoint The zero point value used in dequantization.
          */
-        public QuantizationParams(final float scale, final long zeroPoint) {
+        public QuantizationParams(float scale, long zeroPoint) {
             this.scale = scale;
             this.zeroPoint = zeroPoint;
+        }
+
+        public QuantizationParams(@NonNull DataInput in) throws IOException {
+            this.scale = in.readFloat();
+            this.zeroPoint = in.readLong();
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            out.writeFloat(scale);
+            out.writeLong(zeroPoint);
         }
 
         /** Returns the scale value. */
@@ -179,6 +198,19 @@ public class MetadataExtractor {
         public long getZeroPoint() {
             return zeroPoint;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            QuantizationParams that = (QuantizationParams) o;
+            return Float.compare(scale, that.scale) == 0 && zeroPoint == that.zeroPoint;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(scale, zeroPoint);
+        }
     }
 
     public static class NormalizationParams {
@@ -188,21 +220,32 @@ public class MetadataExtractor {
         private final float[] max;
 
         public NormalizationParams(
-                FloatBuffer meanBuffer,
-                FloatBuffer stdBuffer,
-                FloatBuffer minBuffer,
-                FloatBuffer maxBuffer) {
+                @NonNull FloatBuffer meanBuffer,
+                @NonNull FloatBuffer stdBuffer,
+                @NonNull FloatBuffer minBuffer,
+                @NonNull FloatBuffer maxBuffer) {
             mean = new float[meanBuffer.limit()];
             meanBuffer.get(mean);
-
             std = new float[stdBuffer.limit()];
             stdBuffer.get(std);
-
             min = new float[minBuffer.limit()];
             minBuffer.get(min);
-
             max = new float[maxBuffer.limit()];
             maxBuffer.get(max);
+        }
+
+        public NormalizationParams(@NonNull DataInput in) throws IOException {
+            mean = readFloatArray(in);
+            std = readFloatArray(in);
+            min = readFloatArray(in);
+            max = readFloatArray(in);
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            writeFloatArray(out, mean);
+            writeFloatArray(out, std);
+            writeFloatArray(out, min);
+            writeFloatArray(out, max);
         }
 
         public float[] getMean() {
@@ -219,6 +262,26 @@ public class MetadataExtractor {
 
         public float[] getMax() {
             return max;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NormalizationParams that = (NormalizationParams) o;
+            return Arrays.equals(mean, that.mean)
+                    && Arrays.equals(std, that.std)
+                    && Arrays.equals(min, that.min)
+                    && Arrays.equals(max, that.max);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Arrays.hashCode(mean);
+            result = 31 * result + Arrays.hashCode(std);
+            result = 31 * result + Arrays.hashCode(min);
+            result = 31 * result + Arrays.hashCode(max);
+            return result;
         }
     }
 }
