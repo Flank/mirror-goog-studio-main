@@ -29,6 +29,7 @@ def gradle_integration_test(
         name = lib_name,
         srcs = srcs,
         deps = deps,
+        testonly = True,
         lint_baseline = lint_baseline,
         lint_is_test_sources = True,
     )
