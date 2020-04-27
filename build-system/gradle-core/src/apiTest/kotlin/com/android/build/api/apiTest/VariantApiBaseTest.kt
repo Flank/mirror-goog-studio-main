@@ -197,8 +197,8 @@ ${repositories.joinToString(
     @JvmField val testName= TestName()
 
     @Rule
-    @JvmField val testProjectDir = if (System.getenv("KEEP_TEST_DIR") != null) {
-        ApiTestFolder(File(System.getenv("KEEP_TEST_DIR")), testType.getDirName(this))
+    @JvmField val testProjectDir = if (System.getenv("API_TESTS_OUTDIR") != null) {
+        ApiTestFolder(File(System.getenv("API_TESTS_OUTDIR")), testType.getDirName(this))
     } else {
         TemporaryFolder()
     }
