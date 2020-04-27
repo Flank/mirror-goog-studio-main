@@ -1,4 +1,5 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
+load(":coverage.bzl", "coverage_baseline")
 
 def _maven_pom_impl(ctx):
     # Contains both *.jar and *.aar files.
@@ -204,6 +205,7 @@ def maven_java_library(
         resources = [],
         exports = None,
         pom = None,
+        baseline_coverage = True,
         visibility = None,
         **kwargs):
     if srcs and export_artifact:
@@ -211,6 +213,9 @@ def maven_java_library(
 
     if export_artifact and pom:
         fail("If export_artifact is specified, the maven information cannot be changed.")
+
+    if srcs and baseline_coverage:
+        coverage_baseline(name, srcs)
 
     java_exports = exports + [export_artifact] if export_artifact else exports
     native.java_library(

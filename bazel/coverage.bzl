@@ -22,3 +22,40 @@ def coverage_java_test(name, data = [], jvm_flags = [], visibility = None, test_
         visibility = visibility,
         **kwargs
     )
+
+def coverage_baseline(name, srcs = []):
+    native.genrule(
+        name = name + "_coverage.baseline.srcs",
+        srcs = srcs,
+        outs = [name + ".coverage.baseline.srcs"],
+        tags = [
+            "coverage-sources",
+            "no_mac",
+            "no_windows",
+        ],
+        cmd = "printf '$(RULEDIR)/%s\n' {} | sed -e 's%^$(BINDIR)/%%' >$@".format(" ".join(srcs)),
+    )
+
+    native.genrule(
+        name = name + "_coverage.baseline.srcs.filtered",
+        tools = ["@cov//:ignore_files_filter"],
+        srcs = [name + "_coverage.baseline.srcs"],
+        outs = [name + ".coverage.baseline.srcs.filtered"],
+        tags = [
+            "no_mac",
+            "no_windows",
+        ],
+        cmd = "python $(location @cov//:ignore_files_filter) <$< >$@",
+    )
+
+def coverage_java_library(name, srcs = [], **kwargs):
+    native.java_library(
+        name = name,
+        srcs = srcs,
+        **kwargs
+    )
+
+    coverage_baseline(
+        name = name,
+        srcs = srcs,
+    )

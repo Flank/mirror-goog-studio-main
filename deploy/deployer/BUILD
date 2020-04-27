@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
 
 # managed by go/iml_to_build
 iml_module(
@@ -58,7 +58,7 @@ java_library(
     visibility = ["//visibility:public"],
 )
 
-java_library(
+coverage_java_library(
     name = "tools.deployer",
     srcs = glob([
         "src/main/**/*.java",

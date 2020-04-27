@@ -1,6 +1,7 @@
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_library")
 
-java_library(
+coverage_java_library(
     name = "tools.tracer",
     srcs = glob(["src/**/*.java"]),
     visibility = ["//visibility:public"],

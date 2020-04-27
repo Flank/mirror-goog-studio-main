@@ -1,4 +1,4 @@
-load(":coverage.bzl", "coverage_java_test")
+load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":merge_archives.bzl", "merge_jars")
@@ -126,6 +126,12 @@ def kotlin_library(
     """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
+
+    if not testonly:
+        coverage_baseline(
+            name = name,
+            srcs = javas + kotlins,
+        )
 
     if not kotlins and not javas:
         fail("No sources found for kotlin_library " + name)

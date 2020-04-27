@@ -1,4 +1,4 @@
-load(":coverage.bzl", "coverage_java_test")
+load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
 load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_compile")
@@ -575,6 +575,12 @@ def iml_module(
         runtime_deps = runtime_deps + [":" + name],
         visibility = visibility,
     )
+
+    if srcs.javas + srcs.kotlins:
+        coverage_baseline(
+            name = name,
+            srcs = srcs.javas + srcs.kotlins,
+        )
 
     # Only add test utils to other than itself.
     test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils"]
