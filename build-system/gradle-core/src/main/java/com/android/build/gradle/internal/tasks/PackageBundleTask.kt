@@ -189,10 +189,19 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     params.bundleOptions.enableDensity
                 )
                 .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
-                .splitBy(
-                    Config.SplitDimension.Value.TEXTURE_COMPRESSION_FORMAT,
-                    params.bundleOptions.enableTexture
+
+            params.bundleOptions.enableTexture?.let {
+                splitsConfig.addSplitDimension(
+                    Config.SplitDimension.newBuilder()
+                        .setValue(Config.SplitDimension.Value.TEXTURE_COMPRESSION_FORMAT)
+                        .setSuffixStripping(
+                            Config.SuffixStripping.newBuilder()
+                                .setEnabled(true)
+                                .setDefaultSuffix(params.bundleOptions.textureDefaultFormat ?: "")
+                        )
+                        .setNegate(!it)
                 )
+            }
 
             val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
                 .setEnabled(params.bundleFlags.enableUncompressedNativeLibs)
@@ -304,7 +313,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val enableLanguage: Boolean?,
         @get:Input
         @get:Optional
-        val enableTexture: Boolean?
+        val enableTexture: Boolean?,
+        @get:Input
+        @get:Optional
+        val textureDefaultFormat: String?
     ) : Serializable
 
     data class BundleFlags(
@@ -416,7 +428,8 @@ private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
         enableAbi = abi.enableSplit,
         enableDensity = density.enableSplit,
         enableLanguage = language.enableSplit,
-        enableTexture = texture.enableSplit
+        enableTexture = texture.enableSplit,
+        textureDefaultFormat = texture.defaultFormat
     )
 
 /**

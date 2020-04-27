@@ -321,7 +321,9 @@ com.android.build.api.dsl.BundleLanguage
 com.android.build.api.dsl.BundleLanguage.getEnableSplit: java.lang.Boolean ()
 com.android.build.api.dsl.BundleLanguage.setEnableSplit: void (java.lang.Boolean)
 com.android.build.api.dsl.BundleTexture
+com.android.build.api.dsl.BundleTexture.getDefaultFormat: java.lang.String ()
 com.android.build.api.dsl.BundleTexture.getEnableSplit: java.lang.Boolean ()
+com.android.build.api.dsl.BundleTexture.setDefaultFormat: void (java.lang.String)
 com.android.build.api.dsl.BundleTexture.setEnableSplit: void (java.lang.Boolean)
 com.android.build.api.dsl.Cmake
 com.android.build.api.dsl.Cmake.buildStagingDirectory: void (java.lang.Object)

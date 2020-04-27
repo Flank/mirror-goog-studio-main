@@ -1007,7 +1007,9 @@ com.android.build.gradle.internal.dsl.BundleOptionsLanguage.getEnableSplit: java
 com.android.build.gradle.internal.dsl.BundleOptionsLanguage.setEnableSplit: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.BundleOptionsTexture implements com.android.build.api.dsl.BundleTexture
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.<init>: com.android.build.gradle.internal.dsl.BundleOptionsTexture ()
+com.android.build.gradle.internal.dsl.BundleOptionsTexture.getDefaultFormat: java.lang.String ()
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.getEnableSplit: java.lang.Boolean ()
+com.android.build.gradle.internal.dsl.BundleOptionsTexture.setDefaultFormat: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.setEnableSplit: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.CmakeOptions implements com.android.build.gradle.internal.model.CoreCmakeOptions, com.android.build.api.dsl.Cmake
 com.android.build.gradle.internal.dsl.CmakeOptions.<init>: com.android.build.gradle.internal.dsl.CmakeOptions (com.android.build.gradle.internal.services.DslServices)

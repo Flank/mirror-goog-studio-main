@@ -22,4 +22,5 @@ import javax.inject.Inject
 open class BundleOptionsTexture @Inject constructor() : BundleTexture {
 
     override var enableSplit: Boolean? = null
+    override var defaultFormat: String? = null
 }
