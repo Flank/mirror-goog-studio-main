@@ -38,18 +38,18 @@ class BuildConfigByteCodeGenerator(private val data: BuildConfigData) :
         "${data.buildConfigPackageName.replace('.', '/')}/${data.buildConfigName}"
     }
 
-    override fun getFolderPath(): File = File(data.outputPath.toFile(),
+    override val folderPath: File = File(data.outputPath.toFile(),
             "${data.buildConfigName}${SdkConstants.DOT_JAR}")
             .also { it.mkdirs() }
 
-    override fun getBuildConfigFile(): File =
+    override val buildConfigFile: File =
             File(data.outputPath.toFile(), "${data.buildConfigName}${SdkConstants.DOT_JAR}")
 
     /** Creates a JAR file within the genFolder containing a build config .class which is
      * generated based on the current class attributes.
      */
     override fun generate() = writeToJar(
-            getBuildConfigFile().toPath(),
+            buildConfigFile.toPath(),
             """${data.buildConfigPackageName.replace('.', '/')}/${data
                     .buildConfigName}${SdkConstants.DOT_CLASS}""".trimMargin(),
             generateByteCode()

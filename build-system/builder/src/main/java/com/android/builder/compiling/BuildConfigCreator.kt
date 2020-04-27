@@ -4,8 +4,8 @@ import java.io.File
 import java.io.IOException
 
 interface BuildConfigCreator {
-    fun getFolderPath() : File
-    fun getBuildConfigFile() : File
+    val folderPath : File
+    val buildConfigFile : File
 
     @Throws(IOException::class)
     fun generate()

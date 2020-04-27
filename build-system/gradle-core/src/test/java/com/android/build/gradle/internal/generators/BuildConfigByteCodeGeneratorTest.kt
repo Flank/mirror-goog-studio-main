@@ -40,7 +40,7 @@ internal class BuildConfigByteCodeGeneratorTest {
 
         generator.generate()
 
-        val buildConfigBytecodeFile = generator.getBuildConfigFile()
+        val buildConfigBytecodeFile = generator.buildConfigFile
 
         val urls = arrayOf<URL>(buildConfigBytecodeFile.toURI().toURL())
         val urlClassLoader = URLClassLoader.newInstance(urls)
@@ -68,7 +68,7 @@ internal class BuildConfigByteCodeGeneratorTest {
         val buildConfigData = getSampleByteCodeData(packageFolder.toPath())
         val generator = BuildConfigByteCodeGenerator(buildConfigData)
         generator.generate()
-        val bytecodeJar = generator.getBuildConfigFile()
+        val bytecodeJar = generator.buildConfigFile
 
         Zip(bytecodeJar).use {
             assertThat(it.entries).hasSize(1)
