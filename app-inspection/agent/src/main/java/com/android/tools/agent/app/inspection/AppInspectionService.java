@@ -57,7 +57,7 @@ public class AppInspectionService {
     // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
     private final long mNativePtr;
 
-    private final Map<String, InspectorContext> mInspectorContexts = new HashMap<>();
+    private final Map<String, InspectorContext> mInspectorContexts = new ConcurrentHashMap<>();
 
     private final Map<String, List<HookInfo<ExitHook>>> mExitTransforms = new ConcurrentHashMap<>();
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
@@ -166,8 +166,8 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        Inspector inspector = mInspectorContexts.get(inspectorId).getInspector();
-        if (inspector == null) {
+        InspectorContext inspectorContext = mInspectorContexts.get(inspectorId);
+        if (inspectorContext == null) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
@@ -175,7 +175,7 @@ public class AppInspectionService {
         try {
             CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
             mIdToCommandCallback.put(commandId, callback);
-            inspector.onReceiveCommand(rawCommand, callback);
+            inspectorContext.getInspector().onReceiveCommand(rawCommand, callback);
         } catch (Throwable t) {
             t.printStackTrace();
             sendCrashEvent(

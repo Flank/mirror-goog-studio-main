@@ -187,6 +187,26 @@ public final class AppInspectionTest {
                                 + " already exists. It was launched by project: project.A");
     }
 
+    @Test
+    public void sendCommandToNonExistentInspector() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector("test.inspector", onDevicePath)),
+                SUCCESS);
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+        byte[] commandBytes = new byte[] {1, 2, 127};
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        rawCommandInspector("test.inspector", commandBytes));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage())
+                .isEqualTo("Inspector with id test.inspector wasn't previously created");
+    }
+
     /**
      * The inspector framework includes features for finding object instances on the heap. This test
      * indirectly verifies it works.
