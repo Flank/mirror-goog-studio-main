@@ -30,7 +30,7 @@ data class WizardParameterData(
    * Name of the source provider.
    * Also known as "flavor". E.g. "main", "debug" etc.
    */
-  val sourceProviderName: String,
+  var sourceProviderName: String,
   private val consumers: Collection<Parameter<*>>
 ) {
   init {
