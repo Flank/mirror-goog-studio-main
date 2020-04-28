@@ -50,8 +50,7 @@ import org.gradle.api.Named
  * [filter variants using `android.variantFilter`](https://developer.android.com/studio/build/build-variants.html#filter-variants).
  */
 @Incubating
-interface ProductFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> : Named,
-    BaseFlavor<AnnotationProcessorOptionsT> {
+interface ProductFlavor : Named, BaseFlavor {
     /**
      * Specifies the flavor dimension that this product flavor belongs to.
      *

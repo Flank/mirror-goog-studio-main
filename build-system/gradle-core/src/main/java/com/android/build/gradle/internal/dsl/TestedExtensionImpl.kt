@@ -26,14 +26,14 @@ import com.android.build.gradle.internal.services.DslServices
 /** Internal implementation of the 'new' DSL interface */
 abstract class TestedExtensionImpl<
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptions>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions>,
+        BuildTypeT : com.android.build.api.dsl.BuildType,
+        DefaultConfigT : DefaultConfig,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
-    dslServices: DslServices,
-    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
-) : CommonExtensionImpl<
+            dslServices: DslServices,
+            dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
+        ) : CommonExtensionImpl<
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,

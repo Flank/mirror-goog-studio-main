@@ -19,9 +19,8 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryDefaultConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    LibraryBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-    DefaultConfig<AnnotationProcessorOptionsT> {
+interface LibraryDefaultConfig<SigningConfigT : SigningConfig> :
+    LibraryBaseFlavor<SigningConfigT>,
+    DefaultConfig {
     // TODO(b/140406102)
 }

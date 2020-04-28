@@ -38,17 +38,16 @@ import com.android.build.gradle.internal.dsl.TestOptions as TestOptionsImpl
  */
 interface InternalCommonExtension<
         BuildFeaturesT : com.android.build.api.dsl.BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions>,
-        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<AnnotationProcessorOptions>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions>,
+        BuildTypeT : com.android.build.api.dsl.BuildType,
+        DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         VariantT : Variant<VariantPropertiesT>,
-        VariantPropertiesT : VariantProperties>
-    : CommonExtension<
+        VariantPropertiesT : VariantProperties> :
+    CommonExtension<
         AaptOptionsImpl,
         AbiSplitOptions,
         AdbOptionsImpl,
         AndroidSourceSet,
-        AnnotationProcessorOptions,
         BuildFeaturesT,
         BuildTypeT,
         CmakeOptions,

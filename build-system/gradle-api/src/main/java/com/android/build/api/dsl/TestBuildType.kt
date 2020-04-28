@@ -19,10 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestBuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    BuildType<AnnotationProcessorOptionsT>,
-    TestVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
+interface TestBuildType<SigningConfigT : SigningConfig> :
+    BuildType,
+    TestVariantDimension<SigningConfigT> {
     /** Whether this build type should generate a debuggable apk. */
     var isDebuggable: Boolean
 

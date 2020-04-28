@@ -28,10 +28,10 @@ import javax.inject.Inject
 // Exposed in the DSL.
 open class DefaultConfig @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
-    ApplicationDefaultConfig<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureDefaultConfig<AnnotationProcessorOptions>,
-    LibraryDefaultConfig<AnnotationProcessorOptions, SigningConfig>,
-    TestDefaultConfig<AnnotationProcessorOptions, SigningConfig> {
+    ApplicationDefaultConfig<SigningConfig>,
+    DynamicFeatureDefaultConfig,
+    LibraryDefaultConfig<SigningConfig>,
+    TestDefaultConfig<SigningConfig> {
 
     init {
         val densities = Density.getRecommendedValuesForDevice()

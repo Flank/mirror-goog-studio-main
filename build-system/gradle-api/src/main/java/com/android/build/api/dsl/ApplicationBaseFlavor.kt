@@ -19,10 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface ApplicationBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    BaseFlavor<AnnotationProcessorOptionsT>,
-    ApplicationVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
+interface ApplicationBaseFlavor<SigningConfigT : SigningConfig> :
+    BaseFlavor,
+    ApplicationVariantDimension<SigningConfigT> {
     /**
      * The application ID.
      *

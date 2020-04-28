@@ -19,8 +19,7 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface ApplicationVariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> : VariantDimension<AnnotationProcessorOptionsT> {
+interface ApplicationVariantDimension<SigningConfigT : SigningConfig> : VariantDimension {
     /**
      * Application id suffix. It is appended to the "base" application id when calculating the final
      * application id for a variant.

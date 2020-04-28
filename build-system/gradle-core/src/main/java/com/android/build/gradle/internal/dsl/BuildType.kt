@@ -30,13 +30,13 @@ import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.CodeShrinker
 import com.google.common.collect.Iterables
+import java.io.File
+import java.io.Serializable
+import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
-import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /** DSL object to configure build types.  */
 open class BuildType @Inject constructor(
@@ -44,10 +44,10 @@ open class BuildType @Inject constructor(
     private val dslServices: DslServices
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    ApplicationBuildType<AnnotationProcessorOptions, SigningConfig>,
-    LibraryBuildType<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureBuildType<AnnotationProcessorOptions>,
-    TestBuildType<AnnotationProcessorOptions, SigningConfig> {
+    ApplicationBuildType<SigningConfig>,
+    LibraryBuildType<SigningConfig>,
+    DynamicFeatureBuildType,
+    TestBuildType<SigningConfig> {
 
     /**
      * Name of this build type.
@@ -122,7 +122,7 @@ open class BuildType @Inject constructor(
     override val javaCompileOptions: JavaCompileOptions =
         dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
 
-    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions>.() -> Unit) {
+    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions.() -> Unit) {
         action.invoke(javaCompileOptions)
     }
 

@@ -32,21 +32,21 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.repository.Revision
+import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import java.util.function.Supplier
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptions>,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptions>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions>,
+        BuildTypeT : com.android.build.api.dsl.BuildType,
+        DefaultConfigT : DefaultConfig,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
-    protected val dslServices: DslServices,
-    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
-) : InternalCommonExtension<
+            protected val dslServices: DslServices,
+            dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
+        ) : InternalCommonExtension<
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,

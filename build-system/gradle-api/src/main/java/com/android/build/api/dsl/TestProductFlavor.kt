@@ -19,8 +19,6 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestProductFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    TestBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-    ProductFlavor<AnnotationProcessorOptionsT> {
-}
+interface TestProductFlavor<SigningConfigT : SigningConfig> :
+    TestBaseFlavor<SigningConfigT>,
+    ProductFlavor

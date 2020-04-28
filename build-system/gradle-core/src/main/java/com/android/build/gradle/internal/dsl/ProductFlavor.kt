@@ -28,10 +28,10 @@ import org.gradle.api.provider.Property
 
 open class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
-    ApplicationProductFlavor<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureProductFlavor<AnnotationProcessorOptions>,
-    LibraryProductFlavor<AnnotationProcessorOptions, SigningConfig>,
-    TestProductFlavor<AnnotationProcessorOptions, SigningConfig> {
+    ApplicationProductFlavor<SigningConfig>,
+    DynamicFeatureProductFlavor,
+    LibraryProductFlavor<SigningConfig>,
+    TestProductFlavor<SigningConfig> {
 
     // FIXME remove: b/149431538
     @Suppress("DEPRECATION")

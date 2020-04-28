@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
  *
  * This generated during DSL execution and is used for variant creation
  */
-class DefaultConfigData<DefaultConfigT : DefaultConfig<*>>(
+class DefaultConfigData<DefaultConfigT : DefaultConfig>(
     val defaultConfig: DefaultConfigT,
     sourceSet: DefaultAndroidSourceSet,
     androidTestSourceSet: DefaultAndroidSourceSet?,

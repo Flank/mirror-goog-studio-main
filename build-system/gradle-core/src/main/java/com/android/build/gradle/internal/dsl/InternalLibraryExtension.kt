@@ -25,13 +25,12 @@ import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 
 /** See [InternalCommonExtension] */
-interface InternalLibraryExtension:
+interface InternalLibraryExtension :
     LibraryExtension<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
         AndroidSourceSet,
-        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
@@ -54,6 +53,4 @@ interface InternalLibraryExtension:
                 DefaultConfig,
                 ProductFlavor,
                 LibraryVariant<LibraryVariantProperties>,
-                LibraryVariantProperties> {
-
-}
+                LibraryVariantProperties>
