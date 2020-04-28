@@ -15,10 +15,18 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_ID
+import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.MOTION_LAYOUT
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.resources.ResourceFolderType
+import com.android.resources.ResourceFolderType.LAYOUT
+import com.android.resources.ResourceFolderType.XML
 import com.android.support.AndroidxName
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -30,8 +38,14 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TypeEvaluator
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.getBaseName
 import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.stripIdPrefix
+import com.android.utils.iterator
 import com.google.common.collect.Sets
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiCompiledElement
@@ -50,9 +64,10 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
+import org.w3c.dom.Element
 
 /** Looks for issues around ObjectAnimator usages */
-class ObjectAnimatorDetector : Detector(), SourceCodeScanner {
+class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
     /**
      * Multiple properties might all point back to the same setter; we don't want to highlight these
      * more than once (duplicate warnings etc) so keep track of them here
@@ -460,7 +475,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner {
         return prefix + firstLetter + theRest
     }
 
-    private fun isShrinking(context: JavaContext): Boolean {
+    private fun isShrinking(context: Context): Boolean {
         val model = context.mainProject.buildModule
         return if (model != null) {
             !model.neverShrinking()
@@ -471,7 +486,130 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner {
         }
     }
 
+    // Implements XmlScanner
+
+    override fun appliesTo(folderType: ResourceFolderType): Boolean {
+        return folderType == LAYOUT || folderType == XML
+    }
+
+    override fun getApplicableElements(): Collection<String>? {
+        return listOf(MOTION_LAYOUT.oldName(), MOTION_LAYOUT.newName(), "CustomAttribute")
+    }
+
+    private data class SceneReference(val viewClass: String, val id: String, val scene: String)
+
+    private var sceneIds: MutableList<SceneReference>? = null
+
+    override fun visitElement(context: XmlContext, element: Element) {
+        if (context.resourceFolderType == LAYOUT) {
+            // MotionLayout
+            // app:layoutDescription="@xml/scene_show_details"
+            val sceneReference = element.getAttributeNS(MOTION_LAYOUT_URI, "layoutDescription")
+            if (sceneReference.isEmpty()) {
+                return
+            }
+
+            val sceneName = sceneReference.substring(sceneReference.indexOf('/') + 1)
+
+            // Record mapping from id's to class types
+            for (view in element) {
+                if (!view.tagName.contains(".")) {
+                    // For now, limit search to custom views
+                    continue
+                }
+                val id = stripIdPrefix(view.getAttributeNS(ANDROID_URI, ATTR_ID))
+                if (id.isNotEmpty()) {
+                    val list = sceneIds ?: run {
+                        val list = ArrayList<SceneReference>()
+                        sceneIds = list
+                        list
+                    }
+                    list += SceneReference(view.tagName, id, sceneName)
+                }
+            }
+        } else {
+            assert(context.resourceFolderType == XML)
+
+            // Did any layouts reference this scene?
+            val ids = sceneIds ?: return
+
+            // CustomAttribute
+            val attribute = element.getAttributeNodeNS(MOTION_LAYOUT_URI, "attributeName")
+            attribute ?: return
+
+            val attributeName = attribute.value
+            val parent = element.parentNode as? Element ?: return
+            val parentId = stripIdPrefix(parent.getAttributeNS(ANDROID_URI, ATTR_ID))
+            val sceneName = getBaseName(context.file.name)
+
+            for (s in ids) {
+                if (parentId == s.id && s.scene == sceneName) {
+                    val viewClass = s.viewClass
+                    val uastParser = context.client.getUastParser(context.project)
+                    val evaluator = uastParser.evaluator
+                    val targetClass = evaluator.findClass(viewClass) ?: continue
+                    val methodName = getMethodName("set", attributeName)
+                    val methods = targetClass.findMethodsByName(methodName, true)
+
+                    for (m in methods) {
+                        if (m.parameterList.parametersCount == 1) {
+                            var owner: PsiModifierListOwner? = m
+                            while (owner != null) {
+                                val modifierList = owner.modifierList
+                                if (modifierList != null) {
+                                    //noinspection ExternalAnnotations
+                                    for (annotation in modifierList.annotations) {
+                                        if (KEEP_ANNOTATION.isEquals(annotation.qualifiedName)) {
+                                            return
+                                        }
+                                    }
+                                }
+                                owner = PsiTreeUtil.getParentOfType(
+                                    owner,
+                                    PsiModifierListOwner::class.java,
+                                    true
+                                )
+                            }
+
+                            // Only flag these warnings if minifyEnabled is true in at least one
+                            // variant?
+                            if (!isShrinking(context)) {
+                                return
+                            }
+
+                            val location = context.getValueLocation(attribute)
+                            val javaContext = JavaContext(
+                                context.driver, context.project, context.mainProject,
+                                VfsUtilCore.virtualToIoFile(targetClass.containingFile.virtualFile)
+                            )
+                            location.withSecondary(
+                                uastParser.getLocation(javaContext, m),
+                                "" +
+                                        "This method is accessed via reflection from a " +
+                                        "MotionScene ($sceneName) so it should be " +
+                                        "annotated with `@Keep` to ensure that it is not " +
+                                        "discarded or renamed in release builds",
+                                selfExplanatory = true
+                            )
+                            context.report(
+                                MISSING_KEEP, element, location,
+                                "" +
+                                        "This attribute references a method or property in " +
+                                        "custom view $viewClass which is not annotated with " +
+                                        "`@Keep`; it should be annotated with `@Keep` to " +
+                                        "ensure that it is not discarded or renamed in " +
+                                        "release builds"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
+        private const val MOTION_LAYOUT_URI = AUTO_URI
+
         val KEEP_ANNOTATION = AndroidxName.of(
             SUPPORT_ANNOTATIONS_PREFIX,
             "Keep"
@@ -479,7 +617,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner {
 
         private val IMPLEMENTATION =
             Implementation(
-                ObjectAnimatorDetector::class.java,
+                ObjectAnimatorDetector::class.java, Scope.JAVA_AND_RESOURCE_FILES,
                 Scope.JAVA_FILE_SCOPE
             )
 

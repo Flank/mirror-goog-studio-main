@@ -549,4 +549,158 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
             keepAnnotation
         ).run().expectClean()
     }
+
+    fun testMotionLayoutKeep() {
+        lint().files(
+            xml("src/main/res/layout/mylayout.xml", """
+                <android.support.constraint.motion.MotionLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:id="@+id/details_motion"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layoutDescription="@xml/scene_show_details">
+
+                    <test.pkg.TintingToolbarJava
+                        android:id="@+id/details_toolbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+                    <test.pkg.TintingToolbarKotlin
+                        android:id="@+id/details_toolbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+                    <View
+                        android:id="@+id/details_status_bar_anchor"
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp"
+                        android:background="@color/status_bar_scrim_translucent_dark" />
+
+                </android.support.constraint.motion.MotionLayout>
+            """).indented(),
+            xml("src/main/res/xml/scene_show_details.xml", """
+                <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                    <!-- Not a valid MotionScene file; just a snippet included here; lint
+                    doesn't care about the whole structure -->
+
+                    <Constraint
+                        android:id="@id/details_backdrop_scrim"
+                        app:layout_constraintBottom_toBottomOf="@id/details_backdrop"
+                        app:layout_constraintEnd_toEndOf="@id/details_backdrop"
+                        app:layout_constraintStart_toStartOf="@id/details_backdrop"
+                        app:layout_constraintTop_toTopOf="@id/details_backdrop">
+
+                        <CustomAttribute
+                            app:attributeName="background"
+                            app:customColorDrawableValue="@android:color/transparent" />
+
+                        <CustomAttribute
+                            app:attributeName="background"
+                            app:customColorDrawableValue="@android:color/transparent" />
+
+                    </Constraint>
+
+                    <Constraint
+                        android:id="@id/details_toolbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:elevation="0dp"
+                        app:layout_constraintTop_toBottomOf="@id/details_status_bar_anchor">
+
+                        <CustomAttribute
+                            app:attributeName="iconTint1"
+                            app:customColorValue="?android:attr/textColorPrimaryInverse" />
+
+                        <CustomAttribute
+                            app:attributeName="iconTint2"
+                            app:customColorValue="?android:attr/textColorPrimaryInverse" />
+
+                        <CustomAttribute
+                            app:attributeName="iconTint3"
+                            app:customColorValue="?android:attr/textColorPrimaryInverse" />
+
+                        <CustomAttribute
+                            app:attributeName="iconTint4"
+                            app:customColorValue="?android:attr/textColorPrimaryInverse" />
+                    </Constraint>
+
+                </MotionScene>
+            """).indented(),
+            java(
+                """
+                package test.pkg;
+                import android.support.annotation.Keep;
+                import android.animation.Keyframe;
+                import android.animation.ObjectAnimator;
+                import android.animation.PropertyValuesHolder;
+                import android.app.Activity;
+                import android.view.View;
+
+                /** @noinspection ClassNameDiffersFromFileName, MethodMayBeStatic */
+                public class TintingToolbarJava extends LinearLayout {
+                    public TintingToolbarJava(Context context) { super(context); }
+                    public int getIconTint1() { return 0; } // ERROR
+                    public void setIconTint1(int value) { } // ERROR
+                    @Keep
+                    public int getIconTint2() { return 0; } // OK
+                    @Keep
+                    public void setIconTint2(int value) { } // OK
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.support.annotation.Keep
+                import android.util.AttributeSet
+                import android.widget.LinearLayout
+
+                class TintingToolbarKotlin @JvmOverloads constructor(
+                    context: Context,
+                    attrs: AttributeSet? = null,
+                    defStyleAttr: Int = 0
+                ) : LinearLayout(context, attrs, defStyleAttr) {
+                    var iconTint3: Int = 0 // ERROR
+                    @get:Keep
+                    @set:Keep
+                    var iconTint4: Int = 0 // OK
+                }
+                """
+            ).indented(),
+            gradle(
+                """
+                android {
+                    buildTypes {
+                        release {
+                            minifyEnabled true
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            keepAnnotation
+        ).issues(MISSING_KEEP).run().expect(
+            """
+            src/main/res/xml/scene_show_details.xml:32: Warning: This attribute references a method or property in custom view test.pkg.TintingToolbarJava which is not annotated with @Keep; it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]
+                        app:attributeName="iconTint1"
+                                           ~~~~~~~~~
+                src/main/java/test/pkg/TintingToolbarJava.java:13: This method is accessed via reflection from a MotionScene (scene_show_details) so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds
+            src/main/res/xml/scene_show_details.xml:40: Warning: This attribute references a method or property in custom view test.pkg.TintingToolbarKotlin which is not annotated with @Keep; it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]
+                        app:attributeName="iconTint3"
+                                           ~~~~~~~~~
+                src/main/kotlin/test/pkg/TintingToolbarKotlin.kt:13: This method is accessed via reflection from a MotionScene (scene_show_details) so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds
+            0 errors, 2 warnings
+            """
+        )
+    }
 }
