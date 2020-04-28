@@ -392,7 +392,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
          * href=http://developer.android.com/guide/topics/manifest/intent.html>Intent Xml
          * documentation</a>}
          */
-        INTENT(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
+        INTENT(
+                MergeType.ALWAYS,
+                IntentNodeKeyResolver.INSTANCE,
+                MULTIPLE_DECLARATION_FOR_SAME_KEY_ALLOWED),
 
         /**
          * Intent-filter (contained in activity, activity-alias, service, receiver) <br>

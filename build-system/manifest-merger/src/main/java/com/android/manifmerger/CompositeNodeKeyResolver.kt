@@ -28,13 +28,13 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
- * Specific [NodeKeyResolver] for intent-filter elements. Intent filters do not have a proper key,
- * therefore their identity is really carried by the presence of their sub-elements. We concatenate
- * the sub-elements' attributes' names and values (after sorting them to work around declaration
- * order) and use that for the intent-filter unique key. An example key might look like
+ * Specific [NodeKeyResolver] for intent-filter and intent elements. These two elements do not have
+ * a proper key, therefore their identity is really carried by the presence of their sub-elements.
+ * We concatenate the sub-elements' attributes' names and values (after sorting them to work around
+ * declaration order) and use that for the intent-filter unique key. An example key might look like
  * "action:name:android.intent.action.VIEW+category:name:android.intent.category.DEFAULT+data:host:www.example.com"
  */
-object IntentFilterNodeKeyResolver : NodeKeyResolver {
+internal open class CompositeNodeKeyResolver(val nodeType: String) : NodeKeyResolver {
     private val model = ManifestModel()
 
     private val dataAttributeNames = ImmutableList.of(
@@ -58,7 +58,7 @@ object IntentFilterNodeKeyResolver : NodeKeyResolver {
 
     override fun getKey(element: Element): String? {
         val xmlElement = OrphanXmlElement(element, model)
-        assert(xmlElement.type == ManifestModel.NodeTypes.INTENT_FILTER)
+        assert(xmlElement.name.localName == nodeType)
         // concatenate attribute info for action, category, and data sub-elements.
         val subElementAttributes = ArrayList<String>()
         val childNodes = element.childNodes
@@ -96,3 +96,6 @@ object IntentFilterNodeKeyResolver : NodeKeyResolver {
         }
     }
 }
+
+internal object IntentNodeKeyResolver: CompositeNodeKeyResolver(SdkConstants.TAG_INTENT)
+internal object IntentFilterNodeKeyResolver: CompositeNodeKeyResolver(SdkConstants.TAG_INTENT_FILTER)
