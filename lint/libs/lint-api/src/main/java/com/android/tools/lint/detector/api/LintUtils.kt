@@ -115,7 +115,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UastFacade
-import org.jetbrains.uast.getContainingFile
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -1258,7 +1258,7 @@ fun getLanguageLevel(
     element: UElement,
     defaultLevel: LanguageLevel
 ): LanguageLevel {
-    val containingFile = element.getContainingFile() ?: return defaultLevel
+    val containingFile = element.getContainingUFile() ?: return defaultLevel
 
     return getLanguageLevel(containingFile.psi, defaultLevel)
 }
