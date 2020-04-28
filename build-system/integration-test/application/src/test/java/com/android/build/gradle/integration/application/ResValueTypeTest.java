@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.compiling.ResValueGenerator;
+import com.android.build.gradle.internal.generators.ResValueGenerator;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;

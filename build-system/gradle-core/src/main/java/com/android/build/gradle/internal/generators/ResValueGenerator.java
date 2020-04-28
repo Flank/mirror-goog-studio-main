@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.builder.compiling;
+package com.android.build.gradle.internal.generators;
 
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TRANSLATABLE;
@@ -25,17 +25,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+import com.android.build.api.variant.impl.ResValue;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -64,92 +64,26 @@ public class ResValueGenerator {
                     ResourceType.STRING,
                     ResourceType.STYLE);
 
-    private final File mGenFolder;
+    private final File genFolder;
 
-    private final List<Field> requests = Lists.newArrayList();
-
-    private static class Field {
-
-        @NonNull private final String type;
-        @Nullable private final String value;
-        @NonNull private final String name;
-        @Nullable private final String comment;
-
-        private Field(
-                @NonNull String type,
-                @NonNull String name,
-                @Nullable String value,
-                @Nullable String comment) {
-            this.type = type;
-            this.value = value;
-            this.name = name;
-            this.comment = comment;
-        }
-
-        public void emit(@NonNull Document document, @NonNull Node parentNode) {
-
-            if (comment != null) {
-                parentNode.appendChild(document.createTextNode("\n"));
-                parentNode.appendChild(document.createComment(comment));
-                parentNode.appendChild(document.createTextNode("\n"));
-            }
-
-            ResourceType resourceType = ResourceType.fromClassName(type);
-            if (resourceType == null && SdkConstants.TAG_DECLARE_STYLEABLE.equals(type)) {
-                resourceType = ResourceType.STYLEABLE;
-            }
-
-            boolean hasResourceTag =
-                    (resourceType != null && RESOURCES_WITH_TAGS.contains(resourceType));
-
-            Node itemNode = document.createElement(hasResourceTag ? type : TAG_ITEM);
-            Attr nameAttr = document.createAttribute(ATTR_NAME);
-
-            nameAttr.setValue(name);
-            itemNode.getAttributes().setNamedItem(nameAttr);
-
-            if (!hasResourceTag) {
-                Attr typeAttr = document.createAttribute(ATTR_TYPE);
-                typeAttr.setValue(type);
-                itemNode.getAttributes().setNamedItem(typeAttr);
-            }
-
-            if (resourceType == ResourceType.STRING) {
-                Attr translatable = document.createAttribute(ATTR_TRANSLATABLE);
-                translatable.setValue(VALUE_FALSE);
-                itemNode.getAttributes().setNamedItem(translatable);
-            }
-
-            if (value != null && !value.isEmpty()) {
-                itemNode.appendChild(document.createTextNode(value));
-            }
-
-            parentNode.appendChild(itemNode);
-        }
-    }
+    private final Map<ResValue.Key, ResValue> requests;
 
     /**
      * Creates a generator
+     *
      * @param genFolder the gen folder of the project
      */
-    public ResValueGenerator(@NonNull File genFolder) {
-        mGenFolder = checkNotNull(genFolder);
-    }
-
-    public ResValueGenerator addResource(
-            @NonNull String type,
-            @NonNull String name,
-            @NonNull String value,
-            @Nullable String comment) {
-        requests.add(new Field(type, name, value, comment));
-        return this;
+    public ResValueGenerator(
+            @NonNull File genFolder, @NonNull Map<ResValue.Key, ResValue> requests) {
+        this.genFolder = checkNotNull(genFolder);
+        this.requests = requests;
     }
 
     /**
      * Returns a File representing where the BuildConfig class will be.
      */
     public File getFolderPath() {
-        return new File(mGenFolder, "values");
+        return new File(genFolder, "values");
     }
 
     /**
@@ -181,8 +115,46 @@ public class ResValueGenerator {
         rootNode.appendChild(document.createComment("Automatically generated file. DO NOT MODIFY"));
         rootNode.appendChild(document.createTextNode("\n\n"));
 
-        for (Field request : requests) {
-            request.emit(document, rootNode);
+        for (Map.Entry<ResValue.Key, ResValue> request : requests.entrySet()) {
+            if (request.getValue().getComment() != null) {
+                rootNode.appendChild(document.createTextNode("\n"));
+                rootNode.appendChild(document.createComment(request.getValue().getComment()));
+                rootNode.appendChild(document.createTextNode("\n"));
+            }
+            String type = request.getKey().getType();
+
+            ResourceType resourceType = ResourceType.fromClassName(type);
+            if (resourceType == null && SdkConstants.TAG_DECLARE_STYLEABLE.equals(type)) {
+                resourceType = ResourceType.STYLEABLE;
+            }
+
+            boolean hasResourceTag =
+                    (resourceType != null && RESOURCES_WITH_TAGS.contains(resourceType));
+
+            Node itemNode = document.createElement(hasResourceTag ? type : TAG_ITEM);
+            Attr nameAttr = document.createAttribute(ATTR_NAME);
+
+            nameAttr.setValue(request.getKey().getName());
+            itemNode.getAttributes().setNamedItem(nameAttr);
+
+            if (!hasResourceTag) {
+                Attr typeAttr = document.createAttribute(ATTR_TYPE);
+                typeAttr.setValue(type);
+                itemNode.getAttributes().setNamedItem(typeAttr);
+            }
+
+            if (resourceType == ResourceType.STRING) {
+                Attr translatable = document.createAttribute(ATTR_TRANSLATABLE);
+                translatable.setValue(VALUE_FALSE);
+                itemNode.getAttributes().setNamedItem(translatable);
+            }
+
+            String value = request.getValue().getValue();
+            if (!value.isEmpty()) {
+                itemNode.appendChild(document.createTextNode(value));
+            }
+
+            rootNode.appendChild(itemNode);
         }
         String content;
         try {

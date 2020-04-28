@@ -20,7 +20,7 @@ import com.android.build.api.variant.impl.ResValue
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.compiling.ResValueGenerator
+import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.utils.FileUtils
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.CacheableTask
@@ -49,16 +49,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
         FileUtils.cleanOutputDir(folder)
 
         if (items.get().isNotEmpty()) {
-            val generator = ResValueGenerator(folder)
-            items.get().forEach { (key, resValueField) ->
-                generator.addResource(
-                    key.type,
-                    key.name,
-                    resValueField.value,
-                    resValueField.comment
-                )
-            }
-            generator.generate()
+            ResValueGenerator(folder, items.get()).generate()
         }
     }
 
