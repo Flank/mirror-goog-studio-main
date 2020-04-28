@@ -55,7 +55,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
     ) {
         val cameraFeatureRequested = determinePropertyString(node)
         if (FEATURE_CAMERA_STRING == cameraFeatureRequested) {
-            val message = "You should look for any camera on the device, not just the rear"
+            val message = "You should look for any camera available on the device, not just the rear"
             val fix = fix().name("Switch to look for FEATURE_CAMERA_ANY")
                 .replace()
                 .text(cameraFeatureRequested)
@@ -111,19 +111,19 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
             id = "SourceLockedOrientationActivity",
             briefDescription = "Incompatible setRequestedOrientation value",
             explanation = """
-                The `Activity` should not be locked to any orientation so that users
-                can take advantage of the multi-window environments and larger screens
-                available on Chrome OS. To fix the issue, consider calling `setRequestedOrientation`
-                with the `ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR` or
+                The `Activity` should not be locked to a portrait orientation so that users
+                can take advantage of the multi-window environments and larger landscape-first screens
+                that Android runs on such as Chrome OS. To fix the issue, consider calling 
+                `setRequestedOrientation` with the `ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR` or
                 `ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED` options or removing the call
                 all together.
                 """,
-            category = Category.CHROME_OS,
+            category = Category.CORRECTNESS,
             priority = 4,
-            severity = Severity.ERROR,
+            severity = Severity.WARNING,
             androidSpecific = true,
             implementation = IMPLEMENTATION
-        ).setEnabledByDefault(false)
+        ).setEnabledByDefault(true)
 
         @JvmField
         val UNSUPPORTED_CAMERA_FEATURE = Issue.create(
@@ -133,23 +133,21 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
                 You should look for the `FEATURE_CAMERA_ANY` features to include all
                 possible cameras that may be on the device. Looking for `FEATURE_CAMERA`
                 only looks for a rear facing camera, which certain tablets or Chrome OS
-                devices don't have. To fix the issue, look for `FEATURE_CAMERA_ANY` instead.
+                devices don't have, as well as newer device configurations and modes may place the
+                device in a state where the rear camera is not available. To fix the issue,
+                look for `FEATURE_CAMERA_ANY` instead.
                 """,
-            category = Category.CHROME_OS,
+            category = Category.CORRECTNESS,
             priority = 4,
-            severity = Severity.ERROR,
+            severity = Severity.WARNING,
             androidSpecific = true,
             implementation = IMPLEMENTATION
-        ).setEnabledByDefault(false)
+        ).setEnabledByDefault(true)
 
         val UNSUPPORTED_ORIENTATIONS = setOf(
-            "SCREEN_ORIENTATION_LANDSCAPE",
             "SCREEN_ORIENTATION_PORTRAIT",
-            "SCREEN_ORIENTATION_REVERSE_LANDSCAPE",
             "SCREEN_ORIENTATION_REVERSE_PORTRAIT",
-            "SCREEN_ORIENTATION_SENSOR_LANDSCAPE",
             "SCREEN_ORIENTATION_SENSOR_PORTRAIT",
-            "SCREEN_ORIENTATION_USER_LANDSCAPE",
             "SCREEN_ORIENTATION_USER_PORTRAIT"
         )
 

@@ -103,14 +103,15 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             "NonResizeableActivity",
                             "Activity is set to be non resizeable",
                             "The `<activity>` element should be allowed to be resized to allow "
-                                    + "users to take advantage of the multi-window environment on Chrome OS "
+                                    + "users to take advantage of the multi-window environments available "
+                                    + "on larger screen Android devices."
                                     + "To fix the issue, consider declaring the corresponding "
                                     + "activity element with `resizableActivity=\"true\"` attribute.",
-                            Category.CHROME_OS,
+                            Category.CORRECTNESS,
                             4,
-                            Severity.ERROR,
+                            Severity.WARNING,
                             XML_IMPLEMENTATION)
-                    .setEnabledByDefault(false)
+                    .setEnabledByDefault(true)
                     .addMoreInfo("https://developer.android.com/topic/arc/window-management");
 
     /** Setting activities to be non-resizable */
@@ -120,14 +121,14 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             "Incompatible screenOrientation value",
                             "The `<activity>` element should not be locked to any orientation so "
                                     + "that users can take advantage of the multi-window environments and "
-                                    + "larger screens on Chrome OS. To fix the issue, consider declaring the "
+                                    + "larger screens available on Android. To fix the issue, consider declaring the "
                                     + "corresponding activity element with `screenOrientation=\"unspecified\"`"
                                     + "or `\"fullSensor\"` attribute.",
-                            Category.CHROME_OS,
+                            Category.CORRECTNESS,
                             4,
-                            Severity.ERROR,
+                            Severity.WARNING,
                             XML_IMPLEMENTATION)
-                    .setEnabledByDefault(false)
+                    .setEnabledByDefault(true)
                     .addMoreInfo("https://developer.android.com/topic/arc/window-management");
 
     private static final String HARDWARE_FEATURE_CAMERA = "android.hardware.camera";
@@ -187,13 +188,9 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     private static final Set<String> UNSUPPORTED_ORIENTATIONS =
             new HashSet<>(
                     Arrays.asList(
-                            "landscape",
                             "portrait",
-                            "reverseLandscape",
                             "reversePortrait",
-                            "sensorLandscape",
                             "sensorPortrait",
-                            "userLandscape",
                             "userPortrait"));
 
     /** Constructs a new {@link ChromeOsDetector} check */
