@@ -92,6 +92,10 @@ class BaseSwapCommand : public Command {
   bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
                         const std::string& dst_path) const noexcept;
 
+  // Filter non-app process ids by removing all pids with uids outside of the
+  // range [FIRST_APPLICATION_UID, LAST_APPLICATION_UID] in android.os.Process.
+  void FilterProcessIds(std::vector<int>* process_ids);
+
   bool StartAgentServer(int agent_count, int* server_pid, int* read_fd,
                         int* write_fd) const;
 

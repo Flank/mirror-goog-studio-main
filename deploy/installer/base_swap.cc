@@ -28,10 +28,18 @@
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/server/install_server.h"
 
+namespace {
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
 const int kRxFileMode =
     S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+
+// These values are based on FIRST_APPLICATION_UID and LAST_APPLICATION_UID in
+// android.os.Process, which we assume are stable since they haven't been
+// changed since 2012.
+const int kFirstAppUid = 10000;
+const int kLastAppUid = 19999;
+}  // namespace
 
 namespace deploy {
 
@@ -66,6 +74,9 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
   if (response->status() != proto::SwapResponse::UNKNOWN) {
     return;
   }
+
+  // Remove process ids that we do not need to swap.
+  FilterProcessIds(&process_ids_);
 
   // Don't bother with the server if we have no work to do.
   if (process_ids_.empty() && extra_agents_count_ == 0) {
@@ -156,6 +167,29 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
   }
 
   response->set_status(proto::SwapResponse::MISSING_AGENT_RESPONSES);
+}
+
+void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {
+  Phase p("FilterProcessIds");
+  const std::string proc_path = workspace_.GetRoot() + "/proc/";
+  auto it = process_ids->begin();
+  while (it != process_ids->end()) {
+    const int pid = *it;
+    const std::string pid_path = proc_path + to_string(pid);
+    struct stat proc_dir_stat;
+    if (stat(pid_path.c_str(), &proc_dir_stat) < 0) {
+      LogEvent("Ignoring pid '" + to_string(pid) + "'; could not stat().");
+      it = process_ids->erase(it);
+    } else if (proc_dir_stat.st_uid < kFirstAppUid ||
+               proc_dir_stat.st_uid > kLastAppUid) {
+      LogEvent("Ignoring pid '" + to_string(pid) +
+               "'; uid=" + to_string(proc_dir_stat.st_uid) +
+               " is not in the app uid range.");
+      it = process_ids->erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 bool BaseSwapCommand::StartAgentServer(int agent_count, int* server_pid,
