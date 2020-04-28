@@ -89,12 +89,14 @@ public class OptimisticApkSwapper {
         OverlayId nextOverlayId =
                 new OverlayId(cachedDump.getOverlayId(), dexOverlays, fileOverlays.keySet());
 
+        OverlayId expectedOverlayId = cachedDump.getOverlayId();
         Deploy.OverlaySwapRequest.Builder request =
                 Deploy.OverlaySwapRequest.newBuilder()
                         .setPackageName(packageId)
                         .setRestartActivity(restart)
                         .setArch(arch)
-                        .setExpectedOverlayId(cachedDump.getOverlayId().getSha())
+                        .setExpectedOverlayId(
+                                expectedOverlayId.isBaseInstall() ? "" : expectedOverlayId.getSha())
                         .setOverlayId(nextOverlayId.getSha());
 
         boolean hasDebuggerAttached = false;
@@ -159,7 +161,7 @@ public class OptimisticApkSwapper {
                         installer.verifyOverlayId(
                                 request.getPackageName(), request.getExpectedOverlayId());
                 if (response.getStatus() != Deploy.OverlayIdPushResponse.Status.OK) {
-                    throw DeployerException.overlayIdMisMatch();
+                    throw DeployerException.overlayIdMismatch();
                 }
             } catch (IOException e) {
                 throw DeployerException.installerIoException(e);

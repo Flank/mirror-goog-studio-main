@@ -126,7 +126,10 @@ public class ApkPreInstaller {
             }
 
             Deploy.InstallInfo.Builder pushRequestBuilder = Deploy.InstallInfo.newBuilder();
-            PatchSet patchSet = new PatchSetGenerator(logger).generateFromPairs(pairs);
+            PatchSet patchSet =
+                    new PatchSetGenerator(
+                                    PatchSetGenerator.WhenNoChanges.GENERATE_EMPTY_PATCH, logger)
+                            .generateFromPairs(pairs);
             switch (patchSet.getStatus()) {
                 case NoChanges:
                     return SKIPPED_INSTALLATION;

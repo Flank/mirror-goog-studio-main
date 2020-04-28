@@ -44,6 +44,9 @@ public class OverlayId {
     private final SortedMap<String, String> deltas; // OverlayFile -> Checksum
     private final String sha;
 
+    // Distinguish between a "true" base install and an install that has OID but zero overlay file.
+    private final boolean baseInstall;
+
     public OverlayId(
             OverlayId prevOverlayId,
             DexComparator.ChangedClasses dexOverlays,
@@ -66,6 +69,7 @@ public class OverlayId {
                         deltas.put(
                                 file.getQualifiedPath(), String.format("%d", file.getChecksum())));
         sha = computeShaHex(getRepresentation());
+        baseInstall = false;
     }
 
     public OverlayId(List<Apk> installedApk) throws DeployerException {
@@ -73,6 +77,7 @@ public class OverlayId {
         deltas = ImmutableSortedMap.of();
         installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
         this.sha = computeShaHex(getRepresentation());
+        this.baseInstall = true;
     }
 
     public Set<String> getOverlayFiles() {
@@ -99,6 +104,10 @@ public class OverlayId {
                             delta.getKey(), delta.getValue()));
         }
         return rep.toString();
+    }
+
+    public boolean isBaseInstall() {
+        return baseInstall;
     }
 
     public String getSha() {

@@ -498,7 +498,7 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.INSTALLER_IO_EXCEPTION, NO_ARGS, e.getMessage());
     }
 
-    public static DeployerException overlayIdMisMatch() {
+    public static DeployerException overlayIdMismatch() {
         return new DeployerException(Error.APP_OVERLAY_IN_UNKNOWN_STATE, NO_ARGS, NO_ARGS);
     }
 

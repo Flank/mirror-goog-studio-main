@@ -50,7 +50,9 @@ public class PatchTest {
 
     @Test
     public void testPatchSetTooBig() throws DeployerException, IOException {
-        PatchSetGenerator patchSetGenerator = new PatchSetGenerator(new NullLogger());
+        PatchSetGenerator patchSetGenerator =
+                new PatchSetGenerator(
+                        PatchSetGenerator.WhenNoChanges.GENERATE_EMPTY_PATCH, new NullLogger());
         File testOutputDir = TestUtils.getTestOutputDir();
         ApkParser apkParser = new ApkParser();
 

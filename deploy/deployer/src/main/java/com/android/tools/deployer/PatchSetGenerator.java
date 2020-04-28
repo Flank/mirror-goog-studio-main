@@ -36,9 +36,16 @@ public class PatchSetGenerator {
     public static final int MAX_PATCHSET_SIZE = 40 * 1024 * 1024; // 40 MiB
 
     private ILogger logger;
+    private final WhenNoChanges whenNoChanges;
 
-    public PatchSetGenerator(ILogger logger) {
+    public enum WhenNoChanges {
+        GENERATE_PATCH_ANYWAY, // This results in an apk patch containing the CD/EOCD.
+        GENERATE_EMPTY_PATCH,
+    }
+
+    public PatchSetGenerator(WhenNoChanges whenNoChanges, ILogger logger) {
         this.logger = logger;
+        this.whenNoChanges = whenNoChanges;
     }
 
     public PatchSet generateFromApks(List<Apk> localApks, List<Apk> remoteApks) {
@@ -92,7 +99,7 @@ public class PatchSetGenerator {
         }
 
         // If nothing has changed, return an empty list of patches.
-        if (noChanges) {
+        if (noChanges && whenNoChanges == WhenNoChanges.GENERATE_EMPTY_PATCH) {
             return PatchSet.NO_CHANGES;
         }
 
