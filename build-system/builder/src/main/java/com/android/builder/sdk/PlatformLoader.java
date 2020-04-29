@@ -84,24 +84,26 @@ public class PlatformLoader implements SdkLoader {
 
         File hostTools = getHostToolsFolder();
 
-        BuildToolInfo buildToolInfo = BuildToolInfo.modifiedLayout(
-                buildToolRevision,
-                mTreeLocation,
-                new File(hostTools, FN_AAPT),
-                new File(hostTools, FN_AIDL),
-                new File(mTreeLocation, "prebuilts/sdk/tools/dx"),
-                new File(mTreeLocation, "prebuilts/sdk/tools/lib/dx.jar"),
-                new File(hostTools, FN_RENDERSCRIPT),
-                new File(mTreeLocation, "prebuilts/sdk/renderscript/include"),
-                new File(mTreeLocation, "prebuilts/sdk/renderscript/clang-include"),
-                new File(hostTools, FN_BCC_COMPAT),
-                new File(hostTools, "arm-linux-androideabi-ld"),
-                new File(hostTools, "aarch64-linux-android-ld"),
-                new File(hostTools, "i686-linux-android-ld"),
-                new File(hostTools, "x86_64-linux-android-ld"),
-                new File(hostTools, "mipsel-linux-android-ld"),
-                new File(hostTools, FN_ZIPALIGN),
-                new File(hostTools, FN_AAPT2));
+        BuildToolInfo buildToolInfo =
+                BuildToolInfo.modifiedLayout(
+                        buildToolRevision,
+                        mTreeLocation,
+                        new File(hostTools, FN_AAPT),
+                        new File(hostTools, FN_AIDL),
+                        new File(mTreeLocation, "prebuilts/sdk/tools/dx"),
+                        new File(mTreeLocation, "prebuilts/sdk/tools/lib/dx.jar"),
+                        new File(hostTools, FN_RENDERSCRIPT),
+                        new File(mTreeLocation, "prebuilts/sdk/renderscript/include"),
+                        new File(mTreeLocation, "prebuilts/sdk/renderscript/clang-include"),
+                        new File(hostTools, FN_BCC_COMPAT),
+                        new File(hostTools, "arm-linux-androideabi-ld"),
+                        new File(hostTools, "aarch64-linux-android-ld"),
+                        new File(hostTools, "i686-linux-android-ld"),
+                        new File(hostTools, "x86_64-linux-android-ld"),
+                        new File(hostTools, "mipsel-linux-android-ld"),
+                        new File(hostTools, "lld"),
+                        new File(hostTools, FN_ZIPALIGN),
+                        new File(hostTools, FN_AAPT2));
 
         return new TargetInfo(androidTarget, buildToolInfo);
     }
