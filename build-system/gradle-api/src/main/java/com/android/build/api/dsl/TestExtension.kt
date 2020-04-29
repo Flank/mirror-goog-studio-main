@@ -29,7 +29,6 @@ import org.gradle.api.Incubating
 @Incubating
 interface TestExtension<
         AaptOptionsT : AaptOptions,
-        AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildTypeT : TestBuildType<SigningConfigT>,
@@ -37,7 +36,6 @@ interface TestExtension<
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : TestDefaultConfig<SigningConfigT>,
-        DensitySplitT : DensitySplit,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
@@ -45,11 +43,10 @@ interface TestExtension<
         PackagingOptionsT : PackagingOptions,
         ProductFlavorT : TestProductFlavor<SigningConfigT>,
         SigningConfigT : SigningConfig,
-        SplitsT : Splits<AbiSplitT, DensitySplitT>,
+        SplitsT : Splits,
         TestOptionsT : TestOptions> :
     CommonExtension<
             AaptOptionsT,
-            AbiSplitT,
             AdbOptionsT,
             AndroidSourceSetT,
             TestBuildFeatures,
@@ -58,7 +55,6 @@ interface TestExtension<
             CompileOptionsT,
             DataBindingT,
             DefaultConfigT,
-            DensitySplitT,
             ExternalNativeBuildT,
             JacocoOptionsT,
             LintOptionsT,

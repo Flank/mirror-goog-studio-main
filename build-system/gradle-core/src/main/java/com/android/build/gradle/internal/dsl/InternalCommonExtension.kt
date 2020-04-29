@@ -45,7 +45,6 @@ interface InternalCommonExtension<
         VariantPropertiesT : VariantProperties> :
     CommonExtension<
         AaptOptionsImpl,
-        AbiSplitOptions,
         AdbOptionsImpl,
         AndroidSourceSet,
         BuildFeaturesT,
@@ -54,7 +53,6 @@ interface InternalCommonExtension<
         CompileOptionsImpl,
         DataBindingOptionsImpl,
         DefaultConfigT,
-        DensitySplitOptions,
         ExternalNativeBuildImpl,
         JacocoOptionsImpl,
         LintOptionsImpl,

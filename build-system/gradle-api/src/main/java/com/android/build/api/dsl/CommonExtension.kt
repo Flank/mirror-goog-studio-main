@@ -32,7 +32,6 @@ import org.gradle.api.NamedDomainObjectContainer
 @Incubating
 interface CommonExtension<
         AaptOptionsT : AaptOptions,
-        AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
@@ -41,7 +40,6 @@ interface CommonExtension<
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : DefaultConfig,
-        DensitySplitT : DensitySplit,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
@@ -49,7 +47,7 @@ interface CommonExtension<
         PackagingOptionsT : PackagingOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        SplitsT : Splits<AbiSplitT, DensitySplitT>,
+        SplitsT : Splits,
         TestOptionsT : TestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
@@ -424,7 +422,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
-    val splits: Splits<AbiSplitT, DensitySplitT>
+    val splits: Splits
 
     /**
      * Specifies configurations for

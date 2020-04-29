@@ -29,7 +29,6 @@ import org.gradle.api.Incubating
 @Incubating
 interface DynamicFeatureExtension<
         AaptOptionsT : AaptOptions,
-        AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildTypeT : DynamicFeatureBuildType,
@@ -37,7 +36,6 @@ interface DynamicFeatureExtension<
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : DynamicFeatureDefaultConfig,
-        DensitySplitT : DensitySplit,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
@@ -45,11 +43,10 @@ interface DynamicFeatureExtension<
         PackagingOptionsT : PackagingOptions,
         ProductFlavorT : DynamicFeatureProductFlavor,
         SigningConfigT : SigningConfig,
-        SplitsT : Splits<AbiSplitT, DensitySplitT>,
+        SplitsT : Splits,
         TestOptionsT : TestOptions> :
     CommonExtension<
             AaptOptionsT,
-            AbiSplitT,
             AdbOptionsT,
             AndroidSourceSetT,
             DynamicFeatureBuildFeatures,
@@ -58,7 +55,6 @@ interface DynamicFeatureExtension<
             CompileOptionsT,
             DataBindingT,
             DefaultConfigT,
-            DensitySplitT,
             ExternalNativeBuildT,
             JacocoOptionsT,
             LintOptionsT,

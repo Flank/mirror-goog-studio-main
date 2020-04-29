@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 interface InternalLibraryExtension :
     LibraryExtension<
         AaptOptions,
-        AbiSplitOptions,
         AdbOptions,
         AndroidSourceSet,
         BuildType,
@@ -36,7 +35,6 @@ interface InternalLibraryExtension :
         CompileOptions,
         DataBindingOptions,
         DefaultConfig,
-        DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
         LintOptions,
