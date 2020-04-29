@@ -1183,7 +1183,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.useLibrary: void (
 com.android.build.gradle.internal.dsl.ExternalNativeBuild implements com.android.build.gradle.internal.model.CoreExternalNativeBuild, com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuild (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: com.android.build.gradle.internal.dsl.CmakeOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.CmakeOptions>)
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.CmakeOptions, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Cmake, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.dsl.CmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getCmake: com.android.build.gradle.internal.model.CoreCmakeOptions ()
@@ -1191,7 +1191,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.andro
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.gradle.internal.dsl.NdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.gradle.internal.model.CoreNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.ndkBuild: com.android.build.gradle.internal.dsl.NdkBuildOptions (org.gradle.api.Action<com.android.build.gradle.internal.dsl.NdkBuildOptions>)
-com.android.build.gradle.internal.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.NdkBuildOptions, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.NdkBuild, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions implements com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions, com.android.build.api.dsl.ExternalNativeBuildOptions
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions (com.android.build.gradle.internal.services.DslServices)

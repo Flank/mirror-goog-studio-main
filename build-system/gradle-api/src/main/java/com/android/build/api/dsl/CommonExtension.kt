@@ -36,14 +36,12 @@ interface CommonExtension<
         AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
-        CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : DefaultConfig,
-        ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
+        ExternalNativeBuildT : ExternalNativeBuild,
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
-        NdkBuildT : NdkBuild,
         PackagingOptionsT : PackagingOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
@@ -336,7 +334,7 @@ interface CommonExtension<
      * @since 2.2.0
      */
 
-    val externalNativeBuild: ExternalNativeBuild<CMakeT, NdkBuildT>
+    val externalNativeBuild: ExternalNativeBuild
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
      * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
