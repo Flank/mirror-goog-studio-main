@@ -188,6 +188,7 @@ public class ApkInstaller {
         switch (result.status) {
             case INSTALL_FAILED_UPDATE_INCOMPATIBLE:
             case INCONSISTENT_CERTIFICATES:
+            case INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE:
             case INSTALL_FAILED_VERSION_DOWNGRADE:
             case INSTALL_FAILED_DEXOPT:
                 StringBuilder sb = new StringBuilder();
@@ -339,6 +340,14 @@ public class ApkInstaller {
     public static AdbClient.InstallResult parseInstallerResultErrorCode(String errorCode) {
         try {
             return new AdbClient.InstallResult(InstallStatus.valueOf(errorCode));
+        } catch (IllegalArgumentException i) {
+            try {
+                int numericValue = Integer.parseInt(errorCode);
+                return new AdbClient.InstallResult(
+                        InstallStatus.numericErrorCodeToStatus(numericValue), errorCode, null);
+            } catch (NumberFormatException n) {
+                return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
+            }
         } catch (Exception e) {
             return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
         }
