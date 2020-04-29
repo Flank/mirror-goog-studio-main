@@ -61,11 +61,14 @@ public class Am extends ShellCommand {
                 }
                 return start(device, name, intent, stdout);
             case "force-stop":
+            case "kill":
                 String arg = args.nextArgument();
                 if (arg == null) {
                     stdout.println("\nException occurred while executing:");
                     stdout.println(
-                            "java.lang.IllegalArgumentException: Argument expected after \"force-stop\"");
+                            String.format(
+                                    "java.lang.IllegalArgumentException: Argument expected after \"%s\"",
+                                    action));
                     stdout.println("...message...");
                     return 255;
                 }

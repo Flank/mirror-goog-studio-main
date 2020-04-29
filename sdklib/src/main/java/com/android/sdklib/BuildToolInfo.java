@@ -119,11 +119,11 @@ public class BuildToolInfo {
         /** OS Path to the bcc_compat tool. */
         BCC_COMPAT("18.1.0"),
         /** OS Path to the ARM linker. */
-        LD_ARM("18.1.0"),
+        LD_ARM("18.1.0", "30.0.0 rc4"),
         /** OS Path to the X86 linker. */
-        LD_X86("18.1.0"),
+        LD_X86("18.1.0", "30.0.0 rc4"),
         /** OS Path to the MIPS linker. */
-        LD_MIPS("18.1.0"),
+        LD_MIPS("18.1.0", "30.0.0 rc4"),
 
         // --- NEW IN 19.1.0 ---
         ZIP_ALIGN("19.1.0"),
@@ -136,14 +136,14 @@ public class BuildToolInfo {
 
         // --- NEW IN 23.0.3 ---
         /** OS Path to the ARM64 linker. */
-        LD_ARM64("23.0.3"),
+        LD_ARM64("23.0.3", "30.0.0 rc4"),
 
         // --- NEW IN 24.0.0 ---
         JACK_JACOCO_REPORTER("24.0.0", "28.0.0 rc1"),
         JACK_COVERAGE_PLUGIN("24.0.0", "28.0.0 rc1"),
 
         /** OS Path to the ARM64 linker. */
-        LD_X86_64("24.0.0"),
+        LD_X86_64("24.0.0", "30.0.0 rc4"),
 
         /** OS Path to aapt2. */
         AAPT2("24.0.0 rc2"),
@@ -241,8 +241,8 @@ public class BuildToolInfo {
     /**
      * Creates a full {@link BuildToolInfo} from the specified paths.
      *
-     * <p>The {@link Nullable} paths can only be null if corresponding tools were not present
-     * in the specified version of build tools.
+     * <p>The {@link Nullable} paths can only be null if corresponding tools were not present in the
+     * specified version of build tools.
      */
     @NonNull
     public static BuildToolInfo modifiedLayout(
@@ -261,6 +261,7 @@ public class BuildToolInfo {
             @Nullable File ldX86,
             @Nullable File ldX86_64,
             @Nullable File ldMips,
+            @Nullable File lld,
             @NonNull File zipAlign,
             @Nullable File aapt2) {
         BuildToolInfo result = new BuildToolInfo(revision, mainPath);
@@ -306,6 +307,12 @@ public class BuildToolInfo {
             result.add(LD_MIPS, ldMips);
         } else if (LD_MIPS.isPresentIn(revision)) {
             throw new IllegalArgumentException("LD_MIPS required in " + revision.toString());
+        }
+
+        if (lld != null) {
+            result.add(LLD, lld);
+        } else if (LLD.isPresentIn(revision)) {
+            throw new IllegalArgumentException("LLD required in " + revision.toString());
         }
 
         if (aapt2 != null) {

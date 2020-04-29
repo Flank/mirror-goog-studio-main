@@ -768,8 +768,20 @@ final class Device implements IDevice {
     @Override
     public void forceStop(String applicationName) {
         try {
-            // Force kills the app in case it's in the crashed state.
+            // Force stop the app, even in case it's in the crashed state.
             executeShellCommand("am force-stop " + applicationName, new NullOutputReceiver());
+        } catch (IOException
+                | TimeoutException
+                | AdbCommandRejectedException
+                | ShellCommandUnresponsiveException ignored) {
+        }
+    }
+
+    @Override
+    public void kill(String applicationName) {
+        try {
+            // Kills the app, even in case it's in the crashed state.
+            executeShellCommand("am kill " + applicationName, new NullOutputReceiver());
         } catch (IOException
                 | TimeoutException
                 | AdbCommandRejectedException
