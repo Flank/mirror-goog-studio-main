@@ -63,7 +63,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByProcessId) {
   EXPECT_EQ(result.sched_event_size(), 102230);
   EXPECT_EQ(result.num_cores(), 8);
 
-  std::unordered_map<SchedulingEvent::SchedulingState, long> states_count = {
+  std::unordered_map<int, long> states_count = {
       {SchedulingEvent::UNKNOWN, 0},
       {SchedulingEvent::RUNNING, 0},
       {SchedulingEvent::RUNNING_FOREGROUND, 0},
@@ -103,7 +103,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByThreadId) {
   EXPECT_EQ(result.sched_event_size(), 11005);
   EXPECT_EQ(result.num_cores(), 8);
 
-  std::unordered_map<SchedulingEvent::SchedulingState, long> states_count = {
+  std::unordered_map<int, long> states_count = {
       {SchedulingEvent::UNKNOWN, 0},
       {SchedulingEvent::RUNNING, 0},
       {SchedulingEvent::RUNNING_FOREGROUND, 0},
