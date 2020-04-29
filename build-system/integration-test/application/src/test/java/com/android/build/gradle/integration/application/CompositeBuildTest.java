@@ -18,14 +18,17 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -130,5 +133,26 @@ public class CompositeBuildTest {
     public void assembleDebug() throws Exception {
         app.execute(":assembleDebug");
         assertThat(app.getApk(GradleTestProject.ApkType.DEBUG)).exists();
+    }
+
+    @Test
+    public void checkDifferentPluginVersionsCauseFailure()
+            throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                androidLib.getBuildFile(),
+                "\n"
+                        + "buildscript {\n"
+                        + "  dependencies {\n"
+                        + "    classpath('com.android.tools.build:gradle:3.5.0') { force=true }\n"
+                        + "  }\n"
+                        + "}\n");
+
+        GradleBuildResult result =
+                app.executor().withFailOnWarning(false).expectFailure().run("help");
+        try (Scanner scanner = result.getStderr()) {
+            ScannerSubject.assertThat(scanner)
+                    .contains(
+                            "   > Using multiple versions of the Android Gradle plugin in the same build is not allowed.");
+        }
     }
 }

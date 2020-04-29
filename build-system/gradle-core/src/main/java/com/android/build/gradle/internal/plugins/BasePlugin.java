@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.DependencyResolutionChecks;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
-import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
@@ -71,6 +70,7 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager;
@@ -256,7 +256,8 @@ public abstract class BasePlugin<
         AttributionListenerInitializer.INSTANCE.init(
                 project, projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION));
 
-        PluginInitializer.initialize(project);
+        AgpVersionChecker.enforceTheSamePluginVersions(project);
+
         RecordingBuildListener buildListener = ProfilerInitializer.init(project, projectOptions);
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
