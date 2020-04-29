@@ -65,7 +65,7 @@ class TfliteModelGenerator(
         }
         buildFields(classBuilder)
         buildConstructor(classBuilder)
-        buildStaticNewInstanceMethod(classBuilder)
+        buildStaticNewInstanceMethods(classBuilder)
         buildGetAssociatedFileMethod(classBuilder)
         buildProcessMethod(classBuilder)
         buildInnerClass(classBuilder)
@@ -122,12 +122,19 @@ class TfliteModelGenerator(
     }
 
     private fun buildConstructor(classBuilder: TypeSpec.Builder) {
+        val context = ParameterSpec.builder(ClassNames.CONTEXT, "context")
+            .addAnnotation(ClassNames.NON_NULL)
+            .build()
+        val options = ParameterSpec.builder(ClassNames.MODEL_OPTIONS, "options")
+            .addAnnotation(ClassNames.NON_NULL)
+            .build()
         val constructorBuilder = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PRIVATE)
-            .addParameter(ClassNames.CONTEXT, "context")
+            .addParameter(context)
+            .addParameter(options)
             .addException(ClassNames.IO_EXCEPTION)
             .addStatement(
-                "\$L = new \$T.Builder(context, \$S).build()",
+                "\$L = \$T.createModel(context, \$S, options)",
                 FIELD_MODEL,
                 ClassNames.MODEL,
                 localModelPath
@@ -185,16 +192,33 @@ class TfliteModelGenerator(
         classBuilder.addMethod(methodBuilder.build())
     }
 
-    private fun buildStaticNewInstanceMethod(classBuilder: TypeSpec.Builder) {
+    private fun buildStaticNewInstanceMethods(classBuilder: TypeSpec.Builder) {
+        val context = ParameterSpec.builder(ClassNames.CONTEXT, "context")
+            .addAnnotation(ClassNames.NON_NULL)
+            .build()
+        val options = ParameterSpec.builder(ClassNames.MODEL_OPTIONS, "options")
+            .addAnnotation(ClassNames.NON_NULL)
+            .build()
         val returnType: TypeName = ClassName.get(packageName, className)
+
         val methodBuilder = MethodSpec.methodBuilder("newInstance")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-            .addParameter(ClassNames.CONTEXT, "context")
+            .addParameter(context)
             .addException(ClassNames.IO_EXCEPTION)
             .addAnnotation(ClassNames.NON_NULL)
             .returns(returnType)
-            .addStatement("return new \$T(context)", returnType)
+            .addStatement("return new \$T(context, (new \$T.Builder()).build())", returnType, ClassNames.MODEL_OPTIONS)
         classBuilder.addMethod(methodBuilder.build())
+
+        val methodWithOptionsBuilder = MethodSpec.methodBuilder("newInstance")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addParameter(context)
+            .addParameter(options)
+            .addException(ClassNames.IO_EXCEPTION)
+            .addAnnotation(ClassNames.NON_NULL)
+            .returns(returnType)
+            .addStatement("return new \$T(context, options)", returnType)
+        classBuilder.addMethod(methodWithOptionsBuilder.build())
     }
 
     companion object {

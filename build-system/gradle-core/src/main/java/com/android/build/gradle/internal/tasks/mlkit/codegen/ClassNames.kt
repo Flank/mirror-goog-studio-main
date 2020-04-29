@@ -140,4 +140,7 @@ object ClassNames {
         "org.tensorflow.lite.support.tensorbuffer",
         "TensorBuffer"
     )
+
+    @JvmField
+    val MODEL_OPTIONS: ClassName = MODEL.nestedClass("Options")
 }

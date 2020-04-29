@@ -70,6 +70,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE)
             )
         val outputsMethods: Set<MethodReference> =
@@ -87,6 +88,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(MODEL_SUB),
+                createNewInstanceWithOptionsMethodReference(MODEL_SUB),
                 createProcessMethodReference(TENSOR_IMAGE, MODEL_SUB, MODEL_OUTPUT_SUB)
             )
         val outputsMethods: Set<MethodReference> =
@@ -110,6 +112,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
@@ -127,6 +130,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE)
             )
         val outputsMethods: Set<MethodReference> =
@@ -145,6 +149,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE)
             )
         val outputsMethods: Set<MethodReference> =
@@ -162,6 +167,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE)
             )
         val outputsMethods: Set<MethodReference> =
@@ -179,6 +185,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE)
             )
         val outputsMethods: Set<MethodReference> =
@@ -205,6 +212,7 @@ class MlGeneratedClassTest {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE + TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
@@ -272,6 +280,8 @@ class MlGeneratedClassTest {
         private const val TENSOR_BUFFER =
             "Lorg/tensorflow/lite/support/tensorbuffer/TensorBuffer;"
         private const val TENSOR_LABEL = "Lorg/tensorflow/lite/support/label/TensorLabel;"
+        private const val CONTEXT = "Landroid/content/Context;"
+        private const val MODEL_OPTIONS = "Lorg/tensorflow/lite/support/model/Model\$Options;"
 
         private fun createNewInstanceMethodReference(): MethodReference {
             return createNewInstanceMethodReference(MODEL)
@@ -281,7 +291,19 @@ class MlGeneratedClassTest {
             return ImmutableMethod(
                 model,
                 "newInstance",
-                ParamUtil.parseParamString("Landroid/content/Context;"),
+                ParamUtil.parseParamString(CONTEXT),
+                model,
+                0,
+                null,
+                null
+            )
+        }
+
+        private fun createNewInstanceWithOptionsMethodReference(model: String): MethodReference {
+            return ImmutableMethod(
+                model,
+                "newInstance",
+                ParamUtil.parseParamString(CONTEXT+ MODEL_OPTIONS),
                 model,
                 0,
                 null,
