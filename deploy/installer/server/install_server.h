@@ -55,7 +55,8 @@ class InstallServer {
                           const std::string& expected_id) const;
 };
 
-// Starts an install server in a new process.
+// Starts an install server in a new process. Returns nullptr if the install
+// server can't be started for any reason.
 std::unique_ptr<InstallClient> StartInstallServer(
     Executor& executor, const std::string& server_path,
     const std::string& package_name, const std::string& exec_name);
