@@ -1,5 +1,9 @@
 import %workspace%/tools/base/bazel/common.bazel.rc
 
+# Enables the use of native symlinks in worker sandboxes,
+# required for dynamic scheduling.
+startup --windows_enable_symlinks
+
 build:remote --config=remote_common
 build:remote --jobs=150
 

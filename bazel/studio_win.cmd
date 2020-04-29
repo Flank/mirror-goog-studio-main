@@ -30,7 +30,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --max_idle_secs=60 ^
  test ^
  --keep_going ^
- --config=remote ^
+ --config=dynamic ^
  --build_tag_filters=-no_windows ^
  --invocation_id=%INVOCATIONID% ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
