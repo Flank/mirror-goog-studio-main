@@ -80,7 +80,7 @@ class AutoRevokeDetector : Detector(), XmlScanner {
             """,
             category = Category.COMPLIANCE,
             priority = 8,
-            severity = Severity.ERROR,
+            severity = Severity.WARNING,
             implementation = Implementation(
                 AutoRevokeDetector::class.java,
                 Scope.MANIFEST_SCOPE
