@@ -20,12 +20,12 @@ import org.gradle.api.Incubating
 
 /** Options for running tests. */
 @Incubating
-interface TestOptions<UnitTestOptionsT: UnitTestOptions> {
+interface TestOptions {
     /** Options for controlling unit tests execution. */
     val unitTests: UnitTestOptions
 
     /** Options for controlling unit tests execution. */
-    fun unitTests(action: UnitTestOptionsT.() -> Unit)
+    fun unitTests(action: UnitTestOptions.() -> Unit)
 
     /** Name of the results directory. */
     var resultsDir: String?

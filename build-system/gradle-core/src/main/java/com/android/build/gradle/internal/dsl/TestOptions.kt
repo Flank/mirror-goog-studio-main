@@ -28,7 +28,7 @@ import org.gradle.util.ConfigureUtil
 import javax.inject.Inject
 
 open class TestOptions @Inject constructor(dslServices: DslServices) :
-    com.android.build.api.dsl.TestOptions<TestOptions.UnitTestOptions> {
+    com.android.build.api.dsl.TestOptions {
     private val executionConverter = HelpfulEnumConverter<Execution>(Execution::class.java)
 
     private var _execution = Execution.HOST
@@ -53,7 +53,7 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
             )!!
         }
 
-    override fun unitTests(action: UnitTestOptions.() -> Unit) {
+    override fun unitTests(action: com.android.build.api.dsl.UnitTestOptions.() -> Unit) {
         action.invoke(unitTests)
     }
 

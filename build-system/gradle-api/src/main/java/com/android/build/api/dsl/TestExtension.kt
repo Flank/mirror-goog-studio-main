@@ -46,8 +46,7 @@ interface TestExtension<
         ProductFlavorT : TestProductFlavor<SigningConfigT>,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT : TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT : UnitTestOptions> :
+        TestOptionsT : TestOptions> :
     CommonExtension<
             AaptOptionsT,
             AbiSplitT,
@@ -69,7 +68,6 @@ interface TestExtension<
             SigningConfigT,
             SplitsT,
             TestOptionsT,
-            UnitTestOptionsT,
             TestVariant<TestVariantProperties>,
             TestVariantProperties> {
     // TODO(b/140406102)

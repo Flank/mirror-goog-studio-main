@@ -45,8 +45,7 @@ interface InternalApplicationExtension :
         ProductFlavor,
         SigningConfig,
         Splits,
-        TestOptions,
-        TestOptions.UnitTestOptions>,
+        TestOptions>,
         InternalCommonExtension<
                 ApplicationBuildFeatures,
                 BuildType,

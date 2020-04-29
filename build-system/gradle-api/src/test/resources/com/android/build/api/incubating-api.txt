@@ -369,7 +369,7 @@ com.android.build.api.dsl.CommonExtension.getSdkComponents: com.android.build.ap
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
 com.android.build.api.dsl.CommonExtension.getSourceSets: org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT> ()
 com.android.build.api.dsl.CommonExtension.getSplits: com.android.build.api.dsl.Splits<AbiSplitT, DensitySplitT> ()
-com.android.build.api.dsl.CommonExtension.getTestOptions: com.android.build.api.dsl.TestOptions<UnitTestOptionsT> ()
+com.android.build.api.dsl.CommonExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super JacocoOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.lintOptions: void (kotlin.jvm.functions.Function1<? super LintOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VariantPropertiesT, kotlin.Unit>)
@@ -696,7 +696,7 @@ com.android.build.api.dsl.TestOptions.setAnimationsDisabled: void (boolean)
 com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setResultsDir: void (java.lang.String)
-com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super UnitTestOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions, kotlin.Unit>)
 com.android.build.api.dsl.TestProductFlavor implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.TestVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.TestVariantDimension.getMultiDexEnabled: java.lang.Boolean ()

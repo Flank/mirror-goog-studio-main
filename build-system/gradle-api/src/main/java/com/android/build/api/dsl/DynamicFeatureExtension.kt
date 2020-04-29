@@ -46,8 +46,7 @@ interface DynamicFeatureExtension<
         ProductFlavorT : DynamicFeatureProductFlavor,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT : TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT : UnitTestOptions> :
+        TestOptionsT : TestOptions> :
     CommonExtension<
             AaptOptionsT,
             AbiSplitT,
@@ -69,7 +68,6 @@ interface DynamicFeatureExtension<
             SigningConfigT,
             SplitsT,
             TestOptionsT,
-            UnitTestOptionsT,
             DynamicFeatureVariant<DynamicFeatureVariantProperties>,
             DynamicFeatureVariantProperties>,
     ApkExtension,

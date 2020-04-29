@@ -45,8 +45,7 @@ interface InternalDynamicFeatureExtension :
         ProductFlavor,
         SigningConfig,
         Splits,
-        TestOptions,
-        TestOptions.UnitTestOptions>,
+        TestOptions>,
         InternalCommonExtension<
                 DynamicFeatureBuildFeatures,
                 BuildType,

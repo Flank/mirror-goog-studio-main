@@ -64,7 +64,6 @@ interface InternalCommonExtension<
         SigningConfig,
         SplitsImpl,
         TestOptionsImpl,
-        TestOptionsImpl.UnitTestOptions,
         VariantT,
         VariantPropertiesT> {
 

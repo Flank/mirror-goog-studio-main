@@ -50,8 +50,7 @@ interface CommonExtension<
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT : TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT : UnitTestOptions,
+        TestOptionsT : TestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
@@ -365,7 +364,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
-    val testOptions: TestOptions<UnitTestOptionsT>
+    val testOptions: TestOptions
 
     /**
      * Specifies options for how the Android plugin should run local and instrumented tests.

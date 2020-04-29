@@ -46,8 +46,7 @@ interface ApplicationExtension<
         ProductFlavorT : ApplicationProductFlavor<SigningConfigT>,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT : TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT : UnitTestOptions> :
+        TestOptionsT : TestOptions> :
     CommonExtension<
             AaptOptionsT,
             AbiSplitT,
@@ -69,7 +68,6 @@ interface ApplicationExtension<
             SigningConfigT,
             SplitsT,
             TestOptionsT,
-            UnitTestOptionsT,
             ApplicationVariant<ApplicationVariantProperties>,
             ApplicationVariantProperties>,
     ApkExtension,

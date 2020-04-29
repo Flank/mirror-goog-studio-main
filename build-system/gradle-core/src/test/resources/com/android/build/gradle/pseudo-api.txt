@@ -1513,7 +1513,7 @@ com.android.build.gradle.internal.dsl.TestOptions.setExecution: void (java.lang.
 com.android.build.gradle.internal.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (groovy.lang.Closure<?>)
-com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions>)
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions implements com.android.build.api.dsl.VectorDrawables
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
