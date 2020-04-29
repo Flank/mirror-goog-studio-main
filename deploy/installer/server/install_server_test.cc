@@ -48,11 +48,11 @@ class FakeExecutor : public Executor {
     success_.pop_front();
 
     if (success) {
-      *output = "Success";
-      *error = "";
+      if (output) *output = "Success";
+      if (error) *error = "";
     } else {
-      *output = "";
-      *error = "Failure";
+      if (output) *output = "";
+      if (error) *error = "Failure";
     }
 
     return success;
@@ -312,10 +312,30 @@ TEST_F(InstallServerTest, TestNeedCopy) {
   fake_exec.JoinServerThread();
 };
 
-TEST_F(InstallServerTest, TestCopyFails) {
+TEST_F(InstallServerTest, TestNeedMkdir) {
   std::thread server_thread;
-  // Run fails, copy fails.
-  std::deque<bool> success = {false, false};
+  // Run fails, copy fails, mkdir succeeds, copy succeeds, run succeeds.
+  std::deque<bool> success = {false, false, true, true, true};
+  FakeExecutor fake_exec(server_thread, success);
+
+  auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
+  ASSERT_FALSE(nullptr == client);
+
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+  EXPECT_TRUE(client->Write(request));
+
+  EXPECT_TRUE(client->KillServerAndWait(&response));
+
+  // Make sure we consumed all the exec results.
+  EXPECT_TRUE(success.empty());
+  fake_exec.JoinServerThread();
+};
+
+TEST_F(InstallServerTest, TestCopyAndMkdirFails) {
+  std::thread server_thread;
+  // Run fails, copy fails, mkdir fails, copy fails.
+  std::deque<bool> success = {false, false, false, false};
   FakeExecutor fake_exec(server_thread, success);
 
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
@@ -323,6 +343,28 @@ TEST_F(InstallServerTest, TestCopyFails) {
 
   // Make sure we consumed all the exec results.
   EXPECT_TRUE(success.empty());
+};
+
+// The odd case that the first copy fails, but the directory already exists, and
+// the second copy is ok.
+TEST_F(InstallServerTest, TestMkdirFailCopySucceedss) {
+  std::thread server_thread;
+  // Run fails, copy fails, mkdir fails, copy succeeds, run succeeds.
+  std::deque<bool> success = {false, false, false, true, true};
+  FakeExecutor fake_exec(server_thread, success);
+
+  auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
+  ASSERT_FALSE(nullptr == client);
+
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+  EXPECT_TRUE(client->Write(request));
+
+  EXPECT_TRUE(client->KillServerAndWait(&response));
+
+  // Make sure we consumed all the exec results.
+  EXPECT_TRUE(success.empty());
+  fake_exec.JoinServerThread();
 };
 
 TEST_F(InstallServerTest, TestAllStartsFail) {
