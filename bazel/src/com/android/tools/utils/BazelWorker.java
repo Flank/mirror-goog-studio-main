@@ -95,6 +95,9 @@ public class BazelWorker {
             //noinspection InfiniteLoopStatement
             while (true) {
                 WorkRequest request = WorkRequest.parseDelimitedFrom(realStdIn);
+                if (request == null) {
+                    break;
+                }
                 List<String> args = request.getArgumentsList();
                 int exitCode;
                 try {
