@@ -49,7 +49,7 @@ public class InterceptVisitor extends AdviceAdapter {
             @NonNull String className,
             @NonNull Function<String, String> aspects,
             @NonNull Consumer<String> notFoundCallback) {
-        super(Opcodes.ASM5, mv, access, name, desc);
+        super(Opcodes.ASM7, mv, access, name, desc);
 
         this.name = name;
         this.desc = desc;

@@ -24,7 +24,7 @@ public class InstrumentClassVisitor extends ClassVisitor {
             @NonNull Function<String, String> methodAspects,
             @NonNull Consumer<String> notFoundCallback,
             @NonNull AnnotationConflictsManager annotationConflictsManager) {
-        super(Opcodes.ASM5, classVisitor);
+        super(Opcodes.ASM7, classVisitor);
 
         this.className = className;
         this.methodAspects = methodAspects;
