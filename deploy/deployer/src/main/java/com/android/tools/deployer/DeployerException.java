@@ -416,8 +416,9 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.CLASS_NOT_FOUND, new String[] {className}, className);
     }
 
-    public static DeployerException unsupportedVariableReinit(String msg) {
-        return new DeployerException(Error.UNSUPPORTED_REINIT, new String[] {msg}, NO_ARGS);
+    public static DeployerException unsupportedVariableReinit(
+            Deploy.AgentSwapResponse.Status status, String msg) {
+        return new DeployerException(Error.UNSUPPORTED_REINIT, status, new String[] {msg}, NO_ARGS);
     }
 
     // JVMTI error codes for which we have specific error messages.
