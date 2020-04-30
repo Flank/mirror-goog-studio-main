@@ -24,6 +24,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class DeviceListMonitorTask implements Runnable {
     private boolean mMonitoring = false;
     private int mConnectionAttempt = 0;
     private int mRestartAttemptCount = 0;
+    private Stopwatch mAdbDisconnectionStopwatch;
     private boolean mInitialDeviceListDone = false;
 
     private volatile boolean mQuit;
@@ -72,19 +74,34 @@ public class DeviceListMonitorTask implements Runnable {
         do {
             if (mAdbConnection == null) {
                 Log.d("DeviceMonitor", "Opening adb connection");
-                mAdbConnection = AdbSocketUtils.openAdbConnection();
+                try {
+                    mAdbConnection = AdbSocketUtils.openAdbConnection();
+                } catch (IOException exception) {
+                    Log.d(
+                            "DeviceMonitor",
+                            "Unable to open connection to ADB server on "
+                                    + AndroidDebugBridge.getSocketAddress()
+                                    + ", due to: "
+                                    + exception);
+                }
                 if (mAdbConnection == null) {
                     mConnectionAttempt++;
-                    Log.e("DeviceMonitor", "Connection attempts: " + mConnectionAttempt);
-                    if (AndroidDebugBridge.isUserManagedAdbMode()) {
-                        Log.i("DeviceMonitor", "User managed ADB mode: Waiting for ADB connection to be re-established");
-                    } else if (mConnectionAttempt > 10) {
+
+                    // Only log on first retry attempt to avoid spamming logs.
+                    if (mConnectionAttempt == 1) {
+                        Log.e("DeviceMonitor", "Cannot reach ADB server, attempting to reconnect.");
+                        mAdbDisconnectionStopwatch = Stopwatch.createStarted();
+                        if (AndroidDebugBridge.isUserManagedAdbMode()) {
+                            Log.i(
+                                    "DeviceMonitor",
+                                    "Will not automatically restart the ADB server because ddmlib is in user managed mode");
+                        }
+                    }
+                    if (!AndroidDebugBridge.isUserManagedAdbMode() && mConnectionAttempt > 10) {
                         if (!mBridge.startAdb(
-                          AndroidDebugBridge.DEFAULT_START_ADB_TIMEOUT_MILLIS,
-                          TimeUnit.MILLISECONDS)) {
+                                AndroidDebugBridge.DEFAULT_START_ADB_TIMEOUT_MILLIS,
+                                TimeUnit.MILLISECONDS)) {
                             mRestartAttemptCount++;
-                            Log.e("DeviceMonitor",
-                                  "adb restart attempts: " + mRestartAttemptCount);
                         } else {
                             Log.i("DeviceMonitor", "adb restarted");
                             mRestartAttemptCount = 0;
@@ -92,7 +109,16 @@ public class DeviceListMonitorTask implements Runnable {
                     }
                     Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
                 } else {
-                    Log.d("DeviceMonitor", "Connected to adb for device monitoring");
+                    if (mConnectionAttempt > 0) {
+                        Log.i(
+                                "DeviceMonitor",
+                                "ADB connection re-established after "
+                                        + mAdbDisconnectionStopwatch.elapsed(TimeUnit.SECONDS)
+                                        + " seconds.");
+                        mAdbDisconnectionStopwatch.reset();
+                    } else {
+                        Log.i("DeviceMonitor", "Connected to adb for device monitoring");
+                    }
                     mConnectionAttempt = 0;
                 }
             }
