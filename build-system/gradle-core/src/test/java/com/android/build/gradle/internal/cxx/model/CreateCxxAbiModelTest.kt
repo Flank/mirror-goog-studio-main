@@ -30,7 +30,7 @@ class CreateCxxAbiModelTest {
     //@Test
     fun `abi, variant, and model are completely lazy`() {
         EmptyGlobalMock().let {
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)
@@ -42,7 +42,7 @@ class CreateCxxAbiModelTest {
     fun `fully exercise model and check invariants`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)
@@ -69,7 +69,7 @@ class CreateCxxAbiModelTest {
     @Test
     fun `repeated cmake bug`() {
         BasicCmakeMock().let {
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)

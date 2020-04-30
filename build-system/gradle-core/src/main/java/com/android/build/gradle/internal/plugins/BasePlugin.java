@@ -66,8 +66,8 @@ import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.services.Aapt2Daemon;
-import com.android.build.gradle.internal.services.Aapt2Workers;
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
+import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -92,7 +92,8 @@ import com.android.builder.profile.ThreadRecorder;
 import com.android.dx.command.dexer.Main;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
+import com.android.tools.lint.model.LmModuleLoader;
+import com.android.tools.lint.model.LmModuleLoaderProvider;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -128,7 +129,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class BasePlugin<
                 VariantT extends VariantImpl<VariantPropertiesT>,
                 VariantPropertiesT extends VariantPropertiesImpl>
-        implements Plugin<Project>, ToolingRegistryProvider {
+        implements Plugin<Project>, LmModuleLoaderProvider {
 
     private BaseExtension extension;
 
@@ -145,6 +146,7 @@ public abstract class BasePlugin<
     private VariantFactory<VariantT, VariantPropertiesT> variantFactory;
 
     @NonNull private final ToolingModelBuilderRegistry registry;
+    @NonNull private final LmModuleLoader lintModuleLoader;
     @NonNull private final SoftwareComponentFactory componentFactory;
 
     private LoggerWrapper loggerWrapper;
@@ -162,6 +164,7 @@ public abstract class BasePlugin<
             @NonNull SoftwareComponentFactory componentFactory) {
         ClasspathVerifier.checkClasspathSanity();
         this.registry = registry;
+        this.lintModuleLoader = new LintModuleLoader(this, registry);
         this.componentFactory = componentFactory;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         NonFinalPluginExpiry.verifyRetirementAge();
@@ -258,8 +261,8 @@ public abstract class BasePlugin<
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
-        Aapt2Workers.registerAapt2WorkersBuildService(project, projectOptions);
-        Aapt2Daemon.registerAapt2DaemonBuildService(project);
+        new Aapt2WorkersBuildService.RegistrationAction(project, projectOptions).execute();
+        new Aapt2DaemonBuildService.RegistrationAction(project).execute();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
@@ -740,10 +743,11 @@ public abstract class BasePlugin<
         throw new StopExecutionException(message);
     }
 
+    /** Returns a module loader for lint (this method implements {@link LmModuleLoader}) */
     @NonNull
     @Override
-    public ToolingModelBuilderRegistry getModelBuilderRegistry() {
-        return registry;
+    public LmModuleLoader getModuleLoader() {
+        return lintModuleLoader;
     }
 
     /**

@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.LEANBACK_V17_ARTIFACT;
 import static com.android.SdkConstants.TAG_USES_FEATURE;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.VALUE_FALSE;
@@ -249,7 +249,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
         Project mainProject = context.getMainProject();
         mHasLeanbackDependency =
                 (mainProject.isGradleProject()
-                        && Boolean.TRUE.equals(mainProject.dependsOn(LEANBACK_V17_ARTIFACT)));
+                        && Boolean.TRUE.equals(mainProject.dependsOn(ANDROIDX_LEANBACK_ARTIFACT)));
     }
 
     @Override

@@ -125,7 +125,9 @@ bool SwapCommand::Setup() noexcept {
   // Make sure the target dir exists.
   Phase p("Setup");
 
-  if (!CopyBinaries(workspace_.GetTmpFolder(), target_dir_)) {
+  std::string code_cache =
+      "/data/data/" + request_.package_name() + "/code_cache/";
+  if (!CopyBinaries(workspace_.GetTmpFolder(), code_cache)) {
     ErrEvent("Could not copy binaries");
     return false;
   }
@@ -201,10 +203,20 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   }
 
   std::string cp_output;
-  if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", src_path, dst_path},
+
+  const std::string studio_dir = dst_path + ".studio/";
+  if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", src_path, studio_dir},
               &cp_output)) {
-    ErrEvent("Could not copy agent binary: "_s + cp_output);
-    return false;
+    cp_output.clear();
+    // We don't need to check the output of this. It will fail if the code_cache
+    // already exists; if the code_cache doesn't exist and we can't create it,
+    // that failure will be caught when we try to copy the binaries.
+    RunCmd("mkdir", User::APP_PACKAGE, {dst_path}, nullptr);
+    if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", src_path, studio_dir},
+                &cp_output)) {
+      ErrEvent("Could not copy agent binary: "_s + cp_output);
+      return false;
+    }
   }
 
   return true;

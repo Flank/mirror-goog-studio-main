@@ -88,4 +88,8 @@ class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
     override fun orElse(p0: Provider<out T>): Provider<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    override fun disallowUnsafeRead() {
+        TODO("Not yet implemented")
+    }
 }

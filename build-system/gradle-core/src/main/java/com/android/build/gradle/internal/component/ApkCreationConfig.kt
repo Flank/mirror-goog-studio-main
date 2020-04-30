@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.impl.ResValue
+import org.gradle.api.provider.MapProperty
 
 /**
  * Interface for properties common to all variant generating APKs
@@ -35,4 +37,6 @@ interface ApkCreationConfig: BaseCreationConfig {
 
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
+
+    val resValues: MapProperty<ResValue.Key, ResValue>
 }

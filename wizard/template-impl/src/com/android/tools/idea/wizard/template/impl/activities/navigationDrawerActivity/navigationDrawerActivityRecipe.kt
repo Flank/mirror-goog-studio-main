@@ -72,9 +72,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     packageName,
     isLauncher,
     hasNoActionBar = true,
-    requireTheme = true,
-    generateActivityTitle = true,
-    useMaterial2 = useMaterial2
+    generateActivityTitle = true
   )
 
   mergeXml(strings(), resOut.resolve("values/strings.xml"))

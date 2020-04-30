@@ -1196,21 +1196,15 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testGradleOverrides() {
         String expected =
                 ""
-                        + "src/main/AndroidManifest.xml:4: Warning: This versionCode value (1) is not used; it is always overridden by the value specified in the Gradle build script (2) [GradleOverrides]\n"
-                        + "    android:versionCode=\"1\"\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/main/AndroidManifest.xml:5: Warning: This versionName value (1.0) is not used; it is always overridden by the value specified in the Gradle build script (MyName) [GradleOverrides]\n"
-                        + "    android:versionName=\"1.0\" >\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/main/AndroidManifest.xml:7: Warning: This minSdkVersion value (14) is not used; it is always overridden by the value specified in the Gradle build script (5) [GradleOverrides]\n"
                         + "    <uses-sdk android:minSdkVersion=\"14\" android:targetSdkVersion=\"17\" />\n"
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/main/AndroidManifest.xml:7: Warning: This targetSdkVersion value (17) is not used; it is always overridden by the value specified in the Gradle build script (16) [GradleOverrides]\n"
                         + "    <uses-sdk android:minSdkVersion=\"14\" android:targetSdkVersion=\"17\" />\n"
                         + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n";
+                        + "0 errors, 2 warnings";
         lint().files(
-                        mGradle_override,
+                        xml("src/main/" + mGradle_override.targetRelativePath, mGradle_override.contents),
                         gradle(
                                 ""
                                         + "android {\n"

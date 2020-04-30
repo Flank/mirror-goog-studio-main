@@ -16,12 +16,11 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
 import java.io.File
+import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryVariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> : VariantDimension<AnnotationProcessorOptionsT> {
+interface LibraryVariantDimension<SigningConfigT : SigningConfig> : VariantDimension {
     /**
      * Returns whether multi-dex is enabled.
      *

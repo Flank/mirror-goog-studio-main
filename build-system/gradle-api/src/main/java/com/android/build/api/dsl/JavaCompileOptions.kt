@@ -20,10 +20,10 @@ import org.gradle.api.Incubating
 
 /** DSL object for javaCompileOptions. */
 @Incubating
-interface JavaCompileOptions<AnnotationProcessorOptionsT: AnnotationProcessorOptions> {
+interface JavaCompileOptions {
     /** Options for configuration the annotation processor. */
-    val annotationProcessorOptions: AnnotationProcessorOptionsT
+    val annotationProcessorOptions: AnnotationProcessorOptions
 
     /** Configures annotation processor options. */
-    fun annotationProcessorOptions(action: AnnotationProcessorOptionsT.() -> Unit)
+    fun annotationProcessorOptions(action: AnnotationProcessorOptions.() -> Unit)
 }

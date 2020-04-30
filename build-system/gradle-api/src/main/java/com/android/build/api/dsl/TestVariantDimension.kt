@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.gradle.api
+package com.android.build.api.dsl
 
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.gradle.api.Incubating
 
-/**
- * Interface implemented by objects that can provide a
- * [org.gradle.tooling.provider.model.ToolingModelBuilderRegistry]
- */
-interface ToolingRegistryProvider {
-    val modelBuilderRegistry: ToolingModelBuilderRegistry
+@Incubating
+interface TestVariantDimension<SigningConfigT : SigningConfig> :
+    VariantDimension {
+    /**
+     * Returns whether multi-dex is enabled.
+     *
+     * This can be null if the flag is not set, in which case the default value is used.
+     */
+    var multiDexEnabled: Boolean?
+
+    /** The associated signing config or null if none are set on the variant dimension. */
+    var signingConfig: SigningConfigT?
 }

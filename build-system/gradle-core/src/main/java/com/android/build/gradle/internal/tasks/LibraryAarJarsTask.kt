@@ -36,9 +36,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -53,7 +51,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.function.Predicate
-import java.util.function.Supplier
 import java.util.regex.Pattern
 import java.util.zip.Deflater
 
@@ -141,11 +138,12 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     }
 
     private fun computeExcludeList(): List<Pattern> {
-        val excludes = getDefaultExcludes(
-            packageName.get().replace(".", "/"))
+        val packageNameValue = packageName.get()
+
+        val excludes = getDefaultExcludes(packageNameValue.replace(".", "/"))
 
         dataBindingExcludeDelegate.orNull?.let {
-            excludes.addAll(it.excludedClassList)
+            excludes.addAll(it.getExcludedClassList(packageNameValue))
         }
 
         // create Pattern Objects.
@@ -345,7 +343,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeClassFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
-                        .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
+                        .getFinalProduct(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(
@@ -366,7 +364,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeResourceFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
-                        .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
+                        .getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->

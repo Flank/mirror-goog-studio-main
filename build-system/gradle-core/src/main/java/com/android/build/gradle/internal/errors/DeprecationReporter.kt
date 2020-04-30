@@ -92,7 +92,14 @@ interface DeprecationReporter {
 
         AGP_BUILD_CACHE(
             Version.VERSION_5_0,
-            "It does not do anything and AGP is now using Gradle caching"
+            "It does not do anything and AGP is now using Gradle caching."
+        ),
+
+        LINT_CHECK_ONLY(
+            Version.VERSION_5_0,
+            "`check` has been renamed to `checkOnly` to make it clear that it " +
+                    "will turn off all other checks than those explicitly listed. If that is " +
+                    "what you actually intended, use `checkOnly`; otherwise switch to `enable`."
         ),
 
         ;

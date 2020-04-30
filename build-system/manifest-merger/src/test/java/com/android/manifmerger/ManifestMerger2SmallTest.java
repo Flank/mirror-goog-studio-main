@@ -2104,10 +2104,10 @@ public class ManifestMerger2SmallTest {
                                     .getNodeValue())
                     .isEqualTo("some.authority");
 
-            // ensure all intent are merged into a single one.
+            // ensure intents are not merged since they are not equal.
             NodeList queriesIntents =
                     ((Element) mergedQueries.item(0)).getElementsByTagName(SdkConstants.TAG_INTENT);
-            assertThat(queriesIntents.getLength()).isEqualTo(1);
+            assertThat(queriesIntents.getLength()).isEqualTo(2);
 
             NodeList applications =
                     mergedDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
@@ -2127,6 +2127,192 @@ public class ManifestMerger2SmallTest {
             assertThat(appFile.delete()).named("Overlay was deleted").isTrue();
             assertThat(lib1File.delete()).named("Lib1 file was deleted").isTrue();
             assertThat(lib2File.delete()).named("Lib1 file was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testDifferentIntentMerging() throws Exception {
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <provider android:name=\"provider1\" "
+                        + " android:authorities=\"content://com.example.app.provider/table1\"/>\n"
+                        + "    </application>"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:mimeType=\"image/jpeg\" />\n"
+                        + "    </intent>\n"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        String libInput =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "    </intent>\n"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+        testIntentMerging(appInput, libInput, 2);
+    }
+
+    @Test
+    public void testSameIntentMerging() throws Exception {
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <provider android:name=\"provider1\" "
+                        + " android:authorities=\"content://com.example.app.provider/table1\"/>\n"
+                        + "    </application>"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:mimeType=\"image/jpeg\" />\n"
+                        + "    </intent>"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        String libInput =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:mimeType=\"image/jpeg\" />\n"
+                        + "    </intent>"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+        testIntentMerging(appInput, libInput, 1);
+    }
+
+    @Test
+    public void testIntentWithDifferentMimeTypeMerging() throws Exception {
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <provider android:name=\"provider1\" "
+                        + " android:authorities=\"content://com.example.app.provider/table1\"/>\n"
+                        + "    </application>"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:mimeType=\"image/jpeg\" />\n"
+                        + "    </intent>"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        String libInput =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:mimeType=\"image/png\" />\n"
+                        + "    </intent>"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+        testIntentMerging(appInput, libInput, 2);
+    }
+
+    @Test
+    public void testDifferentDataIntentMerging() throws Exception {
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <provider android:name=\"provider1\" "
+                        + " android:authorities=\"content://com.example.app.provider/table1\"/>\n"
+                        + "    </application>"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:mimeType=\"image/jpeg\" />\n"
+                        + "    </intent>"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        String libInput =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "<queries>\n"
+                        + "    <intent>\n"
+                        + "        <action android:name=\"android.intent.action.SEND\" />\n"
+                        + "        <data android:scheme=\"content\" />\n"
+                        + "    </intent>"
+                        + "</queries>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        testIntentMerging(appInput, libInput, 2);
+    }
+
+    private void testIntentMerging(String appInput, String libInput, int expectedIntentCount)
+            throws Exception {
+        MockLog mockLog = new MockLog();
+
+        File appFile = TestUtils.inputAsFile("testIntentMergingApp", appInput);
+        assertTrue(appFile.exists());
+
+        File lib1File = TestUtils.inputAsFile("testIntentMergingLib", libInput);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addLibraryManifest(lib1File)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document mergedDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList mergedQueries = mergedDocument.getElementsByTagName(SdkConstants.TAG_QUERIES);
+            assertThat(mergedQueries.getLength()).isEqualTo(1);
+
+            NodeList queriesIntents =
+                    ((Element) mergedQueries.item(0)).getElementsByTagName(SdkConstants.TAG_INTENT);
+            assertThat(queriesIntents.getLength()).isEqualTo(expectedIntentCount);
+        } finally {
+            assertThat(appFile.delete()).named("Overlay was deleted").isTrue();
+            assertThat(lib1File.delete()).named("Lib1 file was deleted").isTrue();
         }
     }
 

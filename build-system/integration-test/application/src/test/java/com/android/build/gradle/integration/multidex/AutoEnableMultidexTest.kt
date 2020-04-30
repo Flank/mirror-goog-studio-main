@@ -20,6 +20,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.collect.Sets
 import org.junit.Rule
@@ -72,14 +74,28 @@ class AutoEnableMultidexTest {
         assertThat(debug.allDexes).hasSize(2)
         val classes = debug.allDexes[0].classes.keys
         val classes2 = debug.allDexes[1].classes.keys
+
         assertThat(classes2).named("No duplicate class definitions").containsNoneIn(classes)
-        assertThat(Sets.union(classes, classes2))
-            .containsExactly(
-                "Lcom/example/helloworld/A0;",
-                "Lcom/example/helloworld/A1;",
-                "Lcom/example/helloworld/A2;",
-                "Lcom/example/helloworld/BuildConfig;",
-                "Lcom/example/helloworld/R;"
-            )
+        if (FileUtils.join(project.intermediatesDir,
+                InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName())
+                .exists()
+        ) {
+            assertThat(Sets.union(classes, classes2))
+                    .containsExactly(
+                            "Lcom/example/helloworld/A0;",
+                            "Lcom/example/helloworld/A1;",
+                            "Lcom/example/helloworld/A2;",
+                            "Lcom/example/helloworld/R;"
+                    )
+        } else {
+            assertThat(Sets.union(classes, classes2))
+                    .containsExactly(
+                            "Lcom/example/helloworld/A0;",
+                            "Lcom/example/helloworld/A1;",
+                            "Lcom/example/helloworld/A2;",
+                            "Lcom/example/helloworld/BuildConfig;",
+                            "Lcom/example/helloworld/R;"
+                    )
+        }
     }
 }

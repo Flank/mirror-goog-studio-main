@@ -43,8 +43,7 @@ fun RecipeExecutor.androidThingsActivityRecipe(
            manifestOut.resolve("AndroidManifest.xml"))
 
   if (generateLayout) {
-    generateSimpleLayout(moduleData, activityClass, layoutName, true, packageName)
-    open(resOut.resolve("layout/${layoutName}.xml"))
+    generateSimpleLayout(moduleData, activityClass, layoutName)
   }
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 

@@ -21,8 +21,8 @@ import org.gradle.api.Named
 
 /** DSL object to configure build types. */
 @Incubating
-interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions> : Named,
-    VariantDimension<AnnotationProcessorOptionsT> {
+interface BuildType : Named,
+    VariantDimension {
     /**
      * Whether test coverage is enabled for this build type.
      *

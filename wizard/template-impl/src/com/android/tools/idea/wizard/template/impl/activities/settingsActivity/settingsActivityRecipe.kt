@@ -54,7 +54,7 @@ fun RecipeExecutor.settingsActivityRecipe(
 
   generateManifest(
     moduleData, activityClass, activityClass, packageName, isLauncher = moduleData.isNewModule, hasNoActionBar = false,
-    requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
+    generateActivityTitle = true
   )
 
   mergeXml(stringsXml(activityTitle, simpleName), resOut.resolve("values/strings.xml"))

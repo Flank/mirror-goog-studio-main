@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.ndk.NdkR19Info
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -180,6 +181,8 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
+    val buildFeatures = mock(BuildFeatureValues::class.java, throwUnmocked)
+
     val gradle = mock(
         Gradle::class.java
     )
@@ -241,6 +244,7 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
 
+        doReturn(global).`when`(componentProperties).globalScope
         doReturn(variantScope).`when`(componentProperties).variantScope
         doReturn(baseVariantData).`when`(componentProperties).variantData
 
@@ -301,6 +305,7 @@ open class BasicModuleModelMock {
         doReturn(null).`when`(ndkBuild).buildStagingDirectory
         doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
         doReturn("debug").`when`(componentProperties).name
+        doReturn(buildFeatures).`when`(componentProperties).buildFeatures
 
         projectRootDir.mkdirs()
         sdkDir.mkdirs()
@@ -315,8 +320,7 @@ open class BasicModuleModelMock {
             .get(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)
         doReturn(true)
             .`when`(projectOptions).get(BooleanOption.BUILD_ONLY_TARGET_ABI)
-        doReturn(false)
-            .`when`(projectOptions).get(BooleanOption.ENABLE_PREFAB)
+        doReturn(false).`when`(buildFeatures).prefab
         doReturn(true)
             .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
         doReturn(null)

@@ -33,6 +33,6 @@ enum class AndroidSdkCommandLineToolsPlatform(
             .toPath()
     }
 
-    fun getBinaryName(fileNamePrefix: String): String  = "tools/bin/$fileNamePrefix$binarySuffix"
+    fun getBinaryName(fileNamePrefix: String): String  = "cmdline-tools/bin/$fileNamePrefix$binarySuffix"
 
 }

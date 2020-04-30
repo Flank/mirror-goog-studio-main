@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 
 class AutoRevokeDetectorTest : AbstractCheckTest() {
@@ -67,10 +66,10 @@ class AutoRevokeDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:4: Error: Missing required attribute: autoRevokePermissions [MissingAutoRevokeTolerance]
+                AndroidManifest.xml:4: Warning: Missing required attribute: autoRevokePermissions [MissingAutoRevokeTolerance]
                                     <application/><!-- ERROR -->
                                      ~~~~~~~~~~~
-                1 errors, 0 warnings
+                0 errors, 1 warnings
                 """
             )
             .expectFixDiffs(

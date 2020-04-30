@@ -15,12 +15,24 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
 import java.util.ArrayList;
 import java.util.List;
 
 /** A verifier that determines whether or not a swap operation can be performed. */
 class SwapVerifier {
+
+    public List<FileDiff> verify(List<Apk> apks, List<FileDiff> diffs, boolean allChanges)
+            throws DeployerException {
+        for (Apk apk : apks) {
+            if (!apk.isolatedServices.isEmpty()) {
+                throw DeployerException.isolatedServiceNotSupported(apk.isolatedServices);
+            }
+        }
+        return verify(diffs, allChanges);
+    }
+
     public List<FileDiff> verify(List<FileDiff> diffs, boolean allChanges)
             throws DeployerException {
         List<FileDiff> dexes = new ArrayList<>();

@@ -18,24 +18,19 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.dsl.LibraryBuildFeatures
-import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 
 /** See [InternalCommonExtension] */
-interface InternalApplicationExtension:
+interface InternalApplicationExtension :
     ApplicationExtension<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
         AndroidSourceSet,
-        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
@@ -58,6 +53,4 @@ interface InternalApplicationExtension:
                 DefaultConfig,
                 ProductFlavor,
                 ApplicationVariant<ApplicationVariantProperties>,
-                ApplicationVariantProperties> {
-
-}
+                ApplicationVariantProperties>

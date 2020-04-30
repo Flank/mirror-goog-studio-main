@@ -165,6 +165,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 // references for backwards compatibility.
                 task.from(artifacts.getFinalProduct(
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
+                task.from(artifacts.getFinalProduct(InternalArtifactType.RES_STATIC_LIBRARY))
             }
 
             if (buildFeatures.renderScript) {
@@ -177,7 +178,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             if (buildFeatures.androidResources) {
                 task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
             }
-            task.from(artifacts.getFinalProductAsFileCollection(InternalArtifactType.RES_STATIC_LIBRARY))
             task.from(
                 artifacts.getFinalProduct(LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)

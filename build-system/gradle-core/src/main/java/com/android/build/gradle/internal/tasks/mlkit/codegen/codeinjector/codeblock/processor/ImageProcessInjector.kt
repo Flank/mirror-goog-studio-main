@@ -32,7 +32,7 @@ class ImageProcessInjector : CodeBlockInjector() {
             typeName,
             processedTypeName,
             getProcessorName(tensorInfo),
-            tensorInfo.name
+            tensorInfo.identifierName
         )
     }
 }

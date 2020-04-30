@@ -67,11 +67,6 @@ open class TestVariantPropertiesImpl @Inject constructor(
     globalScope
 ), TestVariantProperties, TestVariantCreationConfig {
 
-    /*
-     * Provider of data coming from the tested modules. These are loaded just once and finalized.
-     */
-    private val testedProjectManifestMetadata: Provider<BuiltArtifactsImpl> = instantiateProjectManifestMetadata(variantDependencies)
-
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
@@ -96,7 +91,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
         action.invoke(aaptOptions)
     }
 
-    override val testedApplicationId: Provider<String> = testedProjectManifestMetadata.map { it.applicationId }
+    override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
@@ -132,24 +127,19 @@ open class TestVariantPropertiesImpl @Inject constructor(
     // Private stuff
     // ---------------------------------------------------------------------------------------------
 
-    private fun instantiateProjectManifestMetadata(
+    private fun calculateTestedApplicationId(
         variantDependencies: VariantDependencies
-    ): Provider<BuiltArtifactsImpl> {
-        val artifact = variantDependencies
+    ): Provider<String> {
+        return variantDependencies
             .getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.MANIFEST_METADATA
-            )
-
-        // Have to wrap the return of artifact.elements.map because we cannot call
-        // finalizeValueOnRead directly on Provider
-        return internalServices.providerOf(
-            BuiltArtifactsImpl::class.java,
-            artifact.elements.map {
+            ).elements.map {
                 val manifestDirectory = it.single().asFile
-                BuiltArtifactsLoaderImpl.loadFromDirectory(manifestDirectory)
+                BuiltArtifactsLoaderImpl.loadFromDirectory(manifestDirectory)?.applicationId
                     ?: throw RuntimeException("Cannot find merged manifest at '$manifestDirectory', please file a bug.\"")
-            })
+            }
+
     }
 }

@@ -25,10 +25,8 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.api.services.BuildServiceRegistration
 import org.gradle.workers.WorkerExecutor
 import java.io.Closeable
 import java.util.concurrent.ExecutorService
@@ -36,30 +34,6 @@ import java.util.concurrent.ForkJoinPool
 
 private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
 private const val AAPT2_WORKERS_BUILD_SERVICE_NAME = "aapt2-workers-build-service"
-
-/**
- * Registers aapt2 workers build services. This makes it available for querying, by using
- * [getAapt2WorkersBuildService] method.
- */
-fun registerAapt2WorkersBuildService(project: Project, projectOptions: ProjectOptions) {
-    project.gradle.sharedServices.registerIfAbsent(
-        AAPT2_WORKERS_BUILD_SERVICE_NAME,
-        Aapt2WorkersBuildService::class.java
-    ) {
-        it.parameters.aapt2ThreadPoolSize.set(
-            projectOptions[IntegerOption.AAPT2_THREAD_POOL_SIZE] ?: Integer.min(
-                MAX_AAPT2_THREAD_POOL_SIZE,
-                ForkJoinPool.getCommonPoolParallelism()
-            )
-        )
-    }
-}
-
-@Suppress("UNCHECKED_CAST")
-fun getAapt2WorkersBuildService(project: Project): Provider<out Aapt2WorkersBuildService> =
-    (project.gradle.sharedServices.registrations.getByName(AAPT2_WORKERS_BUILD_SERVICE_NAME)
-            as BuildServiceRegistration<Aapt2WorkersBuildService, Aapt2WorkersBuildService.Params>)
-        .service
 
 val aapt2WorkersServiceRegistry = WorkerActionServiceRegistry()
 
@@ -115,6 +89,22 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
     override fun close() {
         serviceInfo.value.closeable.close()
         aapt2ThreadPool.shutdown()
+    }
+
+    class RegistrationAction(project: Project, projectOptions: ProjectOptions) :
+        ServiceRegistrationAction<Aapt2WorkersBuildService, Params>(
+            project,
+            Aapt2WorkersBuildService::class.java
+        ) {
+        private val aapt2ThreadPoolSize =
+            projectOptions[IntegerOption.AAPT2_THREAD_POOL_SIZE] ?: Integer.min(
+                MAX_AAPT2_THREAD_POOL_SIZE,
+                ForkJoinPool.getCommonPoolParallelism()
+            )
+
+        override fun configure(parameters: Params) {
+            parameters.aapt2ThreadPoolSize.set(aapt2ThreadPoolSize)
+        }
     }
 }
 

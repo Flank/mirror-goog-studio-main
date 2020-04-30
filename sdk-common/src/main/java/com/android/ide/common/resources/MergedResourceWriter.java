@@ -284,6 +284,9 @@ public class MergedResourceWriter
                                 mMergingLog.logCopy(request.getInputFile(), strippedLayout);
                             }
                             fileToCompile = strippedLayout;
+                        } else {
+                            dataBindingExpressionRemover.processFileWithNoDataBinding(
+                                    request.getInputFile());
                         }
                     }
 

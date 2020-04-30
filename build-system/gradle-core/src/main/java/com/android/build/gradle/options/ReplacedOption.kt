@@ -107,6 +107,13 @@ enum class ReplacedOption(
         "This property has been replaced by ${BooleanOption.NON_TRANSITIVE_R_CLASS.propertyName}"
     ),
 
+    @Suppress("unused")
+    ENABLE_PREFAB(
+        "android.enablePrefab",
+        Version.VERSION_4_1,
+        "This property has been replaced by android.buildFeatures.prefab (DSL)"
+    ),
+
     ;
 
     override val status: Option.Status

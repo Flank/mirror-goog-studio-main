@@ -100,7 +100,7 @@ cc_toolchain_config(
         "/usr/include/x86_64-linux-gnu/c++/8.0.1",
         "/usr/include/c++/8.0.1/backward",
     ],
-    cxx_flags = ["-std=c++0x"],
+    cxx_flags = ["-std=c++14"],
     dbg_compile_flags = ["-g"],
     host_system_name = "local",
     link_flags = [
@@ -189,7 +189,7 @@ cc_toolchain_config(
         "-ffunction-sections",
         "-fdata-sections",
     ],
-    cxx_flags = ["-std=c++0x"],
+    cxx_flags = ["-std=c++14"],
     link_flags = [
         "-lc++",
         "-framework",
@@ -229,6 +229,7 @@ cc_toolchain_config(
         "C:\\Program Files (x86)\\Windows Kits\\8.1\\include\\winrt",
         "C:\\botcode\\w",
     ],
+    cxx_flags = ["/std:c++14"],
     link_flags = ["/MACHINE:X64"],
     compile_flags = [
         "/DCOMPILER_MSVC",

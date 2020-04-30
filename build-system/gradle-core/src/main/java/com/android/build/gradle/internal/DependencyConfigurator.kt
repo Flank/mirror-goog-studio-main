@@ -57,8 +57,9 @@ import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessT
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.res.namespaced.init
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
@@ -309,7 +310,7 @@ class DependencyConfigurator(
                             )
                         )
                     params.aapt2DaemonBuildService
-                        .set(getAapt2DaemonBuildService(project))
+                        .setDisallowChanges(getBuildService(project))
                 }
             }
         }

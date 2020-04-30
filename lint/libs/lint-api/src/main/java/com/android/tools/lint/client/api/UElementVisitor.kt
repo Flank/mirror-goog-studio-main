@@ -294,7 +294,6 @@ internal class UElementVisitor constructor(
                     }
                 })
             } finally {
-                parser.dispose(context, uFile)
                 context.setJavaFile(null)
                 context.uastFile = null
             }
@@ -382,10 +381,6 @@ internal class UElementVisitor constructor(
             )
             return null
         }
-    }
-
-    fun dispose() {
-        parser.dispose()
     }
 
     private class VisitingDetector(val detector: Detector, val uastScanner: SourceCodeScanner) {

@@ -52,7 +52,11 @@ data class AndroidGradlePluginAttributionData(
      * The key of the map represents the name of the garbage collector, while the value represents
      * the time spent collecting in milliseconds.
      */
-    val garbageCollectionData: Map<String, Long> = emptyMap()
+    val garbageCollectionData: Map<String, Long> = emptyMap(),
+    /**
+     * Contains the ids of the plugins defined in the buildSrc.
+     */
+    val buildSrcPlugins: Set<String> = emptySet()
 ) : Serializable {
     companion object {
         fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
@@ -118,6 +122,12 @@ data class AndroidGradlePluginAttributionData(
                 writer.endObject()
             }
             writer.endArray()
+
+            writer.name("buildSrcPlugins").beginArray()
+            data.buildSrcPlugins.forEach { plugin ->
+                writer.value(plugin)
+            }
+            writer.endArray()
             writer.endObject()
         }
 
@@ -125,6 +135,8 @@ data class AndroidGradlePluginAttributionData(
             val taskNameToClassNameMap = HashMap<String, String>()
             val tasksSharingOutput = HashMap<String, List<String>>()
             val garbageCollectionData = HashMap<String, Long>()
+            val buildSrcPlugins = HashSet<String>()
+
             reader.beginObject()
 
             while (reader.hasNext()) {
@@ -188,6 +200,13 @@ data class AndroidGradlePluginAttributionData(
                         }
                         reader.endArray()
                     }
+                    "buildSrcPlugins" -> {
+                        reader.beginArray()
+                        while (reader.hasNext()) {
+                            buildSrcPlugins.add(reader.nextString())
+                        }
+                        reader.endArray()
+                    }
                     else -> {
                         reader.skipValue()
                     }
@@ -199,7 +218,8 @@ data class AndroidGradlePluginAttributionData(
             return AndroidGradlePluginAttributionData(
                 taskNameToClassNameMap = taskNameToClassNameMap,
                 tasksSharingOutput = tasksSharingOutput,
-                garbageCollectionData = garbageCollectionData
+                garbageCollectionData = garbageCollectionData,
+                buildSrcPlugins = buildSrcPlugins
             )
         }
     }

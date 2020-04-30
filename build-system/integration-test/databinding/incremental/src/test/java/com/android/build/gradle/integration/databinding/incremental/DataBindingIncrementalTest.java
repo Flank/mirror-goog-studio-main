@@ -425,6 +425,40 @@ public class DataBindingIncrementalTest {
         assertThat(getLayoutInfoFile("activity2-layout.xml")).doesNotExist();
     }
 
+    /** Regression test for bug 153711619. */
+    @Test
+    public void removeDataBindingFromLayout() throws Exception {
+        // useAndroidX is not relevant to this test, so testing it when useAndroidX=true is enough
+        Assume.assumeTrue(useAndroidX);
+
+        File mainActivityLayout = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File mainActivityLayoutInfo = getLayoutInfoFile("activity_main-layout.xml");
+        File mainActivityBinding = getGeneratedSourceFile();
+        File activity2Layout = new File(mainActivityLayout.getParentFile(), "activity2.xml");
+        File activity2LayoutInfo = getLayoutInfoFile("activity2-layout.xml");
+        File activity2Binding =
+                new File(
+                        getGeneratedSourceDir(),
+                        "android/databinding/testapp/databinding/Activity2BindingImpl.java");
+        Files.copy(mainActivityLayout, activity2Layout);
+
+        project.execute(COMPILE_JAVA_TASK);
+        assertThat(mainActivityLayoutInfo).exists();
+        assertThat(mainActivityBinding).exists();
+        assertThat(activity2LayoutInfo).exists();
+        assertThat(activity2Binding).exists();
+
+        // Remove data binding constructs from the layout file
+        FileUtils.write(activity2Layout, "<RelativeLayout />");
+
+        // Expect that the corresponding layout info file and generated class file to be removed
+        project.execute(COMPILE_JAVA_TASK);
+        assertThat(mainActivityLayoutInfo).exists();
+        assertThat(mainActivityBinding).exists();
+        assertThat(activity2LayoutInfo).doesNotExist();
+        assertThat(activity2Binding).doesNotExist();
+    }
+
     @Test
     public void renameLayout() throws Exception {
         String activity3ClassName = "Landroid/databinding/testapp/databinding/Activity3Binding;";

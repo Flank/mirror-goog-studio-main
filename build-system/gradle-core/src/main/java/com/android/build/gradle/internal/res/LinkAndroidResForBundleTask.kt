@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
-import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -53,6 +53,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -75,12 +76,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    private var mergeBlameLogFolder: File? = null
-
-    // Not an input as it is only used to rewrite exception and doesn't affect task output
+    // Not an input as it is only used to rewrite exceptions and doesn't affect task output
     @get:Internal
-    @get:Optional
-    private lateinit var manifestMergeBlameFile: Provider<RegularFile>
+    abstract val mergeBlameLogFolder: DirectoryProperty
+
+    // Not an input as it is only used to rewrite exceptions and doesn't affect task output
+    @get:Internal
+    abstract val manifestMergeBlameFile: RegularFileProperty
 
     private var buildTargetDensity: String? = null
 
@@ -174,7 +176,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                     aapt2ServiceKey,
                     config,
                     errorFormatMode,
-                    mergeBlameLogFolder,
+                    mergeBlameLogFolder.get().asFile,
                     manifestMergeBlameFile.orNull?.asFile
                 )
             )
@@ -278,7 +280,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            task.mergeBlameLogFolder = creationConfig.paths.resourceBlameLogDir
+            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
@@ -292,9 +295,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 creationConfig.services.projectOptions
             )
 
-            task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
-            )
+            ))
 
             if (variantScope.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources = creationConfig.variantDependencies.getArtifactCollection(
@@ -303,7 +306,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                     AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                 )
             }
-            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
         }
     }
 }

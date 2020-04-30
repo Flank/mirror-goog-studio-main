@@ -18,13 +18,16 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.google.common.annotations.VisibleForTesting
 import com.android.builder.errors.IssueReporter
 import com.android.ide.common.repository.GradleVersion
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.initialization.dsl.ScriptHandler.CLASSPATH_CONFIGURATION
+import java.net.JarURLConnection
+import java.util.Properties
+import java.util.regex.Pattern
 
 private val pluginList = listOf(
     /**
@@ -173,4 +176,38 @@ internal fun visitDependency(
             visitedDependencies
         )
     }
+}
+
+/**
+ * Enumerates through the gradle plugin jars existing in the given [classLoader], finds the
+ * buildSrc jar and loads the id of each plugin from the `META-INF/gradle-plugins/${id}.properties`
+ * file name.
+ *
+ * @return a list of plugin ids that are defined in the buildSrc
+ */
+fun getBuildSrcPlugins(classLoader: ClassLoader): Set<String> {
+    val pattern = Pattern.compile("META-INF/gradle-plugins/(.+)\\.properties")
+    val urls = classLoader.getResources("META-INF/gradle-plugins")
+
+    val buildSrcPlugins = HashSet<String>()
+    while (urls.hasMoreElements()) {
+        val url = urls.nextElement()
+        if (!url.toString().endsWith("buildSrc.jar!/META-INF/gradle-plugins")) {
+            continue
+        }
+        val urlConnection = url.openConnection()
+        if (urlConnection is JarURLConnection) {
+            urlConnection.jarFile.use { jar ->
+                val jarEntries = jar.entries()
+                while (jarEntries.hasMoreElements()) {
+                    val entry = jarEntries.nextElement()
+                    val matcher = pattern.matcher(entry.name)
+                    if (matcher.matches()) {
+                        buildSrcPlugins.add(matcher.group(1))
+                    }
+                }
+            }
+        }
+    }
+    return buildSrcPlugins
 }

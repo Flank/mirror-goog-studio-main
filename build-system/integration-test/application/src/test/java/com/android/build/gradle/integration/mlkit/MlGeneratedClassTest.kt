@@ -83,6 +83,29 @@ class MlGeneratedClassTest {
 
     @Test
     @Throws(IOException::class, InterruptedException::class)
+    fun testMobileNetModelClass_subFolder() {
+        val modelMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createNewInstanceMethodReference(MODEL_SUB),
+                createProcessMethodReference(TENSOR_IMAGE, MODEL_SUB, MODEL_OUTPUT_SUB)
+            )
+        val outputsMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createOutputGetterMethodReference(
+                    MODEL_OUTPUT_SUB,
+                    "getProbabilityAsTensorLabel", TENSOR_LABEL
+                )
+            )
+        verifyModelClass(
+            "mobilenet_quant_metadata.tflite",
+            modelMethods,
+            outputsMethods,
+            true
+        )
+    }
+
+    @Test
+    @Throws(IOException::class, InterruptedException::class)
     fun testMobileNetModelClassWithoutMetadata() {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -199,8 +222,28 @@ class MlGeneratedClassTest {
         expectedModelMethods: Set<MethodReference>,
         expectedOutputMethods: Set<MethodReference>
     ) {
+        verifyModelClass(
+            modelFileName,
+            expectedModelMethods,
+            expectedOutputMethods,
+            false
+        )
+    }
+
+    @Throws(IOException::class, InterruptedException::class)
+    private fun verifyModelClass(
+        modelFileName: String,
+        expectedModelMethods: Set<MethodReference>,
+        expectedOutputMethods: Set<MethodReference>,
+        verifySubFolder: Boolean
+    ) {
+        val dstModelFilePath = if(verifySubFolder) "src/main/ml/sub/mobilenet_model.tflite" else "src/main/ml/model.tflite"
+        val modelClass = if(verifySubFolder) MODEL_SUB else MODEL
+        val modelOutputClass = if(verifySubFolder) MODEL_OUTPUT_SUB else MODEL_OUTPUT
+        val apkModelFile = if(verifySubFolder) "assets/sub/mobilenet_model.tflite" else "assets/model.tflite"
+
         // Add model file to ml folder
-        val modelFile = project.file("src/main/ml/model.tflite")
+        val modelFile = project.file(dstModelFilePath)
         FileUtils.copyFile(
             TestUtils.getWorkspaceFile(
                 "prebuilts/tools/common/mlkit/testData/models/$modelFileName"
@@ -210,30 +253,36 @@ class MlGeneratedClassTest {
         project.executor().run(":assembleDebug")
 
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk.getClass(MODEL)!!.methods).containsAtLeastElementsIn(expectedModelMethods)
-        assertThat(apk.getClass(MODEL_OUTPUT)!!.methods).containsAtLeastElementsIn(
+        assertThat(apk.getClass(modelClass)!!.methods).containsAtLeastElementsIn(expectedModelMethods)
+        assertThat(apk.getClass(modelOutputClass)!!.methods).containsAtLeastElementsIn(
             expectedOutputMethods
         )
 
         // Check model.tflite is uncompressed (Issue 152875817)
-        val entry = ZipArchive.listEntries(apk.file.toFile())["assets/model.tflite"]
+        val entry = ZipArchive.listEntries(apk.file.toFile())[apkModelFile]
         assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
     }
 
     companion object {
         private const val MODEL = "Lcom/android/app/ml/Model;"
+        private const val MODEL_SUB = "Lcom/android/app/ml/MobilenetModel219;"
         private const val MODEL_OUTPUT = "Lcom/android/app/ml/Model\$Outputs;"
+        private const val MODEL_OUTPUT_SUB = "Lcom/android/app/ml/MobilenetModel219\$Outputs;"
         private const val TENSOR_IMAGE = "Lorg/tensorflow/lite/support/image/TensorImage;"
         private const val TENSOR_BUFFER =
             "Lorg/tensorflow/lite/support/tensorbuffer/TensorBuffer;"
         private const val TENSOR_LABEL = "Lorg/tensorflow/lite/support/label/TensorLabel;"
 
         private fun createNewInstanceMethodReference(): MethodReference {
+            return createNewInstanceMethodReference(MODEL)
+        }
+
+        private fun createNewInstanceMethodReference(model: String): MethodReference {
             return ImmutableMethod(
-                MODEL,
+                model,
                 "newInstance",
                 ParamUtil.parseParamString("Landroid/content/Context;"),
-                "Lcom/android/app/ml/Model;",
+                model,
                 0,
                 null,
                 null
@@ -241,11 +290,15 @@ class MlGeneratedClassTest {
         }
 
         private fun createProcessMethodReference(params: String): MethodReference {
+            return createProcessMethodReference(params, MODEL, MODEL_OUTPUT)
+        }
+
+        private fun createProcessMethodReference(params: String, definingClass: String, returnType: String): MethodReference {
             return ImmutableMethod(
-                MODEL,
+                definingClass,
                 "process",
                 ParamUtil.parseParamString(params),
-                MODEL_OUTPUT,
+                returnType,
                 0,
                 null,
                 null
@@ -256,8 +309,16 @@ class MlGeneratedClassTest {
             name: String,
             returnType: String
         ): MethodReference {
+            return createOutputGetterMethodReference(MODEL_OUTPUT, name, returnType)
+        }
+
+        private fun createOutputGetterMethodReference(
+            definingClass: String,
+            name: String,
+            returnType: String
+        ): MethodReference {
             return ImmutableMethod(
-                MODEL_OUTPUT,
+                definingClass,
                 name,
                 ParamUtil.parseParamString(""),
                 returnType,

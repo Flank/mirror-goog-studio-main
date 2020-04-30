@@ -182,8 +182,6 @@ public class BuildConfigTest {
     @Test
     public void modelDebug() {
         Map<String, String> map = Maps.newHashMap();
-        //        map.put("VALUE_DEFAULT", "1");
-        // map.put("VALUE_FLAVOR", "20");
         map.put("VALUE_DEBUG", "100");
         map.put("VALUE_VARIANT", "100");
         checkBuildType(model, "debug", map);
@@ -219,7 +217,6 @@ public class BuildConfigTest {
     @Test
     public void modelFlavor2() {
         Map<String, String> map = Maps.newHashMap();
-        //        map.put("VALUE_DEFAULT", "1");
         map.put("VALUE_FLAVOR", "10");
         map.put("VALUE_DEBUG", "10");
         map.put("VALUE_VARIANT", "10");
@@ -269,6 +266,17 @@ public class BuildConfigTest {
             @NonNull String expected,
             @NonNull String variantDir)
             throws IOException {
+        File buildConfigJar =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/generated_build_config_bytecode/"
+                                + variantDir
+                                + "BuildConfig.jar");
+        // If the compiled BuildConfig exists, the Java class BuildConfig should not check it's
+        // contents as it shouldn't exist.
+        if (buildConfigJar.exists()) {
+            return;
+        }
         File outputFile =
                 new File(
                         project.getTestDir(),

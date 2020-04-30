@@ -219,7 +219,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
             String path = "build.gradle";
             LmModule model = project.getBuildModule();
             if (model != null) {
-                path = model.getModuleName() + File.separator + path;
+                path = model.getModulePath() + File.separator + path;
             }
             String message =
                     "To use VectorDrawableCompat, you need to set "

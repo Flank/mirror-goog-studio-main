@@ -16,8 +16,6 @@
 
 package com.android.build.api.variant.impl
 
-import org.gradle.api.Action
-import org.gradle.api.Task
 import org.gradle.api.Transformer
 import org.gradle.api.internal.provider.HasConfigurableValueInternal
 import org.gradle.api.internal.provider.PropertyInternal
@@ -28,6 +26,7 @@ import org.gradle.api.internal.tasks.TaskDependencyResolveContext
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.internal.DisplayName
+import org.gradle.internal.state.ModelObject
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -39,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * This will provided added services like property names which will help debugging while converting
  * to the new Variant API. It is unclear if this wrapper will remain once conversion is done.
  */
+@Suppress("UNCHECKED_CAST")
 open class GradleProperty<T>(
     private val property: Property<T>) : PropertyInternal<T>, ProviderInternal<T>, Property<T> {
 
@@ -73,6 +73,10 @@ open class GradleProperty<T>(
 
     override fun get(): T {
         return property.get()
+    }
+
+    override fun disallowUnsafeRead() {
+        property.disallowUnsafeRead()
     }
 
     override fun <S : Any?> flatMap(p0: Transformer<out Provider<out S>, in T>): Provider<S> {
@@ -111,16 +115,6 @@ open class GradleProperty<T>(
         return property.convention(p0)
     }
 
-    override fun calculateValue(): ValueSupplier.Value<out T> {
-        @Suppress("UNCHECKED_CAST")
-        return (property as ProviderInternal<T>).calculateValue()
-    }
-
-    override fun withFinalValue(): ProviderInternal<T> {
-        @Suppress("UNCHECKED_CAST")
-        return (property as ProviderInternal<T>).withFinalValue()
-    }
-
     override fun getType(): Class<T>? {
         @Suppress("UNCHECKED_CAST")
         return (property as ProviderInternal<T>).getType()
@@ -130,27 +124,14 @@ open class GradleProperty<T>(
         return (property as ProviderInternal<T>).visitDependencies(p0)
     }
 
-    override fun attachProducer(p0: Task) {
-        @Suppress("UNCHECKED_CAST")
-        (property as PropertyInternal<T>).attachProducer(p0)
-    }
-
     override fun implicitFinalizeValue() {
         (property as HasConfigurableValueInternal).implicitFinalizeValue()
     }
 
-    override fun maybeVisitBuildDependencies(p0: TaskDependencyResolveContext): Boolean {
-        @Suppress("UNCHECKED_CAST")
-        return (property as ProviderInternal<T>).maybeVisitBuildDependencies(p0)
-    }
 
     override fun setFromAnyValue(p0: Any) {
         @Suppress("UNCHECKED_CAST")
         (property as PropertyInternal<T>).setFromAnyValue(p0)
-    }
-
-    override fun attachDisplayName(p0: DisplayName) {
-        (property as PropertyInternal<*>).attachDisplayName(p0)
     }
 
     override fun asSupplier(
@@ -160,14 +141,6 @@ open class GradleProperty<T>(
     ): ProviderInternal<T> {
         @Suppress("UNCHECKED_CAST")
         return (property as ProviderInternal<T>).asSupplier(p0, p1, p2)
-    }
-
-    override fun isValueProducedByTask(): Boolean {
-        return (property as ProviderInternal<*>).isValueProducedByTask
-    }
-
-    override fun visitProducerTasks(p0: Action<in Task>) {
-        return (property as ProviderInternal<*>).visitProducerTasks(p0)
     }
 
     companion object {
@@ -192,6 +165,36 @@ open class GradleProperty<T>(
         fun <T> safeReadingBeforeExecution(id: String, property: Property<T>, initialValue: Provider<T>, executionMode: AtomicBoolean = inExecutionMode): Property<T> {
             return SafeReadingBeforeExecution(id, property, executionMode).also { it.set( initialValue) }
         }
+    }
+
+    override fun calculateValue(p0: ValueSupplier.ValueConsumer): ValueSupplier.Value<out T> {
+        @Suppress("UNCHECKED_CAST")
+        return (property as ProviderInternal<T>).calculateValue(p0)
+    }
+
+    override fun withFinalValue(p0: ValueSupplier.ValueConsumer): ProviderInternal<T> {
+        return (property as ProviderInternal<T>).withFinalValue(p0)
+    }
+
+    override fun getProducer(): ValueSupplier.ValueProducer {
+        return (property as ProviderInternal<T>).getProducer()
+
+    }
+
+    override fun attachOwner(p0: ModelObject?, p1: DisplayName?) {
+        (property as PropertyInternal<T>).attachOwner(p0, p1)
+    }
+
+    override fun calculateExecutionTimeValue(): ValueSupplier.ExecutionTimeValue<out T> {
+        return (property as ProviderInternal<T>).calculateExecutionTimeValue()
+    }
+
+    override fun calculatePresence(p0: ValueSupplier.ValueConsumer): Boolean {
+        return (property as ProviderInternal<T>).calculatePresence(p0)
+    }
+
+    override fun attachProducer(p0: ModelObject) {
+        (property as PropertyInternal<T>).attachProducer(p0)
     }
 }
 

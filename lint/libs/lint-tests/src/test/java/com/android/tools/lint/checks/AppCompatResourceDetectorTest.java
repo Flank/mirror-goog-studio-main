@@ -173,7 +173,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
     public void test112159117() {
         // Regression test for https://issuetracker.google.com/112159117
         lint().files(
-                        mShowAction1,
+                        xml("src/main/" + mShowAction1.targetRelativePath, mShowAction1.contents),
                         gradle(
                                 ""
                                         + "apply plugin: 'com.android.application'\n"

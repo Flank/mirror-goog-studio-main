@@ -115,7 +115,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UastFacade
-import org.jetbrains.uast.getContainingFile
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -639,6 +639,7 @@ fun getCommonParent(files: List<File>): File? {
  */
 fun getCommonParent(file1: File, file2: File): File? {
     when {
+        //noinspection FileComparisons
         file1 == file2 -> return file1
         file1.path.startsWith(file2.path) -> return file2
         file2.path.startsWith(file1.path) -> return file1
@@ -648,6 +649,7 @@ fun getCommonParent(file1: File, file2: File): File? {
             while (first != null) {
                 var second: File? = file2.parentFile
                 while (second != null) {
+                    //noinspection FileComparisons
                     if (first == second) {
                         return first
                     }
@@ -1256,7 +1258,7 @@ fun getLanguageLevel(
     element: UElement,
     defaultLevel: LanguageLevel
 ): LanguageLevel {
-    val containingFile = element.getContainingFile() ?: return defaultLevel
+    val containingFile = element.getContainingUFile() ?: return defaultLevel
 
     return getLanguageLevel(containingFile.psi, defaultLevel)
 }

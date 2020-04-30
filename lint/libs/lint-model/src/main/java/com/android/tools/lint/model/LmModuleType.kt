@@ -26,4 +26,5 @@ enum class LmModuleType {
     INSTANT_APP,
     FEATURE,
     DYNAMIC_FEATURE,
+    JAVA_LIBRARY
 }

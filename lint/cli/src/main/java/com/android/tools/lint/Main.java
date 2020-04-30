@@ -1019,7 +1019,7 @@ public class Main {
                     }
                     try {
                         LmSerialization reader = LmSerialization.INSTANCE;
-                        LmModule module = reader.read(input);
+                        LmModule module = reader.readModule(input, Collections.emptyList());
                         modules.add(module);
                     } catch (Throwable error) {
                         System.err.println(

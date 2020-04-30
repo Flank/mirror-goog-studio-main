@@ -21,6 +21,7 @@ internal data class TemplateImpl(
   override val revision: Int,
   override val name: String,
   override val description: String,
+  override val documentationUrl: String?,
   override val minSdk: Int,
   override val minCompileSdk: Int,
   override val category: Category,
@@ -44,6 +45,7 @@ class TemplateBuilder {
   var revision: Int? = null
   var name: String? = null
   var description: String? = null
+  var documentationUrl: String? = null
   var minApi: Int = 1
   var minBuildApi: Int = 1
   var category: Category? = null
@@ -80,6 +82,7 @@ class TemplateBuilder {
       revision!!,
       name!!,
       description!!,
+      documentationUrl,
       minApi,
       minBuildApi,
       category!!,

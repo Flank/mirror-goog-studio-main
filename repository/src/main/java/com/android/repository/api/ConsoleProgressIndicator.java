@@ -18,6 +18,7 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.PrintStream;
 
 /**
@@ -34,6 +35,7 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
 
     private PrintStream mOut;
     private PrintStream mErr;
+    private final boolean mDumb;
 
     private String mLast = null;
 
@@ -45,8 +47,14 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
     }
 
     public ConsoleProgressIndicator(@NonNull PrintStream out, @NonNull PrintStream err) {
+        this(out, err, "dumb".equals(System.getenv("TERM")));
+    }
+
+    @VisibleForTesting
+    ConsoleProgressIndicator(@NonNull PrintStream out, @NonNull PrintStream err, boolean dumb) {
         mOut = out;
         mErr = err;
+        mDumb = dumb;
     }
 
     public void setOut(@NonNull PrintStream out) {
@@ -69,6 +77,9 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
     }
 
     private void printStatusLine(boolean forceShowProgress) {
+        if (mDumb) {
+            return;
+        }
         StringBuilder line = new StringBuilder();
         if (forceShowProgress || getFraction() > 0) {
             line.append("[");

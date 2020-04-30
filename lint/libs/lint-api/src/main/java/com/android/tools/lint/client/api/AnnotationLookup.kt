@@ -95,6 +95,7 @@ class AnnotationLookup {
         if (kotlinClass != null) {
             val annotationQualifiedName = annotation.qualifiedName
             if (annotationQualifiedName != null) {
+                //noinspection ExternalAnnotations
                 for (uAnnotation in (kotlinClass as UAnnotated).uAnnotations) {
                     if (annotationQualifiedName == uAnnotation.qualifiedName) {
                         return uAnnotation

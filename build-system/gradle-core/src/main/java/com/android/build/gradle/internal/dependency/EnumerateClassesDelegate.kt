@@ -17,18 +17,10 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.tasks.CheckDuplicateClassesDelegate
 import com.android.builder.dexing.ClassFileInput
 import com.android.utils.FileUtils
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import java.io.File
-import java.io.Serializable
 import java.util.zip.ZipFile
-import javax.inject.Inject
 import kotlin.streams.toList
 
 class EnumerateClassesDelegate {
@@ -48,19 +40,5 @@ class EnumerateClassesDelegate {
             .map { it.name.replace('/', '.').dropLast(SdkConstants.DOT_CLASS.length) }
             .toList()
             .sorted()
-    }
-}
-
-abstract class EnumerateClassesParams: WorkParameters, Serializable {
-    abstract val classJar: RegularFileProperty
-    abstract val outputFile: RegularFileProperty
-}
-
-abstract class EnumerateClassesRunnable @Inject constructor(): WorkAction<EnumerateClassesParams> {
-    override fun execute() {
-        EnumerateClassesDelegate().run(
-            parameters.classJar.get().asFile,
-            parameters.outputFile.get().asFile
-        )
     }
 }

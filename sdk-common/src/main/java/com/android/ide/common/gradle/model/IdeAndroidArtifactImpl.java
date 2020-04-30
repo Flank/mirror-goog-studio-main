@@ -46,7 +46,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull private final String mySourceGenTaskName;
     @NonNull private final Collection<File> myGeneratedResourceFolders;
     @NonNull private final Collection<File> myAdditionalRuntimeApks;
-    @NonNull private final Map<String, ClassField> myResValues;
     @Nullable private final IdeInstantRun myInstantRun;
     @Nullable private final String mySigningConfigName;
     @Nullable private final Set<String> myAbiFilters;
@@ -70,7 +69,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         mySourceGenTaskName = "";
         myGeneratedResourceFolders = Collections.emptyList();
         myAdditionalRuntimeApks = Collections.emptyList();
-        myResValues = Collections.emptyMap();
         myInstantRun = null;
         mySigningConfigName = null;
         myAbiFilters = null;
@@ -97,7 +95,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myApplicationId = artifact.getApplicationId();
         mySourceGenTaskName = artifact.getSourceGenTaskName();
         myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
-        myResValues = IdeModel.copy(artifact.getResValues(), modelCache, IdeClassField::new);
         myInstantRun =
                 IdeModel.copyNewProperty(
                         modelCache, artifact::getInstantRun, IdeInstantRun::new, null);
@@ -194,10 +191,10 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         return myGeneratedResourceFolders;
     }
 
-    @Override
     @NonNull
+    @Override
     public Map<String, ClassField> getResValues() {
-        return myResValues;
+        return Collections.emptyMap();
     }
 
     @Override
@@ -299,7 +296,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 && Objects.equals(myApplicationId, artifact.myApplicationId)
                 && Objects.equals(mySourceGenTaskName, artifact.mySourceGenTaskName)
                 && Objects.equals(myGeneratedResourceFolders, artifact.myGeneratedResourceFolders)
-                && Objects.equals(myResValues, artifact.myResValues)
                 && Objects.equals(myInstantRun, artifact.myInstantRun)
                 && Objects.equals(mySigningConfigName, artifact.mySigningConfigName)
                 && Objects.equals(myAbiFilters, artifact.myAbiFilters)
@@ -334,7 +330,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 myApplicationId,
                 mySourceGenTaskName,
                 myGeneratedResourceFolders,
-                myResValues,
                 myInstantRun,
                 mySigningConfigName,
                 myAbiFilters,
@@ -364,8 +359,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + '\''
                 + ", myGeneratedResourceFolders="
                 + myGeneratedResourceFolders
-                + ", myResValues="
-                + myResValues
                 + ", myInstantRun="
                 + myInstantRun
                 + ", mySigningConfigName='"

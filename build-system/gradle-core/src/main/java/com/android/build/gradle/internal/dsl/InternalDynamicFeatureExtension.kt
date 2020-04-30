@@ -18,24 +18,19 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
-import com.android.build.api.dsl.LibraryBuildFeatures
-import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 
 /** See [InternalCommonExtension] */
-interface InternalDynamicFeatureExtension:
+interface InternalDynamicFeatureExtension :
     DynamicFeatureExtension<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
         AndroidSourceSet,
-        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
@@ -58,6 +53,4 @@ interface InternalDynamicFeatureExtension:
                 DefaultConfig,
                 ProductFlavor,
                 DynamicFeatureVariant<DynamicFeatureVariantProperties>,
-                DynamicFeatureVariantProperties> {
-
-}
+                DynamicFeatureVariantProperties>

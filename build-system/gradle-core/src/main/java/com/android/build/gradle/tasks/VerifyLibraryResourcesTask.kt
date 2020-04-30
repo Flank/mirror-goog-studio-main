@@ -30,11 +30,11 @@ import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
 import com.android.build.gradle.internal.services.aapt2WorkersServiceRegistry
-import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.services.getAapt2WorkersBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
@@ -115,7 +115,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
 
-    private lateinit var mergeBlameFolder: File
+    // Not an input as it doesn't affect task outputs
+    @get:Internal
+    abstract val mergeBlameFolder: DirectoryProperty
 
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
@@ -141,7 +143,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             compiledDependenciesResources = compiledDependenciesResources.files,
             manifestMergeBlameFile = manifestMergeBlameFile.get().asFile,
             compiledDirectory = compiledDirectory,
-            mergeBlameFolder = mergeBlameFolder,
+            mergeBlameFolder = mergeBlameFolder.get().asFile,
             useJvmResourceCompiler = useJvmResourceCompiler)
         getWorkerFacadeWithWorkers().use {
             it.submit(Action::class.java, parameter)
@@ -238,7 +240,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
-            task.mergeBlameFolder = creationConfig.paths.resourceBlameLogDir
+            task.mergeBlameFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
@@ -259,8 +261,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             task.useJvmResourceCompiler =
               creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
-            task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
-            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
+            task.aapt2WorkersBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
         }
     }
 

@@ -880,31 +880,31 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
     fun testResConfigs() {
         val expected = """
-            res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]
+            src/main/res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]
                 <string name="menu_settings">Settings</string>
                         ~~~~~~~~~~~~~~~~~~~~
-            res/values-cs/arrays.xml:3: Error: The array "security_questions" in values-cs has no declaration in the base values folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier [ExtraTranslation]
+            src/main/res/values-cs/arrays.xml:3: Error: The array "security_questions" in values-cs has no declaration in the base values folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier [ExtraTranslation]
               <string-array name="security_questions">
                             ~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/values-de-rDE/strings.xml:11: Error: "continue_skip_label" is translated here but not found in default locale [ExtraTranslation]
+            src/main/res/values-de-rDE/strings.xml:11: Error: "continue_skip_label" is translated here but not found in default locale [ExtraTranslation]
                 <string name="continue_skip_label">"Weiter"</string>
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/values-es/strings.xml:12: Error: The array "security_questions" in values-es has no declaration in the base values folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier [ExtraTranslation]
+            src/main/res/values-es/strings.xml:12: Error: The array "security_questions" in values-es has no declaration in the base values folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier [ExtraTranslation]
               <string-array name="security_questions">
                             ~~~~~~~~~~~~~~~~~~~~~~~~~
             4 errors, 0 warnings
             """
 
         lint().files(
-            valuesStrings,
-            valuesCsStrings,
-            valuesDeDeStrings,
-            valuesEsStrings,
-            valuesEsUsStrings,
-            valuesLandStrings,
-            valuesCsArrays,
-            doNotTranslateEsStrings,
-            valuesNlNlStrings,
+            valuesStrings.toSrcMain(),
+            valuesCsStrings.toSrcMain(),
+            valuesDeDeStrings.toSrcMain(),
+            valuesEsStrings.toSrcMain(),
+            valuesEsUsStrings.toSrcMain(),
+            valuesLandStrings.toSrcMain(),
+            valuesCsArrays.toSrcMain(),
+            doNotTranslateEsStrings.toSrcMain(),
+            valuesNlNlStrings.toSrcMain(),
             gradle(
                 """
                     apply plugin: 'com.android.application'
@@ -929,24 +929,26 @@ class TranslationDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun TestFile.toSrcMain(): TestFile = xml("src/main/" + targetRelativePath, contents)
+
     fun testResConfigsIncremental() {
         val expected = """
-            res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]
+            src/main/res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]
                 <string name="menu_settings">Settings</string>
                         ~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
 
         lint().files(
-            valuesStrings,
-            valuesCsStrings,
-            valuesDeDeStrings,
-            valuesEsStrings,
-            valuesEsUsStrings,
-            valuesLandStrings,
-            valuesCsArrays,
-            doNotTranslateEsStrings,
-            valuesNlNlStrings,
+            valuesStrings.toSrcMain(),
+            valuesCsStrings.toSrcMain(),
+            valuesDeDeStrings.toSrcMain(),
+            valuesEsStrings.toSrcMain(),
+            valuesEsUsStrings.toSrcMain(),
+            valuesLandStrings.toSrcMain(),
+            valuesCsArrays.toSrcMain(),
+            doNotTranslateEsStrings.toSrcMain(),
+            valuesNlNlStrings.toSrcMain(),
             gradle(
                 """
                     apply plugin: 'com.android.application'
@@ -968,7 +970,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         }
                     }"""
             )
-        ).incremental("res/values/strings.xml").run().expect(expected)
+        ).incremental("src/main/res/values/strings.xml").run().expect(expected)
     }
 
     fun testMissingBaseCompletely() {
@@ -1239,7 +1241,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // Regression test for issue 74227702: Make sure we correctly handle
         // namespaced resources
         lint().files(
-            xml("res/layout/activity_main.xml", """<merge/>""").indented(),
+            xml("src/main/res/layout/activity_main.xml", """<merge/>""").indented(),
             gradle(
                 """
                     buildscript {

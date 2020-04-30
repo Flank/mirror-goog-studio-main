@@ -31,7 +31,7 @@ class LabelGetMethodInjector : MethodInjector() {
         val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
             MlkitNames.formatGetterName(
-                tensorInfo.name, returnType.simpleName()
+                tensorInfo.identifierName, returnType.simpleName()
             )
         )
             .addModifiers(Modifier.PUBLIC)
@@ -42,7 +42,7 @@ class LabelGetMethodInjector : MethodInjector() {
                 ClassNames.TENSOR_LABEL,
                 getIdentifierFromFileName(tensorInfo.fileName),
                 getProcessorName(tensorInfo),
-                tensorInfo.name
+                tensorInfo.identifierName
             )
             .build()
         classBuilder.addMethod(methodSpec)

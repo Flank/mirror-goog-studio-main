@@ -16,9 +16,16 @@
 package com.android.build.gradle
 
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.build.gradle.internal.errors.DeprecationReporterImpl
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.plugins.BasePlugin
+import com.android.build.gradle.internal.services.DslServicesImpl
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.tasks.LintStandaloneTask
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.SyncOptions
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -34,11 +41,20 @@ import org.gradle.api.tasks.TaskProvider
  */
 open class LintPlugin : Plugin<Project> {
     private lateinit var project: Project
+    private lateinit var projectServices: ProjectServices
+    private lateinit var syncIssueReporter: SyncIssueReporterImpl
+    private var dslServices: DslServicesImpl? = null
     private var lintOptions: LintOptions? = null
     override fun apply(project: Project) {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true")
         this.project = project
+
+        createProjectServices(project)
+        dslServices = DslServicesImpl(
+            projectServices, DslVariableFactory(syncIssueReporter), null
+        )
+
         createExtension(project)
         BasePlugin.createLintClasspathConfiguration(project)
         withJavaPlugin(
@@ -80,7 +96,7 @@ open class LintPlugin : Plugin<Project> {
     }
 
     private fun createExtension(project: Project) {
-        lintOptions = project.extensions.create("lintOptions", LintOptions::class.java)
+        lintOptions = project.extensions.create("lintOptions", LintOptions::class.java, dslServices)
     }
 
     private fun withJavaPlugin(action: Action<Plugin<*>>) {
@@ -113,5 +129,22 @@ open class LintPlugin : Plugin<Project> {
             return null
         }
         return javaConvention
+    }
+
+    // Copied from BasePlugin
+    private fun createProjectServices(project: Project) {
+        val objectFactory = project.objects
+        val logger = project.logger
+        val projectPath = project.path
+        val projectOptions = ProjectOptions(project)
+        val syncIssueReporter =
+            SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger)
+        this.syncIssueReporter = syncIssueReporter
+        val deprecationReporter =
+            DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath)
+        projectServices = ProjectServices(
+            syncIssueReporter, deprecationReporter, objectFactory, project.logger,
+            project.providers, project.layout, projectOptions
+        ) { o: Any -> project.file(o) }
     }
 }

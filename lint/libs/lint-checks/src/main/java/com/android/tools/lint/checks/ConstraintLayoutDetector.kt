@@ -15,15 +15,19 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT
 import com.android.SdkConstants.ATTR_CONSTRAINT_LAYOUT_DESCRIPTION
+import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER
+import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_FLOW
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.CONSTRAINT_LAYOUT
+import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT
 import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID
 import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID
 import com.android.SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION
@@ -67,19 +71,17 @@ class ConstraintLayoutDetector : LayoutDetector() {
         val variant = context.mainProject.buildVariant
         var latestAvailable: GradleCoordinate? = null
         if (variant != null) {
-            val dependencies = variant.mainArtifact.dependencies
-            for (library in dependencies.direct) {
+            val dependencies = variant.mainArtifact.dependencies.compileDependencies
+            val library = dependencies.findLibrary(CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
+                ?: dependencies.findLibrary(ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
+            if (library != null) {
                 val rc = library.resolvedCoordinates
                 if (CONSTRAINT_LAYOUT_LIB_GROUP_ID == rc.groupId &&
                     CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId) {
                     if (latestAvailable == null) {
                         latestAvailable = getLatestVersion(context)
                     }
-                    val version = GradleCoordinate(
-                        CONSTRAINT_LAYOUT_LIB_GROUP_ID,
-                        CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID,
-                        rc.version
-                    )
+                    val version = GradleCoordinate(rc.groupId, rc.artifactId, rc.version)
                     if (COMPARE_PLUS_LOWER.compare(latestAvailable, version) > 0) {
                         val message = "Using version ${version.revision} of the constraint library, which is obsolete"
                         val fix = fix().data(ConstraintLayoutDetector::class.java)
@@ -101,8 +103,33 @@ class ConstraintLayoutDetector : LayoutDetector() {
             return
         }
 
-        // Ensure that all the children have been constrained horizontally and vertically
+        // Views that are constrained by Flow do not require additional constraint.
         var child = element.firstChild
+        // List of views that are Flow-constrained.
+        val flowList = ArrayList<String>()
+        while (child != null) {
+            if (child.nodeType != Node.ELEMENT_NODE) {
+                child = child.nextSibling
+                continue
+            }
+
+            val elementTagName = (child as Element).tagName
+            if (CLASS_CONSTRAINT_LAYOUT_FLOW.isEquals(elementTagName)) {
+                val attributes = child.attributes
+                for (i in 0 until attributes.length) {
+                    val attribute = attributes.item(i)
+                    val name = attribute.localName ?: continue
+                    val value = attribute.nodeValue
+                    if (name.contains("constraint_referenced_ids")){
+                        flowList.addAll(value.split(","))
+                    }
+                }
+            }
+            child = child.nextSibling
+        }
+
+        // Ensure that all the children have been constrained horizontally and vertically
+        child = element.firstChild
         while (child != null) {
             if (child.nodeType != Node.ELEMENT_NODE) {
                 child = child.nextSibling
@@ -134,6 +161,16 @@ class ConstraintLayoutDetector : LayoutDetector() {
             for (i in 0 until attributes.length) {
                 val attribute = attributes.item(i)
                 val name = attribute.localName ?: continue
+
+                // If the id is in the Flow, it's already constrained.
+                if (ATTR_ID == name) {
+                    val value = attribute.nodeValue.split("/").last()
+                    if (flowList.contains(value)) {
+                        isConstrainedHorizontally = true
+                        isConstrainedVertically = true
+                        break
+                    }
+                }
                 if (!name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) ||
                     name.endsWith("_creator")) {
                     continue
@@ -153,8 +190,8 @@ class ConstraintLayoutDetector : LayoutDetector() {
                     name.endsWith("toTopOf") ||
                     name.endsWith("toBottomOf") ||
                     name.endsWith("toCenterY") ||
-                    name.endsWith("toBaselineOf")
-                ) {
+                    name.endsWith("toBaselineOf"))
+                {
                     isConstrainedVertically = true
                     if (isConstrainedHorizontally) {
                         break

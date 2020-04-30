@@ -50,13 +50,19 @@ public class ApkParser {
         public final String fileName;
         public final String packageName;
         public final List<String> targetPackages;
+        public final List<String> isolatedServices;
 
         private ApkDetails(
-                String fileName, String packageName, int versionCode, List<String> targetPackages) {
+                String fileName,
+                String packageName,
+                int versionCode,
+                List<String> targetPackages,
+                List<String> isolatedServices) {
             this.fileName = fileName;
             this.packageName = packageName;
             this.versionCode = versionCode;
             this.targetPackages = targetPackages;
+            this.isolatedServices = isolatedServices;
         }
     }
 
@@ -99,14 +105,14 @@ public class ApkParser {
             zipEntries = readZipEntries(raf, map);
         }
         ApkDetails apkDetails = getApkDetails(absolutePath);
-
         Apk.Builder builder =
                 Apk.builder()
                         .setName(apkDetails.fileName)
                         .setChecksum(digest)
                         .setPath(absolutePath)
                         .setPackageName(apkDetails.packageName)
-                        .setTargetPackages(apkDetails.targetPackages);
+                        .setTargetPackages(apkDetails.targetPackages)
+                        .setIsolatedServices(apkDetails.isolatedServices);
 
         for (ZipUtils.ZipEntry entry : zipEntries) {
             builder.addApkEntry(entry);
@@ -248,6 +254,7 @@ public class ApkParser {
         String splitName = null;
         int versionCode = 0;
         List<String> targetPackages = new ArrayList<>();
+        List<String> isolatedServices = new ArrayList<>();
 
         XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
         for (Chunk chunk : xmlChunk.getChunks().values()) {
@@ -282,6 +289,22 @@ public class ApkParser {
                     }
                 }
             }
+
+            if (startChunk.getName().equals("service")) {
+                String name = "";
+                boolean isolatedProcess = false;
+                for (XmlAttribute attribute : startChunk.getAttributes()) {
+                    if (attribute.name().equals("name")) {
+                        name = attribute.rawValue();
+                    } else if (attribute.name().equals("isolatedProcess")) {
+                        isolatedProcess = attribute.typedValue().data() != 0;
+                    }
+                }
+
+                if (isolatedProcess) {
+                    isolatedServices.add(name);
+                }
+            }
         }
 
         if (packageName == null) {
@@ -289,6 +312,7 @@ public class ApkParser {
         }
 
         String apkFileName = splitName == null ? "base.apk" : "split_" + splitName + ".apk";
-        return new ApkDetails(apkFileName, packageName, versionCode, targetPackages);
+        return new ApkDetails(
+                apkFileName, packageName, versionCode, targetPackages, isolatedServices);
     }
 }

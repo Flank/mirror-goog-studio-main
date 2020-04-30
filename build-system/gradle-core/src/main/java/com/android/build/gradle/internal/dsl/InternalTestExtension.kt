@@ -25,13 +25,12 @@ import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 
 /** See [InternalCommonExtension] */
-interface InternalTestExtension:
+interface InternalTestExtension :
     TestExtension<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
         AndroidSourceSet,
-        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
@@ -54,6 +53,4 @@ interface InternalTestExtension:
                 DefaultConfig,
                 ProductFlavor,
                 TestVariant<TestVariantProperties>,
-                TestVariantProperties> {
-
-}
+                TestVariantProperties>

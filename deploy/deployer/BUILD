@@ -41,6 +41,7 @@ iml_module(
         "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:sqlite",
         "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:Objenesis[test]",
         "//tools/base/tracer:studio.android.sdktools.tracer[module]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/idea/.idea/libraries:studio-proto",

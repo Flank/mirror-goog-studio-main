@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getIdentifierFromFileName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
-import com.android.build.gradle.internal.tasks.mlkit.codegen.isRGBImage
 import com.android.tools.mlkit.TensorInfo
 import com.google.common.base.Strings
 import com.squareup.javapoet.FieldSpec
@@ -44,7 +43,7 @@ class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
         }
 
         // Add preprocessor and postprocessor fields.
-        if (isRGBImage(tensorInfo)) {
+        if (tensorInfo.isRGBImage) {
             val fieldName = FieldSpec.builder(
                 ClassNames.IMAGE_PROCESSOR,
                 getProcessorName(tensorInfo)

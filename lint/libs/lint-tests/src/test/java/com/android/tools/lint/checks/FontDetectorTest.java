@@ -90,7 +90,7 @@ public class FontDetectorTest extends AbstractCheckTest {
     public void testAppCompatVersion() {
         String expected =
                 ""
-                        + "res/font/font1.xml:2: Error: Using version 26.0.0-alpha7 of the appcompat-v7 library. Required version for using downloadable fonts: 26.0.0 or higher. [FontValidationError]\n"
+                        + "src/main/res/font/font1.xml:2: Error: Using version 26.0.0-alpha7 of the appcompat-v7 library. Required version for using downloadable fonts: 26.0.0 or higher. [FontValidationError]\n"
                         + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
                         + " ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -98,7 +98,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest().minSdk(25),
                         xml(
-                                "res/font/font1.xml",
+                                "src/main/res/font/font1.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"

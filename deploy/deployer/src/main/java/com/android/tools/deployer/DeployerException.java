@@ -19,6 +19,7 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Represents a failed deployment. When installing, apply changes or apply code changes failed, this
@@ -112,6 +113,12 @@ public class DeployerException extends Exception {
                 ResolutionAction.APPLY_CHANGES),
 
         // Errors pertaining to un-swappable changes.
+
+        ISOLATED_SERVICE_NOT_SUPPORTED(
+                "Applications with services in isolated processes cannot be swapped with Apply Changes.",
+                "The following service(s) are set to run in an isolated process: %s",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
 
         CLASS_NOT_FOUND(
                 "Class not found: %s",
@@ -370,6 +377,11 @@ public class DeployerException extends Exception {
 
     public static DeployerException entryNotFound(String fileName, String apkName) {
         return new DeployerException(Error.ENTRY_NOT_FOUND, NO_ARGS, fileName, apkName);
+    }
+
+    public static DeployerException isolatedServiceNotSupported(List<String> serviceNames) {
+        return new DeployerException(
+                Error.ISOLATED_SERVICE_NOT_SUPPORTED, NO_ARGS, String.join(", ", serviceNames));
     }
 
     public static DeployerException entryUnzipFailed(Throwable exception) {

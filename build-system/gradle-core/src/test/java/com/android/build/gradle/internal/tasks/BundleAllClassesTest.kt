@@ -21,6 +21,8 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -36,7 +38,6 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -46,6 +47,7 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
+import java.io.File
 
 class BundleAllClassesTest {
 
@@ -61,7 +63,6 @@ class BundleAllClassesTest {
     @Mock private lateinit var extension: BaseExtension
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var taskContainer: MutableTaskContainer
-    @Mock private lateinit var rClasses: FileCollection
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -111,11 +112,9 @@ class BundleAllClassesTest {
         task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(artifacts.getFinalProductAsFileCollection(InternalArtifactType
+        Mockito.`when`(artifacts.getFinalProduct(InternalArtifactType
             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(
-            project.provider {
-                rClasses
-            }
+            FakeGradleProvider(FakeGradleRegularFile(File("")))
         )
 
         Mockito.`when`(scope.jarCreatorType).thenReturn(JarCreatorType.JAR_FLINGER)

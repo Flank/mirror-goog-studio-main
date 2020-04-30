@@ -255,7 +255,8 @@ public class TestFiles {
                         + "\t<classpathentry kind=\"src\" path=\"gen\"/>\n"
                         + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.ANDROID_FRAMEWORK\"/>\n"
                         + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.LIBRARIES\"/>\n"
-                        + "\t<classpathentry kind=\"output\" path=\"bin/classes\"/>\n");
+                        + "\t<classpathentry kind=\"output\" path=\"bin/classes\"/>\n"
+                        + "\t<classpathentry kind=\"output\" path=\"build/intermediates/javac/debug/classes\"/>\n");
         for (String path : extraLibraries) {
             sb.append("\t<classpathentry kind=\"lib\" path=\"").append(path).append("\"/>\n");
         }

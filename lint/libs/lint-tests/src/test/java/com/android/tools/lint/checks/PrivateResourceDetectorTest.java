@@ -40,9 +40,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
 
     public static TestLintTask.GradleMockModifier mockModifier =
             (project, variant) -> {
-                // Null out the resolved coordinates in the result to simulate the
-                // observed failure in issue 226240
-                //noinspection ConstantConditions
                 Dependencies dependencies = variant.getMainArtifact().getDependencies();
                 AndroidLibrary library = dependencies.getLibraries().iterator().next();
 
@@ -90,7 +87,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
 
     private static final TestFile strings =
             xml(
-                    "res/values/strings.xml",
+                    "src/main/res/values/strings.xml",
                     ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
@@ -125,13 +122,13 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     public void testPrivateInXml() {
         String expected =
                 ""
-                        + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library:1.0.0 [PrivateResource]\n"
+                        + "src/main/res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library:1.0.0 [PrivateResource]\n"
                         + "            android:text=\"@string/my_private_string\" />\n"
                         + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         xml(
-                                "res/layout/private.xml",
+                                "src/main/res/layout/private.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -189,7 +186,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         // Regression test for https://code.google.com/p/android/issues/detail?id=221560
         lint().files(
                         xml(
-                                "res/layout/private2.xml",
+                                "src/main/res/layout/private2.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -214,21 +211,21 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     public void testOverride() {
         String expected =
                 ""
-                        + "res/layout/my_private_layout.xml: Warning: Overriding @layout/my_private_layout which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
-                        + "res/values/strings.xml:5: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "src/main/res/layout/my_private_layout.xml: Warning: Overriding @layout/my_private_layout which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "src/main/res/values/strings.xml:5: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                         + "    <string name=\"my_private_string\">String 1</string>\n"
                         + "                  ~~~~~~~~~~~~~~~~~\n"
-                        + "res/values/strings.xml:9: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "src/main/res/values/strings.xml:9: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                         + "    <item type=\"string\" name=\"my_private_string\">String 1</item>\n"
                         + "                              ~~~~~~~~~~~~~~~~~\n"
-                        + "res/values/strings.xml:12: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
+                        + "src/main/res/values/strings.xml:12: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library:1.0.0. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                         + "    <string tools:override=\"false\" name=\"my_private_string\">String 2</string>\n"
                         + "                                         ~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 4 warnings";
 
         lint().files(
                         xml(
-                                "res/values/strings.xml",
+                                "src/main/res/values/strings.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
@@ -245,8 +242,8 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                         + "    <string tools:override=\"true\" name=\"my_private_string\">String 2</string>\n"
                                         + "\n"
                                         + "</resources>\n"),
-                        xml("res/layout/my_private_layout.xml", "<LinearLayout/>"),
-                        xml("res/layout/my_public_layout.xml", "<LinearLayout/>"),
+                        xml("src/main/res/layout/my_private_layout.xml", "<LinearLayout/>"),
+                        xml("src/main/res/layout/my_public_layout.xml", "<LinearLayout/>"),
                         gradle(
                                 ""
                                         + "apply plugin: 'com.android.application'\n"
@@ -265,7 +262,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                         xml(
-                                "res/layout/private.xml",
+                                "src/main/res/layout/private.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

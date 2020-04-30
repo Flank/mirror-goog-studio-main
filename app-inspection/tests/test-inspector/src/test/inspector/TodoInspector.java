@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
+import java.nio.ByteBuffer;
 import java.util.*;
 import test.inspector.api.TestInspectorApi;
 import test.inspector.api.TodoInspectorApi;
@@ -138,6 +139,36 @@ public final class TodoInspector extends TestInspector {
 
         environment.registerExitHook(
                 classActivity,
+                "getByteItemsCount()B",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Byte count = (Byte) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_BYTE_ITEMS_COUNT
+                                                .toByteArrayWithArg(count));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "getShortItemsCount()S",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Short count = (Short) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_SHORT_ITEMS_COUNT
+                                                .toByteArrayWithArg(count.byteValue()));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
                 "getLongItemsCount()J",
                 new InspectorEnvironment.ExitHook<Object>() {
                     @Override
@@ -176,6 +207,57 @@ public final class TodoInspector extends TestInspector {
                                 .sendEvent(
                                         TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST
                                                 .toByteArrayWithArg((byte) (empty ? 1 : 0)));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "getActiveGroupTrailingChar()C",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Character trailing = (Character) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_GROUP_TRAILING_CHAR
+                                                .toByteArrayWithArg((byte) trailing.charValue()));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "getAverageItemCount()F",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Float avg = (Float) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_AVERAGE_ITEMS_COUNT
+                                                .toByteArrayWithArg(
+                                                        ByteBuffer.allocate(4)
+                                                                .putFloat(avg)
+                                                                .array()));
+                        return returnValue;
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "getDoubleAverageItemCount()D",
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        Double avg = (Double) returnValue;
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GOT_DOUBLE_AVERAGE_ITEMS_COUNT
+                                                .toByteArrayWithArg(
+                                                        ByteBuffer.allocate(8)
+                                                                .putDouble(avg)
+                                                                .array()));
                         return returnValue;
                     }
                 });

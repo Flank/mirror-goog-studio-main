@@ -185,12 +185,9 @@ public class AdbClient {
             Deploy.Arch curProc = getArch(pid);
             if (result == Deploy.Arch.ARCH_UNKNOWN) {
                 result = curProc;
-            } else {
-                if (curProc != Deploy.Arch.ARCH_UNKNOWN && result != curProc) {
-                    // TODO: Different message than normal dump?
-                    throw DeployerException.dumpMixedArch(
-                            String.format("Application running as %s an %s", result, curProc));
-                }
+            } else if (curProc != Deploy.Arch.ARCH_UNKNOWN && result != curProc) {
+                // We can't throw an exception here; this happens when you have a webview process.
+                logger.warning("Mixed ABIs detected: %s and %s", result, curProc);
             }
         }
         return result;

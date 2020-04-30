@@ -29,11 +29,8 @@ import com.android.utils.ILogger
 import com.google.common.io.Closer
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.api.services.BuildServiceRegistration
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
@@ -42,29 +39,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-
-private const val AAPT2_DAEMON_BUILD_SERVICE_NAME = "aapt2-daemon-build-service"
-
-/**
- * Registers aapt2 daemon build services. This makes it available for querying, by using
- * [getAapt2DaemonBuildService] method.
- */
-fun registerAapt2DaemonBuildService(project: Project) {
-    project.gradle.sharedServices.registerIfAbsent(
-        AAPT2_DAEMON_BUILD_SERVICE_NAME,
-        Aapt2DaemonBuildService::class.java
-    ) {}
-}
-
-/**
- * Returns registered instance of [Aapt2DaemonBuildService] that can be used to access AAPT2 daemon
- * instances.
- */
-@Suppress("UNCHECKED_CAST")
-fun getAapt2DaemonBuildService(project: Project): Provider<out Aapt2DaemonBuildService> =
-    (project.gradle.sharedServices.registrations.getByName(AAPT2_DAEMON_BUILD_SERVICE_NAME)
-            as BuildServiceRegistration<Aapt2DaemonBuildService, BuildServiceParameters.None>)
-        .service
 
 /**
  * Service registry used to store AAPT2 daemon services so they are accessible from the worker
@@ -140,6 +114,16 @@ abstract class Aapt2DaemonBuildService : BuildService<BuildServiceParameters.Non
 
     override fun close() {
         closer.close()
+    }
+
+    class RegistrationAction(project: Project) :
+        ServiceRegistrationAction<Aapt2DaemonBuildService, BuildServiceParameters.None>(
+            project,
+            Aapt2DaemonBuildService::class.java
+        ) {
+        override fun configure(parameters: BuildServiceParameters.None) {
+            // do nothing
+        }
     }
 }
 

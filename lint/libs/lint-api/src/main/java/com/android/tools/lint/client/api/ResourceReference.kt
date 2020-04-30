@@ -25,11 +25,13 @@ import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.stripIdPrefix
 import com.google.common.base.Joiner
 import com.intellij.psi.PsiArrayType
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -38,7 +40,6 @@ import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.asQualifiedPath
-import org.jetbrains.uast.getContainingClass
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getQualifiedParentOrThis
 import org.jetbrains.uast.java.JavaUDeclarationsExpression
@@ -70,7 +71,7 @@ class ResourceReference(
 
             var packageNameFromResolved: String? = null
 
-            val containingClass = expression.resolve()?.getContainingClass()
+            val containingClass = PsiTreeUtil.getParentOfType(expression.resolve(), PsiClass::class.java)
             if (containingClass != null) {
                 val containingClassFqName = containingClass.qualifiedName
                 if (containingClassFqName != null) {

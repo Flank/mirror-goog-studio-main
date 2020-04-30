@@ -547,6 +547,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 + BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM
                                         .getPropertyName());
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
+                // TODO(b/155306123): move the project options into task input.
                 task.testRunnerFactory =
                         (splitSelectExec, processExecutor, javaProcessExecutor) ->
                                 new UtpTestRunner(
@@ -555,7 +556,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                         javaProcessExecutor,
                                         task.getExecutorServiceAdapter(),
                                         project.getConfigurations(),
-                                        globalScope.getSdkComponents());
+                                        globalScope.getSdkComponents(),
+                                        projectOptions.get(
+                                                BooleanOption.ANDROID_TEST_USES_RETENTION));
             } else {
                 boolean shardBetweenDevices =
                         projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);

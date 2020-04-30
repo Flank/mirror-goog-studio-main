@@ -27,7 +27,7 @@ import org.gradle.api.Incubating
  * @see [ProductFlavor]
  */
 @Incubating
-interface DefaultConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
-    BaseFlavor<AnnotationProcessorOptionsT> {
+interface DefaultConfig :
+    BaseFlavor {
     // TODO(b/140406102)
 }

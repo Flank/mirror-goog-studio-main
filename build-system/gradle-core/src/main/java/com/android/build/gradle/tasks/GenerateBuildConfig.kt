@@ -24,9 +24,14 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
+import com.android.builder.compiling.BuildConfigByteCodeGenerator
+import com.android.builder.compiling.BuildConfigCreator
+import com.android.builder.compiling.BuildConfigData
 import com.android.builder.compiling.BuildConfigGenerator
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -36,6 +41,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -46,7 +52,12 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     // ----- PUBLIC TASK API -----
 
     @get:OutputDirectory
+    @get:Optional
     abstract val sourceOutputDir: DirectoryProperty
+
+    @get:OutputFile
+    @get:Optional
+    abstract val bytecodeOutputFolder: RegularFileProperty
 
     // ----- PRIVATE TASK API -----
 
@@ -93,6 +104,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     @get:Input
     abstract val items: MapProperty<String, BuildConfigField>
 
+    @get:Input
+    abstract val outputAsBytecode: Property<Boolean>
+
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -101,79 +115,89 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     override fun doTaskAction() {
         // must clear the folder in case the packagename changed, otherwise,
         // there'll be two classes.
-        val destinationDir = sourceOutputDir.get().asFile
-        FileUtils.cleanOutputDir(destinationDir)
-
-        val generator = BuildConfigGenerator(
-            sourceOutputDir.get().asFile,
-            buildConfigPackageName.get()
-        )
-
-        // Hack (see IDEA-100046): We want to avoid reporting "condition is always true"
-        // from the data flow inspection, so use a non-constant value. However, that defeats
-        // the purpose of this flag (when not in debug mode, if (BuildConfig.DEBUG && ...) will
-        // be completely removed by the compiler), so as a hack we do it only for the case
-        // where debug is true, which is the most likely scenario while the user is looking
-        // at source code.
-        // map.put(PH_DEBUG, Boolean.toString(mDebug));
-
-        generator.addField(
-            "boolean", "DEBUG", if (debuggable.get()) "Boolean.parseBoolean(\"true\")" else "false"
-        )
-
-        if (isLibrary) {
-            generator
-                .addField(
-                    "String",
-                    "LIBRARY_PACKAGE_NAME",
-                    """"${buildConfigPackageName.get()}""""
-                )
-        } else {
-            generator.addField(
-                "String",
-                "APPLICATION_ID",
-                """"${appPackageName.get()}""""
-            )
+        if (sourceOutputDir.isPresent) {
+            val destinationDir = sourceOutputDir.get().asFile
+            FileUtils.cleanOutputDir(destinationDir)
         }
 
-        buildTypeName.orNull?.let {
-            generator.addField("String", "BUILD_TYPE", """"$it"""")
-        }
+        val itemsToGenerate = items.get()
 
-        flavorName.get().let {
-            if (it.isNotEmpty()) {
-                generator.addField("String", "FLAVOR", """"$it"""")
-            }
-        }
+        val buildConfigData = BuildConfigData.Builder()
+                .setBuildConfigPackageName(buildConfigPackageName.get())
+                .apply {
+                    if (!outputAsBytecode.get() || !itemsToGenerate.none()) {
+                        // Hack (see IDEA-100046): We want to avoid reporting "condition is always
+                        // true" from the data flow inspection, so use a non-constant value.
+                        // However, that defeats the purpose of this flag (when not in debug mode,
+                        // if (BuildConfig.DEBUG && ...) will be completely removed by
+                        // the compiler), so as a hack we do it only for the case where debug is
+                        // true, which is the most likely scenario while the user is looking
+                        // at source code. map.put(PH_DEBUG, Boolean.toString(mDebug));
+                        addBooleanDebugField("DEBUG",
+                                if (debuggable.get()) {
+                                    "Boolean.parseBoolean(\"true\")"
+                                } else {
+                                    "false"
+                                }
+                        )
+                    }
 
-        val flavors = flavorNamesWithDimensionNames.get()
-        val count = flavors.size
-        if (count > 1) {
-            var i = 0
-            while (i < count) {
-                generator.addField(
-                    "String",
-                    """FLAVOR_${flavors[i + 1]}""",
-                    """"${flavors[i]}""""
-                )
-                i += 2
-            }
-        }
+                    if (isLibrary) {
+                        addStringField("LIBRARY_PACKAGE_NAME", buildConfigPackageName.get())
+                    } else {
+                        addStringField("APPLICATION_ID", appPackageName.get())
+                    }
+                    buildTypeName.orNull?.let {
+                        addStringField("BUILD_TYPE", it)
+                    }
+                    flavorName.get().let {
+                        if (it.isNotEmpty()) {
+                            addStringField("FLAVOR", it)
+                        }
+                    }
+                    val flavors = flavorNamesWithDimensionNames.get()
+                    val count = flavors.size
+                    if (count > 1) {
+                        var i = 0
+                        while (i < count) {
+                            addStringField(
+                                    "FLAVOR_${flavors[i + 1]}",
+                                    "${flavors[i]}"
+                            )
+                            i += 2
+                        }
+                    }
+                    if (hasVersionInfo.get()) {
+                        versionCode.orNull?.let {
+                            addIntField("VERSION_CODE", it)
+                            addStringField("VERSION_NAME", "${versionName.getOrElse("")}")
+                        }
+                    }
+                }
 
-        if (hasVersionInfo.get()) {
-            generator.addField("int", "VERSION_CODE", versionCode.getOrElse(1).toString())
-            generator
-                .addField(
-                    "String",
-                    "VERSION_NAME",
-                    """"${versionName.getOrElse("")}""""
-                )
-        }
+        val generator: BuildConfigCreator =
+                if (outputAsBytecode.get() && itemsToGenerate.none()) {
+                    val byteCodeBuildConfigData = buildConfigData
+                            .setOutputPath(bytecodeOutputFolder.get().asFile.toPath())
+                            .addBooleanField("DEBUG", debuggable.get())
+                            .build()
+                    BuildConfigByteCodeGenerator(byteCodeBuildConfigData)
 
-        // user generated items, order them by field name so generation is stable.
-        items.get().toSortedMap().forEach { (name, buildConfigField) ->
-            generator.addField(buildConfigField.type, name, buildConfigField.value, buildConfigField.comment)
-        }
+                } else {
+                    val sourceCodeBuildConfigData = buildConfigData
+                            .setOutputPath(sourceOutputDir.get().asFile.toPath())
+                            .apply {
+                                // user generated items, order them by field name so generation
+                                // is stable.
+                                itemsToGenerate.toSortedMap().forEach { (name, buildConfigField)
+                                    ->
+                                    addItem(buildConfigField.type, name, buildConfigField.value,
+                                            buildConfigField.comment)
+                                }
+                            }
+                            .build()
+                    BuildConfigGenerator(sourceCodeBuildConfigData)
+                }
 
         generator.generate()
     }
@@ -193,12 +217,23 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             taskProvider: TaskProvider<out GenerateBuildConfig>
         ) {
             super.handleProvider(taskProvider)
+            val outputBytecode = creationConfig.services.projectOptions
+                    .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
+            val generateItems = creationConfig.variantDslInfo.getBuildConfigFields().none()
             creationConfig.taskContainer.generateBuildConfigTask = taskProvider
-            creationConfig.operations.setInitialProvider(
-                taskProvider,
-                GenerateBuildConfig::sourceOutputDir
-            ).atLocation(creationConfig.paths.buildConfigSourceOutputDir.canonicalPath)
-                .on(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
+            if (outputBytecode && generateItems) {
+                creationConfig.operations.setInitialProvider(
+                                taskProvider,
+                                GenerateBuildConfig::bytecodeOutputFolder
+                        ).withName("BuildConfig.jar")
+                        .on(InternalArtifactType.COMPILE_BUILD_CONFIG_JAR)
+            } else {
+                creationConfig.operations.setInitialProvider(
+                                taskProvider,
+                                GenerateBuildConfig::sourceOutputDir
+                        ).atLocation(creationConfig.paths.buildConfigSourceOutputDir.canonicalPath)
+                        .on(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
+            }
         }
 
         override fun configure(
@@ -240,6 +275,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             if (creationConfig is VariantCreationConfig) {
                 task.items.set(creationConfig.buildConfigFields)
             }
+
+            task.outputAsBytecode.setDisallowChanges(creationConfig.services.projectOptions
+                    .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE))
 
             if (creationConfig.variantType.isTestComponent) {
                 creationConfig.operations.setTaskInputToFinalProduct(

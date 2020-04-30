@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl
 
-enum class MaterialColor(val colorName: String, val color: String) {
-  GRAY_400("gray_400", "#BDBDBD"),
-  GRAY_600("gray_600", "#757575"),
-  LIGHT_BLUE_50("light_blue_50", "#E1F5FE"),
-  LIGHT_BLUE_200("light_blue_200", "#81D4FA"),
-  LIGHT_BLUE_400("light_blue_400", "#29B6F6"),
-  LIGHT_BLUE_600("light_blue_600", "#039BE5"),
-  LIGHT_BLUE_900("light_blue_900", "#01579B"),
-  LIGHT_BLUE_A200("light_blue_A200", "#40C4FF"),
-  LIGHT_BLUE_A400("light_blue_A400", "#00B0FF");
+package com.android.builder.compiling
 
-  fun xmlElement(): String = """<color name="$colorName">$color</color>"""
+/**
+ * BuildConfigType values describe the existence & format of a BuildConfig class.
+ */
+enum class BuildConfigType {
+    // BuildConfig is represented by a Jar file containing a compiled BuildConfig .class file.
+    JAR,
+    // BuildConfig is represented by a Java source file class.
+    JAVA_CLASS,
+    // No BuildConfig exists.
+    NONE
 }

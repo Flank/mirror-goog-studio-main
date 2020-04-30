@@ -548,18 +548,12 @@ public class MergingLogPersistUtil {
             @NonNull File folder,
             @NonNull String shard) {
         Map<SourceFile, SourceFile> fileMap = Maps.newConcurrentMap();
-        JsonReader reader;
         File file = getSingleFile(folder, shard);
         if (!file.exists()) {
             return fileMap;
         }
-        try {
-            reader = new JsonReader(Files.newReader(file, Charsets.UTF_8));
-        } catch (FileNotFoundException e) {
-            // Shouldn't happen unless it disappears under us.
-            return fileMap;
-        }
-        try {
+
+        try (JsonReader reader = new JsonReader(Files.newReader(file, Charsets.UTF_8))) {
             reader.beginArray();
             while (reader.peek() != JsonToken.END_ARRAY) {
                 reader.beginObject();
@@ -580,15 +574,12 @@ public class MergingLogPersistUtil {
             }
             reader.endArray();
             return fileMap;
+        } catch (FileNotFoundException e) {
+            // Shouldn't happen unless it disappears under us.
+            return fileMap;
         } catch (IOException e) {
             // TODO: trigger a non-incremental merge if this happens.
             throw new RuntimeException(e);
-        } finally {
-            try {
-                reader.close();
-            } catch (Throwable e) {
-                // well, we tried.
-            }
         }
     }
 }

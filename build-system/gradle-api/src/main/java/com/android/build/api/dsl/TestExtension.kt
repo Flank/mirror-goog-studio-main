@@ -32,19 +32,18 @@ interface TestExtension<
         AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
-        AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
+        BuildTypeT : TestBuildType<SigningConfigT>,
         CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
-        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
+        DefaultConfigT : TestDefaultConfig<SigningConfigT>,
         DensitySplitT : DensitySplit,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
         NdkBuildT : NdkBuild,
         PackagingOptionsT : PackagingOptions,
-        ProductFlavorT : ProductFlavor<AnnotationProcessorOptionsT>,
+        ProductFlavorT : TestProductFlavor<SigningConfigT>,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
         TestOptionsT : TestOptions<UnitTestOptionsT>,
@@ -54,7 +53,6 @@ interface TestExtension<
             AbiSplitT,
             AdbOptionsT,
             AndroidSourceSetT,
-            AnnotationProcessorOptionsT,
             TestBuildFeatures,
             BuildTypeT,
             CMakeT,
@@ -79,5 +77,4 @@ interface TestExtension<
      * The Gradle path of the project that this test project tests.
      */
     var targetProjectPath: String?
-
 }

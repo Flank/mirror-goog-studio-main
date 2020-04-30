@@ -59,8 +59,8 @@ public abstract class IdeLibrary implements Library, Serializable {
         myName =
                 IdeModel.copyNewProperty(
                         library::getName, null); // Library.getName() was added in 2.2
-        myProvided = IdeModel.copyNewProperty(library::isProvided, null);
-        myIsSkipped = IdeModel.copyNewProperty(library::isSkipped, null);
+        myProvided = IdeModel.copyNewProperty(library::isProvided, false);
+        myIsSkipped = IdeModel.copyNewProperty(library::isSkipped, false);
         hashCode = calculateHashCode();
     }
 

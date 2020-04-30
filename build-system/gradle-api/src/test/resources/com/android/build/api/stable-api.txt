@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-f5d15d42895b6375c5000ecf6b58ec04b9b026b3540df35f6e1dc6a36a935d2b
+373ab8dee1744108b2003277d0a360024d1d2564dae6262c58a10066ba26879f
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -53,6 +53,7 @@ com.android.build.api.transform.QualifiedContent.getScopes: java.util.Set<? supe
 com.android.build.api.transform.SecondaryFile
 com.android.build.api.transform.SecondaryFile.<init>: com.android.build.api.transform.SecondaryFile (java.io.File, boolean)
 com.android.build.api.transform.SecondaryFile.getFile: java.io.File ()
+com.android.build.api.transform.SecondaryFile.getFileCollection: org.gradle.api.file.FileCollection ()
 com.android.build.api.transform.SecondaryFile.getFileCollection: org.gradle.api.file.FileCollection (org.gradle.api.Project)
 com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (java.io.File)
 com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (java.util.function.Supplier<org.gradle.api.file.FileCollection>)

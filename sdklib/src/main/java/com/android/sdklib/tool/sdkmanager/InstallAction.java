@@ -57,7 +57,7 @@ class InstallAction extends SdkPackagesAction {
         for (String path : getPaths(getRepoManager())) {
             RemotePackage p = getRepoManager().getPackages().getRemotePackages().get(path);
             if (p == null) {
-                progress.logWarning("Failed to find package " + path);
+                progress.logWarning("Failed to find package '" + path + "'");
                 throw new SdkManagerCli.CommandFailedException();
             }
             remotes.add(p);

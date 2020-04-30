@@ -38,7 +38,7 @@ class LookupSettingFromModelKtTest {
     fun `ensure all macros have have a corresponding lookup`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties, it.cmakeFinder)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)
@@ -62,7 +62,7 @@ class LookupSettingFromModelKtTest {
     fun `ensure all macros example values are accurate`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties, it.cmakeFinder)!!
             // Create the ninja executable files so that the macro expansion can succeed
             module.cmake!!.cmakeExe.parentFile.apply { mkdirs() }.apply {
                 resolve("ninja").writeText("whatever")

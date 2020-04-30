@@ -19,9 +19,18 @@ package com.android.tools.lint.model
 import java.io.File
 
 interface LmArtifact {
-    val name: String
     val dependencies: LmDependencies
-    val classFolders: List<File>
+    val classOutputs: List<File>
+
+    /**
+     * Finds the library with the given [mavenName] (group id and artifact id)
+     * in any transitive compile-dependency.
+     *
+     * Convenience method for accessing the compile dependencies and then looking up
+     * the library there, since this is a very common operation.
+     */
+    fun findCompileDependency(mavenName: String): LmLibrary? =
+        dependencies.compileDependencies.findLibrary(mavenName, direct = false)
 }
 
 interface LmJavaArtifact : LmArtifact
@@ -33,30 +42,25 @@ interface LmAndroidArtifact : LmArtifact {
 }
 
 open class DefaultLmArtifact(
-    override val name: String,
     override val dependencies: LmDependencies,
-    override val classFolders: List<File>
+    override val classOutputs: List<File>
 ) : LmArtifact
 
 class DefaultLmJavaArtifact(
-    name: String,
     classFolders: List<File>,
     dependencies: LmDependencies
 ) : DefaultLmArtifact(
-    name = name,
     dependencies = dependencies,
-    classFolders = classFolders
+    classOutputs = classFolders
 ), LmJavaArtifact
 
 class DefaultLmAndroidArtifact(
-    name: String,
     override val applicationId: String,
     override val generatedResourceFolders: Collection<File>,
     override val generatedSourceFolders: Collection<File>,
-    classFolders: List<File>,
+    classOutputs: List<File>,
     dependencies: LmDependencies
 ) : DefaultLmArtifact(
-    name = name,
     dependencies = dependencies,
-    classFolders = classFolders
+    classOutputs = classOutputs
 ), LmAndroidArtifact

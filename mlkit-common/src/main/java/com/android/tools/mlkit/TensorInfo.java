@@ -16,9 +16,15 @@
 
 package com.android.tools.mlkit;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Strings;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.FloatBuffer;
-import org.tensorflow.lite.schema.Tensor;
+import java.util.Arrays;
+import java.util.Objects;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
 import org.tensorflow.lite.support.metadata.schema.Content;
 import org.tensorflow.lite.support.metadata.schema.ContentProperties;
@@ -37,14 +43,15 @@ public class TensorInfo {
     private static final String DEFAULT_OUTPUT_NAME = "outputFeature";
 
     public enum DataType {
-        FLOAT32(0),
-        INT32(2),
-        UINT8(3),
-        INT64(4);
+        UNKNOWN((byte) -1),
+        FLOAT32((byte) 0),
+        INT32((byte) 2),
+        UINT8((byte) 3),
+        INT64((byte) 4);
 
-        private final int id;
+        private final byte id;
 
-        DataType(int id) {
+        DataType(byte id) {
             this.id = id;
         }
 
@@ -54,23 +61,39 @@ public class TensorInfo {
                     return type;
                 }
             }
-            return null;
+            return UNKNOWN;
         }
     }
 
     public enum Source {
-        INPUT,
-        OUTPUT
+        UNKNOWN((byte) 0),
+        INPUT((byte) 1),
+        OUTPUT((byte) 2);
+
+        private final byte id;
+
+        Source(byte id) {
+            this.id = id;
+        }
+
+        public static Source fromByte(byte id) {
+            for (Source source : values()) {
+                if (source.id == id) {
+                    return source;
+                }
+            }
+            return UNKNOWN;
+        }
     }
 
     public enum FileType {
-        UNKNOWN(0),
-        DESCRIPTIONS(1),
-        TENSOR_AXIS_LABELS(2);
+        UNKNOWN((byte) 0),
+        DESCRIPTIONS((byte) 1),
+        TENSOR_AXIS_LABELS((byte) 2);
 
-        private int id;
+        private final byte id;
 
-        FileType(int id) {
+        FileType(byte id) {
             this.id = id;
         }
 
@@ -80,18 +103,18 @@ public class TensorInfo {
                     return type;
                 }
             }
-            return null;
+            return UNKNOWN;
         }
     }
 
     public enum ContentType {
-        UNKNOWN(0),
-        FEATURE(1),
-        IMAGE(2);
+        UNKNOWN((byte) 0),
+        FEATURE((byte) 1),
+        IMAGE((byte) 2);
 
-        private int id;
+        private final byte id;
 
-        ContentType(int id) {
+        ContentType(byte id) {
             this.id = id;
         }
 
@@ -101,53 +124,159 @@ public class TensorInfo {
                     return type;
                 }
             }
-            return null;
+            return UNKNOWN;
         }
     }
 
-    private String name;
-    private int[] shape;
-    private DataType dataType;
-    private String fileName;
-    private FileType fileType;
-    private Source source;
-    private ContentType contentType;
-    private String description;
-    private boolean metadataExisted;
-    private MetadataExtractor.NormalizationParams normalizationParams;
-    private MetadataExtractor.QuantizationParams quantizationParams;
-    @Nullable private ImageProperties imageProperties;
+    // Infos from model itself.
+    private final Source source;
+    private final int index;
+    private final DataType dataType;
+    private final int[] shape;
+    private final MetadataExtractor.QuantizationParams quantizationParams;
 
-    public String getName() {
-        return name;
+    // Infos from model metadata.
+    private final boolean metadataExisted;
+    private final String name;
+    private final String identifierName;
+    private final String description;
+    private final ContentType contentType;
+    private final String fileName;
+    private final FileType fileType;
+    private final MetadataExtractor.NormalizationParams normalizationParams;
+    @Nullable private final ImageProperties imageProperties;
+
+    public TensorInfo(
+            Source source,
+            int index,
+            DataType dataType,
+            int[] shape,
+            MetadataExtractor.QuantizationParams quantizationParams,
+            boolean metadataExisted,
+            String name,
+            String description,
+            ContentType contentType,
+            String fileName,
+            FileType fileType,
+            MetadataExtractor.NormalizationParams normalizationParams,
+            @Nullable ImageProperties imageProperties) {
+        this.source = source;
+        this.index = index;
+        this.dataType = dataType;
+        this.shape = shape;
+        this.quantizationParams = quantizationParams;
+        this.metadataExisted = metadataExisted;
+        this.name = name;
+        this.description = description;
+        this.contentType = contentType;
+        this.fileName = fileName;
+        this.fileType = fileType;
+        this.normalizationParams = normalizationParams;
+        this.imageProperties = imageProperties;
+
+        this.identifierName = MlkitNames.computeIdentifierName(name, getDefaultName(source, index));
     }
 
-    public int[] getShape() {
-        return shape;
+    public TensorInfo(@NonNull DataInput in) throws IOException {
+        // Read infos from model itself.
+        source = Source.fromByte(in.readByte());
+        index = in.readInt();
+        dataType = DataType.fromByte(in.readByte());
+        shape = DataInputOutputUtils.readIntArray(in);
+        quantizationParams = new MetadataExtractor.QuantizationParams(in);
+
+        // Read infos from model metadata.
+        metadataExisted = in.readBoolean();
+        name = in.readUTF();
+        description = in.readUTF();
+        contentType = ContentType.fromByte(in.readByte());
+        fileName = in.readUTF();
+        fileType = FileType.fromByte(in.readByte());
+        normalizationParams = new MetadataExtractor.NormalizationParams(in);
+        imageProperties = in.readBoolean() ? new ImageProperties(in) : null;
+
+        identifierName = MlkitNames.computeIdentifierName(name, getDefaultName(source, index));
     }
 
-    public DataType getDataType() {
-        return dataType;
+    public void save(@NonNull DataOutput out) throws IOException {
+        // Save infos from model itself.
+        out.write(source.id);
+        out.writeInt(index);
+        out.write(dataType.id);
+        DataInputOutputUtils.writeIntArray(out, shape);
+        quantizationParams.save(out);
+
+        // Save infos from model metadata.
+        out.writeBoolean(metadataExisted);
+        out.writeUTF(name);
+        out.writeUTF(description);
+        out.write(contentType.id);
+        out.writeUTF(fileName);
+        out.write(fileType.id);
+        normalizationParams.save(out);
+        out.writeBoolean(imageProperties != null);
+        if (imageProperties != null) {
+            imageProperties.save(out);
+        }
     }
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public FileType getFileType() {
-        return fileType;
-    }
-
+    @NonNull
     public Source getSource() {
         return source;
     }
 
+    @NonNull
+    public DataType getDataType() {
+        return dataType;
+    }
+
+    @NonNull
+    public int[] getShape() {
+        return shape;
+    }
+
+    @NonNull
+    public MetadataExtractor.QuantizationParams getQuantizationParams() {
+        return quantizationParams;
+    }
+
+    public boolean isMetadataExisted() {
+        return metadataExisted;
+    }
+
+    @NonNull
+    public String getName() {
+        return name;
+    }
+
+    @NonNull
+    public String getIdentifierName() {
+        return identifierName;
+    }
+
+    @NonNull
+    public String getDescription() {
+        return description;
+    }
+
+    @NonNull
     public ContentType getContentType() {
         return contentType;
     }
 
-    public String getDescription() {
-        return description;
+    @NonNull
+    public String getFileName() {
+        return fileName;
+    }
+
+    @NonNull
+    public FileType getFileType() {
+        return fileType;
+    }
+
+    @NonNull
+    public MetadataExtractor.NormalizationParams getNormalizationParams() {
+        return normalizationParams;
     }
 
     @Nullable
@@ -155,81 +284,110 @@ public class TensorInfo {
         return imageProperties;
     }
 
-    public boolean isMetadataExisted() {
-        return metadataExisted;
+    public boolean isRGBImage() {
+        return imageProperties != null
+                && imageProperties.colorSpaceType == ImageProperties.ColorSpaceType.RGB;
     }
 
-    public MetadataExtractor.NormalizationParams getNormalizationParams() {
-        return normalizationParams;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TensorInfo that = (TensorInfo) o;
+        return index == that.index
+                && source == that.source
+                && dataType == that.dataType
+                && Arrays.equals(shape, that.shape)
+                && Objects.equals(quantizationParams, that.quantizationParams)
+                && metadataExisted == that.metadataExisted
+                && name.equals(that.name)
+                && description.equals(that.description)
+                && contentType == that.contentType
+                && fileName.equals(that.fileName)
+                && fileType == that.fileType
+                && Objects.equals(normalizationParams, that.normalizationParams)
+                && Objects.equals(imageProperties, that.imageProperties);
     }
 
-    public MetadataExtractor.QuantizationParams getQuantizationParams() {
-        return quantizationParams;
+    @Override
+    public int hashCode() {
+        return Objects.hash(source, index, dataType, metadataExisted, name, description);
     }
 
-    public static class Builder {
-        private String name = "";
+    private static class Builder {
+        private Source source = Source.UNKNOWN;
+        private int index;
+        private DataType dataType = DataType.UNKNOWN;
         private int[] shape;
-        private DataType dataType;
-        private String fileName;
-        private FileType fileType = FileType.UNKNOWN;
-        private Source source;
-        private ContentType contentType = ContentType.UNKNOWN;
-        private String description = "";
-        private boolean metadataExisted;
-        private MetadataExtractor.NormalizationParams normalizationParams;
         private MetadataExtractor.QuantizationParams quantizationParams;
+        private boolean metadataExisted;
+        private String name = "";
+        private String description = "";
+        private ContentType contentType = ContentType.UNKNOWN;
+        private String fileName = "";
+        private FileType fileType = FileType.UNKNOWN;
+        @Nullable private MetadataExtractor.NormalizationParams normalizationParams;
         @Nullable private ImageProperties imageProperties;
 
-        public Builder setName(String name) {
-            this.name = name;
+        private Builder setSource(Source source) {
+            this.source = source;
             return this;
         }
 
-        public Builder setShape(int[] shape) {
-            this.shape = shape;
+        private Builder setIndex(int index) {
+            this.index = index;
             return this;
         }
 
-        public Builder setDataType(DataType dataType) {
+        private Builder setDataType(DataType dataType) {
             this.dataType = dataType;
             return this;
         }
 
-        public Builder setFileName(String fileName) {
-            this.fileName = fileName;
+        private Builder setShape(int[] shape) {
+            this.shape = shape;
             return this;
         }
 
-        public Builder setFileType(FileType fileType) {
-            this.fileType = fileType;
+        private Builder setQuantizationParams(
+                MetadataExtractor.QuantizationParams quantizationParams) {
+            this.quantizationParams = quantizationParams;
             return this;
         }
 
-        public Builder setContentType(ContentType contentType) {
-            this.contentType = contentType;
-            return this;
-        }
-
-        public Builder setDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder setMetadataExisted(boolean metadataExisted) {
+        private Builder setMetadataExisted(boolean metadataExisted) {
             this.metadataExisted = metadataExisted;
             return this;
         }
 
-        public Builder setNormalizationParams(
-                MetadataExtractor.NormalizationParams normalizationParams) {
-            this.normalizationParams = normalizationParams;
+        private Builder setName(String name) {
+            this.name = name;
             return this;
         }
 
-        public Builder setQuantizationParams(
-                MetadataExtractor.QuantizationParams quantizationParams) {
-            this.quantizationParams = quantizationParams;
+        private Builder setDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
+        private Builder setContentType(ContentType contentType) {
+            this.contentType = contentType;
+            return this;
+        }
+
+        private Builder setFileName(String fileName) {
+            this.fileName = fileName;
+            return this;
+        }
+
+        private Builder setFileType(FileType fileType) {
+            this.fileType = fileType;
+            return this;
+        }
+
+        private Builder setNormalizationParams(
+                MetadataExtractor.NormalizationParams normalizationParams) {
+            this.normalizationParams = normalizationParams;
             return this;
         }
 
@@ -238,71 +396,70 @@ public class TensorInfo {
             return this;
         }
 
-        public Builder setSource(Source source) {
-            this.source = source;
-            return this;
-        }
-
-        public TensorInfo build() {
-            TensorInfo tensorInfo = new TensorInfo();
-            tensorInfo.name = name;
-            tensorInfo.shape = shape;
-            tensorInfo.dataType = dataType;
-            tensorInfo.fileName = fileName;
-            tensorInfo.fileType = fileType;
-            tensorInfo.source = source;
-            tensorInfo.contentType = contentType;
-            tensorInfo.description = description;
-            tensorInfo.metadataExisted = metadataExisted;
-            tensorInfo.normalizationParams = normalizationParams;
-            tensorInfo.quantizationParams = quantizationParams;
-            tensorInfo.imageProperties = imageProperties;
-
-            return tensorInfo;
+        private TensorInfo build() {
+            return new TensorInfo(
+                    source,
+                    index,
+                    dataType,
+                    shape,
+                    quantizationParams,
+                    metadataExisted,
+                    name,
+                    description,
+                    contentType,
+                    fileName,
+                    fileType,
+                    normalizationParams != null
+                            ? normalizationParams
+                            : new MetadataExtractor.NormalizationParams(
+                                    toFloatBuffer(0),
+                                    toFloatBuffer(1),
+                                    toFloatBuffer(Float.MIN_VALUE),
+                                    toFloatBuffer(Float.MAX_VALUE)),
+                    imageProperties);
         }
     }
 
     public static TensorInfo parseFrom(MetadataExtractor extractor, Source source, int index) {
         TensorInfo.Builder builder = new TensorInfo.Builder();
+        builder.setSource(source).setIndex(index);
 
         // Deal with data from original model
         if (source == Source.INPUT) {
-            builder.setShape(extractor.getInputTensorShape(0, index));
-            builder.setDataType(DataType.fromByte(extractor.getInputTensorType(0, index)));
+            builder.setDataType(DataType.fromByte(extractor.getInputTensorType(index)))
+                    .setShape(extractor.getInputTensorShape(index))
+                    .setQuantizationParams(
+                            MetadataExtractor.getQuantizationParams(
+                                    extractor.getInputTensor(index)));
         } else {
-            builder.setShape(extractor.getOutputTensorShape(0, index));
-            builder.setDataType(DataType.fromByte(extractor.getOutputTensorType(0, index)));
+            builder.setDataType(DataType.fromByte(extractor.getOutputTensorType(index)))
+                    .setShape(extractor.getOutputTensorShape(index))
+                    .setQuantizationParams(
+                            MetadataExtractor.getQuantizationParams(
+                                    extractor.getOutputTensor(index)));
         }
-        builder.setSource(source);
 
         // Deal with data from extra metadata
         ModelMetadata metadata = extractor.getModelMetaData();
         if (metadata == null) {
             builder.setMetadataExisted(false);
-            builder.setName(getDefaultName(source, index));
         } else {
             builder.setMetadataExisted(true);
+
             TensorMetadata tensorMetadata =
                     source == Source.INPUT
                             ? metadata.subgraphMetadata(0).inputTensorMetadata(index)
                             : metadata.subgraphMetadata(0).outputTensorMetadata(index);
-            Tensor tensor =
-                    source == Source.INPUT
-                            ? extractor.getInputTensor(0, index)
-                            : extractor.getOutputTensor(0, index);
+
+            builder.setName(Strings.nullToEmpty(tensorMetadata.name()))
+                    .setDescription(Strings.nullToEmpty(tensorMetadata.description()))
+                    .setContentType(extractContentType(tensorMetadata));
 
             AssociatedFile file = tensorMetadata.associatedFiles(0);
             if (file != null) {
-                builder.setFileName(file.name());
-                builder.setFileType(FileType.fromByte(file.type()));
+                builder.setFileName(Strings.nullToEmpty(file.name()))
+                        .setFileType(FileType.fromByte(file.type()));
             }
-
-            builder.setContentType(extractContentType(tensorMetadata));
-            builder.setName(
-                    MlkitNames.computeIdentifierName(
-                            tensorMetadata.name(), getDefaultName(source, index)));
-            builder.setDescription(tensorMetadata.description());
-            builder.setQuantizationParams(MetadataExtractor.getQuantizationParams(tensor));
 
             if (builder.contentType == ContentType.IMAGE) {
                 org.tensorflow.lite.support.metadata.schema.ImageProperties properties =
@@ -318,7 +475,6 @@ public class TensorInfo {
             }
 
             NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
-
             FloatBuffer mean =
                     normalizationOptions != null
                             ? normalizationOptions.meanAsByteBuffer().asFloatBuffer()
@@ -335,7 +491,6 @@ public class TensorInfo {
                     tensorMetadata.stats() != null
                             ? tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()
                             : toFloatBuffer(Float.MAX_VALUE);
-
             builder.setNormalizationParams(
                     new MetadataExtractor.NormalizationParams(mean, std, min, max));
         }
@@ -400,8 +555,29 @@ public class TensorInfo {
 
         public final ColorSpaceType colorSpaceType;
 
-        public ImageProperties(ColorSpaceType colorSpaceType) {
+        public ImageProperties(@NonNull ColorSpaceType colorSpaceType) {
             this.colorSpaceType = colorSpaceType;
+        }
+
+        public ImageProperties(@NonNull DataInput in) throws IOException {
+            colorSpaceType = ColorSpaceType.fromByte(in.readByte());
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            out.write(colorSpaceType.id);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ImageProperties that = (ImageProperties) o;
+            return colorSpaceType == that.colorSpaceType;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(colorSpaceType);
         }
     }
 }

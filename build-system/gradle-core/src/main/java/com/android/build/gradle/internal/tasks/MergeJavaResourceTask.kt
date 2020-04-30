@@ -307,7 +307,9 @@ fun getProjectJavaRes(
     )
     javaRes.from(componentProperties.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(componentProperties.variantData.allPostJavacGeneratedBytecode)
-    javaRes.from(componentProperties.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_CLASSES))
+    if (componentProperties.globalScope.extension.aaptOptions.namespaced) {
+        javaRes.from(componentProperties.artifacts.getFinalProduct(RUNTIME_R_CLASS_CLASSES))
+    }
     return javaRes
 }
 

@@ -21,7 +21,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
+import com.android.tools.mlkit.TensorInfo.ImageProperties;
+import com.android.tools.mlkit.TensorInfo.ImageProperties.ColorSpaceType;
 import com.android.tools.mlkit.exception.TfliteModelException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -39,34 +45,32 @@ public class ModelInfoTest {
                         extractByteBufferFromModel(
                                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
 
-        assertEquals(modelInfo.getInputs().size(), 1);
-        assertEquals(modelInfo.getOutputs().size(), 1);
+        assertEquals(1, modelInfo.getInputs().size());
+        assertEquals(1, modelInfo.getOutputs().size());
         assertTrue(modelInfo.isMetadataExisted());
 
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
-        assertEquals(inputTensorInfo.getContentType(), TensorInfo.ContentType.IMAGE);
-        assertEquals(inputTensorInfo.getName(), "image1");
-        assertEquals(
-                inputTensorInfo.getImageProperties().colorSpaceType,
-                TensorInfo.ImageProperties.ColorSpaceType.RGB);
+        assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
+        assertEquals("image1", inputTensorInfo.getIdentifierName());
+        assertEquals(new ImageProperties(ColorSpaceType.RGB), inputTensorInfo.getImageProperties());
         MetadataExtractor.NormalizationParams inputNormalization =
                 inputTensorInfo.getNormalizationParams();
-        assertEquals(inputNormalization.getMean()[0], 127.5f, DELTA);
-        assertEquals(inputNormalization.getStd()[0], 127.5f, DELTA);
-        assertEquals(inputNormalization.getMin()[0], 0f, DELTA);
-        assertEquals(inputNormalization.getMax()[0], 255f, DELTA);
+        assertEquals(127.5f, inputNormalization.getMean()[0], DELTA);
+        assertEquals(127.5f, inputNormalization.getStd()[0], DELTA);
+        assertEquals(0f, inputNormalization.getMin()[0], DELTA);
+        assertEquals(255f, inputNormalization.getMax()[0], DELTA);
         MetadataExtractor.QuantizationParams inputQuantization =
                 inputTensorInfo.getQuantizationParams();
-        assertEquals(inputQuantization.getZeroPoint(), 128f, DELTA);
-        assertEquals(inputQuantization.getScale(), 0.0078125f, DELTA);
+        assertEquals(128f, inputQuantization.getZeroPoint(), DELTA);
+        assertEquals(0.0078125f, inputQuantization.getScale(), DELTA);
 
         TensorInfo outputTensorInfo = modelInfo.getOutputs().get(0);
-        assertEquals(outputTensorInfo.getName(), "probability");
-        assertEquals(outputTensorInfo.getFileType(), TensorInfo.FileType.TENSOR_AXIS_LABELS);
+        assertEquals("probability", outputTensorInfo.getIdentifierName());
+        assertEquals(TensorInfo.FileType.TENSOR_AXIS_LABELS, outputTensorInfo.getFileType());
         MetadataExtractor.QuantizationParams outputQuantization =
                 outputTensorInfo.getQuantizationParams();
-        assertEquals(outputQuantization.getZeroPoint(), 0, DELTA);
-        assertEquals(outputQuantization.getScale(), 0.00390625, DELTA);
+        assertEquals(0, outputQuantization.getZeroPoint(), DELTA);
+        assertEquals(0.00390625, outputQuantization.getScale(), DELTA);
     }
 
     @Test
@@ -76,19 +80,37 @@ public class ModelInfoTest {
                         extractByteBufferFromModel(
                                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_no_metadata.tflite"));
 
-        assertEquals(modelInfo.getInputs().size(), 1);
-        assertEquals(modelInfo.getOutputs().size(), 1);
+        assertEquals(1, modelInfo.getInputs().size());
+        assertEquals(1, modelInfo.getOutputs().size());
         assertFalse(modelInfo.isMetadataExisted());
-        assertEquals(modelInfo.getInputs().get(0).getName(), "inputFeature0");
-        assertEquals(modelInfo.getOutputs().get(0).getName(), "outputFeature0");
+        assertEquals("inputFeature0", modelInfo.getInputs().get(0).getIdentifierName());
+        assertEquals("outputFeature0", modelInfo.getOutputs().get(0).getIdentifierName());
+    }
+
+    @Test
+    public void testModelInfoSerialization() throws TfliteModelException, IOException {
+        ModelInfo originalModelInfo =
+                ModelInfo.buildFrom(
+                        extractByteBufferFromModel(
+                                "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
+
+        byte[] serializedBytes;
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            originalModelInfo.save(new DataOutputStream(byteArrayOutputStream));
+            serializedBytes = byteArrayOutputStream.toByteArray();
+        }
+
+        ModelInfo deserializedModelInfo =
+                new ModelInfo(new DataInputStream(new ByteArrayInputStream(serializedBytes)));
+        assertEquals(originalModelInfo, deserializedModelInfo);
     }
 
     private static ByteBuffer extractByteBufferFromModel(String filePath) throws IOException {
         File modelFile = TestUtils.getWorkspaceFile(filePath);
-        RandomAccessFile f = new RandomAccessFile(modelFile, "r");
-        byte[] data = new byte[(int) f.length()];
-        f.readFully(data);
-        f.close();
-        return ByteBuffer.wrap(data);
+        try (RandomAccessFile f = new RandomAccessFile(modelFile, "r")) {
+            byte[] data = new byte[(int) f.length()];
+            f.readFully(data);
+            return ByteBuffer.wrap(data);
+        }
     }
 }

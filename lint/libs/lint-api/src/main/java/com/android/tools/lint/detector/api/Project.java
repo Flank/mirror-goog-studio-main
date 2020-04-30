@@ -88,6 +88,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -334,7 +335,7 @@ public class Project {
                     }
 
                     for (int i = 1; i < 1000; i++) {
-                        String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);
+                        String key = String.format(Locale.US, ANDROID_LIBRARY_REFERENCE_FORMAT, i);
                         String library = properties.getProperty(key);
                         if (library == null || library.isEmpty()) {
                             // No holes in the numbering sequence is allowed
@@ -462,6 +463,7 @@ public class Project {
             return false;
         }
         Project other = (Project) obj;
+        //noinspection FileComparisons
         return dir.equals(other.dir);
     }
 

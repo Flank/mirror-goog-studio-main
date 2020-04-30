@@ -215,6 +215,31 @@ void InstallServer::HandleOverlayUpdate(
   response->set_status(proto::OverlayUpdateResponse::OK);
 }
 
+namespace {
+bool TryCopyServer(const RunasExecutor& run_as, const std::string& server_path,
+                   const std::string& exec_path, const std::string& exec_name) {
+  std::string cp_output;
+  std::string cp_error;
+  if (run_as.Run("cp", {server_path, exec_path + exec_name}, &cp_output,
+                 &cp_error)) {
+    return true;
+  }
+
+  // We don't need to check the output of this. It will fail if the code_cache
+  // already exists; if the code_cache doesn't exist and we can't create it,
+  // that failure will be caught when we try to copy the server.
+  run_as.Run("mkdir", {exec_path}, nullptr, nullptr);
+
+  if (run_as.Run("cp", {server_path, exec_path + exec_name}, &cp_output,
+                 &cp_error)) {
+    return true;
+  }
+
+  ErrEvent("Could not copy binary: " + cp_error);
+  return false;
+}
+}  // namespace
+
 bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
                                        const std::string& expected_id) const {
   // If the overlay folder is not present, expected id must be empty.
@@ -236,24 +261,12 @@ std::unique_ptr<InstallClient> StartInstallServer(
   StartResult result;
   auto client = TryStartServer(run_as, exec_path + exec_name, &result);
 
-  if (result == StartResult::SUCCESS) {
-    return client;
-  }
-
-  if (result == StartResult::TRY_COPY) {
-    std::string cp_output;
-    std::string cp_error;
-
-    if (!run_as.Run("cp", {server_path, exec_path + exec_name}, &cp_output,
-                    &cp_error)) {
-      ErrEvent("Could not copy binary: " + cp_error);
-      return nullptr;
-    }
-
+  if (result == StartResult::TRY_COPY &&
+      TryCopyServer(run_as, server_path, exec_path, exec_name)) {
     return TryStartServer(run_as, exec_path + exec_name, &result);
   }
 
-  return nullptr;
+  return client;
 }
 
 }  // namespace deploy

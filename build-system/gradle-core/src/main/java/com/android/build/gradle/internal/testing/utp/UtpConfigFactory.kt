@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVIC
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.google.protobuf.Any
@@ -34,8 +35,9 @@ import com.google.test.platform.config.v1.proto.ExecutorProto
 import com.google.test.platform.config.v1.proto.FixtureProto
 import com.google.test.platform.config.v1.proto.HostPluginProto
 import com.google.test.platform.config.v1.proto.LocalAndroidDeviceProviderProto
-import com.google.test.platform.config.v1.proto.OrchestratorV1DriverProto
+import com.google.test.platform.config.v1.proto.AndroidInstrumentationDriverProto
 import com.google.test.platform.config.v1.proto.RunnerConfigProto
+import com.google.test.platform.plugin.android.icebox.host.proto.IceboxPluginProto.IceboxPlugin
 import com.google.test.platform.core.proto.ExtensionProto
 import com.google.test.platform.core.proto.PathProto
 import com.google.test.platform.core.proto.TestArtifactProto
@@ -52,6 +54,10 @@ private const val UTP_TEST_FIXTURE_ID = "AGP_Test_Fixture"
 // A UTP gRPC server address.
 private const val UTP_SERVER_ADDRESS = "localhost:20000"
 
+// Emulator gRPC address
+private const val DEFAULT_EMULATOR_GRPC_ADDRESS = "localhost";
+// Emulator gRPC port
+private const val DEFAULT_EMULATOR_GRPC_PORT = 8554;
 /**
  * A factory class to construct UTP runner and server configuration protos.
  */
@@ -69,12 +75,14 @@ class UtpConfigFactory {
                                 outputDir: File,
                                 tmpDir: File,
                                 testLogDir: File,
-                                testRunLogDir: File): RunnerConfigProto.RunnerConfig {
+                                testRunLogDir: File,
+                                usesIcebox: Boolean): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createLocalDevice(device, testData, configurations))
             addTestFixture(createTestFixture(
-                    apks, testData, configurations, sdkComponents,
-                    outputDir, tmpDir, testLogDir, testRunLogDir))
+                    device, apks, testData, configurations, sdkComponents,
+                    outputDir, tmpDir, testLogDir, testRunLogDir,
+                    usesIcebox))
             singleDeviceExecutor = createSingleDeviceExecutor(device)
         }.build()
     }
@@ -128,14 +136,16 @@ class UtpConfigFactory {
         }.build()
     }
 
-    private fun createTestFixture(apks: Iterable<File>,
+    private fun createTestFixture(device: DeviceConnector,
+                                  apks: Iterable<File>,
                                   testData: StaticTestData,
                                   configurations: ConfigurationContainer,
                                   sdkComponents: SdkComponents,
                                   outputDir: File,
                                   tmpDir: File,
                                   testLogDir: File,
-                                  testRunLogDir: File): FixtureProto.TestFixture {
+                                  testRunLogDir: File,
+                                  usesRetention: Boolean): FixtureProto.TestFixture {
         return FixtureProto.TestFixture.newBuilder().apply {
             testFixtureIdBuilder.apply {
                 id = UTP_TEST_FIXTURE_ID
@@ -156,7 +166,32 @@ class UtpConfigFactory {
                     testLogDir,
                     testRunLogDir,
                     sdkComponents)
-            testDriver = createTestDriver(testData, configurations)
+
+            if (usesRetention) {
+                var retentionTestData = testData.copy(
+                    instrumentationRunnerArguments = testData.instrumentationRunnerArguments
+                        .toMutableMap()
+                        .apply { put("debug", "true") })
+                testDriver = createTestDriver(retentionTestData, configurations)
+                addHostPlugin(HostPluginProto.HostPlugin.newBuilder().apply {
+                    pluginClass = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
+                    pluginConfig = Any.pack(IceboxPlugin.newBuilder().apply{
+                        appPackage = testData.testedApplicationId
+                        // TODO(155308548): query device for the following fields
+                        emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
+                        emulatorGrpcPort = DEFAULT_EMULATOR_GRPC_PORT
+                    }.build())
+                    addAllPluginJar(
+                        configurations.getByName(
+                            ANDROID_TEST_PLUGIN_HOST_RETENTION.configurationName).files.map {
+                                PathProto.Path.newBuilder().apply {
+                                    path = it.absolutePath
+                                }.build()
+                    })
+                }.build())
+            } else {
+                testDriver = createTestDriver(testData, configurations)
+            }
             addHostPlugin(createAndroidTestPlugin(configurations))
         }.build()
     }
@@ -212,7 +247,7 @@ class UtpConfigFactory {
                     path = it.absolutePath
                 }.build()
             })
-            config = Any.pack(OrchestratorV1DriverProto.OrchestratorV1Driver.newBuilder().apply {
+            config = Any.pack(AndroidInstrumentationDriverProto.AndroidInstrumentationDriver.newBuilder().apply {
                 androidInstrumentationRuntimeBuilder.apply {
                     instrumentationInfoBuilder.apply {
                         appPackage = testData.testedApplicationId
@@ -231,6 +266,17 @@ class UtpConfigFactory {
         return HostPluginProto.HostPlugin.newBuilder().apply {
             pluginClass = ANDROID_TEST_PLUGIN.mainClass
             addAllPluginJar(configurations.getByName(ANDROID_TEST_PLUGIN.configurationName).files.map {
+                PathProto.Path.newBuilder().apply {
+                    path = it.absolutePath
+                }.build()
+            })
+        }.build()
+    }
+
+    private fun createAndroidTestPluginHostRetention(configurations: ConfigurationContainer): HostPluginProto.HostPlugin {
+        return HostPluginProto.HostPlugin.newBuilder().apply {
+            pluginClass = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
+            addAllPluginJar(configurations.getByName(ANDROID_TEST_PLUGIN_HOST_RETENTION.configurationName).files.map {
                 PathProto.Path.newBuilder().apply {
                     path = it.absolutePath
                 }.build()

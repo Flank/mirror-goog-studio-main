@@ -86,12 +86,6 @@ class VariantPathHelper(
             variantDslInfo.dirName
         )
 
-    val resourceBlameLogDir: File
-        get() = FileUtils.join(
-            intermediatesDir,
-            listOf("blame", "res") + variantDslInfo.directorySegments
-        )
-
     val buildConfigSourceOutputDir: File
         get() = FileUtils.join(generatedDir, "source", "buildConfig", variantDslInfo.dirName)
 

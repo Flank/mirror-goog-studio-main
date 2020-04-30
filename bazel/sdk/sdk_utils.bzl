@@ -92,7 +92,7 @@ def tool_start_script(name, platform, command_name, main_class_name, classpath_j
 def calculate_jar_name_for_sdk_package(path):
     path = path.replace("/libtools.", "/", 1)
     if path.endswith("-classpath.jar"):
-        return path[path.rfind("/"):]
+        return path[path.rfind("/") + 1:]
 
     for prefix in sdk_jar_prefix_to_zip_location.keys():
         if path.startswith(prefix):

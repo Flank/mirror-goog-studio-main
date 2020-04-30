@@ -17,6 +17,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_NS_NAME;
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.APP_PREFIX;
 import static com.android.SdkConstants.ATTR_FONT_PROVIDER_AUTHORITY;
@@ -211,26 +212,26 @@ public class FontDetector extends ResourceXmlDetector {
         if (variant == null) {
             return;
         }
-        for (LmLibrary library : variant.getMainArtifact().getDependencies().getDirect()) {
-            LmMavenName rc = library.getResolvedCoordinates();
-            if (SUPPORT_LIB_GROUP_ID.equals(rc.getGroupId())
-                    && APPCOMPAT_LIB_ARTIFACT_ID.equals(rc.getArtifactId())) {
-                GradleCoordinate version =
-                        new GradleCoordinate(
-                                SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, rc.getVersion());
-                if (COMPARE_PLUS_LOWER.compare(version, MIN_APPSUPPORT_VERSION) < 0) {
-                    String message =
-                            "Using version "
-                                    + version.getRevision()
-                                    + " of the "
-                                    + APPCOMPAT_LIB_ARTIFACT_ID
-                                    + " library. Required version for using downloadable fonts: "
-                                    + MIN_APPSUPPORT_VERSION.getRevision()
-                                    + " or higher.";
-                    LintFix fix = LintFix.create().data(APPCOMPAT_LIB_ARTIFACT_ID);
-                    reportError(context, element, message, context.getNameLocation(element), fix);
-                }
-            }
+        LmLibrary library = variant.getMainArtifact().findCompileDependency(APPCOMPAT_LIB_ARTIFACT);
+        if (library == null) {
+            return;
+        }
+
+        LmMavenName rc = library.getResolvedCoordinates();
+        GradleCoordinate version =
+                new GradleCoordinate(
+                        SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, rc.getVersion());
+        if (COMPARE_PLUS_LOWER.compare(version, MIN_APPSUPPORT_VERSION) < 0) {
+            String message =
+                    "Using version "
+                            + version.getRevision()
+                            + " of the "
+                            + APPCOMPAT_LIB_ARTIFACT_ID
+                            + " library. Required version for using downloadable fonts: "
+                            + MIN_APPSUPPORT_VERSION.getRevision()
+                            + " or higher.";
+            LintFix fix = LintFix.create().data(APPCOMPAT_LIB_ARTIFACT_ID);
+            reportError(context, element, message, context.getNameLocation(element), fix);
         }
     }
 

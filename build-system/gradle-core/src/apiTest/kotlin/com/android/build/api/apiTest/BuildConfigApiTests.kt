@@ -74,7 +74,7 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                 """
 # Adding a BuildConfig field in Kotlin
 
-This sample show how to add a field in the BuildConfig class for which the value is known at 
+This sample show how to add a field in the BuildConfig class for which the value is known at
 configuration time.
 
 The added field is used in the MainActivity.kt file.
@@ -111,8 +111,10 @@ The added field is used in the MainActivity.kt file.
             ${testingElements.getGitVersionTask()}
 
             val gitVersionProvider = tasks.register<GitVersionTask>("gitVersionProvider") {
-                gitVersionOutputFile.set(
-                    File(project.buildDir, "intermediates/gitVersionProvider/output"))
+                File(project.buildDir, "intermediates/gitVersionProvider/output").also {
+                    it.parentFile.mkdirs()
+                    gitVersionOutputFile.set(it)
+                }
                 outputs.upToDateWhen { false }
             }
 
@@ -124,27 +126,28 @@ The added field is used in the MainActivity.kt file.
                         BuildConfigField.make("String", "\"" + 
                             task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8) + "\"")
                     })
-                }""".trimIndent()
-                testingElements.addManifest(this)
-                addSource(
-                    "src/main/kotlin/com/android/build/example/minimal/MainActivity.kt",
-                    //language=kotlin
-                    """
-                    package com.android.build.example.minimal
+                }
+            }""".trimIndent()
+             testingElements.addManifest(this)
+             addSource(
+            "src/main/kotlin/com/android/build/example/minimal/MainActivity.kt",
+            //language=kotlin
+            """
+            package com.android.build.example.minimal
 
-                    import android.app.Activity
-                    import android.os.Bundle
-                    import android.widget.TextView
+            import android.app.Activity
+            import android.os.Bundle
+            import android.widget.TextView
 
-                    class MainActivity : Activity() {
-                        override fun onCreate(savedInstanceState: Bundle?) {
-                            super.onCreate(savedInstanceState)
-                            val label = TextView(this)
-                            label.setText("Hello ${'$'}{BuildConfig.VariantName}")
-                            setContentView(label)
-                        }
-                    }
-                    """.trimIndent())
+            class MainActivity : Activity() {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    val label = TextView(this)
+                    label.setText("Hello ${'$'}{BuildConfig.VariantName}")
+                    setContentView(label)
+                }
+            }
+            """.trimIndent())
             }
         }
         withDocs {

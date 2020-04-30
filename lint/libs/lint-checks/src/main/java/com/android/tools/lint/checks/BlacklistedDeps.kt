@@ -16,20 +16,9 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.GradleDetector.Companion.getCompileDependencies
 import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.model.LmLibrary
+import com.android.tools.lint.model.LmDependency
 import java.util.ArrayDeque
-
-data class Coordinate(val group: String, val artifact: String) : Comparable<Coordinate> {
-    override fun compareTo(other: Coordinate): Int {
-        val delta = group.compareTo(other.group)
-        if (delta != 0) {
-            return delta
-        }
-        return artifact.compareTo(other.artifact)
-    }
-}
 
 /**
  * This class finds blacklisted dependencies in a project by looking
@@ -37,12 +26,12 @@ data class Coordinate(val group: String, val artifact: String) : Comparable<Coor
  */
 class BlacklistedDeps(val project: Project) {
 
-    private var map: MutableMap<Coordinate, List<LmLibrary>>? = null
+    private var map: MutableMap<String, List<LmDependency>>? = null
 
     init {
-        val dependencies = getCompileDependencies(project)
-        if (dependencies != null) {
-            visitLibraries(ArrayDeque(), dependencies.direct)
+        // TODO: Should skip provided
+        project.buildVariant?.mainArtifact?.dependencies?.compileDependencies?.let {
+            visitLibraries(ArrayDeque(), it.roots)
         }
     }
 
@@ -51,9 +40,9 @@ class BlacklistedDeps(val project: Project) {
      * or null if this dependency is not blacklisted. If [remove] is true, the
      * dependency is removed from the map after this.
      */
-    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LmLibrary>? {
+    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LmDependency>? {
         val map = this.map ?: return null
-        val coordinate = Coordinate(groupId, artifactId)
+        val coordinate = "$groupId:$artifactId"
         val path = map[coordinate] ?: return null
         if (remove) {
             map.remove(coordinate)
@@ -66,70 +55,60 @@ class BlacklistedDeps(val project: Project) {
      * blacklisted dependency. Each list is a list from the root dependency
      * to the blacklisted dependency.
      */
-    fun getBlacklistedDependencies(): List<List<LmLibrary>> {
+    fun getBlacklistedDependencies(): List<List<LmDependency>> {
         val map = this.map ?: return emptyList()
-        return map.values.toMutableList().sortedBy { it[0].resolvedCoordinates.groupId }
+        return map.values.toMutableList().sortedBy { it[0].artifactName }
     }
 
     private fun visitLibraries(
-        stack: ArrayDeque<LmLibrary>,
-        libraries: List<LmLibrary>
+        stack: ArrayDeque<LmDependency>,
+        libraries: List<LmDependency>
     ) {
         for (library in libraries) {
             visitLibrary(stack, library)
         }
     }
 
-    private fun visitLibrary(stack: ArrayDeque<LmLibrary>, library: LmLibrary) {
+    private fun visitLibrary(stack: ArrayDeque<LmDependency>, library: LmDependency) {
         stack.addLast(library)
         checkLibrary(stack, library)
         visitLibraries(stack, library.dependencies)
         stack.removeLast()
     }
 
-    private fun checkLibrary(stack: ArrayDeque<LmLibrary>, library: LmLibrary) {
-        // Provided dependencies are fine
-        if (library.provided /* && stack.size == 1*/) {
-            return
-        }
-
-        val coordinates = library.resolvedCoordinates
-        if (isBlacklistedDependency(coordinates.groupId, coordinates.artifactId)) {
+    private fun checkLibrary(stack: ArrayDeque<LmDependency>, library: LmDependency) {
+        if (isBlacklistedDependency(library.artifactName)) {
             if (map == null) {
                 map = HashMap()
             }
-            val root = stack.first.resolvedCoordinates
-            map?.put(Coordinate(root.groupId, root.artifactId), ArrayList(stack))
+            val root = stack.first.artifactName
+            map?.put(root, ArrayList(stack))
         }
     }
 
-    private fun isBlacklistedDependency(
-        groupId: String,
-        artifactId: String
-    ): Boolean {
-        when (groupId) {
+    private fun isBlacklistedDependency(mavenName: String): Boolean {
+        when (mavenName) {
             // org.apache.http.*
-            "org.apache.httpcomponents" -> return "httpclient" == artifactId
+            "org.apache.httpcomponents:httpclient",
 
             // org.xmlpull.v1.*
-            "xpp3" -> return "xpp3" == artifactId
+            "xpp3:xpp3",
 
             // org.apache.commons.logging
-            "commons-logging" -> return "commons-logging" == artifactId
+            "commons-logging:commons-logging",
 
             // org.xml.sax.*, org.w3c.dom.*
-            "xerces" -> return "xmlParserAPIs" == artifactId
+            "xerces:xmlParserAPIs",
 
             // org.json.*
-            "org.json" -> return "json" == artifactId
+            "org.json:json",
 
             // javax.microedition.khronos.*
-            "org.khronos" -> return "opengl-api" == artifactId
+            "org.khronos:opengl-api",
 
             // all of the above
-            "com.google.android" -> return "android" == artifactId
+            "com.google.android:android" -> return true
+            else -> return false
         }
-
-        return false
     }
 }

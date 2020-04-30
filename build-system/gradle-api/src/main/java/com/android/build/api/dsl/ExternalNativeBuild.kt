@@ -51,7 +51,7 @@ interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildT : NdkBuild> {
      * For more information about the properties you can configure in this block, see
      * [NdkBuild]
      */
-    val ndkBuild: NdkBuildT
+    val ndkBuild: NdkBuild
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path
@@ -67,7 +67,7 @@ interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildT : NdkBuild> {
      *
      * For more information about the properties you can configure in this block, see [Cmake]
      */
-    val cmake: CMakeT
+    val cmake: Cmake
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path

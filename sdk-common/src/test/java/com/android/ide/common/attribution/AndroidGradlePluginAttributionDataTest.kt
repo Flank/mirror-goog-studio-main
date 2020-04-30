@@ -31,7 +31,8 @@ class AndroidGradlePluginAttributionDataTest {
     private val data = AndroidGradlePluginAttributionData(
         taskNameToClassNameMap = mapOf("a" to "b", "c" to "d"),
         tasksSharingOutput = mapOf("e" to listOf("f", "g")),
-        garbageCollectionData = mapOf("gc" to 100L)
+        garbageCollectionData = mapOf("gc" to 100L),
+        buildSrcPlugins = setOf("h", "i")
     )
 
     @Test
@@ -45,7 +46,7 @@ class AndroidGradlePluginAttributionDataTest {
             SdkConstants.FN_AGP_ATTRIBUTION_DATA
         )
         assertThat(file.readLines()[0]).isEqualTo(
-            """{"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],"garbageCollectionData":[{"gcName":"gc","duration":100}]}"""
+            """{"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],"garbageCollectionData":[{"gcName":"gc","duration":100}],"buildSrcPlugins":["h","i"]}"""
         )
     }
 
@@ -72,6 +73,7 @@ class AndroidGradlePluginAttributionDataTest {
         assertThat(deserializedData.taskNameToClassNameMap).isEqualTo(data.taskNameToClassNameMap)
         assertThat(deserializedData.noncacheableTasks).isEqualTo(data.noncacheableTasks)
         assertThat(deserializedData.tasksSharingOutput).isEqualTo(data.tasksSharingOutput)
+        assertThat(deserializedData.buildSrcPlugins).isEqualTo(data.buildSrcPlugins)
 
         assertThat(deserializedData.garbageCollectionData).isNotNull()
         assertThat(deserializedData.garbageCollectionData).isEmpty()

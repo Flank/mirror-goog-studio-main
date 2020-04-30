@@ -19,10 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface ApplicationProductFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    ApplicationBaseFlavor<AnnotationProcessorOptionsT, SigningConfigT>,
-    ProductFlavor<AnnotationProcessorOptionsT> {
+interface ApplicationProductFlavor<SigningConfigT : SigningConfig> :
+    ApplicationBaseFlavor<SigningConfigT>,
+    ProductFlavor {
     /** Whether this product flavor should be selected in Studio by default  */
     var isDefault: Boolean
 }

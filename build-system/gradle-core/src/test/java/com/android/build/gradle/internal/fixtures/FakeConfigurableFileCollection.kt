@@ -71,4 +71,8 @@ class FakeConfigurableFileCollection(vararg files : Any?)
     override fun finalizeValue() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    override fun disallowUnsafeRead() {
+        TODO("Not yet implemented")
+    }
 }

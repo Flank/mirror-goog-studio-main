@@ -28,6 +28,7 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -49,11 +50,9 @@ import java.util.function.Function;
 
 class SdkManagerCliSettings implements SettingsController {
 
-    private static final class ShowUsageException extends Exception {
-        public ShowUsageException() {
-            super();
-        }
-    }
+    static final class ShowUsageException extends Exception {}
+
+    static final class FailSilentlyException extends Exception {}
 
     private static final String CHANNEL_ARG = "--channel=";
     private static final String SDK_ROOT_ARG = "--sdk_root=";
@@ -99,11 +98,11 @@ class SdkManagerCliSettings implements SettingsController {
     private String mProxyHostStr;
     private AndroidSdkHandler mHandler;
     private RepoManager mRepoManager;
-    private PrintStream mOut;
+    private PrintStream mOut = System.out;
     private BufferedReader mIn;
     private Downloader mDownloader;
-    private FileSystem mFileSystem;
-    private Map<String, String> mEnvironment;
+    private final FileSystem mFileSystem;
+    private final Map<String, String> mEnvironment;
 
     public void setDownloader(@Nullable Downloader downloader) {
         mDownloader = downloader;
@@ -120,7 +119,7 @@ class SdkManagerCliSettings implements SettingsController {
         }
     }
 
-    public void setOutputStream(@Nullable PrintStream out) {
+    public void setOutputStream(@NonNull PrintStream out) {
         mOut = out;
     }
 
@@ -128,18 +127,20 @@ class SdkManagerCliSettings implements SettingsController {
         mIn = in == null ? null : new BufferedReader(new InputStreamReader(in));
     }
 
-    @Nullable
+    @NonNull
     public static SdkManagerCliSettings createSettings(
-            @NonNull List<String> args, @NonNull FileSystem fileSystem) {
+            @NonNull List<String> args, @NonNull FileSystem fileSystem)
+            throws ShowUsageException, FailSilentlyException {
         return createSettings(args, fileSystem, System.getenv());
     }
 
-    @Nullable
+    @NonNull
     @VisibleForTesting
     static SdkManagerCliSettings createSettings(
             @NonNull List<String> args,
             @NonNull FileSystem fileSystem,
-            @NonNull Map<String, String> environment) {
+            @NonNull Map<String, String> environment)
+            throws ShowUsageException, FailSilentlyException {
         ProgressIndicator progress =
                 new ConsoleProgressIndicator() {
                     @Override
@@ -148,14 +149,7 @@ class SdkManagerCliSettings implements SettingsController {
                     @Override
                     public void logVerbose(@NonNull String s) {}
                 };
-        try {
-            return new SdkManagerCliSettings(args, fileSystem, environment, progress);
-        } catch (ShowUsageException ignored) {
-            return null;
-        } catch (Exception e) {
-            progress.logWarning("Could not create settings", e);
-            return null;
-        }
+        return new SdkManagerCliSettings(args, fileSystem, environment, progress);
     }
 
     private boolean setAction(@NonNull SdkAction action, @NonNull ProgressIndicator progress) {
@@ -171,8 +165,9 @@ class SdkManagerCliSettings implements SettingsController {
         return true;
     }
 
-    @Nullable
-    private SocketAddress createAddress(@NonNull String host, int port) {
+    @NonNull
+    private SocketAddress createAddress(@NonNull String host, int port)
+            throws FailSilentlyException {
         if ("1".equals(mEnvironment.get(STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY_ENV))) {
             return InetSocketAddress.createUnresolved(host, port);
         }
@@ -181,8 +176,8 @@ class SdkManagerCliSettings implements SettingsController {
             InetAddress address = InetAddress.getByName(host);
             return new InetSocketAddress(address, port);
         } catch (UnknownHostException e) {
-            getProgressIndicator().logWarning("Failed to resolve host " + host);
-            return null;
+            getProgressIndicator().logError("Failed to resolve host " + host);
+            throw new FailSilentlyException();
         }
     }
 
@@ -238,9 +233,7 @@ class SdkManagerCliSettings implements SettingsController {
     @NonNull
     public ProgressIndicator getProgressIndicator() {
         PrintStream out = getOutputStream();
-        if (out == null) {
-            out = System.out;
-        }
+
         return new ConsoleProgressIndicator(out, System.err) {
             @Override
             public void logWarning(@NonNull String s, @Nullable Throwable e) {
@@ -304,7 +297,7 @@ class SdkManagerCliSettings implements SettingsController {
         return mIn;
     }
 
-    @Nullable
+    @NonNull
     public PrintStream getOutputStream() {
         return mOut;
     }
@@ -321,15 +314,16 @@ class SdkManagerCliSettings implements SettingsController {
 
     @NonNull
     private static Proxy.Type extractProxyType(
-            @NonNull String type, @NonNull ProgressIndicator progress) {
+            @NonNull String type, @NonNull ProgressIndicator progress)
+            throws FailSilentlyException {
         if (type.equals("socks")) {
             return Proxy.Type.SOCKS;
         } else if (type.equals("http") || type.equals("https")) {
             return Proxy.Type.HTTP;
         }
 
-        progress.logWarning("Valid proxy types are \"socks\" and \"http\".");
-        throw new IllegalArgumentException();
+        progress.logError("Valid proxy types are \"socks\" and \"http\".");
+        throw new FailSilentlyException();
     }
 
     private SdkManagerCliSettings(
@@ -337,7 +331,7 @@ class SdkManagerCliSettings implements SettingsController {
             @NonNull FileSystem fileSystem,
             @NonNull Map<String, String> environment,
             @NonNull ProgressIndicator progress)
-            throws ShowUsageException {
+            throws ShowUsageException, FailSilentlyException {
         mFileSystem = fileSystem;
         mEnvironment = environment;
 
@@ -348,7 +342,10 @@ class SdkManagerCliSettings implements SettingsController {
             // Assume we're in something similar to the expected place, "cmdline-tools/1.2.3". The parent of that should be the root.
             Path toolRoot = fileSystem.getPath(toolDir).normalize().getParent();
             if (toolRoot != null) {
-                if (toolRoot.getFileName().toString().equals(SdkConstants.FD_CMDLINE_TOOLS)) {
+                Path toolRootName = toolRoot.getFileName();
+                // toolRootName can be null if toolRoot is "/"
+                if (toolRootName != null
+                        && toolRootName.toString().equals(SdkConstants.FD_CMDLINE_TOOLS)) {
                     mLocalPath = toolRoot.getParent();
                 }
             }
@@ -361,7 +358,7 @@ class SdkManagerCliSettings implements SettingsController {
             String arg = argIter.next();
             if (ARG_TO_ACTION.containsKey(arg)) {
                 if (!setAction(ARG_TO_ACTION.get(arg).apply(this), progress)) {
-                    throw new IllegalArgumentException();
+                    throw new ShowUsageException();
                 }
                 argIter.remove();
             } else if (arg.equals(HELP_ARG)) {
@@ -386,8 +383,9 @@ class SdkManagerCliSettings implements SettingsController {
                 try {
                     proxyPort = Integer.parseInt(value);
                 } catch (NumberFormatException e) {
-                    progress.logWarning(String.format("Invalid port \"%s\"", value));
-                    throw new IllegalArgumentException();
+                    progress.logError(
+                            String.format("Invalid port \"%s\"\nExpected an integer.", value));
+                    throw new FailSilentlyException();
                 }
                 argIter.remove();
             } else if (arg.startsWith(PROXY_TYPE_ARG)) {
@@ -399,8 +397,13 @@ class SdkManagerCliSettings implements SettingsController {
                 try {
                     mChannel = Integer.parseInt(value);
                 } catch (NumberFormatException e) {
-                    progress.logWarning(String.format("Invalid channel id \"%s\"", value));
-                    throw new IllegalArgumentException();
+                    progress.logError(
+                            "Invalid channel id \""
+                                    + value
+                                    + "\"Expected an integer.\nTry "
+                                    + HELP_ARG
+                                    + " for more information.");
+                    throw new FailSilentlyException();
                 }
                 argIter.remove();
             } else if (arg.startsWith(SDK_ROOT_ARG)) {
@@ -415,31 +418,38 @@ class SdkManagerCliSettings implements SettingsController {
 
         for (String arg : args) {
             if (!mAction.consumeArgument(arg, progress)) {
-                progress.logWarning(String.format("Unknown argument %s", arg));
-                throw new IllegalArgumentException();
+                progress.logError(String.format("Unknown argument \"%s\"", arg));
+                progress.logError("");
+                throw new ShowUsageException();
             }
         }
 
-        if (!mAction.validate(progress)) {
-            throw new IllegalArgumentException();
-        }
-
         if (mLocalPath == null) {
-            throw new IllegalArgumentException();
+            progress.logError("Could not determine SDK root.");
+            progress.logError(
+                    "Either specify it explicitly with "
+                            + SDK_ROOT_ARG
+                            + " or move this package into its expected location: <sdk>"
+                            + File.separator
+                            + "cmdline-tools"
+                            + File.separator
+                            + "latest"
+                            + File.separator);
+            throw new FailSilentlyException();
         }
 
         if (mForceNoProxy && (proxyHost != null || proxyPort != -1 || mProxyType != null)) {
-            progress.logWarning(
+            progress.logError(
                     String.format(
                             "None of %1$s, %2$s, and %3$s must be specified if %4$s is.",
                             PROXY_HOST_ARG, PROXY_PORT_ARG, PROXY_TYPE_ARG, NO_PROXY_ARG));
-            throw new IllegalArgumentException();
+            throw new FailSilentlyException();
         } else if (proxyHost == null ^ mProxyType == null || proxyPort == -1 ^ mProxyType == null) {
-            progress.logWarning(
+            progress.logError(
                     String.format(
                             "All of %1$s, %2$s, and %3$s must be specified if any are.",
                             PROXY_HOST_ARG, PROXY_PORT_ARG, PROXY_TYPE_ARG));
-            throw new IllegalArgumentException();
+            throw new FailSilentlyException();
         } else {
             if (mForceNoProxy) {
                 return;
@@ -462,20 +472,17 @@ class SdkManagerCliSettings implements SettingsController {
                         proxyHost = url.getHost();
                         proxyPort = url.getPort();
                     } catch (MalformedURLException e) {
-                        progress.logWarning(
+                        progress.logError(
                                 "The proxy server URL extracted from HTTP_PROXY or "
                                         + "HTTPS_PROXY environment variable could not be parsed. "
                                         + "Either specify the correct URL or unset the environment variable.",
                                 e);
-                        throw new IllegalArgumentException();
+                        throw new FailSilentlyException();
                     }
                 }
             }
             if (proxyHost != null) {
                 SocketAddress address = createAddress(proxyHost, proxyPort);
-                if (address == null) {
-                    throw new IllegalArgumentException();
-                }
                 mProxyHost = address;
                 mProxyHostStr = proxyHost;
             }

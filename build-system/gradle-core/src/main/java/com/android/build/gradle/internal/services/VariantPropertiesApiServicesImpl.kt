@@ -221,7 +221,6 @@ class VariantPropertiesApiServicesImpl(
         return initializeProperty(type, id).also {
             it.set(value)
             it.disallowChanges()
-            it.finalizeValueOnRead()
 
             // FIXME when Gradle supports this
             // it.preventGet()

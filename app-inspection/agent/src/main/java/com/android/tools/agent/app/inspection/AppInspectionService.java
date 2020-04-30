@@ -57,7 +57,7 @@ public class AppInspectionService {
     // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
     private final long mNativePtr;
 
-    private final Map<String, InspectorContext> mInspectorContexts = new HashMap<>();
+    private final Map<String, InspectorContext> mInspectorContexts = new ConcurrentHashMap<>();
 
     private final Map<String, List<HookInfo<ExitHook>>> mExitTransforms = new ConcurrentHashMap<>();
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
@@ -166,8 +166,8 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        Inspector inspector = mInspectorContexts.get(inspectorId).getInspector();
-        if (inspector == null) {
+        InspectorContext inspectorContext = mInspectorContexts.get(inspectorId);
+        if (inspectorContext == null) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
@@ -175,7 +175,7 @@ public class AppInspectionService {
         try {
             CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
             mIdToCommandCallback.put(commandId, callback);
-            inspector.onReceiveCommand(rawCommand, callback);
+            inspectorContext.getInspector().onReceiveCommand(rawCommand, callback);
         } catch (Throwable t) {
             t.printStackTrace();
             sendCrashEvent(
@@ -333,7 +333,7 @@ public class AppInspectionService {
         hooks.add(new HookInfo<>(inspectorId, hook));
     }
 
-    private static Object onExitInternal(Object returnObject) {
+    private static <T> T onExitInternal(T returnObject) {
         Error error = new Error();
         error.fillInStackTrace();
         StackTraceElement[] stackTrace = error.getStackTrace();
@@ -350,7 +350,7 @@ public class AppInspectionService {
         }
         for (HookInfo<ExitHook> info : hooks) {
             //noinspection unchecked
-            returnObject = info.hook.onExit(returnObject);
+            returnObject = (T) info.hook.onExit(returnObject);
         }
         return returnObject;
     }
@@ -363,16 +363,36 @@ public class AppInspectionService {
         onExitInternal(null);
     }
 
+    public static boolean onExit(boolean result) {
+        return onExitInternal(result);
+    }
+
+    public static byte onExit(byte result) {
+        return onExitInternal(result);
+    }
+
+    public static char onExit(char result) {
+        return onExitInternal(result);
+    }
+
+    public static short onExit(short result) {
+        return onExitInternal(result);
+    }
+
     public static int onExit(int result) {
-        return (Integer) onExitInternal(result);
+        return onExitInternal(result);
+    }
+
+    public static float onExit(float result) {
+        return onExitInternal(result);
     }
 
     public static long onExit(long result) {
-        return (Long) onExitInternal(result);
+        return onExitInternal(result);
     }
 
-    public static boolean onExit(boolean result) {
-        return (Boolean) onExitInternal(result);
+    public static double onExit(double result) {
+        return onExitInternal(result);
     }
 
     /**

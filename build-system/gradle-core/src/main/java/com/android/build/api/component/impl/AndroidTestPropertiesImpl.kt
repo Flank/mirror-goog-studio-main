@@ -20,6 +20,7 @@ import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.impl.ResValue
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
@@ -109,6 +110,37 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val testLabel: Property<String?> =
         internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
 
+    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+        internalServices.mapPropertyOf(
+            String::class.java,
+            BuildConfigField::class.java,
+            variantDslInfo.getBuildConfigFields(),
+            "$name:buildConfigs"
+        )
+    }
+
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value the resource value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    override fun addResValue(name: String, type: String, value: String, comment: String?) {
+        resValues.put(ResValue.Key(type, name), ResValue(value, comment))
+    }
+
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value a [Provider] for the value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
+        resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -136,12 +168,12 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 
-    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         internalServices.mapPropertyOf(
-            String::class.java,
-            BuildConfigField::class.java,
-            variantDslInfo.getBuildConfigFields(),
-            "$name:buildConfigs"
+            ResValue.Key::class.java,
+            ResValue::class.java,
+            variantDslInfo.getResValues(),
+            "$name:resValues"
         )
     }
 }

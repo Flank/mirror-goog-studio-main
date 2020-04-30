@@ -49,6 +49,7 @@ import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiVariable;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.util.EnumSet;
 import java.util.List;
 import org.jetbrains.uast.UAnnotation;
@@ -59,7 +60,6 @@ import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
-import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.java.JavaAnnotationArrayInitializerUCallExpression;
 import org.jetbrains.uast.kotlin.expressions.KotlinUCollectionLiteralExpression;
 
@@ -294,7 +294,7 @@ public class ResourceEvaluator {
         } else if (element instanceof UCallExpression) {
             UCallExpression call = (UCallExpression) element;
             PsiMethod function = call.resolve();
-            PsiClass containingClass = UastUtils.getContainingClass(function);
+            PsiClass containingClass = PsiTreeUtil.getParentOfType(function, PsiClass.class);
             if (function != null && containingClass != null) {
                 String qualifiedName = containingClass.getQualifiedName();
                 String name = getMethodName(call);
@@ -460,7 +460,7 @@ public class ResourceEvaluator {
                 UCallExpression call = (UCallExpression) probablyCallExpression;
                 PsiMethod method = call.resolve();
                 if (method != null) {
-                    PsiClass containingClass = UastUtils.getContainingClass(method);
+                    PsiClass containingClass = PsiTreeUtil.getParentOfType(method, PsiClass.class);
                     if (containingClass != null) {
                         EnumSet<ResourceType> types = getTypesFromAnnotations(method);
                         if (types != null) {

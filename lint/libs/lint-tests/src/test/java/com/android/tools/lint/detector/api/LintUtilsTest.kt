@@ -1019,7 +1019,7 @@ class LintUtilsTest : TestCase() {
             val uastParser = client.getUastParser(project)
             assertNotNull(uastParser)
             context.uastParser = uastParser
-            uastParser.prepare(listOf(context), emptyList(), javaLanguageLevel, kotlinLanguageLevel)
+            uastParser.prepare(listOf(context), javaLanguageLevel, kotlinLanguageLevel)
             val uFile = uastParser.parse(context)
             context.uastFile = uFile
             assert(uFile != null)
@@ -1062,7 +1062,7 @@ class LintUtilsTest : TestCase() {
                 context.uastParser = uastParser
                 context
             }
-            uastParser.prepare(contexts, emptyList())
+            uastParser.prepare(contexts)
             contexts.forEach { context ->
                 val uFile = uastParser.parse(context)
                 context.uastFile = uFile

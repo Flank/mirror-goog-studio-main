@@ -146,6 +146,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // --- android res ---
     // output of the resource merger ready for aapt.
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // folder for the blame report on the merged resources
+    object MERGED_RES_BLAME_FOLDER: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // The R class jar for compile classpath use.
     object COMPILE_R_CLASS_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // output of the resource merger for unit tests and the resource shrinker.
@@ -411,21 +413,20 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // Config file specifying how to protect app's integrity
     object APP_INTEGRITY_CONFIG: InternalArtifactType<RegularFile>(FILE), Replaceable
 
-    // The outputs of EnumerateClassesTask
-    object ENUMERATED_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // A dummy output (folder) result of CheckDuplicateClassesTask execution
     object DUPLICATE_CLASSES_CHECK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // File containing all generated proguard rules from Javac (by e.g. dagger) merged together
     object GENERATED_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
 
-    // Directory containing generated BuildConfig Java class.
-    object GENERATED_BUILD_CONFIG_JAVA: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
-
     // File containing unused dependencies and dependencies that can be configured as
     // implementation in the current variant
     object ANALYZE_DEPENDENCIES_REPORT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-
+    // Directory containing generated BuildConfig Java class.
+    object GENERATED_BUILD_CONFIG_JAVA: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
+    // File in JAR format containing compiled .class BuildConfig.
+    object COMPILE_BUILD_CONFIG_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
+    
     // File containing SDK dependency block value.
     object SDK_DEPENDENCY_DATA: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Public file containing SDK dependency (unencrypted).

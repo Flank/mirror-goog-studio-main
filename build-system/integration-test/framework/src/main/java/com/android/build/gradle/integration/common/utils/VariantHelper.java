@@ -18,9 +18,11 @@ package com.android.build.gradle.integration.common.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
+import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Collection;
 
@@ -52,7 +54,16 @@ public class VariantHelper {
         File apk = new File(build, "outputs/apk/" + outputFileName);
 
         Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
-        assertThat(sourceFolders).named("Gen src Folder count").hasSize(4);
+
+        if (FileUtils.join(
+                        build,
+                        "intermediates",
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            assertThat(sourceFolders).named("Gen src Folder count").hasSize(3);
+        } else {
+            assertThat(sourceFolders).named("Gen src Folder count").hasSize(4);
+        }
 
         Collection<String> outputs = ProjectBuildOutputUtils.getOutputFiles(variantOutput);
         assertThat(outputs).named("artifact output").isNotNull();

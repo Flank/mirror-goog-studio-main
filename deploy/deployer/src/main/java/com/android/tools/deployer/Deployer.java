@@ -305,7 +305,7 @@ public class Deployer {
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =
-                runner.create(Tasks.VERIFY, new SwapVerifier()::verify, diffs, restart);
+                runner.create(Tasks.VERIFY, new SwapVerifier()::verify, newFiles, diffs, restart);
 
         // Compare the local vs remote dex files.
         Task<DexComparator.ChangedClasses> changedClasses =

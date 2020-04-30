@@ -31,10 +31,10 @@ import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
@@ -57,6 +57,8 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val componentPropertiesImpl = Mockito.mock(ComponentPropertiesImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
+    val buildFeatures = Mockito.mock(BuildFeatureValues::class.java)
+    Mockito.doReturn(global).`when`(componentPropertiesImpl).globalScope
     Mockito.doReturn(variantScope).`when`(componentPropertiesImpl).variantScope
     Mockito.doReturn(baseVariantData).`when`(componentPropertiesImpl).variantData
     projectParentFolder.create()
@@ -87,8 +89,9 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(buildDir).`when`(project).buildDir
     Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
     Mockito.doReturn("debug").`when`(componentPropertiesImpl).name
-    Mockito.doReturn(false).`when`(projectOptions).get(BooleanOption.ENABLE_PREFAB)
-    val module = tryCreateCxxModuleModel(global)!!
+    Mockito.doReturn(buildFeatures).`when`(componentPropertiesImpl).buildFeatures
+    Mockito.doReturn(false).`when`(buildFeatures).prefab
+    val module = tryCreateCxxModuleModel(componentPropertiesImpl)!!
     val variant = createCxxVariantModel(module, componentPropertiesImpl)
     return createCxxAbiModel(
         variant,

@@ -48,18 +48,9 @@ class CheckDuplicateClassesDelegate {
 
     fun run(
         projectName: String,
-        enumeratedMainModuleClasses: File,
         enumeratedClasses: Map<String, File>) {
 
-        val artifactMap =
-            // Enumerate task may not have executed
-            if (enumeratedMainModuleClasses.exists()) {
-                enumeratedClasses
-                    .plus("${enumeratedMainModuleClasses.nameWithoutExtension} (project :$projectName)" to enumeratedMainModuleClasses)
-                    .toMap()
-            } else { enumeratedClasses }
-
-        val classesMap = extractClasses(artifactMap)
+        val classesMap = extractClasses(enumeratedClasses)
 
         val maxSize = classesMap.map { it.value.size }.sum()
         val classes = Maps.newHashMapWithExpectedSize<String, MutableList<String>>(maxSize)
@@ -99,7 +90,6 @@ private fun duplicateClassMessage(className: String, artifactNames: List<String>
 
 abstract class CheckDuplicatesParams: WorkParameters {
     abstract val projectName: Property<String>
-    abstract val enumeratedMainModuleClasses: RegularFileProperty
     abstract val enumeratedClasses: MapProperty<String, File>
 }
 
@@ -107,7 +97,6 @@ abstract class CheckDuplicatesRunnable @Inject constructor(): WorkAction<CheckDu
     override fun execute() {
         CheckDuplicateClassesDelegate().run(
             parameters.projectName.get(),
-            parameters.enumeratedMainModuleClasses.get().asFile,
             parameters.enumeratedClasses.get()
         )
     }

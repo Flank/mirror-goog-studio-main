@@ -128,6 +128,33 @@ java_binary(
     ],
 )
 
+# Verify that the iml_to_build tool does not need to be run.
+java_test(
+    name = "iml_to_build_consistency_test",
+    srcs = ["testSrc/com/android/tools/binaries/ImlToBazelConsistencyTest.java"],
+    # The iml_to_build tool depends on the artifact jars being present.
+    data = ["//tools/adt/idea/android:artifacts"],
+    # This test requires the tools/idea IML project and all corresponding
+    # Bazel BUILD files as input. Rather than trying to model that, this
+    # test is just run locally, without sandbox, and with caching disabled
+    # (see tags).
+    # Note that due to https://github.com/bazelbuild/bazel/issues/6038 the tag
+    # isn't effective when run with --config=remote, hence the workaround in
+    # test_studio.sh
+    local = True,
+    tags = [
+        "no-cache",  # As this test doesn't model all of its inputs.
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.ImlToBazelConsistencyTest",
+    deps = [
+        ":bazel_generator",
+        ":iml_to_build",
+        ":utils",
+        "//tools/base/third_party:junit_junit",
+    ],
+)
+
 java_binary(
     name = "bin2c",
     srcs = ["src/com/android/tools/binaries/Bin2C.java"],

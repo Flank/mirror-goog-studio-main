@@ -42,6 +42,7 @@ enum InstallStatus {
     INSTALL_FAILED_MULTIPACKAGE_INCONSISTENCY,
     INSTALL_FAILED_NEWER_SDK,
     INSTALL_FAILED_NO_MATCHING_ABIS,
+    NO_NATIVE_LIBRARIES,
     INSTALL_FAILED_NO_SHARED_USER,
     INSTALL_FAILED_OLDER_SDK,
     INSTALL_FAILED_OTHER_STAGED_SESSION_IN_PROGRESS,
@@ -68,6 +69,9 @@ enum InstallStatus {
     INSTALL_PARSE_FAILED_NO_CERTIFICATES,
     INSTALL_PARSE_FAILED_NOT_APK,
     INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION,
+    INSTALL_FAILED_PROCESS_NOT_DEFINED,
+    INSTALL_PARSE_FAILED_ONLY_COREAPP_ALLOWED,
+    INSTALL_PARSE_FAILED_RESOURCES_ARSC_COMPRESSED,
 
     DEVICE_NOT_RESPONDING,
     INCONSISTENT_CERTIFICATES,
@@ -78,4 +82,117 @@ enum InstallStatus {
     UNKNOWN_ERROR,
     SKIPPED_INSTALL, // no changes.
     ;
+
+    public static InstallStatus numericErrorCodeToStatus(int code) {
+        switch (code) {
+            case -1:
+                return INSTALL_FAILED_ALREADY_EXISTS;
+            case -2:
+                return INSTALL_FAILED_INVALID_APK;
+            case -3:
+                return INSTALL_FAILED_INVALID_URI;
+            case -4:
+                return INSTALL_FAILED_INSUFFICIENT_STORAGE;
+            case -5:
+                return INSTALL_FAILED_DUPLICATE_PACKAGE;
+            case -6:
+                return INSTALL_FAILED_NO_SHARED_USER;
+            case -7:
+                return INSTALL_FAILED_UPDATE_INCOMPATIBLE;
+            case -8:
+                return INSTALL_FAILED_SHARED_USER_INCOMPATIBLE;
+            case -9:
+                return INSTALL_FAILED_MISSING_SHARED_LIBRARY;
+            case -10:
+                return INSTALL_FAILED_REPLACE_COULDNT_DELETE;
+            case -11:
+                return INSTALL_FAILED_DEXOPT;
+            case -12:
+                return INSTALL_FAILED_OLDER_SDK;
+            case -13:
+                return INSTALL_FAILED_CONFLICTING_PROVIDER;
+            case -14:
+                return INSTALL_FAILED_NEWER_SDK;
+            case -15:
+                return INSTALL_FAILED_TEST_ONLY;
+            case -16:
+                return INSTALL_FAILED_CPU_ABI_INCOMPATIBLE;
+            case -17:
+                return INSTALL_FAILED_MISSING_FEATURE;
+            case -18:
+                return INSTALL_FAILED_CONTAINER_ERROR;
+            case -19:
+                return INSTALL_FAILED_INVALID_INSTALL_LOCATION;
+            case -20:
+                return INSTALL_FAILED_MEDIA_UNAVAILABLE;
+            case -21:
+                return INSTALL_FAILED_VERIFICATION_TIMEOUT;
+            case -22:
+                return INSTALL_FAILED_VERIFICATION_FAILURE;
+            case -23:
+                return INSTALL_FAILED_PACKAGE_CHANGED;
+            case -24:
+                return INSTALL_FAILED_UID_CHANGED;
+            case -25:
+                return INSTALL_FAILED_VERSION_DOWNGRADE;
+            case -26:
+                return INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE;
+            case -27:
+                return INSTALL_FAILED_SANDBOX_VERSION_DOWNGRADE;
+            case -28:
+                return INSTALL_FAILED_MISSING_SPLIT;
+
+            case -100:
+                return INSTALL_PARSE_FAILED_NOT_APK;
+            case -101:
+                return INSTALL_PARSE_FAILED_BAD_MANIFEST;
+            case -102:
+                return INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION;
+            case -103:
+                return INSTALL_PARSE_FAILED_NO_CERTIFICATES;
+            case -104:
+                return INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES;
+            case -105:
+                return INSTALL_PARSE_FAILED_CERTIFICATE_ENCODING;
+            case -106:
+                return INSTALL_PARSE_FAILED_BAD_PACKAGE_NAME;
+            case -107:
+                return INSTALL_PARSE_FAILED_BAD_SHARED_USER_ID;
+            case -108:
+                return INSTALL_PARSE_FAILED_MANIFEST_MALFORMED;
+            case -109:
+                return INSTALL_PARSE_FAILED_MANIFEST_EMPTY;
+            case -110:
+                return INSTALL_FAILED_INTERNAL_ERROR;
+            case -111:
+                return INSTALL_FAILED_USER_RESTRICTED;
+            case -112:
+                return INSTALL_FAILED_DUPLICATE_PERMISSION;
+            case -113:
+                return INSTALL_FAILED_NO_MATCHING_ABIS;
+            case -114:
+                return NO_NATIVE_LIBRARIES;
+            case -115:
+                return INSTALL_FAILED_ABORTED;
+            case -116:
+                return INSTALL_FAILED_INSTANT_APP_INVALID;
+            case -117:
+                return INSTALL_FAILED_BAD_DEX_METADATA;
+            case -118:
+                return INSTALL_FAILED_BAD_SIGNATURE;
+            case -119:
+                return INSTALL_FAILED_OTHER_STAGED_SESSION_IN_PROGRESS;
+            case -120:
+                return INSTALL_FAILED_MULTIPACKAGE_INCONSISTENCY;
+            case -121:
+                return INSTALL_FAILED_WRONG_INSTALLED_VERSION;
+            case -122:
+                return INSTALL_FAILED_PROCESS_NOT_DEFINED;
+            case -123:
+                return INSTALL_PARSE_FAILED_ONLY_COREAPP_ALLOWED;
+            case -124:
+                return INSTALL_PARSE_FAILED_RESOURCES_ARSC_COMPRESSED;
+        }
+        return UNKNOWN_ERROR;
+    }
 }

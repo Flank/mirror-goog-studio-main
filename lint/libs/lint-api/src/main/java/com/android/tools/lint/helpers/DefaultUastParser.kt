@@ -86,7 +86,6 @@ open class DefaultUastParser(
      */
     override fun prepare(
         contexts: List<JavaContext>,
-        testContexts: List<JavaContext>,
         javaLanguageLevel: LanguageLevel?,
         kotlinLanguageLevel: LanguageVersionSettings?
     ): Boolean = true

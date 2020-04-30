@@ -32,6 +32,13 @@ import java.util.List;
 public class PatchGenerator {
 
     public static class Patch {
+        enum Status {
+            Ok,
+            SizeThresholdExceeded
+        };
+
+        final Status status;
+
         final ByteBuffer data;
         final ByteBuffer instructions;
         final String sourcePath; // Path to apk used as source of clean data on the device.
@@ -42,6 +49,15 @@ public class PatchGenerator {
             this.instructions = instructions;
             this.sourcePath = sourcePath;
             this.destinationSize = destinationSize;
+            this.status = Status.Ok;
+        }
+
+        Patch(Status status) {
+            this.data = null;
+            this.instructions = null;
+            this.sourcePath = null;
+            this.destinationSize = 0;
+            this.status = status;
         }
     }
 
@@ -73,6 +89,11 @@ public class PatchGenerator {
         for (ApkMap.Area dirtyArea : dirtyAreas) {
             patchSize += dirtyArea.size();
         }
+
+        if (patchSize > PatchSetGenerator.MAX_PATCHSET_SIZE) {
+            return new Patch(Patch.Status.SizeThresholdExceeded);
+        }
+
         ByteBuffer data = ByteBuffer.wrap(new byte[patchSize]);
         ByteBuffer instructions =
                 ByteBuffer.wrap(new byte[dirtyAreas.size() * 8]).order(ByteOrder.LITTLE_ENDIAN);

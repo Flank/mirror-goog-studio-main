@@ -114,7 +114,6 @@ import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
 import com.android.build.gradle.internal.tasks.DexMergingAction;
 import com.android.build.gradle.internal.tasks.DexMergingTask;
 import com.android.build.gradle.internal.tasks.DexSplitterTask;
-import com.android.build.gradle.internal.tasks.EnumerateClassesTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask;
@@ -169,6 +168,8 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
+import com.android.build.gradle.tasks.CleanBuildCache;
+import com.android.build.gradle.tasks.CleanBuildCacheKt;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -609,6 +610,14 @@ public abstract class TaskManager<
         globalScope.setLintPublish(createCustomLintPublishConfig(project));
 
         globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
+
+        // Register the cleanBuildCache task only for the root project
+        TaskFactory rootProjectTaskFactory =
+                new TaskFactoryImpl(project.getRootProject().getTasks());
+        if (rootProjectTaskFactory.findByName(CleanBuildCacheKt.CLEAN_BUILD_CACHE_TASK_NAME)
+                == null) {
+            rootProjectTaskFactory.register(new CleanBuildCache.CreationAction(globalScope));
+        }
 
         // for testing only.
         taskFactory.register(
@@ -1140,9 +1149,15 @@ public abstract class TaskManager<
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask = taskFactory.register(
                     new GenerateBuildConfig.CreationAction(componentProperties));
 
-            TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getSourceGenTask(),
-                    generateBuildConfigTask);
+            if (!componentProperties
+                            .getServices()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
+                    && componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
+                TaskFactoryUtils.dependsOn(
+                        componentProperties.getTaskContainer().getSourceGenTask(),
+                        generateBuildConfigTask);
+            }
         }
     }
 
@@ -1347,7 +1362,7 @@ public abstract class TaskManager<
                     .getArtifacts()
                     .appendToAllClasses(
                             project.files(
-                                    artifacts.getFinalProductAsFileCollection(
+                                    artifacts.getFinalProduct(
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                                     .INSTANCE)));
         }
@@ -1550,7 +1565,7 @@ public abstract class TaskManager<
 
     public void createExternalNativeBuildJsonGenerators(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties.getGlobalScope());
+        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
 
         if (module == null) {
             return;
@@ -1590,7 +1605,7 @@ public abstract class TaskManager<
 
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties.getGlobalScope());
+        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
 
         if (module != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
@@ -1732,10 +1747,10 @@ public abstract class TaskManager<
             return;
         }
 
-        Provider<FileCollection> rClassJar =
+        Provider<RegularFile> rClassJar =
                 componentProperties
                         .getArtifacts()
-                        .getFinalProductAsFileCollection(
+                        .getFinalProduct(
                                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                         .INSTANCE);
 
@@ -2182,7 +2197,7 @@ public abstract class TaskManager<
         }
 
         // ----- Minify next -----
-        maybeCreateCheckDuplicateClassesTasks(componentProperties);
+        maybeCreateCheckDuplicateClassesTask(componentProperties);
         maybeCreateJavaCodeShrinkerTask(componentProperties);
         if (componentProperties.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(componentProperties);
@@ -2941,9 +2956,14 @@ public abstract class TaskManager<
                 creationConfig
                         .getArtifacts()
                         .getFinalProduct(InternalArtifactType.FEATURE_DEX.INSTANCE);
+
+        DirectoryProperty artifactDirectory =
+                creationConfig.getGlobalScope().getProject().getObjects().directoryProperty();
+        artifactDirectory.set(artifact);
+
         for (String modulePath : modulePaths) {
             Provider<RegularFile> file =
-                    artifact.map(directory -> directory.file(getFeatureFileName(modulePath, null)));
+                    artifactDirectory.file(getFeatureFileName(modulePath, null));
             Map<Attribute<String>, String> attributeMap =
                     ImmutableMap.of(MODULE_PATH, project.absoluteProjectPath(modulePath));
             publishArtifactToConfiguration(
@@ -3354,14 +3374,12 @@ public abstract class TaskManager<
                         .getExtraInstrumentationTestRunnerArgs());
     }
 
-    private void maybeCreateCheckDuplicateClassesTasks(
+    private void maybeCreateCheckDuplicateClassesTask(
             @NonNull ComponentPropertiesImpl componentProperties) {
         if (componentProperties
                 .getServices()
                 .getProjectOptions()
                 .get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
-            taskFactory.register(
-                    new EnumerateClassesTask.CreationAction(componentProperties, false));
             taskFactory.register(new CheckDuplicateClassesTask.CreationAction(componentProperties));
         }
     }

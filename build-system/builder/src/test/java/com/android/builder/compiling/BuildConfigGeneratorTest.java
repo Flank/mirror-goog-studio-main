@@ -35,71 +35,99 @@ public class BuildConfigGeneratorTest {
     @Test
     public void testFalse() throws Exception {
         File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigGenerator generator = new BuildConfigGenerator(tempDir, "my.app.pkg");
-
-        generator.addField("boolean", "DEBUG", "false").generate();
-
-        File file = generator.getBuildConfigFile();
-        assertTrue(file.exists());
-        String actual = Files.toString(file, Charsets.UTF_8);
-        assertEquals(
-                "/**\n" +
-                " * Automatically generated file. DO NOT MODIFY\n" +
-                " */\n" +
-                "package my.app.pkg;\n" +
-                "\n" +
-                "public final class BuildConfig {\n" +
-                "  public static final boolean DEBUG = false;\n" +
-                "}\n", actual);
-        file.delete();
-        tempDir.delete();
-    }
-
-    @Test
-    public void testTrue() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigGenerator generator = new BuildConfigGenerator(tempDir, "my.app.pkg");
-        generator.addField("boolean", "DEBUG", "Boolean.parseBoolean(\"true\")").generate();
-
-        File file = generator.getBuildConfigFile();
-        assertTrue(file.exists());
-        String actual = Files.toString(file, Charsets.UTF_8);
-        assertEquals(
-                "/**\n" +
-                " * Automatically generated file. DO NOT MODIFY\n" +
-                " */\n" +
-                "package my.app.pkg;\n" +
-                "\n" +
-                "public final class BuildConfig {\n" +
-                "  public static final boolean DEBUG = Boolean.parseBoolean(\"true\");\n" +
-                "}\n", actual);
-        file.delete();
-        tempDir.delete();
-    }
-
-
-    @Test
-    public void testExtra() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigGenerator generator = new BuildConfigGenerator(tempDir, "my.app.pkg");
-
-        generator.addField("int", "EXTRA", "42", "Extra line");
+        BuildConfigData buildConfigData =
+                new BuildConfigData.Builder()
+                        .setOutputPath(tempDir.toPath())
+                        .setBuildConfigPackageName("my.app.pkg")
+                        .addBooleanDebugField("DEBUG", "false")
+                        .build();
+        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
         generator.generate();
 
         File file = generator.getBuildConfigFile();
         assertTrue(file.exists());
         String actual = Files.toString(file, Charsets.UTF_8);
         assertEquals(
-                "/**\n" +
-                " * Automatically generated file. DO NOT MODIFY\n" +
-                " */\n" +
-                "package my.app.pkg;\n" +
-                "\n" +
-                "public final class BuildConfig {\n" +
-                "  // Extra line\n" +
-                "  public static final int EXTRA = 42;\n" +
-                "}\n", actual);
-        file.delete();
-        tempDir.delete();
+                "/**\n"
+                        + " * Automatically generated file. DO NOT MODIFY\n"
+                        + " */\n"
+                        + "package my.app.pkg;\n"
+                        + "\n"
+                        + "public final class BuildConfig {\n"
+                        + "  public static final boolean DEBUG = false;\n"
+                        + "}\n",
+                actual);
+    }
+
+    @Test
+    public void testTrue() throws Exception {
+        File tempDir = mTemporaryFolder.newFolder();
+        BuildConfigData buildConfigData =
+                new BuildConfigData.Builder()
+                        .setOutputPath(tempDir.toPath())
+                        .setBuildConfigPackageName("my.app.pkg")
+                        .addBooleanDebugField("DEBUG", "Boolean.parseBoolean(\"true\")")
+                        .build();
+        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
+        generator.generate();
+
+        File file = generator.getBuildConfigFile();
+        assertTrue(file.exists());
+        String actual = Files.toString(file, Charsets.UTF_8);
+        assertEquals(
+                "/**\n"
+                        + " * Automatically generated file. DO NOT MODIFY\n"
+                        + " */\n"
+                        + "package my.app.pkg;\n"
+                        + "\n"
+                        + "public final class BuildConfig {\n"
+                        + "  public static final boolean DEBUG = Boolean.parseBoolean(\"true\");\n"
+                        + "}\n",
+                actual);
+    }
+
+    @Test
+    public void testExtra() throws Exception {
+        File tempDir = mTemporaryFolder.newFolder();
+        BuildConfigData buildConfigData =
+                new BuildConfigData.Builder()
+                        .setOutputPath(tempDir.toPath())
+                        .setBuildConfigPackageName("my.app.pkg")
+                        .addItem("int", "EXTRA", "42", "Extra line")
+                        .build();
+        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
+
+        generator.generate();
+
+        File file = generator.getBuildConfigFile();
+        assertTrue(file.exists());
+        String actual = Files.toString(file, Charsets.UTF_8);
+        assertEquals(
+                "/**\n"
+                        + " * Automatically generated file. DO NOT MODIFY\n"
+                        + " */\n"
+                        + "package my.app.pkg;\n"
+                        + "\n"
+                        + "public final class BuildConfig {\n"
+                        + "  // Extra line\n"
+                        + "  public static final int EXTRA = 42;\n"
+                        + "}\n",
+                actual);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testThrowsExecptionWhenInvalidBuildConfigFieldUsed() throws Exception {
+        File tempDir = mTemporaryFolder.newFolder();
+        BuildConfigData buildConfigData =
+                new BuildConfigData.Builder()
+                        .setOutputPath(tempDir.toPath())
+                        .setBuildConfigPackageName("my.app.pkg")
+                        // BuildConfig generator does not currently support
+                        // BuildConfigField.BooleanField, therefore an IllegalArgumentException
+                        // is thrown.
+                        .addBooleanField("DEBUG", false)
+                        .build();
+        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
+        generator.generate();
     }
 }

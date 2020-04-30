@@ -249,8 +249,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
                         } else {
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE),
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
+                                component.artifacts.getFinalProduct(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE),
+                                component.artifacts.getFinalProduct(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
                             )
                         }
                     }
@@ -264,14 +264,14 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
                         } else {
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE));
+                                component.artifacts.getFinalProduct(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE));
                         }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
                         val files =
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.PROJECT_DEX_ARCHIVE),
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
+                                component.artifacts.getFinalProduct(InternalArtifactType.PROJECT_DEX_ARCHIVE),
+                                component.artifacts.getFinalProduct(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
 
                         val variantType = component.variantType
@@ -305,9 +305,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             } else {
                                 // we merge external dex in a separate task
                                 component.artifacts.getOperations().getAll(
-                                    MultipleArtifactType.EXTERNAL_LIBS_DEX)
-                                    .map { component.globalScope.project.files(it) }
-                                    .orElse(component.globalScope.project.files())
+                                    MultipleArtifactType.EXTERNAL_LIBS_DEX
+                                )
                             })
                     }
                 }

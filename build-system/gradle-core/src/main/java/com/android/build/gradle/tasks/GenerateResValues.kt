@@ -16,17 +16,15 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.ResValue
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.ResValueGenerator
-import com.android.builder.model.ClassField
 import com.android.utils.FileUtils
-import com.google.common.annotations.VisibleForTesting
-import com.google.common.collect.Lists
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -41,38 +39,25 @@ abstract class GenerateResValues : NonIncrementalTask() {
 
     // ----- PRIVATE TASK API -----
 
-    @VisibleForTesting
-    @get:Internal("handled by getItemValues()")
-    internal abstract val items: ListProperty<Any>
-
-    @Input
-    fun getItemValues(): List<String> {
-        val resolvedItems = items.get()
-        val list = Lists.newArrayListWithCapacity<String>(resolvedItems.size * 3)
-
-        for (item in resolvedItems) {
-            if (item is String) {
-                list.add(item)
-            } else if (item is ClassField) {
-                list.add(item.type)
-                list.add(item.name)
-                list.add(item.value)
-            }
-        }
-
-        return list
-    }
+    @get:Input
+    abstract val items: MapProperty<ResValue.Key, ResValue>
 
     override fun doTaskAction() {
         val folder = resOutputDir
-        val resolvedItems = items.get()
 
         // Always clean up the directory before use.
         FileUtils.cleanOutputDir(folder)
 
-        if (resolvedItems.isNotEmpty()) {
+        if (items.get().isNotEmpty()) {
             val generator = ResValueGenerator(folder)
-            generator.addItems(resolvedItems)
+            items.get().forEach { (key, resValueField) ->
+                generator.addResource(
+                    key.type,
+                    key.name,
+                    resValueField.value,
+                    resValueField.comment
+                )
+            }
             generator.generate()
         }
     }
@@ -98,10 +83,11 @@ abstract class GenerateResValues : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.items.set(creationConfig.globalScope.project.provider {
-                creationConfig.variantDslInfo.resValues
-            })
-
+            if (creationConfig is VariantCreationConfig) {
+                task.items.set(creationConfig.resValues)
+            } else {
+                task.items.empty()
+            }
             task.resOutputDir = creationConfig.paths.generatedResOutputDir
         }
     }

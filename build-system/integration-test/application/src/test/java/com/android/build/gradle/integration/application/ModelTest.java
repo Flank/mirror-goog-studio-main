@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -110,8 +111,14 @@ public class ModelTest {
         expectedGeneratedSourceFolders.add(
                 project.file("build/generated/aidl_source_output_dir/debug/out"),
                 project.file("build/generated/ap_generated_sources/debug/out"),
-                project.file("build/generated/source/buildConfig/debug"),
                 project.file("build/generated/renderscript_source_output_dir/debug/out"));
+
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            expectedGeneratedSourceFolders.add(
+                    project.file("build/generated/source/buildConfig/debug"));
+        }
 
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
@@ -126,9 +133,15 @@ public class ModelTest {
         expectedGeneratedTestSourceFolders.add(
                 project.file("build/generated/aidl_source_output_dir/debugAndroidTest/out"),
                 project.file("build/generated/ap_generated_sources/debugAndroidTest/out"),
-                project.file("build/generated/source/buildConfig/androidTest/debug"),
                 project.file(
                         "build/generated/renderscript_source_output_dir/debugAndroidTest/out"));
+
+        if (!project.getIntermediateFile(
+                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
+                .exists()) {
+            expectedGeneratedTestSourceFolders.add(
+                    project.file("build/generated/source/buildConfig/androidTest/debug"));
+        }
 
         assertThat(androidTestArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedTestSourceFolders.build());

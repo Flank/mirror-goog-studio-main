@@ -22,8 +22,7 @@ import org.gradle.api.Incubating
  * Shared properties between DSL objects [ProductFlavor] and [DefaultConfig]
  */
 @Incubating
-interface BaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
-    VariantDimension<AnnotationProcessorOptionsT> {
+interface BaseFlavor : VariantDimension {
     // TODO(b/140406102)
     /** The name of the flavor. */
     fun getName(): String

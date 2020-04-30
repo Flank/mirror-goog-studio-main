@@ -28,35 +28,35 @@ class StudioVersionsTest {
     @Test
     fun testNotInjected() {
         // Check is lenient when no studio version is injected.
-        verifyStudioIsNotOld(null, oldVersion)
+        verifyIDEIsNotOld(null, oldVersion)
     }
 
     @Test
     fun testInvalidVersionsInjected() {
         assertFailsWith<InvalidUserDataException> {
-            verifyStudioIsNotOld("", oldVersion)
+            verifyIDEIsNotOld("", oldVersion)
         }
     }
 
     @Test
     fun testNewerStudio() {
-        verifyStudioIsNotOld("3.3.1.6", MajorMinorVersion(3, 2))
+        verifyIDEIsNotOld("3.3.1.6", MajorMinorVersion(3, 2))
     }
 
     @Test
     fun testMatchingVersion() {
-        verifyStudioIsNotOld("3.2.1.6", MajorMinorVersion(3, 2))
+        verifyIDEIsNotOld("3.2.1.6", MajorMinorVersion(3, 2))
     }
 
     @Test
     fun testTooOldStudioVersion() {
         val exception = assertFailsWith<RuntimeException> {
-            verifyStudioIsNotOld("3.1.3.6", MajorMinorVersion(3, 2))
+            verifyIDEIsNotOld("3.1.3.6", MajorMinorVersion(3, 2))
         }
 
         assertThat(exception)
             .hasMessageThat()
-            .contains("please retry with Android Studio 3.2 or newer.")
+            .contains("please retry with version 3.2 or newer.")
     }
 
     @Test

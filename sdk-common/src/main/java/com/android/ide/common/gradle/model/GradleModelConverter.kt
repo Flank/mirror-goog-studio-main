@@ -325,9 +325,7 @@ class GradleModelConverter(
                     manifestValues = mergedConfig.manifestValues.copy(
                         applicationId = applicationId
                     ),
-                    resValues = mergedConfig.resValues + classFieldsToDynamicResourceValues(
-                        resValues
-                    )
+                    resValues = mergedConfig.resValues
                 )
             }
 

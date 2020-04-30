@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
+import com.android.build.gradle.internal.services.DslServices;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -37,6 +39,7 @@ public class LintOptions
                 Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Nullable private final DslServices dslServices;
     private Set<String> disable = Sets.newHashSet();
     private Set<String> enable = Sets.newHashSet();
     private Set<String> check = Sets.newHashSet();
@@ -70,7 +73,9 @@ public class LintOptions
     private File baselineFile;
 
     @Inject
-    public LintOptions() {}
+    public LintOptions(@NonNull DslServices dslServices) {
+        this.dslServices = dslServices;
+    }
 
     public LintOptions(
             @NonNull Set<String> disable,
@@ -99,6 +104,7 @@ public class LintOptions
             boolean checkDependencies,
             @Nullable File baselineFile,
             @Nullable Map<String, Integer> severityOverrides) {
+        this.dslServices = null;
         this.disable = disable;
         this.enable = enable;
         this.check = check;
@@ -492,14 +498,36 @@ public class LintOptions
 
     @Override
     public void check(@NonNull String id) {
-        check.add(id);
+        emitCheckWarning();
+        checkOnly(id);
     }
 
     @Override
-    public void check(String... ids) {
+    public void check(@NonNull String... ids) {
+        emitCheckWarning();
+        checkOnly(ids);
+    }
+
+    private void emitCheckWarning() {
+        assert dslServices != null; // Always true when these DSL methods are called
+        dslServices
+                .getDeprecationReporter()
+                .reportDeprecatedUsage(
+                        "android.lintOptions.checkOnly",
+                        "android.lintOptions.check",
+                        DeprecationTarget.LINT_CHECK_ONLY);
+    }
+
+    @Override
+    public void checkOnly(@NonNull String... ids) {
         for (String id : ids) {
-            check(id);
+            checkOnly(id);
         }
+    }
+
+    @Override
+    public void checkOnly(@NonNull String id) {
+        check.add(id);
     }
 
     @Override

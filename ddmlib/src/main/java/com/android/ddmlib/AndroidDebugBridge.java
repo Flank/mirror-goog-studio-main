@@ -83,7 +83,6 @@ public class AndroidDebugBridge {
     private static final String ADB = "adb"; //$NON-NLS-1$
     private static final String DDMS = "ddms"; //$NON-NLS-1$
     private static final String SERVER_PORT_ENV_VAR = "ANDROID_ADB_SERVER_PORT"; //$NON-NLS-1$
-    private static final String USER_MANAGED_ADB_ENV_VAR = "ANDROID_ADB_USER_MANAGED_MODE"; //$NON-NLS-1$
 
     // Where to find the ADB bridge.
     static final int DEFAULT_ADB_PORT = 5037;
@@ -263,18 +262,14 @@ public class AndroidDebugBridge {
 
     /** Similar to {@link #init(boolean)}, with ability to pass a custom set of env. variables. */
     public static synchronized void init(AdbInitOptions options) {
-        Preconditions.checkState(
-                !sInitialized, "AndroidDebugBridge.init() has already been called.");
+        Preconditions.checkState(!sInitialized, "AndroidDebugBridge.init() has already been called.");
         sInitialized = true;
         sClientSupport = options.clientSupport;
         sAdbEnvVars = options.adbEnvVars;
-        String userManagedAdbModeSetting = System.getenv(USER_MANAGED_ADB_ENV_VAR);
-        if (userManagedAdbModeSetting != null) {
-            sUserManagedAdbMode = Boolean.parseBoolean(userManagedAdbModeSetting);
-        }
+        sUserManagedAdbMode = options.userManagedAdbMode;
 
         // Determine port and instantiate socket address.
-        initAdbSocketAddr();
+        initAdbSocketAddr(options.userManagedAdbPort);
 
         MonitorThread monitorThread = MonitorThread.createInstance();
         monitorThread.start();
@@ -1445,10 +1440,14 @@ public class AndroidDebugBridge {
     /**
      * Instantiates sSocketAddr with the address of the host's adb process.
      */
-    private static void initAdbSocketAddr() {
+    private static void initAdbSocketAddr(int userManagedAdbPort) {
         // If we're in unit test mode, we already manually set sAdbServerPort.
         if (!sUnitTestMode) {
-            sAdbServerPort = getAdbServerPort();
+            if (sUserManagedAdbMode) {
+                sAdbServerPort = userManagedAdbPort;
+            } else {
+                sAdbServerPort = getAdbServerPort();
+            }
         }
         sHostAddr = InetAddress.getLoopbackAddress();
         sSocketAddr = new InetSocketAddress(sHostAddr, sAdbServerPort);

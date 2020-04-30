@@ -136,6 +136,11 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
       workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
       request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
+  if (!client_) {
+    // TODO Error Handling
+    return;
+  }
+
   if (!client_->Write(install_request)) {
     // TODO Error Handling.
     return;

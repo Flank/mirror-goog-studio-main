@@ -20,6 +20,7 @@ import com.android.build.api.dsl.DynamicFeatureBaseFlavor
 import com.android.build.api.dsl.LibraryBaseFlavor
 import com.android.build.api.dsl.Ndk
 import com.android.build.api.dsl.Shaders
+import com.android.build.api.dsl.TestBaseFlavor
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
@@ -30,16 +31,17 @@ import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.base.Strings
-import org.gradle.api.Action
 import java.io.File
+import org.gradle.api.Action
 
 /** Base DSL object used to configure product flavors.  */
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     AbstractProductFlavor(name),
     CoreProductFlavor,
-    ApplicationBaseFlavor<AnnotationProcessorOptions, SigningConfig>,
-    LibraryBaseFlavor<AnnotationProcessorOptions, SigningConfig>,
-    DynamicFeatureBaseFlavor<AnnotationProcessorOptions> {
+    ApplicationBaseFlavor<SigningConfig>,
+    DynamicFeatureBaseFlavor,
+    LibraryBaseFlavor<SigningConfig>,
+    TestBaseFlavor<SigningConfig> {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
@@ -474,7 +476,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     override val javaCompileOptions: JavaCompileOptions =
         dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
 
-    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions>.() -> Unit) {
+    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions.() -> Unit) {
         action.invoke(javaCompileOptions)
     }
 

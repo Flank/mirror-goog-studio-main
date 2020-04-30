@@ -128,7 +128,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
     public void testNoWarningWhenGradlePluginGeneratedImage() {
         lint().files(
                         xml(
-                                "res/drawable/my_vector.xml",
+                                "src/main/res/drawable/my_vector.xml",
                                 ""
                                         + "<vector\n"
                                         + "  xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -156,7 +156,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
     public void testWarningWhenUsingSupportVectors() {
         lint().files(
                         xml(
-                                "res/drawable/my_vector.xml",
+                                "src/main/res/drawable/my_vector.xml",
                                 ""
                                         + "<vector\n"
                                         + "  xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -182,7 +182,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                 .expectErrorCount(0)
                 .expect(
                         ""
-                                + "res/drawable/my_vector.xml:7: Warning: Very long vector path (1623 characters), which is bad for pe…\n"
+                                + "src/main/res/drawable/my_vector.xml:7: Warning: Very long vector path (1623 characters), which is b…\n"
                                 + "    android:pathData=\"M 37.8337860107,-40.3974914551 c 0,0 -35.8077850342,31.5523681641 -35.8077850…\n"
                                 + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~…\n"
                                 + "0 errors, 1 warnings\n");

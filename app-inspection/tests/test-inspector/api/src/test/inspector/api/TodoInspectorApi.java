@@ -43,9 +43,16 @@ public final class TodoInspectorApi {
         TODO_GROUP_REMOVING,
 
         TODO_GOT_ITEMS_COUNT,
+        TODO_GOT_BYTE_ITEMS_COUNT,
+        TODO_GOT_SHORT_ITEMS_COUNT,
         TODO_GOT_LONG_ITEMS_COUNT,
-        TODO_CLEARED_ALL_ITEMS,
 
+        TODO_GOT_GROUP_TRAILING_CHAR,
+
+        TODO_GOT_AVERAGE_ITEMS_COUNT,
+        TODO_GOT_DOUBLE_AVERAGE_ITEMS_COUNT,
+
+        TODO_CLEARED_ALL_ITEMS,
         TODO_HAS_EMPTY_TODO_LIST,
 
         TODO_ITEMS_PREFILLING,
@@ -62,6 +69,14 @@ public final class TodoInspectorApi {
         @NonNull
         public byte[] toByteArrayWithArg(byte arg) {
             return new byte[] {(byte) ordinal(), arg};
+        }
+
+        @NonNull
+        public byte[] toByteArrayWithArg(byte[] arg) {
+            byte[] result = new byte[arg.length + 1];
+            result[0] = (byte) ordinal();
+            System.arraycopy(arg, 0, result, 1, arg.length);
+            return result;
         }
     }
 }

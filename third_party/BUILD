@@ -59,7 +59,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.13.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.14.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -319,7 +319,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.test.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/test/platform/core-proto/0.0.1-dev:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/test/platform/core-proto/0.0.2-dev:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1310,7 +1310,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.4-rc-2:jar",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )

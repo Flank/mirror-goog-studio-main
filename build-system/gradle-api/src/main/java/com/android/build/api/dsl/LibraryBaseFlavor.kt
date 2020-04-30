@@ -19,8 +19,6 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        SigningConfigT : SigningConfig> :
-    BaseFlavor<AnnotationProcessorOptionsT>,
-    LibraryVariantDimension<AnnotationProcessorOptionsT, SigningConfigT> {
-}
+interface LibraryBaseFlavor<SigningConfigT : SigningConfig> :
+    BaseFlavor,
+    LibraryVariantDimension<SigningConfigT>

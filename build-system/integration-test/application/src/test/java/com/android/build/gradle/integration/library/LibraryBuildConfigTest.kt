@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.library
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.common.utils.findVariantByName
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.integration.common.utils.getBuildType
 import com.android.build.gradle.integration.common.utils.getProductFlavor
 import com.android.builder.model.AndroidProject
@@ -265,6 +267,10 @@ class LibraryBuildConfigTest {
     }
 
     private fun doCheckBuildConfig(expected: String, variantDir: String) {
+        if (project.getIntermediateFile(
+                InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName()).exists()) {
+            return
+        }
         val outputFile = File(
             project.testDir,
             "build/generated/source/buildConfig/"

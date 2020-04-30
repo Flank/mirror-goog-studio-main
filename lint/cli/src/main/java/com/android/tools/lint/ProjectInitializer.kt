@@ -511,7 +511,7 @@ private class ProjectInitializer(
         modules[name] = module
 
         val model = if (moduleElement.hasAttribute(ATTR_MODEL)) {
-            LmSerialization.read(getFile(moduleElement, dir, ATTR_MODEL, false))
+            LmSerialization.readModule(getFile(moduleElement, dir, ATTR_MODEL, false))
         } else {
             null
         }

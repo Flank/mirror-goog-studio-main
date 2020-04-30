@@ -45,7 +45,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency(mavenCoordinate = "androidx.ui:ui-tooling:$composeVersion")
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
-    requireTheme = false, generateActivityTitle = true, useMaterial2 = true
+    generateActivityTitle = true
   )
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
   save(mainActivityKt(activityClass, defaultPreview, greeting, packageName), srcOut.resolve("${activityClass}.kt"))

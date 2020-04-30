@@ -24,7 +24,7 @@ import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
 
 fun getParameterType(tensorInfo: TensorInfo): TypeName {
-    return if (isRGBImage(tensorInfo)) {
+    return if (tensorInfo.isRGBImage) {
         ClassNames.TENSOR_IMAGE
     } else {
         ClassNames.TENSOR_BUFFER
@@ -37,14 +37,14 @@ fun getIdentifierFromFileName(name: String): String {
 
 fun getProcessorName(tensorInfo: TensorInfo): String {
     return if (tensorInfo.source == TensorInfo.Source.INPUT) {
-        tensorInfo.name + "Processor"
+        tensorInfo.identifierName + "Processor"
     } else {
-        tensorInfo.name + "PostProcessor"
+        tensorInfo.identifierName + "PostProcessor"
     }
 }
 
 fun getProcessedTypeName(tensorInfo: TensorInfo): String {
-    return "processed" + tensorInfo.name
+    return "processed" + tensorInfo.identifierName
 }
 
 fun getProcessorBuilderName(tensorInfo: TensorInfo): String {
@@ -79,14 +79,8 @@ fun getDataType(type: TensorInfo.DataType): String {
 
 fun getOutputParameterType(tensorInfo: TensorInfo): ClassName {
     return when {
-        isRGBImage(tensorInfo) -> ClassNames.TENSOR_IMAGE
+        tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE
         tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> ClassNames.TENSOR_LABEL
         else -> ClassNames.TENSOR_BUFFER
     }
-}
-
-fun isRGBImage(tensorInfo: TensorInfo): Boolean {
-    return (tensorInfo.contentType == TensorInfo.ContentType.IMAGE
-            && tensorInfo.imageProperties.colorSpaceType
-            == TensorInfo.ImageProperties.ColorSpaceType.RGB)
 }

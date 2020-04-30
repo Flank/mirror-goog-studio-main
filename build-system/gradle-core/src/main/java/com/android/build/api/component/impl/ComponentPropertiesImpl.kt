@@ -58,6 +58,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
@@ -265,8 +266,9 @@ abstract class ComponentPropertiesImpl(
         // artifact for each publication.
         mainCollection =
             internalServices.fileCollection(
-                getCompiledRClasses(configType),
-                mainCollection
+                    getCompiledRClasses(configType),
+                    getCompiledBuildConfig(),
+                    mainCollection
             )
         return mainCollection
     }
@@ -405,12 +407,11 @@ abstract class ComponentPropertiesImpl(
         }
 
         // for the other, there's no duplicate so no issue.
-        taskContainer.generateBuildConfigTask?.let {
-       if (buildFeatures.buildConfig){
+        if (getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
             val generatedBuildConfig =
                 operations.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
-            sourceSets.add(internalServices.fileTree(generatedBuildConfig).builtBy(generatedBuildConfig))
-            }
+            sourceSets.add(internalServices.fileTree(generatedBuildConfig)
+                .builtBy(generatedBuildConfig))
         }
         if (taskContainer.aidlCompileTask != null) {
             val aidlFC = artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR)
@@ -499,7 +500,7 @@ abstract class ComponentPropertiesImpl(
                     )
 
                     internalServices.fileCollection(
-                        artifacts.getFinalProductAsFileCollection(
+                        artifacts.getFinalProduct(
                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                         )
                     )
@@ -513,6 +514,20 @@ abstract class ComponentPropertiesImpl(
                     internalServices.fileCollection(variantScope.rJarForUnitTests)
                 }
             }
+        }
+    }
+
+     fun getCompiledBuildConfig(): FileCollection {
+        val isBuildConfigJar = getBuildConfigType() == BuildConfigType.JAR
+        val isAndroidTest = variantDslInfo.variantType == VariantTypeImpl.ANDROID_TEST
+        val isUnitTest = variantDslInfo.variantType == VariantTypeImpl.UNIT_TEST
+        // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
+        // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
+        return if (isBuildConfigJar && !isAndroidTest && !isUnitTest && testedConfig == null) {
+            internalServices.fileCollection(operations.get(
+                    InternalArtifactType.COMPILE_BUILD_CONFIG_JAR))
+        } else {
+            internalServices.fileCollection()
         }
     }
 
@@ -543,5 +558,17 @@ abstract class ComponentPropertiesImpl(
             dimension,
             ImmutableMap.of(requestedValue, alternatedValues)
         )
+    }
+
+    fun getBuildConfigType() : BuildConfigType {
+        return if (taskContainer.generateBuildConfigTask == null || !buildFeatures.buildConfig) {
+              BuildConfigType.NONE
+        } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
+                && (this as VariantCreationConfig).buildConfigFields.get().none()
+        ) {
+            BuildConfigType.JAR
+        } else {
+            BuildConfigType.JAVA_CLASS
+        }
     }
 }

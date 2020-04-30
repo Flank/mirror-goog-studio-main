@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.method
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.ImageGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.LabelGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector
-import com.android.build.gradle.internal.tasks.mlkit.codegen.isRGBImage
 import com.android.tools.mlkit.TensorInfo
 
 fun getFieldInjector(): FieldInjector {
@@ -48,14 +47,14 @@ fun getAssociatedFileInjector(): AssociatedFileInjector {
 
 fun getGetterMethodInjector(tensorInfo: TensorInfo): MethodInjector {
     return when {
-        isRGBImage(tensorInfo) -> ImageGetMethodInjector()
+        tensorInfo.isRGBImage -> ImageGetMethodInjector()
         tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> LabelGetMethodInjector()
         else -> DefaultGetMethodInjector()
     }
 }
 
 fun getInputProcessorInjector(tensorInfo: TensorInfo): CodeBlockInjector {
-    return if (isRGBImage(tensorInfo)) {
+    return if (tensorInfo.isRGBImage) {
         ImagePreprocessorInitInjector()
     } else {
         DefaultPreprocessorInitInjector()
@@ -63,7 +62,7 @@ fun getInputProcessorInjector(tensorInfo: TensorInfo): CodeBlockInjector {
 }
 
 fun getProcessInjector(tensorInfo: TensorInfo): CodeBlockInjector {
-    return if (isRGBImage(tensorInfo)) {
+    return if (tensorInfo.isRGBImage) {
         ImageProcessInjector()
     } else {
         DefaultProcessInjector()
@@ -71,7 +70,7 @@ fun getProcessInjector(tensorInfo: TensorInfo): CodeBlockInjector {
 }
 
 fun getOutputProcessorInjector(tensorInfo: TensorInfo): CodeBlockInjector {
-    return if (isRGBImage(tensorInfo)) {
+    return if (tensorInfo.isRGBImage) {
         ImagePostprocessorInitInjector()
     } else {
         DefaultPostprocessorInitInjector()

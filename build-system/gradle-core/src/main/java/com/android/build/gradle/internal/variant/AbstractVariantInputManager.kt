@@ -45,13 +45,13 @@ import com.android.builder.core.VariantTypeImpl
  * to be done per flavor/build-type type. This is handled by children classes for each use case.
  */
 abstract class AbstractVariantInputManager<
-        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<*>,
-        BuildTypeT : com.android.build.api.dsl.BuildType<*>,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<*>,
+        DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
+        BuildTypeT : com.android.build.api.dsl.BuildType,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         SigningConfigT : com.android.build.api.dsl.SigningConfig>(
-    private val variantType: VariantType,
-    override val sourceSetManager: SourceSetManager
-) : VariantInputModel<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>,
+            private val variantType: VariantType,
+            override val sourceSetManager: SourceSetManager
+        ) : VariantInputModel<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>,
     DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT> {
 
     override val buildTypes = mutableMapOf<String, BuildTypeData<BuildTypeT>>()

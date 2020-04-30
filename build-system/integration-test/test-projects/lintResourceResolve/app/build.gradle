@@ -39,7 +39,7 @@ android {
         textOutput file("lint-report.txt")
         xmlOutput file("lint-report.xml")
         warningsAsErrors true
-        check 'SupportAnnotationUsage'
+        checkOnly 'SupportAnnotationUsage'
     }
 }
 

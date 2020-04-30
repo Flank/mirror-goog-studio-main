@@ -20,7 +20,8 @@ import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
-import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
@@ -44,5 +45,5 @@ fun AutoNamespaceParameters.init(globalScope: GlobalScope) {
     aapt2FromMaven.from(file)
     aapt2Version.set(version)
     errorFormatMode.set(SyncOptions.getErrorFormatMode(globalScope.projectOptions))
-    aapt2DaemonBuildService.set(getAapt2DaemonBuildService(globalScope.project))
+    aapt2DaemonBuildService.setDisallowChanges(getBuildService(globalScope.project))
 }

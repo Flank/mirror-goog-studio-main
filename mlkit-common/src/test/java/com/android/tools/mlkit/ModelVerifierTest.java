@@ -35,13 +35,6 @@ public class ModelVerifierTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        when(metadataExtractor.getSubgraphCount()).thenReturn(1);
-    }
-
-    @Test(expected = UnsupportedTfliteException.class)
-    public void testMultiGraphThrowException() throws TfliteModelException {
-        when(metadataExtractor.getSubgraphCount()).thenReturn(2);
-        ModelVerifier.verifyModel(metadataExtractor);
     }
 
     @Test
@@ -53,5 +46,10 @@ public class ModelVerifierTest {
     @Test(expected = InvalidTfliteException.class)
     public void testInvalidModelThrowException() throws TfliteModelException {
         ModelVerifier.verifyModel(ByteBuffer.wrap(new byte[] {1, 2, 4, 6}));
+    }
+
+    @Test(expected = UnsupportedTfliteException.class)
+    public void testUnsupportedDataTypeThrowException() throws TfliteModelException {
+        ModelVerifier.verifyDataType((byte) -1, 0, TensorInfo.Source.INPUT);
     }
 }

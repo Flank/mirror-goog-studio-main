@@ -18,6 +18,7 @@ package com.android.sdklib.tool.sdkmanager;
 import com.android.annotations.NonNull;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -33,12 +34,24 @@ class UpdateAction extends InstallAction {
     @NonNull
     @Override
     public List<String> getPaths(@NonNull RepoManager mgr) {
-        return mgr.getPackages()
-                .getUpdatedPkgs()
-                .stream()
-                .filter(p -> mSettings.includeObsolete() || !p.getRemote().obsolete())
-                .map(p -> p.getRepresentative().getPath())
-                .collect(Collectors.toList());
+        List<String> toUpdate =
+                mgr.getPackages().getUpdatedPkgs().stream()
+                        .filter(p -> mSettings.includeObsolete() || !p.getRemote().obsolete())
+                        .map(p -> p.getRepresentative().getPath())
+                        .collect(Collectors.toList());
+        PrintStream out = mSettings.getOutputStream();
+        out.println();
+        out.flush();
+        if (toUpdate.isEmpty()) {
+            out.println("No updates available");
+        } else {
+            out.println("Updating:");
+            for (String pack : toUpdate) {
+                out.println(pack);
+            }
+        }
+        out.flush();
+        return toUpdate;
     }
 
     @Override

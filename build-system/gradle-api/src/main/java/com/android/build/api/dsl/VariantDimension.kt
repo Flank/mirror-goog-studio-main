@@ -16,8 +16,8 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
 import java.io.File
+import org.gradle.api.Incubating
 
 /**
  * Shared properties between DSL objects that contribute to a variant.
@@ -25,7 +25,7 @@ import java.io.File
  * That is, [BuildType] and [ProductFlavor] and [DefaultConfig].
  */
 @Incubating
-interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
+interface VariantDimension {
     /**
      * Text file with additional ProGuard rules to be used to determine which classes are compiled
      * into the main dex file.
@@ -148,10 +148,10 @@ interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOpti
     fun addManifestPlaceholders(manifestPlaceholders: Map<String, Any>)
 
     /** Options for configuring Java compilation. */
-    val javaCompileOptions: JavaCompileOptions<AnnotationProcessorOptionsT>
+    val javaCompileOptions: JavaCompileOptions
 
     /** Options for configuring Java compilation. */
-    fun javaCompileOptions(action: JavaCompileOptions<AnnotationProcessorOptionsT>.() -> Unit)
+    fun javaCompileOptions(action: JavaCompileOptions.() -> Unit)
 
     /** Options for configuring the shader compiler.  */
     val shaders: Shaders

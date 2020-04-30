@@ -802,10 +802,12 @@ class LintDriver
         }
 
         for ((file, project) in fileToProject) {
+            //noinspection FileComparisons
             if (file != project.dir) {
                 if (file.isDirectory) {
                     try {
                         val dir = file.canonicalFile
+                        //noinspection FileComparisons
                         if (dir == project.dir) {
                             continue
                         }
@@ -991,7 +993,7 @@ class LintDriver
                 } else {
                     findUastSources(project, main, checks)
                 }
-                prepareUast(project, uastSourceList)
+                prepareUast(uastSourceList)
             }
         }
 
@@ -1004,7 +1006,7 @@ class LintDriver
             } else {
                 findUastSources(project, main, emptyList())
             }
-            prepareUast(project, uastRequest)
+            prepareUast(uastRequest)
         }
 
         if (isCanceled) {
@@ -1188,7 +1190,7 @@ class LintDriver
                         val uastParser = client.getUastParser(currentProject)
                         context.uastParser = uastParser
 
-                        uastParser.prepare(listOf(context), emptyList(),
+                        uastParser.prepare(listOf(context),
                             project.javaLanguageLevel, project.kotlinLanguageLevel)
                         val uFile = uastParser.parse(context)
                         if (uFile != null) {
@@ -1217,7 +1219,6 @@ class LintDriver
                             context.uastFile = null
                         }
 
-                        uastParser.dispose()
                         fileCount++
                     } else if (file.path.endsWith(DOT_GRADLE)) {
                         val gradleVisitor = project.client.getGradleVisitor()
@@ -1679,19 +1680,13 @@ class LintDriver
         }
     }
 
-    private fun prepareUast(
-        project: Project,
-        sourceList: UastSourceList
-    ) {
+    private fun prepareUast(sourceList: UastSourceList) {
         val parser = sourceList.parser
-        val srcContexts = sourceList.srcContexts
-        val testContexts = sourceList.testContexts
         val allContexts = sourceList.allContexts
-
         for (context in allContexts) {
             context.uastParser = parser
         }
-        parserErrors = !parser.prepare(srcContexts, testContexts)
+        parserErrors = !parser.prepare(allContexts)
     }
 
     /** The lists of production and test files for Kotlin and Java to parse and process */
@@ -1736,7 +1731,6 @@ class LintDriver
 
             val projectContext = Context(this, project, main, project.dir)
             uElementVisitor.visitGroups(projectContext, allContexts)
-            uElementVisitor.dispose()
 
             if (testContexts.isNotEmpty()) {
                 val testScanners = filterTestScanners(uastScanners)
@@ -1758,8 +1752,6 @@ class LintDriver
                             return
                         }
                     }
-
-                    uTestVisitor.dispose()
                 }
             }
         }
@@ -2035,7 +2027,6 @@ class LintDriver
                             fileCount++
                             resourceFileCount++
                         })
-
                     }
                 }
             } else if (binaryChecks != null && file.isFile && isBitmapFile(file)) {
@@ -2085,7 +2076,7 @@ class LintDriver
 
     /** Notifies listeners, if any, that the given event has occurred  */
     private fun fireEvent(
-        type: LintListener.EventType,
+        type: EventType,
         context: Context? = null,
         project: Project? = context?.project
     ) {
@@ -2262,7 +2253,7 @@ class LintDriver
         override fun getCacheDir(name: String?, create: Boolean): File? =
             delegate.getCacheDir(name, create)
 
-        override fun getClassPath(project: Project): LintClient.ClassPathInfo =
+        override fun getClassPath(project: Project): ClassPathInfo =
             delegate.performGetClassPath(project)
 
         override fun log(
@@ -2739,7 +2730,6 @@ class LintDriver
         // Workaround: Kotlin AST is missing these annotations (IDEA-234749)
         if (clause is KotlinUCatchClause) {
             clause.sourcePsi.catchParameter?.annotationEntries?.forEach { annotation ->
-                val argList = annotation.valueArgumentList
                 if (annotation.shortName?.asString() == SUPPRESS_LINT) {
                     for (arg in annotation.valueArguments) {
                         val expression = arg.getArgumentExpression()
@@ -2956,6 +2946,7 @@ class LintDriver
      */
     fun getResourceFolderVersion(resourceFile: File): Int {
         val parent = resourceFile.parentFile ?: return -1
+        //noinspection FileComparisons
         if (parent == cachedFolder) {
             return cachedFolderVersion
         }
@@ -2988,14 +2979,6 @@ class LintDriver
         const val STUDIO_ID_PREFIX = "AndroidLint"
 
         private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
-
-        private val DEFAULT_SUPPRESS_ANNOTATIONS = setOf(
-            FQCN_SUPPRESS_LINT,
-            SUPPRESS_WARNINGS_FQCN,
-            KOTLIN_SUPPRESS,
-            // When missing imports
-            SUPPRESS_LINT
-        )
 
         /**
          * For testing only: returns the number of exceptions thrown during Java AST analysis
@@ -3168,7 +3151,7 @@ class LintDriver
                     } else {
                         className
                     }
-                    return kotlin.Pair(detector, issues)
+                    return Pair(detector, issues)
                 }
             }
 
@@ -3428,6 +3411,7 @@ class LintDriver
          */
         @JvmStatic
         fun isSuppressed(issue: Issue, annotated: UAnnotated): Boolean {
+            //noinspection ExternalAnnotations
             val annotations = annotated.uAnnotations
             if (annotations.isEmpty()) {
                 return false
@@ -3492,6 +3476,7 @@ class LintDriver
             annotated: UAnnotated,
             names: Set<String>
         ): Boolean {
+            //noinspection ExternalAnnotations
             val annotations = annotated.uAnnotations
             if (annotations.isEmpty()) {
                 return false

@@ -43,7 +43,7 @@ public class SdkManagerCli {
 
     private final SdkManagerCliSettings mSettings;
 
-    public static void main(@NonNull String args[]) {
+    public static void main(@NonNull String[] args) {
         try {
             main(Arrays.asList(args));
         } catch (CommandFailedException | UncheckedCommandFailedException e) {
@@ -53,13 +53,19 @@ public class SdkManagerCli {
 
     private static void main(@NonNull List<String> args) throws CommandFailedException {
         FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
-        SdkManagerCliSettings settings =
-                SdkManagerCliSettings.createSettings(args, fop.getFileSystem());
-
-        if (settings == null) {
+        SdkManagerCliSettings settings;
+        try {
+            settings = SdkManagerCliSettings.createSettings(args, fop.getFileSystem());
+        } catch (SdkManagerCliSettings.ShowUsageException showUsageException) {
             usage(System.err);
             throw new CommandFailedException();
+        } catch (SdkManagerCliSettings.FailSilentlyException failSilentlyException) {
+            throw new CommandFailedException();
+        } catch (Exception exception) {
+            System.err.println("Failed to create settings");
+            throw exception;
         }
+
         Path localPath = settings.getLocalPath();
         if (!Files.exists(localPath)) {
             try {
@@ -134,6 +140,7 @@ public class SdkManagerCli {
                         + "[--package_file=<file>] [<packages>...]");
         out.println("  sdkmanager --update [<common args>]");
         out.println("  sdkmanager --list [<common args>]");
+        out.println("  sdkmanager --list_installed [<common args>]");
         out.println("  sdkmanager --licenses [<common args>]");
         out.println("  sdkmanager --version");
         out.println();
@@ -152,6 +159,8 @@ public class SdkManagerCli {
         out.println("With --update, all installed packages are updated to the latest version.");
         out.println();
         out.println("With --list, all installed and available packages are printed out.");
+        out.println();
+        out.println("With --list_installed, all installed packages are printed out.");
         out.println();
         out.println("With --licenses, show and offer the option to accept licenses for all");
         out.println("     available packages that have not already been accepted.");

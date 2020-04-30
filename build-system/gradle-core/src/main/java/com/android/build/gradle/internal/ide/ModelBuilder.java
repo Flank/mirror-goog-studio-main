@@ -67,6 +67,7 @@ import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.builder.compiling.BuildConfigType;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
@@ -264,7 +265,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                     "This Gradle plugin requires a newer IDE able to request IDE model level 3. For Android Studio this means version 3.0+");
         }
 
-        StudioVersions.verifyStudioIsNotOld(projectOptions);
+        StudioVersions.verifyIDEIsNotOld(projectOptions);
 
         modelWithFullDependency =
                 projectOptions.get(BooleanOption.IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES);
@@ -926,7 +927,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantDslInfo.getSupportedAbis(),
-                variantDslInfo.getMergedResValues(),
                 instantRun,
                 testOptions,
                 taskContainer.getConnectedTask() == null
@@ -1046,7 +1046,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (aidlSources != null) {
             folders.add(aidlSources.getAsFile());
         }
-        folders.add(componentProperties.getPaths().getBuildConfigSourceOutputDir());
+        if (componentProperties.getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
+            folders.add(componentProperties.getPaths().getBuildConfigSourceOutputDir());
+        }
         boolean ndkMode = componentProperties.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =

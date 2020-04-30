@@ -33,11 +33,11 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     public void testResourceFiles() {
         String expected =
                 ""
-                        + "res/drawable-mdpi/frame.png: Error: Resource named 'frame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_frame' ? [ResourceName]\n"
-                        + "res/layout/layout1.xml:2: Error: Resource named 'layout1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_layout1' ? [ResourceName]\n"
+                        + "src/main/res/drawable-mdpi/frame.png: Error: Resource named 'frame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_frame' ? [ResourceName]\n"
+                        + "src/main/res/layout/layout1.xml:2: Error: Resource named 'layout1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_layout1' ? [ResourceName]\n"
                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + " ~~~~~~~~~~~~\n"
-                        + "res/menu/menu.xml:2: Error: Resource named 'menu' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_menu' ? [ResourceName]\n"
+                        + "src/main/res/menu/menu.xml:2: Error: Resource named 'menu' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_menu' ? [ResourceName]\n"
                         + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n"
                         + " ~~~~\n"
                         + "3 errors, 0 warnings";
@@ -45,7 +45,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
         ProjectDescription project =
                 project(
                         xml(
-                                "res/layout/layout1.xml",
+                                "src/main/res/layout/layout1.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -72,7 +72,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</LinearLayout>\n"),
                         xml(
-                                "res/menu/menu.xml",
+                                "src/main/res/menu/menu.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n"
@@ -91,7 +91,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</menu>\n"),
                         xml(
-                                "res/layout/unit_test_prefix_ok.xml",
+                                "src/main/res/layout/unit_test_prefix_ok.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -117,9 +117,9 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                                         + "        android:text=\"Button\" />\n"
                                         + "\n"
                                         + "</LinearLayout>\n"),
-                        image("res/drawable-mdpi/frame.png", 472, 290),
-                        image("res/drawable/unit_test_prefix_ok1.png", 472, 290),
-                        image("res/drawable/unit_test_prefix_ok2.9.png", 472, 290),
+                        image("src/main/res/drawable-mdpi/frame.png", 472, 290),
+                        image("src/main/res/drawable/unit_test_prefix_ok1.png", 472, 290),
+                        image("src/main/res/drawable/unit_test_prefix_ok2.9.png", 472, 290),
                         gradle(
                                 ""
                                         + "apply plugin: 'com.android.library'\n"
@@ -134,16 +134,16 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     public void testValues() {
         String expected =
                 ""
-                        + "res/values/customattr.xml:2: Error: Resource named 'ContentFrame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'UnitTestPrefixContentFrame' ? [ResourceName]\n"
+                        + "src/main/res/values/customattr.xml:2: Error: Resource named 'ContentFrame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'UnitTestPrefixContentFrame' ? [ResourceName]\n"
                         + "    <declare-styleable name=\"ContentFrame\">\n"
                         + "                       ~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/values/customattr.xml:3: Error: Resource named 'content' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_content' ? [ResourceName]\n"
+                        + "src/main/res/values/customattr.xml:3: Error: Resource named 'content' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_content' ? [ResourceName]\n"
                         + "        <attr name=\"content\" format=\"reference\" />\n"
                         + "              ~~~~~~~~~~~~~~\n"
-                        + "res/values/customattr.xml:4: Error: Resource named 'contentId' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_contentId' ? [ResourceName]\n"
+                        + "src/main/res/values/customattr.xml:4: Error: Resource named 'contentId' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_contentId' ? [ResourceName]\n"
                         + "        <attr name=\"contentId\" format=\"reference\" />\n"
                         + "              ~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/customattrlayout.xml:2: Error: Resource named 'customattrlayout' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_customattrlayout' ? [ResourceName]\n"
+                        + "src/main/res/layout/customattrlayout.xml:2: Error: Resource named 'customattrlayout' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_customattrlayout' ? [ResourceName]\n"
                         + "<foo.bar.ContentFrame\n"
                         + " ~~~~~~~~~~~~~~~~~~~~\n"
                         + "4 errors, 0 warnings";
@@ -152,7 +152,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
         ProjectDescription project =
                 project(
                         xml(
-                                "res/values/customattr.xml",
+                                "src/main/res/values/customattr.xml",
                                 ""
                                         + "<resources>\n"
                                         + "    <declare-styleable name=\"ContentFrame\">\n"
@@ -161,7 +161,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                                         + "    </declare-styleable>\n"
                                         + "</resources>\n"),
                         xml(
-                                "res/layout/customattrlayout.xml",
+                                "src/main/res/layout/customattrlayout.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<foo.bar.ContentFrame\n"
@@ -215,7 +215,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                                                 + "    }\n"
                                                 + "}\n"),
                                 xml(
-                                        "res/values/strings.xml",
+                                        "src/main/res/values/strings.xml",
                                         ""
                                                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                                 + "<resources>\n"
@@ -256,16 +256,16 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "LibraryProject/res/values/strings.xml:4: Error: Resource named 'app_name' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_app_name' ? [ResourceName]\n"
+                        + "LibraryProject/src/main/res/values/strings.xml:4: Error: Resource named 'app_name' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_app_name' ? [ResourceName]\n"
                         + "    <string name=\"app_name\">LibraryProject</string>\n"
                         + "            ~~~~~~~~~~~~~~~\n"
-                        + "LibraryProject/res/values/strings.xml:5: Error: Resource named 'string1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string1' ? [ResourceName]\n"
+                        + "LibraryProject/src/main/res/values/strings.xml:5: Error: Resource named 'string1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string1' ? [ResourceName]\n"
                         + "    <string name=\"string1\">String 1</string>\n"
                         + "            ~~~~~~~~~~~~~~\n"
-                        + "LibraryProject/res/values/strings.xml:6: Error: Resource named 'string2' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string2' ? [ResourceName]\n"
+                        + "LibraryProject/src/main/res/values/strings.xml:6: Error: Resource named 'string2' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string2' ? [ResourceName]\n"
                         + "    <string name=\"string2\">String 2</string>\n"
                         + "            ~~~~~~~~~~~~~~\n"
-                        + "LibraryProject/res/values/strings.xml:7: Error: Resource named 'string3' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string3' ? [ResourceName]\n"
+                        + "LibraryProject/src/main/res/values/strings.xml:7: Error: Resource named 'string3' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string3' ? [ResourceName]\n"
                         + "    <string name=\"string3\">String 3</string>\n"
                         + "            ~~~~~~~~~~~~~~\n"
                         + "4 errors, 0 warnings\n";
@@ -282,7 +282,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
         // 208973: Lint check for resource prefix doesn't ignore android: attributes
         lint().files(
                         xml(
-                                "res/values/values.xml",
+                                "src/main/res/values/values.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
@@ -305,7 +305,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     public void testStyleableName() {
         lint().files(
                         xml(
-                                "res/values/values.xml",
+                                "src/main/res/values/values.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
@@ -325,7 +325,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     public void testPublicStyleableName() {
         lint().files(
                         xml(
-                                "res/values/values.xml",
+                                "src/main/res/values/values.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"

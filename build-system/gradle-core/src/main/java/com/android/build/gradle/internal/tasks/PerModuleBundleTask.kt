@@ -235,25 +235,20 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
             task.resFiles.disallowChanges()
 
-            val programDexFiles =
-                creationConfig.globalScope.project.files(
-                    if (creationConfig.variantScope.consumesFeatureJars()) {
-                        artifacts.getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX)
-                    } else {
-                        artifacts
-                        .getOperations()
-                        .getAll(MultipleArtifactType.DEX)
-                    })
-            val desugarLibDexFile =
+            task.dexFiles.from(
+                if (creationConfig.variantScope.consumesFeatureJars()) {
+                    artifacts.getFinalProduct(InternalArtifactType.BASE_DEX)
+                } else {
+                    artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+                }
+            )
+            task.dexFiles.from(
                 if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                    creationConfig.globalScope.project.files(
-                        artifacts.getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
-                    )
+                    artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)
                 } else {
                     getDesugarLibDexFromTransform(creationConfig)
                 }
-
-            task.dexFiles.from(programDexFiles.plus(desugarLibDexFile))
+            )
 
             task.featureDexFiles.from(
                 creationConfig.variantDependencies.getArtifactFileCollection(

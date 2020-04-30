@@ -32,13 +32,13 @@ class DefaultGetMethodInjector : MethodInjector() {
         val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
             MlkitNames.formatGetterName(
-                tensorInfo.name, returnType.simpleName()
+                tensorInfo.identifierName, returnType.simpleName()
             )
         )
             .addModifiers(Modifier.PUBLIC)
             .returns(returnType)
             .addAnnotation(ClassNames.NON_NULL)
-            .addStatement("return \$L", tensorInfo.name)
+            .addStatement("return \$L", tensorInfo.identifierName)
             .build()
         classBuilder.addMethod(methodSpec)
     }

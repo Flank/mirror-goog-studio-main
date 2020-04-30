@@ -52,7 +52,7 @@ fun RecipeExecutor.scrollActivityRecipe(
 
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
-    requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
+    generateActivityTitle = true
   )
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))

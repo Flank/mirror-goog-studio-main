@@ -48,7 +48,7 @@ val androidThingsActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Things
-    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
+    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewProjectExtraDetail, WizardUiContext.NewModule)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {

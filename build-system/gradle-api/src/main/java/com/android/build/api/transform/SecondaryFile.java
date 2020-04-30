@@ -144,8 +144,9 @@ public class SecondaryFile {
     /**
      * Returns the {@link FileCollection} handle for this secondary input to a {@link Transform}
      *
-     * If this {@link SecondaryFile} is constructed with {@link File}, the supplied {@link Project}
-     * will be used to create a {@link FileCollection}.
+     * <p>If this {@link SecondaryFile} is constructed with {@link File}, the supplied {@link
+     * Project} will be used to create a {@link FileCollection}.
+     *
      * @param project for creating a FileCollection when necessary.
      * @return FileCollection of this SecondaryFile
      */
@@ -155,6 +156,23 @@ public class SecondaryFile {
         }
 
         return project.files(secondaryInputFile);
+    }
+
+    /**
+     * Returns the {@link FileCollection} handle for this secondary input to a {@link Transform} if
+     * this {@link SecondaryFile} is constructed with {@link FileCollection}. Otherwise, null is
+     * returned.
+     *
+     * <p>Note this method is not part of the API of {@link SecondaryFile}.
+     *
+     * @return FileCollection of this SecondaryFile
+     */
+    @Nullable
+    public FileCollection getFileCollection() {
+        if (secondaryInputFileCollection == null) {
+            return null;
+        }
+        return secondaryInputFileCollection.get();
     }
 
     /**

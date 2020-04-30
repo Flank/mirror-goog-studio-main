@@ -27,10 +27,10 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.compiling.ResValueGenerator;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProductFlavor;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
@@ -126,13 +126,13 @@ public class ResValueTest {
                         + "\n"
                         + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
                         + "\n"
-                        + "    <!-- Values from the variant -->\n"
+                        + "    <!-- Value from the variant -->\n"
                         + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
-                        + "    <!-- Values from build type: debug -->\n"
+                        + "    <!-- Value from build type: debug -->\n"
                         + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">100</string>\n"
-                        + "    <!-- Values from product flavor: flavor1 -->\n"
+                        + "    <!-- Value from product flavor: flavor1 -->\n"
                         + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">10</string>\n"
-                        + "    <!-- Values from default config. -->\n"
+                        + "    <!-- Value from default config. -->\n"
                         + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
                         + "\n"
                         + "</resources>";
@@ -140,13 +140,12 @@ public class ResValueTest {
     }
 
     @Test
-    public void modelFlavor1Debug() {
+    public void modelFlavor1() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
         map.put("VALUE_FLAVOR", "10");
-        map.put("VALUE_DEBUG", "100");
-        map.put("VALUE_VARIANT", "1000");
-        checkVariant(model, "flavor1Debug", map);
+        map.put("VALUE_DEBUG", "10");
+        map.put("VALUE_VARIANT", "10");
+        checkFlavor(model, "flavor1", map);
     }
 
     @Test
@@ -158,13 +157,13 @@ public class ResValueTest {
                         + "\n"
                         + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
                         + "\n"
-                        + "    <!-- Values from the variant -->\n"
+                        + "    <!-- Value from the variant -->\n"
                         + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
-                        + "    <!-- Values from build type: debug -->\n"
+                        + "    <!-- Value from build type: debug -->\n"
                         + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">100</string>\n"
-                        + "    <!-- Values from product flavor: flavor2 -->\n"
+                        + "    <!-- Value from product flavor: flavor2 -->\n"
                         + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">20</string>\n"
-                        + "    <!-- Values from default config. -->\n"
+                        + "    <!-- Value from default config. -->\n"
                         + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
                         + "\n"
                         + "</resources>";
@@ -172,13 +171,12 @@ public class ResValueTest {
     }
 
     @Test
-    public void modelFlavor2Debug() {
+    public void modelFlavor2() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
         map.put("VALUE_FLAVOR", "20");
-        map.put("VALUE_DEBUG", "100");
-        map.put("VALUE_VARIANT", "1000");
-        checkVariant(model, "flavor2Debug", map);
+        map.put("VALUE_DEBUG", "20");
+        map.put("VALUE_VARIANT", "20");
+        checkFlavor(model, "flavor2", map);
     }
 
     @Test
@@ -190,11 +188,13 @@ public class ResValueTest {
                         + "\n"
                         + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
                         + "\n"
-                        + "    <!-- Values from product flavor: flavor1 -->\n"
+                        + "    <!-- Value from product flavor: flavor1 -->\n"
                         + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">10</string>\n"
+                        + "    <!-- Value from product flavor: flavor1 -->\n"
                         + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">10</string>\n"
+                        + "    <!-- Value from product flavor: flavor1 -->\n"
                         + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">10</string>\n"
-                        + "    <!-- Values from default config. -->\n"
+                        + "    <!-- Value from default config. -->\n"
                         + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
                         + "\n"
                         + "</resources>";
@@ -202,13 +202,11 @@ public class ResValueTest {
     }
 
     @Test
-    public void modelFlavor1Release() {
+    public void modelDebug() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
-        map.put("VALUE_FLAVOR", "10");
-        map.put("VALUE_DEBUG", "10");
-        map.put("VALUE_VARIANT", "10");
-        checkVariant(model, "flavor1Release", map);
+        map.put("VALUE_DEBUG", "100");
+        map.put("VALUE_VARIANT", "100");
+        checkBuildType(model, "debug", map);
     }
 
     @Test
@@ -220,11 +218,13 @@ public class ResValueTest {
                         + "\n"
                         + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
                         + "\n"
-                        + "    <!-- Values from product flavor: flavor2 -->\n"
+                        + "    <!-- Value from product flavor: flavor2 -->\n"
                         + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">20</string>\n"
+                        + "    <!-- Value from product flavor: flavor2 -->\n"
                         + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">20</string>\n"
+                        + "    <!-- Value from product flavor: flavor2 -->\n"
                         + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">20</string>\n"
-                        + "    <!-- Values from default config. -->\n"
+                        + "    <!-- Value from default config. -->\n"
                         + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
                         + "\n"
                         + "</resources>";
@@ -232,13 +232,20 @@ public class ResValueTest {
     }
 
     @Test
-    public void modelFlavor2Release() {
+    public void modelRelease() {
+        Map<String, String> map = Maps.newHashMap();
+        checkBuildType(model, "release", map);
+    }
+
+    @Test
+    public void modelDefaultConfig() {
         Map<String, String> map = Maps.newHashMap();
         map.put("VALUE_DEFAULT", "1");
-        map.put("VALUE_FLAVOR", "20");
-        map.put("VALUE_DEBUG", "20");
-        map.put("VALUE_VARIANT", "20");
-        checkVariant(model, "flavor2Release", map);
+        map.put("VALUE_FLAVOR", "1");
+        map.put("VALUE_DEBUG", "1");
+        map.put("VALUE_VARIANT", "1");
+
+        checkMaps(map, model.getDefaultConfig().getProductFlavor().getResValues(), "DefaultConfig");
     }
 
     private static void checkBuildConfig(@NonNull String expected, @NonNull String variantDir)
@@ -254,26 +261,40 @@ public class ResValueTest {
         assertThat(outputFile).contentWithUnixLineSeparatorsIsExactly(expected);
     }
 
-    private static void checkVariant(
+    private static void checkFlavor(
             @NonNull AndroidProject androidProject,
-            @NonNull String variantName,
+            @NonNull final String flavorName,
             @Nullable Map<String, String> valueMap) {
-        Variant variant = AndroidProjectUtils.findVariantByName(androidProject, variantName);
-        assertNotNull("${variantName} variant null-check", variant);
+        ProductFlavor productFlavor =
+                AndroidProjectUtils.getProductFlavor(androidProject, flavorName).getProductFlavor();
+        assertNotNull(flavorName + " flavor null-check", productFlavor);
 
-        AndroidArtifact artifact = variant.getMainArtifact();
-        assertNotNull("${variantName} main artifact null-check", artifact);
+        checkMaps(valueMap, productFlavor.getResValues(), flavorName);
+    }
 
-        Map<String, ClassField> value = artifact.getResValues();
+    private static void checkBuildType(
+            @NonNull AndroidProject androidProject,
+            @NonNull final String buildTypeName,
+            @Nullable Map<String, String> valueMap) {
+        BuildType buildType =
+                AndroidProjectUtils.getBuildType(androidProject, buildTypeName).getBuildType();
+        assertNotNull(buildTypeName + " flavor null-check", buildType);
+
+        checkMaps(valueMap, buildType.getResValues(), buildTypeName);
+    }
+
+    private static void checkMaps(
+            @Nullable Map<String, String> valueMap,
+            @Nullable Map<String, ClassField> value,
+            @NonNull String name) {
         assertNotNull(value);
 
         // check the map against the expected one.
         assertEquals(valueMap.keySet(), value.keySet());
         for (String key : valueMap.keySet()) {
             ClassField field = value.get(key);
-            assertNotNull(variantName + ": expected field " + key, field);
-            assertEquals(
-                    variantName + ": check Value of " + key, valueMap.get(key), field.getValue());
+            assertNotNull(name + ": expected field " + key, field);
+            assertEquals(name + ": check Value of " + key, valueMap.get(key), field.getValue());
         }
     }
 }

@@ -47,7 +47,7 @@ import org.gradle.api.Incubating
  * your instant app. The Android plugin and Google Play Store support generating configuration APKs
  * based on screen density, ABI, and language locales. You specify properties in this block just as
  * you would when building multiple APKs. However, you need to also set
- * [`generatePureSplits`](http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits)
+ * [`generatePureSplits`](https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits)
  * to `true`.
  */
 @Incubating
@@ -59,7 +59,7 @@ interface Splits<
      * Encapsulates settings for
      * [building per-ABI APKs](https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split).
      */
-    val abi: AbiSplitT
+    val abi: AbiSplit
 
     /**
      * Encapsulates settings for <a
@@ -73,7 +73,7 @@ interface Splits<
      * Encapsulates settings for
      * [building per-density APKs](https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split).
      */
-    val density: DensitySplitT
+    val density: DensitySplit
 
     /**
      * Encapsulates settings for

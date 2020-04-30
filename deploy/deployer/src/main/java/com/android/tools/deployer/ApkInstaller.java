@@ -188,6 +188,7 @@ public class ApkInstaller {
         switch (result.status) {
             case INSTALL_FAILED_UPDATE_INCOMPATIBLE:
             case INCONSISTENT_CERTIFICATES:
+            case INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE:
             case INSTALL_FAILED_VERSION_DOWNGRADE:
             case INSTALL_FAILED_DEXOPT:
                 StringBuilder sb = new StringBuilder();
@@ -261,13 +262,21 @@ public class ApkInstaller {
             builder.addOptions("-r");
         }
 
-        List<Deploy.PatchInstruction> patches =
-                new PatchSetGenerator(logger).generateFromApks(localApks, dump.apks);
-        if (patches == null) {
-            return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
-        } else if (patches.isEmpty()) {
-            return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
+        PatchSet patchSet = new PatchSetGenerator(logger).generateFromApks(localApks, dump.apks);
+        switch (patchSet.getStatus()) {
+            case NoChanges:
+                return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
+            case Invalid:
+            case SizeThresholdExceeded:
+                return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
+            case Ok:
+                break;
+            default:
+                throw new IllegalStateException("Unhandled PatchSet status");
         }
+
+        List<Deploy.PatchInstruction> patches = patchSet.getPatches();
+
         for (Deploy.PatchInstruction patch : patches) {
             logger.info("Patch size %d", patch.getSerializedSize());
         }
@@ -331,6 +340,14 @@ public class ApkInstaller {
     public static AdbClient.InstallResult parseInstallerResultErrorCode(String errorCode) {
         try {
             return new AdbClient.InstallResult(InstallStatus.valueOf(errorCode));
+        } catch (IllegalArgumentException i) {
+            try {
+                int numericValue = Integer.parseInt(errorCode);
+                return new AdbClient.InstallResult(
+                        InstallStatus.numericErrorCodeToStatus(numericValue), errorCode, null);
+            } catch (NumberFormatException n) {
+                return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
+            }
         } catch (Exception e) {
             return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
         }

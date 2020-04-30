@@ -58,7 +58,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
 
   generateManifest(
     moduleData, activityClass, activityClass, packageName, isLauncher, true,
-    requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
+    generateActivityTitle = true
   )
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
 

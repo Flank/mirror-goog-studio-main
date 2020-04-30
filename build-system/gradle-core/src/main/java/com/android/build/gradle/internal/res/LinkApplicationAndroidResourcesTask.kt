@@ -41,8 +41,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
-import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAaptDaemon
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -76,6 +76,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -172,7 +173,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Optional
     abstract val aaptAdditionalParameters: ListProperty<String>
 
-    private lateinit var mergeBlameLogFolder: File
+    // Not an input as it is only used to rewrite exceptions and doesn't affect task output
+    @get:Internal
+    abstract val mergeBlameLogFolder: DirectoryProperty
 
     @get:InputFiles
     @get:Optional
@@ -491,7 +494,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(creationConfig.variantType.canHaveSplits)
 
-            task.setMergeBlameLogFolder(creationConfig.paths.resourceBlameLogDir)
+            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             val variantType = creationConfig.variantType
 
@@ -524,7 +527,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
-            task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
 
             task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
 
@@ -889,7 +892,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val androidJarPath: String =
             task.androidJar.get().absolutePath
         val inputResourcesDir: File? = task.inputResourcesDir.orNull?.asFile
-        val mergeBlameFolder: File = task.mergeBlameLogFolder
+        val mergeBlameFolder: File = task.mergeBlameLogFolder.get().asFile
         val isLibrary: Boolean = task.isLibrary
         val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile.orNull?.asFile
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
@@ -916,10 +919,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     fun setType(type: VariantType) {
         this.type = type
-    }
-
-    fun setMergeBlameLogFolder(mergeBlameLogFolder: File) {
-        this.mergeBlameLogFolder = mergeBlameLogFolder
     }
 
     /**

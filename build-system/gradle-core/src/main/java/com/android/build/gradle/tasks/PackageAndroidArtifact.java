@@ -1110,9 +1110,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 return creationConfig
                         .getGlobalScope()
                         .getProject()
-                        .files(
-                                artifacts.getFinalProductAsFileCollection(
-                                        InternalArtifactType.BASE_DEX.INSTANCE))
+                        .files(artifacts.getFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
                 return project.files(

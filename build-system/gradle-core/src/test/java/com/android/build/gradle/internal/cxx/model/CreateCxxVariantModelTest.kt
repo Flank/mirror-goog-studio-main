@@ -26,7 +26,7 @@ class CreateCxxVariantModelTest {
     @Test
     fun `simple variant does not throw exception`() {
         BasicCmakeMock().let {
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             createCxxVariantModel(
                 module,
                 it.componentProperties
@@ -38,7 +38,7 @@ class CreateCxxVariantModelTest {
     fun `fully exercise variant model and check invariants`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(module, it.componentProperties)
             CxxVariantModel::class.java.methods.toList().onEach { method ->
                 val result = method.invoke(variant)

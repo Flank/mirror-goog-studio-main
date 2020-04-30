@@ -966,18 +966,18 @@ public class IconDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "res: Warning: Missing density variation folders in res: drawable-hdpi [IconMissingDensityFolder]\n"
+                        + "src/main/res: Warning: Missing density variation folders in src/main/res: drawable-hdpi [IconMissingDensityFolder]\n"
                         + "0 errors, 1 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
-                        image("res/drawable-mdpi/frame.png", 472, 290)
+                        image("src/main/res/drawable-mdpi/frame.png", 472, 290)
                                 .fill(0xFFFFFFFF)
                                 .fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-nodpi/frame.png", 472, 290)
+                        image("src/main/res/drawable-nodpi/frame.png", 472, 290)
                                 .fill(0xFFFFFFFF)
                                 .fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290)
+                        image("src/main/res/drawable-xlarge-nodpi-v11/frame.png", 472, 290)
                                 .fill(0xFFFFFFFF)
                                 .fill(10, 10, 362, 280, 0x00000000),
                         gradle(
@@ -1006,21 +1006,21 @@ public class IconDetectorTest extends AbstractCheckTest {
     public void testResConfigs2() {
         String expected =
                 ""
-                        + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi) [IconDensities]\n"
+                        + "src/main/res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi) [IconDensities]\n"
                         + "0 errors, 1 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
                         // Use minSDK4 to ensure that we get warnings about missing drawables
                         manifest().minSdk(4),
-                        image("res/drawable/ic_launcher.png", 48, 48)
+                        image("src/main/res/drawable/ic_launcher.png", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("res/drawable-mdpi/ic_launcher.png", 48, 48)
+                        image("src/main/res/drawable-mdpi/ic_launcher.png", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("res/drawable-xhdpi/ic_launcher.png", 48, 48).fill(0xFF00FF30),
-                        image("res/drawable-mdpi/sample_icon.gif", 48, 48)
+                        image("src/main/res/drawable-xhdpi/ic_launcher.png", 48, 48).fill(0xFF00FF30),
+                        image("src/main/res/drawable-mdpi/sample_icon.gif", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("res/drawable-hdpi/ic_launcher.png", 72, 72)
+                        image("src/main/res/drawable-hdpi/ic_launcher.png", 72, 72)
                                 .fill(10, 10, 30, 30, 0xFFFF00FF),
                         gradle(
                                 ""
@@ -1058,13 +1058,13 @@ public class IconDetectorTest extends AbstractCheckTest {
 
         //noinspection all // Sample code
         lint().files(
-                        image("res/drawable-mdpi/frame.png", 472, 290)
+                        image("src/main/res/drawable-mdpi/frame.png", 472, 290)
                                 .fill(0xFFFFFFFF)
                                 .fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-nodpi/frame.png", 472, 290)
+                        image("src/main/res/drawable-nodpi/frame.png", 472, 290)
                                 .fill(0xFFFFFFFF)
                                 .fill(10, 10, 362, 280, 0x00000000),
-                        image("res/drawable-xlarge-nodpi-v11/frame.png", 472, 290)
+                        image("src/main/res/drawable-xlarge-nodpi-v11/frame.png", 472, 290)
                                 .fill(0xFFFFFFFF)
                                 .fill(10, 10, 362, 280, 0x00000000),
                         gradle(

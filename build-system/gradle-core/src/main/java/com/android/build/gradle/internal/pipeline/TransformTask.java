@@ -47,12 +47,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.LoggingManager;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -112,12 +112,6 @@ public abstract class TransformTask extends StreamBasedTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public List<FileCollection> getSecondaryFileInputs() {
-        if (secondaryInputFiles == null) {
-            secondaryInputFiles = transform.getSecondaryFiles().stream()
-                    .map(secondaryFile -> secondaryFile.getFileCollection(getProject()))
-                    .collect(Collectors.toList());
-        }
-
         return secondaryInputFiles;
     }
 
@@ -159,6 +153,9 @@ public abstract class TransformTask extends StreamBasedTask {
         return transform.getParameterInputs();
     }
 
+    @Internal
+    public abstract Property<String> getProjectPath();
+
     @TaskAction
     void transform(final IncrementalTaskInputs incrementalTaskInputs)
             throws IOException, TransformException, InterruptedException {
@@ -181,7 +178,7 @@ public abstract class TransformTask extends StreamBasedTask {
         recorder.record(
                 ExecutionType.TASK_TRANSFORM_PREPARATION,
                 preExecutionInfo,
-                getProject().getPath(),
+                getProjectPath().get(),
                 getVariantName(),
                 new Recorder.Block<Void>() {
                     @Override
@@ -242,7 +239,7 @@ public abstract class TransformTask extends StreamBasedTask {
         recorder.record(
                 ExecutionType.TASK_TRANSFORM,
                 executionInfo,
-                getProject().getPath(),
+                getProjectPath().get(),
                 getVariantName(),
                 new Recorder.Block<Void>() {
                     @Override
@@ -304,10 +301,9 @@ public abstract class TransformTask extends StreamBasedTask {
     private Collection<SecondaryInput> gatherSecondaryInputChanges(
             Map<File, Status> changedMap, Set<File> removedFiles) {
 
-        final Project project = getProject();
         ImmutableList.Builder<SecondaryInput> builder = ImmutableList.builder();
         for (final SecondaryFile secondaryFile : getAllSecondaryInputs()) {
-            for (File file : secondaryFile.getFileCollection(project).getFiles()) {
+            for (File file : getSecondaryInputFiles(secondaryFile)) {
                 final Status status = changedMap.containsKey(file)
                         ? changedMap.get(file)
                         : removedFiles.contains(file)
@@ -397,10 +393,8 @@ public abstract class TransformTask extends StreamBasedTask {
             @NonNull Map<File, Status> changedMap,
             @NonNull Set<File> removedFiles) {
 
-        final Project project = getProject();
         for (SecondaryFile secondaryFile : getAllSecondaryInputs()) {
-            Set<File> files = secondaryFile.getFileCollection(project).getFiles();
-
+            Set<File> files = getSecondaryInputFiles(secondaryFile);
             if ((!Sets.intersection(files, changedMap.keySet()).isEmpty()
                     || !Sets.intersection(files, removedFiles).isEmpty())
                     && !secondaryFile.supportsIncrementalBuild()) {
@@ -410,10 +404,21 @@ public abstract class TransformTask extends StreamBasedTask {
         return true;
     }
 
+    @NonNull
+    private Set<File> getSecondaryInputFiles(SecondaryFile secondaryFile) {
+        Set<File> secondaryInputFiles = Sets.newHashSet();
+        FileCollection secondaryInputFileCollection = secondaryFile.getFileCollection();
+        if (secondaryInputFileCollection != null) {
+            secondaryInputFiles.addAll(secondaryInputFileCollection.getFiles());
+        } else {
+            secondaryInputFiles.add(secondaryFile.getFile());
+        }
+        return secondaryInputFiles;
+    }
+
     private boolean isSecondaryFile(File file) {
-        final Project project = getProject();
-        for (SecondaryFile secondaryFile : getAllSecondaryInputs()) {
-            if (secondaryFile.getFileCollection(project).contains(file)) {
+        for (FileCollection secondaryFileInput : getSecondaryFileInputs()) {
+            if (secondaryFileInput.contains(file)) {
                 return true;
             }
         }
@@ -584,6 +589,13 @@ public abstract class TransformTask extends StreamBasedTask {
                                     + " declares itself as cacheable",
                             t -> transform.isCacheable());
             task.registerConsumedAndReferencedStreamInputs();
+            task.getProjectPath().set(task.getProject().getPath());
+            task.secondaryInputFiles =
+                    transform.getSecondaryFiles().stream()
+                            .map(
+                                    secondaryFile ->
+                                            secondaryFile.getFileCollection(task.getProject()))
+                            .collect(Collectors.toList());
         }
     }
 }

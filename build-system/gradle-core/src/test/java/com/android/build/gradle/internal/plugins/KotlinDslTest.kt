@@ -24,13 +24,13 @@ import com.android.builder.errors.EvalIssueException
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.StringSubject
 import com.google.common.truth.Truth.assertThat
+import java.io.File
+import kotlin.test.assertFailsWith
 import org.gradle.api.Project
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
-import kotlin.test.assertFailsWith
 
 /** Functional tests for the new Kotlin DSL. */
 class KotlinDslTest {
@@ -39,7 +39,7 @@ class KotlinDslTest {
     val projectDirectory = TemporaryFolder()
 
     private lateinit var plugin: AppPlugin
-    private lateinit var android: ApplicationExtension<*, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *>
+    private lateinit var android: ApplicationExtension<*, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *, *>
     private lateinit var project: Project
 
     @Before

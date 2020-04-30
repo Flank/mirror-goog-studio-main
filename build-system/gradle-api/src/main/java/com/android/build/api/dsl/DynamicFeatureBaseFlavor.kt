@@ -19,7 +19,6 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface DynamicFeatureBaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
-    BaseFlavor<AnnotationProcessorOptionsT>,
-    DynamicFeatureVariantDimension<AnnotationProcessorOptionsT> {
-}
+interface DynamicFeatureBaseFlavor :
+    BaseFlavor,
+    DynamicFeatureVariantDimension
