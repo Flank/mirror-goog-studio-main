@@ -34,6 +34,11 @@ import java.util.TreeMap;
  */
 public class OverlayId {
 
+    // Hash a version number as part of the ID. This is to make sure the OID file on the device is
+    // computed the same way as the current Studio and not by a version of Studio that computes
+    // this differently. This is also strict string comparison with no backward capability.
+    public static final String SCHEMA_VERSION = "1.0";
+
     // overlay file to checksum map.
     private final SortedMap<String, String> apks; // Intalled Apk -> Digest
     private final SortedMap<String, String> deltas; // OverlayFile -> Checksum
@@ -76,6 +81,11 @@ public class OverlayId {
 
     public String getRepresentation() {
         StringBuilder rep = new StringBuilder();
+        rep.append("Apply Changes Overlay ID\n");
+        rep.append("Schema Version ");
+        rep.append(SCHEMA_VERSION);
+        rep.append("\n");
+
         for (Map.Entry<String, String> apk : apks.entrySet()) {
             rep.append(
                     String.format(
