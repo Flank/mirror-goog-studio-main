@@ -30,6 +30,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -90,6 +91,7 @@ public class ClientLifecycleIntegrationTest {
   }
 
   @Test
+  @Ignore("Flaky b/155419945")
   public void attachDebugger() throws Exception {
     assertThat(AndroidDebugBridge.getBridge().getDevices()).isEmpty();
     DeviceState state = myFakeAdb.connectAndWaitForDevice();
