@@ -61,4 +61,14 @@ interface VariantProperties: ComponentProperties {
      * @param comment optional comment to be added to the generated resource file for the field.
      */
     fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
+
+    /**
+     * [MapProperty] of the variant's manifest placeholders.
+     *
+     * Placeholders are organized with a key and a value. The value is a [String] that will be
+     * used as is in the merged manifest.
+     *
+     * @return the [MapProperty] with keys as [String]
+     */
+    val manifestPlaceholders: MapProperty<String, String>
 }

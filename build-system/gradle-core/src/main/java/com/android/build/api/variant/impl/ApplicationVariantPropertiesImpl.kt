@@ -78,9 +78,6 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
 
-    override val manifestPlaceholders: Map<String, Any>
-        get() = variantDslInfo.manifestPlaceholders
-
     override val dependenciesInfo: com.android.build.api.variant.DependenciesInfo = variantDependencyInfo
 
     override val aaptOptions: AaptOptions by lazy {

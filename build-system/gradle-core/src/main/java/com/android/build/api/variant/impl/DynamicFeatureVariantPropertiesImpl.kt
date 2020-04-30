@@ -87,9 +87,6 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
-    override val manifestPlaceholders: Map<String, Any>
-        get() = variantDslInfo.manifestPlaceholders
-
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,

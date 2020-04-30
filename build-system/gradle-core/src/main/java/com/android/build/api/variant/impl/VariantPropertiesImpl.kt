@@ -102,6 +102,16 @@ abstract class VariantPropertiesImpl(
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
+    override val manifestPlaceholders: MapProperty<String, String> by lazy {
+        @Suppress("UNCHECKED_CAST")
+        internalServices.mapPropertyOf(
+            String::class.java,
+            String::class.java,
+            variantDslInfo.manifestPlaceholders,
+            "$name:manifestPlaceholders"
+        )
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

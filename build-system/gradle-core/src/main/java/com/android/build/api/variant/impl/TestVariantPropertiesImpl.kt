@@ -77,9 +77,6 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val applicationId: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
-    override val manifestPlaceholders: Map<String, Any>
-        get() = variantDslInfo.manifestPlaceholders
-
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,

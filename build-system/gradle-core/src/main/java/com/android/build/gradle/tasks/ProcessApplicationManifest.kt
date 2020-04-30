@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
@@ -428,11 +427,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
             task.packageOverride.set(creationConfig.applicationId)
             task.packageOverride.disallowChanges()
-            task.manifestPlaceholders.set(
-                task.project.provider(
-                    creationConfig::manifestPlaceholders
-                )
-            )
+            task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()
             task.mainManifest
                 .set(project.provider(variantSources::mainManifestFilePath))
