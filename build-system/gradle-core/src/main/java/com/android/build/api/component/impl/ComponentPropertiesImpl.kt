@@ -550,11 +550,11 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
-    fun getBuildConfigType() : BuildConfigType {
+    fun getBuildConfigType(): BuildConfigType {
         return if (taskContainer.generateBuildConfigTask == null || !buildFeatures.buildConfig) {
-              BuildConfigType.NONE
+            BuildConfigType.NONE
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
-                && (this as VariantCreationConfig).buildConfigFields.get().none()
+            && variantDslInfo.getBuildConfigFields().none()
         ) {
             BuildConfigType.JAR
         } else {

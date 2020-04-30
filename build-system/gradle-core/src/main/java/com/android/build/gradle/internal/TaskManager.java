@@ -1146,12 +1146,14 @@ public abstract class TaskManager<
         if (componentProperties.getBuildFeatures().getBuildConfig()) {
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask = taskFactory.register(
                     new GenerateBuildConfig.CreationAction(componentProperties));
-
-            if (!componentProperties
+            boolean isBuildConfigBytecodeEnabled =
+                    componentProperties
                             .getServices()
                             .getProjectOptions()
-                            .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
-                    && componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
+                            .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE);
+
+            if (!isBuildConfigBytecodeEnabled
+                    || !componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
                 TaskFactoryUtils.dependsOn(
                         componentProperties.getTaskContainer().getSourceGenTask(),
                         generateBuildConfigTask);
