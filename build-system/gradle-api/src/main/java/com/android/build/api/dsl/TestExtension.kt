@@ -28,38 +28,18 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface TestExtension<
-        AaptOptionsT : AaptOptions,
-        AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildTypeT : TestBuildType<SigningConfigT>,
-        CompileOptionsT : CompileOptions,
-        DataBindingT : DataBinding,
         DefaultConfigT : TestDefaultConfig<SigningConfigT>,
-        ExternalNativeBuildT : ExternalNativeBuild,
-        JacocoOptionsT : JacocoOptions,
-        LintOptionsT : LintOptions,
-        PackagingOptionsT : PackagingOptions,
         ProductFlavorT : TestProductFlavor<SigningConfigT>,
-        SigningConfigT : SigningConfig,
-        SplitsT : Splits,
-        TestOptionsT : TestOptions> :
+        SigningConfigT : SigningConfig> :
     CommonExtension<
-            AaptOptionsT,
-            AdbOptionsT,
             AndroidSourceSetT,
             TestBuildFeatures,
             BuildTypeT,
-            CompileOptionsT,
-            DataBindingT,
             DefaultConfigT,
-            ExternalNativeBuildT,
-            JacocoOptionsT,
-            LintOptionsT,
-            PackagingOptionsT,
             ProductFlavorT,
             SigningConfigT,
-            SplitsT,
-            TestOptionsT,
             TestVariant<TestVariantProperties>,
             TestVariantProperties> {
     // TODO(b/140406102)

@@ -44,22 +44,12 @@ interface InternalCommonExtension<
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> :
     CommonExtension<
-        AaptOptionsImpl,
-        AdbOptionsImpl,
         AndroidSourceSet,
         BuildFeaturesT,
         BuildTypeT,
-        CompileOptionsImpl,
-        DataBindingOptionsImpl,
         DefaultConfigT,
-        ExternalNativeBuildImpl,
-        JacocoOptionsImpl,
-        LintOptionsImpl,
-        PackagingOptionsImpl,
         ProductFlavorT,
         SigningConfig,
-        SplitsImpl,
-        TestOptionsImpl,
         VariantT,
         VariantPropertiesT> {
 

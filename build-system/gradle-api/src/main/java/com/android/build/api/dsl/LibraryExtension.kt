@@ -28,38 +28,18 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface LibraryExtension<
-        AaptOptionsT : AaptOptions,
-        AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildTypeT : LibraryBuildType<SigningConfigT>,
-        CompileOptionsT : CompileOptions,
-        DataBindingT : DataBinding,
         DefaultConfigT : LibraryDefaultConfig<SigningConfigT>,
-        ExternalNativeBuildT : ExternalNativeBuild,
-        JacocoOptionsT : JacocoOptions,
-        LintOptionsT : LintOptions,
-        PackagingOptionsT : PackagingOptions,
         ProductFlavorT : LibraryProductFlavor<SigningConfigT>,
-        SigningConfigT : SigningConfig,
-        SplitsT : Splits,
-        TestOptionsT : TestOptions> :
+        SigningConfigT : SigningConfig> :
     CommonExtension<
-        AaptOptionsT,
-        AdbOptionsT,
         AndroidSourceSetT,
         LibraryBuildFeatures,
         BuildTypeT,
-        CompileOptionsT,
-        DataBindingT,
         DefaultConfigT,
-        ExternalNativeBuildT,
-        JacocoOptionsT,
-        LintOptionsT,
-        PackagingOptionsT,
         ProductFlavorT,
         SigningConfigT,
-        SplitsT,
-        TestOptionsT,
         LibraryVariant<LibraryVariantProperties>,
         LibraryVariantProperties>,
     TestedExtension {

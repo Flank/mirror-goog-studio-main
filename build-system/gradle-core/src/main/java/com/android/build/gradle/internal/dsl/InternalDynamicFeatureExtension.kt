@@ -27,21 +27,11 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 /** See [InternalCommonExtension] */
 interface InternalDynamicFeatureExtension :
     DynamicFeatureExtension<
-        AaptOptions,
-        AdbOptions,
         AndroidSourceSet,
         BuildType,
-        CompileOptions,
-        DataBindingOptions,
         DefaultConfig,
-        ExternalNativeBuild,
-        JacocoOptions,
-        LintOptions,
-        PackagingOptions,
         ProductFlavor,
-        SigningConfig,
-        Splits,
-        TestOptions>,
+        SigningConfig>,
         InternalCommonExtension<
                 DynamicFeatureBuildFeatures,
                 BuildType,
