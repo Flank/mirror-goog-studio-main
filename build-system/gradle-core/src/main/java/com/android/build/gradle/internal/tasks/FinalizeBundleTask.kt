@@ -101,7 +101,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
-            FileUtils.cleanOutputDir(params.finalBundleFile.parentFile)
+            FileUtils.deleteIfExists(params.finalBundleFile)
 
             params.signingConfig?.resolve()?.let {
                 val certificateInfo =
