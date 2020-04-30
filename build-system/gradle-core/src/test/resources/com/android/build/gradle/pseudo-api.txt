@@ -485,7 +485,7 @@ com.android.build.gradle.api.ApkOutputFile.getOutputs: java.util.Collection<? ex
 com.android.build.gradle.api.ApkOutputFile.getType: com.android.build.VariantOutput$OutputType ()
 com.android.build.gradle.api.ApkOutputFile.getVersionCode: int ()
 com.android.build.gradle.api.ApkOutputFile.toString: java.lang.String ()
-com.android.build.gradle.api.ApkVariant implements com.android.build.gradle.api.BaseVariant, com.android.build.gradle.api.InstallableVariant, com.android.build.gradle.api.AndroidArtifactVariant
+com.android.build.gradle.api.ApkVariant implements com.android.build.gradle.api.BaseVariant, com.android.build.gradle.api.InstallableVariant, com.android.build.gradle.api.AndroidArtifactVariant, com.android.build.gradle.internal.core.InternalBaseVariant
 com.android.build.gradle.api.ApkVariant.getDex: java.lang.Object ()
 com.android.build.gradle.api.ApkVariant.getPackageApplication: com.android.build.gradle.tasks.PackageAndroidArtifact ()
 com.android.build.gradle.api.ApkVariant.getPackageApplicationProvider: org.gradle.api.tasks.TaskProvider<com.android.build.gradle.tasks.PackageAndroidArtifact> ()
@@ -583,7 +583,7 @@ com.android.build.gradle.api.InstallableVariant.getUninstall: org.gradle.api.Def
 com.android.build.gradle.api.InstallableVariant.getUninstallProvider: org.gradle.api.tasks.TaskProvider<org.gradle.api.Task> ()
 com.android.build.gradle.api.JavaCompileOptions
 com.android.build.gradle.api.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.gradle.api.AnnotationProcessorOptions ()
-com.android.build.gradle.api.LibraryVariant implements com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.api.TestedVariant
+com.android.build.gradle.api.LibraryVariant implements com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.api.TestedVariant, com.android.build.gradle.internal.core.InternalBaseVariant
 com.android.build.gradle.api.LibraryVariant.getPackageLibrary: org.gradle.api.tasks.bundling.Zip ()
 com.android.build.gradle.api.LibraryVariant.getPackageLibraryProvider: org.gradle.api.tasks.TaskProvider<org.gradle.api.tasks.bundling.Zip> ()
 com.android.build.gradle.api.LibraryVariantOutput
@@ -599,7 +599,7 @@ com.android.build.gradle.api.TestVariant.getProviderInstrumentTests: java.util.L
 com.android.build.gradle.api.TestVariant.getTestedVariant: com.android.build.gradle.api.BaseVariant ()
 com.android.build.gradle.api.TestedComponentIdentifier implements org.gradle.api.artifacts.component.ComponentIdentifier
 com.android.build.gradle.api.TestedComponentIdentifier.getVariantName: java.lang.String ()
-com.android.build.gradle.api.UnitTestVariant implements com.android.build.gradle.api.BaseVariant
+com.android.build.gradle.api.UnitTestVariant implements com.android.build.gradle.api.BaseVariant, com.android.build.gradle.internal.core.InternalBaseVariant
 com.android.build.gradle.api.UnitTestVariant.getTestedVariant: com.android.build.gradle.internal.api.TestedVariant ()
 com.android.build.gradle.api.VersionedVariant
 com.android.build.gradle.api.VersionedVariant.getVersionCode: int ()

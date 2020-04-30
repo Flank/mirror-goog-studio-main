@@ -17,13 +17,13 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import org.gradle.api.tasks.TaskProvider;
 
-/**
- * A Build variant and all its public data.
- */
-public interface ApkVariant extends BaseVariant, InstallableVariant, AndroidArtifactVariant {
+/** A Build variant and all its public data. */
+public interface ApkVariant
+        extends BaseVariant, InstallableVariant, AndroidArtifactVariant, InternalBaseVariant {
 
     /**
      * Returns the Dex task.

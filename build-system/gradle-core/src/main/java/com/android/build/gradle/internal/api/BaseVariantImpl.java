@@ -23,6 +23,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
+import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -69,7 +70,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
  * <p>This is a wrapper around the internal data model, in order to control what is accessible
  * through the external API.
  */
-public abstract class BaseVariantImpl implements BaseVariant {
+public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVariant {
 
     public static final String TASK_ACCESS_DEPRECATION_URL =
             "https://d.android.com/r/tools/task-configuration-avoidance";
@@ -159,7 +160,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     @NonNull
-    public ProductFlavor getMergedFlavor() {
+    public MergedFlavor getMergedFlavor() {
         // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =

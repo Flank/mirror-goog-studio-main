@@ -168,6 +168,22 @@ class KotlinDslTest {
         }
     }
 
+    /** Regression test for https://b.corp.google.com/issues/155318103 */
+    @Test
+    fun `mergedFlavor source compatibility`() {
+        val applicationVariants = (android as BaseAppModuleExtension).applicationVariants
+        applicationVariants.all { variant ->
+            variant.mergedFlavor.manifestPlaceholders += mapOf("a" to "b")
+            variant.mergedFlavor.testInstrumentationRunnerArguments += mapOf("c" to "d")
+        }
+        plugin.createAndroidTasks()
+        assertThat(applicationVariants).hasSize(2)
+        applicationVariants.first().also { variant ->
+            assertThat(variant.mergedFlavor.manifestPlaceholders).containsExactly("a", "b")
+            assertThat(variant.mergedFlavor.testInstrumentationRunnerArguments).containsExactly("c", "d")
+        }
+    }
+
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)
     }
