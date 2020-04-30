@@ -38,12 +38,14 @@ import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-private const val AAPT2_DAEMON_BUILD_SERVICE_NAME = "aapt2-daemon-build-service"
+/** Used to get unique build service name. Each class loader will initialize its own version. */
+private val AAPT2_DAEMON_BUILD_SERVICE_NAME = "aapt2-daemon-build-service" + UUID.randomUUID().toString()
 
 /**
  * Registers aapt2 daemon build services. This makes it available for querying, by using
