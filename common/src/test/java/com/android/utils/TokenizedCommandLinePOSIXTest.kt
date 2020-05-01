@@ -15,16 +15,15 @@
  */
 package com.android.utils
 
+import com.android.SdkConstants
 import com.android.utils.StringHelperPOSIX.splitCommandLine
-import com.android.utils.StringHelperPOSIX.tokenizeCommandLineToEscaped
-import com.android.utils.StringHelperPOSIX.tokenizeCommandLineToRaw
 import com.google.common.truth.Truth
 import org.junit.Test
 
 /**
  * Tests for StringHelperPOSIX
  */
-class StringHelperPOSIXTest {
+class TokenizedCommandLinePOSIXTest {
     @Test
     @Throws(Exception::class)
     fun checkZeroCommands() {
@@ -332,6 +331,20 @@ class StringHelperPOSIXTest {
                 .isEqualTo(splitCommands)
         }
 
+        private fun tokenizeCommandLineToEscaped(commandLine: String) =
+            TokenizedCommandLine(
+                commandLine = commandLine,
+                raw = false,
+                platform = SdkConstants.PLATFORM_LINUX)
+                .toTokenList()
+
+        private fun tokenizeCommandLineToRaw(commandLine: String) =
+            TokenizedCommandLine(
+                commandLine = commandLine,
+                raw = true,
+                platform = SdkConstants.PLATFORM_LINUX)
+                .toTokenList()
+
         // Tokenization.
         @Throws(Exception::class)
         private fun checkTokenizationToCompilerFlags(
@@ -339,10 +352,8 @@ class StringHelperPOSIXTest {
             escapedExpected: List<String?>,
             rawExpected: List<String?>
         ) {
-            val tokenizedRaw: List<String?> =
-                tokenizeCommandLineToRaw(originalString)
-            val tokenizedEscaped: List<String?> =
-                tokenizeCommandLineToEscaped(originalString)
+            val tokenizedRaw = tokenizeCommandLineToRaw(originalString)
+            val tokenizedEscaped = tokenizeCommandLineToEscaped(originalString)
             Truth.assertThat(tokenizedRaw).containsExactlyElementsIn(rawExpected)
             Truth.assertThat(tokenizedEscaped).containsExactlyElementsIn(escapedExpected)
         }

@@ -17,11 +17,9 @@
 @file:JvmName("StringHelper")
 package com.android.utils
 
-import com.android.SdkConstants
 import com.google.common.base.CharMatcher
 import com.google.common.collect.ImmutableList
 import java.util.Locale
-import java.util.function.Function
 import java.util.regex.Pattern
 
 private val CR = CharMatcher.`is`('\r')
@@ -267,21 +265,11 @@ fun toStrings(vararg objects: Any): List<String> {
     return builder.build()
 }
 
-fun String.tokenizeCommandLineToEscaped(): List<String> {
-    return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-        StringHelperWindows.tokenizeCommandLineToEscaped(this)
-    } else {
-        StringHelperPOSIX.tokenizeCommandLineToEscaped(this)
-    }
-}
+fun String.tokenizeCommandLineToEscaped() =
+    TokenizedCommandLine(this, false).toTokenList()
 
-fun String.tokenizeCommandLineToRaw(): List<String> {
-    return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-        StringHelperWindows.tokenizeCommandLineToRaw(this)
-    } else {
-        StringHelperPOSIX.tokenizeCommandLineToRaw(this)
-    }
-}
+fun String.tokenizeCommandLineToRaw() =
+    TokenizedCommandLine(this, true).toTokenList()
 
 fun String.toSystemLineSeparator(): String {
     return toLineSeparator(System.lineSeparator(), this)

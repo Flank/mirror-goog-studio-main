@@ -15,27 +15,11 @@
  */
 package com.android.utils
 
+import com.android.SdkConstants
 import com.google.common.collect.Lists
-import java.lang.Character.isWhitespace
 
 /**
- * Windows specific StringHelper that applies the following tokenization rules:
- *
- * https://msdn.microsoft.com/en-us/library/17w5ykft.aspx
- *
- *  - A string surrounded by double quotation marks ("string") is interpreted
- *    as a single argument, regardless of white space contained within. A
- *    quoted string can be embedded in an argument.
- *  - A double quotation mark preceded by a backslash (\") is interpreted as a
- *    literal double quotation mark character (").
- *  - Backslashes are interpreted literally, unless they immediately precede a
- *    double quotation mark.
- *  - If an even number of backslashes is followed by a double quotation mark,
- *    one backslash is placed in the argv array for every pair of backslashes,
- *    and the double quotation mark is interpreted as a string delimiter.
- *  - If an odd number of backslashes is followed by a double quotation mark,
- *    one backslash is placed in the argv array for every pair of backslashes,
- *    and the double quotation mark is "escaped" by the remaining backslash.
+ * Windows specific StringHelper.
  */
 object StringHelperWindows {
     /**
@@ -97,92 +81,13 @@ object StringHelperWindows {
     }
 
     @JvmStatic
-    fun tokenizeCommandLineToEscaped(commandLine: String): List<String> {
-        return tokenizeCommandLine(commandLine, true)
-    }
+    fun tokenizeCommandLineToEscaped(commandLine: String) =
+        TokenizedCommandLine(commandLine, false, SdkConstants.PLATFORM_WINDOWS)
+            .toTokenList()
+
 
     @JvmStatic
-    fun tokenizeCommandLineToRaw(commandLine: String): List<String> {
-        return tokenizeCommandLine(commandLine, false)
-    }
-
-    /**
-     * Tokenize a string with Windows rules.
-     *
-     * @param commandLine the string to be tokenized
-     * @param returnEscaped if true then return escaped, otherwise return original
-     * @return the list of tokens
-     */
-    private fun tokenizeCommandLine(
-        commandLine: String, returnEscaped: Boolean
-    ): List<String> {
-        val tokens: MutableList<String> =
-            Lists.newArrayList()
-        val token = StringBuilder()
-        var quoting = false
-        var escapingQuotes = false
-        var escapingOthers = false
-        var skipping = true
-        for (c in commandLine) {
-            if (skipping) {
-                skipping = if (isWhitespace(c)) {
-                    continue
-                } else {
-                    false
-                }
-            }
-            if (quoting || !isWhitespace(c)) {
-                if (!returnEscaped) {
-                    token.append(c)
-                }
-            }
-            if (c == '"') {
-                // delete one slash for every pair of preceding slashes
-                if (returnEscaped) {
-                    var j = token.length - 2
-                    while (j >= 0 && token[j] == '\\' && token[j + 1] == '\\') {
-                        token.deleteCharAt(j)
-                        j -= 2
-                    }
-                }
-                if (escapingQuotes) {
-                    if (returnEscaped) {
-                        token.deleteCharAt(token.length - 1)
-                    }
-                } else {
-                    quoting = !quoting
-                    continue
-                }
-            }
-            if (escapingQuotes) {
-                escapingQuotes = false
-            } else if (c == '\\') {
-                escapingQuotes = true
-            }
-            if (escapingOthers) {
-                escapingOthers = false
-                if (c == '\n') {
-                    continue
-                }
-            } else if (!quoting && c == '^') {
-                escapingOthers = true
-                continue
-            }
-            if (!quoting && isWhitespace(c)) {
-                skipping = true
-                if (token.isNotEmpty()) {
-                    tokens.add(token.toString())
-                }
-                token.setLength(0)
-                continue
-            }
-            if (returnEscaped) {
-                token.append(c)
-            }
-        }
-        if (token.isNotEmpty()) {
-            tokens.add(token.toString())
-        }
-        return tokens
-    }
+    fun tokenizeCommandLineToRaw(commandLine: String) =
+        TokenizedCommandLine(commandLine, true, SdkConstants.PLATFORM_WINDOWS)
+            .toTokenList()
 }

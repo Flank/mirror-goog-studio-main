@@ -15,16 +15,16 @@
  */
 package com.android.utils
 
+import com.android.SdkConstants
 import com.android.utils.StringHelperWindows.splitCommandLine
-import com.android.utils.StringHelperWindows.tokenizeCommandLineToEscaped
-import com.android.utils.StringHelperWindows.tokenizeCommandLineToRaw
 import com.google.common.truth.Truth
 import org.junit.Test
 
 /**
  * Tests for StringHelperWindows
  */
-class StringHelperWindowsTest {
+class TokenizedCommandLineWindowsTest {
+
     @Test
     @Throws(Exception::class)
     fun checkZeroCommands() {
@@ -220,6 +220,35 @@ class StringHelperWindowsTest {
     }
 
     @Test
+    fun caseFromCommandLineParserTest() {
+        checkTokenizationToCompilerFlags(
+            "a\\\\\\b d\"e f\"g h",
+            listOf("a\\\\\\b", "de fg", "h"),
+            listOf("a\\\\\\b", "d\"e f\"g", "h")
+        )
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun singleSlash() {
+        checkTokenizationToCompilerFlags(
+            "\\",
+            listOf("\\"),
+            listOf("\\")
+        )
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun singleCaret() {
+        checkTokenizationToCompilerFlags(
+            "^",
+            listOf("^"),
+            listOf("^")
+        )
+    }
+
+    @Test
     @Throws(Exception::class)
     fun checkAlternatingQuotes() {
         checkTokenizationToCompilerFlags(
@@ -318,6 +347,20 @@ class StringHelperWindowsTest {
                 .isEqualTo(splitCommands)
         }
 
+        private fun tokenizeCommandLineToEscaped(commandLine: String) =
+            TokenizedCommandLine(
+                commandLine = commandLine,
+                raw = false,
+                platform = SdkConstants.PLATFORM_WINDOWS)
+                .toTokenList()
+
+        private fun tokenizeCommandLineToRaw(commandLine: String) =
+            TokenizedCommandLine(
+                commandLine = commandLine,
+                raw = true,
+                platform = SdkConstants.PLATFORM_WINDOWS)
+                .toTokenList()
+
         // Tokenization tests.
         @Throws(Exception::class)
         private fun checkTokenizationToCompilerFlags(
@@ -325,12 +368,14 @@ class StringHelperWindowsTest {
             escapedExpected: List<String?>,
             rawExpected: List<String?>
         ) {
-            val tokenizedRaw: List<String?> =
-                tokenizeCommandLineToRaw(originalString)
-            val tokenizedEscaped: List<String?> =
-                tokenizeCommandLineToEscaped(originalString)
-            Truth.assertThat(tokenizedRaw).containsExactlyElementsIn(rawExpected)
-            Truth.assertThat(tokenizedEscaped).containsExactlyElementsIn(escapedExpected)
+            val tokenizedEscaped = tokenizeCommandLineToEscaped(originalString)
+            val tokenizedRaw = tokenizeCommandLineToRaw(originalString)
+            Truth.assertThat(tokenizedEscaped)
+                .named("escaped tokens (1st)")
+                .containsExactlyElementsIn(escapedExpected)
+            Truth.assertThat(tokenizedRaw)
+                .named("raw tokens (2nd)")
+                .containsExactlyElementsIn(rawExpected)
         }
 
         @Throws(Exception::class)

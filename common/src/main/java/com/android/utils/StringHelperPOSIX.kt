@@ -15,21 +15,11 @@
  */
 package com.android.utils
 
+import com.android.SdkConstants
 import com.google.common.collect.Lists
-import java.lang.Character.isWhitespace
 
 /**
  * POSIX specific StringHelper that applies the following tokenization rules:
- *
- * http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html
- *
- *  - A backslash that is not quoted shall preserve the literal value of the
- *    following character
- *  - Enclosing characters in single-quotes ( '' ) shall preserve the literal
- *    value of each character within the single-quotes.
- *  - Enclosing characters in double-quotes ( "" ) shall preserve the literal
- *    value of all characters within the double-quotes, with the exception of
- *    the characters dollar sign, backquote, and backslash
  */
 object StringHelperPOSIX {
     /**
@@ -92,89 +82,12 @@ object StringHelperPOSIX {
     }
 
     @JvmStatic
-    fun tokenizeCommandLineToEscaped(commandLine: String): List<String> {
-        return tokenizeCommandLine(commandLine, true)
-    }
+    fun tokenizeCommandLineToEscaped(commandLine: String) =
+        TokenizedCommandLine(commandLine, false, SdkConstants.PLATFORM_LINUX)
+            .toTokenList()
 
     @JvmStatic
-    fun tokenizeCommandLineToRaw(commandLine: String): List<String> {
-        return tokenizeCommandLine(commandLine, false)
-    }
-
-    /**
-     * Tokenize a string with POSIX rules. This function should operate in the same manner as the
-     * bash command-line.
-     *
-     * For escaped tokens, this can be validated with a script like this:
-     *
-     * echo 1=[/$1]
-     *
-     * echo 2=[/$2]
-     *
-     * echo 3=[/$3]
-     *
-     * @param commandLine the string to be tokenized
-     * @param returnEscaped if true then return escaped, otherwise return original
-     * @return the list of tokens
-     */
-    private fun tokenizeCommandLine(
-        commandLine: String, returnEscaped: Boolean
-    ): List<String> {
-        val tokens: MutableList<String> =
-            Lists.newArrayList()
-        val token = StringBuilder()
-        var quoting = false
-        var quote = '\u0000'
-        var escaping = false
-        var skipping = true
-        for (c in commandLine) {
-            if (skipping) {
-                skipping = if (isWhitespace(c)) {
-                    continue
-                } else {
-                    false
-                }
-            }
-            if (quoting || !isWhitespace(c)) {
-                if (!returnEscaped) {
-                    token.append(c)
-                }
-            }
-            if (escaping) {
-                escaping = false
-                if (c != '\n') {
-                    if (returnEscaped) {
-                        token.append(c)
-                    }
-                }
-                continue
-            } else if (c == '\\' && (!quoting || quote == '\"')) {
-                escaping = true
-                continue
-            } else if (!quoting && (c == '"' || c == '\'')) {
-                quoting = true
-                quote = c
-                continue
-            } else if (quoting && c == quote) {
-                quoting = false
-                quote = '\u0000'
-                continue
-            }
-            if (!quoting && isWhitespace(c)) {
-                skipping = true
-                if (token.isNotEmpty()) {
-                    tokens.add(token.toString())
-                }
-                token.setLength(0)
-                continue
-            }
-            if (returnEscaped) {
-                token.append(c)
-            }
-        }
-        if (token.isNotEmpty()) {
-            tokens.add(token.toString())
-        }
-        return tokens
-    }
+    fun tokenizeCommandLineToRaw(commandLine: String) =
+        TokenizedCommandLine(commandLine, true, SdkConstants.PLATFORM_LINUX)
+            .toTokenList()
 }
