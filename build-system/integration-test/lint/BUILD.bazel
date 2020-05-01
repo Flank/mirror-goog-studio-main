@@ -22,6 +22,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/lintLibraryModel",
         "//tools/base/build-system/integration-test:test-projects/lintLibrarySkipDeps",
         "//tools/base/build-system/integration-test:test-projects/lintMultipleLintJars",
+        "//tools/base/build-system/integration-test:test-projects/lintNoJavaClasses",
         "//tools/base/build-system/integration-test:test-projects/lintResourceResolve",
         "//tools/base/build-system/integration-test:test-projects/lintStandalone",
         "//tools/base/build-system/integration-test:test-projects/lintStandaloneCustomRules",
