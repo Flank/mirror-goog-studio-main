@@ -119,7 +119,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Optional
     abstract val textSymbolOutputFileProperty: RegularFileProperty
 
-    @get:org.gradle.api.tasks.OutputFile
+    @get:OutputFile
     @get:Optional
     abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
 
@@ -131,7 +131,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:OutputFile
     abstract val rClassOutputJar: RegularFileProperty
 
-    @get:org.gradle.api.tasks.OutputFile
+    @get:OutputFile
     @get:Optional
     abstract val mainDexListProguardOutputFile: RegularFileProperty
 
@@ -144,6 +144,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:PathSensitive(PathSensitivity.NONE)
     var dependenciesFileCollection: FileCollection? = null
         private set
+
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val localResourcesFile: RegularFileProperty
 
     @get:InputFiles
     @get:Optional
@@ -317,6 +322,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     manifestBuiltArtifacts.getBuiltArtifact(mainOutput)
                         ?: throw RuntimeException("Cannot find built manifest for $mainOutput"),
                     dependencies,
+                    localResourcesFile.orNull?.asFile,
                     imports,
                     splitList,
                     featureResourcePackages,
@@ -345,6 +351,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                             manifestBuiltArtifacts.getBuiltArtifact(variantOutput)
                                 ?: throw RuntimeException("Cannot find build manifest for $variantOutput"),
                             dependencies,
+                            localResourcesFile.orNull?.asFile,
                             imports,
                             splitList,
                             featureResourcePackages,
@@ -430,7 +437,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            val project = creationConfig.globalScope.project
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
@@ -585,6 +591,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task: LinkApplicationAndroidResourcesTask
         ) {
             super.configure(task)
+
+            // TODO: Remove separate flag for app R class.
+            if (creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
+                && creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_APP_R_CLASS]) {
+                // List of local resources, used to generate a non-transitive R for the app module.
+                creationConfig.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
+                    task.localResourcesFile)
+            }
 
             task.dependenciesFileCollection = creationConfig
                 .variantDependencies.getArtifactFileCollection(
@@ -780,6 +795,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .addResourceDirectories(params.compiledDependenciesResourcesDirs)
                         .setEmitStableIdsFile(params.stableIdsOutputFile)
                         .setConsumeStableIdsFile(params.stableIdsInputFile)
+                        .setLocalSymbolTableFile(params.localResourcesFile)
 
                     if (params.isNamespaced) {
                         configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(params.dependencies))
@@ -849,6 +865,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val variantOutput: VariantOutputImpl.SerializedForm,
         val manifestOutput: BuiltArtifactImpl,
         val dependencies: Set<File>,
+        val localResourcesFile: File?,
         val imports: Set<File>,
         splitList: SplitList,
         val featureResourcePackages: Set<File>,

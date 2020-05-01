@@ -28,7 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Sanity tests for the new compile R class flow pipeline with namespaced R classes.
+ * Sanity tests for the new compile R class flow pipeline with non-transitive R classes.
  */
 class NonTransitiveCompileRClassFlowTest {
 
@@ -100,7 +100,7 @@ class NonTransitiveCompileRClassFlowTest {
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
     @Test
-    fun runtimeRClassFlowTestWithNamespaces() {
+    fun runtimeRClassFlowTestWithNonTransitive() {
 
         val tasks = listOf(
             ":app:assembleDebug",
@@ -110,7 +110,7 @@ class NonTransitiveCompileRClassFlowTest {
             ":lib2:assembleDebugAndroidTest"
         )
 
-        // Need to change the dependency on the support lib form api to implementation.
+        // Need to change the dependency on the support lib implementation to api.
         TestFileUtils.searchAndReplace(
             project.file("lib1/build.gradle"),
             "implementation '",

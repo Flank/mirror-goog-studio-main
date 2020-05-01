@@ -108,6 +108,7 @@ enum class BooleanOption(
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
     NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
+    NON_TRANSITIVE_APP_R_CLASS("android.experimental.nonTransitiveAppRClass", false, FeatureStage.Experimental),
     FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
