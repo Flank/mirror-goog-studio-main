@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import android.databinding.tool.processing.Scope;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
@@ -346,7 +345,7 @@ public abstract class BasePlugin<
                                 task.setDescription(
                                         "Assembles all variants of all applications and secondary packages."));
 
-        // As soon as task graph is ready we can clear the shared state for deprecation reporting.
+        // As soon as project is evaluated we can clear the shared state for deprecation reporting.
         gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
 
         // call back on execution. This is called after the whole build is done (not
@@ -365,7 +364,6 @@ public abstract class BasePlugin<
                         sdkComponents.unload();
                         SdkLocator.resetCache();
                         ConstraintHandler.clearCache();
-                        Scope.clear();
                     }
                 });
 
