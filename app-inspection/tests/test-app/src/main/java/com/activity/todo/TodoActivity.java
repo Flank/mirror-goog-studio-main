@@ -51,6 +51,17 @@ public final class TodoActivity extends TransportTestActivity {
         return item;
     }
 
+    @NonNull
+    public TodoItem newRedItem() {
+        if (activeGroup == null) {
+            newGroup();
+        }
+        TodoItem item =
+                new ColoredTodoItem("Item #" + activeGroup.getItems().size() + 1, 0xffff0000);
+        activeGroup.addItem(item);
+        return item;
+    }
+
     public void removeOldestGroup() {
         removeGroup(0);
     }

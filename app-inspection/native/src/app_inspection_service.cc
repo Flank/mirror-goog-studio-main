@@ -69,14 +69,33 @@ static jint JNICALL HeapIterationCallback(jlong class_tag, jlong size,
   return 0;
 }
 
-bool AppInspectionService::tagClassInstancesO(jclass clazz, jlong tag) {
+bool AppInspectionService::tagClassInstancesO(JNIEnv* jni, jclass clazz,
+                                              jlong tag) {
   jvmtiHeapCallbacks heap_callbacks;
+  jint count;
+  jclass* classes;
+
+  if (CheckJvmtiError(jvmti_, jvmti_->GetLoadedClasses(&count, &classes))) {
+    return true;
+  }
+
   memset(&heap_callbacks, 0, sizeof(heap_callbacks));
   heap_callbacks.heap_iteration_callback =
       reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
           HeapIterationCallback);
-  return CheckJvmtiError(
-      jvmti_, jvmti_->IterateThroughHeap(0, clazz, &heap_callbacks, &tag));
+  // unlike IterateOverInstancesOfClass, that is available only on Q and newer,
+  // IterateThroughHeap doesn't include subclasses
+  // of the specfied class, so have to manually search for subclasses.
+  bool error = false;
+  for (int i = 0; (i < count) && !error; ++i) {
+    if (jni->IsAssignableFrom(classes[i], clazz)) {
+      error = CheckJvmtiError(
+          jvmti_,
+          jvmti_->IterateThroughHeap(0, classes[i], &heap_callbacks, &tag));
+    }
+  }
+  jvmti_->Deallocate((unsigned char*)classes);
+  return error;
 }
 
 // Used on devices with API level >= 29
@@ -121,7 +140,7 @@ jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
   jlong tag = nextTag++;
 
   bool error = DeviceInfo::feature_level() < DeviceInfo::Q
-                   ? tagClassInstancesO(clazz, tag)
+                   ? tagClassInstancesO(jni, clazz, tag)
                    : tagClassInstancesQ(clazz, tag);
 
   if (error) {

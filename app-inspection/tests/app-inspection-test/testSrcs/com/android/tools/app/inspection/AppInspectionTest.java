@@ -249,7 +249,7 @@ public final class AppInspectionTest {
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
         androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
         androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newRedItem");
 
         assertRawResponse(
                 appInspectionRule.sendCommandAndGetResponse(

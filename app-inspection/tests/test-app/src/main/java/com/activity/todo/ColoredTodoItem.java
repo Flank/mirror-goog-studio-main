@@ -18,28 +18,16 @@ package com.activity.todo;
 
 import androidx.annotation.NonNull;
 
-public class TodoItem {
-    @NonNull private String description;
-    private boolean completed;
+public final class ColoredTodoItem extends TodoItem {
 
-    public TodoItem(@NonNull String description) {
-        this.description = description;
+    private final int color;
+
+    public ColoredTodoItem(@NonNull String description, int color) {
+        super(description);
+        this.color = color;
     }
 
-    @NonNull
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(@NonNull String description) {
-        this.description = description;
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
+    public int getColor() {
+        return color;
     }
 }
