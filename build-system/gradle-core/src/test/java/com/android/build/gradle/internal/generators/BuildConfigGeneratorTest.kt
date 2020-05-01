@@ -16,129 +16,135 @@
 
 package com.android.build.gradle.internal.generators;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Charsets
+import com.google.common.io.Files
+import org.junit.Assert
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import java.io.File;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-@SuppressWarnings("ResultOfMethodCallIgnored")
-public class BuildConfigGeneratorTest {
-
-    @Rule
-    public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
+class BuildConfigGeneratorTest {
+    @get:Rule
+    var mTemporaryFolder = TemporaryFolder()
 
     @Test
-    public void testFalse() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigData buildConfigData =
-                new BuildConfigData.Builder()
-                        .setOutputPath(tempDir.toPath())
-                        .setBuildConfigPackageName("my.app.pkg")
-                        .addBooleanField("DEBUG", false)
-                        .build();
-        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
-        generator.generate();
+    fun testFalse() {
+        val tempDir = mTemporaryFolder.newFolder()
+        val buildConfigData =
+            BuildConfigData.Builder()
+                .setOutputPath(tempDir.toPath())
+                .setBuildConfigPackageName("my.app.pkg")
+                .addBooleanField("DEBUG", false)
+                .build()
+        val generator =
+            BuildConfigGenerator(buildConfigData)
+        generator.generate()
+        val file = generator.buildConfigFile
+        Assert.assertTrue(file.exists())
+        val actual =
+            Files.toString(file, Charsets.UTF_8)
+        Assert.assertEquals(
+            """           /**
+            * Automatically generated file. DO NOT MODIFY
+            */
+           package my.app.pkg;
 
-        File file = generator.getBuildConfigFile();
-        assertTrue(file.exists());
-        String actual = Files.toString(file, Charsets.UTF_8);
-        assertEquals(
-                "/**\n"
-                        + " * Automatically generated file. DO NOT MODIFY\n"
-                        + " */\n"
-                        + "package my.app.pkg;\n"
-                        + "\n"
-                        + "public final class BuildConfig {\n"
-                        + "  public static final boolean DEBUG = false;\n"
-                        + "}\n",
-                actual);
+           public final class BuildConfig {
+             public static final boolean DEBUG = false;
+           }
+           """.trimIndent(),
+            actual.trim()
+        )
     }
 
     @Test
-    public void testTrue() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigData buildConfigData =
-                new BuildConfigData.Builder()
-                        .setOutputPath(tempDir.toPath())
-                        .setBuildConfigPackageName("my.app.pkg")
-                        .addBooleanField("DEBUG", true)
-                        .build();
-        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
-        generator.generate();
+    fun testTrue() {
+        val tempDir = mTemporaryFolder.newFolder()
+        val buildConfigData =
+            BuildConfigData.Builder()
+                .setOutputPath(tempDir.toPath())
+                .setBuildConfigPackageName("my.app.pkg")
+                .addBooleanField("DEBUG", true)
+                .build()
+        val generator =
+            BuildConfigGenerator(buildConfigData)
+        generator.generate()
+        val file = generator.buildConfigFile
+        Assert.assertTrue(file.exists())
+        val actual =
+            Files.toString(file, Charsets.UTF_8)
+        Assert.assertEquals(
+            """           /**
+            * Automatically generated file. DO NOT MODIFY
+            */
+           package my.app.pkg;
 
-        File file = generator.getBuildConfigFile();
-        assertTrue(file.exists());
-        String actual = Files.toString(file, Charsets.UTF_8);
-        assertEquals(
-                "/**\n"
-                        + " * Automatically generated file. DO NOT MODIFY\n"
-                        + " */\n"
-                        + "package my.app.pkg;\n"
-                        + "\n"
-                        + "public final class BuildConfig {\n"
-                        + "  public static final boolean DEBUG = Boolean.parseBoolean(\"true\");\n"
-                        + "}\n",
-                actual);
+           public final class BuildConfig {
+             public static final boolean DEBUG = Boolean.parseBoolean("true");
+           }
+           """.trimIndent(),
+            actual.trim()
+        )
     }
 
     @Test
-    public void testLong() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigData buildConfigData =
-                new BuildConfigData.Builder()
-                        .setOutputPath(tempDir.toPath())
-                        .setBuildConfigPackageName("my.app.pkg")
-                        .addLongField("TIME_STAMP", 12343434L)
-                        .build();
-        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
-        generator.generate();
+    fun testLong() {
+        val tempDir = mTemporaryFolder.newFolder()
+        val buildConfigData =
+            BuildConfigData.Builder()
+                .setOutputPath(tempDir.toPath())
+                .setBuildConfigPackageName("my.app.pkg")
+                .addLongField("TIME_STAMP", 12343434L)
+                .build()
+        val generator =
+            BuildConfigGenerator(buildConfigData)
+        generator.generate()
+        val file = generator.buildConfigFile
+        Assert.assertTrue(file.exists())
+        val actual =
+            Files.toString(file, Charsets.UTF_8)
+        Assert.assertEquals(
+            """           /**
+            * Automatically generated file. DO NOT MODIFY
+            */
+           package my.app.pkg;
 
-        File file = generator.getBuildConfigFile();
-        assertTrue(file.exists());
-        String actual = Files.toString(file, Charsets.UTF_8);
-        assertEquals(
-                "/**\n"
-                        + " * Automatically generated file. DO NOT MODIFY\n"
-                        + " */\n"
-                        + "package my.app.pkg;\n"
-                        + "\n"
-                        + "public final class BuildConfig {\n"
-                        + "  public static final long TIME_STAMP = 12343434L;\n"
-                        + "}\n",
-                actual);
+           public final class BuildConfig {
+             public static final long TIME_STAMP = 12343434L;
+           }
+           """.trimIndent(),
+            actual.trim()
+        )
     }
 
     @Test
-    public void testExtra() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigData buildConfigData =
-                new BuildConfigData.Builder()
-                        .setOutputPath(tempDir.toPath())
-                        .setBuildConfigPackageName("my.app.pkg")
-                        .addIntField("EXTRA", 42, "Extra line")
-                        .build();
-        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
+    fun testExtra() {
+        val tempDir = mTemporaryFolder.newFolder()
+        val buildConfigData =
+            BuildConfigData.Builder()
+                .setOutputPath(tempDir.toPath())
+                .setBuildConfigPackageName("my.app.pkg")
+                .addIntField("EXTRA", 42, "Extra line")
+                .build()
+        val generator =
+            BuildConfigGenerator(buildConfigData)
+        generator.generate()
+        val file = generator.buildConfigFile
+        Assert.assertTrue(file.exists())
+        val actual =
+            Files.toString(file, Charsets.UTF_8)
+        Assert.assertEquals(
+            """           /**
+            * Automatically generated file. DO NOT MODIFY
+            */
+           package my.app.pkg;
 
-        generator.generate();
-
-        File file = generator.getBuildConfigFile();
-        assertTrue(file.exists());
-        String actual = Files.toString(file, Charsets.UTF_8);
-        assertEquals(
-                "/**\n"
-                        + " * Automatically generated file. DO NOT MODIFY\n"
-                        + " */\n"
-                        + "package my.app.pkg;\n"
-                        + "\n"
-                        + "public final class BuildConfig {\n"
-                        + "  // Extra line\n"
-                        + "  public static final int EXTRA = 42;\n"
-                        + "}\n",
-                actual);
+           public final class BuildConfig {
+             // Extra line
+             public static final int EXTRA = 42;
+           }
+           """.trimIndent(),
+            actual.trim()
+        )
     }
 }
