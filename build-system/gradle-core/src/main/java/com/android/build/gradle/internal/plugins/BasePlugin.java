@@ -89,7 +89,6 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-import com.android.dx.command.dexer.Main;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.model.LmModuleLoader;
@@ -347,6 +346,9 @@ public abstract class BasePlugin<
                                 task.setDescription(
                                         "Assembles all variants of all applications and secondary packages."));
 
+        // As soon as task graph is ready we can clear the shared state for deprecation reporting.
+        gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
+
         // call back on execution. This is called after the whole build is done (not
         // after the current project is done).
         // This is will be called for each (android) projects though, so this should support
@@ -363,7 +365,6 @@ public abstract class BasePlugin<
                         sdkComponents.unload();
                         SdkLocator.resetCache();
                         ConstraintHandler.clearCache();
-                        DeprecationReporterImpl.Companion.clean();
                         Scope.clear();
                     }
                 });
