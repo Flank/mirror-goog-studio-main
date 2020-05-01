@@ -22,7 +22,7 @@ import org.gradle.api.provider.MapProperty
 
 interface VariantCreationConfig: BaseCreationConfig {
 
-    val buildConfigFields: MapProperty<String, BuildConfigField>
+    val buildConfigFields: MapProperty<String, BuildConfigField<out java.io.Serializable>>
 
     val resValues: MapProperty<ResValue.Key, ResValue>
 }

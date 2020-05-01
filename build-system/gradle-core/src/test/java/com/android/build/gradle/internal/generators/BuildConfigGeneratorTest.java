@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.compiling;
+package com.android.build.gradle.internal.generators;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -39,7 +39,7 @@ public class BuildConfigGeneratorTest {
                 new BuildConfigData.Builder()
                         .setOutputPath(tempDir.toPath())
                         .setBuildConfigPackageName("my.app.pkg")
-                        .addBooleanDebugField("DEBUG", "false")
+                        .addBooleanField("DEBUG", false)
                         .build();
         BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
         generator.generate();
@@ -66,7 +66,7 @@ public class BuildConfigGeneratorTest {
                 new BuildConfigData.Builder()
                         .setOutputPath(tempDir.toPath())
                         .setBuildConfigPackageName("my.app.pkg")
-                        .addBooleanDebugField("DEBUG", "Boolean.parseBoolean(\"true\")")
+                        .addBooleanField("DEBUG", true)
                         .build();
         BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
         generator.generate();
@@ -87,13 +87,40 @@ public class BuildConfigGeneratorTest {
     }
 
     @Test
+    public void testLong() throws Exception {
+        File tempDir = mTemporaryFolder.newFolder();
+        BuildConfigData buildConfigData =
+                new BuildConfigData.Builder()
+                        .setOutputPath(tempDir.toPath())
+                        .setBuildConfigPackageName("my.app.pkg")
+                        .addLongField("TIME_STAMP", 12343434L)
+                        .build();
+        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
+        generator.generate();
+
+        File file = generator.getBuildConfigFile();
+        assertTrue(file.exists());
+        String actual = Files.toString(file, Charsets.UTF_8);
+        assertEquals(
+                "/**\n"
+                        + " * Automatically generated file. DO NOT MODIFY\n"
+                        + " */\n"
+                        + "package my.app.pkg;\n"
+                        + "\n"
+                        + "public final class BuildConfig {\n"
+                        + "  public static final long TIME_STAMP = 12343434L;\n"
+                        + "}\n",
+                actual);
+    }
+
+    @Test
     public void testExtra() throws Exception {
         File tempDir = mTemporaryFolder.newFolder();
         BuildConfigData buildConfigData =
                 new BuildConfigData.Builder()
                         .setOutputPath(tempDir.toPath())
                         .setBuildConfigPackageName("my.app.pkg")
-                        .addItem("int", "EXTRA", "42", "Extra line")
+                        .addIntField("EXTRA", 42, "Extra line")
                         .build();
         BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
 
@@ -113,21 +140,5 @@ public class BuildConfigGeneratorTest {
                         + "  public static final int EXTRA = 42;\n"
                         + "}\n",
                 actual);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsExecptionWhenInvalidBuildConfigFieldUsed() throws Exception {
-        File tempDir = mTemporaryFolder.newFolder();
-        BuildConfigData buildConfigData =
-                new BuildConfigData.Builder()
-                        .setOutputPath(tempDir.toPath())
-                        .setBuildConfigPackageName("my.app.pkg")
-                        // BuildConfig generator does not currently support
-                        // BuildConfigField.BooleanField, therefore an IllegalArgumentException
-                        // is thrown.
-                        .addBooleanField("DEBUG", false)
-                        .build();
-        BuildConfigGenerator generator = new BuildConfigGenerator(buildConfigData);
-        generator.generate();
     }
 }

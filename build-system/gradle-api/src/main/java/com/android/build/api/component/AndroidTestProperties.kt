@@ -22,6 +22,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 /**
  * Properties for the android test Variant of a module
@@ -70,7 +71,7 @@ interface AndroidTestProperties : TestComponentProperties {
     /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
-    val buildConfigFields: MapProperty<String, out BuildConfigField>
+    val buildConfigFields: MapProperty<String, out BuildConfigField<out Serializable>>
 
     /**
      * Adds a ResValue element to the generated resources.

@@ -691,15 +691,19 @@ open class VariantDslInfoImpl internal constructor(
 // come from so we cannot just put everything a map and let the new ones override the
 // old ones.
 
-    override fun getBuildConfigFields(): Map<String, BuildConfigField> {
-        val buildConfigFieldsMap = mutableMapOf<String, BuildConfigField>()
+    override fun getBuildConfigFields(): Map<String, BuildConfigField<out java.io.Serializable>> {
+        val buildConfigFieldsMap = mutableMapOf<String, BuildConfigField<out java.io.Serializable>>()
 
         fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
             if (!buildConfigFieldsMap.containsKey(classField.name)) {
-                buildConfigFieldsMap[classField.name] = BuildConfigField(
-                    type = classField.type,
-                    value = classField.value,
-                    comment = comment)
+
+                buildConfigFieldsMap[classField.name] = when(classField.type) {
+                    "boolean" -> BuildConfigField.SupportedType.Boolean.make(classField.value, comment)
+                    "int" -> BuildConfigField.SupportedType.Int.make(classField.value, comment)
+                    "long" -> BuildConfigField.SupportedType.Long.make(classField.value, comment)
+                    "String" -> BuildConfigField.SupportedType.String.make(classField.value, comment)
+                    else -> throw java.lang.RuntimeException("Unsupported BuildConfig type : ${classField.type}")
+                }
             }
         }
 

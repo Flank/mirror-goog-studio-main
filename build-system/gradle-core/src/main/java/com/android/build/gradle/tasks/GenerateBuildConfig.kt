@@ -16,6 +16,8 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.gradle.internal.generators.BuildConfigByteCodeGenerator
+import com.android.build.gradle.internal.generators.BuildConfigData
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
@@ -25,10 +27,8 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.compiling.BuildConfigByteCodeGenerator
 import com.android.builder.compiling.BuildConfigCreator
-import com.android.builder.compiling.BuildConfigData
-import com.android.builder.compiling.BuildConfigGenerator
+import com.android.build.gradle.internal.generators.BuildConfigGenerator
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -45,6 +45,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import java.io.Serializable
 
 @CacheableTask
 abstract class GenerateBuildConfig : NonIncrementalTask() {
@@ -102,7 +103,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     abstract val hasVersionInfo: Property<Boolean>
 
     @get:Input
-    abstract val items: MapProperty<String, BuildConfigField>
+    abstract val items: MapProperty<String, BuildConfigField<out Serializable>>
 
     @get:Input
     abstract val outputAsBytecode: Property<Boolean>
@@ -126,20 +127,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 .setBuildConfigPackageName(buildConfigPackageName.get())
                 .apply {
                     if (!outputAsBytecode.get() || !itemsToGenerate.none()) {
-                        // Hack (see IDEA-100046): We want to avoid reporting "condition is always
-                        // true" from the data flow inspection, so use a non-constant value.
-                        // However, that defeats the purpose of this flag (when not in debug mode,
-                        // if (BuildConfig.DEBUG && ...) will be completely removed by
-                        // the compiler), so as a hack we do it only for the case where debug is
-                        // true, which is the most likely scenario while the user is looking
-                        // at source code. map.put(PH_DEBUG, Boolean.toString(mDebug));
-                        addBooleanDebugField("DEBUG",
-                                if (debuggable.get()) {
-                                    "Boolean.parseBoolean(\"true\")"
-                                } else {
-                                    "false"
-                                }
-                        )
+                        addBooleanField("DEBUG", debuggable.get())
                     }
 
                     if (isLibrary) {
@@ -191,8 +179,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                                 // is stable.
                                 itemsToGenerate.toSortedMap().forEach { (name, buildConfigField)
                                     ->
-                                    addItem(buildConfigField.type, name, buildConfigField.value,
-                                            buildConfigField.comment)
+                                    addItem(name, buildConfigField)
                                 }
                             }
                             .build()

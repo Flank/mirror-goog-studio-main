@@ -19,6 +19,7 @@ import com.android.build.api.component.ComponentProperties
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 /**
  * Parent interface for all types of variants.
@@ -41,7 +42,7 @@ interface VariantProperties: ComponentProperties {
     /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
-    val buildConfigFields: MapProperty<String, BuildConfigField>
+    val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
 
     /**
      * Adds a ResValue element to the generated resources.

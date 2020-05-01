@@ -83,6 +83,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
         "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
         "//tools/base/third_party:com.squareup_javapoet",
+        "//tools/base/third_party:com.squareup_javawriter",
         "//tools/base/third_party:com.sun.istack_istack-commons-runtime",
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",

@@ -37,12 +37,12 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                     kotlin("android")
                     kotlin("android.extensions")
             }
-            import com.android.build.api.variant.BuildConfigField
+            import com.android.build.api.variant.BuildConfigField.SupportedType
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
-                    buildConfigFields.put("VariantName", BuildConfigField.make("String", "\"${'$'}{name}\""))
+                    buildConfigFields.put("VariantName", SupportedType.String.make("${'$'}{name}", "Variant Name"))
                 }
             }
                 """.trimIndent()
@@ -106,7 +106,7 @@ The added field is used in the MainActivity.kt file.
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.variant.BuildConfigField
+            import com.android.build.api.variant.BuildConfigField.SupportedType
 
             ${testingElements.getGitVersionTask()}
 
@@ -123,8 +123,8 @@ The added field is used in the MainActivity.kt file.
 
                 onVariantProperties {
                     buildConfigFields.put("VariantName", gitVersionProvider.map {  task ->
-                        BuildConfigField.make("String", "\"" + 
-                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8) + "\"")
+                        SupportedType.String.make(
+                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8), "Git Version")
                     })
                 }
             }""".trimIndent()

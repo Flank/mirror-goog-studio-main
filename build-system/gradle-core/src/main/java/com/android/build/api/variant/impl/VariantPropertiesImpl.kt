@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -70,7 +71,7 @@ abstract class VariantPropertiesImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+    override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,

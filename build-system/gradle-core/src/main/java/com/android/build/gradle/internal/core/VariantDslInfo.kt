@@ -277,7 +277,7 @@ interface VariantDslInfo {
      *
      * @return a list of items.
      */
-    fun getBuildConfigFields(): Map<String, BuildConfigField>
+    fun getBuildConfigFields(): Map<String, BuildConfigField<out java.io.Serializable>>
 
     /**
      * Returns a list of generated resource values.

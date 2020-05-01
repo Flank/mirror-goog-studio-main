@@ -17,9 +17,8 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import java.io.Serializable
+import java.lang.Boolean
 
 /**
  * Field definition for the generated BuildConfig class.
@@ -27,18 +26,17 @@ import java.io.Serializable
  * The field is generated as: <type> <name> = <value>;
  */
 @Incubating
-data class BuildConfigField(
-
+data class BuildConfigField<T: Serializable>(
     /**
-     * Type of the generated field.
+     * Generated field type, must be one of the [SupportedType]
      */
-    val type: String,
+    val type: SupportedType<T>,
 
     /**
      * Value of the generated field.
      * If [type] is [String], then [value] should include quotes.
      */
-    val value: String,
+    val value: T,
 
     /**
      * Optional field comment that will be added to the generated source file or null if no comment
@@ -47,15 +45,72 @@ data class BuildConfigField(
     val comment: String?
 ) : Serializable {
 
+    /**
+     * List of supported types for BuildConfig Fields.
+     */
+    @Incubating
+    sealed class SupportedType<T: Serializable>: Serializable {
+        @Incubating
+        object Boolean: SupportedType<kotlin.Boolean>() {
+            fun make(
+                value: kotlin.Boolean,
+                comment: kotlin.String? = null
+            ): BuildConfigField<kotlin.Boolean> =
+                BuildConfigField(Boolean, value, comment)
+
+            fun make(value: kotlin.String, comment: kotlin.String? = null) =
+                make(value.toBoolean(), comment)
+        }
+        @Incubating
+        object Int: SupportedType<kotlin.Int>() {
+            fun make(
+                value: kotlin.Int,
+                comment: kotlin.String? = null
+            ): BuildConfigField<kotlin.Int> =
+                BuildConfigField(Int, value, comment)
+
+            fun make(value: kotlin.String, comment: kotlin.String? = null) =
+                make(value.toInt(), comment)
+        }
+
+        @Incubating
+        object Long: SupportedType<kotlin.Long>() {
+            fun make(
+                value: kotlin.Long,
+                comment: kotlin.String? = null
+            ): BuildConfigField<kotlin.Long> =
+                BuildConfigField(Long, value, comment)
+
+            fun make(value: kotlin.String, comment: kotlin.String? = null): BuildConfigField<kotlin.Long> {
+                return if (value.endsWith("L")) {
+                    make(value.dropLast(1))
+                } else make(value.toLong(), comment)
+            }
+        }
+
+        @Incubating
+        object String: SupportedType<kotlin.String>() {
+            fun make(
+                value: kotlin.String,
+                comment: kotlin.String? = null
+            ): BuildConfigField<kotlin.String> =
+                BuildConfigField(String, value, comment)
+        }
+    }
+
     @Incubating
     companion object {
 
         /**
-         * make a new instance of [BuildConfigField] with a type and value.
+         * make a new instance of [BuildConfigField] with a type as a [SupportedType] and value.
          */
         @JvmStatic
         @JvmOverloads
-        fun make(type: String, value: String, comment: String? = "Field from Variant API") =
-            BuildConfigField(type, value, comment)
+        fun <T : Serializable> make(
+            supportedType: SupportedType<T>,
+            value: T,
+            comment: String? = "Field from Variant API"
+        ) =
+            BuildConfigField<T>(supportedType, value, comment)
     }
 }

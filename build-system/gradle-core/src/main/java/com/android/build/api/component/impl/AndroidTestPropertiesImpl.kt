@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
@@ -110,7 +111,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val testLabel: Property<String?> =
         internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
 
-    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+    override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,
