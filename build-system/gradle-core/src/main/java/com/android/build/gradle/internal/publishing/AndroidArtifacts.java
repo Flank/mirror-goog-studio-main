@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 
@@ -96,6 +97,7 @@ public class AndroidArtifacts {
             "android-compiled-dependencies-resources";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
     private static final String TYPE_LIB_DEPENDENCIES = "android-lib-dependencies";
+    private static final String TYPE_AAR_METADATA = "android-aar-metadata";
 
     // types for additional artifacts to go with APK
     private static final String TYPE_MAPPING = "android-mapping";
@@ -312,6 +314,8 @@ public class AndroidArtifacts {
         RENDERSCRIPT(TYPE_RENDERSCRIPT),
         DATA_BINDING_ARTIFACT(TYPE_DATA_BINDING_ARTIFACT),
         DATA_BINDING_BASE_CLASS_LOG_ARTIFACT(TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+        // The AAR metadata file, specifying consumer constraints
+        AAR_METADATA(TYPE_AAR_METADATA),
 
         // runtime and/or bundle elements
         JAVA_RES(TYPE_JAVA_RES),

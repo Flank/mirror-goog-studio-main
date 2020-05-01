@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUARD_FILE
+import com.android.build.gradle.internal.scope.InternalArtifactType.AAR_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELABLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
@@ -231,6 +232,7 @@ class PublishingSpecs {
                 runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
+                runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
             }
 
             // empty specs

@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
@@ -331,6 +332,9 @@ public class LibraryTaskManager
                 new LibraryJniLibsTask.ProjectAndLocalJarsCreationAction(
                         libVariantProperties,
                         InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI.INSTANCE));
+
+        // Add a task to create the AAR metadata file
+        taskFactory.register(new AarMetadataTask.CreationAction(libVariantProperties));
 
         createLintTasks(libVariantProperties, allVariants);
         createBundleTask(libVariantProperties);

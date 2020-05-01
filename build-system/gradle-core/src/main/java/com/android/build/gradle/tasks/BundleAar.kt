@@ -21,8 +21,10 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
+import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
@@ -191,6 +193,16 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.from(
                 creationConfig.operations.get(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_AAR_METADATA]) {
+                task.from(
+                    creationConfig.operations.get(InternalArtifactType.AAR_METADATA)
+                ) {
+                    it.rename(
+                        AarMetadataTask.aarMetadataFileName,
+                        AarMetadataTask.aarMetadataEntryPath
+                    )
+                }
+            }
             task.localAarDeps.from(
                 creationConfig.variantScope.getLocalFileDependencies {
                     it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)

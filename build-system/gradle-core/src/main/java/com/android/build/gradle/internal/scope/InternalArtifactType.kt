@@ -326,6 +326,8 @@ InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object AAR_MAIN_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // The libs/ directory for the AAR: InternalArtifactType<RegularFile>(FILE), Replaceable containing secondary jars
     object AAR_LIBS_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // The AAR metadata file, specifying consumer constraints
+    object AAR_METADATA: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     object ABI_PACKAGED_SPLIT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object FULL_APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
