@@ -26,6 +26,7 @@ import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.utils.DebuggerPorts;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -163,23 +164,14 @@ final class DeviceMonitor implements ClientTracker {
 
     /**
      * Attempts to connect to the debug bridge server.
+     *
      * @return a connect socket if success, null otherwise
+     * @throws IOException if error occurs when opening connection to the ADB server
      */
-    @Nullable
-    private static SocketChannel openAdbConnection() {
-        try {
-            SocketChannel adbChannel = SocketChannel.open(AndroidDebugBridge.getSocketAddress());
-            adbChannel.socket().setTcpNoDelay(true);
-            return adbChannel;
-        } catch (IOException e) {
-            Log.e(
-                    "DeviceMonitor",
-                    "Unable to open connection to: "
-                            + AndroidDebugBridge.getSocketAddress()
-                            + ", due to: "
-                            + e);
-            return null;
-        }
+    private static SocketChannel openAdbConnection() throws IOException {
+        SocketChannel adbChannel = SocketChannel.open(AndroidDebugBridge.getSocketAddress());
+        adbChannel.socket().setTcpNoDelay(true);
+        return adbChannel;
     }
 
     /**
@@ -291,63 +283,75 @@ final class DeviceMonitor implements ClientTracker {
      * @return true if success.
      */
     private boolean startMonitoringDevice(@NonNull Device device) {
-        SocketChannel socketChannel = openAdbConnection();
-
-        if (socketChannel != null) {
-            try {
-                boolean result = sendDeviceMonitoringRequest(socketChannel, device);
-                if (result) {
-
-                    if (mSelector == null) {
-                        startDeviceMonitorThread();
-                    }
-
-                    device.setClientMonitoringSocket(socketChannel);
-
-                    socketChannel.configureBlocking(false);
-
-                    try {
-                        mChannelsToRegister.put(Pair.of(socketChannel, device));
-                    } catch (InterruptedException e) {
-                        // the queue is unbounded, and isn't going to block
-                    }
-                    mSelector.wakeup();
-
-                    return true;
-                }
-            } catch (TimeoutException e) {
-                try {
-                    // attempt to close the socket if needed.
-                    socketChannel.close();
-                } catch (IOException e1) {
-                    // we can ignore that one. It may already have been closed.
-                }
-                Log.d("DeviceMonitor",
-                        "Connection Failure when starting to monitor device '"
-                        + device + "' : timeout");
-            } catch (AdbCommandRejectedException e) {
-                try {
-                    // attempt to close the socket if needed.
-                    socketChannel.close();
-                } catch (IOException e1) {
-                    // we can ignore that one. It may already have been closed.
-                }
-                Log.d("DeviceMonitor",
-                        "Adb refused to start monitoring device '"
-                        + device + "' : " + e.getMessage());
-            } catch (IOException e) {
-                try {
-                    // attempt to close the socket if needed.
-                    socketChannel.close();
-                } catch (IOException e1) {
-                    // we can ignore that one. It may already have been closed.
-                }
-                Log.d("DeviceMonitor",
-                        "Connection Failure when starting to monitor device '"
-                        + device + "' : " + e.getMessage());
-            }
+        SocketChannel socketChannel;
+        try {
+            socketChannel = openAdbConnection();
+        } catch (IOException exception) {
+            Log.e(
+                    "DeviceClientMonitorTask",
+                    "Unable to open connection to: "
+                            + AndroidDebugBridge.getSocketAddress()
+                            + ", due to: "
+                            + exception);
+            return false;
         }
+        try {
+            boolean result = sendDeviceMonitoringRequest(socketChannel, device);
+            if (result) {
 
+                if (mSelector == null) {
+                    startDeviceMonitorThread();
+                }
+
+                device.setClientMonitoringSocket(socketChannel);
+
+                socketChannel.configureBlocking(false);
+
+                try {
+                    mChannelsToRegister.put(Pair.of(socketChannel, device));
+                } catch (InterruptedException e) {
+                    // the queue is unbounded, and isn't going to block
+                }
+                mSelector.wakeup();
+
+                return true;
+            }
+        } catch (TimeoutException e) {
+            try {
+                // attempt to close the socket if needed.
+                socketChannel.close();
+            } catch (IOException e1) {
+                // we can ignore that one. It may already have been closed.
+            }
+            Log.d(
+                    "DeviceMonitor",
+                    "Connection Failure when starting to monitor device '"
+                            + device
+                            + "' : timeout");
+        } catch (AdbCommandRejectedException e) {
+            try {
+                // attempt to close the socket if needed.
+                socketChannel.close();
+            } catch (IOException e1) {
+                // we can ignore that one. It may already have been closed.
+            }
+            Log.d(
+                    "DeviceMonitor",
+                    "Adb refused to start monitoring device '" + device + "' : " + e.getMessage());
+        } catch (IOException e) {
+            try {
+                // attempt to close the socket if needed.
+                socketChannel.close();
+            } catch (IOException e1) {
+                // we can ignore that one. It may already have been closed.
+            }
+            Log.d(
+                    "DeviceMonitor",
+                    "Connection Failure when starting to monitor device '"
+                            + device
+                            + "' : "
+                            + e.getMessage());
+        }
         return false;
     }
 
@@ -768,6 +772,7 @@ final class DeviceMonitor implements ClientTracker {
         private SocketChannel mAdbConnection = null;
         private boolean mMonitoring = false;
         private int mConnectionAttempt = 0;
+        private Stopwatch mAdbDisconnectionStopwatch;
         private int mRestartAttemptCount = 0;
         private boolean mInitialDeviceListDone = false;
 
@@ -789,17 +794,34 @@ final class DeviceMonitor implements ClientTracker {
             do {
                 if (mAdbConnection == null) {
                     Log.d("DeviceMonitor", "Opening adb connection");
-                    mAdbConnection = openAdbConnection();
+                    try {
+                        mAdbConnection = openAdbConnection();
+                    } catch (IOException exception) {
+                        Log.d(
+                                "DeviceMonitor",
+                                "Unable to open connection to ADB server on "
+                                        + AndroidDebugBridge.getSocketAddress()
+                                        + ", due to: "
+                                        + exception);
+                    }
                     if (mAdbConnection == null) {
                         mConnectionAttempt++;
-                        Log.e("DeviceMonitor", "Connection attempts: " + mConnectionAttempt);
-                        if (AndroidDebugBridge.isUserManagedAdbMode()) {
-                            Log.i("DeviceMonitor", "User managed ADB mode: Waiting for ADB connection to be re-established");
-                        } else if (mConnectionAttempt > 10) {
+
+                        // Only log on first retry attempt to avoid spamming logs.
+                        if (mConnectionAttempt == 1) {
+                            Log.e(
+                                    "DeviceMonitor",
+                                    "Cannot reach ADB server, attempting to reconnect.");
+                            mAdbDisconnectionStopwatch = Stopwatch.createStarted();
+                            if (AndroidDebugBridge.isUserManagedAdbMode()) {
+                                Log.w(
+                                        "DeviceMonitor",
+                                        "Will not automatically restart the ADB server because ddmlib is in user managed mode");
+                            }
+                        }
+                        if (!AndroidDebugBridge.isUserManagedAdbMode() && mConnectionAttempt > 10) {
                             if (!mBridge.startAdb()) {
                                 mRestartAttemptCount++;
-                                Log.e("DeviceMonitor",
-                                        "adb restart attempts: " + mRestartAttemptCount);
                             } else {
                                 Log.i("DeviceMonitor", "adb restarted");
                                 mRestartAttemptCount = 0;
@@ -807,7 +829,16 @@ final class DeviceMonitor implements ClientTracker {
                         }
                         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
                     } else {
-                        Log.d("DeviceMonitor", "Connected to adb for device monitoring");
+                        if (mConnectionAttempt > 0) {
+                            Log.i(
+                                    "DeviceMonitor",
+                                    "ADB connection re-established after "
+                                            + mAdbDisconnectionStopwatch.elapsed(TimeUnit.SECONDS)
+                                            + " seconds.");
+                            mAdbDisconnectionStopwatch.reset();
+                        } else {
+                            Log.i("DeviceMonitor", "Connected to adb for device monitoring");
+                        }
                         mConnectionAttempt = 0;
                     }
                 }
