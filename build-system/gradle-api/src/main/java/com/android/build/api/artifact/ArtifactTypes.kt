@@ -53,4 +53,7 @@ sealed class ArtifactTypes<T : FileSystemLocation>(
     @Incubating
     object OBFUSCATION_MAPPING_FILE: ArtifactTypes<RegularFile>(FILE, FileNames.OBFUSCATION_MAPPING_FILE), Single
 
+    @Incubating
+    object BUNDLE: ArtifactTypes<RegularFile>(FILE), Single, Transformable
+
 }

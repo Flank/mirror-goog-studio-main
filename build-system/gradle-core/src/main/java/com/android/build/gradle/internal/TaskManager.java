@@ -2850,6 +2850,11 @@ public abstract class TaskManager<
                                     .get(InternalArtifactType.BUNDLE.INSTANCE));
                 },
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
+
+        // republish Bundle to the external world.
+        componentProperties
+                .getArtifacts()
+                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactTypes.BUNDLE.INSTANCE);
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(
