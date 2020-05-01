@@ -126,6 +126,8 @@ message Property {
     ANIM = 16;
     ANIMATOR = 17;
     INTERPOLATOR = 18;
+    DIMENSION = 19;
+    DIMENSION_FLOAT = 20;
   }
 
   int32 namespace = 1;
