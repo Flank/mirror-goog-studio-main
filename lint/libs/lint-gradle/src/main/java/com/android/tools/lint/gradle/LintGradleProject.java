@@ -467,16 +467,30 @@ public class LintGradleProject extends Project {
                 File outputClassFolder = mainArtifact.getClassesFolder();
                 if (outputClassFolder.exists()) {
                     javaClassFolders.add(outputClassFolder);
-                    javaClassFolders.addAll(mainArtifact.getAdditionalClassesFolders());
-                } else if (isLibrary()) {
+                }
+                for (File folder : mainArtifact.getAdditionalClassesFolders()) {
+                    if (folder.exists()) {
+                        javaClassFolders.add(folder);
+                    }
+                }
+                if (javaClassFolders.isEmpty() && isLibrary()) {
                     // For libraries we build the release variant instead
                     for (Variant variant : mProject.getVariants()) {
                         if (variant != mVariant) {
                             mainArtifact = variant.getMainArtifact();
                             outputClassFolder = mainArtifact.getClassesFolder();
+                            boolean found = false;
                             if (outputClassFolder.exists()) {
                                 javaClassFolders.add(outputClassFolder);
-                                javaClassFolders.addAll(mainArtifact.getAdditionalClassesFolders());
+                                found = true;
+                            }
+                            for (File folder : mainArtifact.getAdditionalClassesFolders()) {
+                                if (folder.exists()) {
+                                    javaClassFolders.add(folder);
+                                    found = true;
+                                }
+                            }
+                            if (found) {
                                 break;
                             }
                         }
