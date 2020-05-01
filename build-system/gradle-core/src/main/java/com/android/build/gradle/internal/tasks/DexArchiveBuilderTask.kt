@@ -182,6 +182,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:InputFiles
     abstract val externalLibDexFiles: ConfigurableFileCollection
 
+    @get:Internal
+    abstract val dxStateBuildService: Property<DxStateBuildService>
+
     /**
      * Task runs incrementally if input changes allow that and if the number of buckets is the same
      * as in the previous run. This is necessary in order to have correct incremental builds as
@@ -277,6 +280,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             workerExecutor = workerExecutor,
             messageReceiver = MessageReceiverImpl(dexParams.errorFormatMode.get(), logger)
         ).doProcess()
+
+        if (dexer.get() == DexerTool.DX) {
+            dxStateBuildService.get().clearStateAfterBuild()
+        }
     }
 
     /**
@@ -588,6 +595,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             } else {
                 task.externalLibClasses.from(externalLibraryClasses)
             }
+            task.dxStateBuildService.set(DxStateBuildService.RegistrationAction(task.project).execute())
         }
 
         /** Creates a detached configuration and sets up artifact transform for dexing. */

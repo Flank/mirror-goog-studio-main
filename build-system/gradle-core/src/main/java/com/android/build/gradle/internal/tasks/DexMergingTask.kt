@@ -140,6 +140,9 @@ abstract class DexMergingTask : NonIncrementalTask() {
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
 
+    @get:Internal
+    abstract val dxStateBuildService: Property<DxStateBuildService>
+
     override fun doTaskAction() {
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -156,6 +159,9 @@ abstract class DexMergingTask : NonIncrementalTask() {
                     outputDir.get().asFile
                 )
             )
+        }
+        if (dexMerger == DexMergerTool.DX) {
+            dxStateBuildService.get().clearStateAfterBuild()
         }
     }
 
@@ -223,6 +229,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
             } else {
                 task.fileDependencyDexFiles.set(null as Directory?)
             }
+            task.dxStateBuildService.set(DxStateBuildService.RegistrationAction(task.project).execute())
         }
 
         private fun getDexFiles(

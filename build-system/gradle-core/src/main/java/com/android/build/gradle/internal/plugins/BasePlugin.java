@@ -363,11 +363,6 @@ public abstract class BasePlugin<
                         sdkComponents.unload();
                         SdkLocator.resetCache();
                         ConstraintHandler.clearCache();
-                        threadRecorder.record(
-                                ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
-                                project.getPath(),
-                                null,
-                                Main::clearInternTables);
                         DeprecationReporterImpl.Companion.clean();
                         Scope.clear();
                     }
