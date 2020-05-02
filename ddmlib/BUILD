@@ -8,7 +8,6 @@ iml_module(
     name = "studio.android.sdktools.ddmlib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.ddmlib.iml"],
-    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -46,7 +45,6 @@ kotlin_library(
     bundled_deps = [
         ":am-instrumentation-data-proto",
     ],
-    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],

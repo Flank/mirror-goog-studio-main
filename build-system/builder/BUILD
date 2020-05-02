@@ -28,7 +28,6 @@ kotlin_library(
         "//tools/dx/dalvik/dx",
         "//prebuilts/r8",
     ],
-    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     lint_baseline = "lint_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
