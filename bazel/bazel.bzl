@@ -580,6 +580,7 @@ def iml_module(
         coverage_baseline(
             name = name,
             srcs = srcs.javas + srcs.kotlins,
+            jar = name + ".jar",
         )
 
     # Only add test utils to other than itself.
