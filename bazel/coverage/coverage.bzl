@@ -26,7 +26,7 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
     lcovs = ["@results//:{}.LCOVTracefile".format(t[2:].replace(":", "/")) for t in tests]
     native.genrule(
         name = "{}.lcov.unfiltered".format(name),
-        srcs = lcovs,
+        srcs = ["@baseline//:merged-baseline-lcov"] + lcovs,
         outs = ["{}/lcov.unfiltered".format(name)],
         tools = [":merge_lcov"],
         cmd = "python $(location :merge_lcov) $(SRCS) >$@",
