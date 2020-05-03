@@ -21,6 +21,10 @@ if [[ -z ${report_name} || -z ${html_dir} ]]; then
   exit 1
 fi
 
+echo "Delete old baseline coverage file lists"
+find bazel-bin/ -name '*.coverage.baseline*' | xargs rm -fv || exit $?
+echo "Generate baseline coverage file lists"
+bazel build --config=remote --build_tag_filters="coverage-sources" -- //tools/... || exit $?
 echo "Run tests to generate coverage data"
 bazel test --define agent_coverage=true --config=remote -- "@cov//:${report_name}.suite" || exit $?
 echo "Processing raw coverage data"

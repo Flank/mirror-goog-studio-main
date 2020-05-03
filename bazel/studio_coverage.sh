@@ -21,6 +21,15 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
+# Generate baseline coverage file lists
+"${script_dir}/bazel" \
+  build \
+  --config=remote \
+  --build_tag_filters="coverage-sources" \
+  -- \
+  //tools/... \
+  || exit $?
+
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
   --max_idle_secs=60 \

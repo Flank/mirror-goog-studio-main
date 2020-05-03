@@ -46,6 +46,7 @@ def coverage_baseline(name, srcs = []):
             "no_windows",
         ],
         cmd = "python $(location @cov//:ignore_files_filter) <$< >$@",
+        visibility = ["@baseline//:__pkg__"],
     )
 
 def coverage_java_library(name, srcs = [], **kwargs):
