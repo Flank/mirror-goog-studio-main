@@ -121,11 +121,13 @@ def lcov_tracefile(test):
     native.genrule(
         name = "{}.LCOVTracefile".format(test),
         tools = ["@cov//:jacoco_xml_to_lcov"],
-        srcs = ["{}.JacocoXML".format(test)],
+        srcs = [
+            "@baseline//:merged-baseline-srcs",
+            "{}.JacocoXML".format(test),
+        ],
         outs = ["{}/lcov".format(test)],
-        local = True,  # jacoco_xml_to_lcov walks the filesystem
         visibility = ["@cov//:__pkg__"],
-        cmd = "python $(location @cov//:jacoco_xml_to_lcov) {} <$< >$@".format(test),
+        cmd = "python $(location @cov//:jacoco_xml_to_lcov) {} $(location @baseline//:merged-baseline-srcs) <$(location {}.JacocoXML) >$@".format(test, test),
     )
 
 def test_target_pipeline(test, shards):
