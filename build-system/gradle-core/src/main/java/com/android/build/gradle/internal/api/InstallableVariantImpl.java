@@ -23,11 +23,9 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
-import java.util.concurrent.Callable;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -116,11 +114,17 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @Incubating
     public Provider<FileCollection> getFinalArtifact(
             @NonNull ArtifactType<? extends FileSystemLocation> artifactType) {
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        return componentProperties.getGlobalScope().getProject().getProviders().provider(
-                () -> componentProperties.getServices().fileCollection(
-                        artifacts.getFinalProduct((InternalArtifactType) artifactType)
-                )
-        );
+        return componentProperties
+                .getGlobalScope()
+                .getProject()
+                .getProviders()
+                .provider(
+                        () ->
+                                componentProperties
+                                        .getServices()
+                                        .fileCollection(
+                                                componentProperties
+                                                        .getOperations()
+                                                        .get((InternalArtifactType) artifactType)));
     }
 }

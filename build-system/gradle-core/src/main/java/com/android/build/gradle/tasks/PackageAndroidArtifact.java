@@ -29,6 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactTransformationRequest;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
@@ -43,7 +44,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -1020,7 +1020,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getAssets()
-                    .set(creationConfig.getArtifacts().getFinalProduct(COMPRESSED_ASSETS.INSTANCE));
+                    .set(creationConfig.getOperations().get(COMPRESSED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
@@ -1101,27 +1101,26 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
+            OperationsImpl operations = creationConfig.getOperations();
             if (creationConfig.getVariantScope().consumesFeatureJars()) {
                 return creationConfig
                         .getGlobalScope()
                         .getProject()
-                        .files(artifacts.getFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE))
+                        .files(operations.get(InternalArtifactType.BASE_DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
-                return project.files(
-                                artifacts.getOperations().getAll(MultipleArtifactType.DEX.INSTANCE))
+                return project.files(operations.getAll(MultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             }
         }
 
         @NonNull
         private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
+            OperationsImpl operations = creationConfig.getOperations();
 
             if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
                 Provider<RegularFile> mergedJavaResProvider =
-                        artifacts.getFinalProduct(SHRUNK_JAVA_RES.INSTANCE);
+                        operations.get(SHRUNK_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             } else if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
                 return creationConfig
@@ -1129,7 +1128,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
             } else {
                 Provider<RegularFile> mergedJavaResProvider =
-                        artifacts.getFinalProduct(MERGED_JAVA_RES.INSTANCE);
+                        operations.get(MERGED_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             }
         }
@@ -1169,10 +1168,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (creationConfig.getVariantType().isDynamicFeature()) {
                 return creationConfig.getGlobalScope().getProject().files();
             }
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
                 return project.files(
-                        artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
+                        creationConfig
+                                .getOperations()
+                                .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
                 return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);
             }

@@ -108,10 +108,10 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
-                    creationConfig.artifacts.getFinalProduct(
+                    creationConfig.operations.get(
                         InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
                     creationConfig.globalScope.project.files(
-                        creationConfig.artifacts.getFinalProduct(
+                        creationConfig.operations.get(
                             InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
             } else {
                 referencedClasses.from(creationConfig.artifacts.getAllClasses())

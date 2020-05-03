@@ -280,7 +280,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.operations.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
@@ -295,7 +295,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 creationConfig.services.projectOptions
             )
 
-            task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile.setDisallowChanges(creationConfig.operations.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             ))
 

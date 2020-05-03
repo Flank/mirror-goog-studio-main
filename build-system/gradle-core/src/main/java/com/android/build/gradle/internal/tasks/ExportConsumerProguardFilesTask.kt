@@ -122,8 +122,8 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
             task.inputFiles.from(
                 task.consumerProguardFiles,
                 creationConfig
-                    .artifacts
-                    .getFinalProduct(InternalArtifactType.GENERATED_PROGUARD_FILE)
+                    .operations
+                    .get(InternalArtifactType.GENERATED_PROGUARD_FILE)
             )
             if (creationConfig.variantType.isDynamicFeature) {
                 task.inputFiles.from(

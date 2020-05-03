@@ -409,7 +409,7 @@ public class VariantManager<
                         variantDslInfo,
                         variantDependencies,
                         pathHelper,
-                        artifacts,
+                        artifacts.getOperations(),
                         globalScope,
                         null /* testedVariantProperties*/);
 
@@ -653,7 +653,7 @@ public class VariantManager<
                         variantDslInfo,
                         variantDependencies,
                         pathHelper,
-                        artifacts,
+                        artifacts.getOperations(),
                         globalScope,
                         testedVariantProperties);
 
@@ -665,7 +665,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        artifacts,
+                        artifacts.getOperations(),
                         (TestedVariantData) testedVariantProperties.getVariantData(),
                         variantPropertiesApiServices,
                         globalScope,

@@ -192,7 +192,7 @@ public abstract class AbstractAppTaskManager<
     @Override
     protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
         final Provider<Directory> javacOutput =
-                componentProperties.getArtifacts().getFinalProduct(JAVAC.INSTANCE);
+                componentProperties.getOperations().get(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
                 componentProperties.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =

@@ -214,7 +214,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task: PerModuleBundleTask
         ) {
             super.configure(task)
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
             if (creationConfig is DynamicFeatureCreationConfig) {
                 task.fileName.set(creationConfig.featureName.map { "$it.zip" })
@@ -228,23 +228,23 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
             task.resFiles.set(
                 if (creationConfig.variantScope.useResourceShrinker()) {
-                    artifacts.getOperations().get(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
+                    operations.get(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
                 } else {
-                    artifacts.getOperations().get(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
+                    operations.get(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
                 }
             )
             task.resFiles.disallowChanges()
 
             task.dexFiles.from(
                 if (creationConfig.variantScope.consumesFeatureJars()) {
-                    artifacts.getFinalProduct(InternalArtifactType.BASE_DEX)
+                    operations.get(InternalArtifactType.BASE_DEX)
                 } else {
-                    artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+                    operations.getAll(MultipleArtifactType.DEX)
                 }
             )
             task.dexFiles.from(
                 if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                    artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)
+                    operations.get(InternalArtifactType.DESUGAR_LIB_DEX)
                 } else {
                     getDesugarLibDexFromTransform(creationConfig)
                 }
@@ -261,14 +261,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.javaResFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     creationConfig.globalScope.project.layout.files(
-                        artifacts.getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
+                        operations.get(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
                 } else if (creationConfig.variantScope.needsMergedJavaResStream) {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {
                     creationConfig.globalScope.project.layout.files(
-                        artifacts.getFinalProduct(InternalArtifactType.MERGED_JAVA_RES)
+                        operations.get(InternalArtifactType.MERGED_JAVA_RES)
                     )
                 }
             )
@@ -346,9 +346,9 @@ fun getNativeLibsFiles(
 ): FileCollection {
     val nativeLibs = creationConfig.globalScope.project.files()
     if (creationConfig.variantType.isForTesting) {
-        return nativeLibs.from(creationConfig.artifacts.getFinalProduct(MERGED_NATIVE_LIBS))
+        return nativeLibs.from(creationConfig.operations.get(MERGED_NATIVE_LIBS))
     }
-    nativeLibs.from(creationConfig.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS))
+    nativeLibs.from(creationConfig.operations.get(STRIPPED_NATIVE_LIBS))
     if (packageCustomClassDependencies) {
         nativeLibs.from(
             creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)

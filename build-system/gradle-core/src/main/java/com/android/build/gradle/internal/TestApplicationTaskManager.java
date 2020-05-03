@@ -83,9 +83,7 @@ public class TestApplicationTaskManager
         TestVariantPropertiesImpl testVariantProperties = variant.getProperties();
 
         Provider<Directory> testingApk =
-                testVariantProperties
-                        .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.APK.INSTANCE);
+                testVariantProperties.getOperations().get(InternalArtifactType.APK.INSTANCE);
 
         // The APKs to be tested.
         FileCollection testedApks =

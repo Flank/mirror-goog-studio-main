@@ -23,13 +23,13 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
@@ -164,7 +164,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         private ConfigurableFileCollection computeClasspath(
                 ComponentPropertiesImpl component, boolean includeAndroidResources) {
             GlobalScope globalScope = component.getGlobalScope();
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            OperationsImpl operations = component.getOperations();
 
             ConfigurableFileCollection collection = component.getServices().fileCollection();
 
@@ -172,14 +172,14 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             // 1. the config file
             if (includeAndroidResources) {
                 collection.from(
-                        artifacts.getFinalProduct(
-                                InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE));
+                        operations.get(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE));
             }
 
             // 2. the test component classes and java_res
-            collection.from(artifacts.getAllClasses());
-            // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
-            collection.from(artifacts.getFinalProduct(InternalArtifactType.JAVA_RES.INSTANCE));
+            collection.from(component.getArtifacts().getAllClasses());
+            // TODO is this the right thing? this doesn't include the res merging via transform
+            // AFAIK
+            collection.from(operations.get(InternalArtifactType.JAVA_RES.INSTANCE));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(

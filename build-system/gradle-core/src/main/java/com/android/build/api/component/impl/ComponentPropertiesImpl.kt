@@ -344,7 +344,7 @@ abstract class ComponentPropertiesImpl(
                     "Appendable ArtifactType '${buildArtifactType.name()}' cannot be published."
                 )
             }
-            val artifactProvider = artifacts.getFinalProduct(buildArtifactType)
+            val artifactProvider = operations.get(buildArtifactType)
             val artifactContainer =
                 artifacts.getOperations().getArtifactContainer(buildArtifactType)
             if (!artifactContainer.needInitialProducer().get()) {
@@ -414,7 +414,7 @@ abstract class ComponentPropertiesImpl(
                 .builtBy(generatedBuildConfig))
         }
         if (taskContainer.aidlCompileTask != null) {
-            val aidlFC = artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR)
+            val aidlFC = operations.get(AIDL_SOURCE_OUTPUT_DIR)
             sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
@@ -428,7 +428,7 @@ abstract class ComponentPropertiesImpl(
                 if (!artifacts.getOperations().getArtifactContainer(DATA_BINDING_TRIGGER)
                         .needInitialProducer().get()
                 ) {
-                    sourceSets.add(internalServices.fileTree(artifacts.getFinalProduct(DATA_BINDING_TRIGGER)))
+                    sourceSets.add(internalServices.fileTree(operations.get(DATA_BINDING_TRIGGER)))
                 }
             }
             addDataBindingSources(sourceSets)
@@ -436,12 +436,12 @@ abstract class ComponentPropertiesImpl(
         if (!variantDslInfo.renderscriptNdkModeEnabled
             && taskContainer.renderscriptCompileTask != null
         ) {
-            val rsFC = artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+            val rsFC = operations.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
             sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
         }
         if (buildFeatures.mlModelBinding) {
             val mlModelClassSourceOut: Provider<Directory> =
-                artifacts.getFinalProduct(ML_SOURCE_OUT)
+                operations.get(ML_SOURCE_OUT)
             sourceSets.add(
                 internalServices.fileTree(mlModelClassSourceOut).builtBy(mlModelClassSourceOut)
             )
@@ -455,8 +455,7 @@ abstract class ComponentPropertiesImpl(
     open fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>)
     {
-        val baseClassSource =
-            artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
+        val baseClassSource = operations.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
         sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
     }
 
@@ -464,7 +463,7 @@ abstract class ComponentPropertiesImpl(
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
         return if (globalScope.extension.aaptOptions.namespaced) {
             internalServices.fileCollection().also { fileCollection ->
-                val namespacedRClassJar = artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
+                val namespacedRClassJar = operations.get(COMPILE_R_CLASS_JAR)
                 val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
                 fileCollection.from(fileTree)
                 fileCollection.from(
@@ -473,7 +472,7 @@ abstract class ComponentPropertiesImpl(
                     )
                 )
                 testedConfig?.let {
-                    fileCollection.from(it.artifacts.getFinalProduct(COMPILE_R_CLASS_JAR).get())
+                    fileCollection.from(it.operations.get(COMPILE_R_CLASS_JAR).get())
                 }
             }
         } else {
@@ -487,8 +486,7 @@ abstract class ComponentPropertiesImpl(
                         && !variantType.isForTesting)
                 if (variantType.isAar || useCompileRClassInApp) {
                     if (buildFeatures.androidResources) {
-                        internalServices.fileCollection(
-                            artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
+                        internalServices.fileCollection(operations.get(COMPILE_R_CLASS_JAR)
                         )
                     } else {
                         internalServices.fileCollection()
@@ -500,15 +498,13 @@ abstract class ComponentPropertiesImpl(
                     )
 
                     internalServices.fileCollection(
-                        artifacts.getFinalProduct(
-                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                        )
+                        operations.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 }
             } else { // Android test or unit test
                 if (variantType === VariantTypeImpl.ANDROID_TEST) {
                     internalServices.fileCollection(
-                        artifacts.getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                        operations.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 } else {
                     internalServices.fileCollection(variantScope.rJarForUnitTests)

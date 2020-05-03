@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.services.BaseServices;
@@ -489,22 +488,33 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getMappingFile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        //     bypass the configuration time resolution check as some calls this API during
+        // bypass the configuration time resolution check as some calls this API during
         // configuration.
         RegularFile mappingFile =
-                artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE).getOrNull();
+                componentProperties
+                        .getOperations()
+                        .get(InternalArtifactType.APK_MAPPING.INSTANCE)
+                        .getOrNull();
         return mappingFile != null ? mappingFile.getAsFile() : null;
     }
 
     @NonNull
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
-        return componentProperties.getGlobalScope().getProject().getProviders().provider(
-                () -> componentProperties.getServices().fileCollection(
-                        componentProperties.getArtifacts().getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)
-                )
-        );
+        return componentProperties
+                .getGlobalScope()
+                .getProject()
+                .getProviders()
+                .provider(
+                        () ->
+                                componentProperties
+                                        .getServices()
+                                        .fileCollection(
+                                                componentProperties
+                                                        .getOperations()
+                                                        .get(
+                                                                InternalArtifactType.APK_MAPPING
+                                                                        .INSTANCE)));
     }
 
     @Override

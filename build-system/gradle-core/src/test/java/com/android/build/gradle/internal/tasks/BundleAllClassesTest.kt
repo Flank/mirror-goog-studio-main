@@ -112,7 +112,7 @@ class BundleAllClassesTest {
         task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(artifacts.getFinalProduct(InternalArtifactType
+        Mockito.`when`(operations.get(InternalArtifactType
             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(
             FakeGradleProvider(FakeGradleRegularFile(File("")))
         )

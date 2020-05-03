@@ -27,6 +27,7 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -53,7 +54,6 @@ import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -741,7 +741,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private JavaArtifactImpl createUnitTestsJavaArtifact(
             @NonNull VariantType variantType,
             @NonNull ComponentPropertiesImpl componentProperties) {
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        OperationsImpl operations = componentProperties.getOperations();
 
         SourceProviders sourceProviders = determineSourceProviders(componentProperties);
 
@@ -758,9 +758,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (componentProperties.getGlobalScope().getExtension().getTestOptions()
                 .getUnitTests().isIncludeAndroidResources()) {
             additionalTestClasses.add(
-                    artifacts
-                            .getFinalProduct(
-                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)
+                    operations
+                            .get(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)
                             .get()
                             .getAsFile());
         }
@@ -780,7 +779,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 componentProperties.getTaskContainer().getCompileTask().getName(),
                 Sets.newHashSet(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
                 getGeneratedSourceFoldersForUnitTests(componentProperties),
-                artifacts.getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
+                operations.get(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,
                 componentProperties.getVariantData().getJavaResourcesForUnitTesting(),
                 mockableJar,
@@ -900,16 +899,13 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        OperationsImpl operations = componentProperties.getOperations();
 
         return new AndroidArtifactImpl(
                 name,
                 globalScope.getProjectBaseName() + "-" + componentProperties.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
-                artifacts
-                        .getOperations()
-                        .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
-                        .getOrNull(),
+                operations.get(InternalArtifactType.APK_IDE_MODEL.INSTANCE).getOrNull(),
                 variantDslInfo.isSigningReady()
                         || componentProperties.getVariantData().outputsAreSigned,
                 signingConfigName,
@@ -918,7 +914,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getCompileTask().getName(),
                 getGeneratedSourceFolders(componentProperties),
                 getGeneratedResourceFolders(componentProperties),
-                artifacts.getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
+                operations.get(JAVAC.INSTANCE).get().getAsFile(),
                 additionalClasses,
                 componentProperties.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
@@ -935,15 +931,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getBundleTask() == null
                         ? componentProperties.computeTaskName("bundle")
                         : taskContainer.getBundleTask().getName(),
-                artifacts
-                        .getOperations()
-                        .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
-                        .getOrNull(),
+                operations.get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
                 ExtractApksTask.Companion.getTaskName(componentProperties),
-                artifacts
-                        .getOperations()
-                        .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
-                        .getOrNull(),
+                operations.get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
                 variantScope.getCodeShrinker());
     }
 
@@ -1007,8 +997,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                         componentProperties.getVariantData().getExtraGeneratedSourceFolders());
         folders.add(
                 componentProperties
-                        .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE)
+                        .getOperations()
+                        .get(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE)
                         .get()
                         .getAsFile());
         return folders;
@@ -1020,12 +1010,12 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (componentProperties == null) {
             return Collections.emptyList();
         }
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        OperationsImpl operations = componentProperties.getOperations();
 
         boolean isDataBindingEnabled = componentProperties.getBuildFeatures().getDataBinding();
         boolean isViewBindingEnabled = componentProperties.getBuildFeatures().getViewBinding();
         Directory dataBindingSources =
-                artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
+                operations.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
         boolean addBindingSources =
                 (isDataBindingEnabled || isViewBindingEnabled) && (dataBindingSources != null);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(componentProperties);
@@ -1040,9 +1030,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         folders.addAll(extraFolders);
 
         Directory aidlSources =
-                artifacts
-                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE)
-                        .getOrNull();
+                operations.get(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
+
         if (aidlSources != null) {
             folders.add(aidlSources.getAsFile());
         }
@@ -1052,9 +1041,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         boolean ndkMode = componentProperties.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =
-                    artifacts
-                            .getFinalProduct(
-                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
+                    operations
+                            .get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
                             .getOrNull();
             if (renderscriptSources != null) {
                 folders.add(renderscriptSources.getAsFile());

@@ -15,18 +15,17 @@
  */
 package com.android.build.gradle.internal.variant
 
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
 import com.android.utils.capitalizeAndAppend
-import com.google.common.collect.Maps
 import org.gradle.api.Task
 import java.io.File
 
@@ -37,7 +36,7 @@ class LibraryVariantData(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    artifacts: BuildArtifactsHolder,
+    operations: OperationsImpl,
     services: VariantPropertiesApiServices,
     globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
@@ -47,7 +46,7 @@ class LibraryVariantData(
     variantDependencies,
     variantSources,
     paths,
-    artifacts,
+    operations,
     services,
     globalScope,
     taskContainer

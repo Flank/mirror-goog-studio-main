@@ -28,6 +28,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKA
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.VariantOutputConfiguration;
@@ -40,13 +41,12 @@ import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.VariantType;
 import com.android.repository.Revision;
-import com.android.tools.lint.model.LmFactory;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
+import com.android.tools.lint.model.LmFactory;
 import com.android.utils.Pair;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -293,7 +293,8 @@ public abstract class LintBaseTask extends DefaultTask {
                             componentProperties
                                     .getGlobalScope()
                                     .getArtifacts()
-                                    .getFinalProduct(LINT_JAR.INSTANCE));
+                                    .getOperations()
+                                    .get(LINT_JAR.INSTANCE));
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
@@ -307,11 +308,11 @@ public abstract class LintBaseTask extends DefaultTask {
                             .getProject()
                             .files(localLintJarCollection, dependencyLintJarCollection);
 
-            BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+            OperationsImpl operations = componentProperties.getOperations();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
-                    artifacts.getFinalProduct(PACKAGED_MANIFESTS.INSTANCE);
+                    operations.get(PACKAGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
-                tmpMergedManifest = artifacts.getFinalProduct(LIBRARY_MANIFEST.INSTANCE);
+                tmpMergedManifest = operations.get(LIBRARY_MANIFEST.INSTANCE);
             }
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(
@@ -321,7 +322,7 @@ public abstract class LintBaseTask extends DefaultTask {
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
 
-            mergedManifestReport = artifacts.getFinalProduct(MANIFEST_MERGE_REPORT.INSTANCE);
+            mergedManifestReport = operations.get(MANIFEST_MERGE_REPORT.INSTANCE);
             if (mergedManifest.isPresent()) {
                 allInputs.from(mergedManifestReport);
             } else {
@@ -332,7 +333,7 @@ public abstract class LintBaseTask extends DefaultTask {
 
             // these inputs are only there to ensure that the lint task runs after these build
             // intermediates are built.
-            allInputs.from(artifacts.getAllClasses());
+            allInputs.from(componentProperties.getArtifacts().getAllClasses());
 
             addModelArtifactsToInputs(allInputs, componentProperties);
         }

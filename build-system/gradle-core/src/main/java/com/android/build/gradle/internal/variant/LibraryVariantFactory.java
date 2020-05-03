@@ -192,7 +192,7 @@ public class LibraryVariantFactory
                 variantDependencies,
                 variantSources,
                 paths,
-                artifacts,
+                artifacts.getOperations(),
                 services,
                 globalScope,
                 taskContainer);

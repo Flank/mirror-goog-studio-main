@@ -148,30 +148,30 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                 )
             } else if (creationConfig.variantScope.codeShrinker != CodeShrinker.R8) {
                 task.keepRulesFiles.from(
-                    creationConfig.artifacts.getFinalProduct(
+                    creationConfig.operations.get(
                         InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES
                     ),
-                    creationConfig.artifacts.getFinalProduct(
+                    creationConfig.operations.get(
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES
                     ),
-                    creationConfig.artifacts.getFinalProduct(
+                    creationConfig.operations.get(
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES
                     ),
-                    creationConfig.artifacts.getFinalProduct(
+                    creationConfig.operations.get(
                         InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES
                     )
                 )
             }
 
             task.keepRulesFiles.from(
-                creationConfig.artifacts.getFinalProduct(
+                creationConfig.operations.get(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES
                 )
             )
 
             if (separateFileDependenciesDexingTask) {
                 task.keepRulesFiles.from(
-                    creationConfig.artifacts.getFinalProduct(
+                    creationConfig.operations.get(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
             val hasDynamicFeatures =

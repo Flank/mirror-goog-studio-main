@@ -121,7 +121,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
         // Record apList as input. It impacts handleAnnotationProcessors() below.
-        val apList = componentProperties.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
+        val apList = componentProperties.operations.get(ANNOTATION_PROCESSOR_LIST)
         task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
             .withPropertyName("annotationProcessorList")
 

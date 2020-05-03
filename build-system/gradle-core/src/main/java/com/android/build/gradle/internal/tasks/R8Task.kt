@@ -247,7 +247,7 @@ abstract class R8Task: ProguardConfigurableTask() {
         ) {
             super.configure(task)
 
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
             task.enableDesugaring.set(
                 creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.R8
@@ -267,7 +267,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.proguardConfigurations = proguardConfigurations
 
             if (!variantType.isAar) {
-                task.duplicateClassesCheck.from(artifacts.getFinalProduct(DUPLICATE_CLASSES_CHECK))
+                task.duplicateClassesCheck.from(operations.get(DUPLICATE_CLASSES_CHECK))
             }
 
             creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
@@ -277,7 +277,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             if (creationConfig.needsMainDexList
                 && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.mainDexRulesFiles.from(
-                    artifacts.getFinalProduct(
+                    operations.get(
                         InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
                     )
                 )

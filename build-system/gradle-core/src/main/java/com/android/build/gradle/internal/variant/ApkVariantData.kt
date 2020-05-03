@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.variant
 
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -31,7 +32,7 @@ abstract class ApkVariantData protected constructor(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    artifacts: BuildArtifactsHolder,
+    operations: OperationsImpl,
     services: VariantPropertiesApiServices,
     globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
@@ -41,7 +42,7 @@ abstract class ApkVariantData protected constructor(
     variantDependencies,
     variantSources,
     paths,
-    artifacts,
+    operations,
     services,
     globalScope,
     taskContainer

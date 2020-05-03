@@ -240,9 +240,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
-            task.mergeBlameFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+            task.mergeBlameFolder.setDisallowChanges(creationConfig.operations.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
-            task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile = creationConfig.operations.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 

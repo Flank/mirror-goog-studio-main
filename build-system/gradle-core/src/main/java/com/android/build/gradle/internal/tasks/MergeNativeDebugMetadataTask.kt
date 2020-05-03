@@ -100,7 +100,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
             when (componentProperties.variantDslInfo.ndkConfig.debugSymbolLevelEnum) {
                 DebugSymbolLevel.FULL -> {
                     nativeDebugMetadataDirs.from(
-                        componentProperties.artifacts.getFinalProduct(
+                        componentProperties.operations.get(
                             InternalArtifactType.NATIVE_DEBUG_METADATA
                         )
                     )
@@ -114,7 +114,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
                 }
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     nativeDebugMetadataDirs.from(
-                        componentProperties.artifacts.getFinalProduct(
+                        componentProperties.operations.get(
                             InternalArtifactType.NATIVE_SYMBOL_TABLES
                         )
                     )

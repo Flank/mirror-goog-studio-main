@@ -139,7 +139,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task: LibraryJniLibsTask
         ) {
             super.configure(task)
-            task.projectNativeLibs = creationConfig.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS)
+            task.projectNativeLibs = creationConfig.operations.get(STRIPPED_NATIVE_LIBS)
         }
     }
 

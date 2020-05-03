@@ -494,7 +494,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(creationConfig.variantType.canHaveSplits)
 
-            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.operations.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             val variantType = creationConfig.variantType
 
@@ -524,7 +524,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 creationConfig.services.projectOptions
             )
 
-            task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile = creationConfig.operations.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             task.aapt2DaemonBuildService.setDisallowChanges(
@@ -658,8 +658,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
                 creationConfig.services.fileCollection(
-                    creationConfig.artifacts.getFinalProduct(
-                        InternalArtifactType.RES_STATIC_LIBRARY))
+                    creationConfig.operations.get(InternalArtifactType.RES_STATIC_LIBRARY))
             )
             dependencies.add(
                 creationConfig.variantDependencies.getArtifactFileCollection(

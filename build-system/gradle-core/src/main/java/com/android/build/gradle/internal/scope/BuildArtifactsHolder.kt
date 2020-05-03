@@ -137,7 +137,7 @@ abstract class BuildArtifactsHolder(
      *
      * </pre>
      *
-     * Consumers should use [getFinalProduct] or [OperationsImpl.getAll] to get a [Provider] instance
+     * Consumers should use [OperationsImpl.get] or [OperationsImpl.getAll] to get a [Provider] instance
      * for registered products which ensures that [Task]s don't get initialized until the
      * [Provider.get] method is invoked during a consumer task configuration execution for instance.
      *
@@ -161,32 +161,6 @@ abstract class BuildArtifactsHolder(
         taskProvider,
         propertyProvider
     ).withName(fileName).on(artifactType)
-
-    /**
-     * Returns a [Provider] of either a [Directory] or a [RegularFile] depending on the passed
-     * [ArtifactKind]. The [Provider] will represent the final value of the built artifact
-     * irrespective of when this call is made.
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     open class MyTask(objectFactory: ObjectFactory): Task() {
-     *          val inputFile: Provider<RegularFile>
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
-     *          it.inputFile = scope.artifacts.getFinalProduct(InternalArtifactTYpe.SOME_ID)
-     *     }
-     * </pre>
-     *
-     * @param artifactType the identifier for the built artifact.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProduct(
-        artifactType: ARTIFACT_TYPE): Provider<T>
-        where ARTIFACT_TYPE: ArtifactType<out T>,
-              ARTIFACT_TYPE: ArtifactType.Single {
-
-        return operations.get(artifactType)
-    }
 
     /**
      * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.

@@ -207,7 +207,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
             task.dex = creationConfig.globalScope.project.files(
                 if (creationConfig.variantScope.consumesFeatureJars()) {
-                    creationConfig.artifacts.getFinalProduct(InternalArtifactType.BASE_DEX)
+                    creationConfig.operations.get(InternalArtifactType.BASE_DEX)
                 } else {
                     operations.getAll(MultipleArtifactType.DEX)
                 })

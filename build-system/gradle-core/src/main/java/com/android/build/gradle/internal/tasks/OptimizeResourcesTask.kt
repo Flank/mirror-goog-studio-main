@@ -121,7 +121,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
             val resourceShrinkingEnabled = creationConfig.variantScope.useResourceShrinker()
 
             task.inputApkFile.setDisallowChanges(
-                    creationConfig.artifacts.getFinalProduct(InternalArtifactType
+                    creationConfig.operations.get(InternalArtifactType
                             .PROCESSED_RES))
             task.aapt2Executable.setDisallowChanges(
                     getAapt2FromMavenAndVersion(creationConfig.globalScope).first)

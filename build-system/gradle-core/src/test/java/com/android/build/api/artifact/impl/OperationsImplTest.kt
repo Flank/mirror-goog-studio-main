@@ -26,6 +26,7 @@ import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.T
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_REPLACABLE_FILE
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_FILE
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask
@@ -91,6 +92,55 @@ class OperationsImplTest {
             tmpDir.newFolder()).build()
         operations = OperationsImpl(project.objects,"debug", project.layout.buildDirectory)
 
+    }
+
+    @Test
+    fun testEarlyFileLookup() {
+        val finalVersion = operations.get(TEST_FILE)
+        // no-one has provided it so far, so it's not present.
+        Truth.assertThat(finalVersion.isPresent).isFalse()
+        // now provide it.
+
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputFile abstract val outputFile: RegularFileProperty
+        }
+        val agpInitialized = AtomicBoolean(false)
+        val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
+            agpInitialized.set(true)
+        }
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
+
+        // now get it.
+        Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
+                TEST_FILE.name().toLowerCase(),
+                "debug",
+                "out"))
+    }
+
+    @Test
+    fun testEarlyDirectoryLookup() {
+        val finalVersion = operations.get(TEST_DIRECTORY)
+        // no-one has provided it so far, so it's not present.
+        Truth.assertThat(finalVersion.isPresent).isFalse()
+        // now provide it.
+
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputDirectory abstract val outputFiles: DirectoryProperty
+        }
+        val agpInitialized = AtomicBoolean(false)
+        val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
+            agpInitialized.set(true)
+        }
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFiles).on(TEST_DIRECTORY)
+
+        // now get it.
+        Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
+                TEST_DIRECTORY.name().toLowerCase(),
+                "debug"))
     }
 
     @Test

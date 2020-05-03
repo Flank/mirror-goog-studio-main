@@ -61,7 +61,7 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
 
         task.classpath = task.project.files()
         if (component.variantType.isTestComponent || component.variantType.isApk) {
-            task.source(component.artifacts.getFinalProduct(RUNTIME_R_CLASS_SOURCES))
+            task.source(component.operations.get(RUNTIME_R_CLASS_SOURCES))
         }
         task.setDestinationDir(output.asFile)
 

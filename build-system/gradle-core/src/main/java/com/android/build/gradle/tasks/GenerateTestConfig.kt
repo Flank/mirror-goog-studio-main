@@ -165,9 +165,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             isUseRelativePathEnabled = unitTestProperties.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = unitTestProperties.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedVariant.artifacts.getFinalProduct(MERGED_ASSETS)
-            mergedManifest = testedVariant.artifacts.getFinalProduct(PACKAGED_MANIFESTS)
+            resourceApk = unitTestProperties.operations.get(APK_FOR_LOCAL_TEST)
+            mergedAssets = testedVariant.operations.get(MERGED_ASSETS)
+            mergedManifest = testedVariant.operations.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.packageName
             buildDirectoryPath = FileUtils.toSystemIndependentPath(

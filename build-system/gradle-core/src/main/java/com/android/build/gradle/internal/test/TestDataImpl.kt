@@ -68,8 +68,8 @@ class TestDataImpl(
         val builtArtifacts = BuiltArtifactsLoaderImpl()
             .load(
                 testedConfig
-                    .artifacts
-                    .getFinalProduct(
+                    .operations
+                    .get(
                         InternalArtifactType.APK
                     )
                     .get()

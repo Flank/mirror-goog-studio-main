@@ -212,8 +212,8 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             if (testedConfig?.variantScope?.codeShrinker != null) {
                 task.testedMappingFile.from(
                     testedConfig
-                        .artifacts
-                        .getFinalProduct(APK_MAPPING)
+                        .operations
+                        .get(APK_MAPPING)
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
@@ -326,7 +326,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             val configurationFiles = task.project.files(
                 proguardConfigFiles,
                 aaptProguardFile,
-                creationConfig.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
+                creationConfig.operations.get(GENERATED_PROGUARD_FILE),
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,

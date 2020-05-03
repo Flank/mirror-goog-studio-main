@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -104,7 +105,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final ComponentIdentity componentIdentity;
     @NonNull private final VariantDslInfo variantDslInfo;
     @NonNull private final VariantPathHelper pathHelper;
-    @NonNull private final BuildArtifactsHolder artifacts;
+    @NonNull private final OperationsImpl operations;
     @NonNull private final VariantDependencies variantDependencies;
 
     @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
@@ -126,14 +127,14 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull OperationsImpl operations,
             @NonNull GlobalScope globalScope,
             @Nullable VariantPropertiesImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
         this.variantDependencies = variantDependencies;
         this.pathHelper = pathHelper;
-        this.artifacts = artifacts;
+        this.operations = operations;
         this.globalScope = globalScope;
         this.variantPublishingSpec =
                 PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
@@ -579,15 +580,14 @@ public class VariantScopeImpl implements VariantScope {
         checkState(variantType == UNIT_TEST, "Expected unit test type but found: " + variantType);
 
         if (testedVariantProperties.getVariantType().isAar()) {
-            return artifacts.getFinalProduct(
-                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
+            return operations.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         } else {
             checkState(
                     testedVariantProperties.getVariantType().isApk(),
                     "Expected APK type but found: " + testedVariantProperties.getVariantType());
             return testedVariantProperties
-                    .getArtifacts()
-                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
+                    .getOperations()
+                    .get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         }
     }
 

@@ -57,7 +57,7 @@ class MergeAaptProguardFilesCreationAction(
         val inputFiles =
             project
                 .files(
-                    creationConfig.artifacts.getFinalProduct(InternalArtifactType.AAPT_PROGUARD_FILE),
+                    creationConfig.operations.get(InternalArtifactType.AAPT_PROGUARD_FILE),
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,

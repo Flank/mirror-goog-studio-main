@@ -221,7 +221,7 @@ abstract class MergeNativeLibsTask
 
 fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
     val globalScope = componentProperties.globalScope
-    val artifacts = componentProperties.artifacts
+    val operations = componentProperties.operations
     val taskContainer = componentProperties.taskContainer
     val project = globalScope.project
 
@@ -230,7 +230,7 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
 
     // add merged project native libs
     nativeLibs.from(
-        artifacts.getFinalProduct(InternalArtifactType.MERGED_JNI_LIBS)
+        operations.get(InternalArtifactType.MERGED_JNI_LIBS)
     )
     // add content of the local external native build
     if (taskContainer.externalNativeJsonGenerator != null) {
@@ -243,7 +243,7 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     // add renderscript compilation output if support mode is enabled.
     if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
-                project.files(artifacts.getFinalProduct(RENDERSCRIPT_LIB))
+                project.files(operations.get(RENDERSCRIPT_LIB))
         val rsLibs = globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)

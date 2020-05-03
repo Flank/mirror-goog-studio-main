@@ -231,7 +231,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             task.classes.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8
                     && creationConfig.variantType.isAar) {
-                    creationConfig.artifacts.getFinalProduct(InternalArtifactType.SHRUNK_CLASSES)
+                    creationConfig.operations.get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
                     operations.getAll(MultipleArtifactType.DEX)
                         .map {

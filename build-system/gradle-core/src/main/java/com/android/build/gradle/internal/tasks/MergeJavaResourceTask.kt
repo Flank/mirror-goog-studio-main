@@ -293,13 +293,13 @@ fun getProjectJavaRes(
     componentProperties: ComponentPropertiesImpl
 ): FileCollection {
     val javaRes = componentProperties.globalScope.project.files()
-    javaRes.from(componentProperties.artifacts.getFinalProduct(JAVA_RES))
+    javaRes.from(componentProperties.operations.get(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
     javaRes.from(
         Callable {
             if (projectHasAnnotationProcessors(componentProperties)) {
-                componentProperties.artifacts.getFinalProduct(JAVAC)
+                componentProperties.operations.get(JAVAC)
             } else {
                 listOf<File>()
             }
@@ -308,7 +308,7 @@ fun getProjectJavaRes(
     javaRes.from(componentProperties.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(componentProperties.variantData.allPostJavacGeneratedBytecode)
     if (componentProperties.globalScope.extension.aaptOptions.namespaced) {
-        javaRes.from(componentProperties.artifacts.getFinalProduct(RUNTIME_R_CLASS_CLASSES))
+        javaRes.from(componentProperties.operations.get(RUNTIME_R_CLASS_CLASSES))
     }
     return javaRes
 }

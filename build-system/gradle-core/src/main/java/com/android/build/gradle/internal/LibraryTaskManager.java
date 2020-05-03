@@ -354,7 +354,10 @@ public class LibraryTaskManager
         }
 
         FileCollection compileRClass =
-                project.files(variantProperties.getArtifacts().getFinalProduct(InternalArtifactType.COMPILE_R_CLASS_JAR.INSTANCE));
+                project.files(
+                        variantProperties
+                                .getOperations()
+                                .get(InternalArtifactType.COMPILE_R_CLASS_JAR.INSTANCE));
         variantProperties
                 .getTransformManager()
                 .addStream(
@@ -498,7 +501,7 @@ public class LibraryTaskManager
                 componentProperties
                         .getServices()
                         .fileCollection(
-                                componentProperties.getArtifacts().getFinalProduct(JAVAC.INSTANCE),
+                                componentProperties.getOperations().get(JAVAC.INSTANCE),
                                 componentProperties
                                         .getVariantData()
                                         .getAllPreJavacGeneratedBytecode(),

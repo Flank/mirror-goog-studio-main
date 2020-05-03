@@ -75,7 +75,7 @@ public abstract class AbstractAppVariantFactory<
                 variantDependencies,
                 variantSources,
                 paths,
-                artifacts,
+                artifacts.getOperations(),
                 services,
                 globalScope,
                 taskContainer);

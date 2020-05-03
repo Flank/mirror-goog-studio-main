@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -53,7 +54,7 @@ abstract class BaseVariantData(
     val variantDependencies: VariantDependencies,
     protected val variantSources: VariantSources,
     protected val paths: VariantPathHelper,
-    protected val artifacts: BuildArtifactsHolder,
+    protected val operations: OperationsImpl,
     protected val services: VariantPropertiesApiServices,
     // Global Data
     @get:Deprecated("Use {@link ComponentPropertiesImpl#getGlobalScope()} ") val globalScope: GlobalScope,
@@ -329,7 +330,7 @@ abstract class BaseVariantData(
             return if (processJavaResourcesTask != null) {
                 processJavaResourcesTask.outputs.files.singleFile
             } else {
-                artifacts.getFinalProduct(JAVA_RES).get().asFile
+                operations.get(JAVA_RES).get().asFile
             }
         }
 

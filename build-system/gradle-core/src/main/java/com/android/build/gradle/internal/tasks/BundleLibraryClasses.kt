@@ -90,7 +90,7 @@ private fun BundleLibraryClassesInputs.configure(
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {
-        classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_R_CLASS_JAR))
+        classes.from(component.operations.get(InternalArtifactType.COMPILE_R_CLASS_JAR))
     }
     jarCreatorType.set(component.variantScope.jarCreatorType)
 

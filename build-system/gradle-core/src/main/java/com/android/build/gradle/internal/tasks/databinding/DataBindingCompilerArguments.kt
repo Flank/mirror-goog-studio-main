@@ -154,7 +154,7 @@ class DataBindingCompilerArguments constructor(
             printEncodedErrorLogs: Boolean
         ): DataBindingCompilerArguments {
             val globalScope = componentProperties.globalScope
-            val artifacts = componentProperties.artifacts
+            val operations = componentProperties.operations
 
             return DataBindingCompilerArguments(
                 incremental = componentProperties.services.projectOptions
@@ -163,14 +163,13 @@ class DataBindingCompilerArguments constructor(
                 packageName = componentProperties.packageName,
                 minApi = componentProperties.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.getSdkDirectory(),
-                dependencyArtifactsDir =
-                        artifacts.getFinalProduct(DATA_BINDING_DEPENDENCY_ARTIFACTS),
-                layoutInfoDir = artifacts.getFinalProduct(getLayoutInfoArtifactType(componentProperties)),
-                classLogDir = artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
-                baseFeatureInfoDir = artifacts.getFinalProduct(
+                dependencyArtifactsDir = operations.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
+                layoutInfoDir = operations.get(getLayoutInfoArtifactType(componentProperties)),
+                classLogDir = operations.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                baseFeatureInfoDir = operations.get(
                     FEATURE_DATA_BINDING_BASE_FEATURE_INFO
                 ),
-                featureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_FEATURE_INFO),
+                featureInfoDir = operations.get(FEATURE_DATA_BINDING_FEATURE_INFO),
                 // Note that aarOurDir and exportClassListOutFile below are outputs. In the usual
                 // pattern, they need to be a DirectoryProperty or RegularFileProperty and should
                 // be created by calling project.objects.directoryProperty() or fileProperty().
@@ -179,8 +178,8 @@ class DataBindingCompilerArguments constructor(
                 // getFinalProduct() to get the artifacts' locations.
                 // This is a non-standard pattern, but we've used it only for data binding so far,
                 // so it's probably acceptable for now.
-                aarOutDir = artifacts.getFinalProduct(DATA_BINDING_ARTIFACT),
-                exportClassListOutFile = artifacts.getFinalProduct(DATA_BINDING_EXPORT_CLASS_LIST),
+                aarOutDir = operations.get(DATA_BINDING_ARTIFACT),
+                exportClassListOutFile = operations.get(DATA_BINDING_EXPORT_CLASS_LIST),
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = componentProperties.variantType.isTestComponent,

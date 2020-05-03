@@ -413,9 +413,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
                         )!!.outputType
                     componentProperties.globalScope.project.files(
-                        it.artifacts.getFinalProduct(
-                            artifactType
-                        )
+                        it.operations.get(artifactType)
                     )
                 } ?: componentProperties.globalScope.project.files()
 
