@@ -11,6 +11,15 @@ py_library(
 )
 
 # This should be a py_binary, but due to a Bazel bug
+# using a py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
+py_library(
+    name = "ignore_files_filter",
+    srcs = ["ignore_files_filter.py"],
+    visibility = ["//visibility:public"],
+)
+
+# This should be a py_binary, but due to a Bazel bug
 # using py_binary as a tool in a genrule doesn't work
 # See https://github.com/bazelbuild/bazel/issues/1192.
 py_library(
