@@ -6,6 +6,7 @@ apply plugin: 'org.jetbrains.dokka'
 
 configurations {
     provided
+    additionalDokkaClasspath
 }
 
 dependencies {
@@ -21,6 +22,8 @@ dependencies {
     testCompile gradleApi()
     testCompile project(':base:builder-model')
     testCompile libs.mockito_core
+
+    additionalDokkaClasspath gradleApi()
 }
 
 compileKotlin {
@@ -66,15 +69,13 @@ dokka {
     noJdkLink = true
 
     dacRoot = "/reference/tools"
-    classpath = [new File('$rootDir/external/gradle/gradle-5.4.1-bin.zip')]
+    classpath = configurations.additionalDokkaClasspath.files
 
-    sourceRoot {
-        path = "$projectDir/src/main/java/com/android/build/*"
-        platforms = ["JVM"]
+    // Root URL of the generated documentation to link with. The trailing slash is required!
+    externalDocumentationLink {
+        url = new URL("https://docs.gradle.org/current/javadoc/")
     }
     externalDocumentationLink {
-        // Root URL of the generated documentation to link with. The trailing slash is required!
-        url = new URL("https://docs.gradle.org/current/javadoc/")
         url = new URL("http://docs.oracle.com/javase/8/docs/api/")
     }
 }
