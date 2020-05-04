@@ -40,6 +40,8 @@ import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.shell.FailingMkdir;
+import com.android.tools.deployer.rules.ApiLevel;
+import com.android.tools.deployer.rules.FakeDeviceConnection;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.tracer.Trace;
 import com.android.utils.FileUtils;
@@ -85,9 +87,10 @@ Concurrency: These tests are NEVER sharded on the same machine. Therefore, havin
              A single FakeAdbServer can also be used in other tests.
 */
 
-@RunWith(Parameterized.class)
+@RunWith(ApiLevel.class)
 public class DeployerRunnerTest {
     @Rule public TestName name = new TestName();
+    @Rule @ApiLevel.Init public FakeDeviceConnection connection;
 
     private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
@@ -95,21 +98,11 @@ public class DeployerRunnerTest {
     private DeploymentCacheDatabase cacheDb;
     private SqlApkFileDatabase dexDB;
     private UIService service;
-    private final FakeDevice device;
-    private FakeAdbServer myAdbServer;
+    private FakeDevice device;
     private ILogger logger;
 
     private Benchmark benchmark;
     private long startTime;
-
-    @Parameterized.Parameters(name = "{0}")
-    public static DeviceId[] getDevices() {
-        return DeviceId.values();
-    }
-
-    public DeployerRunnerTest(DeviceId id) throws Exception {
-        this.device = new FakeDeviceLibrary().build(id);
-    }
 
     @BeforeClass
     public static void prepare() throws Exception {
@@ -121,18 +114,9 @@ public class DeployerRunnerTest {
 
     @Before
     public void setUp() throws Exception {
-        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.setHostCommandHandler(
-                TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
-        FakeDeviceHandler handler = new FakeDeviceHandler();
-        builder.addDeviceHandler(handler);
-
-        myAdbServer = builder.build();
-        handler.connect(device, myAdbServer);
-        myAdbServer.start();
+        this.device = connection.getDevice();
         this.service = Mockito.mock(UIService.class);
         logger = new TestLogger();
-        AndroidDebugBridge.enableFakeAdbServerMode(myAdbServer.getPort());
 
         File dbFile = File.createTempFile("test_db", ".bin");
         dbFile.deleteOnExit();
@@ -142,7 +126,7 @@ public class DeployerRunnerTest {
 
         if ("true".equals(System.getProperty("dashboards.enabled"))) {
             // Put all APIs (parameters) of a particular test into one benchmark.
-            String benchmarkName = name.getMethodName().replaceAll("\\[.*", "");
+            String benchmarkName = name.getMethodName();
             benchmark =
                     new Benchmark.Builder(benchmarkName)
                             .setProject("Android Studio Deployment")
@@ -161,15 +145,11 @@ public class DeployerRunnerTest {
             long timeTaken = currentTime - startTime;
 
             // Benchmark names can only include [a-zA-Z0-9_-] characters in them.
-            String metricName =
-                    name.getMethodName().replace('[', '-').replace("]", "").replace(',', '_');
-            benchmark.log(metricName + "_time", timeTaken);
+            String metricName = String.format("%s-%s_time", name.getMethodName(), connection.getDeviceId());
+            benchmark.log(metricName, timeTaken);
         }
         System.out.print(getLogcatContent(device));
-        device.shutdown();
         Mockito.verifyNoMoreInteractions(service);
-        AndroidDebugBridge.terminate();
-        myAdbServer.close();
     }
 
     @Test
