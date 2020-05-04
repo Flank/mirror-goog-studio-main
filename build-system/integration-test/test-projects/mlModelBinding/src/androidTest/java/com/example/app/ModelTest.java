@@ -11,10 +11,11 @@ import com.example.app.ml.MobilenetQuantMetadata;
 import com.example.app.ml.StylePredictQuantMetadata;
 import com.example.app.ml.StyleTransferQuantMetadata;
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.support.model.Model;
 
 /** Instrumented test, which will execute on an Android device. */
@@ -31,15 +32,14 @@ public class ModelTest {
                 TensorImage.fromBitmap(
                         BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
         MobilenetQuantMetadata.Outputs outputs = model.process(tensorImage);
-        Map<String, Float> probabilityMap =
-                outputs.getProbabilityAsTensorLabel().getMapWithFloatValue();
+        List<Category> probabilities = outputs.getProbabilityAsCategoryList();
 
         float prob = 0;
         String result = "";
-        for (Map.Entry<String, Float> entry : probabilityMap.entrySet()) {
-            if (entry.getValue() > prob) {
-                prob = entry.getValue();
-                result = entry.getKey();
+        for (Category category : probabilities) {
+            if (category.getScore() > prob) {
+                prob = category.getScore();
+                result = category.getLabel();
             }
         }
         assertEquals("Top1 label in image classification model is wrong.", "daisy", result);

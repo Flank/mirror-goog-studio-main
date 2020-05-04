@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.metho
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterTypeName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.TensorInfo
@@ -30,7 +31,7 @@ class ImageGetMethodInjector : MethodInjector() {
         val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
             MlkitNames.formatGetterName(
-                tensorInfo.identifierName, returnType.simpleName()
+                tensorInfo.identifierName, getOutputParameterTypeName(tensorInfo)
             )
         )
             .addModifiers(Modifier.PUBLIC)

@@ -76,7 +76,7 @@ class MlGeneratedClassTest {
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
-                    "getProbabilityAsTensorLabel", TENSOR_LABEL
+                    "getProbabilityAsCategoryList", LIST
                 )
             )
         verifyModelClass("mobilenet_quant_metadata.tflite", modelMethods, outputsMethods)
@@ -95,7 +95,7 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createOutputGetterMethodReference(
                     MODEL_OUTPUT_SUB,
-                    "getProbabilityAsTensorLabel", TENSOR_LABEL
+                    "getProbabilityAsCategoryList", LIST
                 )
             )
         verifyModelClass(
@@ -155,7 +155,7 @@ class MlGeneratedClassTest {
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
-                    "getProbabilityAsTensorLabel", TENSOR_LABEL
+                    "getProbabilityAsCategoryList", LIST
                 )
             )
         verifyModelClass("inception_quant_metadata.tflite", modelMethods, outputsMethods)
@@ -173,7 +173,7 @@ class MlGeneratedClassTest {
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
-                    "getProbabilityAsTensorLabel", TENSOR_LABEL
+                    "getProbabilityAsCategoryList", LIST
                 )
             )
         verifyModelClass("mnasnet_metadta.tflite", modelMethods, outputsMethods)
@@ -279,7 +279,7 @@ class MlGeneratedClassTest {
         private const val TENSOR_IMAGE = "Lorg/tensorflow/lite/support/image/TensorImage;"
         private const val TENSOR_BUFFER =
             "Lorg/tensorflow/lite/support/tensorbuffer/TensorBuffer;"
-        private const val TENSOR_LABEL = "Lorg/tensorflow/lite/support/label/TensorLabel;"
+        private const val LIST = "Ljava/util/List;"
         private const val CONTEXT = "Landroid/content/Context;"
         private const val MODEL_OPTIONS = "Lorg/tensorflow/lite/support/model/Model\$Options;"
 

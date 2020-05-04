@@ -77,10 +77,18 @@ fun getDataType(type: TensorInfo.DataType): String {
     return type.toString()
 }
 
-fun getOutputParameterType(tensorInfo: TensorInfo): ClassName {
+fun getOutputParameterType(tensorInfo: TensorInfo): TypeName {
     return when {
         tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE
-        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> ClassNames.TENSOR_LABEL
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> ClassNames.CATEGORY_LIST
         else -> ClassNames.TENSOR_BUFFER
+    }
+}
+
+fun getOutputParameterTypeName(tensorInfo: TensorInfo): String {
+    return when {
+        tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE.simpleName()
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> "CategoryList"
+        else -> ClassNames.TENSOR_BUFFER.simpleName()
     }
 }
