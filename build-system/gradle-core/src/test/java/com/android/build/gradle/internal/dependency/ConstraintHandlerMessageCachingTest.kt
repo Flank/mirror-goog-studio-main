@@ -17,29 +17,36 @@
 package com.android.build.gradle.internal.dependency
 
 import com.google.common.truth.Truth
+import org.gradle.api.services.BuildServiceParameters
 import org.junit.Test
 
-class ConstraintHandlerTest {
+class ConstraintHandlerMessageCachingTest {
+
+    private val constraintHandler = object : ConstraintHandler.CachedStringBuildService() {
+        override fun getParameters(): BuildServiceParameters.None {
+            TODO("Not yet implemented")
+        }
+    }
 
     @Test
     fun testBasicCache() {
         val oldFoo = "foo"
-        val newFoo = ConstraintHandler.cacheString(oldFoo);
+        val newFoo = constraintHandler.cacheString(oldFoo);
         Truth.assertThat(newFoo).isEqualTo(oldFoo)
         Truth.assertThat(newFoo).isSameInstanceAs(oldFoo)
 
         var o = "o"
-        val newerFoo = ConstraintHandler.cacheString("f" + o + "o")
+        val newerFoo = constraintHandler.cacheString("f" + o + "o")
         Truth.assertThat(newerFoo).isSameInstanceAs(newFoo)
     }
 
     @Test
     fun testReset() {
-        val oldFoo = ConstraintHandler.cacheString("foo");
-        ConstraintHandler.clearCache()
+        val oldFoo = constraintHandler.cacheString("foo");
+        constraintHandler.close()
 
         var o = "o"
-        val newFoo = ConstraintHandler.cacheString("f" + o + "o")
+        val newFoo = constraintHandler.cacheString("f" + o + "o")
 
         Truth.assertThat(newFoo).isNotSameInstanceAs(oldFoo)
     }

@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
-import com.android.build.gradle.internal.dependency.ConstraintHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -363,7 +362,6 @@ public abstract class BasePlugin<
                         ModelBuilder.clearCaches();
                         sdkComponents.unload();
                         SdkLocator.resetCache();
-                        ConstraintHandler.clearCache();
                     }
                 });
 
