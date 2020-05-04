@@ -70,11 +70,11 @@ import com.android.support.AndroidxName
 import com.android.tools.lint.checks.ApiLookup.equivalentName
 import com.android.tools.lint.checks.ApiLookup.startsWithEquivalentPrefix
 import com.android.tools.lint.checks.RtlDetector.ATTR_SUPPORTS_RTL
-import com.android.tools.lint.checks.VersionChecks.SDK_INT
-import com.android.tools.lint.checks.VersionChecks.codeNameToApi
-import com.android.tools.lint.checks.VersionChecks.isPrecededByVersionCheckExit
-import com.android.tools.lint.checks.VersionChecks.isVersionCheckConditional
-import com.android.tools.lint.checks.VersionChecks.isWithinVersionCheckConditional
+import com.android.tools.lint.checks.VersionChecks.Companion.SDK_INT
+import com.android.tools.lint.checks.VersionChecks.Companion.codeNameToApi
+import com.android.tools.lint.checks.VersionChecks.Companion.isPrecededByVersionCheckExit
+import com.android.tools.lint.checks.VersionChecks.Companion.isVersionCheckConditional
+import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -1615,10 +1615,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (api > minSdk) {
                     val target = getTargetApi(expression)
                     if (target == -1 || api > target) {
-                        if (isWithinVersionCheckConditional(context.evaluator, expression, api, true)) {
+                        val evaluator = context.evaluator
+                        if (isWithinVersionCheckConditional(evaluator, expression, api, true)) {
                             return true
                         }
-                        if (isPrecededByVersionCheckExit(expression, api, true)) {
+                        if (isPrecededByVersionCheckExit(evaluator, expression, api, true)) {
                             return true
                         }
 
@@ -2561,10 +2562,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             val driver = context.driver
+            val evaluator = context.evaluator
             return (driver.isSuppressed(context, UNSUPPORTED, element) ||
                     driver.isSuppressed(context, INLINED, element) ||
-                    isWithinVersionCheckConditional(context.evaluator, element, api, true) ||
-                    isPrecededByVersionCheckExit(element, api, true))
+                    isWithinVersionCheckConditional(evaluator, element, api, true) ||
+                    isPrecededByVersionCheckExit(evaluator, element, api, true))
         }
 
         @JvmOverloads

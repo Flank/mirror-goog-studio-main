@@ -15,7 +15,7 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.VersionChecks.getMinSdkVersionFromMethodName
+import com.android.tools.lint.checks.VersionChecks.Companion.getMinSdkVersionFromMethodName
 import com.android.tools.lint.detector.api.Detector
 
 /** Unit tests for [VersionChecks]. This is using the ApiDetector to drive the analysis. */
@@ -2750,6 +2750,250 @@ class VersionChecksTest : AbstractCheckTest() {
             mSupportJar
         ).run().expectClean()
     }
+
+    fun testChecksSdkIntAtLeast() {
+        // Regression test for https://issuetracker.google.com/120255046
+        // The @ChecksSdkIntAtLeast annotation allows annotating methods and
+        // fields as version check methods without relying on (a) accessing
+        // the method body to see if it's an SDK_INT check, which doesn't work
+        // for compiled libraries, and (b) name patterns, which doesn't
+        // work for unusually named version methods.
+        lint().files(
+            kotlin(
+                "src/main/java/test/pkg/test.kt",
+                """
+                package test.pkg
+
+                import android.support.annotation.RequiresApi
+
+                fun test() {
+                    if (versionCheck1) {
+                        bar() // OK 1
+                    }
+                    if (Constants.getVersionCheck2()) {
+                        bar() // OK 2
+                    }
+                    if (Constants.SUPPORTS_LETTER_SPACING) {
+                        bar() // OK 3
+                    }
+                    sdk(28) { bar() } ?: fallback() // OK 4
+                    if (Constants.getVersionCheck3("", false, 21)) {
+                        bar(); // OK 5
+                    }
+                    "test".applyForOreoOrAbove { bar() } // OK 6
+                    fromApi(10) { bar() } // OK 7
+                    bar() // ERROR
+                }
+
+                @RequiresApi(10)
+                fun bar() {
+                }
+
+                fun fallback() {
+                }
+                """
+            ).indented(),
+            kotlin(
+                "src/main/java/test/pkg/utils.kt",
+                """
+                @file:Suppress("RemoveRedundantQualifierName", "unused")
+
+                package test.pkg
+                import android.os.Build
+                import androidx.annotation.ChecksSdkIntAtLeast
+
+                @ChecksSdkIntAtLeast(parameter = 0, lambda = 1)
+                inline fun fromApi(value: Int, action: () -> Unit) {
+                }
+
+                @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O, lambda = 0)
+                inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {
+                    return this
+                }
+
+                @ChecksSdkIntAtLeast(parameter = 0, lambda = 1)
+                inline fun <T> sdk(level: Int, func: () -> T): T? {
+                    return null
+                }
+
+
+                @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.HONEYCOMB)
+                val versionCheck1: Boolean
+                    get() = false
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Build;
+
+                import androidx.annotation.ChecksSdkIntAtLeast;
+
+                public class Constants {
+                    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.LOLLIPOP)
+                    public static boolean getVersionCheck2() {
+                        return false;
+                    }
+
+                    @ChecksSdkIntAtLeast(parameter = 2)
+                    public static boolean getVersionCheck3(String dummy, boolean dummy2, int apiLevel) {
+                        return false;
+                    }
+
+                    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.LOLLIPOP)
+                    public static final boolean SUPPORTS_LETTER_SPACING = Boolean.getBoolean("foo");
+                }
+                """
+            ),
+            mChecksSdkIntAtLeast,
+            mSupportJar
+        )
+            .run()
+            .expect(
+                """
+                src/main/java/test/pkg/test.kt:21: Error: Call requires API level 10 (current min is 1): bar [NewApi]
+                    bar() // ERROR
+                    ~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    fun testChecksSdkIntAtLeastBytecode() {
+        // Similar to testChecksSdkIntAtLeast, but with precompiled bytecode
+        // for the source files in that test insted of sources, since PSI
+        // treats annotations from bytecode and source files quite differently,
+        // and we want to have a unit test for the main intended purpose
+        // of this functionality: identified compiled version check methods
+        // in libraries as version chek methods, since here looking inside
+        // the method bodies won't work at all.
+        // Regression test for https://issuetracker.google.com/120255046
+        lint().files(
+            kotlin(
+                "src/main/java/test/pkg/test.kt",
+                """
+                package test.pkg
+
+                import android.support.annotation.RequiresApi
+
+                fun test() {
+                    if (versionCheck1) {
+                        bar() // OK 1
+                    }
+                    if (Constants.getVersionCheck2()) {
+                        bar() // OK 2
+                    }
+                    if (Constants.SUPPORTS_LETTER_SPACING) {
+                        bar() // OK 3
+                    }
+                    sdk(28) { bar() } ?: fallback() // OK 4
+                    if (Constants.getVersionCheck3("", false, 21)) {
+                        bar(); // OK 5
+                    }
+                    "test".applyForOreoOrAbove { bar() } // OK 6
+                    fromApi(10) { bar() } // OK 7
+                    bar() // ERROR
+                }
+
+                @RequiresApi(10)
+                fun bar() {
+                }
+
+                fun fallback() {
+                }
+                """
+            ).indented(),
+            // Compiled version of Constants.java above
+            jar(
+                "libs/compiled.jar",
+                base64gzip("test/pkg/Constants.class", "" +
+                        "H4sIAAAAAAAAAG1STW/TQBB9m2+noWnThgIF2vCZFIQl4NYKEaKCLFltFIcc" +
+                        "cqk29pJu46wjexPBf+JScQBx4AfwoxBjN0oqwsEznnkz896z/PvPz18AXuN5" +
+                        "ETk8KOBhEY/w2EAWT/J4mkedYcf52G6fdrrOmX3c7R53zpx2s2WdfGBgfYbd" +
+                        "zlRpORaWmslIDnzRVCrQXMtARQwNmysvDKT32eSLvtk6F+4ocryRpXRT24JH" +
+                        "+pAhzScyTWKqDLkjqaR+Q716o8eQaQWeYCjbUomT6Xggwi4nJoaKHbjc7/FQ" +
+                        "xvW8mdHnkqi3bS0ibU5GQ7NFWjRXOiKWjaHQPRFGpCOR8TIh6a8Cr8h53b7g" +
+                        "M276XA1NR4dSDQ/7Vjyc9abj8ZdYwMoAqU9AOlwgR7aYCZ8+lcVgTHjIx0KL" +
+                        "MLaZIvzI9edGi04wDV3xXsYO1heCX8TnS7iBdZL5KQjyaJRwgGcl5FEg+lWL" +
+                        "ZGQp6XRwIVzNsLlsvQsCX3BFjOR3UVT/47TRR43+gxxpZbgdE1I2qFqjXKRn" +
+                        "zUIJGXoheRTLBJmUGeXswXewy9glNijmkmYemxRLVwOoYIuygW1UaSpevpMg" +
+                        "tJP+mnAuN4urvAZuYme++Jaa6cXidcpyQrl/heIW2UgIiKqQ4Cns4i7F6+fv" +
+                        "WbhP8N7CVG2uy6ikfiD9DZnLf+RtUdxPrtX+Ak5s+MxRAwAA"),
+                base64gzip("test/pkg/UtilsKt.class", "" +
+                        "H4sIAAAAAAAAAI1Wz1PbRhT+Vja2bPNDGBJAtECJk2AICJOmTWNCS2gc3LrQ" +
+                        "FodDOXTWtnCEZcmjlT3JjVv/j5566KG9dXroMBx77f+T6VtZJgbcUIbRvv3e" +
+                        "2+997+2Txn+//fMvAB/jKwbNN4VvtBp146Vv2eJrPw5G6AnvcMPmTt3Yr5yY" +
+                        "VUIjDPFjz21utyyGzFKx1HB923KMk07TOG47Vd9yHWEUQms9nz1keHhj2GbP" +
+                        "/9Kx/PxWcCpb4k7Nc63aa4M7jutzGWnsvDKrDXFQaxQdf9svmVz4eYZEi3u8" +
+                        "afqmF6GKwBCzebNS43JHddwpuV7dODH9isctyvuOTxh7rr/Xtm0iifFAjIpR" +
+                        "hrk+vZZDvA63DUrp0XGrKuLQGKaqUsu3vcxFEVIx3F8qXe1cvg85kDR1KnIY" +
+                        "aUwkMY5JhqEOt9smAysyLNzUVYbhjJU5zlzcxARvtew3Bdfb90x339uuuB3i" +
+                        "KgzS8V7qXD57/QjDd5vlJ9fxraVy+Sa+zdW+mN7tEsQQ4S1L3o9OtVdst9pQ" +
+                        "Mc8wk/FfWSIzsJz0IGk39CpHIdNBrwZSRkStwfDof8zxoNzP/qMtN477CnWg" +
+                        "14fM+4aTxolXbJPCopJHRZa6ZZsdk6ZMDcoKCtDqpn9oeoIOBS9Ijipbyv4g" +
+                        "25tiGO/J+cb0eY37nOiUZkd6aYyVSmDRi80a0lAIqhHBP2eny8mz06SipZKK" +
+                        "GqFV6W7VYJlWCI1318BW9HktqivrQxsxLUZrfGNYU3U1HU0Ttp7YPf9J1R9o" +
+                        "ST06zXZTi1H17FRLUehwGDrSDd1NdUPPf44p2qie08Z05SJ8mcyNKU3TJ7qh" +
+                        "Ife4DFbTF8cmFse1s1PiZY9fEBDTo6qiRc5/iU3K0jYYRjqXewU5W2GP+l8y" +
+                        "Vh7gkBM11wOfv/ZNR1L1vOU3LXlbCZq2H2tmpV2ne2rLT+paw6dL3HFrNHVj" +
+                        "Jcsx99rNiumV5fXKLG6V24fcs+Q+BBMHVt3hftsje/b7tuNbTbPodCxhkXv7" +
+                        "3ZjQDF31XnyVLoUlD9y2VzULlmSfCc8cXuNDDgqi8kNKzxkMIUbrM9rtEi5H" +
+                        "JJlOPl1Jj/2BW7/LgcEOPWPUxATi+JLshW4UbmMqYEliFNPkj5B/hjAFz4Nz" +
+                        "cRTkDJJHpV2iSIGpIobxgtCEEnzIR+g5Ax2zoYRiKCEVSFggCcu/XdGQ6tOQ" +
+                        "wkdYDDSkMI87gQYVmT4NH1zS8GERc1JD8rqGu7g3UMMyaWBXNWiXNKyEfUgh" +
+                        "G/ZBxYM+DfcDDZNkXe7DEqHXdKxijYKkDp0w+adEfg38vfSgxheCdLIoJosy" +
+                        "6MhukGub5AOC4HW62dwRIpQp+N/Aw94uWaSfBY+K+ASfHoEJPMZnR7gl8EQg" +
+                        "L7AqsCYwFNi3g+eowKbAXYGnAisCWYF7ArrAvMCWwOcCswJf/AsGbi0NcAgA" +
+                        "AA=="),
+                base64gzip("androidx/annotation/ChecksSdkIntAtLeast.class", "" +
+                        "H4sIAAAAAAAAAIVRyU4CQRB9zTa4b7jgEpcYhYtcvHkiLJEEg2GIF0/NTImN" +
+                        "Qw+Z6SHyax78AD9KrTkoaiaxk+6qevXqVaX67f3lFcAl9i0ULexa2BNIy7Hi" +
+                        "t1RuCaxVtfaNNMrXdXqQkWfSH3wE8o7vkpYjEiiUyu2hnMiKJ/WgYptA6cGV" +
+                        "AATmxjJgiqFAIOfJUd+VAvO2HwUONZXHtTu1R3KeQtt9amlTNW2SobmIxQSK" +
+                        "3UgbNaI7Faq+R7NBQoHjHw3ld6JS951oRNqQy/2PkjldHkfHHlOyE+lFPMXZ" +
+                        "P9Rb31PONC6otau2LXCQXNCTwYAM806S8w2P4vF60zExKXfT6F136qzabDXa" +
+                        "bM+ldgNfuc8/axIWJLA6k+/0h+QwdJjYcba1M8EfkuKb5g/PZAQyyHKU4yjd" +
+                        "gsVAHnNfQIh5Bhb+MhZ/Aay2xG4Ky1hhe8rKq2zXmLJO2EABm7F7jxRhC9vx" +
+                        "s/MJ+kN96nECAAA="),
+                base64gzip("META-INF/app_debug.kotlin_module", "" +
+                        "H4sIAAAAAAAAAGNgYGBmYGBghGIBLmkujpLU4hK9gux0IbYQIMu7RIg9tCQz" +
+                        "p9i7BAAgbwQqLQAAAA==")
+            ),
+            mChecksSdkIntAtLeast,
+            mSupportJar
+        )
+            .run()
+            .expect(
+                """
+                src/main/java/test/pkg/test.kt:21: Error: Call requires API level 10 (current min is 1): bar [NewApi]
+                    bar() // ERROR
+                    ~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    private val mChecksSdkIntAtLeast = java(
+        """
+        package androidx.annotation;
+        import static java.lang.annotation.ElementType.FIELD;
+        import static java.lang.annotation.ElementType.METHOD;
+        import static java.lang.annotation.RetentionPolicy.CLASS;
+        import java.lang.annotation.Documented;
+        import java.lang.annotation.Retention;
+        import java.lang.annotation.Target;
+        @Documented
+        @Retention(CLASS)
+        @Target({METHOD, FIELD})
+        public @interface ChecksSdkIntAtLeast {
+            int api() default -1;
+            String codename() default "";
+            int parameter() default -1;
+            int lambda() default -1;
+        }
+        """
+    ).indented()
 
     override fun getDetector(): Detector {
         return ApiDetector()
