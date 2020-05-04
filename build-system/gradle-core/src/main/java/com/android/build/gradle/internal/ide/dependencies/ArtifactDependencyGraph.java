@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
@@ -200,6 +201,11 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     AndroidArtifacts.ArtifactType.LINT)
                             .getArtifacts();
 
+            MavenCoordinatesCacheBuildService mavenCoordinatesCache =
+                    BuildServicesKt.getBuildService(
+                                    componentProperties.getServices().getBuildServiceRegistry(),
+                                    MavenCoordinatesCacheBuildService.class)
+                            .get();
             for (ResolvedArtifact artifact : artifacts) {
                 ComponentIdentifier id = artifact.getComponentIdentifier();
 
@@ -229,7 +235,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     null, /* projectPath */
                                     ImmutableList.of(), /* dependencies */
                                     null, /* requestedCoordinates */
-                                    MavenCoordinatesUtils.getMavenCoordinates(artifact),
+                                    mavenCoordinatesCache.getMavenCoordinates(artifact),
                                     false, /* isSkipped */
                                     isProvided));
                 } else {
@@ -259,7 +265,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
 
                     androidLibraries.add(
                             new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
-                                    MavenCoordinatesUtils.getMavenCoordinates(artifact),
+                                    mavenCoordinatesCache.getMavenCoordinates(artifact),
                                     buildId,
                                     projectPath,
                                     artifact.getArtifactFile(),

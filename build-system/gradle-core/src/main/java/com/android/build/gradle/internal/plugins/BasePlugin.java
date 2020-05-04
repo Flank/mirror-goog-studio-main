@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
@@ -292,7 +293,10 @@ public abstract class BasePlugin<
     private void configureProject() {
         final Gradle gradle = project.getGradle();
 
-        extraModelInfo = new ExtraModelInfo();
+        extraModelInfo =
+                new ExtraModelInfo(
+                        new MavenCoordinatesCacheBuildService.RegistrationAction(project)
+                                .execute());
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
         IssueReporter issueReporter = projectServices.getIssueReporter();

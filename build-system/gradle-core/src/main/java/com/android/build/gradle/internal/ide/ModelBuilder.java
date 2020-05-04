@@ -50,7 +50,6 @@ import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
 import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -172,7 +171,6 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     public static void clearCaches() {
         LibraryUtils.clearCaches();
-        MavenCoordinatesUtils.clearMavenCaches();
     }
 
     @Override

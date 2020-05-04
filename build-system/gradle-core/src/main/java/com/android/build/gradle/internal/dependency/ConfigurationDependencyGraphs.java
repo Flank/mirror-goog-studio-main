@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.provider.Provider;
 
 /**
  * Implementation of {@link DependencyGraphs} over a Gradle
@@ -41,15 +42,17 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
 
     @NonNull
     private final Configuration configuration;
+    @NonNull private final Provider<MavenCoordinatesCacheBuildService> mavenCoordinatesCache;
 
     @NonNull
     private List<GraphItem> graphItems;
     private List<Library> libraries;
 
-
-    public ConfigurationDependencyGraphs(@NonNull Configuration configuration) {
-
+    public ConfigurationDependencyGraphs(
+            @NonNull Configuration configuration,
+            @NonNull Provider<MavenCoordinatesCacheBuildService> mavenCoordinatesCache) {
         this.configuration = configuration;
+        this.mavenCoordinatesCache = mavenCoordinatesCache;
     }
 
     @NonNull
@@ -103,7 +106,9 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
         for (File file : files) {
             Library javaLib =
                     new JavaLibraryImpl(
-                            MavenCoordinatesUtils.getMavenCoordForLocalFile(file)
+                            mavenCoordinatesCache
+                                    .get()
+                                    .getMavenCoordForLocalFile(file)
                                     .toString()
                                     .intern(),
                             file);
