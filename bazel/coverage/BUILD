@@ -372,6 +372,18 @@ coverage_report(
 )
 
 coverage_report(
+    name = "fullscreen-heapdump-ui",
+    srcpath_include = [
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/memory",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/memory",
+    ],
+    tests = [
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+    ],
+)
+
+coverage_report(
     name = "templates",
     srcpath_include = [
         "tools/adt/idea/android/src/com/android/tools/idea/npw/module/recipes",
@@ -445,6 +457,7 @@ combine_report_definitions(
         "dsl",
         "dynamic-layout-inspector",
         "emulator",
+        "fullscreen-heapdump-ui",
         "layouteditor",
         "ml-model-binding",
         "motioneditor",
