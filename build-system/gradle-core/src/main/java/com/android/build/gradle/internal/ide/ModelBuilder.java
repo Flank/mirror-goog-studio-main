@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
+import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService;
 import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
@@ -57,6 +58,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
@@ -133,6 +135,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.services.BuildServiceRegistry;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -167,10 +170,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         this.variantModel = variantModel;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
-    }
-
-    public static void clearCaches() {
-        LibraryUtils.clearCaches();
     }
 
     @Override
@@ -226,7 +225,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull
     private Object buildNonParameterizedModels(@NonNull String modelName) {
         if (modelName.equals(GlobalLibraryMap.class.getName())) {
-            return buildGlobalLibraryMap();
+            return buildGlobalLibraryMap(globalScope.getProject().getGradle().getSharedServices());
         } else if (modelName.equals(ProjectSyncIssues.class.getName())) {
             return buildProjectSyncIssuesModel();
         }
@@ -240,8 +239,13 @@ public class ModelBuilder<Extension extends BaseExtension>
         return ModelBuilderParameter.class;
     }
 
-    private static Object buildGlobalLibraryMap() {
-        return new GlobalLibraryMapImpl(LibraryUtils.getGlobalLibMap());
+    private static Object buildGlobalLibraryMap(
+            @NonNull BuildServiceRegistry buildServiceRegistry) {
+        LibraryDependencyCacheBuildService libraryDependencyCacheBuildService =
+                BuildServicesKt.getBuildService(
+                                buildServiceRegistry, LibraryDependencyCacheBuildService.class)
+                        .get();
+        return new GlobalLibraryMapImpl(libraryDependencyCacheBuildService.getGlobalLibMap());
     }
 
     private Object buildProjectSyncIssuesModel() {
@@ -621,15 +625,21 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
                 extraModelInfo.getExtraAndroidArtifacts(variantName));
+        LibraryDependencyCacheBuildService libraryDependencyCache =
+                BuildServicesKt.getBuildService(
+                                componentProperties.getServices().getBuildServiceRegistry(),
+                                LibraryDependencyCacheBuildService.class)
+                        .get();
         // Make sure all extra artifacts are serializable.
         List<JavaArtifact> clonedExtraJavaArtifacts =
-                extraModelInfo
-                        .getExtraJavaArtifacts(variantName)
-                        .stream()
+                extraModelInfo.getExtraJavaArtifacts(variantName).stream()
                         .map(
                                 javaArtifact ->
                                         JavaArtifactImpl.clone(
-                                                javaArtifact, modelLevel, modelWithFullDependency))
+                                                javaArtifact,
+                                                modelLevel,
+                                                modelWithFullDependency,
+                                                libraryDependencyCache))
                         .collect(Collectors.toList());
 
         if (componentProperties instanceof VariantPropertiesImpl) {
