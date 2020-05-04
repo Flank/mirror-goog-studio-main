@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.DesugarProcessArgs
@@ -161,26 +162,22 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_PROJECT_CLASSES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 DesugarTask::projectOutput
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES,
+            ).on(InternalArtifactType.DESUGAR_PROJECT_CLASSES)
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 DesugarTask::subProjectOutput
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES,
+            ).on(InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES)
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 DesugarTask::externalLibsOutput
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT,
+            ).on(InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES)
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 DesugarTask::tmpDir
-            )
+            ).on(InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT)
         }
 
         override fun configure(

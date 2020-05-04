@@ -390,11 +390,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.PROCESSED_RES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::resPackageOutputFolder
-            )
+            ).withName("out").on(InternalArtifactType.PROCESSED_RES)
 
             if (generatesProguardOutputFile(creationConfig)) {
                 creationConfig.artifacts.producesFile(
@@ -642,12 +641,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
-                fileName = "out"
-            )
+                LinkApplicationAndroidResourcesTask::sourceOutputDirProperty
+            ).withName("out").on(InternalArtifactType.RUNTIME_R_CLASS_SOURCES)
         }
 
         override fun configure(

@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
@@ -73,12 +75,10 @@ abstract class CheckManifest : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.checkManifestTask = taskProvider
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.CHECK_MANIFEST_RESULT,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                CheckManifest::fakeOutputDir,
-                "out"
-            )
+                CheckManifest::fakeOutputDir
+            ).withName("out").on(InternalArtifactType.CHECK_MANIFEST_RESULT)
         }
 
         override fun configure(

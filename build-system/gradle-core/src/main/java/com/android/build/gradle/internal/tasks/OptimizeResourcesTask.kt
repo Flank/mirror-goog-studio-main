@@ -109,11 +109,10 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out OptimizeResourcesTask>) {
             super.handleProvider(taskProvider)
             // OPTIMIZED_PROCESSED_RES will be republished as PROCESSED_RES on task completion.
-            creationConfig.artifacts.producesDir(
-                    InternalArtifactType.OPTIMIZED_PROCESSED_RES,
-                    taskProvider,
-                    OptimizeResourcesTask::optimizedApkFile
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                OptimizeResourcesTask::optimizedApkFile
+            ).on(InternalArtifactType.OPTIMIZED_PROCESSED_RES)
         }
 
         override fun configure(task: OptimizeResourcesTask) {

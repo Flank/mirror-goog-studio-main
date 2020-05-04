@@ -19,6 +19,7 @@ import com.android.SdkConstants.DOT_TFLITE
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ML_MODELS
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator
@@ -88,14 +89,10 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateMlModelClass>) {
             super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .producesDir(
-                    InternalArtifactType.ML_SOURCE_OUT,
-                    taskProvider,
-                    GenerateMlModelClass::sourceOutDir,
-                    "out"
-                )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                GenerateMlModelClass::sourceOutDir
+            ).on(InternalArtifactType.ML_SOURCE_OUT)
         }
 
         override fun configure(task: GenerateMlModelClass) {

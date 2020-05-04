@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -227,11 +228,10 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.COMPILED_LOCAL_RESOURCES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
-            )
+            ).withName("out").on(InternalArtifactType.COMPILED_LOCAL_RESOURCES)
         }
 
         override fun configure(

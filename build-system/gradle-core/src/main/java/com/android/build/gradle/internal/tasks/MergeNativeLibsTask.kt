@@ -153,12 +153,10 @@ abstract class MergeNativeLibsTask
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                MERGED_NATIVE_LIBS,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                MergeNativeLibsTask::outputDir,
-                fileName = "out"
-            )
+                MergeNativeLibsTask::outputDir
+            ).withName("out").on(MERGED_NATIVE_LIBS)
         }
 
         override fun configure(

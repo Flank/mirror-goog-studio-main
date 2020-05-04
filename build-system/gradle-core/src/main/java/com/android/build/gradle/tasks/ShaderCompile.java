@@ -224,12 +224,10 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                 @NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig
-                    .getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.SHADER_ASSETS.INSTANCE,
-                            taskProvider,
-                            ShaderCompile::getOutputDir,
-                            "out");
+                    .getOperations()
+                    .setInitialProvider(taskProvider, ShaderCompile::getOutputDir)
+                    .withName("out")
+                    .on(InternalArtifactType.SHADER_ASSETS.INSTANCE);
         }
 
         @Override

@@ -124,11 +124,10 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkManifestForAssetPackTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.LINKED_RES_FOR_ASSET_PACK,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 LinkManifestForAssetPackTask::linkedManifestsDirectory
-            )
+            ).on(InternalArtifactType.LINKED_RES_FOR_ASSET_PACK)
         }
 
         override fun configure(

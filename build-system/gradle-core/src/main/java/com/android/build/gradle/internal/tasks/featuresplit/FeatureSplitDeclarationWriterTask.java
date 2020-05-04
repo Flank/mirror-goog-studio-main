@@ -81,12 +81,11 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
             super.handleProvider(taskProvider);
 
             creationConfig
-                    .getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.METADATA_FEATURE_DECLARATION.INSTANCE,
-                            taskProvider,
-                            FeatureSplitDeclarationWriterTask::getOutputDirectory,
-                            "out");
+                    .getOperations()
+                    .setInitialProvider(
+                            taskProvider, FeatureSplitDeclarationWriterTask::getOutputDirectory)
+                    .withName("out")
+                    .on(InternalArtifactType.METADATA_FEATURE_DECLARATION.INSTANCE);
         }
 
         @Override

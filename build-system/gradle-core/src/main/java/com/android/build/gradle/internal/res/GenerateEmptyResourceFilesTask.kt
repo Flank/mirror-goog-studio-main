@@ -78,12 +78,10 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
                 SdkConstants.FN_RESOURCE_TEXT
             )
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.PACKAGED_RES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateEmptyResourceFilesTask::emptyMergedResources,
-                SdkConstants.FD_RES
-            )
+                GenerateEmptyResourceFilesTask::emptyMergedResources
+            ).withName(SdkConstants.FD_RES).on(InternalArtifactType.PACKAGED_RES)
         }
     }
 }

@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -108,12 +110,10 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.COMPRESSED_ASSETS,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                CompressAssetsTask::outputDir,
-                fileName = "out"
-            )
+                CompressAssetsTask::outputDir
+            ).withName("out").on(InternalArtifactType.COMPRESSED_ASSETS)
         }
 
         override fun configure(

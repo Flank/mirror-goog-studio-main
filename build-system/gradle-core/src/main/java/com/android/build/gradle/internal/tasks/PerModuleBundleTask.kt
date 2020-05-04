@@ -203,11 +203,10 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             taskProvider: TaskProvider<out PerModuleBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.MODULE_BUNDLE,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 PerModuleBundleTask::outputDir
-            )
+            ).on(InternalArtifactType.MODULE_BUNDLE)
         }
 
         override fun configure(

@@ -24,6 +24,7 @@ import android.databinding.tool.util.L
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -177,16 +178,14 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 DataBindingGenBaseClassesTask::classInfoBundleDir
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
+            ).withName("out").on(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 DataBindingGenBaseClassesTask::sourceOutFolder
-            )
+            ).withName("out").on(InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT)
         }
 
         override fun configure(

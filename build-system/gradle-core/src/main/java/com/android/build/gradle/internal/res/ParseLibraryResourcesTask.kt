@@ -169,12 +169,11 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             )
             if (creationConfig.services
                             .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS]) {
-                creationConfig.artifacts.producesDir(
-                        InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY,
-                        taskProvider,
-                        ParseLibraryResourcesTask::partialRDir,
-                        SdkConstants.FD_PARTIAL_R
-                )
+                creationConfig.operations.setInitialProvider(
+                    taskProvider,
+                    ParseLibraryResourcesTask::partialRDir
+                ).withName(SdkConstants.FD_PARTIAL_R)
+                    .on(InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY)
             }
         }
 

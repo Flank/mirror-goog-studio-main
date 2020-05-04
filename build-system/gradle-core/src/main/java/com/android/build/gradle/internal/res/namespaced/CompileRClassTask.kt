@@ -15,8 +15,11 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -46,12 +49,9 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
     override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        component.artifacts.producesDir(
-            RUNTIME_R_CLASS_CLASSES,
-            taskProvider,
-            { output },
-            name
-        )
+        component.operations.setInitialProvider(
+            taskProvider
+        ) {  output  }.withName(SdkConstants.FD_RES).on(RUNTIME_R_CLASS_CLASSES)
     }
 
     override fun configure(task: JavaCompile) {

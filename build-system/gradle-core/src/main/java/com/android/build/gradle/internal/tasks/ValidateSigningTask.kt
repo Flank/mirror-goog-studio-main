@@ -143,11 +143,10 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ValidateSigningTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.VALIDATE_SIGNING_CONFIG,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 ValidateSigningTask::dummyOutputDirectory
-            )
+            ).on(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
         }
 
         override fun configure(

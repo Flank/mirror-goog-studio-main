@@ -75,11 +75,10 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             taskProvider: TaskProvider<out RecalculateStackFramesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.FIXED_STACK_FRAMES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 RecalculateStackFramesTask::outFolder
-            )
+            ).on(InternalArtifactType.FIXED_STACK_FRAMES)
         }
 
         override fun configure(

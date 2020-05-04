@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -114,13 +115,10 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts
-                .producesDir(
-                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
-                    taskProvider,
-                    GenerateTestConfig::outputDirectory,
-                    fileName = "out"
-                )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                GenerateTestConfig::outputDirectory
+            ).withName("out").on(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
         }
 
         override fun configure(

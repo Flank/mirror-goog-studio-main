@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_DEBUG_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBOL_TABLES
@@ -135,13 +136,10 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExtractNativeDebugMetadataTask>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.producesDir(
-                NATIVE_DEBUG_METADATA,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ExtractNativeDebugMetadataTask::outputDir,
-                fileName = "out"
-            )
+                ExtractNativeDebugMetadataTask::outputDir
+            ).withName("out").on(NATIVE_DEBUG_METADATA)
         }
 
         override fun configure(task: ExtractNativeDebugMetadataTask) {
@@ -162,12 +160,10 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                NATIVE_SYMBOL_TABLES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ExtractNativeDebugMetadataTask::outputDir,
-                fileName = "out"
-            )
+                ExtractNativeDebugMetadataTask::outputDir
+            ).withName("out").on(NATIVE_SYMBOL_TABLES)
         }
 
         override fun configure(task: ExtractNativeDebugMetadataTask) {

@@ -845,14 +845,14 @@ public abstract class MergeResources extends ResourceAwareTask {
             creationConfig.getTaskContainer().setMergeResourcesTask(taskProvider);
 
             creationConfig
-                    .getArtifacts()
-                    .producesDir(
+                    .getOperations()
+                    .setInitialProvider(
+                            taskProvider, MergeResources::getDataBindingLayoutInfoOutFolder)
+                    .withName("out")
+                    .on(
                             mergeType == MERGE
                                     ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE.INSTANCE
-                                    : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE,
-                            taskProvider,
-                            MergeResources::getDataBindingLayoutInfoOutFolder,
-                            "out");
+                                    : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE);
 
             // only the full run with dependencies generates the blame folder
             if (includeDependencies) {

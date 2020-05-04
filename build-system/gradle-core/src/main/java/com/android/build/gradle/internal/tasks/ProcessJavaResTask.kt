@@ -59,13 +59,11 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processJavaResourcesTask = taskProvider
-            creationConfig
-                .artifacts
-                .producesDir(
-                    InternalArtifactType.JAVA_RES,
+
+            creationConfig.operations.setInitialProvider(
                     taskProvider,
                     ProcessJavaResTask::outDirectory
-                )
+                ).withName("out").on(InternalArtifactType.JAVA_RES)
         }
 
         override fun configure(

@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ENUMERATED_RUNTIME_CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.artifacts.ArtifactCollection
@@ -71,11 +73,10 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DUPLICATE_CLASSES_CHECK,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 CheckDuplicateClassesTask::dummyOutputDirectory
-            )
+            ).on(InternalArtifactType.DUPLICATE_CLASSES_CHECK)
         }
 
         override fun configure(

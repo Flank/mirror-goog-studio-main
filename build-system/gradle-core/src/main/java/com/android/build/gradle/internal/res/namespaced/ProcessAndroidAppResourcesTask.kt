@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
@@ -140,17 +141,14 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ProcessAndroidAppResourcesTask::rClassSource,
-                fileName = "out"
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.PROCESSED_RES,
+                ProcessAndroidAppResourcesTask::rClassSource
+            ).withName("out").on(InternalArtifactType.RUNTIME_R_CLASS_SOURCES)
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 ProcessAndroidAppResourcesTask::resourceApUnderscoreDirectory
-            )
+            ).withName("out").on(InternalArtifactType.PROCESSED_RES)
         }
 
         override fun configure(

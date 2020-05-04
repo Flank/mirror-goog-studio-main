@@ -55,12 +55,10 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
             taskProvider: TaskProvider<out PackageRenderscriptTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.RENDERSCRIPT_HEADERS,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                PackageRenderscriptTask::headersDir,
-                "out"
-            )
+                PackageRenderscriptTask::headersDir
+            ).withName("out").on(InternalArtifactType.RENDERSCRIPT_HEADERS)
         }
 
         override fun configure(

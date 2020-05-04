@@ -77,11 +77,10 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out SigningConfigWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.SIGNING_CONFIG,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
                 SigningConfigWriterTask::outputDirectory
-            )
+            ).on(InternalArtifactType.SIGNING_CONFIG)
         }
 
         override fun configure(
