@@ -23,6 +23,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
@@ -89,7 +90,9 @@ public class TensorInfo {
     public enum FileType {
         UNKNOWN((byte) 0),
         DESCRIPTIONS((byte) 1),
-        TENSOR_AXIS_LABELS((byte) 2);
+        TENSOR_AXIS_LABELS((byte) 2),
+        TENSOR_VALUE_LABELS((byte) 3),
+        TENSOR_AXIS_SCORE_CALIBRATION((byte) 4);
 
         private final byte id;
 
@@ -110,7 +113,8 @@ public class TensorInfo {
     public enum ContentType {
         UNKNOWN((byte) 0),
         FEATURE((byte) 1),
-        IMAGE((byte) 2);
+        IMAGE((byte) 2),
+        BOUNDING_BOX((byte) 3);
 
         private final byte id;
 
@@ -141,10 +145,14 @@ public class TensorInfo {
     private final String identifierName;
     private final String description;
     private final ContentType contentType;
+    private final ContentRange contentRange;
     private final String fileName;
     private final FileType fileType;
     private final MetadataExtractor.NormalizationParams normalizationParams;
-    @Nullable private final ImageProperties imageProperties;
+    @Nullable
+    private final ImageProperties imageProperties;
+    @Nullable
+    private final BoundingBoxProperties boundingBoxProperties;
 
     public TensorInfo(
             Source source,
@@ -156,10 +164,12 @@ public class TensorInfo {
             String name,
             String description,
             ContentType contentType,
+            ContentRange contentRange,
             String fileName,
             FileType fileType,
             MetadataExtractor.NormalizationParams normalizationParams,
-            @Nullable ImageProperties imageProperties) {
+            @Nullable ImageProperties imageProperties,
+            @Nullable BoundingBoxProperties boundingBoxProperties) {
         this.source = source;
         this.index = index;
         this.dataType = dataType;
@@ -169,10 +179,12 @@ public class TensorInfo {
         this.name = name;
         this.description = description;
         this.contentType = contentType;
+        this.contentRange = contentRange;
         this.fileName = fileName;
         this.fileType = fileType;
         this.normalizationParams = normalizationParams;
         this.imageProperties = imageProperties;
+        this.boundingBoxProperties = boundingBoxProperties;
 
         this.identifierName = MlkitNames.computeIdentifierName(name, getDefaultName(source, index));
     }
@@ -190,10 +202,12 @@ public class TensorInfo {
         name = in.readUTF();
         description = in.readUTF();
         contentType = ContentType.fromByte(in.readByte());
+        contentRange = new ContentRange(in);
         fileName = in.readUTF();
         fileType = FileType.fromByte(in.readByte());
         normalizationParams = new MetadataExtractor.NormalizationParams(in);
         imageProperties = in.readBoolean() ? new ImageProperties(in) : null;
+        boundingBoxProperties = in.readBoolean() ? new BoundingBoxProperties(in) : null;
 
         identifierName = MlkitNames.computeIdentifierName(name, getDefaultName(source, index));
     }
@@ -211,12 +225,17 @@ public class TensorInfo {
         out.writeUTF(name);
         out.writeUTF(description);
         out.write(contentType.id);
+        contentRange.save(out);
         out.writeUTF(fileName);
         out.write(fileType.id);
         normalizationParams.save(out);
         out.writeBoolean(imageProperties != null);
         if (imageProperties != null) {
             imageProperties.save(out);
+        }
+        out.writeBoolean(boundingBoxProperties != null);
+        if (boundingBoxProperties != null) {
+            boundingBoxProperties.save(out);
         }
     }
 
@@ -265,6 +284,11 @@ public class TensorInfo {
     }
 
     @NonNull
+    public ContentRange getContentRange() {
+        return contentRange;
+    }
+
+    @NonNull
     public String getFileName() {
         return fileName;
     }
@@ -282,6 +306,11 @@ public class TensorInfo {
     @Nullable
     public ImageProperties getImageProperties() {
         return imageProperties;
+    }
+
+    @Nullable
+    public BoundingBoxProperties getBoundingBoxProperties() {
+        return boundingBoxProperties;
     }
 
     public boolean isRGBImage() {
@@ -303,10 +332,12 @@ public class TensorInfo {
                 && name.equals(that.name)
                 && description.equals(that.description)
                 && contentType == that.contentType
+                && Objects.equals(contentRange, that.contentRange)
                 && fileName.equals(that.fileName)
                 && fileType == that.fileType
                 && Objects.equals(normalizationParams, that.normalizationParams)
-                && Objects.equals(imageProperties, that.imageProperties);
+                && Objects.equals(imageProperties, that.imageProperties)
+                && Objects.equals(boundingBoxProperties, that.boundingBoxProperties);
     }
 
     @Override
@@ -324,10 +355,15 @@ public class TensorInfo {
         private String name = "";
         private String description = "";
         private ContentType contentType = ContentType.UNKNOWN;
+        private ContentRange contentRange = new ContentRange(-1, -1);
         private String fileName = "";
         private FileType fileType = FileType.UNKNOWN;
-        @Nullable private MetadataExtractor.NormalizationParams normalizationParams;
-        @Nullable private ImageProperties imageProperties;
+        @Nullable
+        private MetadataExtractor.NormalizationParams normalizationParams;
+        @Nullable
+        private ImageProperties imageProperties;
+        @Nullable
+        private BoundingBoxProperties boundingBoxProperties;
 
         private Builder setSource(Source source) {
             this.source = source;
@@ -375,6 +411,11 @@ public class TensorInfo {
             return this;
         }
 
+        private Builder setContentRange(ContentRange contentRange) {
+            this.contentRange = contentRange;
+            return this;
+        }
+
         private Builder setFileName(String fileName) {
             this.fileName = fileName;
             return this;
@@ -396,6 +437,11 @@ public class TensorInfo {
             return this;
         }
 
+        public Builder setBoundingBoxProperties(BoundingBoxProperties boundingBoxProperties) {
+            this.boundingBoxProperties = boundingBoxProperties;
+            return this;
+        }
+
         private TensorInfo build() {
             return new TensorInfo(
                     source,
@@ -407,16 +453,18 @@ public class TensorInfo {
                     name,
                     description,
                     contentType,
+                    contentRange,
                     fileName,
                     fileType,
                     normalizationParams != null
                             ? normalizationParams
                             : new MetadataExtractor.NormalizationParams(
-                                    toFloatBuffer(0),
-                                    toFloatBuffer(1),
-                                    toFloatBuffer(Float.MIN_VALUE),
-                                    toFloatBuffer(Float.MAX_VALUE)),
-                    imageProperties);
+                            toFloatBuffer(0),
+                            toFloatBuffer(1),
+                            toFloatBuffer(Float.MIN_VALUE),
+                            toFloatBuffer(Float.MAX_VALUE)),
+                    imageProperties,
+                    boundingBoxProperties);
         }
     }
 
@@ -455,6 +503,11 @@ public class TensorInfo {
                     .setDescription(Strings.nullToEmpty(tensorMetadata.description()))
                     .setContentType(extractContentType(tensorMetadata));
 
+            Content content = tensorMetadata.content();
+            if (content != null && content.range() != null) {
+                builder.setContentRange(new ContentRange(content.range().min(), content.range().max()));
+            }
+
             AssociatedFile file = tensorMetadata.associatedFiles(0);
             if (file != null) {
                 builder.setFileName(Strings.nullToEmpty(file.name()))
@@ -472,6 +525,18 @@ public class TensorInfo {
                 builder.setImageProperties(
                         new ImageProperties(
                                 ImageProperties.ColorSpaceType.fromByte(properties.colorSpace())));
+            } else if (builder.contentType == ContentType.BOUNDING_BOX) {
+                org.tensorflow.lite.support.metadata.schema.BoundingBoxProperties properties =
+                        (org.tensorflow.lite.support.metadata.schema.BoundingBoxProperties)
+                                tensorMetadata
+                                        .content()
+                                        .contentProperties(
+                                                new org.tensorflow.lite.support.metadata.schema
+                                                        .BoundingBoxProperties());
+                builder.setBoundingBoxProperties(new BoundingBoxProperties(
+                        BoundingBoxProperties.Type.fromByte(properties.type()),
+                        BoundingBoxProperties.CoordinateType.fromByte(properties.coordinateType()),
+                        properties.indexAsByteBuffer().asIntBuffer()));
             }
 
             NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
@@ -516,6 +581,8 @@ public class TensorInfo {
             return ContentType.IMAGE;
         } else if (type == ContentProperties.FeatureProperties) {
             return ContentType.FEATURE;
+        } else if (type == ContentProperties.BoundingBoxProperties) {
+            return ContentType.BOUNDING_BOX;
         }
         return ContentType.UNKNOWN;
     }
@@ -578,6 +645,152 @@ public class TensorInfo {
         @Override
         public int hashCode() {
             return Objects.hash(colorSpaceType);
+        }
+    }
+
+    public static class BoundingBoxProperties {
+
+        /** Denotes how a bounding box is represented. */
+        public enum Type {
+            UNKNOWN((byte)0),
+            /**
+             * Represents the bounding box by using the combination of boundaries, {left, top, right,
+             * bottom}. The default order is {left, top, right, bottom}. Other orders can be indicated by an
+             * index array.
+             */
+            BOUNDARIES((byte)1),
+            /**
+             * Represents the bounding box by using the upper_left corner, width and height. The default
+             * order is {upper_left_x, upper_left_y, width, height}. Other orders can be indicated by an
+             * index array.
+             */
+            UPPER_LEFT((byte)2),
+            /**
+             * Represents the bounding box by using the center of the box, width and height. The default
+             * order is {center_x, center_y, width, height}. Other orders can be indicated by an index
+             * array.
+             */
+            CENTER((byte)3);
+
+            private final int id;
+
+            Type(int id) {
+                this.id = id;
+            }
+
+            public static Type fromByte(byte id) {
+                for (Type type : values()) {
+                    if (type.id == id) {
+                        return type;
+                    }
+                }
+                return UNKNOWN;
+            }
+        }
+
+        /** Denotes if the coordinates are actual pixels or relative ratios. */
+        public enum CoordinateType {
+            UNKNOWN((byte)-1),
+            /** The coordinates are relative ratios in range [0, 1]. */
+            RATIO((byte)0),
+            /** The coordinates are actual pixel values. */
+            PIXEL((byte)1);
+
+            private final int id;
+
+            CoordinateType(int id) {
+                this.id = id;
+            }
+
+            public static CoordinateType fromByte(byte id) {
+                for (CoordinateType type : values()) {
+                    if (type.id == id) {
+                        return type;
+                    }
+                }
+                return UNKNOWN;
+            }
+        }
+
+        public final Type type;
+        public final CoordinateType coordinateType;
+        /**
+         * Denotes the order of the elements defined in each bounding box type. An
+         * empty index array represent the default order of each bounding box type.
+         * For example, to denote the default order of BOUNDARIES, {left, top, right,
+         * bottom}, the index should be {0, 1, 2, 3}. To denote the order {left,
+         * right, top, bottom}, the order should be {0, 2, 1, 3}.
+         * <p>
+         * The index array can be applied to all bounding box types to adjust the
+         * order of their corresponding underlying elements.
+         */
+        public final int[] index;
+
+        public BoundingBoxProperties(@NonNull Type type, @NonNull CoordinateType coordinateType, @NonNull IntBuffer indexBuffer) {
+            this.type = type;
+            this.coordinateType = coordinateType;
+            this.index = new int[indexBuffer.remaining()];
+            indexBuffer.get(index);
+        }
+
+        public BoundingBoxProperties(@NonNull DataInput in) throws IOException {
+            this.type = Type.fromByte(in.readByte());
+            this.coordinateType = CoordinateType.fromByte(in.readByte());
+            this.index = DataInputOutputUtils.readIntArray(in);
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            out.write(type.id);
+            out.write(coordinateType.id);
+            DataInputOutputUtils.writeIntArray(out, index);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            BoundingBoxProperties that = (BoundingBoxProperties) o;
+            return type == that.type && coordinateType == that.coordinateType && Arrays.equals(index, that.index);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(type, coordinateType);
+            result = 31 * result + Arrays.hashCode(index);
+            return result;
+        }
+    }
+
+    public static class ContentRange {
+        public final int min;
+        public final int max;
+
+        public ContentRange(int min, int max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        public ContentRange(@NonNull DataInput in) throws IOException {
+            this.min = in.readInt();
+            this.max = in.readInt();
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            out.writeInt(min);
+            out.writeInt(max);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ContentRange that = (ContentRange) o;
+            return min == that.min && max == that.max;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(min, max);
         }
     }
 }
