@@ -77,6 +77,10 @@ public class FakeDevice {
     @Nullable private DeviceState deviceState;
     public final Server shellServer;
 
+    public FakeDevice(DeviceId deviceId) throws IOException {
+        this(deviceId.version(), deviceId.api());
+    }
+
     public FakeDevice(String version, int api) throws IOException {
         this.version = version;
         this.api = api;

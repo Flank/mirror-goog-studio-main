@@ -21,6 +21,7 @@ import com.android.ddmlib.IDevice;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.testutils.AssumeUtil;
+import com.android.tools.deployer.devices.DeviceId;
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
@@ -49,13 +50,13 @@ public class AdbInstallerTest {
     private final FakeDevice device;
     private ILogger logger;
 
-    public AdbInstallerTest(FakeDeviceLibrary.DeviceId id) throws Exception {
+    public AdbInstallerTest(DeviceId id) throws Exception {
         this.device = new FakeDeviceLibrary().build(id);
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static FakeDeviceLibrary.DeviceId[] getDevices() {
-        return FakeDeviceLibrary.DeviceId.values();
+    public static DeviceId[] getDevices() {
+        return DeviceId.values();
     }
 
     @Before

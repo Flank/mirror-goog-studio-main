@@ -32,95 +32,37 @@ import java.io.IOException;
 
 public class FakeDeviceLibrary {
 
-    public enum DeviceId {
-        API_19,
-        API_21,
-        API_22,
-        API_23,
-        API_24,
-        API_25,
-        API_26,
-        API_27,
-        API_28,
-        API_29,
-    }
-
     public FakeDevice build(DeviceId id) throws IOException {
-        FakeDevice device = null;
+        FakeDevice device = new FakeDevice(id);
         switch (id) {
             case API_19:
-                {
-                    device = new FakeDevice("4.4", 19);
-                    device.getShell().addCommand(new BasicPm());
-                    break;
-                }
+                device.getShell().addCommand(new BasicPm());
+                break;
             case API_21:
-                {
-                    device = new FakeDevice("5.0", 21);
-                    device.getShell().addCommand(new SessionPm());
-                    break;
-                }
             case API_22:
-                {
-                    device = new FakeDevice("5.1", 22);
-                    device.getShell().addCommand(new SessionPm());
-                    break;
-                }
             case API_23:
-                {
-                    device = new FakeDevice("6.0", 23);
-                    device.getShell().addCommand(new SessionPm());
-                    break;
-                }
+                device.getShell().addCommand(new SessionPm());
+                break;
             case API_24:
-                {
-                    device = new FakeDevice("7.0", 24);
-                    device.getShell().addCommand(new Cmd());
-                    break;
-                }
             case API_25:
-                {
-                    device = new FakeDevice("7.1", 25);
-                    device.getShell().addCommand(new Cmd());
-                    break;
-                }
             case API_26:
-                {
-                    device = new FakeDevice("8.0", 26);
-                    device.getShell().addCommand(new Cmd());
-                    break;
-                }
             case API_27:
-                {
-                    device = new FakeDevice("8.1", 27);
-                    device.getShell().addCommand(new Cmd());
-                    break;
-                }
             case API_28:
-                {
-                    device = new FakeDevice("9.0", 28);
-                    device.getShell().addCommand(new Cmd());
-                    break;
-                }
             case API_29:
-                {
-                    device = new FakeDevice("10.0", 29);
-                    device.getShell().addCommand(new Cmd());
-                    break;
-                }
+                device.getShell().addCommand(new Cmd());
+                break;
         }
-        if (device != null) {
-            device.getShell().addCommand(new Am());
-            device.getShell().addCommand(new GetProp());
-            device.getShell().addCommand(new Mkdir());
-            device.getShell().addCommand(new Chmod());
-            device.getShell().addCommand(new Rm());
-            device.getShell().addCommand(new Id());
-            device.getShell().addCommand(new Cp());
-            device.getShell().addCommand(new Ls());
-            device.getShell().addCommand(new Stat());
-            device.getShell().addCommand(new Xargs());
-        }
+
+        device.getShell().addCommand(new Am());
+        device.getShell().addCommand(new GetProp());
+        device.getShell().addCommand(new Mkdir());
+        device.getShell().addCommand(new Chmod());
+        device.getShell().addCommand(new Rm());
+        device.getShell().addCommand(new Id());
+        device.getShell().addCommand(new Cp());
+        device.getShell().addCommand(new Ls());
+        device.getShell().addCommand(new Stat());
+        device.getShell().addCommand(new Xargs());
 
         return device;
     }
