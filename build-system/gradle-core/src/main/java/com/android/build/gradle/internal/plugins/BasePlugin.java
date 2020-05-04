@@ -816,6 +816,7 @@ public abstract class BasePlugin<
                         project.getProviders(),
                         project.getLayout(),
                         projectOptions,
+                        project.getGradle().getSharedServices(),
                         project::file);
     }
 }

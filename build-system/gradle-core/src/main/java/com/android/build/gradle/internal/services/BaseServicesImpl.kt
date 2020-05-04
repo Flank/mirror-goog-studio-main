@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.services
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
+import org.gradle.api.services.BuildServiceRegistry
 
 /**
  * Impl for BaseScope over a [ProjectServices]
@@ -34,4 +35,6 @@ open class BaseServicesImpl(protected val projectServices: ProjectServices):
         get() = projectServices.deprecationReporter
     final override val projectOptions: ProjectOptions
         get() = projectServices.projectOptions
+    final override val buildServiceRegistry: BuildServiceRegistry
+        get() = projectServices.buildServiceRegistry
 }

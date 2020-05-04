@@ -144,7 +144,7 @@ open class LintPlugin : Plugin<Project> {
             DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath)
         projectServices = ProjectServices(
             syncIssueReporter, deprecationReporter, objectFactory, project.logger,
-            project.providers, project.layout, projectOptions
+            project.providers, project.layout, projectOptions, project.gradle.sharedServices
         ) { o: Any -> project.file(o) }
     }
 }

@@ -527,7 +527,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
 
             task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
 

@@ -144,7 +144,9 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             task.aapt2Version = aapt2Version
 
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }

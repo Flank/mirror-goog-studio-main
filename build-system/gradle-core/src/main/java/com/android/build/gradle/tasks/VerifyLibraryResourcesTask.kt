@@ -261,8 +261,12 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             task.useJvmResourceCompiler =
               creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
-            task.aapt2WorkersBuildService.setDisallowChanges(getBuildService(task.project))
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2WorkersBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 

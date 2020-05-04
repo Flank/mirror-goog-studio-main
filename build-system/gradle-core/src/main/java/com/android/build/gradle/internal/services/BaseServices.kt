@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.services
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
+import org.gradle.api.services.BuildServiceRegistry
 
 /**
  * Interface providing services useful everywhere.
@@ -28,6 +29,7 @@ interface BaseServices {
     val issueReporter: IssueReporter
     val deprecationReporter: DeprecationReporter
     val projectOptions: ProjectOptions
+    val buildServiceRegistry: BuildServiceRegistry
 
     fun <T> newInstance(type: Class<T>, vararg args: Any?): T
 }

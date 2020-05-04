@@ -45,5 +45,5 @@ fun AutoNamespaceParameters.init(globalScope: GlobalScope) {
     aapt2FromMaven.from(file)
     aapt2Version.set(version)
     errorFormatMode.set(SyncOptions.getErrorFormatMode(globalScope.projectOptions))
-    aapt2DaemonBuildService.setDisallowChanges(getBuildService(globalScope.project))
+    aapt2DaemonBuildService.setDisallowChanges(getBuildService(globalScope.project.gradle.sharedServices))
 }

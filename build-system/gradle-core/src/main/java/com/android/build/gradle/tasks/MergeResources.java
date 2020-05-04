@@ -992,11 +992,13 @@ public abstract class MergeResources extends ResourceAwareTask {
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getAapt2WorkersBuildService(),
                     BuildServicesKt.getBuildService(
-                            task.getProject(), Aapt2WorkersBuildService.class));
+                            creationConfig.getServices().getBuildServiceRegistry(),
+                            Aapt2WorkersBuildService.class));
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getAapt2DaemonBuildService(),
                     BuildServicesKt.getBuildService(
-                            task.getProject(), Aapt2DaemonBuildService.class));
+                            creationConfig.getServices().getBuildServiceRegistry(),
+                            Aapt2DaemonBuildService.class));
         }
     }
 
