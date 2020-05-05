@@ -28,6 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.Properties
 
 /**
  * Unit tests for [AarMetadataTask].
@@ -71,13 +72,42 @@ class AarMetadataTaskTest {
             AarMetadataTask.aarMetadataVersion
         ).run()
 
-        assertThat(outputFile).exists()
-        assertThat(outputFile.readText()).isEqualTo(
-            """
-                |<aar-metadata
-                |    aarVersion="1.0"
-                |    aarMetadataVersion="1.0" />
-                |""".trimMargin()
+        checkAarMetadataFile(
+            outputFile,
+            AarMetadataTask.aarMetadataVersion,
+            AarMetadataTask.aarVersion
         )
+    }
+
+    @Test
+    fun testMinCompileSdkVersion() {
+        AarMetadataTaskDelegate(
+            workQueue,
+            outputFile,
+            AarMetadataTask.aarVersion,
+            AarMetadataTask.aarMetadataVersion,
+            minCompileSdk = 28
+        ).run()
+
+        checkAarMetadataFile(
+            outputFile,
+            AarMetadataTask.aarMetadataVersion,
+            AarMetadataTask.aarVersion,
+            minCompileSdk = "28"
+        )
+    }
+
+    private fun checkAarMetadataFile(
+        file: File,
+        aarMetadataVersion: String,
+        aarVersion: String,
+        minCompileSdk: String? = null
+    ) {
+        assertThat(file).exists()
+        val properties = Properties()
+        file.inputStream().use { properties.load(it) }
+        assertThat(properties.getProperty("aarMetadataVersion")).isEqualTo(aarMetadataVersion)
+        assertThat(properties.getProperty("aarVersion")).isEqualTo(aarVersion)
+        assertThat(properties.getProperty("minCompileSdk")).isEqualTo(minCompileSdk)
     }
 }

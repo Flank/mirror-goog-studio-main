@@ -70,4 +70,10 @@ interface LibraryVariantDimension<SigningConfigT : SigningConfig> : VariantDimen
 
     /** The associated signing config or null if none are set on the variant dimension. */
     var signingConfig: SigningConfigT?
+
+    /** Options for configuring AAR metadata. */
+    val aarMetadata: AarMetadata
+
+    /** Options for configuring AAR metadata. */
+    fun aarMetadata(action: AarMetadata.() -> Unit)
 }

@@ -28,7 +28,6 @@ import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.ClassField
 import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
@@ -377,4 +376,6 @@ interface VariantDslInfo {
     val renderscriptOptimLevel: Int
 
     val isJniDebuggable: Boolean
+
+    val aarMetadata: MergedAarMetadata
 }

@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Lists
 import com.google.common.hash.Hashing
 import com.google.common.truth.Truth
-import org.gradle.api.Action
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
@@ -71,7 +70,6 @@ import java.nio.file.Paths
 import java.util.Arrays
 import java.util.Comparator
 import java.util.Locale
-import java.util.Objects
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.regex.Pattern
@@ -1202,6 +1200,21 @@ allprojects { proj ->
         action: Aar.() -> Unit
     ) {
         getAar(listOf(dimension1), action)
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * Testing happens in the callback that receives an [AarSubject]
+     *
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    fun withAar(
+        dimensions: List<String>,
+        action: Aar.() -> Unit
+    ) {
+        getAar(dimensions, action)
     }
 
     /**

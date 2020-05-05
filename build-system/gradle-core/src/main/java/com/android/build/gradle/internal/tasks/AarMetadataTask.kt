@@ -19,17 +19,18 @@ import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.xml.XmlBuilder
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
 import java.io.File
+import java.lang.StringBuilder
 import javax.inject.Inject
 
 /** A task that writes the AAR metadata file  */
@@ -45,12 +46,17 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     @get:Input
     abstract val aarMetadataVersion: Property<String>
 
+    @get:Input
+    @get:Optional
+    abstract val minCompileSdk: Property<Int?>
+
     override fun doTaskAction() {
         AarMetadataTaskDelegate(
             workerExecutor.noIsolation(),
             output.get().asFile,
             aarVersion.get(),
-            aarMetadataVersion.get()
+            aarMetadataVersion.get(),
+            minCompileSdk.orNull
         ).run()
     }
 
@@ -59,7 +65,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     ) : VariantTaskCreationAction<AarMetadataTask, LibraryCreationConfig>(creationConfig) {
 
         override val name: String
-            get() = computeTaskName("create", "AarMetadata")
+            get() = computeTaskName("write", "AarMetadata")
 
         override val type: Class<AarMetadataTask>
             get() = AarMetadataTask::class.java
@@ -80,11 +86,14 @@ abstract class AarMetadataTask : NonIncrementalTask() {
 
             task.aarVersion.setDisallowChanges(aarVersion)
             task.aarMetadataVersion.setDisallowChanges(aarMetadataVersion)
+            task.minCompileSdk.setDisallowChanges(
+                creationConfig.variantDslInfo.aarMetadata.minCompileSdk
+            )
         }
     }
 
     companion object {
-        const val aarMetadataFileName = "AarMetadata.xml"
+        const val aarMetadataFileName = "aar-metadata.properties"
         const val aarMetadataEntryPath = "META-INF/com/android/build/gradle/$aarMetadataFileName"
         const val aarVersion = "1.0"
         const val aarMetadataVersion = "1.0"
@@ -96,7 +105,8 @@ class AarMetadataTaskDelegate(
     private val workQueue: WorkQueue,
     val output: File,
     private val aarVersion: String,
-    private val aarMetadataVersion: String
+    private val aarMetadataVersion: String,
+    private val minCompileSdk: Int? = null
 ) {
 
     fun run() {
@@ -104,6 +114,7 @@ class AarMetadataTaskDelegate(
             it.output.set(output)
             it.aarVersion.set(aarVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
+            it.minCompileSdk.set(minCompileSdk)
         }
     }
 }
@@ -114,15 +125,12 @@ abstract class AarMetadataWorkAction @Inject constructor(
 ): WorkAction<AarMetadataWorkParameters> {
 
     override fun execute() {
-        val xmlBuilder = XmlBuilder()
-        xmlBuilder.startTag("aar-metadata")
-        xmlBuilder.attribute("aarVersion", aarMetadataWorkParameters.aarVersion.get())
-        xmlBuilder.attribute(
-            "aarMetadataVersion",
-            aarMetadataWorkParameters.aarMetadataVersion.get()
+        writeAarMetadataFile(
+            aarMetadataWorkParameters.output.get().asFile,
+            aarMetadataWorkParameters.aarVersion.get(),
+            aarMetadataWorkParameters.aarMetadataVersion.get(),
+            aarMetadataWorkParameters.minCompileSdk.orNull
         )
-        xmlBuilder.endTag("aar-metadata")
-        aarMetadataWorkParameters.output.get().asFile.writeText(xmlBuilder.toString())
     }
 }
 
@@ -131,4 +139,22 @@ abstract class AarMetadataWorkParameters: WorkParameters {
     abstract val output: RegularFileProperty
     abstract val aarVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
+    abstract val minCompileSdk: Property<Int?>
+}
+
+/** Writes an AAR metadata file with the given parameters */
+fun writeAarMetadataFile(
+    file: File,
+    aarVersion: String,
+    aarMetadataVersion: String,
+    minCompileSdk: Int?
+) {
+    // We write the file manually instead of using the java.util.Properties API because (1) that API
+    // doesn't guarantee the order of properties in the file and (2) that API writes an unnecessary
+    // timestamp in the file.
+    val stringBuilder = StringBuilder()
+    stringBuilder.appendln("aarMetadataVersion=$aarMetadataVersion")
+    stringBuilder.appendln("aarVersion=$aarVersion")
+    minCompileSdk?.let { stringBuilder.appendln("minCompileSdk=$it") }
+    file.writeText(stringBuilder.toString())
 }

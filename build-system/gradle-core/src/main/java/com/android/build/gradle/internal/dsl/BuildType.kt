@@ -128,6 +128,12 @@ open class BuildType @Inject constructor(
 
     override val shaders: ShaderOptions = dslServices.newInstance(ShaderOptions::class.java)
 
+    override val aarMetadata: AarMetadata = dslServices.newInstance(AarMetadata::class.java)
+
+    override fun aarMetadata(action: com.android.build.api.dsl.AarMetadata.() -> Unit) {
+        action.invoke(aarMetadata)
+    }
+
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build
      * scripts.
@@ -197,6 +203,7 @@ open class BuildType @Inject constructor(
         matchingFallbacks = thatBuildType.matchingFallbacks
         // we don't want to dynamically link these values. We just want to copy the current value.
         isDefault = thatBuildType.isDefault
+        aarMetadata.minCompileSdk = thatBuildType.aarMetadata.minCompileSdk
     }
 
     /** Override as DSL objects have no reason to be compared for equality.  */
