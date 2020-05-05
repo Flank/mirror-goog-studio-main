@@ -25,6 +25,8 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,4 +69,22 @@ public class KotlinAppTest {
         assertThat(apk).containsMainClass("Lcom/example/android/kotlin/LibActivity;");
     }
 
+    /** Regression test for b/155721209. */
+    @Test
+    public void aarContents() throws Exception {
+        project.executor().run("clean", "library:assembleDebug");
+
+        project.getSubproject("library")
+                .getAar(
+                        "debug",
+                        aar -> {
+                            try {
+                                Path javaResource =
+                                        aar.getJavaResource("META-INF/library_debug.kotlin_module");
+                                assertThat(javaResource != null).isTrue();
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
+    }
 }
