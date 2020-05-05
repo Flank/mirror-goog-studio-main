@@ -677,6 +677,7 @@ open class GradleDetector : Detector(), GradleScanner {
         context: GradleContext,
         statement: String,
         parent: String?,
+        parentParent: String?,
         namedArguments: Map<String, String>,
         unnamedArguments: List<String>,
         cookie: Any
