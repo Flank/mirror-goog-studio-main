@@ -72,6 +72,7 @@ interface GradleScanner : FileScanner {
      * and [unnamedArguments] are the arguments being passed to the block and the [cookie]
      * describes the range and can be passed to {@link GradleContext#getLocation}.
      */
+    @Deprecated("Replace with checkMethodCall that includes a parentParent name")
     fun checkMethodCall(
         context: GradleContext,
         statement: String,
@@ -81,6 +82,24 @@ interface GradleScanner : FileScanner {
         cookie: Any
     )
 
+    /**
+     * Visits the given DSL reference.
+     *
+     * The [context] describes the file being analyzed, the [statement] describes
+     * the statement being read, the [parent] the parent block name and [parentParent]
+     * the grandparent block name. The [namedArguments] and [unnamedArguments] are the
+     * arguments being passed to the block and the [cookie] describes the range and
+     * can be passed to {@link GradleContext#getLocation}.
+     */
+    fun checkMethodCall(
+        context: GradleContext,
+        statement: String,
+        parent: String?,
+        parentParent: String?,
+        namedArguments: Map<String, String>,
+        unnamedArguments: List<String>,
+        cookie: Any
+    )
     /**
      * Should be true if this scanner will handle visiting the Gradle file
      * on its own. In that case override {@link #visitBuildScript} to process the file.

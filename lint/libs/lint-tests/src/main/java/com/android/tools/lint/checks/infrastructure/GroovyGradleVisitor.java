@@ -105,6 +105,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                             if (call.getArguments() == tupleExpression) {
                                 String parent = call.getMethodAsString();
                                 String parentParent = getParentParent();
+                                String parent3 = getParentN(2);
                                 if (tupleExpression instanceof ArgumentListExpression) {
                                     ArgumentListExpression ale =
                                             (ArgumentListExpression) tupleExpression;
@@ -165,6 +166,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                                 context,
                                                 parent,
                                                 parentParent,
+                                                parent3,
                                                 namedArguments,
                                                 unnamedArguments,
                                                 call);
@@ -176,7 +178,8 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         super.visitTupleExpression(tupleExpression);
                     }
 
-                    private String getParentParent() {
+                    private String getParentN(int n) {
+                        int nParent = 0;
                         for (int i = mMethodCallStack.size() - 2; i >= 0; i--) {
                             MethodCallExpression expression = mMethodCallStack.get(i);
                             Expression arguments = expression.getArguments();
@@ -185,12 +188,18 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                 List<Expression> expressions = ale.getExpressions();
                                 if (expressions.size() == 1
                                         && expressions.get(0) instanceof ClosureExpression) {
-                                    return expression.getMethodAsString();
+                                    nParent += 1;
                                 }
                             }
+                            if (nParent == n) {
+                                return expression.getMethodAsString();
+                            }
                         }
-
                         return null;
+                    }
+
+                    private String getParentParent() {
+                        return getParentN(1);
                     }
 
                     private void checkDslProperty(

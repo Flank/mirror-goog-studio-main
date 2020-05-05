@@ -436,6 +436,19 @@ abstract class Detector {
     ) {
     }
 
+    open fun checkMethodCall(
+        context: GradleContext,
+        statement: String,
+        parent: String?,
+        parentParent: String?,
+        namedArguments: Map<String, String>,
+        unnamedArguments: List<String>,
+        cookie: Any
+    ) {
+        // Backward compatibility
+        checkMethodCall(context, statement, parent, namedArguments, unnamedArguments, cookie)
+    }
+
     // ---- Dummy implementations to make implementing a resource folder scanner easier: ----
 
     open fun checkFolder(context: ResourceContext, folderName: String) {}
