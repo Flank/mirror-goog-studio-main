@@ -103,12 +103,10 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             super.handleProvider(taskProvider);
 
             creationConfig
-                    .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE.INSTANCE,
-                            taskProvider,
-                            MergeConsumerProguardFilesTask::getOutputFile,
-                            SdkConstants.FN_PROGUARD_TXT);
+                    .getOperations()
+                    .setInitialProvider(taskProvider, MergeConsumerProguardFilesTask::getOutputFile)
+                    .withName(SdkConstants.FN_PROGUARD_TXT)
+                    .on(InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE.INSTANCE);
         }
 
         @Override

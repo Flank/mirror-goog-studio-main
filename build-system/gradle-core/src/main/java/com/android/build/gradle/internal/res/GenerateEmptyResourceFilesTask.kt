@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -71,12 +72,10 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateEmptyResourceFilesTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_SYMBOL_LIST,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateEmptyResourceFilesTask::emptyRDotTxt,
-                SdkConstants.FN_RESOURCE_TEXT
-            )
+                GenerateEmptyResourceFilesTask::emptyRDotTxt
+            ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.COMPILE_SYMBOL_LIST)
 
             creationConfig.operations.setInitialProvider(
                 taskProvider,

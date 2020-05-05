@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RE
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -137,14 +139,10 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             taskProvider: TaskProvider<out PackageForUnitTest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .producesFile(
-                    APK_FOR_LOCAL_TEST,
-                    taskProvider,
-                    PackageForUnitTest::apkForUnitTest,
-                    "apk-for-local-test.ap_"
-                )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                PackageForUnitTest::apkForUnitTest
+            ).withName("apk-for-local-test.ap_").on(InternalArtifactType.APK_FOR_LOCAL_TEST)
         }
 
         override fun configure(

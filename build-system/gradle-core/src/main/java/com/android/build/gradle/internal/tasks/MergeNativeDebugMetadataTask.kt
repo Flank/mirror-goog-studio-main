@@ -23,6 +23,7 @@ import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -150,12 +151,11 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.MERGED_NATIVE_DEBUG_METADATA,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                MergeNativeDebugMetadataTask::outputFile,
-                "native-debug-symbols.zip"
-            )
+                MergeNativeDebugMetadataTask::outputFile
+            ).withName("native-debug-symbols.zip")
+                .on(InternalArtifactType.MERGED_NATIVE_DEBUG_METADATA)
         }
 
         override fun configure(

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -161,12 +162,10 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             taskProvider: TaskProvider<out ParseLibraryResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                    InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
-                    taskProvider,
-                    ParseLibraryResourcesTask::librarySymbolsFile,
-                    SdkConstants.FN_R_DEF_TXT
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                ParseLibraryResourcesTask::librarySymbolsFile
+            ).withName(SdkConstants.FN_R_DEF_TXT).on(InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST)
             if (creationConfig.services
                             .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS]) {
                 creationConfig.operations.setInitialProvider(

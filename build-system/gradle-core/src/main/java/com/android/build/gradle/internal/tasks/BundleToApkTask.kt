@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.signing.SigningConfigProvider
@@ -126,12 +127,10 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleToApkTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APKS_FROM_BUNDLE,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                BundleToApkTask::outputFile,
-                "bundle.apks"
-            )
+                BundleToApkTask::outputFile
+            ).withName("bundle.apks").on(InternalArtifactType.APKS_FROM_BUNDLE)
         }
 
         override fun configure(

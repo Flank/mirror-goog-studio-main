@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -299,12 +300,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.AAR_MAIN_JAR,
-                taskProvider = taskProvider,
-                productProvider = LibraryAarJarsTask::mainClassLocation,
-                fileName = SdkConstants.FN_CLASSES_JAR
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                LibraryAarJarsTask::mainClassLocation
+            ).withName(SdkConstants.FN_CLASSES_JAR).on(InternalArtifactType.AAR_MAIN_JAR)
 
             creationConfig.operations.setInitialProvider(
                 taskProvider,

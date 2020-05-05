@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -91,12 +92,11 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.BASE_MODULE_METADATA,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ModuleMetadataWriterTask::outputFile,
-                ModuleMetadata.PERSISTED_FILE_NAME
-            )
+                ModuleMetadataWriterTask::outputFile
+            ).withName(ModuleMetadata.PERSISTED_FILE_NAME)
+                .on(InternalArtifactType.BASE_MODULE_METADATA)
         }
 
         override fun configure(

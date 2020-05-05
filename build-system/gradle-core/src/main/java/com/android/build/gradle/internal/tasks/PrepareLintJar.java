@@ -20,7 +20,6 @@ import static com.android.SdkConstants.FN_LINT_JAR;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
@@ -104,11 +103,10 @@ public abstract class PrepareLintJar extends DefaultTask {
                 @NonNull TaskProvider<? extends PrepareLintJar> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.LINT_JAR.INSTANCE,
-                            taskProvider,
-                            PrepareLintJar::getOutputLintJar,
-                            FN_LINT_JAR);
+                    .getOperations()
+                    .setInitialProvider(taskProvider, PrepareLintJar::getOutputLintJar)
+                    .withName(FN_LINT_JAR)
+                    .on(InternalArtifactType.LINT_JAR.INSTANCE);
         }
 
         @Override

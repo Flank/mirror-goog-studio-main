@@ -448,13 +448,10 @@ public class LibraryTaskManager
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends MergeResources> taskProvider) {
             variantProperties
-                    .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.PUBLIC_RES.INSTANCE,
-                            taskProvider,
-                            MergeResources::getPublicFile,
-                            FN_PUBLIC_TXT);
-
+                    .getOperations()
+                    .setInitialProvider(taskProvider, MergeResources::getPublicFile)
+                    .withName(FN_PUBLIC_TXT)
+                    .on(InternalArtifactType.PUBLIC_RES.INSTANCE);
         }
     }
 

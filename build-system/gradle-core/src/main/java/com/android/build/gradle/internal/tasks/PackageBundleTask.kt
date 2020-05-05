@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -344,12 +345,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             val bundleName =
                 "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.INTERMEDIARY_BUNDLE,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                PackageBundleTask::bundleFile,
-                bundleName
-            )
+                PackageBundleTask::bundleFile
+            ).withName(bundleName).on(InternalArtifactType.INTERMEDIARY_BUNDLE)
         }
 
         override fun configure(

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.TaskProvider
@@ -40,12 +41,11 @@ class MergeAaptProguardFilesCreationAction(
     ) {
         super.handleProvider(taskProvider)
 
-        creationConfig.artifacts.producesFile(
-            InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
+        creationConfig.operations.setInitialProvider(
             taskProvider,
-            MergeFileTask::outputFile,
-            SdkConstants.FN_MERGED_AAPT_RULES
-        )
+            MergeFileTask::outputFile
+        ).withName(SdkConstants.FN_MERGED_AAPT_RULES)
+            .on(InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
     }
 
     override fun configure(

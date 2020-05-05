@@ -21,6 +21,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -200,28 +201,22 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_R_CLASS_JAR,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::rClassOutputJar,
-                fileName = "R.jar"
-            )
+                GenerateLibraryRFileTask::rClassOutputJar
+            ).withName("R.jar").on(InternalArtifactType.COMPILE_R_CLASS_JAR)
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_SYMBOL_LIST,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::textSymbolOutputFileProperty,
-                SdkConstants.FN_RESOURCE_TEXT
-            )
+                GenerateLibraryRFileTask::textSymbolOutputFileProperty
+            ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.COMPILE_SYMBOL_LIST)
 
             // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
             // process resources for local subprojects.
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile,
-                "package-aware-r.txt"
-            )
+                GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile
+            ).withName("package-aware-r.txt").on(InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
         }
 
         override fun configure(
@@ -301,12 +296,10 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             taskProvider: TaskProvider<out GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::rClassOutputJar,
-                fileName = "R.jar"
-            )
+                GenerateLibraryRFileTask::rClassOutputJar
+            ).withName("R.jar").on(InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
         }
 
         override fun configure(

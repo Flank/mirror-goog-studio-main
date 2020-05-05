@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -116,12 +117,10 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleLibraryJavaRes>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.LIBRARY_JAVA_RES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                BundleLibraryJavaRes::output,
-                FN_INTERMEDIATE_RES_JAR
-            )
+                BundleLibraryJavaRes::output
+            ).withName(FN_INTERMEDIATE_RES_JAR).on(InternalArtifactType.LIBRARY_JAVA_RES)
         }
 
         override fun configure(

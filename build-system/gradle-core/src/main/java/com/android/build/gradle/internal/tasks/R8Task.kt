@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.MultipleArtifactType
@@ -188,12 +189,12 @@ abstract class R8Task: ProguardConfigurableTask() {
             super.handleProvider(taskProvider)
 
             when {
-                variantType.isAar -> creationConfig.artifacts.producesFile(
-                    artifactType = InternalArtifactType.SHRUNK_CLASSES,
-                    taskProvider = taskProvider,
-                    productProvider = R8Task::outputClasses,
-                    fileName = "shrunkClasses.jar"
-                )
+                variantType.isAar -> creationConfig.operations.setInitialProvider(
+                    taskProvider,
+                    R8Task::outputClasses)
+                    .withName("shrunkClasses.jar")
+                    .on(InternalArtifactType.SHRUNK_CLASSES)
+
                 creationConfig.variantScope.consumesFeatureJars() -> {
                     creationConfig.operations.setInitialProvider(
                         taskProvider,
@@ -223,22 +224,16 @@ abstract class R8Task: ProguardConfigurableTask() {
                 }
             }
 
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.SHRUNK_JAVA_RES,
-                taskProvider = taskProvider,
-                productProvider = R8Task::outputResources,
-                fileName = "shrunkJavaRes.jar"
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                R8Task::outputResources
+            ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {
-                creationConfig
-                    .artifacts
-                    .producesFile(
-                        InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
-                        taskProvider,
-                        R8Task::mainDexListOutput,
-                        "mainDexList.txt"
-                    )
+                creationConfig.operations.setInitialProvider(
+                    taskProvider,
+                    R8Task::mainDexListOutput
+                ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
             }
         }
 

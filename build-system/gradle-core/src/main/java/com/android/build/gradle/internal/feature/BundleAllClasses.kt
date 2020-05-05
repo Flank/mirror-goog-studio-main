@@ -120,12 +120,10 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APP_CLASSES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                BundleAllClasses::outputJar,
-                "classes.jar"
-            )
+                BundleAllClasses::outputJar
+            ).withName("classes.jar").on(InternalArtifactType.APP_CLASSES)
         }
 
         override fun configure(task: BundleAllClasses) {

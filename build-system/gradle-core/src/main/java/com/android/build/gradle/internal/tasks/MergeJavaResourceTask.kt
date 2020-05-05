@@ -28,6 +28,8 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
@@ -206,13 +208,10 @@ abstract class MergeJavaResourceTask
             taskProvider: TaskProvider<out MergeJavaResourceTask>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.producesFile(
-                MERGED_JAVA_RES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                MergeJavaResourceTask::outputFile,
-                fileName = "out.jar"
-            )
+                MergeJavaResourceTask::outputFile
+            ).withName("out.jar").on(InternalArtifactType.MERGED_JAVA_RES)
         }
 
         override fun configure(

@@ -21,6 +21,7 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
@@ -230,12 +231,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkAndroidResForBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.LINKED_RES_FOR_BUNDLE,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                LinkAndroidResForBundleTask::bundledResFile,
-                "bundled-res.ap_"
-            )
+                LinkAndroidResForBundleTask::bundledResFile
+            ).withName("bundled-res.ap_").on(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
         }
 
         override fun configure(

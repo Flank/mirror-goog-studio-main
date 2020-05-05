@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
@@ -122,12 +123,10 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out PackagedDependenciesWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.PACKAGED_DEPENDENCIES,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                PackagedDependenciesWriterTask::outputFile,
-                "deps.txt"
-            )
+                PackagedDependenciesWriterTask::outputFile
+            ).withName("deps.txt").on(InternalArtifactType.PACKAGED_DEPENDENCIES)
         }
 
         override fun configure(

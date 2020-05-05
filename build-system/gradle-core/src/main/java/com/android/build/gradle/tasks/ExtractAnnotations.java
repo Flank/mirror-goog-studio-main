@@ -321,20 +321,16 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             creationConfig.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 
             creationConfig
-                    .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.ANNOTATIONS_ZIP.INSTANCE,
-                            taskProvider,
-                            ExtractAnnotations::getOutput,
-                            SdkConstants.FN_ANNOTATIONS_ZIP);
+                    .getOperations()
+                    .setInitialProvider(taskProvider, ExtractAnnotations::getOutput)
+                    .withName(SdkConstants.FN_ANNOTATIONS_ZIP)
+                    .on(InternalArtifactType.ANNOTATIONS_ZIP.INSTANCE);
 
             creationConfig
-                    .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE.INSTANCE,
-                            taskProvider,
-                            ExtractAnnotations::getTypedefFile,
-                            "typedefs.txt");
+                    .getOperations()
+                    .setInitialProvider(taskProvider, ExtractAnnotations::getTypedefFile)
+                    .withName("typedefs.txt")
+                    .on(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE.INSTANCE);
         }
 
         @Override

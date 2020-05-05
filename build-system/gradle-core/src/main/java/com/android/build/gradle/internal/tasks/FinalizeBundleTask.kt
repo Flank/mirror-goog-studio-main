@@ -21,6 +21,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
@@ -161,12 +162,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             val bundleName = "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
             val apkLocationOverride = creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
-                creationConfig.artifacts.producesFile(
-                    InternalArtifactType.BUNDLE,
+                creationConfig.operations.setInitialProvider(
                     taskProvider,
-                    FinalizeBundleTask::finalBundleFile,
-                    bundleName
-                )
+                    FinalizeBundleTask::finalBundleFile
+                ).withName(bundleName).on(InternalArtifactType.BUNDLE)
             } else {
                 creationConfig.operations.setInitialProvider(
                     taskProvider,
@@ -178,12 +177,11 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     .on(InternalArtifactType.BUNDLE)
             }
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.BUNDLE_IDE_MODEL,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                FinalizeBundleTask::bundleIdeModel,
-                BuiltArtifactsImpl.METADATA_FILE_NAME
-            )
+                FinalizeBundleTask::bundleIdeModel
+            ).withName(BuiltArtifactsImpl.METADATA_FILE_NAME)
+                .on(InternalArtifactType.BUNDLE_IDE_MODEL)
         }
 
         override fun configure(

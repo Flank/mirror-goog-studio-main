@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.getChangesInSerializableForm
@@ -132,13 +133,10 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
             taskProvider: TaskProvider<out GenerateLibraryProguardRulesTask>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.AAPT_PROGUARD_FILE,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                GenerateLibraryProguardRulesTask::proguardOutputFile,
-                SdkConstants.FN_AAPT_RULES
-            )
+                GenerateLibraryProguardRulesTask::proguardOutputFile
+            ).withName(SdkConstants.FN_AAPT_RULES).on(InternalArtifactType.AAPT_PROGUARD_FILE)
         }
 
         override fun configure(

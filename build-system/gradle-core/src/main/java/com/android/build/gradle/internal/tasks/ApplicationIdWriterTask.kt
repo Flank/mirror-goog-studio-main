@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -59,12 +60,10 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ApplicationIdWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.METADATA_APPLICATION_ID,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ApplicationIdWriterTask::outputFile,
-                "application-id.txt"
-            )
+                ApplicationIdWriterTask::outputFile
+            ).withName("application-id.txt").on(InternalArtifactType.METADATA_APPLICATION_ID)
         }
 
         override fun configure(

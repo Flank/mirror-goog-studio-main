@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
@@ -137,12 +138,10 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleReportDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                BundleReportDependenciesTask::dependenciesList,
-                "dependencies.pb"
-            )
+                BundleReportDependenciesTask::dependenciesList
+            ).withName("dependencies.pb").on(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)
         }
 
         override fun configure(

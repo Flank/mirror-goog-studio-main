@@ -134,12 +134,10 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.RES_STATIC_LIBRARY,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                LinkLibraryAndroidResourcesTask::staticLibApk,
-                "res.apk"
-            )
+                LinkLibraryAndroidResourcesTask::staticLibApk
+            ).withName("res.apk").on(InternalArtifactType.RES_STATIC_LIBRARY)
         }
 
         override fun configure(

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -222,14 +223,10 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig
-                .artifacts
-                .producesFile(
-                    InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT,
-                    taskProvider,
-                    PerModuleReportDependenciesTask::dependenciesList,
-                    fileName = "dependencies.pb"
-                )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                PerModuleReportDependenciesTask::dependenciesList
+            ).withName("dependencies.pb").on(InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT)
         }
 
         override fun configure(

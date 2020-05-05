@@ -20,6 +20,7 @@ import com.android.SdkConstants.FD_RES_NAVIGATION
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
@@ -88,12 +89,10 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             taskProvider: TaskProvider<out ExtractDeepLinksTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.NAVIGATION_JSON,
-                taskProvider = taskProvider,
-                productProvider = ExtractDeepLinksTask::navigationJson,
-                fileName = "navigation.json"
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                ExtractDeepLinksTask::navigationJson
+            ).withName("navigation.json").on(InternalArtifactType.NAVIGATION_JSON)
         }
 
         override fun configure(

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.featuresplit
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.apache.commons.io.FileUtils
@@ -66,14 +67,10 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig
-                .artifacts
-                .producesFile(
-                    InternalArtifactType.FEATURE_NAME,
-                    taskProvider,
-                    FeatureNameWriterTask::outputFile,
-                    "feature-name.txt"
-                )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                FeatureNameWriterTask::outputFile
+            ).withName("feature-name.txt").on(InternalArtifactType.FEATURE_NAME)
         }
 
         override fun configure(

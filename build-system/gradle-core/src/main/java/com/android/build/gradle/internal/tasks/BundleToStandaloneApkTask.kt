@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.signing.SigningConfigProvider
@@ -183,12 +184,11 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix = if (creationConfig.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.UNIVERSAL_APK,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                BundleToStandaloneApkTask::outputFile,
-                "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix"
-            )
+                BundleToStandaloneApkTask::outputFile
+            ).withName("${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix")
+                .on(InternalArtifactType.UNIVERSAL_APK)
         }
 
         override fun configure(
