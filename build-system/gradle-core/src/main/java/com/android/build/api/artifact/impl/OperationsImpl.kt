@@ -25,10 +25,13 @@ import com.android.build.api.artifact.ReplaceRequest
 import com.android.build.api.artifact.TransformRequest
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.api.model.ObjectFactory
@@ -48,11 +51,13 @@ import java.io.File
  * specific services like setting initial AGP providers.
  */
 class OperationsImpl(
-    internal val objects: ObjectFactory,
-    private val identifier: String,
-    private val buildDirectory: DirectoryProperty): Operations {
+    project: Project,
+    private val identifier: String
+): Operations {
 
     private val storageProvider = StorageProviderImpl()
+    private val objects= project.objects
+    private val buildDirectory = project.layout.buildDirectory
 
     override fun getBuiltArtifactsLoader(): BuiltArtifactsLoader {
         return BuiltArtifactsLoaderImpl()
@@ -133,7 +138,7 @@ class OperationsImpl(
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)
     }
 
-    internal fun <T: FileSystemLocation, ARTIFACT_TYPE, ARTIFACT_TYPE2> republish(source: ARTIFACT_TYPE, target: ARTIFACT_TYPE2)
+    fun <T: FileSystemLocation, ARTIFACT_TYPE, ARTIFACT_TYPE2> republish(source: ARTIFACT_TYPE, target: ARTIFACT_TYPE2)
         where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single,
               ARTIFACT_TYPE2: ArtifactType<T>, ARTIFACT_TYPE2: ArtifactType.Single {
 
@@ -231,6 +236,30 @@ class OperationsImpl(
         val artifactContainer = from.getArtifactContainer(artifactType)
         storageProvider.getStorage(artifactType.kind).copy(artifactType, artifactContainer)
     }
+
+    /**
+     * Backward compatibility section
+     */
+
+    // because of existing public APIs, we cannot move [AnchorOutputType.ALL_CLASSES] to Provider<>
+    private val allClasses= project.files()
+
+    /**
+     * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.
+     *
+     * @param files the [FileCollection] to add.
+     */
+    fun appendToAllClasses(files: FileCollection) {
+        synchronized(allClasses) {
+            allClasses.from(files)
+        }
+    }
+
+    /**
+     * Returns the current [FileCollection] for [AnchorOutputType.ALL_CLASSES] as of now.
+     * The returned file collection is final but its content can change.
+     */
+    fun getAllClasses(): FileCollection = allClasses
 }
 
 /**

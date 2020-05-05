@@ -177,7 +177,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             ).on(InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES)
 
             if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                creationConfig.artifacts.getOperations()
+                creationConfig.operations
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
             }

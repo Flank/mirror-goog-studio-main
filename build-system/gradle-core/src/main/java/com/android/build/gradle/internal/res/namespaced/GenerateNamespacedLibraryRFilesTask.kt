@@ -168,7 +168,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             super.configure(task)
 
             task.partialRFiles.setDisallowChanges(
-                creationConfig.artifacts.getOperations().getAll(
+                creationConfig.operations.getAll(
                 MultipleArtifactType.PARTIAL_R_FILES))
             task.packageForR.setDisallowChanges(creationConfig.packageName)
         }

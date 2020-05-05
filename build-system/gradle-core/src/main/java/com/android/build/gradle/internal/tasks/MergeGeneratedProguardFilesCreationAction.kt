@@ -50,7 +50,7 @@ class MergeGeneratedProguardFilesCreationAction(
     ) {
         super.configure(task)
 
-        val allClasses = creationConfig.artifacts.getAllClasses()
+        val allClasses = creationConfig.operations.getAllClasses()
         val proguardFiles = allClasses.asFileTree.filter { f ->
             val baseFolders = allClasses.files
             val baseFolder = baseFolders.first { f.startsWith(it) }

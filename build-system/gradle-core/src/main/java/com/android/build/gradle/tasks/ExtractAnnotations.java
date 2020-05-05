@@ -342,7 +342,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            task.setClassDir(creationConfig.getArtifacts().getAllClasses());
+            task.setClassDir(creationConfig.getOperations().getAllClasses());
 
             task.source(creationConfig.getJavaSources());
             task.setEncoding(

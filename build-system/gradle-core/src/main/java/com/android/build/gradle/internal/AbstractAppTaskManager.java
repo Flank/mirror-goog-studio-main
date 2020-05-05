@@ -105,8 +105,6 @@ public abstract class AbstractAppTaskManager<
         // TODO remove case once TaskManager's type param is based on BaseCreationConfig
         createApplicationIdWriterTask(apkCreationConfig);
 
-        createBuildArtifactReportTask(appVariantProperties);
-
         // Add a task to check the manifest
         taskFactory.register(new CheckManifest.CreationAction(appVariantProperties));
 
@@ -206,7 +204,7 @@ public abstract class AbstractAppTaskManager<
                         .getServices()
                         .fileCollection(
                                 javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
-        componentProperties.getArtifacts().appendToAllClasses(files);
+        componentProperties.getOperations().appendToAllClasses(files);
     }
 
     @Override

@@ -332,7 +332,7 @@ public abstract class LintBaseTask extends DefaultTask {
 
             // these inputs are only there to ensure that the lint task runs after these build
             // intermediates are built.
-            allInputs.from(componentProperties.getArtifacts().getAllClasses());
+            allInputs.from(componentProperties.getOperations().getAllClasses());
 
             addModelArtifactsToInputs(allInputs, componentProperties);
         }

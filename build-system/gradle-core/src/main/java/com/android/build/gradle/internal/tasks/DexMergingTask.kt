@@ -190,7 +190,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DexMergingTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.getOperations().append(
+            creationConfig.operations.append(
                 taskProvider, DexMergingTask::outputDir).on(outputType)
         }
 
@@ -289,7 +289,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                     // be dex'ed in a task, so we need to fetch the output directly.
                                     // Otherwise, it will be in the dex'ed in the dex builder transform.
                                     files.from(
-                                        it.artifacts.getOperations().getAll(
+                                        it.operations.getAll(
                                             MultipleArtifactType.DEX
                                         )
                                     )
@@ -311,7 +311,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
                             } else {
                                 // we merge external dex in a separate task
-                                component.artifacts.getOperations().getAll(
+                                component.operations.getAll(
                                     MultipleArtifactType.EXTERNAL_LIBS_DEX
                                 )
                             })

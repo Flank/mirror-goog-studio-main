@@ -21,6 +21,7 @@ import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
@@ -55,7 +56,6 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.services.DslServices;
@@ -395,9 +395,9 @@ public class VariantManager<
         // Done. Create the (too) many variant objects
 
         VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
-        VariantBuildArtifactsHolder artifacts =
-                new VariantBuildArtifactsHolder(
-                        project, componentIdentity.getName(), globalScope.getBuildDir());
+
+        OperationsImpl operations = new OperationsImpl(project, componentIdentity.getName());
+
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
                 new TransformManager(project, dslServices.getIssueReporter(), recorder);
@@ -409,7 +409,7 @@ public class VariantManager<
                         variantDslInfo,
                         variantDependencies,
                         pathHelper,
-                        artifacts.getOperations(),
+                        operations,
                         globalScope,
                         null /* testedVariantProperties*/);
 
@@ -421,7 +421,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        artifacts,
+                        operations,
                         variantPropertiesApiServices,
                         globalScope,
                         taskContainer);
@@ -437,7 +437,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        artifacts,
+                        operations,
                         variantScope,
                         variantData,
                         transformManager,
@@ -640,9 +640,9 @@ public class VariantManager<
 
         VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
         ComponentIdentity componentIdentity = variantDslInfo.getComponentIdentity();
-        VariantBuildArtifactsHolder artifacts =
-                new VariantBuildArtifactsHolder(
-                        project, componentIdentity.getName(), globalScope.getBuildDir());
+
+        OperationsImpl operations = new OperationsImpl(project, componentIdentity.getName());
+
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
                 new TransformManager(project, dslServices.getIssueReporter(), recorder);
@@ -653,7 +653,7 @@ public class VariantManager<
                         variantDslInfo,
                         variantDependencies,
                         pathHelper,
-                        artifacts.getOperations(),
+                        operations,
                         globalScope,
                         testedVariantProperties);
 
@@ -665,7 +665,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        artifacts.getOperations(),
+                        operations,
                         (TestedVariantData) testedVariantProperties.getVariantData(),
                         variantPropertiesApiServices,
                         globalScope,
@@ -692,7 +692,7 @@ public class VariantManager<
                             variantDependencies,
                             variantSources,
                             pathHelper,
-                            artifacts,
+                            operations,
                             variantScope,
                             testVariantData,
                             testedVariantProperties,
@@ -717,7 +717,7 @@ public class VariantManager<
                             variantDependencies,
                             variantSources,
                             pathHelper,
-                            artifacts,
+                            operations,
                             variantScope,
                             testVariantData,
                             testedVariantProperties,

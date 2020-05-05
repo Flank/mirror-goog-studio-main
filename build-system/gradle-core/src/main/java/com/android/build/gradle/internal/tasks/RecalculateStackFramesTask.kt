@@ -113,7 +113,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                         creationConfig.operations.get(
                             InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
             } else {
-                referencedClasses.from(creationConfig.artifacts.getAllClasses())
+                referencedClasses.from(creationConfig.operations.getAllClasses())
             }
 
             creationConfig.onTestedConfig {

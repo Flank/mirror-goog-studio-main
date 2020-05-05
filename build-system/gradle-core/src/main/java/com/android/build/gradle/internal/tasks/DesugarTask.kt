@@ -139,7 +139,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
                 val processedClasses = componentProperties.globalScope.project.files(
-                    componentProperties.artifacts.getOperations().get(output)
+                    componentProperties.operations.get(output)
                 )
                     .asFileTree
                 componentProperties

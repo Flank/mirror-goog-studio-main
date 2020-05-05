@@ -269,7 +269,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
-            val artifacts = creationConfig.artifacts
             val operations = creationConfig.operations
             operations.setInitialProvider(
                 taskProvider,

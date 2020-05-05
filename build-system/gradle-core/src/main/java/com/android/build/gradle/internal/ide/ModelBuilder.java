@@ -416,7 +416,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 componentProperties.getTaskContainer().assembleTask.getName(),
                 toAbsolutePath(
                         componentProperties
-                                .getArtifacts()
                                 .getOperations()
                                 .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
                                 .getOrNull()),
@@ -425,14 +424,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                         : componentProperties.getTaskContainer().getBundleTask().getName(),
                 toAbsolutePath(
                         componentProperties
-                                .getArtifacts()
                                 .getOperations()
                                 .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
                                 .getOrNull()),
                 ExtractApksTask.Companion.getTaskName(componentProperties),
                 toAbsolutePath(
                         componentProperties
-                                .getArtifacts()
                                 .getOperations()
                                 .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
                                 .getOrNull()));

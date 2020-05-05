@@ -20,6 +20,7 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -34,7 +35,6 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.plugins.DslContainerProvider;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -65,7 +65,7 @@ public abstract class AbstractAppVariantFactory<
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull OperationsImpl operations,
             @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer) {
@@ -75,7 +75,7 @@ public abstract class AbstractAppVariantFactory<
                 variantDependencies,
                 variantSources,
                 paths,
-                artifacts.getOperations(),
+                operations,
                 services,
                 globalScope,
                 taskContainer);

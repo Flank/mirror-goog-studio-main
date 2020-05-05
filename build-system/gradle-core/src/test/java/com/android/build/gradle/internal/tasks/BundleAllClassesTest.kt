@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -53,7 +52,6 @@ class BundleAllClassesTest {
 
     @Mock private lateinit var componentProperties: ComponentPropertiesImpl
     @Mock private lateinit var scope: VariantScope
-    @Mock private lateinit var artifacts: BuildArtifactsHolder
     @Mock private lateinit var operations: OperationsImpl
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
@@ -84,7 +82,6 @@ class BundleAllClassesTest {
         val services = createTaskCreationServices(projectServices)
 
         MockitoAnnotations.initMocks(this)
-        Mockito.`when`(componentProperties.artifacts).thenReturn(artifacts)
         Mockito.`when`(componentProperties.operations).thenReturn(operations)
         Mockito.`when`(componentProperties.globalScope).thenReturn(globalScope)
         Mockito.`when`(componentProperties.name).thenReturn("theVariantName")

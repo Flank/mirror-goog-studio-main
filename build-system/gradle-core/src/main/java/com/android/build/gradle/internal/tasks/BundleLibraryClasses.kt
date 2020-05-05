@@ -163,7 +163,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClassesDir>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.getOperations()
+            creationConfig.operations
                 .setInitialProvider(taskProvider, BundleLibraryClassesDir::output)
                 .on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR)
         }
@@ -213,7 +213,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
             } else {
-                componentProperties.artifacts.getAllClasses()
+                componentProperties.operations.getAllClasses()
             }
         }
 
@@ -232,7 +232,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.getOperations()
+            creationConfig.operations
                 .setInitialProvider(
                     taskProvider,
                     BundleLibraryClassesJar::output

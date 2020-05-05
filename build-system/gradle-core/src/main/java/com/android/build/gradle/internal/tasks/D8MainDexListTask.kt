@@ -188,7 +188,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out D8MainDexListTask>
         ) {
             super.handleProvider(taskProvider)
-            val request = creationConfig.artifacts.getOperations().setInitialProvider(
+            val request = creationConfig.operations.setInitialProvider(
                 taskProvider, D8MainDexListTask::output
             ).withName("mainDexList.txt")
             if (includeDynamicFeatures) {

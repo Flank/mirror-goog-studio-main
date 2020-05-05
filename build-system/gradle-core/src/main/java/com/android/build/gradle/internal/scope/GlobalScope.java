@@ -96,8 +96,7 @@ public class GlobalScope {
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
 
-        this.globalOperations = new OperationsImpl(project.getObjects(), "global",
-                project.getLayout().getBuildDirectory());
+        this.globalOperations = new OperationsImpl(project, "global");
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();

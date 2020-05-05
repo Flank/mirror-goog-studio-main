@@ -105,7 +105,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out L8DexDesugarLibTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.getOperations()
+            creationConfig.operations
                 .setInitialProvider(taskProvider, L8DexDesugarLibTask::desugarLibDex)
                 .on(InternalArtifactType.DESUGAR_LIB_DEX)
         }

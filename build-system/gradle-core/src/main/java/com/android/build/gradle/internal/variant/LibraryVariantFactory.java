@@ -20,6 +20,7 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.LibraryBuildFeatures;
@@ -39,7 +40,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.plugins.DslContainerProvider;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -91,7 +91,7 @@ public class LibraryVariantFactory
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull OperationsImpl operations,
             @NonNull VariantScope variantScope,
             @NonNull BaseVariantData variantData,
             @NonNull TransformManager transformManager,
@@ -108,7 +108,7 @@ public class LibraryVariantFactory
                                 variantDependencies,
                                 variantSources,
                                 paths,
-                                artifacts,
+                                operations,
                                 variantScope,
                                 variantData,
                                 transformManager,
@@ -182,7 +182,7 @@ public class LibraryVariantFactory
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull OperationsImpl operations,
             @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer) {
@@ -192,7 +192,7 @@ public class LibraryVariantFactory
                 variantDependencies,
                 variantSources,
                 paths,
-                artifacts.getOperations(),
+                operations,
                 services,
                 globalScope,
                 taskContainer);

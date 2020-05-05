@@ -102,12 +102,10 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.CONSUMER_PROGUARD_DIR,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ExportConsumerProguardFilesTask::outputDir,
-                ""
-            )
+                ExportConsumerProguardFilesTask::outputDir
+            ).on(InternalArtifactType.CONSUMER_PROGUARD_DIR)
         }
 
         override fun configure(

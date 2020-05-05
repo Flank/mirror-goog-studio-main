@@ -175,7 +175,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
+            task.variantArtifact.from(creationConfig.operations.getAllClasses())
 
             task.externalArtifactCollection = creationConfig
                 .variantDependencies.getArtifactCollection(

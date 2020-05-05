@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -87,7 +86,7 @@ abstract class ComponentPropertiesImpl(
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
-    override val artifacts: BuildArtifactsHolder,
+    override val operations: OperationsImpl,
     override val variantScope: VariantScope,
     val variantData: BaseVariantData,
     override val transformManager: TransformManager,
@@ -100,10 +99,6 @@ abstract class ComponentPropertiesImpl(
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
-
-    override val operations: OperationsImpl
-        get() = artifacts.getOperations()
-
     override val packageName: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
 
@@ -345,8 +340,7 @@ abstract class ComponentPropertiesImpl(
                 )
             }
             val artifactProvider = operations.get(buildArtifactType)
-            val artifactContainer =
-                artifacts.getOperations().getArtifactContainer(buildArtifactType)
+            val artifactContainer = operations.getArtifactContainer(buildArtifactType)
             if (!artifactContainer.needInitialProducer().get()) {
                 variantScope
                     .publishIntermediateArtifact(
@@ -425,7 +419,7 @@ abstract class ComponentPropertiesImpl(
                 // TaskManager.createUnitTestVariantTasks), the artifact may not have been created,
                 // so we need to check its presence first (using internal AGP API instead of Gradle
                 // API---see https://android.googlesource.com/platform/tools/base/+/ca24108e58e6e0dc56ce6c6f639cdbd0fa3b812f).
-                if (!artifacts.getOperations().getArtifactContainer(DATA_BINDING_TRIGGER)
+                if (!operations.getArtifactContainer(DATA_BINDING_TRIGGER)
                         .needInitialProducer().get()
                 ) {
                     sourceSets.add(internalServices.fileTree(operations.get(DATA_BINDING_TRIGGER)))

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
@@ -41,7 +42,6 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -86,7 +86,7 @@ public class ModelBuilderTest {
     @Mock Gradle gradle;
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
-    @Mock BuildArtifactsHolder artifacts;
+    @Mock OperationsImpl operations;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -188,7 +188,7 @@ public class ModelBuilderTest {
                             variantDependencies,
                             variantSources,
                             paths,
-                            artifacts,
+                            operations,
                             variantScope,
                             variantData,
                             testedVariant,
@@ -217,7 +217,7 @@ public class ModelBuilderTest {
                     variantDependencies,
                     variantSources,
                     paths,
-                    artifacts,
+                    operations,
                     variantScope,
                     variantData,
                     dependenciesInfo,
@@ -235,7 +235,7 @@ public class ModelBuilderTest {
                 variantDependencies,
                 variantSources,
                 paths,
-                artifacts,
+                operations,
                 variantScope,
                 variantData,
                 Mockito.mock(TransformManager.class),

@@ -205,12 +205,12 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.getOperations().append(
+            creationConfig.operations.append(
                 taskProvider,
                 CompileSourceSetResources::partialRDirectory
             ).on(MultipleArtifactType.PARTIAL_R_FILES)
 
-            creationConfig.artifacts.getOperations().append(
+            creationConfig.operations.append(
                 taskProvider,
                 CompileSourceSetResources::outputDirectory
             ).on(MultipleArtifactType.RES_COMPILED_FLAT_FILES)

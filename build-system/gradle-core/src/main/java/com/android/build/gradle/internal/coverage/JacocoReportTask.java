@@ -226,7 +226,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                             InternalArtifactType.CODE_COVERAGE.INSTANCE,
                             task.getCoverageDirectories());
 
-            task.classFileCollection = testedVariant.getArtifacts().getAllClasses();
+            task.classFileCollection = testedVariant.getOperations().getAllClasses();
 
             task.sourceFolders =
                     creationConfig

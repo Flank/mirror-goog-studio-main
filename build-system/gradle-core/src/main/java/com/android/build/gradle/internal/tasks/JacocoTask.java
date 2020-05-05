@@ -128,7 +128,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
         public void configure(@NonNull JacocoTask task) {
             super.configure(task);
 
-            task.inputClasses = creationConfig.getArtifacts().getAllClasses();
+            task.inputClasses = creationConfig.getOperations().getAllClasses();
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
                             creationConfig.getGlobalScope().getProject(),

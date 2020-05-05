@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
@@ -77,14 +77,14 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         componentProperties.taskContainer.javacTask = taskProvider
 
-        val artifacts = componentProperties.artifacts
+        val operations = componentProperties.operations
 
-        artifacts.getOperations()
+        operations
             .setInitialProvider(taskProvider) { classesOutputDirectory }
             .withName("classes")
             .on(JAVAC)
 
-        artifacts.getOperations()
+        operations
             .setInitialProvider(taskProvider) { annotationProcessorOutputDirectory }
             // Setting a name is not required, but a lot of AGP and IDE tests are assuming this name
             // so we leave it here for now.
@@ -99,7 +99,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
                 componentProperties.variantType.isExportDataBindingClassList,
                 true, /* firstRegistration */
                 taskProvider,
-                artifacts
+                operations
             )
         }
     }
@@ -134,7 +134,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         // https://docs.gradle.org/current/userguide/upgrading_version_6.html#querying_a_mapped_output_property_of_a_task_before_the_task_has_completed
         // (currently caught by BasicInstantExecutionTest).
         task.options.annotationProcessorGeneratedSourcesDirectory =
-            componentProperties.artifacts.getOperations()
+            componentProperties.operations
                 .getOutputPath(AP_GENERATED_SOURCES, AP_GENERATED_SOURCES_DIR_NAME)
 
         // The API of JavaCompile to set up outputs only accepts File or Provider<File> (see above).
@@ -171,10 +171,10 @@ fun registerDataBindingOutputs(
     isExportDataBindingClassList: Boolean,
     firstRegistration: Boolean,
     taskProvider: TaskProvider<out Task>,
-    artifacts: BuildArtifactsHolder
+    operations: OperationsImpl
 ) {
     if (firstRegistration) {
-        artifacts.getOperations()
+        operations
             .setInitialProvider(taskProvider) { dataBindingArtifactDir }
             // a name is required, or DataBindingCachingTest would fail (somehow adding a name
             // solves the issue of overlapping outputs between Kapt and JavaCompile when this
@@ -182,17 +182,17 @@ fun registerDataBindingOutputs(
             .withName("out")
             .on(DATA_BINDING_ARTIFACT)
     } else {
-        artifacts.getOperations()
+        operations
             .replace(taskProvider) { dataBindingArtifactDir }
             .on(DATA_BINDING_ARTIFACT)
     }
     if (isExportDataBindingClassList) {
         if (firstRegistration) {
-            artifacts.getOperations()
+            operations
                 .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         } else {
-            artifacts.getOperations()
+            operations
                 .replace(taskProvider) { dataBindingExportClassListFile }
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         }

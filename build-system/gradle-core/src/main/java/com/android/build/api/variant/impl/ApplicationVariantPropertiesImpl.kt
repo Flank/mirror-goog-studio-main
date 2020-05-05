@@ -15,6 +15,7 @@
  */
 package com.android.build.api.variant.impl
 
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
@@ -23,7 +24,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
@@ -41,7 +41,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    artifacts: BuildArtifactsHolder,
+    operations: OperationsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
     variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
@@ -56,7 +56,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantDependencies,
     variantSources,
     paths,
-    artifacts,
+    operations,
     variantScope,
     variantData,
     transformManager,

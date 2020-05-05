@@ -94,7 +94,6 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -169,7 +168,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
-import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CleanBuildCacheKt;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -926,12 +924,6 @@ public abstract class TaskManager<
                 });
     }
 
-    public void createBuildArtifactReportTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(
-                new BuildArtifactReportTask.BuildArtifactReportCreationAction(componentProperties));
-    }
-
     public void createMergeApkManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
         ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
         Set<String> screenSizes = apkVariantData.getCompatibleScreens();
@@ -1277,7 +1269,7 @@ public abstract class TaskManager<
                                     .setFileCollection(rFiles)
                                     .build());
 
-            creationConfig.getArtifacts().appendToAllClasses(rFiles);
+            creationConfig.getOperations().appendToAllClasses(rFiles);
             return;
         }
         createNonNamespacedResourceTasks(
@@ -1327,7 +1319,7 @@ public abstract class TaskManager<
                             new OptimizeResourcesTask.CreateAction(componentProperties));
                     // Republish the RES_PROCESSED_OPTIMIZED as PROCESSED_RES
                     componentProperties
-                            .getArtifacts()
+                            .getOperations()
                             .republish(
                                     InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE,
                                     InternalArtifactType.PROCESSED_RES.INSTANCE);
@@ -1348,7 +1340,7 @@ public abstract class TaskManager<
 
             if (packageOutputType != null) {
                 componentProperties
-                        .getArtifacts()
+                        .getOperations()
                         .republish(PROCESSED_RES.INSTANCE, packageOutputType);
             }
 
@@ -1362,7 +1354,7 @@ public abstract class TaskManager<
             }
 
             componentProperties
-                    .getArtifacts()
+                    .getOperations()
                     .appendToAllClasses(
                             project.files(
                                     operations.get(
@@ -2639,7 +2631,7 @@ public abstract class TaskManager<
 
         // republish APK to the external world.
         creationConfig
-                .getArtifacts()
+                .getOperations()
                 .republish(InternalArtifactType.APK.INSTANCE, ArtifactTypes.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
@@ -3346,7 +3338,7 @@ public abstract class TaskManager<
                 componentProperties.getVariantType().isExportDataBindingClassList(),
                 false, // Set to false to replace the first registration done by JavaCompile earlier
                 kaptTaskProvider,
-                componentProperties.getArtifacts());
+                componentProperties.getOperations());
 
         // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).

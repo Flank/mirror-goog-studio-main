@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
@@ -27,7 +28,6 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -72,7 +72,7 @@ internal class DynamicFeatureVariantFactory(
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
-        artifacts: BuildArtifactsHolder,
+        operations: OperationsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
@@ -89,7 +89,7 @@ internal class DynamicFeatureVariantFactory(
                 variantDependencies,
                 variantSources,
                 paths,
-                artifacts,
+                operations,
                 variantScope,
                 variantData,
                 transformManager,

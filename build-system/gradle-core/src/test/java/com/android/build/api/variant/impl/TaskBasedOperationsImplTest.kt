@@ -80,7 +80,7 @@ class TaskBasedOperationsImplTest {
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(
             tmpDir.newFolder()).build()
-        operations = OperationsImpl(project.objects,"debug", project.layout.buildDirectory)
+        operations = OperationsImpl(project, "debug")
 
         val inputFolder = tmpDir.newFolder("input")
         val inputFolderProperty = project.objects.directoryProperty().also { it.set(inputFolder) }

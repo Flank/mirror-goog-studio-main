@@ -857,12 +857,10 @@ public abstract class MergeResources extends ResourceAwareTask {
             // only the full run with dependencies generates the blame folder
             if (includeDependencies) {
                 creationConfig
-                        .getArtifacts()
-                        .producesDir(
-                                InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE,
-                                taskProvider,
-                                MergeResources::getBlameLogOutputFolder,
-                                "out");
+                        .getOperations()
+                        .setInitialProvider(taskProvider, MergeResources::getBlameLogOutputFolder)
+                        .withName("out")
+                        .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE);
             }
         }
 

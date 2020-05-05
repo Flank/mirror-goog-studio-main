@@ -315,10 +315,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             val aaptProguardFile =
                 if (task.includeFeaturesInScopes.get()) {
-                    creationConfig.artifacts.getOperations().get(
+                    creationConfig.operations.get(
                         InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
                 } else {
-                    creationConfig.artifacts.getOperations().get(
+                    creationConfig.operations.get(
                         InternalArtifactType.AAPT_PROGUARD_FILE
                     )
                 }

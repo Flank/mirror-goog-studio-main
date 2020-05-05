@@ -122,7 +122,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setDescription("Run unit tests for the " + testedVariant.getName() + " build.");
 
-            task.setTestClassesDirs(creationConfig.getArtifacts().getAllClasses());
+            task.setTestClassesDirs(creationConfig.getOperations().getAllClasses());
             task.setClasspath(computeClasspath(creationConfig, includeAndroidResources));
 
             if (includeAndroidResources) {
@@ -176,7 +176,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             }
 
             // 2. the test component classes and java_res
-            collection.from(component.getArtifacts().getAllClasses());
+            collection.from(component.getOperations().getAllClasses());
             // TODO is this the right thing? this doesn't include the res merging via transform
             // AFAIK
             collection.from(operations.get(InternalArtifactType.JAVA_RES.INSTANCE));

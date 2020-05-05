@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
@@ -63,8 +64,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.internal.tasks.AarMetadataTask;
-import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
@@ -133,10 +132,6 @@ public class LibraryTaskManager
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(libVariantProperties);
-
-        taskFactory.register(
-                new BuildArtifactReportTask.BuildArtifactReportCreationAction(
-                        libVariantProperties));
 
         if (buildFeatures.getAndroidResources()) {
             createGenerateResValuesTask(libVariantProperties);
@@ -520,7 +515,7 @@ public class LibraryTaskManager
                                 componentProperties
                                         .getVariantData()
                                         .getAllPostJavacGeneratedBytecode());
-        componentProperties.getArtifacts().appendToAllClasses(files);
+        componentProperties.getOperations().appendToAllClasses(files);
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(

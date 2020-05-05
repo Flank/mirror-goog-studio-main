@@ -151,7 +151,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             )
 
             task.inputResourcesDirectories.set(
-                creationConfig.artifacts.getOperations().getAll(
+                creationConfig.operations.getAll(
                     MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
                     creationConfig.variantDependencies.getArtifactFileCollection(

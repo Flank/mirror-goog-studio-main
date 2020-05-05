@@ -174,7 +174,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            artifactTransformationRequest = creationConfig.artifacts.getOperations().use(taskProvider)
+            artifactTransformationRequest = creationConfig.operations.use(taskProvider)
                 .toRead(InternalArtifactType.PROCESSED_RES, ShrinkResourcesTask::uncompressedResources)
                 .andWrite(InternalArtifactType.SHRUNK_PROCESSED_RES, ShrinkResourcesTask::compressedResources)
         }
