@@ -527,6 +527,14 @@ class LintDetectorDetector : Detector(), UastScanner {
             else
                 id
 
+            if (leaf.isEmpty()) {
+                // An empty id isn't valid but this is most likely due to difficulty
+                // computing the constant value of a reference; this is not likely
+                // to be helpful and we want to avoid a string index out of bounds
+                // exception below
+                return
+            }
+
             if (!leaf[0].isUpperCase() || (leaf.none { it.isLowerCase() })) {
                 context.report(
                     ID, idArgument, context.getLocation(idArgument),
