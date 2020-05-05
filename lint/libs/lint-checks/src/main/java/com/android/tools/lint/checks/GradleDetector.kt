@@ -135,6 +135,24 @@ open class GradleDetector : Detector(), GradleScanner {
      */
     private var mAppliedKotlinKaptPlugin: Boolean = false
 
+    /**
+     * If incrementally editing a single build.gradle file, tracks whether we have declared
+     * the google maven repository in the buildscript block.
+     */
+    private var mDeclaredGoogleMavenRepository: Boolean = false
+
+    data class AgpVersionCheckInfo(
+        val newerVersion: GradleVersion,
+        val safeReplacement: GradleVersion?,
+        val dependency: GradleCoordinate,
+        val isResolved: Boolean,
+        val cookie: Any)
+
+    /**
+     * Stores information for a check of the Android gradle plugin dependency version
+     */
+    private var agpVersionCheckInfo: AgpVersionCheckInfo? = null
+
     private val blacklisted = HashMap<Project, BlacklistedDeps>()
 
     // ---- Implements GradleScanner ----
@@ -701,6 +719,10 @@ open class GradleDetector : Detector(), GradleScanner {
                 mAppliedKotlinKaptPlugin = true
             }
         }
+        if (statement == "google" && parent == "repositories" && parentParent == "buildscript") {
+            mDeclaredGoogleMavenRepository = true
+            maybeReportAgpVersionIssue(context)
+        }
     }
 
     private fun checkTargetCompatibility(context: GradleContext) {
@@ -759,6 +781,15 @@ open class GradleDetector : Detector(), GradleScanner {
                         getGoogleMavenRepoVersion(context, dependency, filter)
                     )
 
+                    // Compare with what's in the Gradle cache.
+                    newerVersion = GradleVersion.max(newerVersion, findCachedNewerVersion(dependency, filter))
+
+                    // Compare with IDE's repository cache, if available.
+                    newerVersion = GradleVersion.max(
+                        newerVersion,
+                        context.client.getHighestKnownVersion(dependency, filter)
+                    )
+
                     // Don't just offer the latest available version, but if there is a newer
                     // dot dot release available, offer that one as well since it may be easier
                     // to update to
@@ -774,6 +805,13 @@ open class GradleDetector : Detector(), GradleScanner {
                                         filterVersion < newerVersion!!
                             })
                     }
+                    if (newerVersion != null && newerVersion > version) {
+                        agpVersionCheckInfo = AgpVersionCheckInfo(
+                            newerVersion, safeReplacement, dependency, isResolved, cookie
+                        )
+                        maybeReportAgpVersionIssue(context)
+                    }
+                    return
                 }
             }
 
@@ -1557,6 +1595,18 @@ open class GradleDetector : Detector(), GradleScanner {
 
         // Check for blacklisted dependencies
         checkBlacklistedDependencies(context, project)
+    }
+
+    private fun maybeReportAgpVersionIssue(context: Context) {
+        // b/144442233: surface check for outdated AGP only if google() is in buildscript repositories
+        if (mDeclaredGoogleMavenRepository) {
+            agpVersionCheckInfo?.let {
+                val versionString = it.newerVersion.toString()
+                val message = getNewerVersionAvailableMessage(it.dependency, versionString, it.safeReplacement)
+                val fix = if (!it.isResolved) getUpdateDependencyFix(it.dependency.revision, versionString, it.safeReplacement) else null
+                report(context, it.cookie, DEPENDENCY, message, fix)
+            }
+        }
     }
 
     /**
