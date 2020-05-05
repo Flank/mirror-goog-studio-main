@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.json
 
 import com.android.utils.tokenizeCommandLineToEscaped
+import com.android.utils.tokenizeCommandLineToRaw
 import com.google.gson.stream.JsonReader
 import java.nio.file.Paths
 
@@ -47,7 +48,7 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
      * Intern each command after stripping -o and -c flags
      */
     override fun visitCommand(command: String) {
-        val tokens = command.tokenizeCommandLineToEscaped()
+        val tokens = command.tokenizeCommandLineToRaw()
         compiler = tokens.first()
         val stripped = mutableListOf<String>()
         var skipNext = true // Initially true to remove the actual clang++.exe
