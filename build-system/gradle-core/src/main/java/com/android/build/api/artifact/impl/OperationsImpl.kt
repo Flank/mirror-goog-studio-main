@@ -154,7 +154,8 @@ class OperationsImpl(
     @JvmName("setInitialProvider")
     internal fun <FILE_TYPE, TASK> setInitialProvider(
         taskProvider: TaskProvider<TASK>,
-        property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>): SingleInitialProviderRequestImpl<TASK, FILE_TYPE>
+        property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+    ): SingleInitialProviderRequestImpl<TASK, FILE_TYPE>
             where FILE_TYPE : FileSystemLocation,
                   TASK: Task
             = SingleInitialProviderRequestImpl(this, taskProvider, property)
@@ -177,8 +178,8 @@ class OperationsImpl(
     internal fun <ARTIFACT_TYPE, FILE_TYPE, TASK> addInitialProvider(
         type: ARTIFACT_TYPE,
         taskProvider: TaskProvider<TASK>,
-        property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>) where
-            ARTIFACT_TYPE : ArtifactType.Multiple,
+        property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
+    ) where ARTIFACT_TYPE : ArtifactType.Multiple,
             ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
             FILE_TYPE : FileSystemLocation,
             TASK: Task {
@@ -214,20 +215,21 @@ class OperationsImpl(
      * @param taskInputProperty the [Property] to set the final producer on.
      */
     fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProduct(
-        artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>)
-            where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
+        artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>
+    ) where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
         val finalProduct = get(artifactType)
         taskInputProperty.setDisallowChanges(finalProduct)
     }
 
-    internal fun <ARTIFACT_TYPE, FILE_TYPE> copy(
+    fun <ARTIFACT_TYPE, FILE_TYPE> copy(
         artifactType: ARTIFACT_TYPE,
-        from: SingleArtifactContainer<FILE_TYPE>)
-            where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE: ArtifactType.Single,
-                  FILE_TYPE: FileSystemLocation {
+        from: OperationsImpl
+    ) where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
+            ARTIFACT_TYPE: ArtifactType.Single,
+            FILE_TYPE: FileSystemLocation {
 
-        storageProvider.getStorage(artifactType.kind).copy(artifactType, from)
+        val artifactContainer = from.getArtifactContainer(artifactType)
+        storageProvider.getStorage(artifactType.kind).copy(artifactType, artifactContainer)
     }
 }
 

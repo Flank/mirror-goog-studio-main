@@ -74,33 +74,6 @@ abstract class BuildArtifactsHolder(
         operations.republish(sourceType, targetType)
     }
 
-    /**
-     * Copies a published [ArtifactType] from another instance of [BuildArtifactsHolder] to this
-     * instance.
-     * This does not remove the original elements from the source [BuildArtifactsHolder].
-     *
-     * @param artifactType artifact type to copy to this holder.
-     * @param from source [BuildArtifactsHolder] to copy the produced artifacts from.
-     */
-    fun <T: FileSystemLocation> copy(artifactType: SingleArtifactType<T>, from: BuildArtifactsHolder) {
-        copy(artifactType, from, artifactType)
-    }
-
-    /**
-     * Copies a published [ArtifactType] from another instance of [BuildArtifactsHolder] to this
-     * instance.
-     * This does not remove the original elements from the source [BuildArtifactsHolder].
-     *
-     * @param artifactType artifact type to copy to this holder.
-     * @param from source [BuildArtifactsHolder] to copy the produced artifacts from.
-     * @param originalArtifactType artifact type under which the producers are registered in the
-     * source [BuildArtifactsHolder], by default is the same [artifactType]
-     */
-    fun <T: FileSystemLocation> copy(artifactType: SingleArtifactType<T>, from: BuildArtifactsHolder, originalArtifactType: SingleArtifactType<T> = artifactType) {
-        val artifactContainer = from.operations.getArtifactContainer(originalArtifactType)
-        operations.copy(artifactType, artifactContainer)
-    }
-
     // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
     fun <T: Task, ARTIFACT_TYPE> producesFile(
         artifactType: ARTIFACT_TYPE,

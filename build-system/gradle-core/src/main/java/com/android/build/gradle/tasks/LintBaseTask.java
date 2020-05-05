@@ -292,8 +292,7 @@ public abstract class LintBaseTask extends DefaultTask {
                     localLintJarCollection =
                             componentProperties
                                     .getGlobalScope()
-                                    .getArtifacts()
-                                    .getOperations()
+                                    .getGlobalOperations()
                                     .get(LINT_JAR.INSTANCE));
             FileCollection dependencyLintJarCollection;
             allInputs.from(

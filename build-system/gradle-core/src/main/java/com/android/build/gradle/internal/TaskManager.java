@@ -673,7 +673,8 @@ public abstract class TaskManager<
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
         for (VariantPropertiesT variant : variantPropertiesList) {
-            variant.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
+            variant.getOperations().copy(LINT_PUBLISH_JAR.INSTANCE,
+                    globalScope.getGlobalOperations());
         }
     }
 
@@ -1620,7 +1621,6 @@ public abstract class TaskManager<
 
     /** Creates the tasks to build unit tests. */
     private void createUnitTestVariantTasks(@NonNull UnitTestPropertiesImpl unitTestProperties) {
-        BuildArtifactsHolder artifacts = unitTestProperties.getArtifacts();
         final MutableTaskContainer taskContainer = unitTestProperties.getTaskContainer();
 
         VariantPropertiesImpl testedVariant = unitTestProperties.getTestedVariant();
@@ -1657,8 +1657,8 @@ public abstract class TaskManager<
             } else if (testedVariant.getVariantType().isApk()) {
                 // The IDs will have been inlined for an non-namespaced application
                 // so just re-export the artifacts here.
-                artifacts.copy(PROCESSED_RES.INSTANCE, testedVariant.getArtifacts());
-                artifacts.copy(MERGED_ASSETS.INSTANCE, testedVariant.getArtifacts());
+                unitTestProperties.getOperations().copy(PROCESSED_RES.INSTANCE, testedVariant.getOperations());
+                unitTestProperties.getOperations().copy(MERGED_ASSETS.INSTANCE, testedVariant.getOperations());
 
                 taskFactory.register(new PackageForUnitTest.CreationAction(unitTestProperties));
             } else {
