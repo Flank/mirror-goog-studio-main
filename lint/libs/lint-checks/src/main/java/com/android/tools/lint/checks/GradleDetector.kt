@@ -1014,6 +1014,7 @@ open class GradleDetector : Detector(), GradleScanner {
             val clientRevision = context.client.getClientRevision() ?: return null
             val ideVersion = GradleVersion.parse(clientRevision)
             val version = GradleVersion.parse(revision)
+            // TODO(b/145606749): this assumes that the IDE version and the AGP version are directly comparable
             return Predicate { v ->
                 // Any higher IDE version that matches major and minor
                 // (e.g. from 3.3.0 offer 3.3.2 but not 3.4.0)
@@ -2343,7 +2344,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** targetSdkVersion about to expiry */
+        /** targetSdkVersion about to expire */
         @JvmField
         val EXPIRING_TARGET_SDK_VERSION = Issue.create(
             id = "ExpiringTargetSdkVersion",
