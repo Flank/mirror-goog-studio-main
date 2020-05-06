@@ -18,6 +18,7 @@ cc_library(
     srcs = [
         "counters/counters_request_handler.cc",
         "memory/memory_request_handler.cc",
+        "process_metadata/process_metadata_request_handler.cc",
         "scheduling/scheduling_request_handler.cc",
         "trace_events/trace_events_request_handler.cc",
         "trace_processor_service.cc",
@@ -25,6 +26,7 @@ cc_library(
     hdrs = [
         "counters/counters_request_handler.h",
         "memory/memory_request_handler.h",
+        "process_metadata/process_metadata_request_handler.h",
         "scheduling/scheduling_request_handler.h",
         "trace_events/trace_events_request_handler.h",
         "trace_processor_service.h",
@@ -107,6 +109,26 @@ cc_test(
     size = "medium",
     srcs = [
         "counters/counters_request_handler_test.cc",
+    ],
+    copts = [
+        "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
+        "-Itools/base/profiler/native/trace_processor_daemon",
+    ],
+    data = [
+        "testdata/tank.trace",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":trace_processor_service_impl",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "process_metadata_request_handler_test",
+    size = "medium",
+    srcs = [
+        "process_metadata/process_metadata_request_handler_test.cc",
     ],
     copts = [
         "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
