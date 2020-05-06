@@ -206,7 +206,7 @@ private fun parseChild(
     val resourceType = ResourceType.fromXmlTag(child)
                        ?: throw ResourceValuesXmlParseException("Unknown resource value XML element '${toXml(child)}'")
 
-    if (resourceType == ResourceType.PUBLIC) {
+    if (resourceType == ResourceType.PUBLIC || resourceType == ResourceType.OVERLAYABLE) {
         // Doesn't declare a resource.
         return
     }
@@ -243,7 +243,6 @@ private fun parseChild(
         ResourceType.ATTR ->
             // We also need to find all the enums declared under attr (if there are any).
             parseAttr(child, idProvider, name, builder, enumSymbols, false)
-        ResourceType.PUBLIC -> error("Already checked above.")
         else -> throw ResourceValuesXmlParseException(
                 "Unknown resource value XML element '${toXml(child)}'")
     }
