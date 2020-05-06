@@ -20,7 +20,6 @@ import static com.android.tools.mlkit.DataInputOutputUtils.writeTensorInfoList;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.mlkit.exception.TfliteModelException;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 import java.io.DataInput;
@@ -169,11 +168,6 @@ public class ModelInfo {
     @NonNull
     public static ModelInfo buildFrom(ByteBuffer byteBuffer) throws TfliteModelException {
         ModelVerifier.verifyModel(byteBuffer);
-        return buildWithoutVerification(byteBuffer);
-    }
-
-    @NonNull
-    public static ModelInfo buildWithoutVerification(ByteBuffer byteBuffer) {
         String modelHash = Hashing.sha256().hashBytes(byteBuffer.array()).toString();
         MetadataExtractor extractor = new MetadataExtractor(byteBuffer);
         ModelMetadata modelMetadata = extractor.getModelMetaData();

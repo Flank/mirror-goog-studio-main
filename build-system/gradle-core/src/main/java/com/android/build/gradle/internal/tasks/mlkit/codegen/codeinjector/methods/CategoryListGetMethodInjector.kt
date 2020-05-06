@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.getIdentifierFromFi
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterTypeName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
-import com.android.tools.mlkit.MlkitNames
+import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
@@ -31,7 +31,7 @@ class CategoryListGetMethodInjector : MethodInjector() {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
         val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
-            MlkitNames.formatGetterName(
+            MlNames.formatGetterName(
                 tensorInfo.identifierName, getOutputParameterTypeName(tensorInfo)
             )
         )

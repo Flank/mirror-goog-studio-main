@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getInp
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getOutputProcessorInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getOutputsClassInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getProcessInjector
-import com.android.tools.mlkit.MlkitNames
+import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.ModelInfo
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
@@ -49,7 +49,7 @@ class TfliteModelGenerator(
 ) : ModelGenerator {
     private val logger: Logger = Logging.getLogger(this.javaClass)
     private val modelInfo: ModelInfo = ModelInfo.buildFrom(ByteBuffer.wrap(modelFile.readBytes()))
-    private val className: String = MlkitNames.computeModelClassName(localModelPath)
+    private val className: String = MlNames.computeModelClassName(localModelPath)
 
     override fun generateBuildClass(outputDirProperty: DirectoryProperty) {
         val classBuilder = TypeSpec.classBuilder(className).addModifiers(
@@ -163,7 +163,7 @@ class TfliteModelGenerator(
 
     private fun buildProcessMethod(classBuilder: TypeSpec.Builder) {
         val outputType: TypeName = ClassName.get(packageName, className)
-            .nestedClass(MlkitNames.OUTPUTS)
+            .nestedClass(MlNames.OUTPUTS)
         val localOutputs = "outputs"
         val methodBuilder = MethodSpec.methodBuilder("process")
             .addModifiers(Modifier.PUBLIC)

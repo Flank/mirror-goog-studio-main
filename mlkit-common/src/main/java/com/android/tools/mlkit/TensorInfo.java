@@ -186,7 +186,7 @@ public class TensorInfo {
         this.imageProperties = imageProperties;
         this.boundingBoxProperties = boundingBoxProperties;
 
-        this.identifierName = MlkitNames.computeIdentifierName(name, getDefaultName(source, index));
+        this.identifierName = MlNames.computeIdentifierName(name, getDefaultName(source, index));
     }
 
     public TensorInfo(@NonNull DataInput in) throws IOException {
@@ -209,7 +209,7 @@ public class TensorInfo {
         imageProperties = in.readBoolean() ? new ImageProperties(in) : null;
         boundingBoxProperties = in.readBoolean() ? new BoundingBoxProperties(in) : null;
 
-        identifierName = MlkitNames.computeIdentifierName(name, getDefaultName(source, index));
+        identifierName = MlNames.computeIdentifierName(name, getDefaultName(source, index));
     }
 
     public void save(@NonNull DataOutput out) throws IOException {

@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeIn
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getGetterMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getDataType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
-import com.android.tools.mlkit.MlkitNames
+import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
@@ -32,7 +32,7 @@ import javax.lang.model.element.Modifier
 /** Injector to inject output class. */
 class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfos: List<TensorInfo>) {
-        val builder = TypeSpec.classBuilder(MlkitNames.OUTPUTS)
+        val builder = TypeSpec.classBuilder(MlNames.OUTPUTS)
         builder.addModifiers(Modifier.PUBLIC)
 
         // Add necessary fields.

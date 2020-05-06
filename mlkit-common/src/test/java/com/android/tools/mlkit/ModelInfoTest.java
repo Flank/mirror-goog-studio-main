@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.testutils.TestUtils;
 import com.android.tools.mlkit.TensorInfo.ImageProperties;
 import com.android.tools.mlkit.TensorInfo.ImageProperties.ColorSpaceType;
-import com.android.tools.mlkit.exception.TfliteModelException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.mlkit.exception;
+package com.android.tools.mlkit;
 
 /** Exception to throw if TensorFlow Lite Model is invalid or unsupported. */
-public abstract class TfliteModelException extends Exception {
+public class TfliteModelException extends Exception {
 
     public TfliteModelException(String errorMessage) {
         super(errorMessage);

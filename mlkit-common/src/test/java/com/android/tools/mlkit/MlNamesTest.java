@@ -21,65 +21,65 @@ import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
 
-public class MlkitNamesTest {
+public class MlNamesTest {
 
     @Test
     public void computeModelClassName_validName_justReturn() {
-        assertEquals("ValidModel", MlkitNames.computeModelClassName("validModel.tflite"));
-        assertEquals("ValidModel", MlkitNames.computeModelClassName("validModel.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName("validModel.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName("validModel.tflite"));
     }
 
     @Test
     public void computeModelClassName_nameWithInvalidCharacters_correctIt() {
-        assertEquals("ValidModel", MlkitNames.computeModelClassName(" valid_model%$.tflite"));
-        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid_model.tflite"));
-        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid-model.tflite"));
-        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid-_model.tflite"));
-        assertEquals("ValidModel", MlkitNames.computeModelClassName("valid model.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName(" valid_model%$.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName("valid_model.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName("valid-model.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName("valid-_model.tflite"));
+        assertEquals("ValidModel", MlNames.computeModelClassName("valid model.tflite"));
     }
 
     @Test
     public void computeModelClassName_nameAllWithInvalidCharacters_returnModelWithHashcode() {
-        assertEquals("AutoModel40", MlkitNames.computeModelClassName(" %$.tflite"));
+        assertEquals("AutoModel40", MlNames.computeModelClassName(" %$.tflite"));
     }
 
     @Test
     public void computeModelClassName_nameStartWithDigit_correctIt() {
-        assertEquals("AutoModel012", MlkitNames.computeModelClassName("012.tflite"));
+        assertEquals("AutoModel012", MlNames.computeModelClassName("012.tflite"));
     }
 
     @Test
     public void computeIdentifierName_nameStartWithDigit_returnHashedName() {
-        assertEquals("name250", MlkitNames.computeIdentifierName("012abc"));
+        assertEquals("name250", MlNames.computeIdentifierName("012abc"));
     }
 
     @Test
     public void computeIdentifierName_nameIsKeyword_returnHashedName() {
-        assertEquals("name158", MlkitNames.computeIdentifierName("class"));
+        assertEquals("name158", MlNames.computeIdentifierName("class"));
     }
 
     @Test
     public void computeIdentifierNameWithDefault_nameIsKeyword_returnDefaultName() {
-        assertEquals("defaultName", MlkitNames.computeIdentifierName("class", "defaultName"));
+        assertEquals("defaultName", MlNames.computeIdentifierName("class", "defaultName"));
     }
 
     @Test
     public void computeIdentifierName_nameWithInvalidCharacters_correctIt() {
-        assertEquals("tensorName", MlkitNames.computeIdentifierName("%tensorName"));
-        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensor name"));
-        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensor-name"));
-        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensor_name"));
+        assertEquals("tensorName", MlNames.computeIdentifierName("%tensorName"));
+        assertEquals("tensorName", MlNames.computeIdentifierName("tensor name"));
+        assertEquals("tensorName", MlNames.computeIdentifierName("tensor-name"));
+        assertEquals("tensorName", MlNames.computeIdentifierName("tensor_name"));
     }
 
     @Test
     public void computeIdentifierName_nameValid_returnName() {
-        assertEquals("tensorName", MlkitNames.computeIdentifierName("tensorName"));
+        assertEquals("tensorName", MlNames.computeIdentifierName("tensorName"));
     }
 
     @Test
     public void computeModelClassName_sameFileInDifferentDir_returnDifferentName() {
         assertNotEquals(
-                MlkitNames.computeModelClassName("dir1/model.tflite"),
-                MlkitNames.computeModelClassName("dir2/model.tflite"));
+                MlNames.computeModelClassName("dir1/model.tflite"),
+                MlNames.computeModelClassName("dir2/model.tflite"));
     }
 }
