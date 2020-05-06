@@ -98,6 +98,10 @@ class Perfetto {
   // True is returned if tracer was stopped successfully.
   virtual void ForceStopTracer();
 
+  // Sets the property "persist.traced.enable" required for enabling the built
+  // in traced probes.
+  virtual bool EnableProfiling();
+
   // Helper function to launch a process and block waiting for the
   // /proc/[pid]/cmdline to be populated with the process path.
   // If the cmdline does not match the expected process path the process is

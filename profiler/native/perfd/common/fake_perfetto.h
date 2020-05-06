@@ -62,10 +62,15 @@ class FakePerfetto : public Perfetto {
   }
   bool IsShutdown() { return shutdown_; }
   void ForceStopTracer() override { tracer_state_ = false; }
+  bool EnableProfiling() override {
+    enable_profiling_called_ = true;
+    return true;
+  }
 
   const std::string& OutputFilePath() { return output_file_path_; }
   const std::string& AbiArch() { return abi_arch_; }
   const perfetto::protos::TraceConfig& Config() { return config_; }
+  bool IsProfilingEnabled() { return enable_profiling_called_; }
   void SetTracerState(bool state) { tracer_state_ = state; }
   void SetPerfettoState(bool state) { perfetto_state_ = state; }
   void SetRunStateTo(bool perfetto, bool tracer) {
@@ -94,6 +99,8 @@ class FakePerfetto : public Perfetto {
   bool perfetto_stop_state_;
   // Allows us to test if shutdown is called.
   bool shutdown_;
+  // Holds the state if EnableProfiling was called.
+  bool enable_profiling_called_;
   perfetto::protos::TraceConfig config_;
   std::string output_file_path_;
   std::string abi_arch_;
