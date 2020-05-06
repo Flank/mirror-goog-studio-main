@@ -734,7 +734,6 @@ com.android.build.api.dsl.VariantDimension.ndk: void (kotlin.jvm.functions.Funct
 com.android.build.api.dsl.VariantDimension.proguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.VariantDimension.proguardFiles: java.lang.Object (java.lang.Object[])
 com.android.build.api.dsl.VariantDimension.resValue: void (java.lang.String, java.lang.String, java.lang.String)
-com.android.build.api.dsl.VariantDimension.setManifestPlaceholders: void (java.util.Map<java.lang.String, java.lang.Object>)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepFile: void (java.io.File)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepProguard: void (java.io.File)
 com.android.build.api.dsl.VariantDimension.setProguardFiles: void (java.util.List<java.io.File>)

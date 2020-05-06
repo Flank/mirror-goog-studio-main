@@ -158,13 +158,9 @@ class KotlinDslTest {
             setManifestPlaceholders(ImmutableMap.of())
             manifestPlaceholders["c"] = 3
             assertThat(manifestPlaceholders).containsExactly("c", 3)
-            // Prior to this change
-            //     New DSL: Re-add setManifestPlaceholders to preserve source compatibility
-            // the set method manifestPlaceholders(Map) was implemented by the Gradle decorator.
-            // Verify that the explicitly implemented method does actually set, not append.
-            manifestPlaceholders = mutableMapOf("a" to "b")
-            manifestPlaceholders(mapOf("d" to "D"))
-            assertThat(manifestPlaceholders).containsExactly("d", "D")
+            // Check use of overloaded +=
+            manifestPlaceholders += mapOf("d" to "D")
+            assertThat(manifestPlaceholders).containsExactly("c", 3,"d", "D")
         }
     }
 

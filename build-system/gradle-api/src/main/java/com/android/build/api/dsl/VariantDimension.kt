@@ -137,7 +137,7 @@ interface VariantDimension {
      * See
      * [Inject Build Variables into the Manifest](https://developer.android.com/studio/build/manifest-build-variables.html).
      */
-    var manifestPlaceholders: MutableMap<String, Any>
+    val manifestPlaceholders: MutableMap<String, Any>
 
     /**
      * Adds manifest placeholders.
