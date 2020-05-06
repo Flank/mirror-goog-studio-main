@@ -16,6 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.ui
 
+import com.android.tools.idea.wizard.template.MaterialColor
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun colorKt(
@@ -25,8 +26,8 @@ package ${escapeKotlinIdentifier(packageName)}.ui
 
 import androidx.ui.graphics.Color
 
-val purple200 = Color(0xFFBB86FC)
-val purple500 = Color(0xFF6200EE)
-val purple700 = Color(0xFF3700B3)
-val teal200 = Color(0xFF03DAC6)
+${MaterialColor.PURPLE_200.kotlinVal()}
+${MaterialColor.PURPLE_500.kotlinVal()}
+${MaterialColor.PURPLE_700.kotlinVal()}
+${MaterialColor.TEAL_200.kotlinVal()}
 """

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 package com.android.tools.idea.wizard.template
-import com.google.common.base.CaseFormat
 import com.android.tools.idea.wizard.template.AssetNameConverter.Type
+import com.google.common.base.CaseFormat
 import com.google.common.io.Resources
 import java.io.File
 import java.net.URL
@@ -59,6 +59,10 @@ fun camelCaseToUnderlines(string: String): String = CaseFormat.UPPER_CAMEL.to(Ca
 fun underscoreToCamelCase(
   string: String
 ): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
+
+fun underscoreToLowerCamelCase(
+  string: String
+): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, string)
 
 fun escapeKotlinIdentifier(identifier: String): String =
   identifier.split(".").joinToString(".") { if (it in kotlinKeywords) "`$it`" else it }
