@@ -96,7 +96,9 @@ class CoreLibraryDesugarGeneralizationTest {
         private const val DESUGAR_CONFIG_JAR = "desugar-config.jar"
         private const val DESUGAR_CONFIG_CONTENT = """
             {
-               "configuration_format_version": 3,
+               "artifact_id": "test",
+               "configuration_format_version": 4,
+               "group_id": "com.example",
                "required_compilation_api_level": 26,
                "synthesized_library_classes_package_prefix": "foo$.",
                 "library_flags": [
@@ -107,7 +109,8 @@ class CoreLibraryDesugarGeneralizationTest {
                         }
                     }
                 ],
-                "program_flags": []
+                "program_flags": [],
+                "version": "0.11.2"
             }
         """
     }
