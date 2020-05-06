@@ -104,23 +104,26 @@ import java.io.File
 @Incubating
 interface LintOptions {
     /**
-     * The set of issue id's to suppress. Callers are allowed to modify this collection. Note that
-     *these ids add to rather than replace the given set of ids.
+     * The set of issue IDs to suppress.
+     *
+     * Issues passed to [disable]  to this list, call
+     * Callers are allowed to modify this collection.
+     *
      */
-    var disable: MutableSet<String>
+    val disable: MutableSet<String>
 
     /**
-     * The set of issue id's to enable. Callers are allowed to modify this collection. Note that
-     * these ids add to rather than replace the given set of ids.
+     * The set of issue IDs to enable. Callers are allowed to modify this collection.
      */
-    var enable: MutableSet<String>
+    val enable: MutableSet<String>
 
     /**
-     * The exact set of issues to check, or null to run the issues that are enabled by default plus
+     * The exact set of issues to check set by [checkOnly].
+     *s
+     * If empty, lint will detect the issues that are enabled by default plus
      * any issues enabled via [enable] and without issues disabled via [disable].
-     * If non-null, callers are allowed to modify this collection.
      */
-    var check: MutableSet<String>?
+    val check: MutableSet<String>
 
     /** Whether lint should set the exit code of the process if errors are found */
     var isAbortOnError: Boolean

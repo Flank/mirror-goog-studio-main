@@ -40,9 +40,9 @@ public class LintOptions
     private static final long serialVersionUID = 1L;
 
     @Nullable private final DslServices dslServices;
-    private Set<String> disable = Sets.newHashSet();
-    private Set<String> enable = Sets.newHashSet();
-    private Set<String> check = Sets.newHashSet();
+    private final Set<String> disable = Sets.newHashSet();
+    private final Set<String> enable = Sets.newHashSet();
+    private final Set<String> check = Sets.newHashSet();
     private boolean abortOnError = true;
     private boolean absolutePaths = true;
     private boolean noLines;
@@ -69,7 +69,7 @@ public class LintOptions
     @Nullable
     private File xmlOutput;
 
-    private Map<String,Integer> severities = Maps.newHashMap();
+    private final Map<String, Integer> severities = Maps.newHashMap();
     private File baselineFile;
 
     @Inject
@@ -80,7 +80,7 @@ public class LintOptions
     public LintOptions(
             @NonNull Set<String> disable,
             @NonNull Set<String> enable,
-            @Nullable Set<String> check,
+            @NonNull Set<String> check,
             @Nullable File lintConfig,
             boolean textReport,
             @Nullable File textOutput,
@@ -105,9 +105,9 @@ public class LintOptions
             @Nullable File baselineFile,
             @Nullable Map<String, Integer> severityOverrides) {
         this.dslServices = null;
-        this.disable = disable;
-        this.enable = enable;
-        this.check = check;
+        this.disable.addAll(disable);
+        this.enable.addAll(enable);
+        this.check.addAll(check);
         this.lintConfig = lintConfig;
         this.textReport = textReport;
         this.textOutput = textOutput;
@@ -139,7 +139,7 @@ public class LintOptions
     }
 
     @NonNull
-    public static com.android.builder.model.LintOptions create(@NonNull com.android.builder.model.LintOptions source) {
+    public static com.android.builder.model.LintOptions create(@NonNull LintOptions source) {
         return new LintOptions(
                 source.getDisable(),
                 source.getEnable(),
@@ -176,7 +176,6 @@ public class LintOptions
         return disable;
     }
 
-    @Override
     public void setDisable(@Nullable Set<String> ids) {
         if (ids != null) {
             disable.addAll(ids);
@@ -190,7 +189,6 @@ public class LintOptions
         return enable;
     }
 
-    @Override
     public void setEnable(@Nullable Set<String> ids) {
         if (ids != null) {
             enable.addAll(ids);
@@ -198,14 +196,13 @@ public class LintOptions
     }
 
     @Override
-    @Nullable
+    @NonNull
     @Optional
     @Input
     public Set<String> getCheck() {
         return check;
     }
 
-    @Override
     public void setCheck(@NonNull Set<String> ids) {
         check.addAll(ids);
     }

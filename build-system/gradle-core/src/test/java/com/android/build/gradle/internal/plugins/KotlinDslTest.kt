@@ -199,6 +199,18 @@ class KotlinDslTest {
         }
     }
 
+    @Test
+    fun `LintOptions source compatibility`() {
+        android.lintOptions {
+            enable += "a"
+            assertThat(enable).containsExactly("a")
+            disable += "b"
+            assertThat(disable).containsExactly("b")
+            check += "c"
+            assertThat(check).containsExactly("c")
+        }
+    }
+
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)
     }
