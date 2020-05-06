@@ -50,7 +50,7 @@ public class AssetSetTest extends BaseTestCase {
     public void testDupAssetSet() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/assets/dupSet");
 
-        AssetSet set = new AssetSet("main");
+        AssetSet set = new AssetSet("main", null);
         set.addSource(new File(root, "assets1"));
         set.addSource(new File(root, "assets2"));
         boolean gotException = false;
@@ -71,7 +71,7 @@ public class AssetSetTest extends BaseTestCase {
 
             RecordingLogger logger = new RecordingLogger();
 
-            sBaseResourceSet = new AssetSet("main");
+            sBaseResourceSet = new AssetSet("main", null);
             sBaseResourceSet.addSource(root);
             sBaseResourceSet.loadFromFiles(logger);
             checkLogger(logger);

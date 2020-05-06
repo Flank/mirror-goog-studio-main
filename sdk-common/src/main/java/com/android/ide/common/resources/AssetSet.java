@@ -16,6 +16,7 @@
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.ILogger;
 import java.io.File;
 import org.w3c.dom.Attr;
@@ -30,15 +31,17 @@ public class AssetSet extends DataSet<AssetItem, AssetFile> {
      * sessions.
      *
      * @param configName the name of the config this set is associated with
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable
      */
-    public AssetSet(@NonNull String configName) {
-        super(configName, true /*validateEnabled*/);
+    public AssetSet(@NonNull String configName, @Nullable String aaptEnv) {
+        super(configName, true /*validateEnabled*/, aaptEnv);
     }
 
     @Override
     @NonNull
-    protected DataSet<AssetItem, AssetFile> createSet(@NonNull String name) {
-        return new AssetSet(name);
+    protected DataSet<AssetItem, AssetFile> createSet(
+            @NonNull String name, @Nullable String aaptEnv) {
+        return new AssetSet(name, aaptEnv);
     }
 
     @Override

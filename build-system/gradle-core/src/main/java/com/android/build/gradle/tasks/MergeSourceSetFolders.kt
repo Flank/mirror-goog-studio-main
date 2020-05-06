@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SourceProvider
+import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
 import com.android.ide.common.resources.AssetMerger
 import com.android.ide.common.resources.AssetSet
 import com.android.ide.common.resources.FileStatus
@@ -45,6 +46,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -93,6 +95,8 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     private val fileValidity = FileValidity<AssetSet>()
+
+    private var aaptEnv: String? = null
 
     override val incremental: Boolean
         @Internal
@@ -148,7 +152,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         val merger = AssetMerger()
         try {
             getWorkerFacadeWithWorkers().use { workerExecutor ->
-                if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder!!, true)) {
+                if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder!!, true, aaptEnv)) {
                     doFullTaskAction()
                     return
                 }
@@ -265,7 +269,8 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 // the order of the artifact is descending order, so we need to reverse it.
                 val libArtifacts = it.artifacts
                 for (artifact in libArtifacts) {
-                    val assetSet = AssetSet(ProcessApplicationManifest.getArtifactName(artifact))
+                    val assetSet =
+                        AssetSet(ProcessApplicationManifest.getArtifactName(artifact), aaptEnv)
                     assetSet.addSource(artifact.file)
 
                     // add to 0 always, since we need to reverse the order.
@@ -351,8 +356,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.assetsDirectories }
 
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
+
             task.assetSets.set(creationConfig.globalScope.project.provider {
-                variantSources.getSourceFilesAsAssetSets(assetDirFunction)
+                variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
             task.assetSets.disallowChanges()
 
@@ -432,8 +439,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.jniLibsDirectories }
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
             task.assetSets.set(creationConfig.globalScope.project.provider {
-                variantSources.getSourceFilesAsAssetSets(assetDirFunction)
+                variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
             task.assetSets.disallowChanges()
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
@@ -463,8 +471,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val variantSources = creationConfig.variantSources
 
             val assetDirFunction = Function<SourceProvider, Collection<File>> { it.shadersDirectories }
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
             task.assetSets.set(creationConfig.globalScope.project.provider {
-                variantSources.getSourceFilesAsAssetSets(assetDirFunction)
+                variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
             task.assetSets.disallowChanges()
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
@@ -495,8 +504,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val variantSources = creationConfig.variantSources
             val mlModelsDirFunction =
                 Function<SourceProvider, Collection<File>> { it.mlModelsDirectories }
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
             task.assetSets.setDisallowChanges(creationConfig.globalScope.project.provider {
-                variantSources.getSourceFilesAsAssetSets(mlModelsDirFunction)
+                variantSources.getSourceFilesAsAssetSets(mlModelsDirFunction, task.aaptEnv)
             })
             task.sourceFolderInputs.from(Callable {
                 variantSources.getSourceFiles(

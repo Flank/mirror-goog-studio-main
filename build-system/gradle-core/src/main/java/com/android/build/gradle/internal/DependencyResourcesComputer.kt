@@ -57,7 +57,8 @@ class DependencyResourcesComputer {
     private fun addLibraryResources(
         libraries: ArtifactCollection?,
         resourceSetList: MutableList<ResourceSet>,
-        resourceArePrecompiled: Boolean
+        resourceArePrecompiled: Boolean,
+        aaptEnv: String?
     ) {
         // add at the beginning since the libraries are less important than the folder based
         // resource sets.
@@ -70,7 +71,8 @@ class DependencyResourcesComputer {
                 val resourceSet = ResourceSet(
                     ProcessApplicationManifest.getArtifactName(artifact),
                     ResourceNamespace.RES_AUTO, null,
-                    validateEnabled
+                    validateEnabled,
+                    aaptEnv
                 )
                 resourceSet.isFromDependency = true
                 resourceSet.addSource(artifact.file)
@@ -93,8 +95,11 @@ class DependencyResourcesComputer {
      * linking step.
      */
     @JvmOverloads
-    fun compute(precompileDependenciesResources: Boolean = false): List<ResourceSet> {
-        val sourceFolderSets = getResSet()
+    fun compute(
+        precompileDependenciesResources: Boolean = false,
+        aaptEnv: String?
+    ): List<ResourceSet> {
+        val sourceFolderSets = getResSet(aaptEnv)
         var size = sourceFolderSets.size
         libraries?.let {
             size += it.artifacts.size
@@ -102,7 +107,7 @@ class DependencyResourcesComputer {
 
         val resourceSetList = ArrayList<ResourceSet>(size)
 
-        addLibraryResources(libraries, resourceSetList, precompileDependenciesResources)
+        addLibraryResources(libraries, resourceSetList, precompileDependenciesResources, aaptEnv)
 
         // add the folder based next
         resourceSetList.addAll(sourceFolderSets)
@@ -139,12 +144,12 @@ class DependencyResourcesComputer {
         return resourceSetList
     }
 
-    private fun getResSet(): List<ResourceSet> {
+    private fun getResSet(aaptEnv: String?): List<ResourceSet> {
         val builder = ImmutableList.builder<ResourceSet>()
         resources?.let {
             for ((key, value) in it) {
                 val resourceSet = ResourceSet(
-                    key, ResourceNamespace.RES_AUTO, null, validateEnabled)
+                    key, ResourceNamespace.RES_AUTO, null, validateEnabled, aaptEnv)
                 resourceSet.addSources(value.files)
                 builder.add(resourceSet)
             }

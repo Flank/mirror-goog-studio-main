@@ -146,10 +146,10 @@ public class DataSetTest {
     }
 
     private static DataSet getDataSet() {
-        return new DataSet("foo", false) {
+        return new DataSet("foo", false, null) {
             @Override
             @NonNull
-            protected DataSet createSet(@NonNull String name) {
+            protected DataSet createSet(@NonNull String name, @Nullable String aaptEnv) {
                 return null;
             }
 

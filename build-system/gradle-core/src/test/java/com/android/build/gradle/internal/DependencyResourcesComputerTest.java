@@ -82,7 +82,7 @@ public class DependencyResourcesComputerTest {
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        assertThat(computer.compute()).containsExactly(mainSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet);
     }
 
     @Test
@@ -92,7 +92,7 @@ public class DependencyResourcesComputerTest {
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file, file2);
 
-        assertThat(computer.compute()).containsExactly(mainSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class DependencyResourcesComputerTest {
         File file2 = temporaryFolder.newFolder("src", "debug");
         ResourceSet debugSet = createResourceSet(folderSets, artifactMap, "debug", file2);
 
-        assertThat(computer.compute()).containsExactly(mainSet, debugSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet, debugSet);
     }
 
     @Test
@@ -118,7 +118,7 @@ public class DependencyResourcesComputerTest {
 
         assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(file2);
 
-        List<ResourceSet> computedSets = computer.compute();
+        List<ResourceSet> computedSets = computer.compute(null);
         assertThat(computedSets).containsExactly(librarySets.get(0), mainSet).inOrder();
     }
 
@@ -132,7 +132,7 @@ public class DependencyResourcesComputerTest {
         setFileCollection(computer::setRenderscriptResOutputDir, rsFile);
         mainSet.addSource(rsFile);
 
-        assertThat(computer.compute()).containsExactly(mainSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet);
         // rs file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, rsFile);
     }
@@ -147,7 +147,7 @@ public class DependencyResourcesComputerTest {
         setFileCollection(computer::setGeneratedResOutputDir, genFile);
         mainSet.addSource(genFile);
 
-        assertThat(computer.compute()).containsExactly(mainSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet);
         // generated file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, genFile);
     }
@@ -162,7 +162,7 @@ public class DependencyResourcesComputerTest {
         setFileCollection(computer::setMicroApkResDirectory, microFile);
         mainSet.addSource(microFile);
 
-        assertThat(computer.compute()).containsExactly(mainSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet);
         // micro file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, microFile);
     }
@@ -177,7 +177,7 @@ public class DependencyResourcesComputerTest {
         setFileCollectionSupplier(computer::setExtraGeneratedResFolders, extraFile);
         mainSet.addSource(extraFile);
 
-        assertThat(computer.compute()).containsExactly(mainSet);
+        assertThat(computer.compute(null)).containsExactly(mainSet);
         // rs file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, extraFile);
     }
@@ -222,7 +222,7 @@ public class DependencyResourcesComputerTest {
         mainSet.addSource(microFile);
 
         assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
-        assertThat(computer.compute())
+        assertThat(computer.compute(null))
                 .containsExactly(librarySet2, librarySet, mainSet, debugSet)
                 .inOrder();
         // generated files should have been added to the main resource sets.
@@ -237,7 +237,7 @@ public class DependencyResourcesComputerTest {
             Map<String, FileCollection> artifactMap,
             String name,
             File... files) {
-        ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false);
+        ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false, null);
         FileCollection artifact = new FakeFileCollection(Arrays.asList(files));
         artifactMap.put(name, artifact);
         mainSet.addSources(artifact.getFiles());
@@ -290,7 +290,7 @@ public class DependencyResourcesComputerTest {
             when(artifact.getId()).thenReturn(artifactId);
 
             // create a resource set that must match the one returned by the computation
-            ResourceSet set = new ResourceSet(path, ResourceNamespace.RES_AUTO, null, false);
+            ResourceSet set = new ResourceSet(path, ResourceNamespace.RES_AUTO, null, false, null);
             set.addSource(file);
             set.setFromDependency(true);
             resourceSets.add(set);

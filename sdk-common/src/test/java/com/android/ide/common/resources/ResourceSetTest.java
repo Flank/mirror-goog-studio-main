@@ -131,7 +131,7 @@ public class ResourceSetTest extends BaseTestCase {
 
     @NonNull
     private static ResourceSet createResourceSet() {
-        return new ResourceSet("main", ResourceNamespace.RES_AUTO, null, true);
+        return new ResourceSet("main", ResourceNamespace.RES_AUTO, null, true, null);
     }
 
     @Test

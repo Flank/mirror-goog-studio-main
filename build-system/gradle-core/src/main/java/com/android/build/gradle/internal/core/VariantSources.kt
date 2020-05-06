@@ -128,16 +128,17 @@ class VariantSources internal constructor(
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
      * Resource merger
      *
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
      * @return a list ResourceSet.
      */
-    fun getResourceSets(validateEnabled: Boolean): List<ResourceSet> {
+    fun getResourceSets(validateEnabled: Boolean, aaptEnv: String?): List<ResourceSet> {
         val resourceSets: MutableList<ResourceSet> =
             Lists.newArrayList()
         val mainResDirs =
             defaultSourceProvider.resDirectories
         // the main + generated res folders are in the same ResourceSet
         var resourceSet = ResourceSet(
-            BuilderConstants.MAIN, ResourceNamespace.RES_AUTO, null, validateEnabled
+            BuilderConstants.MAIN, ResourceNamespace.RES_AUTO, null, validateEnabled, aaptEnv
         )
         resourceSet.addSources(mainResDirs)
         resourceSets.add(resourceSet)
@@ -152,7 +153,8 @@ class VariantSources internal constructor(
                 sourceProvider.name,
                 ResourceNamespace.RES_AUTO,
                 null,
-                validateEnabled
+                validateEnabled,
+                aaptEnv
             )
             resourceSet.addSources(flavorResDirs)
             resourceSets.add(resourceSet)
@@ -161,7 +163,11 @@ class VariantSources internal constructor(
         multiFlavorSourceProvider?.let {
             val variantResDirs = it.resDirectories
             resourceSet = ResourceSet(
-                multiFlavorSourceProvider.name, ResourceNamespace.RES_AUTO, null, validateEnabled
+                multiFlavorSourceProvider.name,
+                ResourceNamespace.RES_AUTO,
+                null,
+                validateEnabled,
+                aaptEnv
             )
             resourceSet.addSources(variantResDirs)
             resourceSets.add(resourceSet)
@@ -174,7 +180,8 @@ class VariantSources internal constructor(
                 buildTypeSourceProvider.name,
                 ResourceNamespace.RES_AUTO,
                 null,
-                validateEnabled
+                validateEnabled,
+                aaptEnv
             )
             resourceSet.addSources(typeResDirs)
             resourceSets.add(resourceSet)
@@ -184,7 +191,11 @@ class VariantSources internal constructor(
         variantSourceProvider?.let {
             val variantResDirs = it.resDirectories
             resourceSet = ResourceSet(
-                variantSourceProvider.name, ResourceNamespace.RES_AUTO, null, validateEnabled
+                variantSourceProvider.name,
+                ResourceNamespace.RES_AUTO,
+                null,
+                validateEnabled,
+                aaptEnv
             )
             resourceSet.addSources(variantResDirs)
             resourceSets.add(resourceSet)
@@ -203,17 +214,19 @@ class VariantSources internal constructor(
      * asset merger
      *
      * @param function the function that return a collection of file based on the SourceProvider.
-     * this is usually a method referenceo on SourceProvider
+     * this is usually a method reference on SourceProvider
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
      * @return a list ResourceSet.
      */
     fun getSourceFilesAsAssetSets(
-        function: Function<SourceProvider, Collection<File>>
+        function: Function<SourceProvider, Collection<File>>,
+        aaptEnv: String?
     ): List<AssetSet> {
         val assetSets = mutableListOf<AssetSet>()
 
         val mainResDirs = function.apply(defaultSourceProvider)
         // the main + generated asset folders are in the same AssetSet
-        var assetSet = AssetSet(BuilderConstants.MAIN)
+        var assetSet = AssetSet(BuilderConstants.MAIN, aaptEnv)
         assetSet.addSources(mainResDirs)
         assetSets.add(assetSet)
         // the list of flavor must be reversed to use the right overlay order.
@@ -222,7 +235,7 @@ class VariantSources internal constructor(
             val flavorResDirs = function.apply(sourceProvider)
             // we need the same of the flavor config, but it's in a different list.
             // This is fine as both list are parallel collections with the same number of items.
-            assetSet = AssetSet(sourceProvider.name)
+            assetSet = AssetSet(sourceProvider.name, aaptEnv)
             assetSet.addSources(flavorResDirs)
             assetSets.add(assetSet)
         }
@@ -230,7 +243,7 @@ class VariantSources internal constructor(
         // multiflavor specific overrides flavor
         multiFlavorSourceProvider?.let {
             val variantResDirs = function.apply(it)
-            assetSet = AssetSet(multiFlavorSourceProvider.name)
+            assetSet = AssetSet(multiFlavorSourceProvider.name, aaptEnv)
             assetSet.addSources(variantResDirs)
             assetSets.add(assetSet)
         }
@@ -238,7 +251,7 @@ class VariantSources internal constructor(
         // build type overrides flavors
         if (buildTypeSourceProvider != null) {
             val typeResDirs = function.apply(buildTypeSourceProvider)
-            assetSet = AssetSet(buildTypeSourceProvider.name)
+            assetSet = AssetSet(buildTypeSourceProvider.name, aaptEnv)
             assetSet.addSources(typeResDirs)
             assetSets.add(assetSet)
         }
@@ -246,7 +259,7 @@ class VariantSources internal constructor(
         // variant specific overrides all
         variantSourceProvider?.let {
             val variantResDirs = function.apply(it)
-            assetSet = AssetSet(variantSourceProvider.name)
+            assetSet = AssetSet(variantSourceProvider.name, aaptEnv)
             assetSet.addSources(variantResDirs)
             assetSets.add(assetSet)
         }

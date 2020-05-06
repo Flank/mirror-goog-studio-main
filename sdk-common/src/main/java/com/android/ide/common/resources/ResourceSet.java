@@ -80,8 +80,9 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
             @NonNull String name,
             @NonNull ResourceNamespace namespace,
             String libraryName,
-            boolean validateEnabled) {
-        super(name, validateEnabled);
+            boolean validateEnabled,
+            @Nullable String aaptEnv) {
+        super(name, validateEnabled, aaptEnv);
         mNamespace = namespace;
         mPreprocessor = NoOpResourcePreprocessor.INSTANCE;
         mLibraryName = libraryName;
@@ -124,8 +125,9 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
 
     @NonNull
     @Override
-    protected DataSet<ResourceMergerItem, ResourceFile> createSet(@NonNull String name) {
-        return new ResourceSet(name, mNamespace, mLibraryName, true);
+    protected DataSet<ResourceMergerItem, ResourceFile> createSet(
+            @NonNull String name, @Nullable String aaptEnv) {
+        return new ResourceSet(name, mNamespace, mLibraryName, true, aaptEnv);
     }
 
     @Override

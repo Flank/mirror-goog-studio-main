@@ -94,7 +94,7 @@ public class ResourceRepositoryFixture {
         File resFolder = new File(dir, FD_RES);
 
         ResourceMerger merger = new ResourceMerger(0);
-        ResourceSet resourceSet = new ResourceSet("main", namespace, null, false);
+        ResourceSet resourceSet = new ResourceSet("main", namespace, null, false, null);
         resourceSet.addSource(resFolder);
         resourceSet.setTrackSourcePositions(false);
         try {

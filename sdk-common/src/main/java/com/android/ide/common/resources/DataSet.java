@@ -93,21 +93,24 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     /** Map from a File to its DataFile. */
     @NonNull private final Map<File, F> mDataFileMap = new HashMap<>();
 
-    @NonNull private PatternBasedFileFilter mFileFilter = new PatternBasedFileFilter();
+    @NonNull private PatternBasedFileFilter mFileFilter;
 
     /**
      * Creates a DataSet with a given configName. The name is used to identify the set across
      * sessions.
      *
      * @param configName the name of the config this set is associated with
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable
      */
-    protected DataSet(@NonNull String configName, boolean validateEnabled) {
+    protected DataSet(
+            @NonNull String configName, boolean validateEnabled, @Nullable String aaptEnv) {
         mConfigName = configName;
         mValidateEnabled = validateEnabled;
+        mFileFilter = new PatternBasedFileFilter(new AndroidAaptIgnore(aaptEnv));
     }
 
     @NonNull
-    protected abstract DataSet<I, F> createSet(@NonNull String name);
+    protected abstract DataSet<I, F> createSet(@NonNull String name, @Nullable String aaptEnv);
 
     /**
      * Creates a DataFile and associated DataItems from an XML node from a file created with
@@ -379,16 +382,18 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     }
 
     /**
-     * Creates and returns a new DataSet from an XML node that was created with
-     * {@link #appendToXml(Node, Document, MergeConsumer, boolean)}
+     * Creates and returns a new DataSet from an XML node that was created with {@link
+     * #appendToXml(Node, Document, MergeConsumer, boolean)}
      *
-     * The object this method is called on is not modified. This should be static but can't be
+     * <p>The object this method is called on is not modified. This should be static but can't be
      * due to children classes.
      *
      * @param dataSetNode the node to read from.
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable
      * @return a new DataSet object or null.
      */
-    DataSet<I,F> createFromXml(Node dataSetNode) throws MergingException {
+    DataSet<I, F> createFromXml(Node dataSetNode, @Nullable String aaptEnv)
+            throws MergingException {
         // get the config name
         Attr configNameAttr = (Attr) dataSetNode.getAttributes().getNamedItem(ATTR_CONFIG);
         if (configNameAttr == null) {
@@ -396,7 +401,7 @@ public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         }
 
         // create the DataSet that will be filled with the content of the XML.
-        DataSet<I, F> dataSet = createSet(configNameAttr.getValue());
+        DataSet<I, F> dataSet = createSet(configNameAttr.getValue(), aaptEnv);
 
         Attr ignoredPatternAttr =
                 (Attr) dataSetNode.getAttributes().getNamedItem(ATTR_IGNORE_PATTERN);

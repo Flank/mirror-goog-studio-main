@@ -91,7 +91,7 @@ public class AssetMergerTest extends BaseTestCase {
 
         RecordingLogger logger = new RecordingLogger();
 
-        AssetSet writtenSet = new AssetSet("unused");
+        AssetSet writtenSet = new AssetSet("unused", null);
         writtenSet.addSource(folder);
         writtenSet.loadFromFiles(logger);
 
@@ -114,7 +114,7 @@ public class AssetMergerTest extends BaseTestCase {
         }
 
         // Load asset set containing gzipped asset
-        AssetSet assetSet = new AssetSet("config");
+        AssetSet assetSet = new AssetSet("config", null);
         assetSet.addSource(assetsSourceDirectory.toFile());
         assetSet.loadFromFiles(new NoErrorsOrWarningsLogger());
 
@@ -145,7 +145,7 @@ public class AssetMergerTest extends BaseTestCase {
                 false);
 
         AssetMerger loadedMerger = new AssetMerger();
-        loadedMerger.loadFromBlob(folder, true /*incrementalState*/);
+        loadedMerger.loadFromBlob(folder, true /*incrementalState*/, null);
 
         compareResourceMaps(merger, loadedMerger, true /*full compare*/);
     }
@@ -159,7 +159,7 @@ public class AssetMergerTest extends BaseTestCase {
         File fakeRoot = getMergedBlobFolder(root);
 
         AssetMerger assetMerger = new AssetMerger();
-        assetMerger.loadFromBlob(fakeRoot, true /*incrementalState*/);
+        assetMerger.loadFromBlob(fakeRoot, true /*incrementalState*/, null);
         checkSourceFolders(assetMerger);
 
         List<AssetSet> sets = assetMerger.getDataSets();
@@ -180,7 +180,7 @@ public class AssetMergerTest extends BaseTestCase {
         File root = getIncMergeRoot("basicFiles");
         File fakeRoot = getMergedBlobFolder(root);
         AssetMerger assetMerger = new AssetMerger();
-        assetMerger.loadFromBlob(fakeRoot, true /*incrementalState*/);
+        assetMerger.loadFromBlob(fakeRoot, true /*incrementalState*/, null);
         checkSourceFolders(assetMerger);
 
         List<AssetSet> sets = assetMerger.getDataSets();
@@ -312,7 +312,7 @@ public class AssetMergerTest extends BaseTestCase {
 
         // reload it
         AssetMerger loadedMerger = new AssetMerger();
-        loadedMerger.loadFromBlob(folder, true /*incrementalState*/);
+        loadedMerger.loadFromBlob(folder, true /*incrementalState*/, null);
 
         String expected = merger1.toString();
         String actual = loadedMerger.toString();
@@ -419,7 +419,7 @@ public class AssetMergerTest extends BaseTestCase {
     private static AssetMerger createMerger(String[][] data) {
         AssetMerger merger = new AssetMerger();
         for (String[] setData : data) {
-            AssetSet set = new AssetSet(setData[0]);
+            AssetSet set = new AssetSet(setData[0], null);
             merger.addDataSet(set);
             for (int i = 1, n = setData.length; i < n; i++) {
                 set.addSource(new File(setData[i]));
@@ -439,7 +439,7 @@ public class AssetMergerTest extends BaseTestCase {
 
             RecordingLogger logger = new RecordingLogger();
 
-            AssetSet overlay = new AssetSet("overlay");
+            AssetSet overlay = new AssetSet("overlay", null);
             overlay.addSource(new File(root, "overlay"));
             overlay.loadFromFiles(logger);
 
