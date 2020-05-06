@@ -901,6 +901,8 @@ open class GradleDetector : Detector(), GradleScanner {
             }
         }
 
+        checkForKtxExtension(context, groupId, artifactId, version, cookie)
+
         val blacklistedDeps = blacklisted[context.project]
         if (blacklistedDeps != null) {
             val path = blacklistedDeps.checkDependency(groupId, artifactId, true)
@@ -1608,6 +1610,48 @@ open class GradleDetector : Detector(), GradleScanner {
                 report(context, it.cookie, DEPENDENCY, message, fix)
             }
         }
+    }
+
+    /**
+     * Checks to see if a KTX extension is available for the given library.
+     * If so, we offer a suggestion to switch the dependency to the KTX version.
+     * See https://developer.android.com/kotlin/ktx for details.
+     *
+     * This should be called outside of a read action, since it may trigger network requests.
+     */
+    private fun checkForKtxExtension(
+        context: Context,
+        groupId: String,
+        artifactId: String,
+        version: GradleVersion,
+        cookie: Any
+    ) {
+        if (!mAppliedKotlinAndroidPlugin) return
+        if (artifactId.endsWith("-ktx")) return
+
+        val mavenName = "$groupId:$artifactId"
+        if (!libraryHasKtxExtension(mavenName)) {
+            return
+        }
+
+        // Make sure the KTX extension exists for this version of the library.
+        val repository = getGoogleMavenRepository(context.client)
+        repository.findVersion(
+            groupId, "$artifactId-ktx",
+            filter = { it == version }, allowPreview = true
+        ) ?: return
+
+        // Note: once b/155974293 is fixed, we can check whether the KTX extension is
+        // already a direct dependency. If it is, then we could offer a slightly better
+        // warning message along the lines of: "There is no need to declare this dependency
+        // because the corresponding KTX extension pulls it in automatically."
+
+        val msg = "Add suffix `-ktx` to enable the Kotlin extensions for this library"
+        val fix = fix()
+            .name("Replace with KTX dependency")
+            .replace().text(mavenName).with("$mavenName-ktx")
+            .build()
+        report(context, cookie, KTX_EXTENSION_AVAILABLE, msg, fix)
     }
 
     /**
@@ -2508,6 +2552,27 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
+        @JvmField
+        val KTX_EXTENSION_AVAILABLE = Issue.create(
+            id = "KtxExtensionAvailable",
+            briefDescription = "KTX Extension Available",
+            explanation = """
+                Android KTX extensions augment some libraries with support for modern Kotlin \
+                language features like extension functions, extension properties, lambdas, named \
+                parameters, coroutines, and more.
+
+                In Kotlin projects, use the KTX version of a library by replacing the \
+                dependency in your `build.gradle` file. For example, you can replace \
+                `androidx.fragment:fragment` with `androidx.fragment:fragment-ktx`.
+            """,
+            category = Category.PRODUCTIVITY,
+            priority = 4,
+            severity = Severity.INFORMATIONAL,
+            androidSpecific = true,
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://developer.android.com/kotlin/ktx"
+        )
+
         /** The Gradle plugin ID for Android applications */
         const val APP_PLUGIN_ID = "com.android.application"
         /** The Gradle plugin ID for Android libraries */
@@ -2862,5 +2927,33 @@ open class GradleDetector : Detector(), GradleScanner {
             "org.inferred:freebuilder",
             "com.smile.gifshow.annotation:router_processor"
         )
+
+        private fun libraryHasKtxExtension(mavenName: String): Boolean {
+            // From https://developer.android.com/kotlin/ktx/extensions-list.
+            return when (mavenName) {
+                "androidx.activity:activity",
+                "androidx.collection:collection",
+                "androidx.core:core",
+                "androidx.dynamicanimation:dynamicanimation",
+                "androidx.fragment:fragment",
+                "androidx.lifecycle:lifecycle-livedata-core",
+                "androidx.lifecycle:lifecycle-livedata",
+                "androidx.lifecycle:lifecycle-reactivestreams",
+                "androidx.lifecycle:lifecycle-runtime",
+                "androidx.lifecycle:lifecycle-viewmodel",
+                "androidx.navigation:navigation-runtime",
+                "androidx.navigation:navigation-fragment",
+                "androidx.navigation:navigation-ui",
+                "androidx.paging:paging-common",
+                "androidx.paging:paging-runtime",
+                "androidx.paging:paging-rxjava2",
+                "androidx.palette:palette",
+                "androidx.preference:preference",
+                "androidx.slice:slice-builders",
+                "androidx.sqlite:sqlite",
+                "com.google.android.play:core" -> true
+                else -> false
+            }
+        }
     }
 }

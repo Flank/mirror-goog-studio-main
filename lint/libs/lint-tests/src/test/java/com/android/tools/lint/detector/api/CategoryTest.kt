@@ -49,6 +49,7 @@ class CategoryTest : TestCase() {
                     "Usability:Typography\n" +
                     "Usability:Icons\n" +
                     "Usability\n" +
+                    "Productivity\n" +
                     "Accessibility\n" +
                     "Internationalization\n" +
                     "Internationalization:Bidirectional Text\n" +
