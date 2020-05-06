@@ -19,10 +19,11 @@ import com.android.tools.deployer.ZipUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class Apk {
+public class Apk implements Serializable {
     public final String name;
     public final String checksum;
     public final String path;

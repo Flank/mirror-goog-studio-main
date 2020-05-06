@@ -18,7 +18,17 @@ package com.android.tools.deployer;
 import com.android.tools.deployer.model.Apk;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,12 +45,14 @@ import java.util.Set;
  */
 public class DeploymentCacheDatabase {
 
-    public static final int DEFAULT_SIZE = 100; // max number of cache entries.
+    public static final int DEFAULT_SIZE = 25; // max number of cache entries.
 
     // Key = serial + ":" + appId.
     private final Cache<String, Entry> db;
 
-    public static class Entry {
+    File persistFile = null;
+
+    public static class Entry implements Serializable {
         private final List<Apk> apks;
         private final OverlayId oid;
 
@@ -62,12 +74,31 @@ public class DeploymentCacheDatabase {
         }
     }
 
-    public DeploymentCacheDatabase() {
-        this(DEFAULT_SIZE);
+    public DeploymentCacheDatabase(int size) {
+        this(size, null);
     }
 
-    public DeploymentCacheDatabase(int size) {
+    public DeploymentCacheDatabase(File persistFile) {
+        this(DEFAULT_SIZE, persistFile);
+    }
+
+    public DeploymentCacheDatabase(int size, File persistFile) {
         db = CacheBuilder.newBuilder().maximumSize(size).build();
+        this.persistFile = persistFile;
+
+        if (persistFile == null) {
+            return;
+        }
+
+        try {
+            ObjectInputStream in = new ObjectInputStream(new FileInputStream(persistFile));
+            HashMap<String, Entry> entries = (HashMap<String, Entry>) in.readObject();
+            for (Map.Entry<String, Entry> e : entries.entrySet()) {
+                db.put(e.getKey(), e.getValue());
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public Entry get(String serial, String appId) {
@@ -80,6 +111,29 @@ public class DeploymentCacheDatabase {
             String serial, String appId, List<Apk> newInstalledApks, OverlayId overlayId) {
         String key = String.format("%s:%s", serial, appId);
         db.put(key, new Entry(newInstalledApks, overlayId));
+        writeToFile();
+        return true;
+    }
+
+    /** Write to persistent file should the cache database be created with a targeted file. */
+    public boolean writeToFile() {
+        if (persistFile == null) {
+            return false;
+        }
+
+        if (persistFile.exists()) {
+            persistFile.delete();
+        }
+
+        try {
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(persistFile));
+            HashMap<String, Entry> entries = Maps.newHashMap(db.asMap());
+            out.writeObject(entries);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 }

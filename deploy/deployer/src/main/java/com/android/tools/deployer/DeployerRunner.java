@@ -33,7 +33,9 @@ import java.util.concurrent.Executors;
 
 public class DeployerRunner {
 
-    private static final String DB_PATH = "/tmp/studio.db";
+    private static final String DEX_DB_PATH = "/tmp/studio_dex.db";
+    private static final String DEPLOY_DB_PATH = "/tmp/studio_deploy.db";
+
     private final DeploymentCacheDatabase cacheDb;
     private final SqlApkFileDatabase dexDb;
     private final ArrayList<DeployMetric> metrics;
@@ -53,12 +55,17 @@ public class DeployerRunner {
     }
 
     public static int tracedMain(String[] args, ILogger logger) {
-        DeployerRunner runner = new DeployerRunner(new File(DB_PATH), new CommandLineService());
+        DeployerRunner runner =
+                new DeployerRunner(
+                        new File(DEPLOY_DB_PATH), new File(DEX_DB_PATH), new CommandLineService());
         return runner.run(args, logger);
     }
 
-    public DeployerRunner(File databaseFile, UIService service) {
-        this(new DeploymentCacheDatabase(), new SqlApkFileDatabase(databaseFile, null), service);
+    public DeployerRunner(File deployCacheFile, File databaseFile, UIService service) {
+        this(
+                new DeploymentCacheDatabase(deployCacheFile),
+                new SqlApkFileDatabase(databaseFile, null),
+                service);
     }
 
     @VisibleForTesting

@@ -20,12 +20,17 @@ import com.android.tools.deployer.DeploymentCacheDatabase;
 import com.android.tools.deployer.OverlayId;
 import com.android.tools.deployer.model.Apk;
 import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Unit tests for DeploymentCacheDatabase. */
 public class DeploymentCacheDatabaseTest {
+    @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
     @Test
     public void testSimpleAddAndRetrieve() throws DeployerException {
@@ -178,6 +183,30 @@ public class DeploymentCacheDatabaseTest {
         DeploymentCacheDatabase.Entry entry1 = db.get("serial1", "com.example.XYZ");
         Assert.assertEquals(1, entry1.getApks().size());
         Assert.assertEquals("mychecksum1", entry1.getApks().get(0).checksum);
+    }
+
+    @Test
+    public void testPersist() throws DeployerException, IOException {
+        File persistFile = tmpDir.newFile("dex.db");
+        DeploymentCacheDatabase db = new DeploymentCacheDatabase(10, persistFile);
+        db.store(
+                "serialXYZ",
+                "com.example.xyz",
+                Lists.newArrayList(makeApk("mychecksum")),
+                mockOverLayId());
+        DeploymentCacheDatabase.Entry entry = db.get("serialXYZ", "com.example.xyz");
+        Assert.assertEquals(1, entry.getApks().size());
+        Assert.assertEquals("mychecksum", entry.getApks().get(0).checksum);
+
+        db = new DeploymentCacheDatabase(10, persistFile);
+        db.store(
+                "serialXYZ",
+                "com.example.xyz",
+                Lists.newArrayList(makeApk("mychecksum")),
+                mockOverLayId());
+        entry = db.get("serialXYZ", "com.example.xyz");
+        Assert.assertEquals(1, entry.getApks().size());
+        Assert.assertEquals("mychecksum", entry.getApks().get(0).checksum);
     }
 
     private static Apk makeApk(String checksum) {

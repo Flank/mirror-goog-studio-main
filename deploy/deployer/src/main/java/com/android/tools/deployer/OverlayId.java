@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableSortedMap;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,7 +33,7 @@ import java.util.TreeMap;
  *
  * <p>oid = sha1( sha1(installer base.apk), sha1(installed spilt.apk), sha1(dex1), sha1(dex2), ...).
  */
-public class OverlayId {
+public class OverlayId implements Serializable {
 
     // Hash a version number as part of the ID. This is to make sure the OID file on the device is
     // computed the same way as the current Studio and not by a version of Studio that computes

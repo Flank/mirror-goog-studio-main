@@ -17,8 +17,9 @@ package com.android.tools.deployer.model;
 
 import com.android.tools.deployer.ZipUtils;
 import com.google.common.annotations.VisibleForTesting;
+import java.io.Serializable;
 
-public class ApkEntry {
+public class ApkEntry implements Serializable {
     private final String name;
     private final long checksum;
     private final ZipUtils.ZipEntry entry;
