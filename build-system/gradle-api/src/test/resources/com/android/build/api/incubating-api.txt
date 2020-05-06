@@ -184,7 +184,6 @@ com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProviders: 
 com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.setArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.List<org.gradle.process.CommandLineArgumentProvider>)
 com.android.build.api.dsl.ApkExtension

@@ -84,7 +84,6 @@ public class AnnotationProcessorOptions
         return arguments;
     }
 
-    @Override
     public void setArguments(@NonNull Map<String, String> arguments) {
         this.arguments.clear();
         this.arguments.putAll(arguments);

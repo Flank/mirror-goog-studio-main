@@ -193,6 +193,16 @@ class KotlinDslTest {
         assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b", "c", "d")
     }
 
+    @Test
+    fun `AnnotationProcessorOptions arguments source compatibility`() {
+        android.defaultConfig.javaCompileOptions.annotationProcessorOptions {
+            arguments["a"] = "b"
+            assertThat(arguments).containsExactly("a", "b")
+            arguments += mapOf("c" to "d")
+            assertThat(arguments).containsExactly("a", "b", "c", "d")
+        }
+    }
+
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)
     }
