@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -52,7 +52,7 @@ class BundleAllClassesTest {
 
     @Mock private lateinit var componentProperties: ComponentPropertiesImpl
     @Mock private lateinit var scope: VariantScope
-    @Mock private lateinit var operations: OperationsImpl
+    @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantData: BaseVariantData
@@ -82,7 +82,7 @@ class BundleAllClassesTest {
         val services = createTaskCreationServices(projectServices)
 
         MockitoAnnotations.initMocks(this)
-        Mockito.`when`(componentProperties.operations).thenReturn(operations)
+        Mockito.`when`(componentProperties.artifacts).thenReturn(artifacts)
         Mockito.`when`(componentProperties.globalScope).thenReturn(globalScope)
         Mockito.`when`(componentProperties.name).thenReturn("theVariantName")
         Mockito.`when`(componentProperties.variantScope).thenReturn(scope)
@@ -109,7 +109,7 @@ class BundleAllClassesTest {
         task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(operations.get(InternalArtifactType
+        Mockito.`when`(artifacts.get(InternalArtifactType
             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(
             FakeGradleProvider(FakeGradleRegularFile(File("")))
         )

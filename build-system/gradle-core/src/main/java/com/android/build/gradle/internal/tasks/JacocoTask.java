@@ -112,13 +112,13 @@ public abstract class JacocoTask extends AndroidVariantTask {
                 @NonNull TaskProvider<? extends JacocoTask> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, JacocoTask::getOutput)
                     .withName("out")
                     .on(InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE);
 
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, JacocoTask::getOutputJars)
                     .withName("out")
                     .on(InternalArtifactType.JACOCO_INSTRUMENTED_JARS.INSTANCE);
@@ -128,7 +128,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
         public void configure(@NonNull JacocoTask task) {
             super.configure(task);
 
-            task.inputClasses = creationConfig.getOperations().getAllClasses();
+            task.inputClasses = creationConfig.getArtifacts().getAllClasses();
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
                             creationConfig.getGlobalScope().getProject(),

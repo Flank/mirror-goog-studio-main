@@ -174,7 +174,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            artifactTransformationRequest = creationConfig.operations.use(taskProvider)
+            artifactTransformationRequest = creationConfig.artifacts.use(taskProvider)
                 .toRead(InternalArtifactType.PROCESSED_RES, ShrinkResourcesTask::uncompressedResources)
                 .andWrite(InternalArtifactType.SHRUNK_PROCESSED_RES, ShrinkResourcesTask::compressedResources)
         }
@@ -184,30 +184,30 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
             if (creationConfig
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
-                operations.setTaskInputToFinalProduct(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
                 )
             } else {
-                operations.setTaskInputToFinalProduct(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.lightRClasses
                 )
             }
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir
             )
 
-            operations.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
+            artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
                 task.mappingFileSrc)
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS,
                 task.mergedManifests
             )
@@ -231,9 +231,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             task.classes.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8
                     && creationConfig.variantType.isAar) {
-                    creationConfig.operations.get(InternalArtifactType.SHRUNK_CLASSES)
+                    creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
-                    operations.getAll(MultipleArtifactType.DEX)
+                    artifacts.getAll(MultipleArtifactType.DEX)
                         .map {
                             if (it.isEmpty()) { classes } else {
                                 creationConfig.globalScope.project.files(it)

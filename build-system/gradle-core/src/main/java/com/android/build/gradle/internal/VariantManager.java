@@ -21,7 +21,7 @@ import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
@@ -396,7 +396,7 @@ public class VariantManager<
 
         VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
 
-        OperationsImpl operations = new OperationsImpl(project, componentIdentity.getName());
+        ArtifactsImpl artifacts = new ArtifactsImpl(project, componentIdentity.getName());
 
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
@@ -409,7 +409,7 @@ public class VariantManager<
                         variantDslInfo,
                         variantDependencies,
                         pathHelper,
-                        operations,
+                        artifacts,
                         globalScope,
                         null /* testedVariantProperties*/);
 
@@ -421,7 +421,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        operations,
+                        artifacts,
                         variantPropertiesApiServices,
                         globalScope,
                         taskContainer);
@@ -437,7 +437,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        operations,
+                        artifacts,
                         variantScope,
                         variantData,
                         transformManager,
@@ -641,7 +641,7 @@ public class VariantManager<
         VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
         ComponentIdentity componentIdentity = variantDslInfo.getComponentIdentity();
 
-        OperationsImpl operations = new OperationsImpl(project, componentIdentity.getName());
+        ArtifactsImpl artifacts = new ArtifactsImpl(project, componentIdentity.getName());
 
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
@@ -653,7 +653,7 @@ public class VariantManager<
                         variantDslInfo,
                         variantDependencies,
                         pathHelper,
-                        operations,
+                        artifacts,
                         globalScope,
                         testedVariantProperties);
 
@@ -665,7 +665,7 @@ public class VariantManager<
                         variantDependencies,
                         variantSources,
                         pathHelper,
-                        operations,
+                        artifacts,
                         (TestedVariantData) testedVariantProperties.getVariantData(),
                         variantPropertiesApiServices,
                         globalScope,
@@ -692,7 +692,7 @@ public class VariantManager<
                             variantDependencies,
                             variantSources,
                             pathHelper,
-                            operations,
+                            artifacts,
                             variantScope,
                             testVariantData,
                             testedVariantProperties,
@@ -717,7 +717,7 @@ public class VariantManager<
                             variantDependencies,
                             variantSources,
                             pathHelper,
-                            operations,
+                            artifacts,
                             variantScope,
                             testVariantData,
                             testedVariantProperties,

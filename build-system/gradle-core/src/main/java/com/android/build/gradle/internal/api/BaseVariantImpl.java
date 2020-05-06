@@ -492,7 +492,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // configuration.
         RegularFile mappingFile =
                 componentProperties
-                        .getOperations()
+                        .getArtifacts()
                         .get(InternalArtifactType.APK_MAPPING.INSTANCE)
                         .getOrNull();
         return mappingFile != null ? mappingFile.getAsFile() : null;
@@ -511,7 +511,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                                         .getServices()
                                         .fileCollection(
                                                 componentProperties
-                                                        .getOperations()
+                                                        .getArtifacts()
                                                         .get(
                                                                 InternalArtifactType.APK_MAPPING
                                                                         .INSTANCE)));

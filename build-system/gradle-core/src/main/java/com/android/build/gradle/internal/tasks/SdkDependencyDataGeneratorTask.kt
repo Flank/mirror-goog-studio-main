@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import java.nio.charset.StandardCharsets.UTF_8
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
@@ -35,7 +34,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.ByteArrayOutputStream
-import java.io.FileInputStream
 import java.io.PrintStream
 import java.nio.file.Files;
 import java.util.zip.DeflaterOutputStream
@@ -124,12 +122,12 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
       taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>
     ) {
       super.handleProvider(taskProvider)
-      creationConfig.operations.setInitialProvider(
+      creationConfig.artifacts.setInitialProvider(
         taskProvider,
         SdkDependencyDataGeneratorTask::sdkDependencyData
       ).withName("sdkDependencyData.pb").on(InternalArtifactType.SDK_DEPENDENCY_DATA)
 
-      creationConfig.operations.setInitialProvider(
+      creationConfig.artifacts.setInitialProvider(
         taskProvider,
         SdkDependencyDataGeneratorTask::sdkDependencyDataPublic
       ).withName("sdkDependencies.txt").on(InternalArtifactType.SDK_DEPENDENCY_DATA_PUBLIC)
@@ -139,7 +137,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
       task: SdkDependencyDataGeneratorTask
     ) {
       super.configure(task)
-      creationConfig.operations.setTaskInputToFinalProduct(
+      creationConfig.artifacts.setTaskInputToFinalProduct(
           InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
     }
   }

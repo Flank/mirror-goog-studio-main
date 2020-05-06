@@ -109,7 +109,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out OptimizeResourcesTask>) {
             super.handleProvider(taskProvider)
             // OPTIMIZED_PROCESSED_RES will be republished as PROCESSED_RES on task completion.
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 OptimizeResourcesTask::optimizedApkFile
             ).on(InternalArtifactType.OPTIMIZED_PROCESSED_RES)
@@ -120,7 +120,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
             val resourceShrinkingEnabled = creationConfig.variantScope.useResourceShrinker()
 
             task.inputApkFile.setDisallowChanges(
-                    creationConfig.operations.get(InternalArtifactType
+                    creationConfig.artifacts.get(InternalArtifactType
                             .PROCESSED_RES))
             task.aapt2Executable.setDisallowChanges(
                     getAapt2FromMavenAndVersion(creationConfig.globalScope).first)

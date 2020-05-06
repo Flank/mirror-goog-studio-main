@@ -29,7 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactTransformationRequest;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
@@ -1020,7 +1020,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getAssets()
-                    .set(creationConfig.getOperations().get(COMPRESSED_ASSETS.INSTANCE));
+                    .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
@@ -1079,7 +1079,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
                 creationConfig
-                        .getOperations()
+                        .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());
@@ -1101,26 +1101,26 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
-            OperationsImpl operations = creationConfig.getOperations();
+            ArtifactsImpl artifacts = creationConfig.getArtifacts();
             if (creationConfig.getVariantScope().consumesFeatureJars()) {
                 return creationConfig
                         .getGlobalScope()
                         .getProject()
-                        .files(operations.get(InternalArtifactType.BASE_DEX.INSTANCE))
+                        .files(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
-                return project.files(operations.getAll(MultipleArtifactType.DEX.INSTANCE))
+                return project.files(artifacts.getAll(MultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             }
         }
 
         @NonNull
         private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
-            OperationsImpl operations = creationConfig.getOperations();
+            ArtifactsImpl artifacts = creationConfig.getArtifacts();
 
             if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
                 Provider<RegularFile> mergedJavaResProvider =
-                        operations.get(SHRUNK_JAVA_RES.INSTANCE);
+                        artifacts.get(SHRUNK_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             } else if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
                 return creationConfig
@@ -1128,7 +1128,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
             } else {
                 Provider<RegularFile> mergedJavaResProvider =
-                        operations.get(MERGED_JAVA_RES.INSTANCE);
+                        artifacts.get(MERGED_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             }
         }
@@ -1171,7 +1171,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
                 return project.files(
                         creationConfig
-                                .getOperations()
+                                .getArtifacts()
                                 .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
                 return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);

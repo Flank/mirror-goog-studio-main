@@ -21,7 +21,7 @@ import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROI
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
@@ -111,7 +111,7 @@ public abstract class BaseVariantFactory<
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull OperationsImpl operations,
+            @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
@@ -129,7 +129,7 @@ public abstract class BaseVariantFactory<
                                 variantDependencies,
                                 variantSources,
                                 paths,
-                                operations,
+                                artifacts,
                                 variantScope,
                                 variantData,
                                 testedVariantProperties,
@@ -153,7 +153,7 @@ public abstract class BaseVariantFactory<
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull OperationsImpl operations,
+            @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
@@ -171,7 +171,7 @@ public abstract class BaseVariantFactory<
                                 variantDependencies,
                                 variantSources,
                                 paths,
-                                operations,
+                                artifacts,
                                 variantScope,
                                 variantData,
                                 testedVariantProperties,

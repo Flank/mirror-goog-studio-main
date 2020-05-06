@@ -102,7 +102,7 @@ class SigningConfigProvider(
                         SigningConfigData.fromSigningConfig(it)
                     },
                     signingConfigFileCollection = null,
-                    signingConfigValidationResultDir = creationConfig.operations.get(
+                    signingConfigValidationResultDir = creationConfig.artifacts.get(
                         InternalArtifactType.VALIDATE_SIGNING_CONFIG
                     )
                 )

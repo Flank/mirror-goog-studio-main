@@ -92,7 +92,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ModuleMetadataWriterTask::outputFile
             ).withName(ModuleMetadata.PERSISTED_FILE_NAME)

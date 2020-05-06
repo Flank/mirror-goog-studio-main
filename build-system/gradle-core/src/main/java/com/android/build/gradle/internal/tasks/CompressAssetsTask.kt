@@ -110,7 +110,7 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CompressAssetsTask::outputDir
             ).withName("out").on(InternalArtifactType.COMPRESSED_ASSETS)
@@ -121,7 +121,7 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_ASSETS,
                 task.inputDir
             )

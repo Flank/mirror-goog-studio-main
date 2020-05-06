@@ -134,7 +134,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkLibraryAndroidResourcesTask::staticLibApk
             ).withName("res.apk").on(InternalArtifactType.RES_STATIC_LIBRARY)
@@ -145,13 +145,13 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 task.manifestFile
             )
 
             task.inputResourcesDirectories.set(
-                creationConfig.operations.getAll(
+                creationConfig.artifacts.getAll(
                     MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
                     creationConfig.variantDependencies.getArtifactFileCollection(
@@ -165,7 +165,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
             creationConfig.onTestedConfig {
-                it.operations.setTaskInputToFinalProduct(
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested
                 )

@@ -44,8 +44,8 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
 
                 onVariantProperties {
                     project.tasks.register(it.getName() + "DisplayApks", DisplayApksTask.class) {
-                        it.apkFolder.set(operations.get(ArtifactTypes.APK.INSTANCE))
-                        it.builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
+                        it.apkFolder.set(artifacts.get(ArtifactTypes.APK.INSTANCE))
+                        it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                     }
                 }
             }
@@ -88,7 +88,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                             )
                             task.outputs.upToDateWhen { false }
                     }
-    
+
                     TaskProvider manifestProducer = tasks.register(it.getName() + 'ManifestProducer', ManifestProducerTask) {
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
@@ -96,7 +96,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                                 new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
                             )
                     }
-                    it.operations.replace(manifestProducer,
+                    it.artifacts.replace(manifestProducer,
                             { it.outputManifest })
                     .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
                 }
@@ -155,7 +155,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
                     }
-                    it.operations.transform(manifestUpdater,
+                    it.artifacts.transform(manifestUpdater,
                             { it.mergedManifest },
                             { it.updatedManifest })
                     .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
@@ -229,7 +229,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
 
                     ArtifactTransformationRequest request =
-                        it.operations.use(copyApksProvider)
+                        it.artifacts.use(copyApksProvider)
                         .toRead(ArtifactTypes.APK.INSTANCE, { it.getApkFolder() })
                         .andWrite(acme_apk_instance, { it.getOutFolder()}, "${outFolderForApk.absolutePath}")
 

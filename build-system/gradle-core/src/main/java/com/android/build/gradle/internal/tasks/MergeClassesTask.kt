@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -119,7 +118,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out MergeClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeClassesTask::outputFile
             ).withName(if (creationConfig.variantType.isBaseModule) {

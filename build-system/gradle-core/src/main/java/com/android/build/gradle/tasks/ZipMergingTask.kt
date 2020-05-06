@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -103,7 +102,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ZipMergingTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ZipMergingTask::outputFile
             ).withName(FN_INTERMEDIATE_FULL_JAR).on(InternalArtifactType.FULL_JAR)
@@ -114,9 +113,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
-            operations.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR, task.libraryInputFile)
-            operations.setTaskInputToFinalProduct(
+            val artifacts = creationConfig.artifacts
+            artifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR, task.libraryInputFile)
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
             )

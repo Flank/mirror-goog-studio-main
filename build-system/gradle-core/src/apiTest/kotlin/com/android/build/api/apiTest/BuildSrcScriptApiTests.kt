@@ -45,7 +45,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 import org.gradle.api.Project
                 import java.io.File
                 import com.android.build.api.dsl.CommonExtension
-                
+
                 abstract class ExamplePlugin: Plugin<Project> {
                 
                     override fun apply(project: Project) {
@@ -56,25 +56,25 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                 )
                                 it.outputs.upToDateWhen { false }
                             }
-                
+
                         val android = project.extensions.getByType(CommonExtension::class.java)
-                
+
                         android.onVariantProperties {
-                
+
                             val manifestProducer =
                                 project.tasks.register(name + "ManifestProducer", ManifestProducerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            operations.replace(manifestProducer, ManifestProducerTask::outputManifest)
+                            artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
                                 .on(ArtifactTypes.MERGED_MANIFEST)
-                
+
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(operations.get(ArtifactTypes.APK))
-                                it.builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
+                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }
                     }
-                }              
+                }
                 """.trimIndent()
                 )
                 buildFile =
@@ -84,7 +84,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
                     implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
                     gradleApi()
-                }                
+                }
                 """.trimIndent()
             }
             addModule(":app") {
@@ -118,7 +118,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 import org.gradle.api.Project
                 import java.io.File
                 import com.android.build.api.dsl.CommonExtension
-                
+
                 abstract class ExamplePlugin: Plugin<Project> {
                 
                     override fun apply(project: Project) {
@@ -129,25 +129,25 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                 )
                                 it.outputs.upToDateWhen { false }
                             }
-                
+
                         val android = project.extensions.getByType(CommonExtension::class.java)
-                
+
                         android.onVariantProperties {
-                
+
                             val manifestProducer =
                                 project.tasks.register(name + "ManifestProducer", ManifestProducerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            operations.replace(manifestProducer, ManifestProducerTask::outputManifest)
+                            artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
                                 .on(ArtifactTypes.MERGED_MANIFEST)
-                
+
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(operations.get(ArtifactTypes.APK))
-                                it.builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
+                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }
                     }
-                }              
+                }
                 """.trimIndent()
                 )
                 buildFile =
@@ -157,7 +157,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
                     implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
                     gradleApi()
-                }                
+                }
                 """.trimIndent()
             }
             addModule(":app") {
@@ -191,9 +191,9 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 import org.gradle.api.Project
                 import java.io.File
                 import com.android.build.api.dsl.CommonExtension
-                
+
                 abstract class ExamplePlugin: Plugin<Project> {
-                
+
                     override fun apply(project: Project) {
                         val gitVersionProvider =
                             project.tasks.register("gitVersionProvider", GitVersionTask::class.java) {
@@ -202,27 +202,27 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                 )
                                 it.outputs.upToDateWhen { false }
                             }
-                
+
                         val android = project.extensions.getByType(CommonExtension::class.java)
-                
+
                         android.onVariantProperties {
-                
+
                             val manifestUpdater =
                                 project.tasks.register(name + "ManifestUpdater", ManifestTransformerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            operations.transform(manifestUpdater,
+                            artifacts.transform(manifestUpdater,
                                 ManifestTransformerTask::mergedManifest,
                                 ManifestTransformerTask::updatedManifest)
                                 .on(ArtifactTypes.MERGED_MANIFEST)
                 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(operations.get(ArtifactTypes.APK))
-                                it.builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
+                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }
                     }
-                }              
+                }
                 """.trimIndent()
                 )
                 buildFile =
@@ -232,7 +232,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
                     implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
                     gradleApi()
-                }                
+                }
                 """.trimIndent()
             }
             addModule(":app") {
@@ -303,7 +303,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
 
                             val copyApksProvider = project.tasks.register("copy${'$'}{name}Apks", CopyApksTask::class.java)
 
-                            val transformationRequest = operations.use(copyApksProvider)
+                            val transformationRequest = artifacts.use(copyApksProvider)
                                 .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
                                 .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
 
@@ -343,9 +343,9 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     kotlin("android")
                     kotlin("android.extensions")
             }
-            
+
             apply<ExamplePlugin>()
-            
+
             android { ${testingElements.addCommonAndroidBuildLogic()}
             }
             """.trimIndent()

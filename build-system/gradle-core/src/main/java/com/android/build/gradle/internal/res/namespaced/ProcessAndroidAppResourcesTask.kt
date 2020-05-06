@@ -20,7 +20,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
@@ -141,11 +140,11 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessAndroidAppResourcesTask::rClassSource
             ).withName("out").on(InternalArtifactType.RUNTIME_R_CLASS_SOURCES)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessAndroidAppResourcesTask::resourceApUnderscoreDirectory
             ).withName("out").on(InternalArtifactType.PROCESSED_RES)
@@ -156,14 +155,14 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
             task.aaptFriendlyManifestFileDirectory =
-                operations.get(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                artifacts.get(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
 
             task.manifestFileDirectory =
-                operations.get(creationConfig.manifestArtifactType)
+                artifacts.get(creationConfig.manifestArtifactType)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 task.thisSubProjectStaticLibrary
             )

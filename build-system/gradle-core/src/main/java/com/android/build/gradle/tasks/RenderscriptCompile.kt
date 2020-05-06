@@ -263,12 +263,12 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.renderscriptCompileTask = taskProvider
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 RenderscriptCompile::sourceOutputDir
             ).withName("out").on(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 RenderscriptCompile::libOutputDir
             ).withName("lib").on(RENDERSCRIPT_LIB)

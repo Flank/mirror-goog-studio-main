@@ -23,7 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
@@ -122,7 +122,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setDescription("Run unit tests for the " + testedVariant.getName() + " build.");
 
-            task.setTestClassesDirs(creationConfig.getOperations().getAllClasses());
+            task.setTestClassesDirs(creationConfig.getArtifacts().getAllClasses());
             task.setClasspath(computeClasspath(creationConfig, includeAndroidResources));
 
             if (includeAndroidResources) {
@@ -164,7 +164,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         private ConfigurableFileCollection computeClasspath(
                 ComponentPropertiesImpl component, boolean includeAndroidResources) {
             GlobalScope globalScope = component.getGlobalScope();
-            OperationsImpl operations = component.getOperations();
+            ArtifactsImpl artifacts = component.getArtifacts();
 
             ConfigurableFileCollection collection = component.getServices().fileCollection();
 
@@ -172,14 +172,14 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             // 1. the config file
             if (includeAndroidResources) {
                 collection.from(
-                        operations.get(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE));
+                        artifacts.get(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE));
             }
 
             // 2. the test component classes and java_res
-            collection.from(component.getOperations().getAllClasses());
+            collection.from(component.getArtifacts().getAllClasses());
             // TODO is this the right thing? this doesn't include the res merging via transform
             // AFAIK
-            collection.from(operations.get(InternalArtifactType.JAVA_RES.INSTANCE));
+            collection.from(artifacts.get(InternalArtifactType.JAVA_RES.INSTANCE));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(

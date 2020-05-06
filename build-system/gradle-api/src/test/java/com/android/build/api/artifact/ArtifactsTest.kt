@@ -39,9 +39,9 @@ import org.mockito.MockitoAnnotations
  *
  * If you change this class, this could mean the public API is being changed so proceed with caution
  */
-class OperationsTest {
+class ArtifactsTest {
 
-    @Mock lateinit var operations: Operations
+    @Mock lateinit var artifacts: Artifacts
 
     @Before
     fun setUp() {
@@ -71,10 +71,10 @@ class OperationsTest {
 
     @Test
     fun testGet() {
-        operations.get(TestArtifactType.TEST_FILE)
-        operations.get(TestArtifactType.TEST_DIRECTORY)
-        operations.getAll(TestArtifactType.TEST_FILES)
-        operations.getAll(TestArtifactType.TEST_DIRECTORIES)
+        artifacts.get(TestArtifactType.TEST_FILE)
+        artifacts.get(TestArtifactType.TEST_DIRECTORY)
+        artifacts.getAll(TestArtifactType.TEST_FILES)
+        artifacts.getAll(TestArtifactType.TEST_DIRECTORIES)
     }
 
     @Test
@@ -82,11 +82,11 @@ class OperationsTest {
         val appendRegularFile = getAppendRequest<RegularFile>()
         val taskProvider = getTaskProvider<FileProducerTask>()
 
-        `when`(operations.append(taskProvider, FileProducerTask::getOutputFile))
+        `when`(artifacts.append(taskProvider, FileProducerTask::getOutputFile))
             .thenReturn(appendRegularFile)
 
         // actual API
-        operations.append(taskProvider, FileProducerTask::getOutputFile)
+        artifacts.append(taskProvider, FileProducerTask::getOutputFile)
             .on(TestArtifactType.TEST_APPENDABLE_FILES)
     }
 
@@ -95,11 +95,11 @@ class OperationsTest {
         val appendDirectory = getAppendRequest<Directory>()
         val taskProvider = getTaskProvider<DirectoryProducerTask>()
 
-        `when`(operations.append(taskProvider, DirectoryProducerTask::getOutputDir))
+        `when`(artifacts.append(taskProvider, DirectoryProducerTask::getOutputDir))
             .thenReturn(appendDirectory)
 
         // actual API
-        operations.append(taskProvider, DirectoryProducerTask::getOutputDir)
+        artifacts.append(taskProvider, DirectoryProducerTask::getOutputDir)
             .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
     }
 
@@ -108,13 +108,13 @@ class OperationsTest {
         val transformRequest = getTransformRequest<RegularFile>()
         val taskProvider = getTaskProvider<FileProducerTask>()
 
-        `when`(operations.transform(taskProvider,
+        `when`(artifacts.transform(taskProvider,
             FileProducerTask::getInputFile,
             FileProducerTask::getOutputFile))
             .thenReturn(transformRequest)
 
         // actual API
-        operations.transform(taskProvider, FileProducerTask::getInputFile, FileProducerTask::getOutputFile)
+        artifacts.transform(taskProvider, FileProducerTask::getInputFile, FileProducerTask::getOutputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILE)
     }
 
@@ -123,13 +123,13 @@ class OperationsTest {
         val transformRequest = getTransformRequest<Directory>()
         val taskProvider = getTaskProvider<DirectoryProducerTask>()
 
-        `when`(operations.transform(taskProvider,
+        `when`(artifacts.transform(taskProvider,
             DirectoryProducerTask::getInputDir,
             DirectoryProducerTask::getOutputDir))
             .thenReturn(transformRequest)
 
         // actual API
-        operations.transform(taskProvider,
+        artifacts.transform(taskProvider,
             DirectoryProducerTask::getInputDir,
             DirectoryProducerTask::getOutputDir)
             .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY)
@@ -145,13 +145,13 @@ class OperationsTest {
         }
         val taskProvider = getTaskProvider<FilesTransformerTask>()
 
-        `when`(operations.transformAll(taskProvider,
+        `when`(artifacts.transformAll(taskProvider,
             FilesTransformerTask::getInputFiles,
             FilesTransformerTask::getOutputFile))
             .thenReturn(combineRequest)
 
         // actual API
-        operations.transformAll(taskProvider,
+        artifacts.transformAll(taskProvider,
             FilesTransformerTask::getInputFiles,
             FilesTransformerTask::getOutputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
@@ -167,13 +167,13 @@ class OperationsTest {
         }
         val taskProvider = getTaskProvider<DirectoriesTransformerTask>()
 
-        `when`(operations.transformAll(taskProvider,
+        `when`(artifacts.transformAll(taskProvider,
             DirectoriesTransformerTask::getInputDirectories,
             DirectoriesTransformerTask::getOutputDirectory))
             .thenReturn(combineRequest)
 
         // actual API
-        operations.transformAll(taskProvider, DirectoriesTransformerTask::getInputDirectories,
+        artifacts.transformAll(taskProvider, DirectoriesTransformerTask::getInputDirectories,
             DirectoriesTransformerTask::getOutputDirectory)
             .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
     }
@@ -183,12 +183,12 @@ class OperationsTest {
         val transformRequest = getReplaceRequest<RegularFile>()
         val taskProvider = getTaskProvider<FileProducerTask>()
 
-        `when`(operations.replace(taskProvider,
+        `when`(artifacts.replace(taskProvider,
             FileProducerTask::getOutputFile))
             .thenReturn(transformRequest)
 
         // actual API
-        operations.replace(taskProvider, FileProducerTask::getOutputFile)
+        artifacts.replace(taskProvider, FileProducerTask::getOutputFile)
             .on(TestArtifactType.TEST_REPLACABLE_FILE)
     }
 
@@ -197,12 +197,12 @@ class OperationsTest {
         val transformRequest = getReplaceRequest<Directory>()
         val taskProvider = getTaskProvider<DirectoryProducerTask>()
 
-        `when`(operations.replace(taskProvider,
+        `when`(artifacts.replace(taskProvider,
             DirectoryProducerTask::getOutputDir))
             .thenReturn(transformRequest)
 
         // actual API
-        operations.replace(taskProvider, DirectoryProducerTask::getOutputDir)
+        artifacts.replace(taskProvider, DirectoryProducerTask::getOutputDir)
             .on(TestArtifactType.TEST_REPLACABLE_DIRECTORY)
     }
 

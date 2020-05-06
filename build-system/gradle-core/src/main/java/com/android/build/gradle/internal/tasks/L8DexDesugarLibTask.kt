@@ -105,7 +105,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out L8DexDesugarLibTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations
+            creationConfig.artifacts
                 .setInitialProvider(taskProvider, L8DexDesugarLibTask::desugarLibDex)
                 .on(InternalArtifactType.DESUGAR_LIB_DEX)
         }
@@ -148,30 +148,30 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                 )
             } else if (creationConfig.variantScope.codeShrinker != CodeShrinker.R8) {
                 task.keepRulesFiles.from(
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES
                     ),
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES
                     ),
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES
                     ),
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES
                     )
                 )
             }
 
             task.keepRulesFiles.from(
-                creationConfig.operations.get(
+                creationConfig.artifacts.get(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES
                 )
             )
 
             if (separateFileDependenciesDexingTask) {
                 task.keepRulesFiles.from(
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
             val hasDynamicFeatures =

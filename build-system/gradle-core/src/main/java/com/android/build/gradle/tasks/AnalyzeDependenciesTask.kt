@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -31,7 +30,6 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -175,7 +173,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.variantArtifact.from(creationConfig.operations.getAllClasses())
+            task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
 
             task.externalArtifactCollection = creationConfig
                 .variantDependencies.getArtifactCollection(
@@ -199,7 +197,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 AnalyzeDependenciesTask::outputDirectory
             ).withName("analyzeDependencies")

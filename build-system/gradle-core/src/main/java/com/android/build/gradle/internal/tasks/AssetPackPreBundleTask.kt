@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarCreator
@@ -96,7 +95,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out AssetPackPreBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 AssetPackPreBundleTask::outputDir
             ).on(InternalArtifactType.ASSET_PACK_BUNDLE)
@@ -106,7 +105,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
             task: AssetPackPreBundleTask
         ) {
             super.configure(task)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_ASSET_PACK, task.manifestFiles)
 
             task.assetsFiles.from(assetFileCollection)

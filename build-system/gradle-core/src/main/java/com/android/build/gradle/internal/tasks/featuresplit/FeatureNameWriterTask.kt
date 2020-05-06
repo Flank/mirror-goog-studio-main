@@ -67,7 +67,7 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 FeatureNameWriterTask::outputFile
             ).withName("feature-name.txt").on(InternalArtifactType.FEATURE_NAME)

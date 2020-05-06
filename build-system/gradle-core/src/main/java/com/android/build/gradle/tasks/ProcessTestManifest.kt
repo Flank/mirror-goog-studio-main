@@ -397,7 +397,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
             creationConfig
-                .operations
+                .artifacts
                 .republish(
                     PACKAGED_MANIFESTS,
                     InternalArtifactType.MANIFEST_METADATA
@@ -409,11 +409,11 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessTestManifest::packagedManifestOutputDirectory
             ).on(PACKAGED_MANIFESTS)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessTestManifest::mergeBlameFile
             ).withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")

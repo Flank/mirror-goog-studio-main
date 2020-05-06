@@ -124,7 +124,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkManifestForAssetPackTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkManifestForAssetPackTask::linkedManifestsDirectory
             ).on(InternalArtifactType.LINKED_RES_FOR_ASSET_PACK)
@@ -135,7 +135,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)

@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -75,7 +73,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             taskProvider: TaskProvider<out RecalculateStackFramesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 RecalculateStackFramesTask::outFolder
             ).on(InternalArtifactType.FIXED_STACK_FRAMES)
@@ -107,13 +105,13 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
                     creationConfig.globalScope.project.files(
-                        creationConfig.operations.get(
+                        creationConfig.artifacts.get(
                             InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
             } else {
-                referencedClasses.from(creationConfig.operations.getAllClasses())
+                referencedClasses.from(creationConfig.artifacts.getAllClasses())
             }
 
             creationConfig.onTestedConfig {

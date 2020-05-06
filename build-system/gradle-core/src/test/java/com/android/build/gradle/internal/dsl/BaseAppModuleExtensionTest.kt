@@ -94,17 +94,17 @@ class BaseAppModuleExtensionTest {
     fun testOnVariantsProperties() {
         appExtension.onVariantProperties
             .withName("foo", Action {
-                it.operations.get(ArtifactTypes.APK) })
+                it.artifacts.get(ArtifactTypes.APK) })
         appExtension.onVariantProperties
             .withFlavor("f1" to "dim1", Action {
-                it.operations.get(ArtifactTypes.APK) }
+                it.artifacts.get(ArtifactTypes.APK) }
             )
 
         appExtension.onVariantProperties
             .withType(ApplicationVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1", Action {
-                it.operations.get(ArtifactTypes.APK)
+                it.artifacts.get(ArtifactTypes.APK)
             })
 
         appExtension.onVariantProperties
@@ -112,7 +112,7 @@ class BaseAppModuleExtensionTest {
             .withBuildType("debug")
             .withFlavor("f1" to "dim1")
             .withFlavor("f2" to "dim2", Action {
-                it.operations.get(ArtifactTypes.APK)
+                it.artifacts.get(ArtifactTypes.APK)
             })
     }
 }

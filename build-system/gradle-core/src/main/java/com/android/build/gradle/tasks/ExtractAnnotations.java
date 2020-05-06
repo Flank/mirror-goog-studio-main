@@ -321,13 +321,13 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             creationConfig.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, ExtractAnnotations::getOutput)
                     .withName(SdkConstants.FN_ANNOTATIONS_ZIP)
                     .on(InternalArtifactType.ANNOTATIONS_ZIP.INSTANCE);
 
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, ExtractAnnotations::getTypedefFile)
                     .withName("typedefs.txt")
                     .on(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE.INSTANCE);
@@ -342,7 +342,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            task.setClassDir(creationConfig.getOperations().getAllClasses());
+            task.setClassDir(creationConfig.getArtifacts().getAllClasses());
 
             task.source(creationConfig.getJavaSources());
             task.setEncoding(

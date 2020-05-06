@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -139,7 +137,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             taskProvider: TaskProvider<out PackageForUnitTest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PackageForUnitTest::apkForUnitTest
             ).withName("apk-for-local-test.ap_").on(InternalArtifactType.APK_FOR_LOCAL_TEST)
@@ -149,9 +147,9 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             task: PackageForUnitTest
         ) {
             super.configure(task)
-            val operations = creationConfig.operations
-            operations.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
-            operations.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
+            val artifacts = creationConfig.artifacts
+            artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
+            artifacts.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
         }
     }
 }

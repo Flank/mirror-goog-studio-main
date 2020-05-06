@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -42,7 +42,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    operations: OperationsImpl,
+    artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
     override val testedVariant: VariantPropertiesImpl,
@@ -57,7 +57,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantDependencies,
     variantSources,
     paths,
-    operations,
+    artifacts,
     variantScope,
     variantData,
     transformManager,

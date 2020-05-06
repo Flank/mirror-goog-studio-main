@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.dexing.isProguardRule
@@ -39,7 +38,7 @@ class MergeGeneratedProguardFilesCreationAction(
         taskProvider: TaskProvider<out MergeFileTask>
     ) {
         super.handleProvider(taskProvider)
-        creationConfig.operations.setInitialProvider(
+        creationConfig.artifacts.setInitialProvider(
             taskProvider,
             MergeFileTask::outputFile
         ).withName(SdkConstants.FN_PROGUARD_TXT).on(InternalArtifactType.GENERATED_PROGUARD_FILE)
@@ -50,7 +49,7 @@ class MergeGeneratedProguardFilesCreationAction(
     ) {
         super.configure(task)
 
-        val allClasses = creationConfig.operations.getAllClasses()
+        val allClasses = creationConfig.artifacts.getAllClasses()
         val proguardFiles = allClasses.asFileTree.filter { f ->
             val baseFolders = allClasses.files
             val baseFolder = baseFolders.first { f.startsWith(it) }

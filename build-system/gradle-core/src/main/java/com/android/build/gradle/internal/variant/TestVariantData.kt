@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -37,7 +37,7 @@ class TestVariantData(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    operations: OperationsImpl,
+    artifacts: ArtifactsImpl,
     val testedVariantData: TestedVariantData,
     services: VariantPropertiesApiServices,
     globalScope: GlobalScope,
@@ -48,7 +48,7 @@ class TestVariantData(
     variantDependencies,
     variantSources,
     paths,
-    operations,
+    artifacts,
     services,
     globalScope,
     taskContainer

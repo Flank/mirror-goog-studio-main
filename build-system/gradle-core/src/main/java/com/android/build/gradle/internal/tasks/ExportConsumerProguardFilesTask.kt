@@ -102,7 +102,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ExportConsumerProguardFilesTask::outputDir
             ).on(InternalArtifactType.CONSUMER_PROGUARD_DIR)
@@ -120,7 +120,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
             task.inputFiles.from(
                 task.consumerProguardFiles,
                 creationConfig
-                    .operations
+                    .artifacts
                     .get(InternalArtifactType.GENERATED_PROGUARD_FILE)
             )
             if (creationConfig.variantType.isDynamicFeature) {

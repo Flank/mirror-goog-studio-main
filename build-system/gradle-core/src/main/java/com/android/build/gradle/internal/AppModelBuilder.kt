@@ -71,12 +71,12 @@ class AppModelBuilder(
         val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
 
         for (component in variantModel.variants) {
-            val operations = component.operations
+            val artifacts = component.artifacts
 
             // TODO(b/111168382): Remove the namespaced check check once bundle pipeline works with namespaces.
             if (component.variantType.isBaseModule && !component.globalScope.extension.aaptOptions.namespaced) {
-                val bundleFile = operations.get(InternalArtifactType.BUNDLE)
-                val apkFolder = operations.get(InternalArtifactType.EXTRACTED_APKS)
+                val bundleFile = artifacts.get(InternalArtifactType.BUNDLE)
+                val apkFolder = artifacts.get(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
                             component.name, bundleFile.get().asFile, apkFolder.get().asFile))

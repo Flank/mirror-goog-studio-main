@@ -97,7 +97,7 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DataBindingExportFeatureInfoTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingExportFeatureInfoTask::outFolder
             ).on(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)

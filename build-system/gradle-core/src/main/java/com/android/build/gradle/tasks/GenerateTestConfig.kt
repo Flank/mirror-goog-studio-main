@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -115,7 +114,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateTestConfig::outputDirectory
             ).withName("out").on(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
@@ -163,9 +162,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             isUseRelativePathEnabled = unitTestProperties.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = unitTestProperties.operations.get(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedVariant.operations.get(MERGED_ASSETS)
-            mergedManifest = testedVariant.operations.get(PACKAGED_MANIFESTS)
+            resourceApk = unitTestProperties.artifacts.get(APK_FOR_LOCAL_TEST)
+            mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS)
+            mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.packageName
             buildDirectoryPath = FileUtils.toSystemIndependentPath(

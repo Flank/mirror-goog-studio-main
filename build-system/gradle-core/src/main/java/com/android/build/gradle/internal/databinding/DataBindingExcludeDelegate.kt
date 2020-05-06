@@ -85,11 +85,11 @@ fun Property<DataBindingExcludeDelegate>.configureFrom(creationConfig: BaseCreat
         creationConfig.buildFeatures.dataBinding
     ).also {
         it.dependencyArtifactsDir.setDisallowChanges(
-            creationConfig.operations.get(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
+            creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
         )
 
         it.exportClassListLocation.setDisallowChanges(
-            creationConfig.operations.get(InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST)
+            creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST)
         )
     })
 }

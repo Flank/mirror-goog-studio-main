@@ -103,7 +103,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             super.handleProvider(taskProvider);
 
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, MergeConsumerProguardFilesTask::getOutputFile)
                     .withName(SdkConstants.FN_PROGUARD_TXT)
                     .on(InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE.INSTANCE);
@@ -125,7 +125,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             ConfigurableFileCollection inputFiles =
                     project.files(
                             task.getConsumerProguardFiles(),
-                            creationConfig.getOperations().get(GENERATED_PROGUARD_FILE.INSTANCE));
+                            creationConfig.getArtifacts().get(GENERATED_PROGUARD_FILE.INSTANCE));
             task.setInputFiles(inputFiles);
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getBuildDirectory(), task.getProject().getLayout().getBuildDirectory());

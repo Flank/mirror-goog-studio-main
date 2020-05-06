@@ -188,7 +188,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out D8MainDexListTask>
         ) {
             super.handleProvider(taskProvider)
-            val request = creationConfig.operations.setInitialProvider(
+            val request = creationConfig.artifacts.setInitialProvider(
                 taskProvider, D8MainDexListTask::output
             ).withName("mainDexList.txt")
             if (includeDynamicFeatures) {
@@ -203,7 +203,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
                 task.aaptGeneratedRules
             )

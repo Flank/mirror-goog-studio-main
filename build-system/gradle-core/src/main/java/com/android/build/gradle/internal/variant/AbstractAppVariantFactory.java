@@ -20,7 +20,7 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -65,7 +65,7 @@ public abstract class AbstractAppVariantFactory<
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull OperationsImpl operations,
+            @NonNull ArtifactsImpl artifacts,
             @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer) {
@@ -75,7 +75,7 @@ public abstract class AbstractAppVariantFactory<
                 variantDependencies,
                 variantSources,
                 paths,
-                operations,
+                artifacts,
                 services,
                 globalScope,
                 taskContainer);

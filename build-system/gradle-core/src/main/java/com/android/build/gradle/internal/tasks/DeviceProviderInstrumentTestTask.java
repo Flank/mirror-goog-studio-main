@@ -451,7 +451,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 if (isAdditionalAndroidTestOutputEnabled) {
                     creationConfig
-                            .getOperations()
+                            .getArtifacts()
                             .setInitialProvider(
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir)
@@ -461,7 +461,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                             .INSTANCE);
                 }
                 creationConfig
-                        .getOperations()
+                        .getArtifacts()
                         .setInitialProvider(
                                 taskProvider, DeviceProviderInstrumentTestTask::getCoverageDir)
                         .withName(deviceProvider.getName())
@@ -471,7 +471,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 // will exist in the variant scope.
                 if (isAdditionalAndroidTestOutputEnabled) {
                     creationConfig
-                            .getOperations()
+                            .getArtifacts()
                             .setInitialProvider(
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir)
@@ -482,7 +482,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                             .INSTANCE);
                 }
                 creationConfig
-                        .getOperations()
+                        .getArtifacts()
                         .setInitialProvider(
                                 taskProvider, DeviceProviderInstrumentTestTask::getCoverageDir)
                         .withName(deviceProvider.getName())

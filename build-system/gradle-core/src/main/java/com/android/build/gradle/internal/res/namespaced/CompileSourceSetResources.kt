@@ -30,7 +30,6 @@ import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -205,12 +204,12 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.append(
+            creationConfig.artifacts.append(
                 taskProvider,
                 CompileSourceSetResources::partialRDirectory
             ).on(MultipleArtifactType.PARTIAL_R_FILES)
 
-            creationConfig.operations.append(
+            creationConfig.artifacts.append(
                 taskProvider,
                 CompileSourceSetResources::outputDirectory
             ).on(MultipleArtifactType.RES_COMPILED_FLAT_FILES)

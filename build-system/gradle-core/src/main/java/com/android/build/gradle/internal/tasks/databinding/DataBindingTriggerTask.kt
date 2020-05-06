@@ -85,7 +85,7 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DataBindingTriggerTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingTriggerTask::triggerDir
             ).on(InternalArtifactType.DATA_BINDING_TRIGGER)

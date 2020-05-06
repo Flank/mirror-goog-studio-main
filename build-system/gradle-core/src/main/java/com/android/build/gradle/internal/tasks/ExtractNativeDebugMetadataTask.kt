@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_DEBUG_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBOL_TABLES
@@ -113,7 +112,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
         override fun configure(task: ExtractNativeDebugMetadataTask) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.ndkRevision = creationConfig.globalScope.sdkComponents.ndkRevisionProvider
             task.objcopyExecutableMapProvider =
                 creationConfig.globalScope.sdkComponents.objcopyExecutableMapProvider
@@ -136,7 +135,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExtractNativeDebugMetadataTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ExtractNativeDebugMetadataTask::outputDir
             ).withName("out").on(NATIVE_DEBUG_METADATA)
@@ -160,7 +159,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ExtractNativeDebugMetadataTask::outputDir
             ).withName("out").on(NATIVE_SYMBOL_TABLES)

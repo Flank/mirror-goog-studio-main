@@ -189,48 +189,48 @@ abstract class R8Task: ProguardConfigurableTask() {
             super.handleProvider(taskProvider)
 
             when {
-                variantType.isAar -> creationConfig.operations.setInitialProvider(
+                variantType.isAar -> creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     R8Task::outputClasses)
                     .withName("shrunkClasses.jar")
                     .on(InternalArtifactType.SHRUNK_CLASSES)
 
                 creationConfig.variantScope.consumesFeatureJars() -> {
-                    creationConfig.operations.setInitialProvider(
+                    creationConfig.artifacts.setInitialProvider(
                         taskProvider,
                         R8Task::featureDexDir
                     ).on(InternalArtifactType.FEATURE_DEX)
 
-                    creationConfig.operations.setInitialProvider(
+                    creationConfig.artifacts.setInitialProvider(
                         taskProvider,
                         R8Task::baseDexDir
                     ).on(InternalArtifactType.BASE_DEX)
 
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                        creationConfig.operations
+                        creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
                             .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
                     }
                 }
                 else -> {
-                    creationConfig.operations.append(
+                    creationConfig.artifacts.append(
                         taskProvider, R8Task::outputDex
                     ).on(MultipleArtifactType.DEX)
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                        creationConfig.operations
+                        creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
                             .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
                     }
                 }
             }
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 R8Task::outputResources
             ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     R8Task::mainDexListOutput
                 ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
@@ -242,7 +242,7 @@ abstract class R8Task: ProguardConfigurableTask() {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
             task.enableDesugaring.set(
                 creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.R8
@@ -262,7 +262,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.proguardConfigurations = proguardConfigurations
 
             if (!variantType.isAar) {
-                task.duplicateClassesCheck.from(operations.get(DUPLICATE_CLASSES_CHECK))
+                task.duplicateClassesCheck.from(artifacts.get(DUPLICATE_CLASSES_CHECK))
             }
 
             creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
@@ -272,7 +272,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             if (creationConfig.needsMainDexList
                 && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.mainDexRulesFiles.from(
-                    operations.get(
+                    artifacts.get(
                         InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
                     )
                 )
@@ -283,7 +283,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
 
             if (creationConfig.variantScope.consumesFeatureJars()) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                     task.baseJar
                 )

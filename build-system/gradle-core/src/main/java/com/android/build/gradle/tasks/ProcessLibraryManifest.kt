@@ -269,30 +269,30 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
-            val operations = creationConfig.operations
-            operations.setInitialProvider(
+            val artifacts = creationConfig.artifacts
+            artifacts.setInitialProvider(
                 taskProvider,
                 ProcessLibraryManifest::aaptFriendlyManifestOutputDirectory
             ).withName("aapt").on(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
 
-            operations.setInitialProvider(
+            artifacts.setInitialProvider(
                 taskProvider,
                 ProcessLibraryManifest::packagedManifestOutputDirectory
             ).on(InternalArtifactType.PACKAGED_MANIFESTS)
 
-            operations.setInitialProvider(
+            artifacts.setInitialProvider(
                 taskProvider
             ) { task: ProcessLibraryManifest -> task.manifestOutputFile }
                 .withName(SdkConstants.ANDROID_MANIFEST_XML)
                 .on(InternalArtifactType.LIBRARY_MANIFEST)
 
-            operations.setInitialProvider(
+            artifacts.setInitialProvider(
                 taskProvider,
                 ProcessLibraryManifest::mergeBlameFile
             ).withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
                 .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
 
-            operations.setInitialProvider(
+            artifacts.setInitialProvider(
                 taskProvider,
                 ProcessLibraryManifest::reportFile
             )

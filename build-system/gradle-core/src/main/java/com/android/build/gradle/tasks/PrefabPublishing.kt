@@ -301,7 +301,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out PrefabPackageTask>) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PrefabPackageTask::outputDirectory
             ).withName("prefab").on(InternalArtifactType.PREFAB_PACKAGE)

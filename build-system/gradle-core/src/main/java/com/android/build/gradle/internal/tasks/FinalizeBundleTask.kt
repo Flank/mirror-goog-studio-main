@@ -162,12 +162,12 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             val bundleName = "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
             val apkLocationOverride = creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile
                 ).withName(bundleName).on(InternalArtifactType.BUNDLE)
             } else {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile)
                     .atLocation(FileUtils.join(
@@ -177,7 +177,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     .on(InternalArtifactType.BUNDLE)
             }
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 FinalizeBundleTask::bundleIdeModel
             ).withName(BuiltArtifactsImpl.METADATA_FILE_NAME)
@@ -189,7 +189,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
                 task.intermediaryBundleFile)
 

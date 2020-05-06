@@ -64,7 +64,7 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out StaticLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 StaticLibraryManifestTask::manifestFile
             ).withName(SdkConstants.ANDROID_MANIFEST_XML).on(InternalArtifactType.STATIC_LIBRARY_MANIFEST)

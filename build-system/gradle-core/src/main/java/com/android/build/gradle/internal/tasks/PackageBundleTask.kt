@@ -17,10 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -345,7 +343,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             val bundleName =
                 "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PackageBundleTask::bundleFile
             ).withName(bundleName).on(InternalArtifactType.INTERMEDIARY_BUNDLE)
@@ -356,7 +354,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_BUNDLE, task.baseModuleZip
             )
 
@@ -367,17 +365,17 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             if (creationConfig.needAssetPackTasks.get()) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
                 )
             }
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
                 task.bundleDeps
             )
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APP_INTEGRITY_CONFIG,
                 task.integrityConfigFile
             )
@@ -398,7 +396,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList
                 )
@@ -407,7 +405,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 // not reprocess the dex files.
             }
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.obsfuscationMappingFile
             )
@@ -415,7 +413,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.bundleNeedsFusedStandaloneConfig.set(
                 creationConfig.globalScope.project.provider {
                     creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
-                            && creationConfig.operations.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
+                            && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }
             )
         }

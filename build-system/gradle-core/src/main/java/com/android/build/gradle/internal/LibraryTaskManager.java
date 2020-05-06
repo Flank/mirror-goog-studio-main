@@ -366,7 +366,7 @@ public class LibraryTaskManager
         FileCollection compileRClass =
                 project.files(
                         variantProperties
-                                .getOperations()
+                                .getArtifacts()
                                 .get(InternalArtifactType.COMPILE_R_CLASS_JAR.INSTANCE));
         variantProperties
                 .getTransformManager()
@@ -454,7 +454,7 @@ public class LibraryTaskManager
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends MergeResources> taskProvider) {
             variantProperties
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, MergeResources::getPublicFile)
                     .withName(FN_PUBLIC_TXT)
                     .on(InternalArtifactType.PUBLIC_RES.INSTANCE);
@@ -508,14 +508,14 @@ public class LibraryTaskManager
                 componentProperties
                         .getServices()
                         .fileCollection(
-                                componentProperties.getOperations().get(JAVAC.INSTANCE),
+                                componentProperties.getArtifacts().get(JAVAC.INSTANCE),
                                 componentProperties
                                         .getVariantData()
                                         .getAllPreJavacGeneratedBytecode(),
                                 componentProperties
                                         .getVariantData()
                                         .getAllPostJavacGeneratedBytecode());
-        componentProperties.getOperations().appendToAllClasses(files);
+        componentProperties.getArtifacts().appendToAllClasses(files);
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(

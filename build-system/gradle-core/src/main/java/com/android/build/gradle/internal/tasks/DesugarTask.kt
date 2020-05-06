@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.DesugarProcessArgs
@@ -139,7 +138,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
                 val processedClasses = componentProperties.globalScope.project.files(
-                    componentProperties.operations.get(output)
+                    componentProperties.artifacts.get(output)
                 )
                     .asFileTree
                 componentProperties
@@ -162,19 +161,19 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::projectOutput
             ).on(InternalArtifactType.DESUGAR_PROJECT_CLASSES)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::subProjectOutput
             ).on(InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::externalLibsOutput
             ).on(InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::tmpDir
             ).on(InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT)
@@ -208,7 +207,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FIXED_STACK_FRAMES,
                 task.externaLibsClasses
             )

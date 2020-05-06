@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -336,7 +335,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeSourceSetFolders::outputDir
             ).withName("out").on(outputArtifactType)
@@ -359,12 +358,12 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
                 task.shadersOutputDir
             )
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_ML_MODELS,
                 task.mlModelsOutputDir
             )
@@ -419,7 +418,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeSourceSetFolders::outputDir
             ).withName("out").on(InternalArtifactType.MERGED_JNI_LIBS)
@@ -451,7 +450,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeSourceSetFolders::outputDir
             ).withName("out").on(InternalArtifactType.MERGED_SHADERS)
@@ -482,7 +481,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeSourceSetFolders::outputDir
             ).withName("out").on(InternalArtifactType.MERGED_ML_MODELS)

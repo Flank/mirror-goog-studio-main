@@ -209,13 +209,13 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             val generateItems = creationConfig.variantDslInfo.getBuildConfigFields().none()
             creationConfig.taskContainer.generateBuildConfigTask = taskProvider
             if (outputBytecode && generateItems) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                                 taskProvider,
                                 GenerateBuildConfig::bytecodeOutputFolder
                         ).withName("BuildConfig.jar")
                         .on(InternalArtifactType.COMPILE_BUILD_CONFIG_JAR)
             } else {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                                 taskProvider,
                                 GenerateBuildConfig::sourceOutputDir
                         ).atLocation(creationConfig.paths.buildConfigSourceOutputDir.canonicalPath)
@@ -267,7 +267,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                     .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE))
 
             if (creationConfig.variantType.isTestComponent) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_MANIFESTS, task.mergedManifests
                 )
             }

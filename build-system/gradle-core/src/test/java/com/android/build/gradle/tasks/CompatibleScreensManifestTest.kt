@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
@@ -63,7 +63,7 @@ class CompatibleScreensManifestTest {
     @Mock internal lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantDslInfo: VariantDslInfo
     @Suppress("DEPRECATION")
-    @Mock private lateinit var operations: OperationsImpl
+    @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer
     @Mock private lateinit var variantData: BaseVariantData
     @Mock private lateinit var variantProperties: ApplicationVariantPropertiesImpl
@@ -85,7 +85,7 @@ class CompatibleScreensManifestTest {
         `when`(variantProperties.baseName).thenReturn("baseName")
         `when`(variantProperties.variantDslInfo).thenReturn(variantDslInfo)
         `when`(variantProperties.globalScope).thenReturn(globalScope)
-        `when`(variantProperties.operations).thenReturn(operations)
+        `when`(variantProperties.artifacts).thenReturn(artifacts)
         `when`(variantProperties.taskContainer).thenReturn(taskContainer)
         `when`(variantProperties.variantScope).thenReturn(scope)
         `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)

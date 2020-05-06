@@ -183,13 +183,13 @@ abstract class AidlCompile : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.aidlCompileTask = taskProvider
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 AidlCompile::sourceOutputDir
             ).withName("out").on(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
 
             if (creationConfig.variantType.isAar) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     AidlCompile::packagedDir
                 ).withName("out").on(InternalArtifactType.AIDL_PARCELABLE)

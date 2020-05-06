@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.TestVariantProperties
@@ -44,7 +44,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    operations: OperationsImpl,
+    artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
@@ -58,7 +58,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantDependencies,
     variantSources,
     paths,
-    operations,
+    artifacts,
     variantScope,
     variantData,
     transformManager,

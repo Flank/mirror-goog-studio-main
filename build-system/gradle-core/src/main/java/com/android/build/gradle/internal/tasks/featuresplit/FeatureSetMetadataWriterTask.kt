@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.FileCollection
@@ -121,7 +120,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 FeatureSetMetadataWriterTask::outputFile
             ).withName(FeatureSetMetadata.OUTPUT_FILE_NAME).on(InternalArtifactType.FEATURE_SET_METADATA)

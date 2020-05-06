@@ -142,7 +142,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
 
         init {
             // Publish the Proguarded classes and resources back to a Stream
-            val shrunkClassesAndResourcesProvider = creationConfig.operations
+            val shrunkClassesAndResourcesProvider = creationConfig.artifacts
                 .get(InternalArtifactType.SHRUNK_JAR)
             val project = creationConfig.globalScope.project
             creationConfig.transformManager.addStream(
@@ -191,7 +191,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
             taskProvider: TaskProvider<out ProguardTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProguardTask::shrunkJar
             ).withName("minified.jar").on(InternalArtifactType.SHRUNK_JAR)

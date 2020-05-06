@@ -37,21 +37,21 @@ com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android
 com.android.build.api.artifact.ArtifactTypes$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single
 com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactTypes.getFileSystemLocationName: java.lang.String ()
+com.android.build.api.artifact.Artifacts
+com.android.build.api.artifact.Artifacts.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
+com.android.build.api.artifact.Artifacts.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Artifacts.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Artifacts.getBuiltArtifactsLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.artifact.Artifacts.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
+com.android.build.api.artifact.Artifacts.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
+com.android.build.api.artifact.Artifacts.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
+com.android.build.api.artifact.Artifacts.use: com.android.build.api.artifact.TaskBasedOperations<TASK> (org.gradle.api.tasks.TaskProvider<TASK>)
 com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH extends com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.MultipleTransformRequest
 com.android.build.api.artifact.MultipleTransformRequest.on: void (ARTIFACT_TYPE)
-com.android.build.api.artifact.Operations
-com.android.build.api.artifact.Operations.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Operations.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
-com.android.build.api.artifact.Operations.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
-com.android.build.api.artifact.Operations.getBuiltArtifactsLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
-com.android.build.api.artifact.Operations.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Operations.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Operations.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Operations.use: com.android.build.api.artifact.TaskBasedOperations<TASK> (org.gradle.api.tasks.TaskProvider<TASK>)
 com.android.build.api.artifact.ReplaceRequest
 com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TaskBasedOperations
@@ -86,7 +86,7 @@ com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String
 com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.ComponentProperties implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
-com.android.build.api.component.ComponentProperties.getOperations: com.android.build.api.artifact.Operations ()
+com.android.build.api.component.ComponentProperties.getArtifacts: com.android.build.api.artifact.Artifacts ()
 com.android.build.api.component.FilteredComponentActionRegistrar
 com.android.build.api.component.FilteredComponentActionRegistrar.withBuildType: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (java.lang.String)
 com.android.build.api.component.FilteredComponentActionRegistrar.withBuildType: void (java.lang.String, kotlin.jvm.functions.Function1<? super ComponentT, kotlin.Unit>)

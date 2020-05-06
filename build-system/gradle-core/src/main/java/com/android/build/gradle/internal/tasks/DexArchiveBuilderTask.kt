@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -414,7 +413,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
                         )!!.outputType
                     componentProperties.globalScope.project.files(
-                        it.operations.get(artifactType)
+                        it.artifacts.get(artifactType)
                     )
                 } ?: componentProperties.globalScope.project.files()
 
@@ -450,56 +449,56 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         override fun handleProvider(taskProvider: TaskProvider<out DexArchiveBuilderTask>) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::projectOutputDex
             ).withName("out").withName("out").on(InternalArtifactType.PROJECT_DEX_ARCHIVE)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::subProjectOutputDex
             ).withName("out").withName("out").on(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::externalLibsOutputDex
             ).withName("out").on(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::externalLibsFromAritfactTransformsDex
             ).withName("out").on(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::mixedScopeOutputDex
             ).withName("out").on(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             ).withName("out").on(InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::desugarGraphDir
             ).withName("out").on(InternalArtifactType.DESUGAR_GRAPH)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexArchiveBuilderTask::previousRunNumberOfBucketsFile
             ).withName("out").on(InternalArtifactType.DEX_NUMBER_OF_BUCKETS_FILE)
             if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     DexArchiveBuilderTask::projectOutputKeepRules
                 ).withName("out").on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     DexArchiveBuilderTask::subProjectOutputKeepRules
                 ).withName("out").on(InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES)
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     DexArchiveBuilderTask::externalLibsOutputKeepRules
                 ).withName("out").on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     DexArchiveBuilderTask::externalLibsFromAritfactTransformsKeepRules
                 ).withName("out").on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES)
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     DexArchiveBuilderTask::mixedScopeOutputKeepRules
                 ).withName("out").on(InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES)

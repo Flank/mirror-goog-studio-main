@@ -227,22 +227,22 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             task.aapt2FromMaven.fromDisallowChanges(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.inputDirectory
             )
 
             task.compiledDirectory = creationConfig.paths.compiledResourcesOutputDir
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                 task.manifestFiles
             )
 
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
-            task.mergeBlameFolder.setDisallowChanges(creationConfig.operations.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+            task.mergeBlameFolder.setDisallowChanges(creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
-            task.manifestMergeBlameFile = creationConfig.operations.get(
+            task.manifestMergeBlameFile = creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 

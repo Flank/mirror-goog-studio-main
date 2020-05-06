@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.TaskProvider
@@ -41,7 +40,7 @@ class MergeAaptProguardFilesCreationAction(
     ) {
         super.handleProvider(taskProvider)
 
-        creationConfig.operations.setInitialProvider(
+        creationConfig.artifacts.setInitialProvider(
             taskProvider,
             MergeFileTask::outputFile
         ).withName(SdkConstants.FN_MERGED_AAPT_RULES)
@@ -57,7 +56,7 @@ class MergeAaptProguardFilesCreationAction(
         val inputFiles =
             project
                 .files(
-                    creationConfig.operations.get(InternalArtifactType.AAPT_PROGUARD_FILE),
+                    creationConfig.artifacts.get(InternalArtifactType.AAPT_PROGUARD_FILE),
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,

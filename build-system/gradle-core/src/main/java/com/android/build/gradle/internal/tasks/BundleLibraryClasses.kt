@@ -90,7 +90,7 @@ private fun BundleLibraryClassesInputs.configure(
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {
-        classes.from(component.operations.get(InternalArtifactType.COMPILE_R_CLASS_JAR))
+        classes.from(component.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR))
     }
     jarCreatorType.set(component.variantScope.jarCreatorType)
 
@@ -163,7 +163,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClassesDir>) {
             super.handleProvider(taskProvider)
-            creationConfig.operations
+            creationConfig.artifacts
                 .setInitialProvider(taskProvider, BundleLibraryClassesDir::output)
                 .on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR)
         }
@@ -213,7 +213,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
             } else {
-                componentProperties.operations.getAllClasses()
+                componentProperties.artifacts.getAllClasses()
             }
         }
 
@@ -232,7 +232,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations
+            creationConfig.artifacts
                 .setInitialProvider(
                     taskProvider,
                     BundleLibraryClassesJar::output

@@ -391,27 +391,27 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::resPackageOutputFolder
             ).withName("out").on(InternalArtifactType.PROCESSED_RES)
 
             if (generatesProguardOutputFile(creationConfig)) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::proguardOutputFile
                 ).withName(SdkConstants.FN_AAPT_RULES).on(InternalArtifactType.AAPT_PROGUARD_FILE)
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::mainDexListProguardOutputFile
                 ).withName("manifest_keep.txt").on(InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES)
             }
 
             if (creationConfig.services.projectOptions[BooleanOption.ENABLE_STABLE_IDS]) {
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::stableIdsOutputFileProperty
                 ).withName("stableIds.txt").on(InternalArtifactType.STABLE_RESOURCE_IDS_FILE)
@@ -465,11 +465,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.packageName.setDisallowChanges(creationConfig.packageName)
 
             task.taskInputType = creationConfig.manifestArtifactType
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
             )
-            creationConfig.operations.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,
                 task.mergedManifestFiles
             )
@@ -488,7 +488,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(creationConfig.variantType.canHaveSplits)
 
-            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.operations.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             val variantType = creationConfig.variantType
 
@@ -518,7 +518,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 creationConfig.services.projectOptions
             )
 
-            task.manifestMergeBlameFile = creationConfig.operations.get(
+            task.manifestMergeBlameFile = creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             task.aapt2DaemonBuildService.setDisallowChanges(
@@ -561,12 +561,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::rClassOutputJar
             ).withName(FN_R_CLASS_JAR).on(InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::textSymbolOutputFileProperty
             ).withName( SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.RUNTIME_SYMBOL_LIST)
@@ -574,7 +574,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             if (!creationConfig.services.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
                 // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created
                 // in process resources for local subprojects.
-                creationConfig.operations.setInitialProvider(
+                creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::symbolsWithPackageNameOutputFile
                 ).withName("package-aware-r.txt").on(InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
@@ -592,7 +592,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
                 )
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 sourceArtifactType.outputType,
                 task.inputResourcesDir
             )
@@ -628,7 +628,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::sourceOutputDirProperty
             ).withName("out").on(InternalArtifactType.RUNTIME_R_CLASS_SOURCES)
@@ -642,7 +642,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
                 creationConfig.services.fileCollection(
-                    creationConfig.operations.get(InternalArtifactType.RES_STATIC_LIBRARY))
+                    creationConfig.artifacts.get(InternalArtifactType.RES_STATIC_LIBRARY))
             )
             dependencies.add(
                 creationConfig.variantDependencies.getArtifactFileCollection(

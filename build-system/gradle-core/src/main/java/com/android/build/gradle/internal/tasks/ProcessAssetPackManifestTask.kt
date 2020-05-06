@@ -82,7 +82,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAssetPackManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessAssetPackManifestTask::processedManifests
             ).on(InternalArtifactType.ASSET_PACK_MANIFESTS)

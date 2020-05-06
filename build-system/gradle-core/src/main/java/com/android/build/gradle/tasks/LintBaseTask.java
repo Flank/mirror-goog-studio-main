@@ -28,7 +28,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKA
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.VariantOutputConfiguration;
@@ -292,7 +292,7 @@ public abstract class LintBaseTask extends DefaultTask {
                     localLintJarCollection =
                             componentProperties
                                     .getGlobalScope()
-                                    .getGlobalOperations()
+                                    .getGlobalArtifacts()
                                     .get(LINT_JAR.INSTANCE));
             FileCollection dependencyLintJarCollection;
             allInputs.from(
@@ -307,11 +307,11 @@ public abstract class LintBaseTask extends DefaultTask {
                             .getProject()
                             .files(localLintJarCollection, dependencyLintJarCollection);
 
-            OperationsImpl operations = componentProperties.getOperations();
+            ArtifactsImpl artifacts = componentProperties.getArtifacts();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
-                    operations.get(PACKAGED_MANIFESTS.INSTANCE);
+                    artifacts.get(PACKAGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
-                tmpMergedManifest = operations.get(LIBRARY_MANIFEST.INSTANCE);
+                tmpMergedManifest = artifacts.get(LIBRARY_MANIFEST.INSTANCE);
             }
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(
@@ -321,7 +321,7 @@ public abstract class LintBaseTask extends DefaultTask {
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
 
-            mergedManifestReport = operations.get(MANIFEST_MERGE_REPORT.INSTANCE);
+            mergedManifestReport = artifacts.get(MANIFEST_MERGE_REPORT.INSTANCE);
             if (mergedManifest.isPresent()) {
                 allInputs.from(mergedManifestReport);
             } else {
@@ -332,7 +332,7 @@ public abstract class LintBaseTask extends DefaultTask {
 
             // these inputs are only there to ensure that the lint task runs after these build
             // intermediates are built.
-            allInputs.from(componentProperties.getOperations().getAllClasses());
+            allInputs.from(componentProperties.getArtifacts().getAllClasses());
 
             addModelArtifactsToInputs(allInputs, componentProperties);
         }

@@ -102,7 +102,7 @@ public abstract class PrepareLintJar extends DefaultTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends PrepareLintJar> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getGlobalOperations()
+            scope.getGlobalArtifacts()
                     .setInitialProvider(taskProvider, PrepareLintJar::getOutputLintJar)
                     .withName(FN_LINT_JAR)
                     .on(InternalArtifactType.LINT_JAR.INSTANCE);

@@ -143,7 +143,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ValidateSigningTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ValidateSigningTask::dummyOutputDirectory
             ).on(InternalArtifactType.VALIDATE_SIGNING_CONFIG)

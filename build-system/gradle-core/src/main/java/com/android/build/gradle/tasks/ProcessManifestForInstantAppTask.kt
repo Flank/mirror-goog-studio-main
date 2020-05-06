@@ -133,7 +133,7 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
 
         override fun handleProvider(taskProvider: TaskProvider<out ProcessManifestForInstantAppTask>) {
             super.handleProvider(taskProvider)
-            transformationRequest = creationConfig.operations.use(taskProvider)
+            transformationRequest = creationConfig.artifacts.use(taskProvider)
                 .toRead(
                     InternalArtifactType.MERGED_MANIFESTS,
                     ProcessManifestForInstantAppTask::mergedManifests

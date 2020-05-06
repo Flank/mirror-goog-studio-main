@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.impl.OperationsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
@@ -86,7 +86,7 @@ public class ModelBuilderTest {
     @Mock Gradle gradle;
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
-    @Mock OperationsImpl operations;
+    @Mock ArtifactsImpl artifacts;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -188,7 +188,7 @@ public class ModelBuilderTest {
                             variantDependencies,
                             variantSources,
                             paths,
-                            operations,
+                            artifacts,
                             variantScope,
                             variantData,
                             testedVariant,
@@ -217,7 +217,7 @@ public class ModelBuilderTest {
                     variantDependencies,
                     variantSources,
                     paths,
-                    operations,
+                    artifacts,
                     variantScope,
                     variantData,
                     dependenciesInfo,
@@ -235,7 +235,7 @@ public class ModelBuilderTest {
                 variantDependencies,
                 variantSources,
                 paths,
-                operations,
+                artifacts,
                 variantScope,
                 variantData,
                 Mockito.mock(TransformManager.class),

@@ -160,7 +160,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             taskProvider: TaskProvider<out CompatibleScreensManifest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CompatibleScreensManifest::outputFolder
             ).on(COMPATIBLE_SCREEN_MANIFEST)

@@ -190,7 +190,7 @@ public abstract class AbstractAppTaskManager<
     @Override
     protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
         final Provider<Directory> javacOutput =
-                componentProperties.getOperations().get(JAVAC.INSTANCE);
+                componentProperties.getArtifacts().get(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
                 componentProperties.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =
@@ -204,7 +204,7 @@ public abstract class AbstractAppTaskManager<
                         .getServices()
                         .fileCollection(
                                 javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
-        componentProperties.getOperations().appendToAllClasses(files);
+        componentProperties.getArtifacts().appendToAllClasses(files);
     }
 
     @Override

@@ -24,7 +24,7 @@ import org.gradle.api.file.RegularFile
 /**
  * Public [ArtifactType] for Android Gradle Plugin.
  *
- * All methods in [Operations] should be supported with any subclass of this
+ * All methods in [Artifacts] should be supported with any subclass of this
  * class.
  */
 @Incubating

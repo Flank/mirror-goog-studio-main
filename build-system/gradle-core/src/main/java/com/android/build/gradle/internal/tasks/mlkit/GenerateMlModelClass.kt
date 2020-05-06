@@ -88,7 +88,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateMlModelClass>) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateMlModelClass::sourceOutDir
             ).on(InternalArtifactType.ML_SOURCE_OUT)
@@ -97,7 +97,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
         override fun configure(task: GenerateMlModelClass) {
             super.configure(task)
             creationConfig
-                .operations
+                .artifacts
                 .setTaskInputToFinalProduct(
                     MERGED_ML_MODELS, task.modelFileDir
                 )

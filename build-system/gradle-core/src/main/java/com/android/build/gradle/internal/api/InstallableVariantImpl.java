@@ -124,7 +124,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
                                         .getServices()
                                         .fileCollection(
                                                 componentProperties
-                                                        .getOperations()
+                                                        .getArtifacts()
                                                         .get((InternalArtifactType) artifactType)));
     }
 }

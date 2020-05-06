@@ -60,7 +60,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processJavaResourcesTask = taskProvider
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     ProcessJavaResTask::outDirectory
                 ).withName("out").on(InternalArtifactType.JAVA_RES)

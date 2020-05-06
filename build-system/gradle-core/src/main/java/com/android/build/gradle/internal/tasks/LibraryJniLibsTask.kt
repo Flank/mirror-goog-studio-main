@@ -128,7 +128,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LibraryJniLibsTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LibraryJniLibsTask::outputDirectory
             ).withName(SdkConstants.FD_JNI)
@@ -139,7 +139,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task: LibraryJniLibsTask
         ) {
             super.configure(task)
-            task.projectNativeLibs = creationConfig.operations.get(STRIPPED_NATIVE_LIBS)
+            task.projectNativeLibs = creationConfig.artifacts.get(STRIPPED_NATIVE_LIBS)
         }
     }
 

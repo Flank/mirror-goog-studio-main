@@ -224,7 +224,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                 @NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setInitialProvider(taskProvider, ShaderCompile::getOutputDir)
                     .withName("out")
                     .on(InternalArtifactType.SHADER_ASSETS.INSTANCE);
@@ -238,7 +238,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             task.ndkLocation =
                     creationConfig.getGlobalScope().getSdkComponents().getNdkDirectoryProvider();
             creationConfig
-                    .getOperations()
+                    .getArtifacts()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
             task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
             task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());

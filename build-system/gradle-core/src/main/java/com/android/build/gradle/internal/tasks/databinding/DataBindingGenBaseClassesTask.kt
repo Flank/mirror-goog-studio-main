@@ -24,7 +24,6 @@ import android.databinding.tool.util.L
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -178,11 +177,11 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingGenBaseClassesTask::classInfoBundleDir
             ).withName("out").on(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingGenBaseClassesTask::sourceOutFolder
             ).withName("out").on(InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT)
@@ -192,19 +191,19 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             task: DataBindingGenBaseClassesTask
         ) {
             super.configure(task)
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 DataBindingCompilerArguments.getLayoutInfoArtifactType(creationConfig),
                 task.layoutInfoDirectory)
 
             task.packageName.setDisallowChanges(creationConfig.packageName)
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies
             )
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
             task.logOutFolder = creationConfig.paths.getIncrementalDir(task.name)
             task.useAndroidX = creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]

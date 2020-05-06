@@ -27,13 +27,13 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
 /**
- * Operations on a Variant object.
+ * Access to the artifacts on a Variant object.
  *
  * This interface is not implemented so far by the Android Gradle Plugin, it's work in
  * progress.
  */
 @Incubating
-interface Operations {
+interface Artifacts {
 
     /**
      * Provides an implementation of [BuiltArtifactsLoader] that can be used to load and save
@@ -91,7 +91,7 @@ interface Operations {
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "appendTask")
-     *     Operations.append(taskProvider, MyTask::outputFile)
+     *     artifacts.append(taskProvider, MyTask::outputFile)
      *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
@@ -138,7 +138,7 @@ interface Operations {
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "transformTask")
-     *     Operations.transform(taskProvider, MyTask::inputFile, MyTask::outputFile)
+     *     artifacts.transform(taskProvider, MyTask::inputFile, MyTask::outputFile)
      *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
      * </pre>
      *
@@ -193,7 +193,7 @@ interface Operations {
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
-     *     Operations.transformAll(taskProvider, MyTask::inputFiles, MyTask::outputFile)
+     *     artifacts.transformAll(taskProvider, MyTask::inputFiles, MyTask::outputFile)
      *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
@@ -230,7 +230,7 @@ interface Operations {
      * providers.
      *
      * You cannot replace [ArtifactType.Multiple] artifact type, therefore you must instead combine
-     * it using the [Operations.transformAll] API.
+     * it using the [Artifacts.transformAll] API.
      *
      * Let's take a [Task] with a [org.gradle.api.file.RegularFile] output :
      *
@@ -257,7 +257,7 @@ interface Operations {
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "replaceTask")
-     *     Operations.replace(taskProvider, MyTask::outputFile)
+     *     artifacts.replace(taskProvider, MyTask::outputFile)
      *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
      * </pre>
      */

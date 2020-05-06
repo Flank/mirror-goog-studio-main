@@ -55,7 +55,7 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
             taskProvider: TaskProvider<out PackageRenderscriptTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PackageRenderscriptTask::headersDir
             ).withName("out").on(InternalArtifactType.RENDERSCRIPT_HEADERS)

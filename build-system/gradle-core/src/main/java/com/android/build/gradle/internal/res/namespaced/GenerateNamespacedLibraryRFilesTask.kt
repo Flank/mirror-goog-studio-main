@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -145,18 +144,18 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             taskProvider: TaskProvider<out GenerateNamespacedLibraryRFilesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateNamespacedLibraryRFilesTask::rJarFile
             ).withName("R.jar").on(InternalArtifactType.COMPILE_R_CLASS_JAR)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateNamespacedLibraryRFilesTask::textSymbolFile
             ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.COMPILE_SYMBOL_LIST)
 
             // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
             // process resources for local subprojects.
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateNamespacedLibraryRFilesTask::symbolsWithPackageNameFile
             ).withName("package-aware-r.txt").on(InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
@@ -168,7 +167,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             super.configure(task)
 
             task.partialRFiles.setDisallowChanges(
-                creationConfig.operations.getAll(
+                creationConfig.artifacts.getAll(
                 MultipleArtifactType.PARTIAL_R_FILES))
             task.packageForR.setDisallowChanges(creationConfig.packageName)
         }

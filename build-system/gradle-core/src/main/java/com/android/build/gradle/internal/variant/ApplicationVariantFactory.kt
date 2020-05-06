@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
@@ -91,7 +91,7 @@ class ApplicationVariantFactory(
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
-        operations: OperationsImpl,
+        artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
@@ -108,7 +108,7 @@ class ApplicationVariantFactory(
                 variantDependencies,
                 variantSources,
                 paths,
-                operations,
+                artifacts,
                 variantScope,
                 variantData,
                 variant.dependenciesInfo as DependenciesInfo,

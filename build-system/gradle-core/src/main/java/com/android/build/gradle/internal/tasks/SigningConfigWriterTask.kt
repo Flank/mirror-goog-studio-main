@@ -77,7 +77,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out SigningConfigWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 SigningConfigWriterTask::outputDirectory
             ).on(InternalArtifactType.SIGNING_CONFIG)
@@ -88,7 +88,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
                 task.validatedSigningOutput
             )

@@ -112,7 +112,7 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
 
             if (variantDslInfo.getRenderscriptNdkModeEnabled()) {
                 creationConfig
-                        .getOperations()
+                        .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE,
                                 task.getRenderscriptSources());

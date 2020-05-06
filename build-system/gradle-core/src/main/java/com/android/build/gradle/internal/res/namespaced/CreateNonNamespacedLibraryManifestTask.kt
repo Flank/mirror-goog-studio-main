@@ -69,7 +69,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out CreateNonNamespacedLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CreateNonNamespacedLibraryManifestTask::outputStrippedManifestFile
             ).withName(SdkConstants.ANDROID_MANIFEST_XML)
@@ -80,7 +80,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
             task: CreateNonNamespacedLibraryManifestTask
         ) {
             super.configure(task)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
         }
     }

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.google.common.annotations.VisibleForTesting
@@ -121,7 +120,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ParseIntegrityConfigTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ParseIntegrityConfigTask::appIntegrityConfigProto
             ).withName("AppIntegrityConfig.pb").on(InternalArtifactType.APP_INTEGRITY_CONFIG)

@@ -60,7 +60,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ApplicationIdWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ApplicationIdWriterTask::outputFile
             ).withName("application-id.txt").on(InternalArtifactType.METADATA_APPLICATION_ID)

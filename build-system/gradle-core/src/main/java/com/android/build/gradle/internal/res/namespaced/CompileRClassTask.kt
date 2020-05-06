@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
-import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -49,7 +47,7 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
     override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        component.operations.setInitialProvider(
+        component.artifacts.setInitialProvider(
             taskProvider
         ) {  output  }.withName(SdkConstants.FD_RES).on(RUNTIME_R_CLASS_CLASSES)
     }
@@ -61,7 +59,7 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
 
         task.classpath = task.project.files()
         if (component.variantType.isTestComponent || component.variantType.isApk) {
-            task.source(component.operations.get(RUNTIME_R_CLASS_SOURCES))
+            task.source(component.artifacts.get(RUNTIME_R_CLASS_SOURCES))
         }
         task.setDestinationDir(output.asFile)
 

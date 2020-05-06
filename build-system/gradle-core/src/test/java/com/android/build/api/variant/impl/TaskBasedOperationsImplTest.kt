@@ -18,7 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.artifact.impl.ProfilerEnabledWorkQueue
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
@@ -72,7 +72,7 @@ class TaskBasedOperationsImplTest {
     @Rule
     @JvmField val tmpDir: TemporaryFolder = TemporaryFolder()
     private lateinit var project: Project
-    private lateinit var operations: OperationsImpl
+    private lateinit var artifacts: ArtifactsImpl
     private val taskInitialized = AtomicBoolean(false)
     private val component = Mockito.mock(VariantPropertiesImpl::class.java)
 
@@ -80,7 +80,7 @@ class TaskBasedOperationsImplTest {
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(
             tmpDir.newFolder()).build()
-        operations = OperationsImpl(project, "debug")
+        artifacts = ArtifactsImpl(project, "debug")
 
         val inputFolder = tmpDir.newFolder("input")
         val inputFolderProperty = project.objects.directoryProperty().also { it.set(inputFolder) }
@@ -90,9 +90,9 @@ class TaskBasedOperationsImplTest {
             createBuiltArtifact(inputFolder, "file3", "xxxhdpi")
         ).save(inputFolderProperty.get())
 
-        operations.getArtifactContainer(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
+        artifacts.getArtifactContainer(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
             .setInitialProvider(inputFolderProperty)
-        Mockito.`when`(component.operations).thenReturn(operations)
+        Mockito.`when`(component.artifacts).thenReturn(artifacts)
     }
 
     abstract class SynchronousTask @Inject constructor(val workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
@@ -124,7 +124,7 @@ class TaskBasedOperationsImplTest {
 
             override fun handleProvider(taskProvider: TaskProvider<out SynchronousTask>) {
                 super.handleProvider(taskProvider)
-                replacementRequest = component.operations
+                replacementRequest = component.artifacts
                     .use(taskProvider)
                     .toRead(type = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, at = SynchronousTask::inputDir)
                     .andWrite(type = InternalArtifactType.PACKAGED_MANIFESTS, at = SynchronousTask::outputDir)
@@ -151,7 +151,7 @@ class TaskBasedOperationsImplTest {
                 it.outputDir.set(outputFolder)
             }
         }
-        val mergedManifests = operations.get(InternalArtifactType.PACKAGED_MANIFESTS)
+        val mergedManifests = artifacts.get(InternalArtifactType.PACKAGED_MANIFESTS)
         mergedManifests.get()
         Truth.assertThat(taskInitialized.get()).isTrue()
 
@@ -237,7 +237,7 @@ class TaskBasedOperationsImplTest {
 
             override fun handleProvider(taskProvider: TaskProvider<out InternalApiTask>) {
                 super.handleProvider(taskProvider)
-                replacementRequest = component.operations
+                replacementRequest = component.artifacts
                     .use(taskProvider)
                     .toRead(type = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, at = InternalApiTask::inputDir)
                     .andWrite(type = InternalArtifactType.PACKAGED_MANIFESTS, at = InternalApiTask::outputDir)
@@ -284,7 +284,7 @@ class TaskBasedOperationsImplTest {
         }
 
         // force lookup of the produced artifact, this should force task initialization.
-        val mergedManifests = operations.get(InternalArtifactType.PACKAGED_MANIFESTS)
+        val mergedManifests = artifacts.get(InternalArtifactType.PACKAGED_MANIFESTS)
         mergedManifests.get()
         Truth.assertThat(taskInitialized.get()).isTrue()
 

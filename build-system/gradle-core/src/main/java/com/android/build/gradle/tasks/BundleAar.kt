@@ -96,7 +96,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 property.set(task.archiveFile)
                 property
             }
-            creationConfig.operations.setInitialProvider(taskProvider, propertyProvider)
+            creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
                 .on(InternalArtifactType.AAR)
         }
 
@@ -105,7 +105,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
             val buildFeatures = creationConfig.buildFeatures
 
             // Sanity check, there should never be duplicates.
@@ -126,24 +126,24 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             if (buildFeatures.aidl) {
                 task.from(
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.AIDL_PARCELABLE
                     ),
                     prependToCopyPath(SdkConstants.FD_AIDL)
                 )
             }
 
-            task.from(operations.get(
+            task.from(artifacts.get(
                 InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
 
             if (buildFeatures.dataBinding && buildFeatures.androidResources) {
                 task.from(
                     creationConfig.globalScope.project.provider {
-                        creationConfig.operations.get(InternalArtifactType.DATA_BINDING_ARTIFACT) },
+                        creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
                 task.from(
-                    creationConfig.operations.get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                     prependToCopyPath(
                         DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
@@ -152,58 +152,57 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             }
 
             task.from(
-                operations.get(
+                artifacts.get(
                     InternalArtifactType.COMPILE_SYMBOL_LIST))
             task.from(
-                operations.get(InternalArtifactType.PACKAGED_RES),
+                artifacts.get(InternalArtifactType.PACKAGED_RES),
                 prependToCopyPath(SdkConstants.FD_RES)
             )
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
-                task.from(operations.get(InternalArtifactType.LIBRARY_MANIFEST))
+                task.from(artifacts.get(InternalArtifactType.LIBRARY_MANIFEST))
             } else {
                 // In namespaced projects the bundled manifest needs to have stripped resource
                 // references for backwards compatibility.
-                task.from(operations.get(
+                task.from(artifacts.get(
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
-                task.from(operations.get(InternalArtifactType.RES_STATIC_LIBRARY))
+                task.from(artifacts.get(InternalArtifactType.RES_STATIC_LIBRARY))
             }
 
             if (buildFeatures.renderScript) {
                 task.from(
-                    operations.get(InternalArtifactType.RENDERSCRIPT_HEADERS),
+                    artifacts.get(InternalArtifactType.RENDERSCRIPT_HEADERS),
                     prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
                 )
             }
 
             if (buildFeatures.androidResources) {
-                task.from(operations.get(InternalArtifactType.PUBLIC_RES))
+                task.from(artifacts.get(InternalArtifactType.PUBLIC_RES))
             }
             task.from(
-                operations.get(LIBRARY_AND_LOCAL_JARS_JNI),
+                artifacts.get(LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
-            task.from(creationConfig.operations.get(InternalArtifactType.LINT_PUBLISH_JAR))
-            task.from(operations.get(InternalArtifactType.ANNOTATIONS_ZIP))
-            task.from(operations.get(InternalArtifactType.AAR_MAIN_JAR))
+            task.from(creationConfig.artifacts.get(InternalArtifactType.LINT_PUBLISH_JAR))
+            task.from(artifacts.get(InternalArtifactType.ANNOTATIONS_ZIP))
+            task.from(artifacts.get(InternalArtifactType.AAR_MAIN_JAR))
 
             if (buildFeatures.prefabPublishing) {
                 task.from(
-                    operations.get(InternalArtifactType.PREFAB_PACKAGE),
+                    artifacts.get(InternalArtifactType.PREFAB_PACKAGE),
                     prependToCopyPath(SdkConstants.FD_PREFAB_PACKAGE)
                 )
             }
-
             task.from(
-                operations.get(InternalArtifactType.AAR_LIBS_DIRECTORY),
+                artifacts.get(InternalArtifactType.AAR_LIBS_DIRECTORY),
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
             task.from(
-                creationConfig.operations.get(InternalArtifactType.LIBRARY_ASSETS),
+                creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
             if (creationConfig.services.projectOptions[BooleanOption.ENABLE_AAR_METADATA]) {
                 task.from(
-                    creationConfig.operations.get(InternalArtifactType.AAR_METADATA)
+                    creationConfig.artifacts.get(InternalArtifactType.AAR_METADATA)
                 ) {
                     it.rename(
                         AarMetadataTask.aarMetadataFileName,

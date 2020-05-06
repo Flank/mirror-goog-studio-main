@@ -21,7 +21,6 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -201,19 +200,19 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar
             ).withName("R.jar").on(InternalArtifactType.COMPILE_R_CLASS_JAR)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateLibraryRFileTask::textSymbolOutputFileProperty
             ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.COMPILE_SYMBOL_LIST)
 
             // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
             // process resources for local subprojects.
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile
             ).withName("package-aware-r.txt").on(InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
@@ -261,10 +260,10 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.compileClasspathLibraryRClasses.setDisallowChanges(compileClasspathLibraryRClasses)
             task.packageForR.setDisallowChanges(creationConfig.packageName)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.mergedManifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit()
@@ -278,7 +277,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                 task.localResourcesFile)
         }
@@ -296,7 +295,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             taskProvider: TaskProvider<out GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar
             ).withName("R.jar").on(InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
@@ -328,11 +327,11 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.useConstantIds.setDisallowChanges(false)
 
             creationConfig.onTestedConfig {
-                it.operations.setTaskInputToFinalProduct(
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles
                 )
 
-                it.operations.setTaskInputToFinalProduct(
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                     task.localResourcesFile
                 )

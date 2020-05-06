@@ -223,7 +223,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PerModuleReportDependenciesTask::dependenciesList
             ).withName("dependencies.pb").on(InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT)

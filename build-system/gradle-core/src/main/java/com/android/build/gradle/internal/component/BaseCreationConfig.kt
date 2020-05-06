@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -86,7 +86,7 @@ interface BaseCreationConfig : ComponentIdentity {
     val variantDslInfo: VariantDslInfo
     val variantSources: VariantSources
     val variantDependencies: VariantDependencies
-    val operations: OperationsImpl
+    val artifacts: ArtifactsImpl
     val taskContainer: MutableTaskContainer
     val transformManager: TransformManager
     val paths: VariantPathHelper

@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -300,12 +299,12 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LibraryAarJarsTask::mainClassLocation
             ).withName(SdkConstants.FN_CLASSES_JAR).on(InternalArtifactType.AAR_MAIN_JAR)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LibraryAarJarsTask::localJarsLocation
             ).withName(SdkConstants.LIBS_FOLDER)
@@ -319,9 +318,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             task.dataBindingExcludeDelegate.configureFrom(creationConfig)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
                 task.typedefRecipe
             )
@@ -341,7 +340,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              */
             task.mainScopeClassFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
-                    creationConfig.operations
+                    creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
                     creationConfig.transformManager
@@ -362,7 +361,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             task.mainScopeResourceFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
-                    creationConfig.operations
+                    creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {
                     creationConfig.transformManager

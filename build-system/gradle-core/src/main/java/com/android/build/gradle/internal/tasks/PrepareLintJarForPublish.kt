@@ -82,7 +82,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out PrepareLintJarForPublish>) {
             super.handleProvider(taskProvider)
-            scope.globalOperations.setInitialProvider(
+            scope.globalArtifacts.setInitialProvider(
                 taskProvider,
                 PrepareLintJarForPublish::outputLintJar
             ).withName(FN_LINT_JAR).on(InternalArtifactType.LINT_PUBLISH_JAR)

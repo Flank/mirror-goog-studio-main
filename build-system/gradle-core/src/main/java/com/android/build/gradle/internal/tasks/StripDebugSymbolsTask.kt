@@ -151,7 +151,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 StripDebugSymbolsTask::outputDir
             ).withName("out").on(STRIPPED_NATIVE_LIBS)
@@ -162,7 +162,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.excludePatterns =
                 creationConfig.globalScope.extension.packagingOptions.doNotStrip.sorted()
             task.stripToolFinderProvider =

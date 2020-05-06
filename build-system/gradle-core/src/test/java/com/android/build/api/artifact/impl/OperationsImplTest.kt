@@ -84,19 +84,19 @@ class OperationsImplTest {
     @Rule
     @JvmField val tmpDir: TemporaryFolder = TemporaryFolder()
     private lateinit var project: Project
-    private lateinit var operations: OperationsImpl
+    private lateinit var artifacts: ArtifactsImpl
 
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(
             tmpDir.newFolder()).build()
-        operations = OperationsImpl(project, "debug")
+        artifacts = ArtifactsImpl(project, "debug")
 
     }
 
     @Test
     fun testEarlyFileLookup() {
-        val finalVersion = operations.get(TEST_FILE)
+        val finalVersion = artifacts.get(TEST_FILE)
         // no-one has provided it so far, so it's not present.
         Truth.assertThat(finalVersion.isPresent).isFalse()
         // now provide it.
@@ -108,7 +108,7 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
 
         // now get it.
         Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
@@ -121,7 +121,7 @@ class OperationsImplTest {
 
     @Test
     fun testEarlyDirectoryLookup() {
-        val finalVersion = operations.get(TEST_DIRECTORY)
+        val finalVersion = artifacts.get(TEST_DIRECTORY)
         // no-one has provided it so far, so it's not present.
         Truth.assertThat(finalVersion.isPresent).isFalse()
         // now provide it.
@@ -133,7 +133,7 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFiles).on(TEST_DIRECTORY)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFiles).on(TEST_DIRECTORY)
 
         // now get it.
         Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
@@ -152,10 +152,10 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
-        val artifactContainer = operations.getArtifactContainer(TEST_FILE)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_FILE)
         Truth.assertThat(agpTaskProvider.get().outputFile.get().asFile.absolutePath).contains("test_file")
         Truth.assertThat(agpTaskProvider.get().outputFile.get().asFile.absolutePath).doesNotContain("agpProvider")
         // final artifact value should be the agp producer task output
@@ -172,10 +172,10 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder).on(TEST_DIRECTORY)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFolder).on(TEST_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
-        val artifactContainer = operations.getArtifactContainer(TEST_DIRECTORY)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_DIRECTORY)
         Truth.assertThat(agpTaskProvider.get().outputFolder.get().asFile.absolutePath).contains("test_directory")
         Truth.assertThat(agpTaskProvider.get().outputFolder.get().asFile.absolutePath).doesNotContain("agpTaskProvider")
         // final artifact value should be the agp producer task output
@@ -190,9 +190,9 @@ class OperationsImplTest {
             abstract val outputFile: RegularFileProperty
         }
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
-        operations.addInitialProvider(TEST_FILES, agpTaskProvider, AGPTask::outputFile)
+        artifacts.addInitialProvider(TEST_FILES, agpTaskProvider, AGPTask::outputFile)
 
-        val artifactContainer = operations.getArtifactContainer(TEST_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         val outputFile = artifactContainer.get().get()[0]
         Truth.assertThat(outputFile.asFile.absolutePath).contains("test_files")
@@ -213,11 +213,11 @@ class OperationsImplTest {
                 initializedTasks.incrementAndGet()
             }
             agpTaskProviders.add(agpTaskProvider)
-            operations.addInitialProvider(TEST_FILES, agpTaskProvider, AGPTask::outputFile)
+            artifacts.addInitialProvider(TEST_FILES, agpTaskProvider, AGPTask::outputFile)
         }
 
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
-        val artifactContainer = operations.getArtifactContainer(TEST_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_FILES)
         for (i in 0..2) {
             Truth.assertThat(agpTaskProviders[i].get().outputFile.get().asFile.absolutePath).contains("test_files")
             // since multiple producer, task name is provided in path.
@@ -234,9 +234,9 @@ class OperationsImplTest {
             abstract val outputDirectory: DirectoryProperty
         }
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
-        operations.addInitialProvider(TEST_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
+        artifacts.addInitialProvider(TEST_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
 
-        val artifactContainer = operations.getArtifactContainer(TEST_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         val outputFile = artifactContainer.get().get()[0]
         Truth.assertThat(outputFile.asFile.absolutePath).contains("test_directories")
@@ -257,11 +257,11 @@ class OperationsImplTest {
                 initializedTasks.incrementAndGet()
             }
             agpTaskProviders.add(agpTaskProvider)
-            operations.addInitialProvider(TEST_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
+            artifacts.addInitialProvider(TEST_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
         }
 
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
-        val artifactContainer = operations.getArtifactContainer(TEST_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_DIRECTORIES)
         for (i in 0..2) {
             Truth.assertThat(agpTaskProviders[i].get().outputDirectory.get().asFile.absolutePath).contains("test_directories")
             // since multiple producer, task name is provided in path.
@@ -282,7 +282,7 @@ class OperationsImplTest {
         val transformerProvider = project.tasks.register("transformer", TransformTask::class.java) {
             transformerInitialized.set(true)
         }
-        operations.transform(transformerProvider,
+        artifacts.transform(transformerProvider,
             TransformTask::inputFile,
             TransformTask::outputFile).on(TEST_TRANSFORMABLE_FILE)
 
@@ -296,13 +296,13 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
             .on(TEST_TRANSFORMABLE_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(transformerInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_TRANSFORMABLE_FILE)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_FILE)
         // agp Producer should output in a folder with its task name since there are transforms registered.
         Truth.assertThat(agpTaskProvider.get().outputFile.get().asFile.absolutePath).contains("agpTaskProvider")
         // transform input should be in the agp producer.
@@ -326,7 +326,7 @@ class OperationsImplTest {
         val transformerProvider = project.tasks.register("transformer", TransformTask::class.java) {
             transformerInitialized.set(true)
         }
-        operations.transform(transformerProvider,
+        artifacts.transform(transformerProvider,
             TransformTask::inputFolder,
             TransformTask::outputFolder).on(TEST_TRANSFORMABLE_DIRECTORY)
 
@@ -340,13 +340,13 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
             .on(TEST_TRANSFORMABLE_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(transformerInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_TRANSFORMABLE_DIRECTORY)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_DIRECTORY)
         // agp Producer should output in a folder with its task name since there are transforms registered.
         Truth.assertThat(agpTaskProvider.get().outputFolder.get().asFile.absolutePath).contains("agpTaskProvider")
         // transform input should be in the agp producer.
@@ -370,7 +370,7 @@ class OperationsImplTest {
         val transformerOneProvider = project.tasks.register("transformerOne", TransformTask::class.java) {
             transformerOneInitialized.set(true)
         }
-        operations.transform(transformerOneProvider,
+        artifacts.transform(transformerOneProvider,
             TransformTask::inputFile,
             TransformTask::outputFile).on(TEST_TRANSFORMABLE_FILE)
 
@@ -381,7 +381,7 @@ class OperationsImplTest {
         val transformerTwoProvider = project.tasks.register("transformerTwo", TransformTask::class.java) {
             transformerTwoInitialized.set(true)
         }
-        operations.transform(transformerTwoProvider,
+        artifacts.transform(transformerTwoProvider,
             TransformTask::inputFile,
             TransformTask::outputFile).on(TEST_TRANSFORMABLE_FILE)
 
@@ -395,7 +395,7 @@ class OperationsImplTest {
         val agpInitialized = AtomicBoolean(false)
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
 
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
             .on(TEST_TRANSFORMABLE_FILE)
 
         agpTaskProvider.configure {
@@ -406,7 +406,7 @@ class OperationsImplTest {
         Truth.assertThat(transformerOneInitialized.get()).isFalse()
         Truth.assertThat(transformerTwoInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_TRANSFORMABLE_FILE)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_FILE)
 
         // final artifact value should be the transformerTwo task output
         Truth.assertThat(artifactContainer.get().get().asFile.absolutePath)
@@ -441,7 +441,7 @@ class OperationsImplTest {
         val transformerOneProvider = project.tasks.register("transformerOne", TransformTask::class.java) {
             transformerOneInitialized.set(true)
         }
-        operations.transform(transformerOneProvider,
+        artifacts.transform(transformerOneProvider,
             TransformTask::inputFolder,
             TransformTask::outputFolder).on(TEST_TRANSFORMABLE_DIRECTORY)
 
@@ -452,7 +452,7 @@ class OperationsImplTest {
         val transformerTwoProvider = project.tasks.register("transformerTwo", TransformTask::class.java) {
             transformerTwoInitialized.set(true)
         }
-        operations.transform(transformerTwoProvider,
+        artifacts.transform(transformerTwoProvider,
             TransformTask::inputFolder,
             TransformTask::outputFolder).on(TEST_TRANSFORMABLE_DIRECTORY)
 
@@ -466,7 +466,7 @@ class OperationsImplTest {
         val agpInitialized = AtomicBoolean(false)
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
 
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
             .on(TEST_TRANSFORMABLE_DIRECTORY)
         agpTaskProvider.configure {
             agpInitialized.set(true)
@@ -476,7 +476,7 @@ class OperationsImplTest {
         Truth.assertThat(transformerOneInitialized.get()).isFalse()
         Truth.assertThat(transformerTwoInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_TRANSFORMABLE_DIRECTORY)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_DIRECTORY)
 
         // final artifact value should be the transformerTwo task output
         Truth.assertThat(artifactContainer.get().get().asFile.absolutePath)
@@ -509,7 +509,7 @@ class OperationsImplTest {
         val replaceTaskProvider = project.tasks.register("replaceTask", ReplaceTask::class.java) {
             replaceTaskInitialized.set(true)
         }
-        operations.replace(replaceTaskProvider,
+        artifacts.replace(replaceTaskProvider,
             ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
@@ -519,20 +519,20 @@ class OperationsImplTest {
             @get:OutputFile abstract val outputFile: RegularFileProperty
         }
 
-        Truth.assertThat(operations.getArtifactContainer(TEST_REPLACABLE_FILE)
+        Truth.assertThat(artifacts.getArtifactContainer(TEST_REPLACABLE_FILE)
             .needInitialProducer().get()).isFalse()
 
         val agpInitialized = AtomicBoolean(false)
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
             .on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_REPLACABLE_FILE)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_REPLACABLE_FILE)
         // transform output should have the task name in its output.
         Truth.assertThat(replaceTaskProvider.get().outputFile.get().asFile.absolutePath).contains("replaceTask")
         // final artifact value should be the transformer task output
@@ -554,7 +554,7 @@ class OperationsImplTest {
         val replaceTaskProvider = project.tasks.register("replaceTask", ReplaceTask::class.java) {
             replaceTaskInitialized.set(true)
         }
-        operations.replace(replaceTaskProvider,
+        artifacts.replace(replaceTaskProvider,
             ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
@@ -564,20 +564,20 @@ class OperationsImplTest {
             @get:OutputDirectory abstract val outputFolder: DirectoryProperty
         }
 
-        Truth.assertThat(operations.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
+        Truth.assertThat(artifacts.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
             .needInitialProducer().get()).isFalse()
 
         val agpInitialized = AtomicBoolean(false)
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
             .on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
         // transform output should have the task name in its output.
         Truth.assertThat(replaceTaskProvider.get().outputFolder.get().asFile.absolutePath).contains("replaceTask")
         // final artifact value should be the transformer task output
@@ -599,7 +599,7 @@ class OperationsImplTest {
         val replaceTaskOneProvider = project.tasks.register("replaceTaskOne", ReplaceTask::class.java) {
             replaceTaskOneInitialized.set(true)
         }
-        operations.replace(replaceTaskOneProvider,
+        artifacts.replace(replaceTaskOneProvider,
             ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
@@ -608,12 +608,12 @@ class OperationsImplTest {
         val replaceTaskTwoProvider = project.tasks.register("replaceTaskTwo", ReplaceTask::class.java) {
             replaceTaskTwoInitialized.set(true)
         }
-        operations.replace(replaceTaskTwoProvider, ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
+        artifacts.replace(replaceTaskTwoProvider, ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskTwoInitialized.get()).isFalse()
 
-        Truth.assertThat(operations.getArtifactContainer(TEST_REPLACABLE_FILE).needInitialProducer().get())
+        Truth.assertThat(artifacts.getArtifactContainer(TEST_REPLACABLE_FILE).needInitialProducer().get())
             .isFalse()
 
         // now registers AGP provider.
@@ -625,14 +625,14 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile)
             .on(TEST_REPLACABLE_FILE)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskTwoInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_REPLACABLE_FILE)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_REPLACABLE_FILE)
         // transform output should have the task name in its output.
         Truth.assertThat(replaceTaskTwoProvider.get().outputFile.get().asFile.absolutePath).contains("replaceTaskTwo")
         // final artifact value should be the transformer task output
@@ -655,7 +655,7 @@ class OperationsImplTest {
         val replaceTaskOneProvider = project.tasks.register("replaceTaskOne", ReplaceTask::class.java) {
             replaceTaskOneInitialized.set(true)
         }
-        operations.replace(replaceTaskOneProvider,
+        artifacts.replace(replaceTaskOneProvider,
             ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
@@ -664,12 +664,12 @@ class OperationsImplTest {
         val replaceTaskTwoProvider = project.tasks.register("replaceTaskTwo", ReplaceTask::class.java) {
             replaceTaskTwoInitialized.set(true)
         }
-        operations.replace(replaceTaskTwoProvider, ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
+        artifacts.replace(replaceTaskTwoProvider, ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskTwoInitialized.get()).isFalse()
 
-        Truth.assertThat(operations.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
+        Truth.assertThat(artifacts.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
             .needInitialProducer().get()).isFalse()
 
         // now registers AGP provider.
@@ -681,14 +681,14 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFolder)
             .on(TEST_REPLACABLE_DIRECTORY)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskTwoInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_REPLACABLE_DIRECTORY)
         // transform output should have the task name in its output.
         Truth.assertThat(replaceTaskTwoProvider.get().outputFolder.get().asFile.absolutePath).contains("replaceTaskTwo")
         // final artifact value should be the transformer task output
@@ -711,7 +711,7 @@ class OperationsImplTest {
         val appendTaskProvider = project.tasks.register("appendTask", AppendTask::class.java) {
             appendTaskInitialized.set(true)
         }
-        operations.append(appendTaskProvider, AppendTask::outputFile)
+        artifacts.append(appendTaskProvider, AppendTask::outputFile)
             .on(TestArtifactType.TEST_APPENDABLE_FILES)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
@@ -725,14 +725,14 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.addInitialProvider(
+        artifacts.addInitialProvider(
             TestArtifactType.TEST_APPENDABLE_FILES,
             agpTaskProvider, AGPTask::outputFile)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_FILES)
         // append output should have the task name in its output.
         Truth.assertThat(appendTaskProvider.get().outputFile.get().asFile.absolutePath).contains("appendTask")
         Truth.assertThat(agpTaskProvider.get().outputFile.get().asFile.absolutePath).contains("agpTaskProvider")
@@ -758,7 +758,7 @@ class OperationsImplTest {
 
         for (i in 0..2) {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
-            operations.append(appendTaskProvider, AppendTask::outputFile)
+            artifacts.append(appendTaskProvider, AppendTask::outputFile)
                 .on(TestArtifactType.TEST_APPENDABLE_FILES)
         }
 
@@ -768,11 +768,11 @@ class OperationsImplTest {
         }
 
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
-        operations.addInitialProvider(
+        artifacts.addInitialProvider(
             TestArtifactType.TEST_APPENDABLE_FILES,
             agpTaskProvider, AGPTask::outputFile)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_FILES)
         // final artifact values should have all tasks output.
         Truth.assertThat(artifactContainer.get().get()).hasSize(4)
 
@@ -794,7 +794,7 @@ class OperationsImplTest {
         val appendTaskProvider = project.tasks.register("appendTask", AppendTask::class.java) {
             appendTaskInitialized.set(true)
         }
-        operations.append(appendTaskProvider, AppendTask::outputDirectory)
+        artifacts.append(appendTaskProvider, AppendTask::outputDirectory)
             .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
@@ -808,14 +808,14 @@ class OperationsImplTest {
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java) {
             agpInitialized.set(true)
         }
-        operations.addInitialProvider(
+        artifacts.addInitialProvider(
             TestArtifactType.TEST_APPENDABLE_DIRECTORIES,
             agpTaskProvider, AGPTask::outputDirectory)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
         // append output should have the task name in its output.
         Truth.assertThat(appendTaskProvider.get().outputDirectory.get().asFile.absolutePath).contains("appendTask")
         Truth.assertThat(agpTaskProvider.get().outputDirectory.get().asFile.absolutePath).contains("agpTaskProvider")
@@ -841,7 +841,7 @@ class OperationsImplTest {
 
         for (i in 0..2) {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
-            operations.append(appendTaskProvider, AppendTask::outputDirectory)
+            artifacts.append(appendTaskProvider, AppendTask::outputDirectory)
                 .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
         }
 
@@ -851,11 +851,11 @@ class OperationsImplTest {
         }
 
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
-        operations.addInitialProvider(
+        artifacts.addInitialProvider(
             TestArtifactType.TEST_APPENDABLE_DIRECTORIES,
             agpTaskProvider, AGPTask::outputDirectory)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
         // final artifact values should have all tasks output.
         Truth.assertThat(artifactContainer.get().get()).hasSize(4)
 
@@ -880,7 +880,7 @@ class OperationsImplTest {
                 initializedTasks.incrementAndGet()
             }
             agpTaskProviders.add(agpTaskProvider)
-            operations.addInitialProvider(
+            artifacts.addInitialProvider(
                 TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
         }
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
@@ -894,10 +894,10 @@ class OperationsImplTest {
         }
 
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+        artifacts.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTask")
@@ -918,7 +918,7 @@ class OperationsImplTest {
         }
         for (i in 0..2) {
             val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java)
-            operations.addInitialProvider(
+            artifacts.addInitialProvider(
                 TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
         }
 
@@ -931,14 +931,14 @@ class OperationsImplTest {
         }
 
         val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformOneTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+        artifacts.transformAll(transformOneTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
 
         val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformTwoTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+        artifacts.transformAll(transformTwoTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTwoTask")
@@ -969,7 +969,7 @@ class OperationsImplTest {
             val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java) {
                 initializedTasks.incrementAndGet()
             }
-            operations.addInitialProvider(
+            artifacts.addInitialProvider(
                 TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
         }
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
@@ -983,12 +983,12 @@ class OperationsImplTest {
         }
 
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformTask,
+        artifacts.transformAll(transformTask,
             TransformMultipleTask::inputDirectories,
             TransformMultipleTask::outputDirectory)
             .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTask")
@@ -1009,7 +1009,7 @@ class OperationsImplTest {
         }
         for (i in 0..2) {
             val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java)
-            operations.addInitialProvider(
+            artifacts.addInitialProvider(
                 TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
         }
 
@@ -1022,14 +1022,14 @@ class OperationsImplTest {
         }
 
         val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformOneTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
+        artifacts.transformAll(transformOneTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
             .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
 
         val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformTwoTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
+        artifacts.transformAll(transformTwoTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
             .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTwoTask")
@@ -1061,7 +1061,7 @@ class OperationsImplTest {
                 initializedTasks.incrementAndGet()
             }
             agpTaskProviders.add(agpTaskProvider)
-            operations.addInitialProvider(
+            artifacts.addInitialProvider(
                 TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, ProducerTask::outputFile)
         }
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
@@ -1075,15 +1075,15 @@ class OperationsImplTest {
         }
 
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
-        operations.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
+        artifacts.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
             .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
 
         // now add a new producer, after the transfomrAll is called. Yet the transform should get
         // this appended producer anyhow.
         val lateProducer = project.tasks.register("lateProducer", ProducerTask::class.java)
-        operations.append(lateProducer, ProducerTask::outputFile).on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        artifacts.append(lateProducer, ProducerTask::outputFile).on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
 
-        val artifactContainer = operations.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTask")
@@ -1105,9 +1105,9 @@ class OperationsImplTest {
             @get:OutputFile abstract val outputFile: RegularFileProperty
         }
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
-        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
+        artifacts.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
 
-        Truth.assertThat(operations.getArtifactContainer(TEST_FILE).get().get().asFile.absolutePath)
+        Truth.assertThat(artifacts.getArtifactContainer(TEST_FILE).get().get().asFile.absolutePath)
             .endsWith(
                 FileUtils.join("test_file", "debug", DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS)
             )

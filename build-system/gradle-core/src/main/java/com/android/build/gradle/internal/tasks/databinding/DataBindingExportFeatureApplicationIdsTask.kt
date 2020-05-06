@@ -21,7 +21,6 @@ import android.databinding.tool.store.FeatureInfoList
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
@@ -81,7 +80,7 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
             taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingExportFeatureApplicationIdsTask::packageListOutFolder
             ).on(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
