@@ -200,8 +200,11 @@ message SchedulingEventsResult {
 }
 
 message CountersResult {
+  // The id of the process from which these counters belongs to.
+  int64 process_id = 1;
+
   // List of counters.
-  repeated Counter counter = 1;
+  repeated Counter counter = 2;
 
   message Counter {
     // The counter name.
