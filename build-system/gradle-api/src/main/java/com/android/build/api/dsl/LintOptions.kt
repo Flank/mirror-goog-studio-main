@@ -240,12 +240,6 @@ interface LintOptions {
     var baselineFile: File?
 
     /**
-     * An optional map of severity overrides. The map maps from issue id's to the corresponding
-     * severity to use, which must be "fatal", "error", "warning", or "ignore".
-     */
-    val severityOverrides: MutableMap<String, Int>?
-
-    /**
      * Sets the baseline file to use, if any. The baseline file is an XML report previously created
      * by lint, and any warnings and errors listed in that report will be ignored from analysis.
      *
