@@ -145,22 +145,27 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                                 }
                                             }
                                         }
+                                    } else {
+                                        Map<String, String> namedArguments = new HashMap<>();
+                                        List<String> unnamedArguments = new ArrayList<>();
+                                        extractMethodCallArguments(tupleExpression,
+                                                unnamedArguments, namedArguments);
+                                        for (GradleScanner scanner : detectors) {
+                                            scanner.checkMethodCall(
+                                                    context,
+                                                    parent,
+                                                    parentParent,
+                                                    parent3,
+                                                    namedArguments,
+                                                    unnamedArguments,
+                                                    call);
+                                        }
                                     }
                                 } else {
                                     Map<String, String> namedArguments = new HashMap<>();
                                     List<String> unnamedArguments = new ArrayList<>();
-                                    for (Expression subExpr : tupleExpression.getExpressions()) {
-                                        if (subExpr instanceof NamedArgumentListExpression) {
-                                            NamedArgumentListExpression nale =
-                                                    (NamedArgumentListExpression) subExpr;
-                                            for (MapEntryExpression mae :
-                                                    nale.getMapEntryExpressions()) {
-                                                namedArguments.put(
-                                                        mae.getKeyExpression().getText(),
-                                                        mae.getValueExpression().getText());
-                                            }
-                                        }
-                                    }
+                                    extractMethodCallArguments(tupleExpression, unnamedArguments,
+                                            namedArguments);
                                     for (GradleScanner scanner : detectors) {
                                         scanner.checkMethodCall(
                                                 context,
@@ -176,6 +181,23 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         }
 
                         super.visitTupleExpression(tupleExpression);
+                    }
+
+                    private void extractMethodCallArguments(TupleExpression tupleExpression,
+                            List<String> unnamedArguments,
+                            Map<String, String> namedArguments) {
+                        for (Expression subExpr : tupleExpression.getExpressions()) {
+                            if (subExpr instanceof NamedArgumentListExpression) {
+                                NamedArgumentListExpression nale =
+                                        (NamedArgumentListExpression) subExpr;
+                                for (MapEntryExpression mae :
+                                        nale.getMapEntryExpressions()) {
+                                    namedArguments.put(
+                                            mae.getKeyExpression().getText(),
+                                            mae.getValueExpression().getText());
+                                }
+                            }
+                        }
                     }
 
                     private String getParentN(int n) {
