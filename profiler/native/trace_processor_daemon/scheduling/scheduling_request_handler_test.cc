@@ -131,7 +131,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByThreadId) {
   EXPECT_EQ(states_count[SchedulingEvent::DEAD], 0);
 }
 
-TEST(SchedulingRequestHandlerTest, PopulateEventsNoIds) {
+TEST(SchedulingRequestHandlerTest, PopulateEventsAllData) {
   auto tp = LoadTrace(TESTDATA_PATH);
   auto handler = SchedulingRequestHandler(tp.get());
 
@@ -140,8 +140,10 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsNoIds) {
   SchedulingEventsResult result;
   handler.PopulateEvents(params_proto, &result);
 
-  EXPECT_EQ(result.sched_event_size(), 0);
-  EXPECT_EQ(result.num_cores(), 0);
+  // Very simple test to make sure we are returning more data than the
+  // tests above.
+  EXPECT_EQ(result.sched_event_size(), 945682);
+  EXPECT_EQ(result.num_cores(), 8);
 }
 
 }  // namespace

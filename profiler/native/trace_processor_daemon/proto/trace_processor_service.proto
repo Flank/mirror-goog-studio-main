@@ -91,6 +91,7 @@ message QueryParameters {
 
   // Returns all CPU scheduling events for all threads part of the process
   // identified by process_id or for a single thread identified by thread_id.
+  // If no criteria is set, return all the scheduling data contained in the trace.
   // See SchedulingEventsResults for the data returned from this.
   message SchedulingEventsParameters {
     oneof criteria {

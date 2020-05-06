@@ -31,8 +31,7 @@ const std::string STATE_TASK_DEAD = std::string("x");
 
 void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
                                               SchedulingEventsResult* result) {
-  if (result == nullptr ||
-      params.criteria_case() == SchedulingEventsParameters::CRITERIA_NOT_SET) {
+  if (result == nullptr) {
     return;
   }
 
@@ -57,6 +56,11 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
           " "
           "ORDER BY tid ASC, ts ASC";
       break;
+    case SchedulingEventsParameters::CRITERIA_NOT_SET:
+      query_string =
+          "SELECT tid, cpu, ts, dur, end_state, priority "
+          "FROM sched INNER JOIN thread using(utid) "
+          "ORDER BY tid ASC, ts ASC";
     default:
       std::cerr << "SchedulingEventsParameters with no criteria set."
                 << std::endl;
