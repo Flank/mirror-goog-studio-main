@@ -1649,7 +1649,6 @@ com.android.builder.core.AbstractProductFlavor.setTestHandleProfiling: void (jav
 com.android.builder.core.AbstractProductFlavor.setTestInstrumentationRunner: com.android.builder.model.ProductFlavor (java.lang.String)
 com.android.builder.core.AbstractProductFlavor.setTestInstrumentationRunner: void (java.lang.String)
 com.android.builder.core.AbstractProductFlavor.setTestInstrumentationRunnerArguments: com.android.builder.model.ProductFlavor (java.util.Map<java.lang.String, java.lang.String>)
-com.android.builder.core.AbstractProductFlavor.setTestInstrumentationRunnerArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.builder.core.AbstractProductFlavor.setVersionCode: com.android.builder.model.ProductFlavor (java.lang.Integer)
 com.android.builder.core.AbstractProductFlavor.setVersionCode: void (java.lang.Integer)
 com.android.builder.core.AbstractProductFlavor.setVersionName: com.android.builder.model.ProductFlavor (java.lang.String)

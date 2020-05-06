@@ -268,7 +268,6 @@ com.android.build.api.dsl.BaseFlavor.setTestApplicationId: void (java.lang.Strin
 com.android.build.api.dsl.BaseFlavor.setTestFunctionalTest: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setTestHandleProfiling: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setTestInstrumentationRunner: void (java.lang.String)
-com.android.build.api.dsl.BaseFlavor.setTestInstrumentationRunnerArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.BaseFlavor.setWearAppUnbundled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.vectorDrawables: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables, kotlin.Unit>)
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware

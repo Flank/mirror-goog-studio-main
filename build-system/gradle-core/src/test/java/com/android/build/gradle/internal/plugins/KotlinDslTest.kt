@@ -184,6 +184,15 @@ class KotlinDslTest {
         }
     }
 
+    @Test
+    fun `testInstrumentationRunnerArguments source compatibility`() {
+        android.defaultConfig.testInstrumentationRunnerArguments.put("a", "b")
+        assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b")
+
+        android.defaultConfig.testInstrumentationRunnerArguments += "c" to "d"
+        assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b", "c", "d")
+    }
+
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)
     }
