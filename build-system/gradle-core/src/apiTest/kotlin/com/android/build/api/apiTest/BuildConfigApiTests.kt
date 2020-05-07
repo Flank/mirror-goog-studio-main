@@ -37,12 +37,11 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                     kotlin("android")
                     kotlin("android.extensions")
             }
-            import com.android.build.api.variant.BuildConfigField.SupportedType
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
-                    buildConfigFields.put("VariantName", SupportedType.String.make("${'$'}{name}", "Variant Name"))
+                    addBuildConfigField("VariantName", "${'$'}{name}", "Variant Name")
                 }
             }
                 """.trimIndent()
@@ -106,7 +105,7 @@ The added field is used in the MainActivity.kt file.
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.variant.BuildConfigField.SupportedType
+            import com.android.build.api.variant.BuildConfigField
 
             ${testingElements.getGitVersionTask()}
 
@@ -122,9 +121,11 @@ The added field is used in the MainActivity.kt file.
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
-                    buildConfigFields.put("VariantName", gitVersionProvider.map {  task ->
-                        SupportedType.String.make(
-                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8), "Git Version")
+                    buildConfigFields.put("GitVersion", gitVersionProvider.map {  task ->
+                        BuildConfigField(
+                            BuildConfigField.SupportedType.STRING,
+                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8), 
+                            "Git Version")
                     })
                 }
             }""".trimIndent()
@@ -143,7 +144,7 @@ The added field is used in the MainActivity.kt file.
                 override fun onCreate(savedInstanceState: Bundle?) {
                     super.onCreate(savedInstanceState)
                     val label = TextView(this)
-                    label.setText("Hello ${'$'}{BuildConfig.VariantName}")
+                    label.setText("Hello ${'$'}{BuildConfig.GitVersion}")
                     setContentView(label)
                 }
             }

@@ -80,6 +80,22 @@ abstract class VariantPropertiesImpl(
         )
     }
 
+    override fun addBuildConfigField(
+        key: String,
+        value: Serializable,
+        comment: String?
+    ) {
+        buildConfigFields.put(key,
+            when(value) {
+                is Long -> BuildConfigField(BuildConfigField.SupportedType.LONG, value, comment)
+                is Int -> BuildConfigField(BuildConfigField.SupportedType.INT, value, comment)
+                is Boolean -> BuildConfigField(BuildConfigField.SupportedType.BOOLEAN, value, comment)
+                is String -> BuildConfigField(BuildConfigField.SupportedType.STRING, value, comment)
+                else -> throw IllegalArgumentException(
+                    "Value $value is not of the supported types : Boolean, Long, Int, String")
+            })
+    }
+
     /**
      * Adds a ResValue element to the generated resources.
      * @param name the resource name

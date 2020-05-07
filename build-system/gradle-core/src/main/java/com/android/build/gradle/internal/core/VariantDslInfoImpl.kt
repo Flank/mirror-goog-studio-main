@@ -707,16 +707,25 @@ open class VariantDslInfoImpl internal constructor(
             if (!buildConfigFieldsMap.containsKey(classField.name)) {
 
                 buildConfigFieldsMap[classField.name] = when (classField.type) {
-                    "boolean" -> BuildConfigField.SupportedType.Boolean.make(
-                        classField.value,
+                    "boolean" -> BuildConfigField(
+                        BuildConfigField.SupportedType.BOOLEAN,
+                        classField.value.toBoolean(),
                         comment
                     )
-                    "int" -> BuildConfigField.SupportedType.Int.make(classField.value, comment)
-                    "long" -> BuildConfigField.SupportedType.Long.make(classField.value, comment)
-                    "String" -> BuildConfigField.SupportedType.String.make(
+                    "int" -> BuildConfigField(
+                        BuildConfigField.SupportedType.INT,
+                        classField.value.toInt(),
+                        comment)
+                    "long" -> BuildConfigField(
+                        BuildConfigField.SupportedType.LONG,
+                        if (classField.value.endsWith("L"))
+                            classField.value.dropLast(1).toLong()
+                        else classField.value.toLong(),
+                        comment)
+                    "String" ->BuildConfigField(
+                        BuildConfigField.SupportedType.STRING,
                         classField.value,
-                        comment
-                    )
+                        comment)
                     else -> throw java.lang.RuntimeException("Unsupported BuildConfig type : ${classField.type}")
                 }
             }

@@ -45,34 +45,34 @@ class BuildConfigData private constructor(
 
         @JvmOverloads
         fun addStringField(name: String, value: String, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField.SupportedType.String.make(
+            buildConfigFields[name] = BuildConfigField(
+                BuildConfigField.SupportedType.STRING,
                 value,
-                comment
-            )
+                comment)
         }
 
         @JvmOverloads
         fun addIntField(name: String, value: Int, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField.SupportedType.Int.make(
+            buildConfigFields[name] = BuildConfigField(
+                BuildConfigField.SupportedType.INT,
                 value,
-                comment
-            )
+                comment)
         }
 
         @JvmOverloads
         fun addBooleanField(name: String, value: Boolean, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField.SupportedType.Boolean.make(
+            buildConfigFields[name] = BuildConfigField(
+                BuildConfigField.SupportedType.BOOLEAN,
                 value,
-                comment
-            )
+                comment)
         }
 
         @JvmOverloads
         fun addLongField(name: String, value: Long, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField.SupportedType.Long.make(
+            buildConfigFields[name] = BuildConfigField(
+                BuildConfigField.SupportedType.LONG,
                 value,
-                comment
-            )
+                comment)
         }
 
 
