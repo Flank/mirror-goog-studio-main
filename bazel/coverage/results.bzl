@@ -125,7 +125,7 @@ def lcov_tracefile(test):
         outs = ["{}/lcov".format(test)],
         local = True,  # jacoco_xml_to_lcov walks the filesystem
         visibility = ["@cov//:__pkg__"],
-        cmd = "python $(location @cov//:jacoco_xml_to_lcov) <$< >$@",
+        cmd = "python $(location @cov//:jacoco_xml_to_lcov) {} <$< >$@".format(test),
     )
 
 def test_target_pipeline(test, shards):

@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -96,11 +97,10 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DataBindingExportFeatureInfoTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingExportFeatureInfoTask::outFolder
-            )
+            ).on(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)
         }
 
         override fun configure(

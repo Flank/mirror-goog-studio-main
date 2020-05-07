@@ -64,6 +64,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
         FROM_CACHE to setOf(
             ":checkMinifiedDuplicateClasses",
             ":compileMinifiedJavaWithJavac",
+            ":compressMinifiedAssets",
             ":extractDeepLinksMinified",
             ":generateMinifiedBuildConfig",
             ":generateMinifiedResValues",

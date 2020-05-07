@@ -20,6 +20,7 @@ import static com.android.tools.mlkit.DataInputOutputUtils.readFloatArray;
 import static com.android.tools.mlkit.DataInputOutputUtils.writeFloatArray;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -124,6 +125,7 @@ public class MetadataExtractor {
         return tensorShape;
     }
 
+    @Nullable
     public ModelMetadata getModelMetaData() {
         int length = bufferModel.metadataLength();
         for (int i = 0; i < length; i++) {

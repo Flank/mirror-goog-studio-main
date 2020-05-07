@@ -21,10 +21,12 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.ClientTracker;
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.internal.jdwp.JdwpProxyServer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -55,7 +57,7 @@ public final class DeviceMonitor implements ClientTracker {
     private DeviceListMonitorTask mDeviceListMonitorTask;
     @Nullable
     private DeviceClientMonitorTask myDeviceClientMonitorTask;
-
+    private JdwpProxyServer mJdwpProxy;
     private final Object mDevicesGuard = new Object();
 
     @GuardedBy("mDevicesGuard")
@@ -74,6 +76,9 @@ public final class DeviceMonitor implements ClientTracker {
     /** Starts the monitoring. */
     public void start() {
         try {
+            mJdwpProxy = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, this::jdwpProxyChangedState);
+            mJdwpProxy.start();
+
             // To terminate thread call stop on each respective task.
             mDeviceListMonitorTask = new DeviceListMonitorTask(mServer, new DeviceListUpdateListener());
             if (AndroidDebugBridge.getClientSupport()) {
@@ -81,14 +86,31 @@ public final class DeviceMonitor implements ClientTracker {
                 new Thread(myDeviceClientMonitorTask, "Device Client Monitor").start();
             }
             new Thread(mDeviceListMonitorTask, "Device List Monitor").start(); //$NON-NLS-1$
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             // Not expected.
             Log.e("DeviceMonitor", ex);
         }
     }
 
-    /** Stops the monitoring. */
+    private void jdwpProxyChangedState() {
+        DeviceImpl[] devices;
+        synchronized (mDevicesGuard) {
+            devices = mDevices.toArray(new DeviceImpl[0]);
+        }
+        for (DeviceImpl device : devices) {
+            trackDeviceToDropAndReopen(device);
+        }
+    }
+
+    /**
+     * Stops the monitoring.
+     */
     public void stop() {
+        if (mJdwpProxy != null) {
+            mJdwpProxy.stop();
+        }
+
         if (mDeviceListMonitorTask != null) {
             mDeviceListMonitorTask.stop();
         }
@@ -134,9 +156,9 @@ public final class DeviceMonitor implements ClientTracker {
     }
 
     @Override
-    public void trackClientToDropAndReopen(@NonNull ClientImpl client, int port) {
+    public void trackClientToDropAndReopen(@NonNull ClientImpl client) {
         assert myDeviceClientMonitorTask != null;
-        myDeviceClientMonitorTask.registerClientToDropAndReopen(client, port);
+        myDeviceClientMonitorTask.registerClientToDropAndReopen(client);
     }
 
     @Override

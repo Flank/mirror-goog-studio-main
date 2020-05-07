@@ -15,7 +15,9 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.Cmake
 import com.android.build.api.dsl.ExternalNativeBuild
+import com.android.build.api.dsl.NdkBuild
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import org.gradle.api.Action
@@ -24,7 +26,7 @@ import javax.inject.Inject
 /** See [com.android.build.api.dsl.ExternalNativeBuild]  */
 open class ExternalNativeBuild @Inject constructor(dslServices: DslServices) :
     CoreExternalNativeBuild,
-    ExternalNativeBuild<CmakeOptions, NdkBuildOptions> {
+    ExternalNativeBuild {
     override val ndkBuild: NdkBuildOptions =
         dslServices.newInstance(
             NdkBuildOptions::class.java, dslServices
@@ -40,7 +42,7 @@ open class ExternalNativeBuild @Inject constructor(dslServices: DslServices) :
         return ndkBuild
     }
 
-    override fun ndkBuild(action: NdkBuildOptions.() -> Unit) {
+    override fun ndkBuild(action: NdkBuild.() -> Unit) {
         action.invoke(ndkBuild)
     }
 
@@ -50,7 +52,7 @@ open class ExternalNativeBuild @Inject constructor(dslServices: DslServices) :
         return cmake
     }
 
-    override fun cmake(action: CmakeOptions.() -> Unit) {
+    override fun cmake(action: Cmake.() -> Unit) {
         action.invoke(cmake)
     }
 }

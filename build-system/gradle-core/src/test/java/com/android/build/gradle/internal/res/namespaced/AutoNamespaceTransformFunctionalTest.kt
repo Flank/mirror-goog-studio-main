@@ -247,7 +247,7 @@ class AutoNamespaceTransformFunctionalTest {
         val aapt2 = TestUtils.getAapt2()
         aapt2Version.set("Custom for tests $aapt2")
         aapt2FromMaven.from(aapt2.parent)
-        aapt2DaemonBuildService.set(getBuildService(project))
+        aapt2DaemonBuildService.set(getBuildService(project.gradle.sharedServices))
     }
 
     companion object {

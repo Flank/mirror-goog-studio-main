@@ -177,35 +177,33 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingGenBaseClassesTask::classInfoBundleDir
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
+            ).withName("out").on(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingGenBaseClassesTask::sourceOutFolder
-            )
+            ).withName("out").on(InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT)
         }
 
         override fun configure(
             task: DataBindingGenBaseClassesTask
         ) {
             super.configure(task)
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 DataBindingCompilerArguments.getLayoutInfoArtifactType(creationConfig),
                 task.layoutInfoDirectory)
 
             task.packageName.setDisallowChanges(creationConfig.packageName)
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies
             )
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
             task.logOutFolder = creationConfig.paths.getIncrementalDir(task.name)
             task.useAndroidX = creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]

@@ -59,6 +59,7 @@ public class LayoutInspectorService {
     private DetectRootViewChange mDetectRootChange = null;
     private final Map<View, AutoCloseable> mCaptureClosables = new HashMap<>();
 
+    private boolean mShowComposeNodes = false;
     private boolean mUseScreenshotMode = false;
 
     private static LayoutInspectorService sInstance;
@@ -85,7 +86,8 @@ public class LayoutInspectorService {
 
     /** This method is called when a layout inspector command is received by the agent. */
     @SuppressWarnings("unused") // invoked via jni
-    public void onStartLayoutInspectorCommand() {
+    public void onStartLayoutInspectorCommand(boolean showComposeNodes) {
+        mShowComposeNodes = showComposeNodes;
         List<View> roots = getRootViews();
         for (View root : roots) {
             startLayoutInspector(root);
@@ -211,7 +213,7 @@ public class LayoutInspectorService {
     }
 
     @NonNull
-    public List<View> getRootViews() {
+    public static List<View> getRootViews() {
         try {
             List<View> views = WindowInspector.getGlobalWindowViews();
             List<View> result = new ArrayList<>();
@@ -271,8 +273,22 @@ public class LayoutInspectorService {
             }
             long event = initComponentTree(request, rootViewIds);
             if (root != null) {
-                new ComponentTree().writeTree(event, root);
+                // The compose API must run on the UI thread.
+                // For now: Build the entire component tree on the UI thread.
+                ComponentTreeBuilder builder =
+                        new ComponentTreeBuilder(event, root, mShowComposeNodes);
+                root.post(builder);
+                synchronized (builder) {
+                    if (!builder.isDone()) {
+                        builder.wait(5000);
+                    }
+                }
+                Throwable ex = builder.getException();
+                if (ex != null) {
+                    throw ex;
+                }
             }
+            // Send the message from a non UI thread:
             int messageId = (int) System.currentTimeMillis();
             sendComponentTree(request, image, image.length, messageId, type.ordinal());
         } catch (LayoutModifiedException e) {
@@ -441,6 +457,43 @@ public class LayoutInspectorService {
             default:
                 sendErrorMessage(
                         "Unsupported attribute for editing: " + Integer.toHexString(attributeId));
+        }
+    }
+
+    private static class ComponentTreeBuilder implements Runnable {
+        private final long mEvent;
+        private final View mRoot;
+        private final boolean mShowComposeNodes;
+        private boolean mDone;
+        private Throwable mException;
+
+        private ComponentTreeBuilder(long event, @NonNull View root, boolean showComposeNodes) {
+            mEvent = event;
+            mRoot = root;
+            mShowComposeNodes = showComposeNodes;
+        }
+
+        public boolean isDone() {
+            return mDone;
+        }
+
+        @Nullable
+        public Throwable getException() {
+            return mException;
+        }
+
+        @Override
+        public void run() {
+            try {
+                new ComponentTree(mShowComposeNodes).writeTree(mEvent, mRoot);
+            } catch (Throwable ex) {
+                mException = ex;
+            } finally {
+                synchronized (this) {
+                    mDone = true;
+                    notify();
+                }
+            }
         }
     }
 }

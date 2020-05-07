@@ -20,6 +20,7 @@ import com.android.aapt.Resources
 import com.android.aaptcompiler.android.ResValue
 import com.android.aaptcompiler.android.deviceToHost
 import com.android.aaptcompiler.android.hostToDevice
+import com.android.utils.ILogger
 import java.io.File
 
 
@@ -157,7 +158,7 @@ data class BinaryPrimitive(val resValue: ResValue): Item() {
   }
 }
 
-data class AttributeResource(var typeMask: Int = 0): Value() {
+data class AttributeResource(var typeMask: Int = 0, val logger: ILogger? = null): Value() {
   data class Symbol(val symbol: Reference, val value: Int, val type: Byte)
 
   var minInt = Int.MIN_VALUE
@@ -173,7 +174,8 @@ data class AttributeResource(var typeMask: Int = 0): Value() {
 
     // Only one type must match between the actual and the expected.
     if ((actualType and (typeMask or Resources.Attribute.FormatFlags.REFERENCE_VALUE) == 0)) {
-      // TODO(b/139297538): diagnostics
+      val errorMsg = "%s, Expected %s but got %s"
+      logger?.error(null, errorMsg, blameSource(source), maskToString(typeMask), item)
       return false
     }
 
@@ -188,7 +190,8 @@ data class AttributeResource(var typeMask: Int = 0): Value() {
 
       // If the attribute accepts integers, we can't fail here.
       if ((typeMask and Resources.Attribute.FormatFlags.INTEGER_VALUE) == 0) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, %s is not a valid enum."
+        logger?.error(null, errorMsg, blameSource(source), item)
         return false
       }
     }
@@ -207,7 +210,8 @@ data class AttributeResource(var typeMask: Int = 0): Value() {
 
       // If the attribute accepts integers, we can't fail here.
       if ((typeMask and Resources.Attribute.FormatFlags.INTEGER_VALUE) == 0) {
-        // TODO(b/139297538): diagnostics
+        val errorMsg = "%s, %s is not a valid flag."
+        logger?.error(null, errorMsg, blameSource(source), item)
         return false
       }
     }
@@ -230,6 +234,29 @@ data class AttributeResource(var typeMask: Int = 0): Value() {
 
     return thisTypeMask == otherTypeMask
   }
+}
+
+private fun maskToString(typeMask: Int, target: Int, success: String) =
+  if ((typeMask and target) == target) success else ""
+
+private fun maskToString(typeMask: Int): String {
+  val result = StringBuilder()
+  result.append(maskToString(typeMask, Resources.Attribute.FormatFlags.BOOLEAN_VALUE, "| boolean"))
+  result.append(maskToString(typeMask, Resources.Attribute.FormatFlags.COLOR_VALUE, "| color"))
+  result.append(
+    maskToString(typeMask, Resources.Attribute.FormatFlags.DIMENSION_VALUE, "| dimension"))
+  result.append(maskToString(typeMask, Resources.Attribute.FormatFlags.ENUM_VALUE, "| enum"))
+  result.append(maskToString(typeMask, Resources.Attribute.FormatFlags.FLAGS_VALUE, "| flags"))
+  result.append(maskToString(typeMask, Resources.Attribute.FormatFlags.FLOAT_VALUE, "| float"))
+  result.append(
+    maskToString(typeMask, Resources.Attribute.FormatFlags.FRACTION_VALUE, "| fraction"))
+  result.append(
+    maskToString(typeMask, Resources.Attribute.FormatFlags.INTEGER_VALUE, "| integer"))
+  result.append(
+    maskToString(typeMask, Resources.Attribute.FormatFlags.REFERENCE_VALUE, "| reference"))
+  result.append(
+    maskToString(typeMask, Resources.Attribute.FormatFlags.STRING_VALUE, "| string"))
+  return if (result.isNotEmpty()) result.substring(2) else ""
 }
 
 data class UntranslatableSection(var startIndex: Int, var endIndex: Int = startIndex) {

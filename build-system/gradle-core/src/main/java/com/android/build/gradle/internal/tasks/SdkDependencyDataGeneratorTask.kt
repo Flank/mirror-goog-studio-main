@@ -34,7 +34,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.ByteArrayOutputStream
-import java.io.FileInputStream
 import java.io.PrintStream
 import java.nio.file.Files;
 import java.util.zip.DeflaterOutputStream
@@ -123,30 +122,22 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
       taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>
     ) {
       super.handleProvider(taskProvider)
-      creationConfig
-        .artifacts
-        .producesFile(
-          InternalArtifactType.SDK_DEPENDENCY_DATA,
-          taskProvider,
-          SdkDependencyDataGeneratorTask::sdkDependencyData,
-          fileName = "sdkDependencyData.pb"
-        )
+      creationConfig.artifacts.setInitialProvider(
+        taskProvider,
+        SdkDependencyDataGeneratorTask::sdkDependencyData
+      ).withName("sdkDependencyData.pb").on(InternalArtifactType.SDK_DEPENDENCY_DATA)
 
-      creationConfig
-        .artifacts
-        .producesFile(
-          InternalArtifactType.SDK_DEPENDENCY_DATA_PUBLIC,
-            taskProvider,
-            SdkDependencyDataGeneratorTask::sdkDependencyDataPublic,
-            fileName = "sdkDependencies.txt"
-        )
+      creationConfig.artifacts.setInitialProvider(
+        taskProvider,
+        SdkDependencyDataGeneratorTask::sdkDependencyDataPublic
+      ).withName("sdkDependencies.txt").on(InternalArtifactType.SDK_DEPENDENCY_DATA_PUBLIC)
     }
 
     override fun configure(
       task: SdkDependencyDataGeneratorTask
     ) {
       super.configure(task)
-      creationConfig.operations.setTaskInputToFinalProduct(
+      creationConfig.artifacts.setTaskInputToFinalProduct(
           InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
     }
   }

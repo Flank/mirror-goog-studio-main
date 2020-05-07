@@ -41,9 +41,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)}
-import ${getMaterialComponentName("android.support.wearable.watchface.CanvasWatchFaceService", useAndroidX)}
-import ${getMaterialComponentName("android.support.wearable.watchface.WatchFaceService", useAndroidX)}
-import ${getMaterialComponentName("android.support.wearable.watchface.WatchFaceStyle", useAndroidX)}
+import android.support.wearable.watchface.CanvasWatchFaceService
+import android.support.wearable.watchface.WatchFaceService
+import android.support.wearable.watchface.WatchFaceStyle
 import android.view.SurfaceHolder
 import android.view.WindowInsets
 ${renderIf(isInteractive) { "import android.widget.Toast" }}

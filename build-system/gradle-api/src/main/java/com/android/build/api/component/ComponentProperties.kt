@@ -16,8 +16,7 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.artifact.Operations
-import com.android.build.api.variant.VariantOutput
+import com.android.build.api.artifact.Artifacts
 import org.gradle.api.Incubating
 
 @Incubating
@@ -27,5 +26,5 @@ interface ComponentProperties: ComponentIdentity,
     /**
      * Access to the variant's buildable artifacts for build customization.
      */
-    val operations: Operations
+    val artifacts: Artifacts
 }

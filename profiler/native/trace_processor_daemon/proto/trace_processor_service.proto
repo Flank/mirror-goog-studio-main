@@ -67,9 +67,10 @@ message QueryParameters {
 
   oneof query {
     ProcessMetadataParameters process_metadata = 101;
-    ProcessTraceEventsParameters process_events = 102;
+    TraceEventsParameters trace_events_request = 102;
     SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
+    CountersParameters counters_request = 105;
   }
 
   // Returns metadata information for a set of processes.
@@ -78,11 +79,14 @@ message QueryParameters {
     repeated int64 process_id = 1;
   }
 
-  // Returns all the trace events for a set of processes.
-  // Includes all the threads under those processes.
-  // See ResultProcessTraceEvents for the data returned from this.
-  message ProcessTraceEventsParameters {
-    repeated int64 process_id = 1;
+  // Returns all the trace events for all threads part of the process_id
+  // identified by process_id or for a single thread identified by thread_id.
+  // See TraceEventsResult for the data returned from this.
+  message TraceEventsParameters {
+    oneof criteria {
+      int64 process_id = 1;
+      int64 thread_id = 2;
+    }
   }
 
   // Returns all CPU scheduling events for all threads part of the process
@@ -94,6 +98,11 @@ message QueryParameters {
       int64 thread_id = 2;
     }
   }
+
+  // Returns all process counters for the process identified by process_id.
+  message CountersParameters {
+    int64 process_id = 1;
+  }
 }
 
 message QueryResult {
@@ -104,9 +113,10 @@ message QueryResult {
   // check the error field.
   oneof result {
     ProcessMetadataResult process_metadata = 101;
-    ProcessTraceEventsResult process_events = 102;
+    TraceEventsResult trace_events_result = 102;
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
+    CountersResult counters_result = 105;
   }
 
 }
@@ -129,10 +139,30 @@ message ProcessMetadataResult {
   }
 }
 
-message ProcessTraceEventsResult {
-  repeated ProcessTraceEvents events = 1;
+message TraceEventsResult {
+  repeated ThreadTraceEvents thread = 1;
 
-  message ProcessTraceEvents {
+  message ThreadTraceEvents {
+    int64 thread_id = 1;
+
+    // Trace Events keyed by their id, useful to reconstruct the event tree.
+    // See TraceEvent.parent_id.
+    repeated TraceEvent trace_event = 2;
+  }
+
+  message TraceEvent {
+    // Id of this particular event.
+    int64 id = 1;
+
+    int64 timestamp_nanoseconds = 2;
+    int64 duration_nanoseconds = 3;
+    string name = 4;
+
+    // The parent event of this. Will be 0 if depth = 0.
+    int64 parent_id = 5;
+
+    // The depth of this event on its event tree.
+    int32 depth = 6;
   }
 }
 
@@ -169,3 +199,20 @@ message SchedulingEventsResult {
 
 }
 
+message CountersResult {
+  // List of counters.
+  repeated Counter counter = 1;
+
+  message Counter {
+    // The counter name.
+    string name = 1;
+
+    // All entries of this counter, with associated timestamps.
+    repeated CounterValue value = 2;
+  }
+
+  message CounterValue {
+    int64 timestamp_nanoseconds = 1;
+    double value = 2;
+  }
+}

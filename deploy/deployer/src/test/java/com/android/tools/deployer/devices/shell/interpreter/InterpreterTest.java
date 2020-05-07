@@ -18,6 +18,7 @@ package com.android.tools.deployer.devices.shell.interpreter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.android.tools.deployer.devices.DeviceId;
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.shell.ShellCommand;
@@ -41,7 +42,7 @@ public class InterpreterTest {
     public void before() throws IOException {
         inputStream = new ByteArrayInputStream(new byte[] {});
         outputStream = new ByteArrayOutputStream(1024);
-        FakeDevice device = new FakeDeviceLibrary().build(FakeDeviceLibrary.DeviceId.API_28);
+        FakeDevice device = new FakeDeviceLibrary().build(DeviceId.API_28);
         device.getShell().addCommand(new EchoCommand());
         device.getShell().addCommand(new CatCommand());
         device.getShell().addCommand(new TwoParamCommand());

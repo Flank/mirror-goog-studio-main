@@ -846,23 +846,21 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             creationConfig
                     .getArtifacts()
-                    .producesDir(
+                    .setInitialProvider(
+                            taskProvider, MergeResources::getDataBindingLayoutInfoOutFolder)
+                    .withName("out")
+                    .on(
                             mergeType == MERGE
                                     ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE.INSTANCE
-                                    : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE,
-                            taskProvider,
-                            MergeResources::getDataBindingLayoutInfoOutFolder,
-                            "out");
+                                    : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE.INSTANCE);
 
             // only the full run with dependencies generates the blame folder
             if (includeDependencies) {
                 creationConfig
                         .getArtifacts()
-                        .producesDir(
-                                InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE,
-                                taskProvider,
-                                MergeResources::getBlameLogOutputFolder,
-                                "out");
+                        .setInitialProvider(taskProvider, MergeResources::getBlameLogOutputFolder)
+                        .withName("out")
+                        .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE);
             }
         }
 
@@ -992,11 +990,13 @@ public abstract class MergeResources extends ResourceAwareTask {
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getAapt2WorkersBuildService(),
                     BuildServicesKt.getBuildService(
-                            task.getProject(), Aapt2WorkersBuildService.class));
+                            creationConfig.getServices().getBuildServiceRegistry(),
+                            Aapt2WorkersBuildService.class));
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getAapt2DaemonBuildService(),
                     BuildServicesKt.getBuildService(
-                            task.getProject(), Aapt2DaemonBuildService.class));
+                            creationConfig.getServices().getBuildServiceRegistry(),
+                            Aapt2DaemonBuildService.class));
         }
     }
 

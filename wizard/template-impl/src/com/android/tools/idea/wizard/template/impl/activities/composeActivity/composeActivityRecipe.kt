@@ -37,7 +37,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addAllKotlinDependencies(moduleData)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
 
-  val composeVersion = "0.1.0-dev03"
+  val composeVersion = "0.1.0-dev09"
   // Note: Don't use minRev = "0.1.0-devXX" because compose and Studio are in lock step at the moment.
   addDependency(mavenCoordinate = "androidx.ui:ui-framework:$composeVersion")
   addDependency(mavenCoordinate = "androidx.ui:ui-layout:$composeVersion")

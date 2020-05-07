@@ -71,19 +71,15 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateEmptyResourceFilesTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_SYMBOL_LIST,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateEmptyResourceFilesTask::emptyRDotTxt,
-                SdkConstants.FN_RESOURCE_TEXT
-            )
+                GenerateEmptyResourceFilesTask::emptyRDotTxt
+            ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.COMPILE_SYMBOL_LIST)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.PACKAGED_RES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateEmptyResourceFilesTask::emptyMergedResources,
-                SdkConstants.FD_RES
-            )
+                GenerateEmptyResourceFilesTask::emptyMergedResources
+            ).withName(SdkConstants.FD_RES).on(InternalArtifactType.PACKAGED_RES)
         }
     }
 }

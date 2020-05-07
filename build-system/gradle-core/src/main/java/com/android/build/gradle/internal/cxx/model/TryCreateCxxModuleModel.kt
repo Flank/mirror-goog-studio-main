@@ -23,7 +23,6 @@ import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
@@ -43,7 +42,6 @@ import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
-import org.gradle.api.InvalidUserDataException
 import java.io.File
 import java.io.FileReader
 import java.util.function.Consumer
@@ -103,38 +101,11 @@ fun tryCreateCxxModuleModel(
      * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
      * in Android Studio
      */
-    fun ndkHandler(): NdkHandler {
-        CachingEnvironment(cxxFolder).use {
-            val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
-                if (!ndkHandler.ndkPlatform.isConfigured) {
-                    try {
-                        global.sdkComponents.installNdk(ndkHandler)
-                    } catch (e: NumberFormatException) {
-                        // This is likely a mis-formatted NDK version in build.gradle. Just issue
-                        // an infoln because an appropriate errorln will have been emitted by
-                        // NdkLocator.
-                        infoln(
-                            "NDK auto-download failed, possibly due to a malformed NDK version in " +
-                                    "build.gradle. If manual download is necessary from SDK manager " +
-                                    "then the preferred NDK version is " +
-                                    "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'."
-                        )
-                        return ndkHandler
-                    }
-
-                    if (!ndkHandler.ndkPlatform.isConfigured) {
-                        throw InvalidUserDataException(
-                            "NDK not configured. Download " +
-                                    "it with SDK manager. Preferred NDK version is " +
-                                    "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'. "
-                        )
-                    }
-                }
-            return ndkHandler
-        }
+    val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
+    val ndkInstall = CachingEnvironment(cxxFolder).use {
+        ndkHandler.getNdkPlatform(downloadOkay = true)
     }
-    val ndkHandler = ndkHandler()
-    if (!ndkHandler.ndkPlatform.isConfigured) {
+    if (!ndkInstall.isConfigured) {
         infoln("Not creating C/C++ model because NDK could not be configured.")
         return null
     }

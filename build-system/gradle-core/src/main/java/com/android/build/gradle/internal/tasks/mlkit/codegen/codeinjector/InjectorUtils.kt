@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codebl
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.OutputsClassInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.ImageGetMethodInjector
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.LabelGetMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.CategoryListGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector
 import com.android.tools.mlkit.TensorInfo
 
@@ -48,7 +48,7 @@ fun getAssociatedFileInjector(): AssociatedFileInjector {
 fun getGetterMethodInjector(tensorInfo: TensorInfo): MethodInjector {
     return when {
         tensorInfo.isRGBImage -> ImageGetMethodInjector()
-        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> LabelGetMethodInjector()
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> CategoryListGetMethodInjector()
         else -> DefaultGetMethodInjector()
     }
 }

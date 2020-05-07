@@ -113,19 +113,15 @@ public abstract class JacocoTask extends AndroidVariantTask {
             super.handleProvider(taskProvider);
             creationConfig
                     .getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE,
-                            taskProvider,
-                            JacocoTask::getOutput,
-                            "out");
+                    .setInitialProvider(taskProvider, JacocoTask::getOutput)
+                    .withName("out")
+                    .on(InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE);
 
             creationConfig
                     .getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS.INSTANCE,
-                            taskProvider,
-                            JacocoTask::getOutputJars,
-                            "out");
+                    .setInitialProvider(taskProvider, JacocoTask::getOutputJars)
+                    .withName("out")
+                    .on(InternalArtifactType.JACOCO_INSTRUMENTED_JARS.INSTANCE);
         }
 
         @Override

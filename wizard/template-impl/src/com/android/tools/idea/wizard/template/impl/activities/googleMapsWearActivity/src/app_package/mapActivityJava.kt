@@ -35,7 +35,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrameLayout", useAndroidX)};
-import ${getMaterialComponentName("android.support.wearable.activity.WearableActivity", useAndroidX)};
+import android.support.wearable.activity.WearableActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;

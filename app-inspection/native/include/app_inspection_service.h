@@ -57,7 +57,7 @@ class AppInspectionService {
   void AddTransform(JNIEnv* jni, const std::string& class_name,
                     const std::string& method_name,
                     const std::string& signature, bool is_entry);
-  bool tagClassInstancesO(jclass clazz, jlong tag);
+  bool tagClassInstancesO(JNIEnv* jni, jclass clazz, jlong tag);
   bool tagClassInstancesQ(jclass clazz, jlong tag);
 
   static void OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,

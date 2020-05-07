@@ -16,10 +16,8 @@
 package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Log;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -74,22 +72,12 @@ public class AdbSocketUtils {
     /**
      * Attempts to connect to the debug bridge server.
      *
-     * @return a connect socket if success, null otherwise
+     * @return a connect socket if success
+     * @throws IOException should errors occur when opening the connection
      */
-    @Nullable
-    static SocketChannel openAdbConnection() {
-        try {
-            SocketChannel adbChannel = SocketChannel.open(AndroidDebugBridge.getSocketAddress());
-            adbChannel.socket().setTcpNoDelay(true);
-            return adbChannel;
-        } catch (IOException e) {
-            Log.e(
-                    "AdbSocketUtils",
-                    "Unable to open connection to: "
-                            + AndroidDebugBridge.getSocketAddress()
-                            + ", due to: "
-                            + e);
-            return null;
-        }
+    static SocketChannel openAdbConnection() throws IOException {
+        SocketChannel adbChannel = SocketChannel.open(AndroidDebugBridge.getSocketAddress());
+        adbChannel.socket().setTcpNoDelay(true);
+        return adbChannel;
     }
 }

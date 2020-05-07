@@ -277,7 +277,7 @@ interface VariantDslInfo {
      *
      * @return a list of items.
      */
-    fun getBuildConfigFields(): Map<String, BuildConfigField>
+    fun getBuildConfigFields(): Map<String, BuildConfigField<out java.io.Serializable>>
 
     /**
      * Returns a list of generated resource values.
@@ -302,7 +302,7 @@ interface VariantDslInfo {
      *
      * @return the merged manifest placeholders for a build variant.
      */
-    val manifestPlaceholders: Map<String, Any>
+    val manifestPlaceholders: Map<String, String>
 
     // Only require specific multidex opt-in for legacy multidex.
     val isMultiDexEnabled: Boolean

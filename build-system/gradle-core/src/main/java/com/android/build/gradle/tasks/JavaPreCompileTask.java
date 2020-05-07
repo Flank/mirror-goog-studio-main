@@ -157,11 +157,9 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
             super.handleProvider(taskProvider);
             creationConfig
                     .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.ANNOTATION_PROCESSOR_LIST.INSTANCE,
-                            taskProvider,
-                            JavaPreCompileTask::getProcessorListFile,
-                            "annotationProcessors.json");
+                    .setInitialProvider(taskProvider, JavaPreCompileTask::getProcessorListFile)
+                    .withName("annotationProcessors.json")
+                    .on(InternalArtifactType.ANNOTATION_PROCESSOR_LIST.INSTANCE);
         }
 
         @Override

@@ -120,12 +120,10 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.FEATURE_SET_METADATA,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                FeatureSetMetadataWriterTask::outputFile,
-                FeatureSetMetadata.OUTPUT_FILE_NAME
-            )
+                FeatureSetMetadataWriterTask::outputFile
+            ).withName(FeatureSetMetadata.OUTPUT_FILE_NAME).on(InternalArtifactType.FEATURE_SET_METADATA)
         }
 
         override fun configure(

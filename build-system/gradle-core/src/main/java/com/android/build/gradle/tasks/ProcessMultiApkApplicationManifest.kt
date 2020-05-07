@@ -166,7 +166,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
         override fun handleProvider(taskProvider: TaskProvider<out ProcessMultiApkApplicationManifest>) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessMultiApkApplicationManifest::multiApkManifestOutputDirectory
             ).on(InternalArtifactType.MERGED_MANIFESTS)
@@ -185,12 +185,12 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
             )
 
             task.compatibleScreensManifest.setDisallowChanges(
-                creationConfig.operations.get(
+                creationConfig.artifacts.get(
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
             )
 
             creationConfig
-                .operations
+                .artifacts
                 .setTaskInputToFinalProduct(
                     ArtifactTypes.MERGED_MANIFEST,
                     task.mainMergedManifest

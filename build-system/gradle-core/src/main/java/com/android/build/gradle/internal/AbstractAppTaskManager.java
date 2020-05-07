@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
+import com.android.build.gradle.internal.tasks.CompressAssetsTask;
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
@@ -104,8 +105,6 @@ public abstract class AbstractAppTaskManager<
         // TODO remove case once TaskManager's type param is based on BaseCreationConfig
         createApplicationIdWriterTask(apkCreationConfig);
 
-        createBuildArtifactReportTask(appVariantProperties);
-
         // Add a task to check the manifest
         taskFactory.register(new CheckManifest.CreationAction(appVariantProperties));
 
@@ -126,6 +125,8 @@ public abstract class AbstractAppTaskManager<
 
         // Add a task to merge the asset folders
         createMergeAssetsTask(appVariantProperties);
+
+        taskFactory.register(new CompressAssetsTask.CreationAction(apkCreationConfig));
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(appVariantProperties);
@@ -150,8 +151,7 @@ public abstract class AbstractAppTaskManager<
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(appVariantProperties);
 
-        // Add a task to auto-generate classes for helping run inference on ML model files under
-        // assets folder.
+        // Add a task to auto-generate classes for ML model files.
         createMlkitTask(appVariantProperties);
 
         // Add a compile task
@@ -189,7 +189,7 @@ public abstract class AbstractAppTaskManager<
     @Override
     protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
         final Provider<Directory> javacOutput =
-                componentProperties.getArtifacts().getFinalProduct(JAVAC.INSTANCE);
+                componentProperties.getArtifacts().get(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
                 componentProperties.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =

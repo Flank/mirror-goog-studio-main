@@ -73,6 +73,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         project.getProviders(),
                         project.getLayout(),
                         projectOptions,
+                        project.getGradle().getSharedServices(),
                         project::file);
 
         DslServices dslServices =

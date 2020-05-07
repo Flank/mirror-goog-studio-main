@@ -18,6 +18,7 @@ package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.builder.model.PrefabPackagingOptions
 import org.gradle.api.Incubating
 
 /**
@@ -28,48 +29,19 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface LibraryExtension<
-        AaptOptionsT : AaptOptions,
-        AbiSplitT : AbiSplit,
-        AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildTypeT : LibraryBuildType<SigningConfigT>,
-        CMakeT : Cmake,
-        CompileOptionsT : CompileOptions,
-        DataBindingT : DataBinding,
         DefaultConfigT : LibraryDefaultConfig<SigningConfigT>,
-        DensitySplitT : DensitySplit,
-        ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
-        JacocoOptionsT : JacocoOptions,
-        LintOptionsT : LintOptions,
-        NdkBuildT : NdkBuild,
-        PackagingOptionsT : PackagingOptions,
         ProductFlavorT : LibraryProductFlavor<SigningConfigT>,
         SigningConfigT : SigningConfig,
-        SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT : TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT : UnitTestOptions> :
+        PrefabOptionsT : PrefabPackagingOptions> :
     CommonExtension<
-        AaptOptionsT,
-        AbiSplitT,
-        AdbOptionsT,
         AndroidSourceSetT,
         LibraryBuildFeatures,
         BuildTypeT,
-        CMakeT,
-        CompileOptionsT,
-        DataBindingT,
         DefaultConfigT,
-        DensitySplitT,
-        ExternalNativeBuildT,
-        JacocoOptionsT,
-        LintOptionsT,
-        NdkBuildT,
-        PackagingOptionsT,
         ProductFlavorT,
         SigningConfigT,
-        SplitsT,
-        TestOptionsT,
-        UnitTestOptionsT,
         LibraryVariant<LibraryVariantProperties>,
         LibraryVariantProperties>,
     TestedExtension {

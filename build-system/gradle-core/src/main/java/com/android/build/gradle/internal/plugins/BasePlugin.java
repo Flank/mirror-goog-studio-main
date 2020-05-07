@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import android.databinding.tool.processing.Scope;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
@@ -39,14 +38,12 @@ import com.android.build.gradle.internal.DependencyResolutionChecks;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
-import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
-import com.android.build.gradle.internal.dependency.ConstraintHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -60,6 +57,8 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
+import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService;
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
@@ -71,6 +70,7 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager;
@@ -89,7 +89,6 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-import com.android.dx.command.dexer.Main;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.model.LmModuleLoader;
@@ -256,7 +255,8 @@ public abstract class BasePlugin<
         AttributionListenerInitializer.INSTANCE.init(
                 project, projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION));
 
-        PluginInitializer.initialize(project);
+        AgpVersionChecker.enforceTheSamePluginVersions(project);
+
         RecordingBuildListener buildListener = ProfilerInitializer.init(project, projectOptions);
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
@@ -294,7 +294,11 @@ public abstract class BasePlugin<
     private void configureProject() {
         final Gradle gradle = project.getGradle();
 
-        extraModelInfo = new ExtraModelInfo();
+        new LibraryDependencyCacheBuildService.RegistrationAction(project).execute();
+        extraModelInfo =
+                new ExtraModelInfo(
+                        new MavenCoordinatesCacheBuildService.RegistrationAction(project)
+                                .execute());
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
         IssueReporter issueReporter = projectServices.getIssueReporter();
@@ -346,6 +350,9 @@ public abstract class BasePlugin<
                                 task.setDescription(
                                         "Assembles all variants of all applications and secondary packages."));
 
+        // As soon as project is evaluated we can clear the shared state for deprecation reporting.
+        gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
+
         // call back on execution. This is called after the whole build is done (not
         // after the current project is done).
         // This is will be called for each (android) projects though, so this should support
@@ -358,17 +365,8 @@ public abstract class BasePlugin<
                         if (buildResult.getGradle().getParent() != null) {
                             return;
                         }
-                        ModelBuilder.clearCaches();
                         sdkComponents.unload();
                         SdkLocator.resetCache();
-                        ConstraintHandler.clearCache();
-                        threadRecorder.record(
-                                ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
-                                project.getPath(),
-                                null,
-                                Main::clearInternTables);
-                        DeprecationReporterImpl.Companion.clean();
-                        Scope.clear();
                     }
                 });
 
@@ -819,6 +817,7 @@ public abstract class BasePlugin<
                         project.getProviders(),
                         project.getLayout(),
                         projectOptions,
+                        project.getGradle().getSharedServices(),
                         project::file);
     }
 }

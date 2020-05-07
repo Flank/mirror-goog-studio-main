@@ -97,6 +97,11 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
     perfettoPath = GetPath(kPerfettoExecutable, run_args.abi_arch);
     perfetto_trace_path_ = run_args.output_file_path;
   } else {
+    // When running built in perfetto we need to enable traced. This is enabled
+    // by default on pixel devices but not other OEMS.
+    if (!EnableProfiling()) {
+      return FAILED_LAUNCH_TRACED;
+    }
     // Perfetto only has write access to the |kFixedPerfettoTracePath| folder.
     // As such we take the expected file name and tell perfetto to write to a
     // file with that name in the |kFixedPerfettoTracePath| folder. For Q this

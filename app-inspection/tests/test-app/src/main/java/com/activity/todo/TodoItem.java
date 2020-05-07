@@ -18,7 +18,7 @@ package com.activity.todo;
 
 import androidx.annotation.NonNull;
 
-public final class TodoItem {
+public class TodoItem {
     @NonNull private String description;
     private boolean completed;
 

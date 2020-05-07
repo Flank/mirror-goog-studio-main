@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.impl.ResValue
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import org.gradle.api.provider.MapProperty
 
 /**
@@ -26,5 +24,5 @@ import org.gradle.api.provider.MapProperty
  */
 interface AndroidTestCreationConfig: TestComponentCreationConfig, ApkCreationConfig {
 
-    val buildConfigFields: MapProperty<String, BuildConfigField>
+    val buildConfigFields: MapProperty<String, BuildConfigField<out java.io.Serializable>>
 }

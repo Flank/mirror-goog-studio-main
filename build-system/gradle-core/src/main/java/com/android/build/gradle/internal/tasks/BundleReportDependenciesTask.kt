@@ -137,19 +137,17 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleReportDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                BundleReportDependenciesTask::dependenciesList,
-                "dependencies.pb"
-            )
+                BundleReportDependenciesTask::dependenciesList
+            ).withName("dependencies.pb").on(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)
         }
 
         override fun configure(
             task: BundleReportDependenciesTask
         ) {
             super.configure(task)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
             task.featureDeps = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,

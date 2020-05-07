@@ -19,6 +19,7 @@ import com.android.build.api.component.ComponentProperties
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 /**
  * Parent interface for all types of variants.
@@ -41,7 +42,7 @@ interface VariantProperties: ComponentProperties {
     /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
-    val buildConfigFields: MapProperty<String, BuildConfigField>
+    val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
 
     /**
      * Adds a ResValue element to the generated resources.
@@ -60,4 +61,14 @@ interface VariantProperties: ComponentProperties {
      * @param comment optional comment to be added to the generated resource file for the field.
      */
     fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
+
+    /**
+     * [MapProperty] of the variant's manifest placeholders.
+     *
+     * Placeholders are organized with a key and a value. The value is a [String] that will be
+     * used as is in the merged manifest.
+     *
+     * @return the [MapProperty] with keys as [String]
+     */
+    val manifestPlaceholders: MapProperty<String, String>
 }

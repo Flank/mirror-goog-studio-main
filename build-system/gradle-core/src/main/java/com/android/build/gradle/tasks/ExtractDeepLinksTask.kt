@@ -88,12 +88,10 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             taskProvider: TaskProvider<out ExtractDeepLinksTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.NAVIGATION_JSON,
-                taskProvider = taskProvider,
-                productProvider = ExtractDeepLinksTask::navigationJson,
-                fileName = "navigation.json"
-            )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                ExtractDeepLinksTask::navigationJson
+            ).withName("navigation.json").on(InternalArtifactType.NAVIGATION_JSON)
         }
 
         override fun configure(

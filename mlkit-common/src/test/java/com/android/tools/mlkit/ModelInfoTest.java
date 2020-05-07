@@ -16,6 +16,7 @@
 
 package com.android.tools.mlkit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.testutils.TestUtils;
 import com.android.tools.mlkit.TensorInfo.ImageProperties;
 import com.android.tools.mlkit.TensorInfo.ImageProperties.ColorSpaceType;
-import com.android.tools.mlkit.exception.TfliteModelException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -38,7 +38,7 @@ public class ModelInfoTest {
     private static final double DELTA = 10e-6;
 
     @Test
-    public void testQuantMetadataModelExtractedCorrectly()
+    public void testImageClassificationQuantModelMetadataExtractedCorrectly()
             throws TfliteModelException, IOException {
         ModelInfo modelInfo =
                 ModelInfo.buildFrom(
@@ -74,7 +74,7 @@ public class ModelInfoTest {
     }
 
     @Test
-    public void testQuantModelExtractedCorrectly() throws TfliteModelException, IOException {
+    public void testImageClassificationQuantModelExtractedCorrectly() throws TfliteModelException, IOException {
         ModelInfo modelInfo =
                 ModelInfo.buildFrom(
                         extractByteBufferFromModel(
@@ -88,11 +88,65 @@ public class ModelInfoTest {
     }
 
     @Test
-    public void testModelInfoSerialization() throws TfliteModelException, IOException {
-        ModelInfo originalModelInfo =
+    public void testObjectDetectionModelMetadataExtractedCorrectly()
+            throws TfliteModelException, IOException {
+        ModelInfo modelInfo =
                 ModelInfo.buildFrom(
                         extractByteBufferFromModel(
-                                "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"));
+                                "prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata.tflite"));
+
+        assertEquals(1, modelInfo.getInputs().size());
+        assertEquals(4, modelInfo.getOutputs().size());
+        assertTrue(modelInfo.isMetadataExisted());
+
+        TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
+        assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
+        assertEquals("image", inputTensorInfo.getIdentifierName());
+        assertEquals(new ImageProperties(ColorSpaceType.RGB), inputTensorInfo.getImageProperties());
+        MetadataExtractor.NormalizationParams inputNormalization =
+                inputTensorInfo.getNormalizationParams();
+        assertEquals(127.5f, inputNormalization.getMean()[0], DELTA);
+        assertEquals(127.5f, inputNormalization.getStd()[0], DELTA);
+        assertEquals(0f, inputNormalization.getMin()[0], DELTA);
+        assertEquals(255f, inputNormalization.getMax()[0], DELTA);
+        MetadataExtractor.QuantizationParams inputQuantization =
+                inputTensorInfo.getQuantizationParams();
+        assertEquals(128f, inputQuantization.getZeroPoint(), DELTA);
+        assertEquals(0.0078125f, inputQuantization.getScale(), DELTA);
+
+        TensorInfo locationsTensor = modelInfo.getOutputs().get(0);
+        assertEquals("locations", locationsTensor.getName());
+        assertEquals(TensorInfo.ContentType.BOUNDING_BOX, locationsTensor.getContentType());
+        TensorInfo.BoundingBoxProperties properties = locationsTensor.getBoundingBoxProperties();
+        assertEquals(TensorInfo.BoundingBoxProperties.Type.BOUNDARIES, properties.type);
+        assertEquals(TensorInfo.BoundingBoxProperties.CoordinateType.RATIO, properties.coordinateType);
+        assertArrayEquals(new int[]{1, 0, 3, 2}, properties.index);
+        TensorInfo.ContentRange contentRange = locationsTensor.getContentRange();
+        assertEquals(2, contentRange.min);
+        assertEquals(2, contentRange.max);
+
+        TensorInfo classesTensor = modelInfo.getOutputs().get(1);
+        assertEquals("classes", classesTensor.getName());
+        assertEquals(TensorInfo.FileType.TENSOR_VALUE_LABELS, classesTensor.getFileType());
+        assertEquals("labelmap.txt", classesTensor.getFileName());
+
+        TensorInfo scoresTensor = modelInfo.getOutputs().get(2);
+        assertEquals("scores", scoresTensor.getName());
+
+        TensorInfo numOfDetectionsTensor = modelInfo.getOutputs().get(3);
+        assertEquals("number of detections", numOfDetectionsTensor.getName());
+    }
+
+    @Test
+    public void testModelInfoSerialization() throws TfliteModelException, IOException {
+        testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite");
+        testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata.tflite");
+    }
+
+    private void testModelInfoSerialization(String modelPath) throws TfliteModelException, IOException {
+        ModelInfo originalModelInfo =
+                ModelInfo.buildFrom(
+                        extractByteBufferFromModel(modelPath));
 
         byte[] serializedBytes;
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {

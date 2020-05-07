@@ -27,9 +27,7 @@ interface ApkCreationConfig: BaseCreationConfig {
 
     val aaptOptions: AaptOptions
 
-    // TODO: move the below properties to Property<X>
-
-    val manifestPlaceholders: Map<String, Any>
+    val manifestPlaceholders: MapProperty<String, String>
 
     val embedsMicroApp: Boolean
 

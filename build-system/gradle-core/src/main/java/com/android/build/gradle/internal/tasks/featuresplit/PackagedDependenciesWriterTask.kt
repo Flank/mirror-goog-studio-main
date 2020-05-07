@@ -122,12 +122,10 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out PackagedDependenciesWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.PACKAGED_DEPENDENCIES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                PackagedDependenciesWriterTask::outputFile,
-                "deps.txt"
-            )
+                PackagedDependenciesWriterTask::outputFile
+            ).withName("deps.txt").on(InternalArtifactType.PACKAGED_DEPENDENCIES)
         }
 
         override fun configure(

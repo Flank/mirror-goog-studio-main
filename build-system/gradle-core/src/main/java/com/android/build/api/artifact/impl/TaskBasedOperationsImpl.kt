@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Supplier
 
 class TaskBasedOperationsImpl<TaskT: Task>(
-    val operations: OperationsImpl,
+    val operations: ArtifactsImpl,
     val taskProvider: TaskProvider<TaskT>
 ) : TaskBasedOperations<TaskT> {
 
@@ -82,7 +82,7 @@ class TaskBasedOperationsImpl<TaskT: Task>(
 }
 
 class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
-    private val operations: OperationsImpl,
+    private val operations: ArtifactsImpl,
     private val taskProvider: TaskProvider<TaskT>,
     private val inputArtifactType: ArtifactTypeT,
     private val inputLocation: (TaskT) -> FileSystemLocationProperty<Directory>

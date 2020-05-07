@@ -18,9 +18,8 @@
 
 package com.android.build.gradle.internal.tasks.mlkit.codegen
 
-import com.android.tools.mlkit.MlkitNames
+import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.TensorInfo
-import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
 
 fun getParameterType(tensorInfo: TensorInfo): TypeName {
@@ -32,7 +31,7 @@ fun getParameterType(tensorInfo: TensorInfo): TypeName {
 }
 
 fun getIdentifierFromFileName(name: String): String {
-    return MlkitNames.computeIdentifierName(name.replace("\\..*".toRegex(), ""))
+    return MlNames.computeIdentifierName(name.replace("\\..*".toRegex(), ""))
 }
 
 fun getProcessorName(tensorInfo: TensorInfo): String {
@@ -77,10 +76,18 @@ fun getDataType(type: TensorInfo.DataType): String {
     return type.toString()
 }
 
-fun getOutputParameterType(tensorInfo: TensorInfo): ClassName {
+fun getOutputParameterType(tensorInfo: TensorInfo): TypeName {
     return when {
         tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE
-        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> ClassNames.TENSOR_LABEL
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> ClassNames.CATEGORY_LIST
         else -> ClassNames.TENSOR_BUFFER
+    }
+}
+
+fun getOutputParameterTypeName(tensorInfo: TensorInfo): String {
+    return when {
+        tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE.simpleName()
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> "CategoryList"
+        else -> ClassNames.TENSOR_BUFFER.simpleName()
     }
 }

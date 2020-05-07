@@ -22,4 +22,5 @@ abstract class LibraryBuildFeaturesImpl : BuildFeaturesImpl(), LibraryBuildFeatu
     override var androidResources: Boolean? = null
     override var dataBinding: Boolean? = null
     override var mlModelBinding: Boolean? = false
+    override var prefabPublishing: Boolean? = false
 }

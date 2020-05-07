@@ -38,12 +38,10 @@ class MergeGeneratedProguardFilesCreationAction(
         taskProvider: TaskProvider<out MergeFileTask>
     ) {
         super.handleProvider(taskProvider)
-        creationConfig.artifacts.producesFile(
-            InternalArtifactType.GENERATED_PROGUARD_FILE,
+        creationConfig.artifacts.setInitialProvider(
             taskProvider,
-            MergeFileTask::outputFile,
-            SdkConstants.FN_PROGUARD_TXT
-        )
+            MergeFileTask::outputFile
+        ).withName(SdkConstants.FN_PROGUARD_TXT).on(InternalArtifactType.GENERATED_PROGUARD_FILE)
     }
 
     override fun configure(

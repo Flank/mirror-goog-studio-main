@@ -76,11 +76,10 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             taskProvider: TaskProvider<out DataBindingMergeBaseClassLogTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingMergeBaseClassLogTask::outFolder
-            )
+            ).on(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS)
         }
 
         override fun configure(

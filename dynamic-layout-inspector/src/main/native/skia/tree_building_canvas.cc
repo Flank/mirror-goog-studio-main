@@ -278,7 +278,8 @@ void TreeBuildingCanvas::onDrawPicture(const SkPicture* picture,
 
 void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
                                           SkData* value) {
-  if (!strstr(key, "RenderNode")) {
+  // TODO(b/154023953) Remove the check for name,  merge the images in Studio.
+  if (!strstr(key, "RenderNode") || strstr(key, "name=''")) {
     return;
   }
   if (key[0] != '/') {

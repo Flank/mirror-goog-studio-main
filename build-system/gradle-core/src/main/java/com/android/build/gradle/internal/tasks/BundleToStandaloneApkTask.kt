@@ -183,12 +183,11 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix = if (creationConfig.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.UNIVERSAL_APK,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                BundleToStandaloneApkTask::outputFile,
-                "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix"
-            )
+                BundleToStandaloneApkTask::outputFile
+            ).withName("${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix")
+                .on(InternalArtifactType.UNIVERSAL_APK)
         }
 
         override fun configure(
@@ -196,7 +195,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)

@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -25,11 +26,8 @@ import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.tasks.factory.dependsOn
@@ -53,7 +51,7 @@ abstract class BaseVariantData(
     val variantDependencies: VariantDependencies,
     protected val variantSources: VariantSources,
     protected val paths: VariantPathHelper,
-    protected val artifacts: BuildArtifactsHolder,
+    protected val artifacts: ArtifactsImpl,
     protected val services: VariantPropertiesApiServices,
     // Global Data
     @get:Deprecated("Use {@link ComponentPropertiesImpl#getGlobalScope()} ") val globalScope: GlobalScope,
@@ -329,7 +327,7 @@ abstract class BaseVariantData(
             return if (processJavaResourcesTask != null) {
                 processJavaResourcesTask.outputs.files.singleFile
             } else {
-                artifacts.getFinalProduct(JAVA_RES).get().asFile
+                artifacts.get(JAVA_RES).get().asFile
             }
         }
 

@@ -450,6 +450,27 @@ public class AssetPackagingTest {
         checkAar(libProject, "filelib.txt", "library:abcd");
     }
 
+    @Test
+    public void testLibProjectWithIgnoredAssets() throws Exception {
+        TemporaryProjectModification.doTest(libProject, it -> {
+            // first test for non-incremental
+            it.addFile("src/main/assets/ignored", "ignored");
+            it.addFile("src/main/assets/kept", "kept");
+            it.appendToFile(
+                    libProject.getBuildFile().getPath(),
+                    "android.aaptOptions.ignoreAssetsPattern 'ignored'");
+            execute("library:assembleDebug");
+            checkAar(libProject, "ignored", null);
+            checkAar(libProject, "kept", "kept");
+            // then test for incremental
+            it.addFile("src/main/assets/dir/ignored", "ignored");
+            execute("library:assembleDebug");
+            checkAar(libProject, "ignored", null);
+            checkAar(libProject, "dir/ignored", null);
+            checkAar(libProject, "kept", "kept");
+        });
+    }
+
     // ---- LIB TEST ---
 
     @Test

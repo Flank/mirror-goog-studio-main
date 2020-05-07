@@ -132,13 +132,10 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
             taskProvider: TaskProvider<out GenerateLibraryProguardRulesTask>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.AAPT_PROGUARD_FILE,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateLibraryProguardRulesTask::proguardOutputFile,
-                SdkConstants.FN_AAPT_RULES
-            )
+                GenerateLibraryProguardRulesTask::proguardOutputFile
+            ).withName(SdkConstants.FN_AAPT_RULES).on(InternalArtifactType.AAPT_PROGUARD_FILE)
         }
 
         override fun configure(
@@ -146,12 +143,12 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_RES,
                 task.inputResourcesDir
             )
 
-             creationConfig.operations.setTaskInputToFinalProduct(
+             creationConfig.artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
         }
     }

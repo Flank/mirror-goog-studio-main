@@ -335,14 +335,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig
-                .artifacts
-                .producesDir(
-                    outputArtifactType,
-                    taskProvider,
-                    MergeSourceSetFolders::outputDir,
-                    fileName = "out"
-                )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                MergeSourceSetFolders::outputDir
+            ).withName("out").on(outputArtifactType)
             creationConfig.taskContainer.mergeAssetsTask = taskProvider
         }
 
@@ -362,18 +358,23 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
                 task.shadersOutputDir
             )
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_ML_MODELS,
                 task.mlModelsOutputDir
             )
 
             if (creationConfig is ApkCreationConfig) {
                 task.ignoreAssetsPatterns.set(creationConfig.aaptOptions.ignoreAssetsPatterns)
+            } else {
+                // support ignoring asset patterns in library modules via DSL
+                creationConfig.globalScope.extension.aaptOptions.ignoreAssetsPattern?.let {
+                    task.ignoreAssetsPatterns.set(it.split(':'))
+                }
             }
             task.ignoreAssetsPatterns.disallowChanges()
 
@@ -417,14 +418,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .producesDir(
-                    InternalArtifactType.MERGED_JNI_LIBS,
-                    taskProvider,
-                    MergeSourceSetFolders::outputDir,
-                    fileName = "out"
-                )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                MergeSourceSetFolders::outputDir
+            ).withName("out").on(InternalArtifactType.MERGED_JNI_LIBS)
         }
 
         override fun configure(
@@ -453,14 +450,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .producesDir(
-                    InternalArtifactType.MERGED_SHADERS,
-                    taskProvider,
-                    MergeSourceSetFolders::outputDir,
-                    fileName = "out"
-                )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                MergeSourceSetFolders::outputDir
+            ).withName("out").on(InternalArtifactType.MERGED_SHADERS)
         }
 
         override fun configure(
@@ -488,14 +481,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .producesDir(
-                    InternalArtifactType.MERGED_ML_MODELS,
-                    taskProvider,
-                    MergeSourceSetFolders::outputDir,
-                    fileName = "out"
-                )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                MergeSourceSetFolders::outputDir
+            ).withName("out").on(InternalArtifactType.MERGED_ML_MODELS)
         }
 
         override fun configure(

@@ -100,7 +100,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
             when (componentProperties.variantDslInfo.ndkConfig.debugSymbolLevelEnum) {
                 DebugSymbolLevel.FULL -> {
                     nativeDebugMetadataDirs.from(
-                        componentProperties.artifacts.getFinalProduct(
+                        componentProperties.artifacts.get(
                             InternalArtifactType.NATIVE_DEBUG_METADATA
                         )
                     )
@@ -114,7 +114,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
                 }
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     nativeDebugMetadataDirs.from(
-                        componentProperties.artifacts.getFinalProduct(
+                        componentProperties.artifacts.get(
                             InternalArtifactType.NATIVE_SYMBOL_TABLES
                         )
                     )
@@ -150,12 +150,11 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.MERGED_NATIVE_DEBUG_METADATA,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                MergeNativeDebugMetadataTask::outputFile,
-                "native-debug-symbols.zip"
-            )
+                MergeNativeDebugMetadataTask::outputFile
+            ).withName("native-debug-symbols.zip")
+                .on(InternalArtifactType.MERGED_NATIVE_DEBUG_METADATA)
         }
 
         override fun configure(

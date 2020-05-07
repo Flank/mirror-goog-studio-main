@@ -31,27 +31,12 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 @Incubating
 interface CommonExtension<
-        AaptOptionsT : AaptOptions,
-        AbiSplitT : AbiSplit,
-        AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
-        CMakeT : Cmake,
-        CompileOptionsT : CompileOptions,
-        DataBindingT : DataBinding,
         DefaultConfigT : DefaultConfig,
-        DensitySplitT : DensitySplit,
-        ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
-        JacocoOptionsT : JacocoOptions,
-        LintOptionsT : LintOptions,
-        NdkBuildT : NdkBuild,
-        PackagingOptionsT : PackagingOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT : TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT : UnitTestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
@@ -68,7 +53,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
-    fun aaptOptions(action: AaptOptionsT.() -> Unit)
+    fun aaptOptions(action: AaptOptions.() -> Unit)
 
     /**
      * Specifies options for the
@@ -86,7 +71,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    fun adbOptions(action: AdbOptionsT.() -> Unit)
+    fun adbOptions(action: AdbOptions.() -> Unit)
 
     /**
      * Specifies Java compiler options, such as the language level of the Java source code and
@@ -102,7 +87,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
-    fun compileOptions(action: CompileOptionsT.() -> Unit)
+    fun compileOptions(action: CompileOptions.() -> Unit)
 
     /**
      * A list of build features that can be enabled or disabled on the Android Project.
@@ -154,7 +139,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
-    fun dataBinding(action: DataBindingT.() -> Unit)
+    fun dataBinding(action: DataBinding.() -> Unit)
 
     /**
      * Configure JaCoCo version that is used for offline instrumentation and coverage report.
@@ -185,7 +170,7 @@ interface CommonExtension<
      * }
      * ```
      */
-    fun jacoco(action: JacocoOptionsT.() -> Unit)
+    fun jacoco(action: JacocoOptions.() -> Unit)
 
     /**
      * Specifies options for the lint tool.
@@ -199,7 +184,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
-    fun lintOptions(action: LintOptionsT.() -> Unit)
+    fun lintOptions(action: LintOptions.() -> Unit)
 
     /**
      * Specifies options and rules that determine which files the Android plugin packages into your
@@ -215,7 +200,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [PackagingOptions].
      */
-    fun packagingOptions(action: PackagingOptionsT.() -> Unit)
+    fun packagingOptions(action: PackagingOptions.() -> Unit)
 
     /**
      * Encapsulates all product flavors configurations for this project.
@@ -339,7 +324,7 @@ interface CommonExtension<
      * @since 2.2.0
      */
 
-    val externalNativeBuild: ExternalNativeBuild<CMakeT, NdkBuildT>
+    val externalNativeBuild: ExternalNativeBuild
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
      * [ndk-build](https://developer.android.com/ndk/guides/ndk-build.html).
@@ -358,21 +343,21 @@ interface CommonExtension<
      *
      * @since 2.2.0
      */
-    fun externalNativeBuild(action: ExternalNativeBuildT.()->Unit)
+    fun externalNativeBuild(action: ExternalNativeBuild.()->Unit)
 
     /**
      * Specifies options for how the Android plugin should run local and instrumented tests.
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
-    val testOptions: TestOptions<UnitTestOptionsT>
+    val testOptions: TestOptions
 
     /**
      * Specifies options for how the Android plugin should run local and instrumented tests.
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
-    fun testOptions(action: TestOptionsT.() -> Unit)
+    fun testOptions(action: TestOptions.() -> Unit)
 
     /**
      * Adds an [Action] to be performed on all [VariantT] objects associated with this module
@@ -425,7 +410,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
-    val splits: Splits<AbiSplitT, DensitySplitT>
+    val splits: Splits
 
     /**
      * Specifies configurations for
@@ -434,7 +419,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
-    fun splits(action: SplitsT.() -> Unit)
+    fun splits(action: Splits.() -> Unit)
 
     val composeOptions: ComposeOptions
 

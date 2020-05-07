@@ -30,7 +30,7 @@ import com.google.common.collect.Lists
 class MergedFlavor(
     name: String,
     private val dslServices: DslServices
-) : AbstractProductFlavor(name) {
+) : AbstractProductFlavor(name), InternalBaseVariant.MergedFlavor {
 
     companion object {
 

@@ -15,6 +15,7 @@
  */
 package com.android.build.api.variant.impl
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
@@ -23,7 +24,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
@@ -41,7 +41,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    artifacts: BuildArtifactsHolder,
+    artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
     variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
@@ -77,9 +77,6 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
-
-    override val manifestPlaceholders: Map<String, Any>
-        get() = variantDslInfo.manifestPlaceholders
 
     override val dependenciesInfo: com.android.build.api.variant.DependenciesInfo = variantDependencyInfo
 

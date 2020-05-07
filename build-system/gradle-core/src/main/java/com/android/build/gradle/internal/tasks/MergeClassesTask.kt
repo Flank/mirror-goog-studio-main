@@ -118,16 +118,14 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out MergeClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
-                taskProvider = taskProvider,
-                productProvider = MergeClassesTask::outputFile,
-                fileName = if (creationConfig.variantType.isBaseModule) {
-                    "base.jar"
-                } else {
-                    TaskManager.getFeatureFileName(creationConfig.globalScope.project.path, DOT_JAR)
-                }
-            )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                MergeClassesTask::outputFile
+            ).withName(if (creationConfig.variantType.isBaseModule) {
+                "base.jar"
+            } else {
+                TaskManager.getFeatureFileName(creationConfig.globalScope.project.path, DOT_JAR)
+            }).on(InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES)
         }
 
         override fun configure(

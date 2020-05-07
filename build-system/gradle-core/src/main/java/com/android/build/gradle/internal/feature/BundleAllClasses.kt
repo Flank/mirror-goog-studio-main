@@ -120,17 +120,15 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APP_CLASSES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                BundleAllClasses::outputJar,
-                "classes.jar"
-            )
+                BundleAllClasses::outputJar
+            ).withName("classes.jar").on(InternalArtifactType.APP_CLASSES)
         }
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.JAVAC,
                 task.javacClasses
             )
@@ -140,12 +138,12 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             task.modulePath = globalScope.project.path
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_R_CLASS_JAR,
                     task.rClassesJar
                 )
             } else {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.rClassesJar
                 )

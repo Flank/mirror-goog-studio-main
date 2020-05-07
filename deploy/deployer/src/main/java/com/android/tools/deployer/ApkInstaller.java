@@ -230,7 +230,7 @@ public class ApkInstaller {
             Deployer.InstallMode installMode,
             String packageName)
             throws DeployerException {
-        if (installMode != Deployer.InstallMode.DELTA) {
+        if (installMode == Deployer.InstallMode.FULL) {
             return new DeltaInstallResult(DeltaInstallStatus.DISABLED);
         }
 
@@ -262,7 +262,13 @@ public class ApkInstaller {
             builder.addOptions("-r");
         }
 
-        PatchSet patchSet = new PatchSetGenerator(logger).generateFromApks(localApks, dump.apks);
+        PatchSet patchSet =
+                new PatchSetGenerator(
+                                installMode == Deployer.InstallMode.DELTA_NO_SKIP
+                                        ? PatchSetGenerator.WhenNoChanges.GENERATE_PATCH_ANYWAY
+                                        : PatchSetGenerator.WhenNoChanges.GENERATE_EMPTY_PATCH,
+                                logger)
+                        .generateFromApks(localApks, dump.apks);
         switch (patchSet.getStatus()) {
             case NoChanges:
                 return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);

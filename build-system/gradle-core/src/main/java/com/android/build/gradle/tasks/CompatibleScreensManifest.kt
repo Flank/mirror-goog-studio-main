@@ -23,7 +23,9 @@ import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -158,11 +160,10 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             taskProvider: TaskProvider<out CompatibleScreensManifest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                COMPATIBLE_SCREEN_MANIFEST,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CompatibleScreensManifest::outputFolder
-            )
+            ).on(COMPATIBLE_SCREEN_MANIFEST)
         }
 
         override fun configure(

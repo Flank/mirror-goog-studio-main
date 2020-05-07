@@ -2,7 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 load("//tools/base/bazel:utils.bzl", "flat_archive")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 kotlin_test(
     name = "agent_tests",
@@ -15,7 +15,7 @@ kotlin_test(
         "windows": [],
         "mac": [":libjni-test.dylib"],
         "//conditions:default": [":libjni-test.so"],
-    }),
+    }) + ["//tools/base/dynamic-layout-inspector/src/testData"],
     jvm_flags = [
         "-Dtest.suite.jar=agent_tests.jar",
         "-Djava.library.path=tools/base/dynamic-layout-inspector",
@@ -51,9 +51,12 @@ java_library(
     ],
 )
 
-java_library(
+kotlin_library(
     name = "fake_android",
-    srcs = glob(["src/fake-android/**/*.java"]),
+    srcs = glob([
+        "src/fake-android/**/*.kt",
+        "src/fake-android/**/*.java",
+    ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
@@ -153,6 +156,7 @@ cc_library(
     name = "jni",
     srcs = [
         "src/main/native/agent/component_tree_java_jni.cc",
+        "src/main/native/agent/compose_tree_java_jni.cc",
         "src/main/native/agent/layoutinspector_java_jni.cc",
         "src/main/native/agent/properties_java_jni.cc",
         "src/main/native/agent/resource_configuration_java_jni.cc",

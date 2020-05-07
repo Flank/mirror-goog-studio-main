@@ -41,4 +41,6 @@ public enum ValueType {
     ANIM,
     ANIMATOR,
     INTERPOLATOR,
+    DIMENSION,
+    DIMENSION_FLOAT,
 }

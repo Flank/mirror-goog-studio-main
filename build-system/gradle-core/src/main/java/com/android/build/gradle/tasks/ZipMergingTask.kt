@@ -102,12 +102,10 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ZipMergingTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.FULL_JAR,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                ZipMergingTask::outputFile,
-                FN_INTERMEDIATE_FULL_JAR
-            )
+                ZipMergingTask::outputFile
+            ).withName(FN_INTERMEDIATE_FULL_JAR).on(InternalArtifactType.FULL_JAR)
         }
 
         override fun configure(
@@ -115,9 +113,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
-            operations.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR, task.libraryInputFile)
-            operations.setTaskInputToFinalProduct(
+            val artifacts = creationConfig.artifacts
+            artifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR, task.libraryInputFile)
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
             )

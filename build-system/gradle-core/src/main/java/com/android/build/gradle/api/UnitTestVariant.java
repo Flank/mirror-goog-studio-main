@@ -18,11 +18,10 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.api.TestedVariant;
+import com.android.build.gradle.internal.core.InternalBaseVariant;
 
-/**
- * A variant that contains all unit test code.
- */
-public interface UnitTestVariant extends BaseVariant {
+/** A variant that contains all unit test code. */
+public interface UnitTestVariant extends BaseVariant, InternalBaseVariant {
     /**
      * Returns the build variant that is tested by this variant.
      */

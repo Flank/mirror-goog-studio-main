@@ -39,6 +39,7 @@ import com.android.build.api.attributes.VariantAttr;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.dependency.ConstraintHandler.CachedStringBuildService;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
@@ -68,6 +69,7 @@ import org.gradle.api.attributes.Category;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
 
 /**
  * Object that represents the dependencies of variant.
@@ -253,6 +255,8 @@ public class VariantDependenciesBuilder {
         runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
 
         if (projectOptions.get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
+            Provider<CachedStringBuildService> cachedStringBuildServiceProvider =
+                    new CachedStringBuildService.RegistrationAction(project).execute();
             // make compileClasspath match runtimeClasspath
             compileClasspath
                     .getIncoming()
@@ -260,7 +264,8 @@ public class VariantDependenciesBuilder {
                             new ConstraintHandler(
                                     runtimeClasspath,
                                     project.getDependencies().getConstraints(),
-                                    false));
+                                    false,
+                                    cachedStringBuildServiceProvider));
 
             // if this is a test App, then also synchronize the 2 runtime classpaths
             if (variantType.isApk() && testedVariant != null) {
@@ -272,7 +277,8 @@ public class VariantDependenciesBuilder {
                                 new ConstraintHandler(
                                         testedRuntimeClasspath,
                                         project.getDependencies().getConstraints(),
-                                        true));
+                                        true,
+                                        cachedStringBuildServiceProvider));
             }
         }
 

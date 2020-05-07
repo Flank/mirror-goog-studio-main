@@ -18,11 +18,12 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.TestedVariant;
+import com.android.build.gradle.internal.core.InternalBaseVariant;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 
 /** A Build variant and all its public data. */
-public interface LibraryVariant extends BaseVariant, TestedVariant {
+public interface LibraryVariant extends BaseVariant, TestedVariant, InternalBaseVariant {
 
     /**
      * Returns the Library AAR packaging task.

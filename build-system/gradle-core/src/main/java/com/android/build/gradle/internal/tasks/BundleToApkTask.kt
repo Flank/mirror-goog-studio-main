@@ -126,12 +126,10 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleToApkTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APKS_FROM_BUNDLE,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                BundleToApkTask::outputFile,
-                "bundle.apks"
-            )
+                BundleToApkTask::outputFile
+            ).withName("bundle.apks").on(InternalArtifactType.APKS_FROM_BUNDLE)
         }
 
         override fun configure(
@@ -139,7 +137,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)

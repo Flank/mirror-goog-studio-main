@@ -21,6 +21,7 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
@@ -230,12 +231,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkAndroidResForBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.LINKED_RES_FOR_BUNDLE,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                LinkAndroidResForBundleTask::bundledResFile,
-                "bundled-res.ap_"
-            )
+                LinkAndroidResForBundleTask::bundledResFile
+            ).withName("bundled-res.ap_").on(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
         }
 
         override fun configure(
@@ -248,11 +247,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.manifestFile)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.getInputResourcesDir()
             )
@@ -280,7 +279,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.getFinalProduct(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
+            task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
@@ -295,7 +294,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 creationConfig.services.projectOptions
             )
 
-            task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             ))
 
@@ -306,7 +305,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                     AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                 )
             }
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }

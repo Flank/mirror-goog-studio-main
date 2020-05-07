@@ -18,6 +18,7 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.NdkLocator
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
 import com.android.build.gradle.internal.ndk.NdkHandler
@@ -87,13 +88,19 @@ open class SdkComponents(
             val sdkLoadWithFallback = SdkLoadingStrategy(
                 directLoadingStrategy, fullScanLoadingStrategy)
 
-            val ndkHandlerSupplier = Suppliers.memoize {
-                NdkHandler(
+            val ndkLocatorSupplier = Suppliers.memoize {
+                NdkLocator(
                     issueReporter,
                     extensionSupplier.get()?.ndkVersion,
                     extensionSupplier.get()?.ndkPath,
-                    extensionSupplier.get()!!.compileSdkVersion!!,
-                    project.rootDir)
+                    project.rootDir,
+                    sdkHandlerSupplier.get())
+            }
+
+            val ndkHandlerSupplier = Suppliers.memoize {
+                NdkHandler(
+                    ndkLocatorSupplier.get(),
+                    extensionSupplier.get()!!.compileSdkVersion!!)
             }
 
             return SdkComponents(
@@ -174,11 +181,6 @@ open class SdkComponents(
     }
 
     // These old methods are expensive and require SDK Parsing or some kind of installation/download.
-    // TODO: Add mechanism to warn if those are called during configuration time.
-
-    fun installNdk(ndkHandler: NdkHandler) {
-        sdkHandlerSupplier.get().installNdk(ndkHandler)
-    }
 
     fun installCmake(version: String) {
         sdkHandlerSupplier.get().installCMake(version)

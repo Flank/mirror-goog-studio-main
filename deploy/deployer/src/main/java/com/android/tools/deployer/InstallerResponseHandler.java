@@ -74,7 +74,8 @@ public class InstallerResponseHandler {
                         == AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_OBJECT
                 || failedAgent.getStatus()
                         == AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_ARRAY) {
-            throw DeployerException.unsupportedVariableReinit(failedAgent.getErrorMsg());
+            throw DeployerException.unsupportedVariableReinit(
+                    failedAgent.getStatus(), failedAgent.getErrorMsg());
         }
 
         if (failedAgent.getStatus() == AgentSwapResponse.Status.JVMTI_ERROR) {

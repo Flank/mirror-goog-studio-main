@@ -114,13 +114,10 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts
-                .producesDir(
-                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
-                    taskProvider,
-                    GenerateTestConfig::outputDirectory,
-                    fileName = "out"
-                )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                GenerateTestConfig::outputDirectory
+            ).withName("out").on(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
         }
 
         override fun configure(
@@ -165,9 +162,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             isUseRelativePathEnabled = unitTestProperties.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = unitTestProperties.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedVariant.artifacts.getFinalProduct(MERGED_ASSETS)
-            mergedManifest = testedVariant.artifacts.getFinalProduct(PACKAGED_MANIFESTS)
+            resourceApk = unitTestProperties.artifacts.get(APK_FOR_LOCAL_TEST)
+            mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS)
+            mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.packageName
             buildDirectoryPath = FileUtils.toSystemIndependentPath(

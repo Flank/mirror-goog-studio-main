@@ -22,11 +22,11 @@ import org.gradle.api.Named
  * Type for the attribute holding ProductFlavor information.
  *
  *
- * There can be more than one attribute associated to each [ ] object, where each represents a different flavor
+ * There can be more than one attribute associated to each
+ * [org.gradle.api.artifacts.Configuration] object, where each represents a different flavor
  * dimension.
  *
+ * The key should be created with `Attribute.of(dimensionName, ProductFlavorAttr.class)`
  *
- * The key should be created with `Attribute.of(dimensionName, ProductFlavorAttr.class)
-` *
  */
 interface ProductFlavorAttr : Named

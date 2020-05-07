@@ -85,7 +85,7 @@ abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out ProcessManifestForBundleTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessManifestForBundleTask::bundleManifest
             )
@@ -95,7 +95,7 @@ abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
 
         override fun configure(task: ProcessManifestForBundleTask) {
             super.configure(task)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,
                 task.applicationMergedManifests
             )

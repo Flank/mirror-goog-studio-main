@@ -29,7 +29,6 @@ import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
-import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -171,13 +170,13 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             taskProvider: TaskProvider<out DexFileDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DexFileDependenciesTask::outputDirectory
             ).on(InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES)
 
             if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                creationConfig.artifacts.getOperations()
+                creationConfig.artifacts
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
             }

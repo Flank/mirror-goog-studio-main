@@ -103,12 +103,10 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APK_ZIP,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                ApkZipPackagingTask::apkZipFile,
-                "apks.zip"
-            )
+                ApkZipPackagingTask::apkZipFile
+            ).withName("apks.zip").on(InternalArtifactType.APK_ZIP)
         }
 
         override fun configure(
@@ -116,10 +114,10 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK, task.apkFolder
             )
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.mappingFile
             )

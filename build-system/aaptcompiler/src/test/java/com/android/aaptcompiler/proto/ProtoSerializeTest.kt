@@ -107,7 +107,7 @@ class ProtoSerializeTest {
 
   private fun testSerializeDeserialize(reference: Reference) {
     val pbReference = serializeReferenceToPb(reference)
-    val deserialized = deserializeReferenceFromPb(pbReference)
+    val deserialized = deserializeReferenceFromPb(pbReference, null)
 
     Truth.assertThat(deserialized).isNotNull()
     Truth.assertThat(deserialized!!).isEqualTo(reference)
@@ -122,7 +122,7 @@ class ProtoSerializeTest {
     val buffer = BigBuffer(1028)
     sourcePool.flattenUtf16(buffer, null)
     val extractedSources = ResStringPool.get(ByteBuffer.wrap(buffer.toBytes()), buffer.size)
-    val deserialized = deserializeAttrFromPb(pbAttr, extractedSources)
+    val deserialized = deserializeAttrFromPb(pbAttr, extractedSources, null)
 
     Truth.assertThat(deserialized).isNotNull()
     Truth.assertThat(deserialized!!).isEqualTo(attr)
@@ -194,7 +194,7 @@ class ProtoSerializeTest {
     val buffer = BigBuffer(1028)
     sourcePool.flattenUtf16(buffer, null)
     val extractedSources = ResStringPool.get(ByteBuffer.wrap(buffer.toBytes()), buffer.size)
-    val deserialized = deserializeStyleableFromPb(pbStyleable, extractedSources)
+    val deserialized = deserializeStyleableFromPb(pbStyleable, extractedSources, null)
 
     Truth.assertThat(deserialized).isNotNull()
     Truth.assertThat(deserialized!!).isEqualTo(styleable)

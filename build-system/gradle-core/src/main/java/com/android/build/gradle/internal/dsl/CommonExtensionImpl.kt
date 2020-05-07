@@ -82,13 +82,13 @@ abstract class CommonExtensionImpl<
             dslServices.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
         )
 
-    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+    override fun aaptOptions(action: com.android.build.api.dsl.AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)
     }
 
     override val adbOptions: AdbOptions = dslServices.newInstance(AdbOptions::class.java)
 
-    override fun adbOptions(action: AdbOptions.() -> Unit) {
+    override fun adbOptions(action: com.android.build.api.dsl.AdbOptions.() -> Unit) {
         action.invoke(adbOptions)
     }
 
@@ -106,7 +106,7 @@ abstract class CommonExtensionImpl<
     override val compileOptions: CompileOptions =
         dslServices.newInstance(CompileOptions::class.java)
 
-    override fun compileOptions(action: CompileOptions.() -> Unit) {
+    override fun compileOptions(action: com.android.build.api.dsl.CompileOptions.() -> Unit) {
         action.invoke(compileOptions)
     }
 
@@ -158,7 +158,7 @@ abstract class CommonExtensionImpl<
             dslServices
         )
 
-    override fun dataBinding(action: DataBindingOptions.() -> Unit) {
+    override fun dataBinding(action: com.android.build.api.dsl.DataBinding.() -> Unit) {
         action.invoke(dataBinding)
     }
 
@@ -169,27 +169,27 @@ abstract class CommonExtensionImpl<
     override val externalNativeBuild: ExternalNativeBuild =
         dslServices.newInstance(ExternalNativeBuild::class.java, dslServices)
 
-    override fun externalNativeBuild(action: (ExternalNativeBuild) -> Unit) {
+    override fun externalNativeBuild(action: com.android.build.api.dsl.ExternalNativeBuild.() -> Unit) {
         action.invoke(externalNativeBuild)
     }
 
     override val jacoco: JacocoOptions = dslServices.newInstance(JacocoOptions::class.java)
 
-    override fun jacoco(action: JacocoOptions.() -> Unit) {
+    override fun jacoco(action: com.android.build.api.dsl.JacocoOptions.() -> Unit) {
         action.invoke(jacoco)
     }
 
     override val lintOptions: LintOptions =
         dslServices.newInstance(LintOptions::class.java, dslServices)
 
-    override fun lintOptions(action: LintOptions.() -> Unit) {
+    override fun lintOptions(action: com.android.build.api.dsl.LintOptions.() -> Unit) {
         action.invoke(lintOptions)
     }
 
     override val packagingOptions: PackagingOptions =
         dslServices.newInstance(PackagingOptions::class.java)
 
-    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+    override fun packagingOptions(action: com.android.build.api.dsl.PackagingOptions.() -> Unit) {
         action.invoke(packagingOptions)
     }
 
@@ -211,14 +211,14 @@ abstract class CommonExtensionImpl<
     override val splits: Splits =
         dslServices.newInstance(Splits::class.java, dslServices)
 
-    override fun splits(action: Splits.() -> Unit) {
+    override fun splits(action: com.android.build.api.dsl.Splits.() -> Unit) {
         action.invoke(splits)
     }
 
     override val testOptions: TestOptions =
         dslServices.newInstance(TestOptions::class.java, dslServices)
 
-    override fun testOptions(action: TestOptions.() -> Unit) {
+    override fun testOptions(action: com.android.build.api.dsl.TestOptions.() -> Unit) {
         action.invoke(testOptions)
     }
 

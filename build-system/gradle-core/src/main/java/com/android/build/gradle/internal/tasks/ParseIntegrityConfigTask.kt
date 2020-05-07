@@ -120,12 +120,10 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ParseIntegrityConfigTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APP_INTEGRITY_CONFIG,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                ParseIntegrityConfigTask::appIntegrityConfigProto,
-                "AppIntegrityConfig.pb"
-            )
+                ParseIntegrityConfigTask::appIntegrityConfigProto
+            ).withName("AppIntegrityConfig.pb").on(InternalArtifactType.APP_INTEGRITY_CONFIG)
         }
 
         override fun configure(

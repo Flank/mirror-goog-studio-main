@@ -138,7 +138,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
                 val processedClasses = componentProperties.globalScope.project.files(
-                    componentProperties.artifacts.getOperations().get(output)
+                    componentProperties.artifacts.get(output)
                 )
                     .asFileTree
                 componentProperties
@@ -161,26 +161,22 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_PROJECT_CLASSES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::projectOutput
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES,
+            ).on(InternalArtifactType.DESUGAR_PROJECT_CLASSES)
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::subProjectOutput
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES,
+            ).on(InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES)
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::externalLibsOutput
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT,
+            ).on(InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES)
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DesugarTask::tmpDir
-            )
+            ).on(InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT)
         }
 
         override fun configure(
@@ -211,7 +207,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FIXED_STACK_FRAMES,
                 task.externaLibsClasses
             )

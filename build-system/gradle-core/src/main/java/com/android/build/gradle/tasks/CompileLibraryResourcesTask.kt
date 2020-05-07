@@ -227,11 +227,10 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.COMPILED_LOCAL_RESOURCES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
-            )
+            ).withName("out").on(InternalArtifactType.COMPILED_LOCAL_RESOURCES)
         }
 
         override fun configure(
@@ -239,7 +238,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_RES,
                 task.mergedLibraryResourcesDir
             )
@@ -259,8 +258,12 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             task.useJvmResourceCompiler =
               creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
-            task.aapt2WorkersBuildService.setDisallowChanges(getBuildService(task.project))
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2WorkersBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }

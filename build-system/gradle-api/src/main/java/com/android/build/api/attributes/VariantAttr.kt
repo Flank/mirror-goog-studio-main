@@ -21,8 +21,7 @@ import org.gradle.api.attributes.Attribute
 /**
  * Type for the attribute holding the variant name information.
  *
- *
- * The key should be [.ATTRIBUTE].
+ * The key should be [ATTRIBUTE].
  */
 interface VariantAttr : org.gradle.api.Named {
     companion object {

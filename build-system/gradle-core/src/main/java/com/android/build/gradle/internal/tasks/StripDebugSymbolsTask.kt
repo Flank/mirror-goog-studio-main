@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -150,12 +151,10 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                STRIPPED_NATIVE_LIBS,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                StripDebugSymbolsTask::outputDir,
-                fileName = "out"
-            )
+                StripDebugSymbolsTask::outputDir
+            ).withName("out").on(STRIPPED_NATIVE_LIBS)
         }
 
         override fun configure(
@@ -163,7 +162,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.excludePatterns =
                 creationConfig.globalScope.extension.packagingOptions.doNotStrip.sorted()
             task.stripToolFinderProvider =

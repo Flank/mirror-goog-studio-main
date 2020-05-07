@@ -26,7 +26,7 @@ import org.gradle.api.file.FileCollection
  * This interface should not be implemented by third party.
  *
  * Implementation of this interface can be obtained from
- * [com.android.build.api.artifact.Operations.getBuiltArtifactsLoader]
+ * [com.android.build.api.artifact.Artifacts.getBuiltArtifactsLoader]
  */
 @Incubating
 interface BuiltArtifactsLoader {

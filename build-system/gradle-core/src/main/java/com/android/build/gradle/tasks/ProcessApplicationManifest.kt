@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
@@ -299,8 +298,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             super.preConfigure(taskName)
             val variantType = creationConfig.variantType
             Preconditions.checkState(!variantType.isTestComponent)
-            val operations = creationConfig.operations
-            operations.republish(
+            val artifacts = creationConfig.artifacts
+            artifacts.republish(
                 InternalArtifactType.PACKAGED_MANIFESTS,
                 InternalArtifactType.MANIFEST_METADATA
             )
@@ -310,20 +309,20 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             taskProvider: TaskProvider<out ProcessApplicationManifest>
         ) {
             super.handleProvider(taskProvider)
-            val operations = creationConfig.operations
-            operations.setInitialProvider(
+            val artifacts = creationConfig.artifacts
+            artifacts.setInitialProvider(
                 taskProvider,
                 ProcessApplicationManifest::mergedManifest
             )
                 .on(ArtifactTypes.MERGED_MANIFEST)
 
-            operations.setInitialProvider(
+            artifacts.setInitialProvider(
                 taskProvider,
                 ManifestProcessorTask::mergeBlameFile
             )
                 .withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
                 .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
-            operations.setInitialProvider(
+            artifacts.setInitialProvider(
                 taskProvider,
                 ProcessApplicationManifest::reportFile
             )
@@ -416,7 +415,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
             if (!globalScope.extension.aaptOptions.namespaced) {
                 task.navigationJsons = project.files(
-                    creationConfig.operations.get(NAVIGATION_JSON),
+                    creationConfig.artifacts.get(NAVIGATION_JSON),
                     creationConfig
                         .variantDependencies
                         .getArtifactFileCollection(
@@ -428,11 +427,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
             task.packageOverride.set(creationConfig.applicationId)
             task.packageOverride.disallowChanges()
-            task.manifestPlaceholders.set(
-                task.project.provider(
-                    creationConfig::manifestPlaceholders
-                )
-            )
+            task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
             task.manifestPlaceholders.disallowChanges()
             task.mainManifest
                 .set(project.provider(variantSources::mainManifestFilePath))

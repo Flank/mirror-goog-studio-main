@@ -40,12 +40,11 @@ class MergeAaptProguardFilesCreationAction(
     ) {
         super.handleProvider(taskProvider)
 
-        creationConfig.artifacts.producesFile(
-            InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
+        creationConfig.artifacts.setInitialProvider(
             taskProvider,
-            MergeFileTask::outputFile,
-            SdkConstants.FN_MERGED_AAPT_RULES
-        )
+            MergeFileTask::outputFile
+        ).withName(SdkConstants.FN_MERGED_AAPT_RULES)
+            .on(InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
     }
 
     override fun configure(
@@ -57,7 +56,7 @@ class MergeAaptProguardFilesCreationAction(
         val inputFiles =
             project
                 .files(
-                    creationConfig.artifacts.getFinalProduct(InternalArtifactType.AAPT_PROGUARD_FILE),
+                    creationConfig.artifacts.get(InternalArtifactType.AAPT_PROGUARD_FILE),
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,

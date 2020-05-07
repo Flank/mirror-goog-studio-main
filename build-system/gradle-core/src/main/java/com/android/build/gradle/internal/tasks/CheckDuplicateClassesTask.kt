@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -71,11 +70,10 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DUPLICATE_CLASSES_CHECK,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CheckDuplicateClassesTask::dummyOutputDirectory
-            )
+            ).on(InternalArtifactType.DUPLICATE_CLASSES_CHECK)
         }
 
         override fun configure(

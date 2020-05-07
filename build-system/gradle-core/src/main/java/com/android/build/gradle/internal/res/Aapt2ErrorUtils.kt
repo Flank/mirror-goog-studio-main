@@ -17,6 +17,9 @@
 
 package com.android.build.gradle.internal.res
 
+import com.android.aaptcompiler.compileResource
+import com.android.aaptcompiler.BlameLogger
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.errors.humanReadableMessage
 import com.android.build.gradle.internal.tasks.manifest.findOriginalManifestFilePosition
@@ -29,6 +32,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser
 import com.android.ide.common.resources.CompileResourceRequest
+import com.android.utils.ILogger
 import com.android.utils.StdLogger
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
@@ -85,7 +89,7 @@ fun rewriteCompileException(
         }
     }
     return rewriteException(e, errorFormatMode, true, logger) {
-        if (it.file.sourceFile == request.originalInputFile) {
+        if (it.file.sourceFile.absolutePath == request.originalInputFile.absolutePath) {
             MergingLog.find(it.position, request.blameMap) ?: it
         } else {
             it
@@ -133,6 +137,50 @@ fun rewriteLinkException(
             newFile = findOriginalManifestFilePosition(manifestMergeBlameContents, it)
         }
         newFile
+    }
+}
+
+/**
+ * Creates a blame logger for the given [CompileResourceRequest] to be passed into the
+ * [compileResource].
+ *
+ * @param request The request being sent through [ResourceCompilerRunnable].
+ *
+ * @param enableBlame whether file attribution is enabled.
+ *
+ * @param logger: Logger the logger for the [BlameLogger] to be wrapped around.
+ *
+ * @return A Blame Logger that can rewrite sources, to their correct locations pre-merge.
+ */
+fun blameLoggerFor(
+    request: CompileResourceRequest, enableBlame: Boolean, logger: Logger) : ILogger {
+
+    if (!enableBlame) {
+        return BlameLogger(LoggerWrapper(logger))
+    }
+    if (request.blameMap.isEmpty()) {
+        if (request.mergeBlameFolder != null) {
+            val mergingLog = MergingLog(request.mergeBlameFolder!!)
+            return BlameLogger(LoggerWrapper(logger)) {
+                val sourceFile = it.toSourceFilePosition()
+                BlameLogger.Source.fromSourceFilePosition(mergingLog.find(sourceFile))
+            }
+        }
+
+        return BlameLogger(LoggerWrapper(logger))
+    }
+    return BlameLogger(LoggerWrapper(logger)) {
+        if (it.file.absolutePath == request.originalInputFile.absolutePath) {
+            val sourceFile = it.toSourceFilePosition()
+            val foundSource = MergingLog.find(sourceFile.position, request.blameMap)
+            if (foundSource == null) {
+                it
+            } else {
+                BlameLogger.Source.fromSourceFilePosition(foundSource)
+            }
+        } else {
+            it
+        }
     }
 }
 

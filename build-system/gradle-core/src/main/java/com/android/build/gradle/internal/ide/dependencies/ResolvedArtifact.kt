@@ -46,7 +46,8 @@ data class ResolvedArtifact(
     val extractedFolder: File?,
     val dependencyType: DependencyType,
     val isWrappedModule: Boolean,
-    val buildMapping: ImmutableMap<String, String>
+    val buildMapping: ImmutableMap<String, String>,
+    val mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 )  {
 
     constructor(
@@ -54,7 +55,8 @@ data class ResolvedArtifact(
         secondaryArtifactResult: ResolvedArtifactResult?,
         dependencyType: DependencyType,
         isWrappedModule: Boolean,
-        buildMapping: ImmutableMap<String, String>
+        buildMapping: ImmutableMap<String, String>,
+        mavenCoordinatesCache: MavenCoordinatesCacheBuildService
     ) :
             this(
                 mainArtifactResult.id.componentIdentifier,
@@ -63,7 +65,8 @@ data class ResolvedArtifact(
                 secondaryArtifactResult?.file,
                 dependencyType,
                 isWrappedModule,
-                buildMapping
+                buildMapping,
+                mavenCoordinatesCache
             )
 
     enum class DependencyType constructor(val extension: String) {
@@ -103,13 +106,13 @@ data class ResolvedArtifact(
             is OpaqueComponentArtifactIdentifier -> {
                 // We have a file based dependency
                 if (dependencyType == DependencyType.JAVA) {
-                    getMavenCoordForLocalFile(
+                    mavenCoordinatesCache.getMavenCoordForLocalFile(
                         artifactFile
                     )
                 } else {
                     // local aar?
                     assert(artifactFile.isDirectory)
-                    getMavenCoordForLocalFile(
+                    mavenCoordinatesCache.getMavenCoordForLocalFile(
                         artifactFile
                     )
                 }
@@ -143,7 +146,7 @@ data class ResolvedArtifact(
                 .toString().intern()
         }
         is ModuleComponentIdentifier, is OpaqueComponentArtifactIdentifier -> {
-            this.getMavenCoordinates().toString().intern()
+            mavenCoordinatesCache.getMavenCoordinates(this).toString().intern()
         }
         else -> {
             throw RuntimeException(

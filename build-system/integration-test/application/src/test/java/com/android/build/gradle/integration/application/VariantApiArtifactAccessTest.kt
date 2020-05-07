@@ -61,11 +61,11 @@ abstract class CustomTask extends DefaultTask {
 
 
 android {
-    onVariantProperties { 
+    onVariantProperties {
         TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class)
         customTaskProvider.configure {
             task ->
-                task.getApkLocation().set(operations.get(ArtifactTypes.APK.INSTANCE))
+                task.getApkLocation().set(artifacts.get(ArtifactTypes.APK.INSTANCE))
                 Provider<Directory> outputDir = getProject().getLayout().getBuildDirectory()
                 task.getOutputFile().set(outputDir.file(name + "/out.txt"))
         }
@@ -83,7 +83,7 @@ android {
         ).create()
 
     /**
-     * Test that exercise the [Operations.get()] API to wire a [Task] that will consume the
+     * Test that exercise the [artifacts.get()] API to wire a [Task] that will consume the
      * ArtifactTypes.APK and list the files into an output text file.
      */
     @Test

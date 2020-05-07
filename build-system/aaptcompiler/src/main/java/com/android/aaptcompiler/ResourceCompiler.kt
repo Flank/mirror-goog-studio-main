@@ -17,12 +17,11 @@
 
 package com.android.aaptcompiler
 
-import com.android.aaptcompiler.buffer.BigBuffer
 import com.android.aaptcompiler.proto.serializeTableToPb
 import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
+import com.android.utils.ILogger
 import java.io.File
-import java.io.InputStream
 
 private const val VALUES_DIRECTORY_PREFIX = "values"
 private const val XML_EXTENSION = "xml"
@@ -100,10 +99,11 @@ fun canCompileResourceInJvm(file: File, requirePngCrunching: Boolean): Boolean {
  *
  * See [canCompileResourceInJvm] to see what is supported.
  */
-fun compileResource(file: File, outputDirectory: File, options: ResourceCompilerOptions) {
+fun compileResource(
+  file: File, outputDirectory: File, options: ResourceCompilerOptions, logger: ILogger? = null) {
   // Skip hidden files.
   if (file.isHidden) {
-    //logger?.warning("Omitting file ${file.absolutePath} because it is hidden.")
+    logger?.warning("Omitting file ${file.absolutePath} because it is hidden.")
     return
   }
 
@@ -111,13 +111,13 @@ fun compileResource(file: File, outputDirectory: File, options: ResourceCompiler
   val pathData = extractPathData(file)
 
   // Determine how to compile the file based on its type.
-  val compileFunction = getCompileMethod(pathData)
+  val compileFunction = getCompileMethod(pathData, logger)
   
-  compileFunction(pathData, outputDirectory, options)
+  compileFunction(pathData, outputDirectory, options, logger)
 }
 
-private fun getCompileMethod(pathData: ResourcePathData):
-    (ResourcePathData, File, ResourceCompilerOptions) -> Unit {
+private fun getCompileMethod(pathData: ResourcePathData, logger: ILogger?):
+    (ResourcePathData, File, ResourceCompilerOptions, ILogger?) -> Unit {
   if (pathData.resourceDirectory == VALUES_DIRECTORY_PREFIX &&
       pathData.extension == XML_EXTENSION) {
     pathData.extension = RESOURCE_TABLE_EXTENSION
@@ -127,8 +127,7 @@ private fun getCompileMethod(pathData: ResourcePathData):
     if (type == null) {
       val errorMsg = "Invalid resource type '${pathData.resourceDirectory}'" +
         " for file ${pathData.file.absolutePath}"
-      // TODO(b/139297538): Diagnostics
-      //logger?.warning(errorMsg)
+      logger?.warning(errorMsg)
       error(errorMsg)
     }
     if (type != ResourceType.RAW) {
@@ -154,24 +153,27 @@ private fun getCompileMethod(pathData: ResourcePathData):
  * @throws IllegalStateException A failure occurred in processing this resource.
  */
 private fun compileTable(
-    pathData: ResourcePathData, outputDirectory: File, options: ResourceCompilerOptions) {
+    pathData: ResourcePathData,
+    outputDirectory: File,
+    options: ResourceCompilerOptions,
+    logger: ILogger?) {
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
-  // TODO(b/139297538): Diagnostics
-  //logger?.info("Compiling XML table ${pathData.file.absolutePath} to $outputFile")
+  logger?.info("Compiling XML table ${pathData.file.absolutePath} to $outputFile")
 
-  val table = ResourceTable()
+  val table = ResourceTable(logger = logger)
   
   val extractorOptions = TableExtractorOptions(
     translatable = !pathData.name.contains("donottranslate"),
     errorOnPositionalArgs = !options.legacyMode,
     visibility = options.visibility)
-  val tableExtractor = TableExtractor(table, pathData.source, pathData.config, extractorOptions)
+  val tableExtractor =
+    TableExtractor(table, pathData.source, pathData.config, extractorOptions, logger)
 
 
   pathData.file.inputStream().use {
     if (!tableExtractor.extract(it)) {
-      // TODO(b/139297538): diagnostics
-      error("TODO")
+      logger?.warning("Failed to extract resources for ${pathData.file.absolutePath}")
+      error("Failed to extract resources.")
     }
 
     // Adds the fake locales: en-XA and ar-XB for each default-defined string resource. This is used
@@ -184,9 +186,6 @@ private fun compileTable(
   // Ensure we have the compilation package at least.
   table.createPackage("")
   table.sort()
-
-
-  // TODO(b/139297538): assign an id to any package that has resources
 
   val container = Container(outputFile.outputStream(), 1)
   val pbTable = serializeTableToPb(table)
@@ -203,10 +202,12 @@ private fun compileTable(
  * @param outputDirectory the directory to which the compiled file is to be placed.
  */
 private fun compileFile(
-    pathData: ResourcePathData, outputDirectory: File, options: ResourceCompilerOptions) {
+    pathData: ResourcePathData,
+    outputDirectory: File,
+    options: ResourceCompilerOptions,
+    logger: ILogger?) {
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
-  // TODO(b/139297538): Diagnostics
-  //logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
+  logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
   pathData.file.inputStream().use {
     val resourceFile = ResourceFile(
       ResourceName("", resourceTypeFromTag(pathData.resourceDirectory)!!, pathData.name),
@@ -238,10 +239,12 @@ private fun compileFile(
  * @throws IllegalStateException A failure occurred in processing this resource.
  */
 private fun compileXml(
-    pathData: ResourcePathData, outputDirectory: File, options: ResourceCompilerOptions) {
+    pathData: ResourcePathData,
+    outputDirectory: File,
+    options: ResourceCompilerOptions,
+    logger: ILogger?) {
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
-  // TODO(b/139297538): Diagnostics
-  //logger?.info("Compiling xml file ${pathData.file.absolutePath} to $outputFile")
+  logger?.info("Compiling xml file ${pathData.file.absolutePath} to $outputFile")
 
   val fileToProcess = ResourceFile(
     ResourceName("", pathData.type!!, pathData.name),
@@ -251,10 +254,10 @@ private fun compileXml(
   )
 
   pathData.file.inputStream().use {
-    val xmlProcessor = XmlProcessor(source = pathData.source)
+    val xmlProcessor = XmlProcessor(source = pathData.source, logger = logger)
     if (!xmlProcessor.process(fileToProcess, it)) {
-      // TODO(b/139297538): diagnostics
-      error("Failure to compile the resource file ${pathData.file.absoluteFile}.")
+      logger?.warning("Failure to compile the resource file ${pathData.file.absolutePath}")
+      error("Failed to compile resource file.")
     }
 
     val container =
@@ -283,15 +286,16 @@ private fun compileXml(
  * @param outputDirectory the directory in which the processed file will be placed.
  */
 private fun compilePng(
-    pathData: ResourcePathData, outputDirectory: File, options: ResourceCompilerOptions) {
-  // TODO(b/139297538): Diagnostics
-  //logger?.info("Compiling image file ${pathData.file.absolutePath}")
+    pathData: ResourcePathData,
+    outputDirectory: File,
+    options: ResourceCompilerOptions,
+    logger: ILogger?) {
+  logger?.info("Compiling image file ${pathData.file.absolutePath}")
   if (pathData.extension == PATCH_9_EXTENSION) {
     error("Patch 9 PNG processing support not yet implemented.")
   }
   if (options.requirePngCrunching) {
     error("PNG crunching support not yet implemented")
   }
-  compileFile(pathData, outputDirectory, options)
+  compileFile(pathData, outputDirectory, options, logger)
 }
-

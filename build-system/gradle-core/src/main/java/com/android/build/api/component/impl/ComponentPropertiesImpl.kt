@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -87,7 +86,7 @@ abstract class ComponentPropertiesImpl(
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
-    override val artifacts: BuildArtifactsHolder,
+    override val artifacts: ArtifactsImpl,
     override val variantScope: VariantScope,
     val variantData: BaseVariantData,
     override val transformManager: TransformManager,
@@ -100,10 +99,6 @@ abstract class ComponentPropertiesImpl(
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
-
-    override val operations: OperationsImpl
-        get() = artifacts.getOperations()
-
     override val packageName: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
 
@@ -307,7 +302,7 @@ abstract class ComponentPropertiesImpl(
             val testedAllClasses: Provider<FileCollection> =
                 internalServices.provider(Callable {
                     internalServices.fileCollection(
-                        testedVariant.operations.get(internalArtifactType)
+                        testedVariant.artifacts.get(internalArtifactType)
                     ) as FileCollection
                 })
             val combinedCollectionForTest = internalServices.fileCollection(
@@ -344,9 +339,8 @@ abstract class ComponentPropertiesImpl(
                     "Appendable ArtifactType '${buildArtifactType.name()}' cannot be published."
                 )
             }
-            val artifactProvider = artifacts.getFinalProduct(buildArtifactType)
-            val artifactContainer =
-                artifacts.getOperations().getArtifactContainer(buildArtifactType)
+            val artifactProvider = artifacts.get(buildArtifactType)
+            val artifactContainer = artifacts.getArtifactContainer(buildArtifactType)
             if (!artifactContainer.needInitialProducer().get()) {
                 variantScope
                     .publishIntermediateArtifact(
@@ -409,12 +403,12 @@ abstract class ComponentPropertiesImpl(
         // for the other, there's no duplicate so no issue.
         if (getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
             val generatedBuildConfig =
-                operations.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
+                artifacts.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
             sourceSets.add(internalServices.fileTree(generatedBuildConfig)
                 .builtBy(generatedBuildConfig))
         }
         if (taskContainer.aidlCompileTask != null) {
-            val aidlFC = artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR)
+            val aidlFC = artifacts.get(AIDL_SOURCE_OUTPUT_DIR)
             sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
@@ -425,10 +419,10 @@ abstract class ComponentPropertiesImpl(
                 // TaskManager.createUnitTestVariantTasks), the artifact may not have been created,
                 // so we need to check its presence first (using internal AGP API instead of Gradle
                 // API---see https://android.googlesource.com/platform/tools/base/+/ca24108e58e6e0dc56ce6c6f639cdbd0fa3b812f).
-                if (!artifacts.getOperations().getArtifactContainer(DATA_BINDING_TRIGGER)
+                if (!artifacts.getArtifactContainer(DATA_BINDING_TRIGGER)
                         .needInitialProducer().get()
                 ) {
-                    sourceSets.add(internalServices.fileTree(artifacts.getFinalProduct(DATA_BINDING_TRIGGER)))
+                    sourceSets.add(internalServices.fileTree(artifacts.get(DATA_BINDING_TRIGGER)))
                 }
             }
             addDataBindingSources(sourceSets)
@@ -436,12 +430,12 @@ abstract class ComponentPropertiesImpl(
         if (!variantDslInfo.renderscriptNdkModeEnabled
             && taskContainer.renderscriptCompileTask != null
         ) {
-            val rsFC = artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+            val rsFC = artifacts.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
             sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
         }
         if (buildFeatures.mlModelBinding) {
             val mlModelClassSourceOut: Provider<Directory> =
-                artifacts.getFinalProduct(ML_SOURCE_OUT)
+                artifacts.get(ML_SOURCE_OUT)
             sourceSets.add(
                 internalServices.fileTree(mlModelClassSourceOut).builtBy(mlModelClassSourceOut)
             )
@@ -455,8 +449,7 @@ abstract class ComponentPropertiesImpl(
     open fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>)
     {
-        val baseClassSource =
-            artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
+        val baseClassSource = artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
         sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
     }
 
@@ -464,7 +457,7 @@ abstract class ComponentPropertiesImpl(
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
         return if (globalScope.extension.aaptOptions.namespaced) {
             internalServices.fileCollection().also { fileCollection ->
-                val namespacedRClassJar = artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
+                val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
                 val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
                 fileCollection.from(fileTree)
                 fileCollection.from(
@@ -473,7 +466,7 @@ abstract class ComponentPropertiesImpl(
                     )
                 )
                 testedConfig?.let {
-                    fileCollection.from(it.artifacts.getFinalProduct(COMPILE_R_CLASS_JAR).get())
+                    fileCollection.from(it.artifacts.get(COMPILE_R_CLASS_JAR).get())
                 }
             }
         } else {
@@ -487,8 +480,7 @@ abstract class ComponentPropertiesImpl(
                         && !variantType.isForTesting)
                 if (variantType.isAar || useCompileRClassInApp) {
                     if (buildFeatures.androidResources) {
-                        internalServices.fileCollection(
-                            artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
+                        internalServices.fileCollection(artifacts.get(COMPILE_R_CLASS_JAR)
                         )
                     } else {
                         internalServices.fileCollection()
@@ -500,15 +492,13 @@ abstract class ComponentPropertiesImpl(
                     )
 
                     internalServices.fileCollection(
-                        artifacts.getFinalProduct(
-                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                        )
+                        artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 }
             } else { // Android test or unit test
                 if (variantType === VariantTypeImpl.ANDROID_TEST) {
                     internalServices.fileCollection(
-                        artifacts.getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                        artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 } else {
                     internalServices.fileCollection(variantScope.rJarForUnitTests)
@@ -524,7 +514,7 @@ abstract class ComponentPropertiesImpl(
         // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
         // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
         return if (isBuildConfigJar && !isAndroidTest && !isUnitTest && testedConfig == null) {
-            internalServices.fileCollection(operations.get(
+            internalServices.fileCollection(artifacts.get(
                     InternalArtifactType.COMPILE_BUILD_CONFIG_JAR))
         } else {
             internalServices.fileCollection()

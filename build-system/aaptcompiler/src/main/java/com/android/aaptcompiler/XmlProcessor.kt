@@ -1,5 +1,6 @@
 package com.android.aaptcompiler
 
+import com.android.utils.ILogger
 import java.io.InputStream
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLEventReader
@@ -82,7 +83,7 @@ private fun mangleEntry(pck: String, entry: String) = "$pck${'$'}$entry"
  *
  * @property source: The source that this processor is going to process.
  */
-class XmlProcessor(val source: Source) {
+class XmlProcessor(val source: Source, val logger: ILogger?) {
 
     lateinit var primaryFile: ResourceFile
         private set
@@ -107,7 +108,7 @@ class XmlProcessor(val source: Source) {
 
             val documentStart = eventReader.nextEvent()
             if (!documentStart.isStartDocument) {
-                // TODO(b/139297538): diagnostics
+                logError("Failed to find start of xml for file %s", blameSource(source))
                 return false
             }
 
@@ -163,6 +164,10 @@ class XmlProcessor(val source: Source) {
         }
     }
 
+    private fun logError(formatMessage: String, vararg args: Any?) {
+        logger?.error(null, formatMessage, args)
+    }
+
     /**
      * Flattens the XML element, as well as all text, comments, and child elements underneath it.
      *
@@ -211,7 +216,9 @@ class XmlProcessor(val source: Source) {
         // </ListView>
         // Both of these are invalid.
         if (isAaptAttribute(startElement.name)) {
-            // TODO(b/139297538): diagnostics
+            val errorMsg = "%s, <aapt:attr> blocks are not allowed as the root of documents, or " +
+                    "as a child element under another <aapt:attr>."
+            logError(errorMsg, blameSource(source, startElement.location))
             walkToEndOfElement(startElement, eventReader)
             return false
         }
@@ -336,7 +343,7 @@ class XmlProcessor(val source: Source) {
      * will be positioned immediately after the [EndElement] that aligns with the supplied
      * [attrElement].
      * @param collectedIds The map of all created ID resources in the XML document. Any created ids
-     * found in the XML tree represented by [startElement] will be added to this map.
+     * found in the XML tree represented by [attrElement] will be added to this map.
      * @param resourceBuilders The map of all XML resource builders created for this XML document.
      * At least one new builder will be added from the outlined aapt:attr (if successful), or more
      * if there are nested aapt:attr definitions.
@@ -352,7 +359,8 @@ class XmlProcessor(val source: Source) {
 
         val nameAttribute = attrElement.getAttributeByName(QName("name"))
         if (nameAttribute == null) {
-            // TODO(b/139297538): diagnostics
+            val errorMsg = "%s, <%s> tag requires the 'name' attribute."
+            logError(errorMsg, blameSource(source, attrElement.location), attrElement.name)
             walkToEndOfElement(attrElement, eventReader)
             return false
         }
@@ -362,7 +370,8 @@ class XmlProcessor(val source: Source) {
 
         val extractedPackage = transformPackageAlias(attrElement, nameValue.pck!!)
         if (extractedPackage == null) {
-            // TODO(b/139297538): diagnostics
+            val errorMsg = "%s, Invalid namespace prefix '%s' for value of 'name' attribute '%s'."
+            logError(errorMsg, blameSource(source, attrElement.location), nameValue.pck, nameValue)
             walkToEndOfElement(attrElement, eventReader)
             return false
         }
@@ -455,7 +464,8 @@ class XmlProcessor(val source: Source) {
             if (event.isCharacters) {
                 // Non-whitespace text is not allowed as children of a aapt:attr
                 if (!event.asCharacters().isWhiteSpace) {
-                    // TODO(b/139297538): diagnostics
+                    val errorMsg = "%s, Can't extract text into its own resource."
+                    logError(errorMsg, blameSource(source, event.location))
                     foundError = true
                 }
                 continue
@@ -464,7 +474,8 @@ class XmlProcessor(val source: Source) {
             if (event.isStartElement) {
                 // An aapt:attr element cannot have more than one element child.
                 if (foundChild) {
-                    // TODO(b/139297538): diagnostics
+                    val errorMsg = "%s, Inline XML resources must have a single root."
+                    logError(errorMsg, blameSource(source, event.location))
                     foundError = true
                     walkToEndOfElement(event.asStartElement(), eventReader)
                     continue
@@ -488,8 +499,9 @@ class XmlProcessor(val source: Source) {
         }
 
         if (!foundChild) {
-          // TODO(b/139297538): diagnostics
-          return null
+            val errorMsg = "%s, No resource to outline. <%s> block is empty."
+            logError(errorMsg, blameSource(source, startElement.location), startElement.name)
+            return null
         }
 
         if (foundError) return null
@@ -518,7 +530,12 @@ class XmlProcessor(val source: Source) {
             val resourceName = parsedRef.reference.name
             if (parsedRef.createNew && resourceName.type == AaptResourceType.ID) {
                 if (!isValidResourceEntryName(resourceName.entry!!)) {
-                    // TODO(b/139297538): diagnostics
+                    val errorMsg = "%s, Id '%s' has an invalid entry name '%s'."
+                    logError(
+                        errorMsg,
+                        blameSource(source, startElement.location),
+                        resourceName,
+                        resourceName.entry)
                     noError = false
                 } else {
                     collectedIds.putIfAbsent(

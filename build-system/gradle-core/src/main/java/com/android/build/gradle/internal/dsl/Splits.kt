@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.AbiSplit
+import com.android.build.api.dsl.DensitySplit
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
-import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
 open class Splits @Inject constructor(dslServices: DslServices) :
-    com.android.build.api.dsl.Splits<AbiSplitOptions, DensitySplitOptions> {
+    com.android.build.api.dsl.Splits {
 
     override val density: DensitySplitOptions =
         dslServices.newInstance(DensitySplitOptions::class.java)
@@ -51,7 +52,7 @@ open class Splits @Inject constructor(dslServices: DslServices) :
         action.execute(density)
     }
 
-    override fun density(action: DensitySplitOptions.() -> Unit) {
+    override fun density(action: DensitySplit.() -> Unit) {
         action.invoke(density)
     }
 
@@ -66,7 +67,7 @@ open class Splits @Inject constructor(dslServices: DslServices) :
         action.execute(abi)
     }
 
-    override fun abi(action: AbiSplitOptions.() -> Unit) {
+    override fun abi(action: AbiSplit.() -> Unit) {
         action.invoke(abi)
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.impl
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
@@ -28,7 +29,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
@@ -48,7 +49,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    artifacts: BuildArtifactsHolder,
+    artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
     testedVariant: VariantPropertiesImpl,
@@ -84,8 +85,14 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         String::class.java,
         variantDslInfo.applicationId)
 
-    override val manifestPlaceholders: Map<String, Any>
-        get() = variantDslInfo.manifestPlaceholders
+    override val manifestPlaceholders: MapProperty<String, String> by lazy {
+        internalServices.mapPropertyOf(
+            String::class.java,
+            String::class.java,
+            variantDslInfo.manifestPlaceholders,
+            "$name:manifestPlaceholders"
+        )
+    }
 
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
@@ -110,7 +117,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val testLabel: Property<String?> =
         internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
 
-    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+    override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,

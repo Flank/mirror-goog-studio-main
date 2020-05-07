@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.common.base.Charsets
@@ -142,7 +143,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
         init {
             // Publish the Proguarded classes and resources back to a Stream
             val shrunkClassesAndResourcesProvider = creationConfig.artifacts
-                .getFinalProduct(InternalArtifactType.SHRUNK_JAR)
+                .get(InternalArtifactType.SHRUNK_JAR)
             val project = creationConfig.globalScope.project
             creationConfig.transformManager.addStream(
                 OriginalStream.builder(project, "shrunk_classes_and_resources")
@@ -190,13 +191,10 @@ abstract class ProguardTask : ProguardConfigurableTask() {
             taskProvider: TaskProvider<out ProguardTask>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.SHRUNK_JAR,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                ProguardTask::shrunkJar,
-                "minified.jar"
-            )
+                ProguardTask::shrunkJar
+            ).withName("minified.jar").on(InternalArtifactType.SHRUNK_JAR)
         }
     }
 }

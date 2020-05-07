@@ -140,17 +140,14 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                ProcessAndroidAppResourcesTask::rClassSource,
-                fileName = "out"
-            )
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.PROCESSED_RES,
+                ProcessAndroidAppResourcesTask::rClassSource
+            ).withName("out").on(InternalArtifactType.RUNTIME_R_CLASS_SOURCES)
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessAndroidAppResourcesTask::resourceApUnderscoreDirectory
-            )
+            ).withName("out").on(InternalArtifactType.PROCESSED_RES)
         }
 
         override fun configure(
@@ -160,12 +157,12 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
             val artifacts = creationConfig.artifacts
             task.aaptFriendlyManifestFileDirectory =
-                artifacts.getFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                artifacts.get(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
 
             task.manifestFileDirectory =
-                artifacts.getFinalProduct(creationConfig.manifestArtifactType)
+                artifacts.get(creationConfig.manifestArtifactType)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 task.thisSubProjectStaticLibrary
             )
@@ -194,7 +191,9 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 task.noCompress.set(creationConfig.aaptOptions.noCompress)
             }
             task.noCompress.disallowChanges()
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 

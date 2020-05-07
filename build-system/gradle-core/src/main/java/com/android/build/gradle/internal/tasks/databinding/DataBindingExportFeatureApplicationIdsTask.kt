@@ -80,11 +80,10 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
             taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingExportFeatureApplicationIdsTask::packageListOutFolder
-            )
+            ).on(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
         }
 
         override fun configure(

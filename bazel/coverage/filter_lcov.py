@@ -56,8 +56,8 @@ def write_lcov(filtered_cov):
 
 def main():
     prefixes = sys.argv[1:]
-    includes = ["./" + x for x in prefixes if not x.startswith("-")]
-    excludes = ["./" + x[1:] for x in prefixes if x.startswith("-")]
+    includes = [x for x in prefixes if not x.startswith("-")]
+    excludes = [x[1:] for x in prefixes if x.startswith("-")]
 
     file_line_cov = read_lcov()
 

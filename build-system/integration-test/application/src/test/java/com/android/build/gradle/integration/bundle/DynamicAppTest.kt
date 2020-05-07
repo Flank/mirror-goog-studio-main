@@ -830,10 +830,6 @@ class DynamicAppTest {
 
         // test the folder is the same as the previous one.
         Truth.assertThat(bundleFile.parentFile).isEqualTo(newBundleFile.parentFile)
-
-        // check that the previous bundle does not exist anymore
-        FileSubject.assertThat(bundleFile).doesNotExist()
-
     }
 
     @Test

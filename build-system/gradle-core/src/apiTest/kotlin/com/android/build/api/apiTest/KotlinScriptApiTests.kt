@@ -56,8 +56,8 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
 
                 onVariantProperties {
                     project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
-                        apkFolder.set(operations.get(ArtifactTypes.APK))
-                        builtArtifactsLoader.set(operations.getBuiltArtifactsLoader())
+                        apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                        builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                     }
                 }
             }
@@ -69,20 +69,20 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
             index =
                     // language=markdown
                 """
-# Operations.get in Kotlin
+# artifacts.get in Kotlin
 
 This sample show how to obtain a built artifact from the AGP. The built artifact is identified by
 its [ArtifactTypes] and in this case, it's [ArtifactTypes.APK].
 The [onVariantProperties] block will wire the [DisplayApksTask] input property (apkFolder) by using
-the Operations.get call with the right ArtifactTypes
-`apkFolder.set(operations.get(ArtifactTypes.APK))`
+the [Artifacts.get] call with the right [ArtifactTypes]
+`apkFolder.set(artifacts.get(ArtifactTypes.APK))`
 Since more than one APK can be produced by the build when dealing with multi-apk, you should use the
 [BuiltArtifacts] interface to load the metadata associated with produced files using
 [BuiltArtifacts.load] method.
 `builtArtifactsLoader.get().load(apkFolder.get())'
 Once loaded, the built artifacts can be accessed.
 ## To Run
-/path/to/gradle debugDisplayApks 
+/path/to/gradle debugDisplayApks
 expected result : "Got an APK...." message.
             """.trimIndent()
         }
@@ -128,7 +128,7 @@ expected result : "Got an APK...." message.
                             File(project.buildDir, "intermediates/${'$'}{name}/ManifestProducer/output")
                         )
                     }
-                    operations.replace(manifestProducer, ManifestProducerTask::outputManifest)
+                    artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
                         .on(ArtifactTypes.MERGED_MANIFEST)
                 }
             }
@@ -180,7 +180,7 @@ expected result : "Got an APK...." message.
                     val manifestUpdater = tasks.register<ManifestTransformerTask>("${'$'}{name}ManifestUpdater") {
                         gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                     }
-                    operations.transform(manifestUpdater,
+                    artifacts.transform(manifestUpdater,
                             ManifestTransformerTask::mergedManifest,
                             ManifestTransformerTask::updatedManifest)
                     .on(com.android.build.api.artifact.ArtifactTypes.MERGED_MANIFEST)
@@ -249,7 +249,7 @@ expected result : "Got an APK...." message.
                 onVariantProperties {
                     val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")
 
-                    val transformationRequest = operations.use(copyApksProvider)
+                    val transformationRequest = artifacts.use(copyApksProvider)
                         .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
                         .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
 
@@ -315,10 +315,10 @@ expected result : "Got an APK...." message.
                         isMinifyEnabled = true
                     }
                 }
-                
+
                 onVariantProperties {
                     project.tasks.register<MappingFileUploadTask>("${ '$' }{name}MappingFileUpload") {
-                        mappingFile.set(operations.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))
+                        mappingFile.set(artifacts.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))
                     }
                 }
             }
@@ -330,12 +330,12 @@ expected result : "Got an APK...." message.
             index =
                     // language=markdown
                 """
-# Operations.get in Kotlin
+# artifacts.get in Kotlin
 
 This sample show how to obtain the obfuscation mapping file from the AGP. 
 The [onVariantProperties] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
-the Operations.get call with the right ArtifactTypes
-`mapping.set(operations.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))`
+the [Artifacts.get] call with the right [ArtifactTypes]
+`mapping.set(artifacts.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))`
 ## To Run
 /path/to/gradle debugMappingFileUpload 
 expected result : "Uploading .... to a fantasy server...s" message.

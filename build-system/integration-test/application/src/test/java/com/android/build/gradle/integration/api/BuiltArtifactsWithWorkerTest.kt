@@ -217,11 +217,11 @@ android.onVariantProperties {
     task.getVariantName().set(it.getName())
   }
 
-  it.operations.replace(outputTask) { it.getOutputDir() }.on(
+  it.artifacts.replace(outputTask) { it.getOutputDir() }.on(
     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE)
 
   TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
-  ArtifactTransformationRequest replacementRequest = it.operations.use(consumerTask)
+  ArtifactTransformationRequest replacementRequest = it.artifacts.use(consumerTask)
     .toRead(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE) { it.getCompatibleManifests() }
     .andWrite(InternalArtifactType.MERGED_MANIFESTS.INSTANCE) { it.getOutputDir() }
 
@@ -231,9 +231,9 @@ android.onVariantProperties {
 
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->
     task.getInputDir().set(
-      it.operations.get(InternalArtifactType.MERGED_MANIFESTS.INSTANCE)
+      it.artifacts.get(InternalArtifactType.MERGED_MANIFESTS.INSTANCE)
     )
-    task.getArtifactsLoader().set(it.operations.getBuiltArtifactsLoader())
+    task.getArtifactsLoader().set(it.artifacts.getBuiltArtifactsLoader())
   }
 }
         """.trimIndent()

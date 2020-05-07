@@ -23,10 +23,10 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
+import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.services.BaseServices;
@@ -69,7 +69,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
  * <p>This is a wrapper around the internal data model, in order to control what is accessible
  * through the external API.
  */
-public abstract class BaseVariantImpl implements BaseVariant {
+public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVariant {
 
     public static final String TASK_ACCESS_DEPRECATION_URL =
             "https://d.android.com/r/tools/task-configuration-avoidance";
@@ -159,7 +159,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     @NonNull
-    public ProductFlavor getMergedFlavor() {
+    public MergedFlavor getMergedFlavor() {
         // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
@@ -488,22 +488,33 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getMappingFile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        //     bypass the configuration time resolution check as some calls this API during
+        // bypass the configuration time resolution check as some calls this API during
         // configuration.
         RegularFile mappingFile =
-                artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE).getOrNull();
+                componentProperties
+                        .getArtifacts()
+                        .get(InternalArtifactType.APK_MAPPING.INSTANCE)
+                        .getOrNull();
         return mappingFile != null ? mappingFile.getAsFile() : null;
     }
 
     @NonNull
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
-        return componentProperties.getGlobalScope().getProject().getProviders().provider(
-                () -> componentProperties.getServices().fileCollection(
-                        componentProperties.getArtifacts().getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)
-                )
-        );
+        return componentProperties
+                .getGlobalScope()
+                .getProject()
+                .getProviders()
+                .provider(
+                        () ->
+                                componentProperties
+                                        .getServices()
+                                        .fileCollection(
+                                                componentProperties
+                                                        .getArtifacts()
+                                                        .get(
+                                                                InternalArtifactType.APK_MAPPING
+                                                                        .INSTANCE)));
     }
 
     @Override

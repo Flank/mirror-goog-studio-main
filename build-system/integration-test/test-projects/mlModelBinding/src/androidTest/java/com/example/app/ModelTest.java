@@ -11,10 +11,12 @@ import com.example.app.ml.MobilenetQuantMetadata;
 import com.example.app.ml.StylePredictQuantMetadata;
 import com.example.app.ml.StyleTransferQuantMetadata;
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.label.Category;
+import org.tensorflow.lite.support.model.Model;
 
 /** Instrumented test, which will execute on an Android device. */
 @RunWith(AndroidJUnit4.class)
@@ -24,20 +26,20 @@ public class ModelTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        MobilenetQuantMetadata model = MobilenetQuantMetadata.newInstance(appContext);
-        TensorImage tensorImage = new TensorImage();
-        tensorImage.load(
-                BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
+        Model.Options options = new Model.Options.Builder().setDevice(Model.Device.CPU).build();
+        MobilenetQuantMetadata model = MobilenetQuantMetadata.newInstance(appContext, options);
+        TensorImage tensorImage =
+                TensorImage.fromBitmap(
+                        BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
         MobilenetQuantMetadata.Outputs outputs = model.process(tensorImage);
-        Map<String, Float> probabilityMap =
-                outputs.getProbabilityAsTensorLabel().getMapWithFloatValue();
+        List<Category> probabilities = outputs.getProbabilityAsCategoryList();
 
         float prob = 0;
         String result = "";
-        for (Map.Entry<String, Float> entry : probabilityMap.entrySet()) {
-            if (entry.getValue() > prob) {
-                prob = entry.getValue();
-                result = entry.getKey();
+        for (Category category : probabilities) {
+            if (category.getScore() > prob) {
+                prob = category.getScore();
+                result = category.getLabel();
             }
         }
         assertEquals("Top1 label in image classification model is wrong.", "daisy", result);
@@ -51,8 +53,9 @@ public class ModelTest {
         // First get style array
         StylePredictQuantMetadata stylePredictQuantized256 =
                 StylePredictQuantMetadata.newInstance(appContext);
-        TensorImage flower = new TensorImage();
-        flower.load(BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
+        TensorImage flower =
+                TensorImage.fromBitmap(
+                        BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
         StylePredictQuantMetadata.Outputs predictOutputs = stylePredictQuantized256.process(flower);
         assertNotNull(predictOutputs.getStyleBottleneckAsTensorBuffer().getBuffer());
 

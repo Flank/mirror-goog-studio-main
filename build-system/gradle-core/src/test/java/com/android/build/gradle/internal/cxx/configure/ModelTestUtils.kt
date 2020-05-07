@@ -86,6 +86,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(sdkComponents).`when`(global).sdkComponents
     Mockito.doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
     Mockito.doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
+    Mockito.doReturn(ndkPlatform).`when`(ndkHandler).getNdkPlatform(true)
     Mockito.doReturn(buildDir).`when`(project).buildDir
     Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
     Mockito.doReturn("debug").`when`(componentPropertiesImpl).name

@@ -124,11 +124,10 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkManifestForAssetPackTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.LINKED_RES_FOR_ASSET_PACK,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkManifestForAssetPackTask::linkedManifestsDirectory
-            )
+            ).on(InternalArtifactType.LINKED_RES_FOR_ASSET_PACK)
         }
 
         override fun configure(
@@ -136,7 +135,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
@@ -144,7 +143,9 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             task.aapt2Version = aapt2Version
 
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }

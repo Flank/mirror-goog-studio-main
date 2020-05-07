@@ -8,9 +8,6 @@ android {
         minSdkVersion rootProject.supportLibMinSdk
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-
-    // don't exclude .kotlin_module files because we look for them to test the bytecode hooks
-    packagingOptions.excludes -= ['/META-INF/*.kotlin_module']
 }
 
 dependencies {

@@ -452,41 +452,41 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 if (isAdditionalAndroidTestOutputEnabled) {
                     creationConfig
                             .getArtifacts()
-                            .producesDir(
-                                    InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
-                                            .INSTANCE,
+                            .setInitialProvider(
                                     taskProvider,
-                                    DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
-                                    deviceProvider.getName());
+                                    DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir)
+                            .withName(deviceProvider.getName())
+                            .on(
+                                    InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
+                                            .INSTANCE);
                 }
                 creationConfig
                         .getArtifacts()
-                        .producesDir(
-                                InternalArtifactType.CODE_COVERAGE.INSTANCE,
-                                taskProvider,
-                                DeviceProviderInstrumentTestTask::getCoverageDir,
-                                deviceProvider.getName());
+                        .setInitialProvider(
+                                taskProvider, DeviceProviderInstrumentTestTask::getCoverageDir)
+                        .withName(deviceProvider.getName())
+                        .on(InternalArtifactType.CODE_COVERAGE.INSTANCE);
             } else {
                 // NOTE : This task will be created per device provider, assume several tasks instances
                 // will exist in the variant scope.
                 if (isAdditionalAndroidTestOutputEnabled) {
                     creationConfig
                             .getArtifacts()
-                            .producesDir(
+                            .setInitialProvider(
+                                    taskProvider,
+                                    DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir)
+                            .withName(deviceProvider.getName())
+                            .on(
                                     InternalArtifactType
                                             .DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT
-                                            .INSTANCE,
-                                    taskProvider,
-                                    DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
-                                    deviceProvider.getName());
+                                            .INSTANCE);
                 }
                 creationConfig
                         .getArtifacts()
-                        .producesDir(
-                                InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE,
-                                taskProvider,
-                                DeviceProviderInstrumentTestTask::getCoverageDir,
-                                deviceProvider.getName());
+                        .setInitialProvider(
+                                taskProvider, DeviceProviderInstrumentTestTask::getCoverageDir)
+                        .withName(deviceProvider.getName())
+                        .on(InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE);
             }
 
             if (creationConfig instanceof TestComponentPropertiesImpl) {

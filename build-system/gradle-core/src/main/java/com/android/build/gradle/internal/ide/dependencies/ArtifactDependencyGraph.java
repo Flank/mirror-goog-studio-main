@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
@@ -78,6 +79,12 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                             dependencyFailureHandler,
                             buildMapping);
 
+            LibraryDependencyCacheBuildService libraryDependencyCache =
+                    BuildServicesKt.getBuildService(
+                                    componentProperties.getServices().getBuildServiceRegistry(),
+                                    LibraryDependencyCacheBuildService.class)
+                            .get();
+
             // In this simpler model, faster computation of the runtime dependencies to get the
             // provided bit.
             if (!withFullDependency) {
@@ -111,7 +118,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     final GraphItemImpl graphItem =
                             new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of());
                     compileItems.add(graphItem);
-                    LibraryUtils.getLibraryCache().get(artifact);
+                    libraryDependencyCache.getLibraryCache().get(artifact);
                     if (!runtimeIdentifiers.contains(artifact.getComponentIdentifier())) {
                         providedAddresses.add(graphItem.getArtifactAddress());
                     }
@@ -125,7 +132,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             for (ResolvedArtifact artifact : compileArtifacts) {
                 compileItems.add(
                         new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of()));
-                LibraryUtils.getLibraryCache().get(artifact);
+                libraryDependencyCache.getLibraryCache().get(artifact);
             }
 
             // in this mode, compute GraphItem for the runtime configuration
@@ -141,7 +148,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             for (ResolvedArtifact artifact : runtimeArtifacts) {
                 runtimeItems.add(
                         new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of()));
-                LibraryUtils.getLibraryCache().get(artifact);
+                libraryDependencyCache.getLibraryCache().get(artifact);
             }
 
             // compute the provided dependency list, by comparing the compile and runtime items
@@ -200,6 +207,16 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     AndroidArtifacts.ArtifactType.LINT)
                             .getArtifacts();
 
+            MavenCoordinatesCacheBuildService mavenCoordinatesCache =
+                    BuildServicesKt.getBuildService(
+                                    componentProperties.getServices().getBuildServiceRegistry(),
+                                    MavenCoordinatesCacheBuildService.class)
+                            .get();
+            LibraryDependencyCacheBuildService libraryDependencyCache =
+                    BuildServicesKt.getBuildService(
+                                    componentProperties.getServices().getBuildServiceRegistry(),
+                                    LibraryDependencyCacheBuildService.class)
+                            .get();
             for (ResolvedArtifact artifact : artifacts) {
                 ComponentIdentifier id = artifact.getComponentIdentifier();
 
@@ -229,7 +246,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     null, /* projectPath */
                                     ImmutableList.of(), /* dependencies */
                                     null, /* requestedCoordinates */
-                                    MavenCoordinatesUtils.getMavenCoordinates(artifact),
+                                    mavenCoordinatesCache.getMavenCoordinates(artifact),
                                     false, /* isSkipped */
                                     isProvided));
                 } else {
@@ -259,7 +276,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
 
                     androidLibraries.add(
                             new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
-                                    MavenCoordinatesUtils.getMavenCoordinates(artifact),
+                                    mavenCoordinatesCache.getMavenCoordinates(artifact),
                                     buildId,
                                     projectPath,
                                     artifact.getArtifactFile(),
@@ -269,7 +286,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     false, /* dependencyItem.isSkipped() */
                                     ImmutableList.of(), /* androidLibraries */
                                     ImmutableList.of(), /* javaLibraries */
-                                    LibraryUtils.getLocalJarCache().get(extractedFolder),
+                                    libraryDependencyCache.getLocalJarCache().get(extractedFolder),
                                     lintJar));
                 }
             }

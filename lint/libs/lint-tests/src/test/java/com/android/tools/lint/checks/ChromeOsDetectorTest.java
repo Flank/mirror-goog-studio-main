@@ -259,10 +259,10 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Error: Expecting android:resizeableActivity=\"true\" for this activity so the user can take advantage of the multi-window environment on Chrome OS devices [NonResizeableActivity]\n"
+                        + "AndroidManifest.xml:5: Warning: Expecting android:resizeableActivity=\"true\" for this activity so the user can take advantage of the multi-window environment on Chrome OS devices [NonResizeableActivity]\n"
                         + "        <activity android:name=\".MainActivity\" android:resizeableActivity=\"false\"/>\n"
                         + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+                        + "0 errors, 1 warnings\n";
 
         lint().files(
                         manifest(
@@ -305,10 +305,10 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Error: Expecting android:screenOrientation=\"unspecified\" or \"fullSensor\" for this activity so the user can use the application in any orientation and provide a great experience on Chrome OS devices [LockedOrientationActivity]\n"
+                        + "AndroidManifest.xml:5: Warning: Expecting android:screenOrientation=\"unspecified\" or \"fullSensor\" for this activity so the user can use the application in any orientation and provide a great experience on Chrome OS devices [LockedOrientationActivity]\n"
                         + "        <activity android:name=\".MainActivity\" android:screenOrientation=\"portrait\"/>\n"
                         + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+                        + "0 errors, 1 warnings\n";
         lint().files(
                         manifest(
                                 ""

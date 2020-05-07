@@ -60,6 +60,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.jetbrains.kotlin.asJava.elements.KtLightPsiLiteral;
+import org.jetbrains.kotlin.psi.KtExpression;
 import org.jetbrains.uast.UArrayAccessExpression;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBinaryExpressionWithType;
@@ -1065,7 +1067,16 @@ public class ConstantEvaluator {
             return null;
         }
         if (node instanceof PsiLiteral) {
-            return ((PsiLiteral) node).getValue();
+            Object value = ((PsiLiteral) node).getValue();
+            if (value == null && node instanceof KtLightPsiLiteral) {
+                KtExpression origin = ((KtLightPsiLiteral) node).getKotlinOrigin();
+                UExpression uastExpression = (UExpression) UastFacade.INSTANCE
+                        .convertElement(origin, null, UExpression.class);
+                if (uastExpression != null) {
+                    value = uastExpression.evaluate();
+                }
+            }
+            return value;
         } else if (node instanceof PsiPrefixExpression) {
             IElementType operator = ((PsiPrefixExpression) node).getOperationTokenType();
             Object operand = evaluate(((PsiPrefixExpression) node).getOperand());

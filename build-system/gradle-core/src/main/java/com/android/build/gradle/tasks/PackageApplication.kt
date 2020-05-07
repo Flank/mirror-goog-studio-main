@@ -72,11 +72,11 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.packageAndroidTask = taskProvider
             transformationRequest = (if (useResourceShrinker)
-                 creationConfig.artifacts.getOperations().use(taskProvider)
+                 creationConfig.artifacts.use(taskProvider)
                     .toRead(InternalArtifactType.SHRUNK_PROCESSED_RES,
                         PackageAndroidArtifact::getResourceFiles)
             else
-                creationConfig.artifacts.getOperations().use(taskProvider)
+                creationConfig.artifacts.use(taskProvider)
                     .toRead(InternalArtifactType.PROCESSED_RES,
                         PackageAndroidArtifact::getResourceFiles))
                 .andWrite(
@@ -88,10 +88,9 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             transformationRequest?.let {
                 task?.let { t -> t.transformationRequest = it }
             }
-           
+
             creationConfig
                 .artifacts
-                .getOperations()
                 .setInitialProvider(taskProvider, PackageApplication::getIdeModelOutputFile)
                 .atLocation { obj: PackageApplication -> obj.outputDirectory }
                 .withName(BuiltArtifactsImpl.METADATA_FILE_NAME)

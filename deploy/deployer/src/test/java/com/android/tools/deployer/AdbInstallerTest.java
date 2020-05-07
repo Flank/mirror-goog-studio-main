@@ -18,66 +18,38 @@ package com.android.tools.deployer;
 import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.fakeadbserver.FakeAdbServer;
-import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.testutils.AssumeUtil;
 import com.android.tools.deployer.devices.FakeDevice;
-import com.android.tools.deployer.devices.FakeDeviceHandler;
-import com.android.tools.deployer.devices.FakeDeviceLibrary;
+import com.android.tools.deployer.rules.ApiLevel;
+import com.android.tools.deployer.rules.FakeDeviceConnection;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
 
 /**
  * This test works in the same manner as the DeployerRunnerTest with a fake adb server to which
  * ddmlib connects.
  */
-@RunWith(Parameterized.class)
+@RunWith(ApiLevel.class)
 public class AdbInstallerTest {
 
-    private FakeAdbServer adbServer;
-    private final FakeDevice device;
+    @Rule @ApiLevel.Init public FakeDeviceConnection connection;
+    private FakeDevice device;
     private ILogger logger;
 
-    public AdbInstallerTest(FakeDeviceLibrary.DeviceId id) throws Exception {
-        this.device = new FakeDeviceLibrary().build(id);
-    }
-
-    @Parameterized.Parameters(name = "{0}")
-    public static FakeDeviceLibrary.DeviceId[] getDevices() {
-        return FakeDeviceLibrary.DeviceId.values();
-    }
-
     @Before
-    public void setUp() throws Exception {
-        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.setHostCommandHandler(
-                TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
-        FakeDeviceHandler handler = new FakeDeviceHandler();
-        builder.addDeviceHandler(handler);
-
-        adbServer = builder.build();
-        handler.connect(device, adbServer);
-        adbServer.start();
+    public void setUp() {
+        device = connection.getDevice();
         logger = new TestLogger();
-        AndroidDebugBridge.enableFakeAdbServerMode(adbServer.getPort());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        device.shutdown();
-        AndroidDebugBridge.terminate();
-        adbServer.close();
     }
 
     @Test

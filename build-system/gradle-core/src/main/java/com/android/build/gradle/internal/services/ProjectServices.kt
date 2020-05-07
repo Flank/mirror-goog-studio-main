@@ -19,11 +19,11 @@ package com.android.build.gradle.internal.services
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.services.BuildServiceRegistry
 import java.io.File
 
 /**
@@ -45,5 +45,6 @@ class ProjectServices(
     val providerFactory: ProviderFactory,
     val projectLayout: ProjectLayout,
     val projectOptions: ProjectOptions,
+    val buildServiceRegistry: BuildServiceRegistry,
     val fileResolver: (Any) -> File
 )

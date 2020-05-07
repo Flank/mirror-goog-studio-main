@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.MultipleArtifactType
@@ -188,57 +189,51 @@ abstract class R8Task: ProguardConfigurableTask() {
             super.handleProvider(taskProvider)
 
             when {
-                variantType.isAar -> creationConfig.artifacts.producesFile(
-                    artifactType = InternalArtifactType.SHRUNK_CLASSES,
-                    taskProvider = taskProvider,
-                    productProvider = R8Task::outputClasses,
-                    fileName = "shrunkClasses.jar"
-                )
+                variantType.isAar -> creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    R8Task::outputClasses)
+                    .withName("shrunkClasses.jar")
+                    .on(InternalArtifactType.SHRUNK_CLASSES)
+
                 creationConfig.variantScope.consumesFeatureJars() -> {
-                    creationConfig.operations.setInitialProvider(
+                    creationConfig.artifacts.setInitialProvider(
                         taskProvider,
                         R8Task::featureDexDir
                     ).on(InternalArtifactType.FEATURE_DEX)
 
-                    creationConfig.operations.setInitialProvider(
+                    creationConfig.artifacts.setInitialProvider(
                         taskProvider,
                         R8Task::baseDexDir
                     ).on(InternalArtifactType.BASE_DEX)
 
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                        creationConfig.artifacts.getOperations()
+                        creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
                             .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
                     }
                 }
                 else -> {
-                    creationConfig.artifacts.getOperations().append(
+                    creationConfig.artifacts.append(
                         taskProvider, R8Task::outputDex
                     ).on(MultipleArtifactType.DEX)
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                        creationConfig.artifacts.getOperations()
+                        creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
                             .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
                     }
                 }
             }
 
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.SHRUNK_JAVA_RES,
-                taskProvider = taskProvider,
-                productProvider = R8Task::outputResources,
-                fileName = "shrunkJavaRes.jar"
-            )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                R8Task::outputResources
+            ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {
-                creationConfig
-                    .artifacts
-                    .producesFile(
-                        InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
-                        taskProvider,
-                        R8Task::mainDexListOutput,
-                        "mainDexList.txt"
-                    )
+                creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    R8Task::mainDexListOutput
+                ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
             }
         }
 
@@ -267,7 +262,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.proguardConfigurations = proguardConfigurations
 
             if (!variantType.isAar) {
-                task.duplicateClassesCheck.from(artifacts.getFinalProduct(DUPLICATE_CLASSES_CHECK))
+                task.duplicateClassesCheck.from(artifacts.get(DUPLICATE_CLASSES_CHECK))
             }
 
             creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
@@ -277,7 +272,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             if (creationConfig.needsMainDexList
                 && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.mainDexRulesFiles.from(
-                    artifacts.getFinalProduct(
+                    artifacts.get(
                         InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
                     )
                 )
@@ -288,7 +283,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
 
             if (creationConfig.variantScope.consumesFeatureJars()) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                     task.baseJar
                 )

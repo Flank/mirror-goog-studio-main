@@ -34,10 +34,18 @@ import java.util.TreeMap;
  */
 public class OverlayId {
 
+    // Hash a version number as part of the ID. This is to make sure the OID file on the device is
+    // computed the same way as the current Studio and not by a version of Studio that computes
+    // this differently. This is also strict string comparison with no backward capability.
+    public static final String SCHEMA_VERSION = "1.0";
+
     // overlay file to checksum map.
     private final SortedMap<String, String> apks; // Intalled Apk -> Digest
     private final SortedMap<String, String> deltas; // OverlayFile -> Checksum
     private final String sha;
+
+    // Distinguish between a "true" base install and an install that has OID but zero overlay file.
+    private final boolean baseInstall;
 
     public OverlayId(
             OverlayId prevOverlayId,
@@ -61,6 +69,7 @@ public class OverlayId {
                         deltas.put(
                                 file.getQualifiedPath(), String.format("%d", file.getChecksum())));
         sha = computeShaHex(getRepresentation());
+        baseInstall = false;
     }
 
     public OverlayId(List<Apk> installedApk) throws DeployerException {
@@ -68,6 +77,7 @@ public class OverlayId {
         deltas = ImmutableSortedMap.of();
         installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
         this.sha = computeShaHex(getRepresentation());
+        this.baseInstall = true;
     }
 
     public Set<String> getOverlayFiles() {
@@ -76,6 +86,11 @@ public class OverlayId {
 
     public String getRepresentation() {
         StringBuilder rep = new StringBuilder();
+        rep.append("Apply Changes Overlay ID\n");
+        rep.append("Schema Version ");
+        rep.append(SCHEMA_VERSION);
+        rep.append("\n");
+
         for (Map.Entry<String, String> apk : apks.entrySet()) {
             rep.append(
                     String.format(
@@ -89,6 +104,10 @@ public class OverlayId {
                             delta.getKey(), delta.getValue()));
         }
         return rep.toString();
+    }
+
+    public boolean isBaseInstall() {
+        return baseInstall;
     }
 
     public String getSha() {

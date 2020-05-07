@@ -38,7 +38,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
-import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity;", useAndroidX)}
+import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
 import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)};

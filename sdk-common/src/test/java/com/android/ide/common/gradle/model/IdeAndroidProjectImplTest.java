@@ -24,6 +24,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -204,8 +205,7 @@ public class IdeAndroidProjectImplTest {
                         Collections.emptyList());
 
         // Verify that new variant is added.
-        Variant newVariant = new VariantStub();
-        copy.addVariants(singletonList(newVariant), myDependenciesFactory);
+        copy.addVariants(singletonList(mock(IdeVariant.class)));
         assertThat(copy.getVariants()).hasSize(2);
 
         verifyUsageOfImmutableCollections(copy);

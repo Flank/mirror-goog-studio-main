@@ -22,6 +22,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 /**
  * Properties for the android test Variant of a module
@@ -70,7 +71,7 @@ interface AndroidTestProperties : TestComponentProperties {
     /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
-    val buildConfigFields: MapProperty<String, out BuildConfigField>
+    val buildConfigFields: MapProperty<String, out BuildConfigField<out Serializable>>
 
     /**
      * Adds a ResValue element to the generated resources.
@@ -89,4 +90,15 @@ interface AndroidTestProperties : TestComponentProperties {
      * @param comment optional comment to be added to the generated resource file for the field.
      */
     fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
+
+
+    /**
+     * [MapProperty] of the variant's manifest placeholders.
+     *
+     * Placeholders are organized with a key and a value. The value is a [String] that will be
+     * used as is in the merged manifest.
+     *
+     * @return the [MapProperty] with keys as [String]
+     */
+    val manifestPlaceholders: MapProperty<String, String>
 }

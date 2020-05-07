@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_TESTED_APKS;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
@@ -38,7 +39,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.plugins.DslContainerProvider;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -51,7 +51,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -112,7 +111,7 @@ public class TestVariantFactory
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull BaseVariantData variantData,
             @NonNull TransformManager transformManager,
@@ -178,7 +177,7 @@ public class TestVariantFactory
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
@@ -197,7 +196,7 @@ public class TestVariantFactory
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,

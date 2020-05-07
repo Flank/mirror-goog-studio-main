@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -189,10 +188,19 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     params.bundleOptions.enableDensity
                 )
                 .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
-                .splitBy(
-                    Config.SplitDimension.Value.TEXTURE_COMPRESSION_FORMAT,
-                    params.bundleOptions.enableTexture
+
+            params.bundleOptions.enableTexture?.let {
+                splitsConfig.addSplitDimension(
+                    Config.SplitDimension.newBuilder()
+                        .setValue(Config.SplitDimension.Value.TEXTURE_COMPRESSION_FORMAT)
+                        .setSuffixStripping(
+                            Config.SuffixStripping.newBuilder()
+                                .setEnabled(true)
+                                .setDefaultSuffix(params.bundleOptions.textureDefaultFormat ?: "")
+                        )
+                        .setNegate(!it)
                 )
+            }
 
             val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
                 .setEnabled(params.bundleFlags.enableUncompressedNativeLibs)
@@ -304,7 +312,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val enableLanguage: Boolean?,
         @get:Input
         @get:Optional
-        val enableTexture: Boolean?
+        val enableTexture: Boolean?,
+        @get:Input
+        @get:Optional
+        val textureDefaultFormat: String?
     ) : Serializable
 
     data class BundleFlags(
@@ -332,12 +343,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             val bundleName =
                 "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.INTERMEDIARY_BUNDLE,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                PackageBundleTask::bundleFile,
-                bundleName
-            )
+                PackageBundleTask::bundleFile
+            ).withName(bundleName).on(InternalArtifactType.INTERMEDIARY_BUNDLE)
         }
 
         override fun configure(
@@ -345,7 +354,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_BUNDLE, task.baseModuleZip
             )
 
@@ -356,17 +365,17 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             if (creationConfig.needAssetPackTasks.get()) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
                 )
             }
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
                 task.bundleDeps
             )
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APP_INTEGRITY_CONFIG,
                 task.integrityConfigFile
             )
@@ -387,7 +396,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList
                 )
@@ -396,7 +405,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 // not reprocess the dex files.
             }
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.obsfuscationMappingFile
             )
@@ -404,7 +413,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.bundleNeedsFusedStandaloneConfig.set(
                 creationConfig.globalScope.project.provider {
                     creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
-                            && creationConfig.operations.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
+                            && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }
             )
         }
@@ -416,7 +425,8 @@ private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
         enableAbi = abi.enableSplit,
         enableDensity = density.enableSplit,
         enableLanguage = language.enableSplit,
-        enableTexture = texture.enableSplit
+        enableTexture = texture.enableSplit,
+        textureDefaultFormat = texture.defaultFormat
     )
 
 /**

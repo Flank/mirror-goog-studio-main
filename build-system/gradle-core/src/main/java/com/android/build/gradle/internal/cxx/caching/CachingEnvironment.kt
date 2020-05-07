@@ -22,7 +22,10 @@ import com.android.build.gradle.internal.cxx.json.writeJsonFile
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.utils.FileUtils.join
+import com.google.common.base.Charsets
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
 
 /**
  * This file exposes functions for caching where the information about where the cache is held
@@ -61,15 +64,27 @@ inline fun <TKey, reified TValue> cache(
     if (prior != null) return prior
 
     PassThroughDeduplicatingLoggingEnvironment().use { logger ->
-        val computed = action()
-        ThreadCachingEnvironment.writeInCurrentEnvironment(
-            key,
-            snakeCase(baseName),
-            computed,
-            logger.record,
-            TValue::class.java
-        )
-        return computed
+        try {
+            val computed = action()
+            ThreadCachingEnvironment.writeInCurrentEnvironment(
+                key,
+                snakeCase(baseName),
+                computed,
+                logger.record,
+                TValue::class.java
+            )
+            return computed
+        } catch(e: Exception) {
+            // When there's an exception we still need to write the log
+            ThreadCachingEnvironment.writeFailureInCurrentEnvironment(
+                key,
+                snakeCase(baseName),
+                e,
+                logger.record,
+                TValue::class.java
+            )
+            throw e
+        }
     }
 }
 
@@ -88,7 +103,7 @@ fun snakeCase(value : String) : String {
 /**
  * File names related to caching an item.
  */
-data class CacheFileNames(val key: File, val value: File, val log: File)
+data class CacheFileNames(val key: File, val value: File, val exception: File, val log: File)
 
 /**
  * Define the caching contract.
@@ -104,6 +119,14 @@ interface CachingEnvironmentDefinition : AutoCloseable {
         key: TKey,
         baseName: String,
         value: TValue,
+        log: List<LoggingMessage>,
+        valueType: Class<TValue>
+    )
+
+    fun <TKey, TValue> writeFailure(
+        key: TKey,
+        baseName: String,
+        reason: Exception,
         log: List<LoggingMessage>,
         valueType: Class<TValue>
     )
@@ -164,6 +187,14 @@ abstract class ThreadCachingEnvironment : CachingEnvironmentDefinition {
             log: List<LoggingMessage>,
             valueType: Class<TValue>
         ) = stack.get()?.cacher?.write(key, baseName, value, log, valueType)
+
+        fun <TKey, TValue> writeFailureInCurrentEnvironment(
+            key: TKey,
+            baseName: String,
+            reason: Exception,
+            log: List<LoggingMessage>,
+            valueType: Class<TValue>
+        ) = stack.get()?.cacher?.writeFailure(key, baseName, reason, log, valueType)
     }
 }
 
@@ -183,7 +214,8 @@ class CachingEnvironment(
         return CacheFileNames(
             File("${keyBase}_key.json"),
             File("${keyBase}.json"),
-            File("${keyBase}.log")
+            File("${keyBase}.log"),
+            File("${keyBase}_exception.txt")
         )
     }
 
@@ -213,9 +245,42 @@ class CachingEnvironment(
         log: List<LoggingMessage>,
         valueType: Class<TValue>
     ) {
-        val (keyFile, valueFile, logFile) = filenames(key, baseName)
+        val (keyFile, valueFile, logFile, exceptionFile) = filenames(key, baseName)
         writeJsonFile(logFile, log)
         writeJsonFile(valueFile, value)
         writeJsonFile(keyFile, key)
+        // Don't leave dangling exception file from a prior run
+        if (exceptionFile.exists()) exceptionFile.delete()
+    }
+
+    /**
+     *  Write a cache key, reason, and log to their respective files.
+     */
+    override fun <TKey, TValue> writeFailure(
+        key: TKey,
+        baseName: String,
+        reason: Exception,
+        log: List<LoggingMessage>,
+        valueType: Class<TValue>
+    ) {
+        val (keyFile, _, logFile, exceptionFile) = filenames(key, baseName)
+        writeJsonFile(logFile, log)
+        writeExceptionFile(exceptionFile, reason)
+        writeJsonFile(keyFile, key)
+    }
+
+    /**
+     * Write a value to a file as text.
+     */
+    private fun writeExceptionFile(file : File, reason : Exception) {
+        val parent = file.parentFile
+        if (!parent.exists()) parent.mkdirs()
+        val byteStream = ByteArrayOutputStream()
+        val printStream = PrintStream(byteStream)
+        reason.printStackTrace(printStream)
+        val stack = byteStream.toString("UTF8")
+        file.writeText(
+            "${reason.javaClass}: ${reason.message ?: ""} $stack",
+            Charsets.UTF_8)
     }
 }

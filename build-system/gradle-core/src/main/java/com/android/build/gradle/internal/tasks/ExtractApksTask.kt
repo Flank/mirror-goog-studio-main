@@ -167,11 +167,11 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExtractApksTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ExtractApksTask::outputDir)
                 .on(InternalArtifactType.EXTRACTED_APKS)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     ExtractApksTask::apksFromBundleIdeModel)
                 .withName(BuiltArtifactsImpl.METADATA_FILE_NAME)
@@ -183,7 +183,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkSetArchive)
 

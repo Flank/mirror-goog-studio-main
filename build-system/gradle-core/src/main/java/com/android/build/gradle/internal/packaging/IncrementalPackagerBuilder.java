@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.signing.SigningConfigData;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.files.RelativeFile;
+import com.android.builder.files.SerializableChange;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
@@ -36,6 +37,7 @@ import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -169,7 +171,7 @@ public class IncrementalPackagerBuilder {
 
     @NonNull private Map<RelativeFile, FileStatus> changedDexFiles = new HashMap<>();
     @NonNull private Map<RelativeFile, FileStatus> changedJavaResources = new HashMap<>();
-    @NonNull private Map<RelativeFile, FileStatus> changedAssets = new HashMap<>();
+    @NonNull private List<SerializableChange> changedAssets = new ArrayList<>();
     @NonNull private Map<RelativeFile, FileStatus> changedAndroidResources = new HashMap<>();
     @NonNull private Map<RelativeFile, FileStatus> changedNativeLibs = new HashMap<>();
 
@@ -524,8 +526,8 @@ public class IncrementalPackagerBuilder {
      * @return {@code this} for use with fluent-style notation
      */
     public IncrementalPackagerBuilder withChangedAssets(
-            @NonNull Map<RelativeFile, FileStatus> changedAssets) {
-        this.changedAssets = ImmutableMap.copyOf(changedAssets);
+            @NonNull Collection<SerializableChange> changedAssets) {
+        this.changedAssets = ImmutableList.copyOf(changedAssets);
         return this;
     }
 

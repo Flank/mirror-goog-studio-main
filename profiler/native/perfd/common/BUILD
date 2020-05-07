@@ -1,4 +1,4 @@
-load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "select_android")
 
 cc_library(
     name = "trace_utils",
@@ -23,7 +23,14 @@ cc_library(
     srcs = [
         "perfetto.cc",
         "perfetto_manager.cc",
-    ],
+    ] + select_android(
+        [
+            "perfetto.android.cc",
+        ],
+        [
+            "perfetto.host.cc",
+        ],
+    ),
     hdrs = [
         "fake_perfetto.h",
         "perfetto.h",

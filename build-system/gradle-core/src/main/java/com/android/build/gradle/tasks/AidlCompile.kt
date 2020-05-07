@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.DependencyFileProcessor
@@ -182,24 +183,16 @@ abstract class AidlCompile : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.aidlCompileTask = taskProvider
-            creationConfig
-                .artifacts
-                .producesDir(
-                    InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
-                    taskProvider,
-                    AidlCompile::sourceOutputDir,
-                    "out"
-                )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                AidlCompile::sourceOutputDir
+            ).withName("out").on(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
 
             if (creationConfig.variantType.isAar) {
-                creationConfig
-                    .artifacts
-                    .producesDir(
-                        InternalArtifactType.AIDL_PARCELABLE,
-                        taskProvider,
-                        AidlCompile::packagedDir,
-                        "out"
-                    )
+                creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    AidlCompile::packagedDir
+                ).withName("out").on(InternalArtifactType.AIDL_PARCELABLE)
             }
         }
 

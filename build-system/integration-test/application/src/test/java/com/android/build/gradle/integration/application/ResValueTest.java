@@ -26,7 +26,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.compiling.ResValueGenerator;
+import com.android.build.gradle.internal.generators.ResValueGenerator;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;

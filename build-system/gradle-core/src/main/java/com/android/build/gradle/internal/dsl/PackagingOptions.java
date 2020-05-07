@@ -107,7 +107,6 @@ import org.gradle.api.tasks.Input;
  *         <li><code>&#042;&#042;/_&#042;</code>
  *         <li><code>&#042;&#042;/_&#042;/&#042;&#042;</code>
  *         <li><code>&#042;&#042;/&#042;.kotlin_metadata</code> (kotlin metadata)
- *         <li><code>/META-INF/&#042;.kotlin_module</code>
  *       </ul>
  * </ul>
  *
@@ -191,9 +190,8 @@ public class PackagingOptions
         exclude("**/_*");
         exclude("**/_*/**");
 
-        // Exclude kotlin_metadata and kotlin_module files
+        // Exclude kotlin metadata files
         exclude("**/*.kotlin_metadata");
-        exclude("/META-INF/*.kotlin_module");
 
         // Merge services
         merge("/META-INF/services/**");
@@ -208,6 +206,7 @@ public class PackagingOptions
     private Set<String> merges = Sets.newHashSet();
     private Set<String> doNotStrip = Sets.newHashSet();
 
+    /** Returns the list of excluded paths. */
     @Override
     @NonNull
     @Input

@@ -2316,6 +2316,59 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    @Test
+    public void testMergingWithOverlayTags() throws Exception {
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <overlay\n"
+                        + "        android:targetPackage=\"xxx.yyy\"\n"
+                        + "        android:targetName=\"Foo\" />\n"
+                        + "\n"
+                        + "</manifest>";
+
+        String libInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "    <overlay\n"
+                        + "        android:targetPackage=\"xxx.yyy\"\n"
+                        + "        android:targetName=\"Bar\" />\n"
+                        + "\n"
+                        + "</manifest>";
+
+        MockLog mockLog = new MockLog();
+
+        File appFile = TestUtils.inputAsFile("testMergingWithOverlayTagsApp", appInput);
+        assertTrue(appFile.exists());
+
+        File libFile = TestUtils.inputAsFile("testMergingWithOverlayTagsLib", libInput);
+        assertTrue(libFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                            appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addLibraryManifest(libFile)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document mergedDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList mergedOverlays = mergedDocument.getElementsByTagName("overlay");
+            // We expect 2 overlay nodes in the merged manifest because the overlay nodes from the
+            // app and lib should both be included in the merged manifest.
+            assertThat(mergedOverlays.getLength()).isEqualTo(2);
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+            assertThat(libFile.delete()).named("libFile was deleted").isTrue();
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {

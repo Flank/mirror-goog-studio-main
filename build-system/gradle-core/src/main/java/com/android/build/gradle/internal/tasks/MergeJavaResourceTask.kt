@@ -28,12 +28,11 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -206,13 +205,10 @@ abstract class MergeJavaResourceTask
             taskProvider: TaskProvider<out MergeJavaResourceTask>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.producesFile(
-                MERGED_JAVA_RES,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                MergeJavaResourceTask::outputFile,
-                fileName = "out.jar"
-            )
+                MergeJavaResourceTask::outputFile
+            ).withName("out.jar").on(InternalArtifactType.MERGED_JAVA_RES)
         }
 
         override fun configure(
@@ -293,13 +289,13 @@ fun getProjectJavaRes(
     componentProperties: ComponentPropertiesImpl
 ): FileCollection {
     val javaRes = componentProperties.globalScope.project.files()
-    javaRes.from(componentProperties.artifacts.getFinalProduct(JAVA_RES))
+    javaRes.from(componentProperties.artifacts.get(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
     javaRes.from(
         Callable {
             if (projectHasAnnotationProcessors(componentProperties)) {
-                componentProperties.artifacts.getFinalProduct(JAVAC)
+                componentProperties.artifacts.get(JAVAC)
             } else {
                 listOf<File>()
             }
@@ -308,7 +304,7 @@ fun getProjectJavaRes(
     javaRes.from(componentProperties.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(componentProperties.variantData.allPostJavacGeneratedBytecode)
     if (componentProperties.globalScope.extension.aaptOptions.namespaced) {
-        javaRes.from(componentProperties.artifacts.getFinalProduct(RUNTIME_R_CLASS_CLASSES))
+        javaRes.from(componentProperties.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }
     return javaRes
 }

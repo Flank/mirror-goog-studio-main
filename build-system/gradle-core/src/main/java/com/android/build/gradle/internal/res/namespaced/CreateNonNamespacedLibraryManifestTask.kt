@@ -69,19 +69,18 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out CreateNonNamespacedLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                CreateNonNamespacedLibraryManifestTask::outputStrippedManifestFile,
-                SdkConstants.ANDROID_MANIFEST_XML
-            )
+                CreateNonNamespacedLibraryManifestTask::outputStrippedManifestFile
+            ).withName(SdkConstants.ANDROID_MANIFEST_XML)
+                .on(InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST)
         }
 
         override fun configure(
             task: CreateNonNamespacedLibraryManifestTask
         ) {
             super.configure(task)
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
         }
     }

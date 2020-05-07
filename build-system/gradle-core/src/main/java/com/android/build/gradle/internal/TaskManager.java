@@ -54,6 +54,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactTypes;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -93,7 +94,6 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -105,6 +105,7 @@ import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
+import com.android.build.gradle.internal.tasks.CompressAssetsTask;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DesugarTask;
@@ -167,7 +168,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
-import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CleanBuildCacheKt;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -301,7 +301,7 @@ public abstract class TaskManager<
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev03";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev09";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
             "1.3.61-dev-withExperimentalGoogleExtensions-20191127";
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
@@ -671,7 +671,8 @@ public abstract class TaskManager<
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
         for (VariantPropertiesT variant : variantPropertiesList) {
-            variant.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
+            variant.getArtifacts()
+                    .copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getGlobalArtifacts());
         }
     }
 
@@ -923,12 +924,6 @@ public abstract class TaskManager<
                 });
     }
 
-    public void createBuildArtifactReportTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(
-                new BuildArtifactReportTask.BuildArtifactReportCreationAction(componentProperties));
-    }
-
     public void createMergeApkManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
         ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
         Set<String> screenSizes = apkVariantData.getCompatibleScreens();
@@ -1099,21 +1094,24 @@ public abstract class TaskManager<
                         null,
                         taskProviderCallback);
 
-        componentProperties.getOperations().setInitialProvider(
-                mergeResourcesTask,
-                MergeResources::getOutputDir)
-                .atLocation(MoreObjects.firstNonNull(
-                        outputLocation,
-                        componentProperties
-                                .getPaths()
-                                .getDefaultMergeResourcesOutputDir())
-                        .getAbsolutePath())
+        componentProperties
+                .getArtifacts()
+                .setInitialProvider(mergeResourcesTask, MergeResources::getOutputDir)
+                .atLocation(
+                        MoreObjects.firstNonNull(
+                                        outputLocation,
+                                        componentProperties
+                                                .getPaths()
+                                                .getDefaultMergeResourcesOutputDir())
+                                .getAbsolutePath())
                 .on(mergeType.getOutputType());
 
         if (alsoOutputNotCompiledResources) {
-            componentProperties.getOperations().setInitialProvider(
-                    mergeResourcesTask,
-                    MergeResources::getMergedNotCompiledResourcesOutputDirectory)
+            componentProperties
+                    .getArtifacts()
+                    .setInitialProvider(
+                            mergeResourcesTask,
+                            MergeResources::getMergedNotCompiledResourcesOutputDirectory)
                     .atLocation(mergedNotCompiledDir.getAbsolutePath())
                     .on(MERGED_NOT_COMPILED_RES.INSTANCE);
         }
@@ -1260,9 +1258,7 @@ public abstract class TaskManager<
 
             FileCollection rFiles =
                     project.files(
-                            creationConfig
-                                    .getArtifacts()
-                                    .getFinalProduct(RUNTIME_R_CLASS_CLASSES.INSTANCE));
+                            creationConfig.getArtifacts().get(RUNTIME_R_CLASS_CLASSES.INSTANCE));
 
             creationConfig
                     .getTransformManager()
@@ -1294,7 +1290,7 @@ public abstract class TaskManager<
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
 
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        ArtifactsImpl artifacts = componentProperties.getArtifacts();
         ProjectOptions projectOptions = componentProperties.getServices().getProjectOptions();
 
         if (mergeType == MergeType.PACKAGE) {
@@ -1346,7 +1342,9 @@ public abstract class TaskManager<
                             isLibrary()));
 
             if (packageOutputType != null) {
-                artifacts.republish(PROCESSED_RES.INSTANCE, packageOutputType);
+                componentProperties
+                        .getArtifacts()
+                        .republish(PROCESSED_RES.INSTANCE, packageOutputType);
             }
 
             // TODO: also support stable IDs for the bundle (does it matter?)
@@ -1362,7 +1360,7 @@ public abstract class TaskManager<
                     .getArtifacts()
                     .appendToAllClasses(
                             project.files(
-                                    artifacts.getFinalProduct(
+                                    artifacts.get(
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                                     .INSTANCE)));
         }
@@ -1421,7 +1419,7 @@ public abstract class TaskManager<
                                                     .fileCollection(
                                                             componentProperties
                                                                     .getArtifacts()
-                                                                    .getFinalProduct(
+                                                                    .get(
                                                                             InternalArtifactType
                                                                                     .JAVA_RES
                                                                                     .INSTANCE)))
@@ -1446,7 +1444,7 @@ public abstract class TaskManager<
         // also add a new merged java res stream if needed.
         if (componentProperties.getVariantScope().getNeedsMergedJavaResStream()) {
             Provider<RegularFile> mergedJavaResProvider =
-                    componentProperties.getArtifacts().getFinalProduct(MERGED_JAVA_RES.INSTANCE);
+                    componentProperties.getArtifacts().get(MERGED_JAVA_RES.INSTANCE);
             transformManager.addStream(
                     OriginalStream.builder(project, "merged-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
@@ -1510,8 +1508,8 @@ public abstract class TaskManager<
      * <p>This should not be called for classes that will also be compiled from source by jack.
      */
     protected void addJavacClassesStream(@NonNull ComponentPropertiesImpl componentProperties) {
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        Provider<Directory> javaOutputs = artifacts.getFinalProduct(JAVAC.INSTANCE);
+        ArtifactsImpl artifacts = componentProperties.getArtifacts();
+        Provider<Directory> javaOutputs = artifacts.get(JAVAC.INSTANCE);
         Preconditions.checkNotNull(javaOutputs);
 
         // create separate streams for the output of JAVAC and for the pre/post javac
@@ -1618,7 +1616,6 @@ public abstract class TaskManager<
 
     /** Creates the tasks to build unit tests. */
     private void createUnitTestVariantTasks(@NonNull UnitTestPropertiesImpl unitTestProperties) {
-        BuildArtifactsHolder artifacts = unitTestProperties.getArtifacts();
         final MutableTaskContainer taskContainer = unitTestProperties.getTaskContainer();
 
         VariantPropertiesImpl testedVariant = unitTestProperties.getTestedVariant();
@@ -1655,8 +1652,12 @@ public abstract class TaskManager<
             } else if (testedVariant.getVariantType().isApk()) {
                 // The IDs will have been inlined for an non-namespaced application
                 // so just re-export the artifacts here.
-                artifacts.copy(PROCESSED_RES.INSTANCE, testedVariant.getArtifacts());
-                artifacts.copy(MERGED_ASSETS.INSTANCE, testedVariant.getArtifacts());
+                unitTestProperties
+                        .getArtifacts()
+                        .copy(PROCESSED_RES.INSTANCE, testedVariant.getArtifacts());
+                unitTestProperties
+                        .getArtifacts()
+                        .copy(MERGED_ASSETS.INSTANCE, testedVariant.getArtifacts());
 
                 taskFactory.register(new PackageForUnitTest.CreationAction(unitTestProperties));
             } else {
@@ -1750,7 +1751,7 @@ public abstract class TaskManager<
         Provider<RegularFile> rClassJar =
                 componentProperties
                         .getArtifacts()
-                        .getFinalProduct(
+                        .get(
                                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                         .INSTANCE);
 
@@ -1790,6 +1791,8 @@ public abstract class TaskManager<
 
         // Add a task to merge the assets folders
         createMergeAssetsTask(androidTestProperties);
+
+        taskFactory.register(new CompressAssetsTask.CreationAction(androidTestProperties));
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(androidTestProperties);
@@ -2007,7 +2010,7 @@ public abstract class TaskManager<
                             androidTestProperties,
                             androidTestProperties
                                     .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.APK.INSTANCE),
+                                    .get(InternalArtifactType.APK.INSTANCE),
                             FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             testedVariant
                                     .getVariantDependencies()
@@ -2016,16 +2019,14 @@ public abstract class TaskManager<
         } else {
             ConfigurableFileCollection testedApkFileCollection =
                     project.files(
-                            testedVariant
-                                    .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.APK.INSTANCE));
+                            testedVariant.getArtifacts().get(InternalArtifactType.APK.INSTANCE));
 
             testData =
                     new TestDataImpl(
                             androidTestProperties,
                             androidTestProperties
                                     .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.APK.INSTANCE),
+                                    .get(InternalArtifactType.APK.INSTANCE),
                             isLibrary ? null : testedApkFileCollection);
         }
 
@@ -2497,12 +2498,11 @@ public abstract class TaskManager<
                 project.files(
                         componentProperties
                                 .getArtifacts()
-                                .getFinalProduct(
-                                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE),
+                                .get(InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE),
                         project.files(
                                         componentProperties
                                                 .getArtifacts()
-                                                .getFinalProduct(
+                                                .get(
                                                         InternalArtifactType
                                                                 .JACOCO_INSTRUMENTED_JARS
                                                                 .INSTANCE))
@@ -2599,7 +2599,7 @@ public abstract class TaskManager<
         VariantScope variantScope = creationConfig.getVariantScope();
         InternalArtifactType<Directory> manifestType = creationConfig.getManifestArtifactType();
 
-        Provider<Directory> manifests = creationConfig.getArtifacts().getFinalProduct(manifestType);
+        Provider<Directory> manifests = creationConfig.getArtifacts().get(manifestType);
 
         // Common code for both packaging tasks.
         Action<Task> configureResourcesAndAssetsDependencies =
@@ -2847,7 +2847,7 @@ public abstract class TaskManager<
                     task.dependsOn(
                             componentProperties
                                     .getArtifacts()
-                                    .getFinalProduct(InternalArtifactType.BUNDLE.INSTANCE));
+                                    .get(InternalArtifactType.BUNDLE.INSTANCE));
                 },
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
     }
@@ -2953,9 +2953,7 @@ public abstract class TaskManager<
                         + "VariantType: "
                         + creationConfig.getVariantType());
         Provider<Directory> artifact =
-                creationConfig
-                        .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.FEATURE_DEX.INSTANCE);
+                creationConfig.getArtifacts().get(InternalArtifactType.FEATURE_DEX.INSTANCE);
 
         DirectoryProperty artifactDirectory =
                 creationConfig.getGlobalScope().getProject().getObjects().directoryProperty();

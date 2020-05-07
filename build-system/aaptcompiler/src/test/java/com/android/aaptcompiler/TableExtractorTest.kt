@@ -29,7 +29,7 @@ class TableExtractorTest {
     """.trimIndent()
 
     val extractor =
-      TableExtractor(table, Source("test.xml"), config, TableExtractorOptions())
+      TableExtractor(table, Source("test.xml"), config, TableExtractorOptions(), null)
 
     return extractor.extract(parseInput.byteInputStream())
   }
@@ -45,7 +45,7 @@ class TableExtractorTest {
     val input = "$XML_PREAMBLE\n"
 
     val extractor =
-      TableExtractor(table, Source("test.xml"), ConfigDescription(), TableExtractorOptions())
+      TableExtractor(table, Source("test.xml"), ConfigDescription(), TableExtractorOptions(), null)
 
     Truth.assertThat(extractor.extract(input.byteInputStream())).isTrue()
   }
@@ -54,7 +54,7 @@ class TableExtractorTest {
   fun failToParseWithNoRoot() {
     val input = """$XML_PREAMBLE<attr name="foo"/>"""
     val extractor =
-      TableExtractor(table, Source("test.xml"), ConfigDescription(), TableExtractorOptions())
+      TableExtractor(table, Source("test.xml"), ConfigDescription(), TableExtractorOptions(), null)
 
     Truth.assertThat(extractor.extract(input.byteInputStream())).isFalse()
   }

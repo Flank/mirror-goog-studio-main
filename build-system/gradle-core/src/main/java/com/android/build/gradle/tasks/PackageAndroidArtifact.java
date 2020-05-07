@@ -20,7 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPRESSED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.SHRUNK_JAVA_RES;
 
@@ -29,6 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactTransformationRequest;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
@@ -43,7 +44,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -665,7 +665,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             @NonNull BuiltArtifactsImpl manifestOutputs,
             @NonNull Map<RelativeFile, FileStatus> changedDex,
             @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
-            @NonNull Map<RelativeFile, FileStatus> changedAssets,
+            @NonNull Collection<SerializableChange> changedAssets,
             @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull Map<RelativeFile, FileStatus> changedNLibs,
             @NonNull SplitterParams params)
@@ -857,10 +857,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 Map<RelativeFile, FileStatus> changedJavaResources =
                         getChangedJavaResources(params, cacheKeyMap, cache, cacheUpdates);
 
-                Map<RelativeFile, FileStatus> changedAssets =
-                        IncrementalChanges.classpathToRelativeFileSet(
-                                params.getAssetsFiles().get(), cache, cacheUpdates);
-
                 final Map<RelativeFile, FileStatus> changedAndroidResources;
                 if (params.getAndroidResourcesChanged().get()) {
                     changedAndroidResources =
@@ -887,7 +883,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         manifestOutputs,
                         changedDexFiles,
                         changedJavaResources,
-                        changedAssets,
+                        params.getAssetsFiles().get().getChanges(),
                         changedAndroidResources,
                         changedJniLibs,
                         params);
@@ -1024,7 +1020,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getAssets()
-                    .set(creationConfig.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
+                    .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
@@ -1083,7 +1079,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
                 creationConfig
-                        .getOperations()
+                        .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());
@@ -1105,27 +1101,26 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
+            ArtifactsImpl artifacts = creationConfig.getArtifacts();
             if (creationConfig.getVariantScope().consumesFeatureJars()) {
                 return creationConfig
                         .getGlobalScope()
                         .getProject()
-                        .files(artifacts.getFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE))
+                        .files(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
-                return project.files(
-                                artifacts.getOperations().getAll(MultipleArtifactType.DEX.INSTANCE))
+                return project.files(artifacts.getAll(MultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             }
         }
 
         @NonNull
         private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
+            ArtifactsImpl artifacts = creationConfig.getArtifacts();
 
             if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
                 Provider<RegularFile> mergedJavaResProvider =
-                        artifacts.getFinalProduct(SHRUNK_JAVA_RES.INSTANCE);
+                        artifacts.get(SHRUNK_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             } else if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
                 return creationConfig
@@ -1133,7 +1128,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
             } else {
                 Provider<RegularFile> mergedJavaResProvider =
-                        artifacts.getFinalProduct(MERGED_JAVA_RES.INSTANCE);
+                        artifacts.get(MERGED_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             }
         }
@@ -1173,10 +1168,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (creationConfig.getVariantType().isDynamicFeature()) {
                 return creationConfig.getGlobalScope().getProject().files();
             }
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
                 return project.files(
-                        artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
+                        creationConfig
+                                .getArtifacts()
+                                .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
                 return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);
             }

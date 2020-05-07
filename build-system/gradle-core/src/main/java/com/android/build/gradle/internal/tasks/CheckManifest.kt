@@ -73,12 +73,10 @@ abstract class CheckManifest : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.checkManifestTask = taskProvider
 
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.CHECK_MANIFEST_RESULT,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                CheckManifest::fakeOutputDir,
-                "out"
-            )
+                CheckManifest::fakeOutputDir
+            ).withName("out").on(InternalArtifactType.CHECK_MANIFEST_RESULT)
         }
 
         override fun configure(

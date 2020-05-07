@@ -332,6 +332,7 @@ open class BasicModuleModelMock {
 
         doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
+        doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
 
         val ndkInfo = NdkR19Info(ndkFolder)
         doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo

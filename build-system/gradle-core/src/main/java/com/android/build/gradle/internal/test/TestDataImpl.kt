@@ -69,7 +69,7 @@ class TestDataImpl(
             .load(
                 testedConfig
                     .artifacts
-                    .getFinalProduct(
+                    .get(
                         InternalArtifactType.APK
                     )
                     .get()

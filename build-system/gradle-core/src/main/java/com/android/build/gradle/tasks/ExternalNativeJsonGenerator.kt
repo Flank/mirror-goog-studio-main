@@ -314,7 +314,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     if (abi.shouldGeneratePrefabPackages()) {
                         checkPrefabConfig()
                         generatePrefabPackages(
-                            nativeBuildSystem,
                             variant.module,
                             abi,
                             variant.prefabPackageDirectoryList,

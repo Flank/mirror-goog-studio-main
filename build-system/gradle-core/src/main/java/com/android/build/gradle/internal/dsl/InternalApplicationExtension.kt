@@ -27,26 +27,11 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 /** See [InternalCommonExtension] */
 interface InternalApplicationExtension :
     ApplicationExtension<
-        AaptOptions,
-        AbiSplitOptions,
-        AdbOptions,
         AndroidSourceSet,
         BuildType,
-        CmakeOptions,
-        CompileOptions,
-        DataBindingOptions,
         DefaultConfig,
-        DensitySplitOptions,
-        ExternalNativeBuild,
-        JacocoOptions,
-        LintOptions,
-        NdkBuildOptions,
-        PackagingOptions,
         ProductFlavor,
-        SigningConfig,
-        Splits,
-        TestOptions,
-        TestOptions.UnitTestOptions>,
+        SigningConfig>,
         InternalCommonExtension<
                 ApplicationBuildFeatures,
                 BuildType,

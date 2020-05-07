@@ -140,6 +140,9 @@ abstract class DexMergingTask : NonIncrementalTask() {
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
 
+    @get:Internal
+    abstract val dxStateBuildService: Property<DxStateBuildService>
+
     override fun doTaskAction() {
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -156,6 +159,9 @@ abstract class DexMergingTask : NonIncrementalTask() {
                     outputDir.get().asFile
                 )
             )
+        }
+        if (dexMerger == DexMergerTool.DX) {
+            dxStateBuildService.get().clearStateAfterBuild()
         }
     }
 
@@ -184,7 +190,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DexMergingTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.getOperations().append(
+            creationConfig.artifacts.append(
                 taskProvider, DexMergingTask::outputDir).on(outputType)
         }
 
@@ -198,7 +204,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
 
             task.dexingType = dexingType
             if (DexMergingAction.MERGE_ALL == action && dexingType === DexingType.LEGACY_MULTIDEX) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
                     task.mainDexListFile)
             }
@@ -210,19 +216,20 @@ abstract class DexMergingTask : NonIncrementalTask() {
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
             if (creationConfig.services.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                     task.duplicateClassesCheck
                 )
             }
             if (separateFileDependenciesDexingTask) {
-                creationConfig.operations.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
                     task.fileDependencyDexFiles
                 )
             } else {
                 task.fileDependencyDexFiles.set(null as Directory?)
             }
+            task.dxStateBuildService.set(DxStateBuildService.RegistrationAction(task.project).execute())
         }
 
         private fun getDexFiles(
@@ -249,8 +256,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
                         } else {
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProduct(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE),
-                                component.artifacts.getFinalProduct(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
+                                component.artifacts.get(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE),
+                                component.artifacts.get(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
                             )
                         }
                     }
@@ -264,14 +271,14 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
                         } else {
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProduct(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE));
+                                component.artifacts.get(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE));
                         }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
                         val files =
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProduct(InternalArtifactType.PROJECT_DEX_ARCHIVE),
-                                component.artifacts.getFinalProduct(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
+                                component.artifacts.get(InternalArtifactType.PROJECT_DEX_ARCHIVE),
+                                component.artifacts.get(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
 
                         val variantType = component.variantType
@@ -282,7 +289,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                     // be dex'ed in a task, so we need to fetch the output directly.
                                     // Otherwise, it will be in the dex'ed in the dex builder transform.
                                     files.from(
-                                        it.artifacts.getOperations().getAll(
+                                        it.artifacts.getAll(
                                             MultipleArtifactType.DEX
                                         )
                                     )
@@ -304,7 +311,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
                             } else {
                                 // we merge external dex in a separate task
-                                component.artifacts.getOperations().getAll(
+                                component.artifacts.getAll(
                                     MultipleArtifactType.EXTERNAL_LIBS_DEX
                                 )
                             })

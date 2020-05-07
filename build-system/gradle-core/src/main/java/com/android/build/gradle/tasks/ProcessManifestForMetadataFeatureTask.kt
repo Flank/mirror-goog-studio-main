@@ -116,7 +116,7 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
 
         override fun handleProvider(taskProvider: TaskProvider<out ProcessManifestForMetadataFeatureTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                     ProcessManifestForMetadataFeatureTask::metadataFeatureManifest
             )
@@ -127,7 +127,7 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
         override fun configure(task: ProcessManifestForMetadataFeatureTask) {
             super.configure(task)
             task.workersProperty.disallowChanges()
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.bundleManifest
             )

@@ -26,9 +26,9 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
-import com.android.ddmlib.utils.DebuggerPorts;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -55,9 +55,7 @@ class DeviceClientMonitorTask implements Runnable {
     @NonNull private final Selector mSelector;
     private final ConcurrentHashMap<SocketChannel, DeviceImpl> mChannelsToRegister =
             new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<ClientImpl, Integer> mClientsToReopen = new ConcurrentHashMap<>();
-    private final DebuggerPorts mDebuggerPorts =
-            new DebuggerPorts(DdmPreferences.getDebugPortBase());
+    private final Set<ClientImpl> mClientsToReopen = new HashSet<>();
 
     DeviceClientMonitorTask() throws IOException {
         mSelector = Selector.open();
@@ -70,7 +68,18 @@ class DeviceClientMonitorTask implements Runnable {
      * @return true if success.
      */
     boolean register(@NonNull DeviceImpl device) {
-        SocketChannel socketChannel = AdbSocketUtils.openAdbConnection();
+        SocketChannel socketChannel;
+        try {
+            socketChannel = AdbSocketUtils.openAdbConnection();
+        } catch (IOException exception) {
+            Log.e(
+                    "DeviceClientMonitorTask",
+                    "Unable to open connection to: "
+                            + AndroidDebugBridge.getSocketAddress()
+                            + ", due to: "
+                            + exception);
+            return false;
+        }
         if (socketChannel != null) {
             try {
                 boolean result = sendDeviceMonitoringRequest(socketChannel, device);
@@ -126,46 +135,35 @@ class DeviceClientMonitorTask implements Runnable {
         return false;
     }
 
-    void registerClientToDropAndReopen(ClientImpl client, int port) {
-        Log.d(
-                "DeviceClientMonitorTask",
-                "Adding " + client + " to list of client to reopen (" + port + ").");
-        mClientsToReopen.putIfAbsent(client, port);
+    void registerClientToDropAndReopen(ClientImpl client) {
+        synchronized (mClientsToReopen) {
+            Log.d(
+              "DeviceClientMonitorTask",
+              "Adding " + client + " to list of client to reopen (" + client.getDebuggerListenPort() + ").");
+            mClientsToReopen.add(client);
+        }
         mSelector.wakeup();
     }
 
-    void free(@NonNull ClientImpl client) {
-        mDebuggerPorts.free(client.getDebuggerListenPort());
-    }
+    void free(@NonNull ClientImpl client) { }
 
     private void processDropAndReopenClients() {
         synchronized (mClientsToReopen) {
-            if (!mClientsToReopen.isEmpty()) {
-                Set<ClientImpl> clients = mClientsToReopen.keySet();
-                MonitorThread monitorThread = MonitorThread.getInstance();
+            MonitorThread monitorThread = MonitorThread.getInstance();
+            for (ClientImpl client : mClientsToReopen) {
+                DeviceImpl device = (DeviceImpl) client.getDevice();
+                int pid = client.getClientData().getPid();
 
-                for (ClientImpl client : clients) {
-                    DeviceImpl device = (DeviceImpl) client.getDevice();
-                    int pid = client.getClientData().getPid();
+                monitorThread.dropClient(client, false /* notify */);
 
-                    monitorThread.dropClient(client, false /* notify */);
-
-                    // This is kinda bad, but if we don't wait a bit, the client
-                    // will never answer the second handshake!
-                    Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-
-                    int port = mClientsToReopen.get(client);
-
-                    if (port == DebugPortManager.IDebugPortProvider.NO_STATIC_PORT) {
-                        port = getNextDebuggerPort();
-                    }
-                    Log.d("DeviceClientMonitorTask", "Reopening " + client);
-                    openClient(device, pid, port, monitorThread);
-                    device.update(IDevice.CHANGE_CLIENT_LIST);
-                }
-
-                mClientsToReopen.clear();
+                // This is kinda bad, but if we don't wait a bit, the client
+                // will never answer the second handshake!
+                Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+                Log.d("DeviceClientMonitorTask", "Reopening " + client);
+                openClient(device, pid, monitorThread);
+                device.update(IDevice.CHANGE_CLIENT_LIST);
             }
+            mClientsToReopen.clear();
         }
     }
 
@@ -320,7 +318,7 @@ class DeviceClientMonitorTask implements Runnable {
 
             // at this point whatever pid is left in the list needs to be converted into Clients.
             for (int newPid : pidsToAdd) {
-                openClient(device, newPid, getNextDebuggerPort(), monitorThread);
+                openClient(device, newPid, monitorThread);
             }
 
             if (!pidsToAdd.isEmpty() || !clientsToRemove.isEmpty()) {
@@ -329,19 +327,15 @@ class DeviceClientMonitorTask implements Runnable {
         }
     }
 
-    private int getNextDebuggerPort() {
-        return mDebuggerPorts.next();
-    }
-
     /** Opens and creates a new client. */
     private static void openClient(
-            @NonNull DeviceImpl device, int pid, int port, @NonNull MonitorThread monitorThread) {
+            @NonNull DeviceImpl device, int pid, @NonNull MonitorThread monitorThread) {
 
         SocketChannel clientSocket;
         try {
-            clientSocket =
-                    AdbHelper.createPassThroughConnection(
-                            AndroidDebugBridge.getSocketAddress(), device.getSerialNumber(), pid);
+          clientSocket =
+            AdbHelper.createPassThroughConnection(
+              new InetSocketAddress("localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT), device.getSerialNumber(), pid);
 
             // required for Selector
             clientSocket.configureBlocking(false);
@@ -363,7 +357,7 @@ class DeviceClientMonitorTask implements Runnable {
             return;
         }
 
-        createClient(device, pid, clientSocket, port, monitorThread);
+        createClient(device, pid, clientSocket, monitorThread);
     }
 
     /** Creates a client and register it to the monitor thread */
@@ -371,7 +365,6 @@ class DeviceClientMonitorTask implements Runnable {
             @NonNull DeviceImpl device,
             int pid,
             @NonNull SocketChannel socket,
-            int debuggerPort,
             @NonNull MonitorThread monitorThread) {
 
         /*
@@ -384,18 +377,18 @@ class DeviceClientMonitorTask implements Runnable {
         if (client.sendHandshake()) {
             try {
                 if (AndroidDebugBridge.getClientSupport()) {
-                    client.listenForDebugger(debuggerPort);
+                    client.listenForDebugger();
                     String msg =
                             String.format(
                                     Locale.US,
                                     "Opening a debugger listener at port %1$d for client with pid %2$d",
-                                    debuggerPort,
+                                    client.getDebuggerListenPort(),
                                     pid);
                     Log.d("ddms", msg);
                 }
             } catch (IOException ioe) {
                 client.getClientData().setDebuggerConnectionStatus(ClientData.DebuggerStatus.ERROR);
-                Log.e("ddms", "Can't bind to local " + debuggerPort + " for debugger");
+                Log.e("ddms", "Can't bind to local " + client.getDebuggerListenPort() + " for debugger");
                 // oh well
             }
 

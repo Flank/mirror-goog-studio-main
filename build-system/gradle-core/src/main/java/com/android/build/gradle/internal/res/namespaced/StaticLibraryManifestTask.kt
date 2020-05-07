@@ -64,12 +64,10 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out StaticLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.STATIC_LIBRARY_MANIFEST,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                StaticLibraryManifestTask::manifestFile,
-                SdkConstants.ANDROID_MANIFEST_XML
-            )
+                StaticLibraryManifestTask::manifestFile
+            ).withName(SdkConstants.ANDROID_MANIFEST_XML).on(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
         }
 
         override fun configure(

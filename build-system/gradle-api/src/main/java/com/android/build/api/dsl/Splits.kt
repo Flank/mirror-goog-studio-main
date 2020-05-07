@@ -51,9 +51,7 @@ import org.gradle.api.Incubating
  * to `true`.
  */
 @Incubating
-interface Splits<
-        AbiSplitT : AbiSplit,
-        DensitySplitT : DensitySplit> {
+interface Splits{
 
     /**
      * Encapsulates settings for
@@ -67,7 +65,7 @@ interface Splits<
      *
      * For more information about the properties you can configure in this block, see [AbiSplit].
      */
-    fun abi(action: AbiSplitT.() -> Unit)
+    fun abi(action: AbiSplit.() -> Unit)
 
     /**
      * Encapsulates settings for
@@ -82,7 +80,7 @@ interface Splits<
      * For more information about the properties you can configure in this block, see
      * [DensitySplit].
      */
-    fun density(action: DensitySplitT.() -> Unit)
+    fun density(action: DensitySplit.() -> Unit)
 
     /**
      * Returns the list of ABIs that the plugin will generate separate APKs for.

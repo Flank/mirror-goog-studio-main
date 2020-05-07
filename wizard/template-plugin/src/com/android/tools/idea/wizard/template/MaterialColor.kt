@@ -28,8 +28,8 @@ enum class MaterialColor(val colorName: String, val color: String) {
   PURPLE_200("purple_200", "#BB86FC"),
   PURPLE_500("purple_500", "#6200EE"),
   PURPLE_700("purple_700", "#3700B3"),
-  TEEL_200("teel_200", "#03DAC6"),
-  TEEL_700("teel_700", "#018786"),
+  TEAL_200("teal_200", "#03DAC5"),
+  TEAL_700("teal_700", "#018786"),
   BLACK("black", "#000000"),
   WHITE("white", "#FFFFFF");
 

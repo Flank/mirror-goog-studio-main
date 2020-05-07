@@ -92,11 +92,10 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 DataBindingMergeDependencyArtifactsTask::outFolder
-            )
+            ).on(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
         }
 
         override fun configure(

@@ -27,7 +27,6 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.ViewBindingOptions;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
 import java.io.Serializable;
@@ -281,13 +280,11 @@ public interface IdeAndroidProject extends Serializable {
     void forEachVariant(@NonNull Consumer<IdeVariant> action);
 
     /**
-     * Add variant models obtained from Variant-Only Sync.
+     * Add variant models obtained from previous Gradle Sync.
      *
-     * @param variants List of Variant models obtained by Variant-Only Sync.
-     * @param factory IdeDependenciesFactory that handles GlobalLibraryMap for DependencyGraph.
+     * @param variants List of IdeVariant models obtained from previous Sync.
      */
-    void addVariants(
-            @NonNull Collection<Variant> variants, @NonNull IdeDependenciesFactory factory);
+    void addVariants(@NonNull Collection<IdeVariant> variants);
 
     /**
      * Add sync issues from Variant-Only Sync.

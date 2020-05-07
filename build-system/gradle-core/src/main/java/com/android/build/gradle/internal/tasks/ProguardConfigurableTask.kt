@@ -195,13 +195,13 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.operations
+            creationConfig.artifacts
                 .setInitialProvider(taskProvider,
                 ProguardConfigurableTask::mappingFile)
                 .withName(FileNames.OBFUSCATION_MAPPING_FILE.fileName)
                 .on(APK_MAPPING)
 
-            creationConfig.operations.republish(APK_MAPPING, ArtifactTypes.OBFUSCATION_MAPPING_FILE)
+            creationConfig.artifacts.republish(APK_MAPPING, ArtifactTypes.OBFUSCATION_MAPPING_FILE)
         }
 
         override fun configure(
@@ -213,7 +213,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts
-                        .getFinalProduct(APK_MAPPING)
+                        .get(APK_MAPPING)
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
@@ -315,10 +315,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             val aaptProguardFile =
                 if (task.includeFeaturesInScopes.get()) {
-                    creationConfig.artifacts.getOperations().get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
                 } else {
-                    creationConfig.artifacts.getOperations().get(
+                    creationConfig.artifacts.get(
                         InternalArtifactType.AAPT_PROGUARD_FILE
                     )
                 }
@@ -326,7 +326,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             val configurationFiles = task.project.files(
                 proguardConfigFiles,
                 aaptProguardFile,
-                creationConfig.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
+                creationConfig.artifacts.get(GENERATED_PROGUARD_FILE),
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,

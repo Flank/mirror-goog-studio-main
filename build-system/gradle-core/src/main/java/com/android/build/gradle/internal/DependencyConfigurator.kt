@@ -310,7 +310,7 @@ class DependencyConfigurator(
                             )
                         )
                     params.aapt2DaemonBuildService
-                        .setDisallowChanges(getBuildService(project))
+                        .setDisallowChanges(getBuildService(project.gradle.sharedServices))
                 }
             }
         }

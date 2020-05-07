@@ -27,6 +27,7 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -48,16 +49,16 @@ import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
+import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService;
 import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
@@ -134,6 +135,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.services.BuildServiceRegistry;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -168,11 +170,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         this.variantModel = variantModel;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
-    }
-
-    public static void clearCaches() {
-        LibraryUtils.clearCaches();
-        MavenCoordinatesUtils.clearMavenCaches();
     }
 
     @Override
@@ -228,7 +225,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull
     private Object buildNonParameterizedModels(@NonNull String modelName) {
         if (modelName.equals(GlobalLibraryMap.class.getName())) {
-            return buildGlobalLibraryMap();
+            return buildGlobalLibraryMap(globalScope.getProject().getGradle().getSharedServices());
         } else if (modelName.equals(ProjectSyncIssues.class.getName())) {
             return buildProjectSyncIssuesModel();
         }
@@ -242,8 +239,13 @@ public class ModelBuilder<Extension extends BaseExtension>
         return ModelBuilderParameter.class;
     }
 
-    private static Object buildGlobalLibraryMap() {
-        return new GlobalLibraryMapImpl(LibraryUtils.getGlobalLibMap());
+    private static Object buildGlobalLibraryMap(
+            @NonNull BuildServiceRegistry buildServiceRegistry) {
+        LibraryDependencyCacheBuildService libraryDependencyCacheBuildService =
+                BuildServicesKt.getBuildService(
+                                buildServiceRegistry, LibraryDependencyCacheBuildService.class)
+                        .get();
+        return new GlobalLibraryMapImpl(libraryDependencyCacheBuildService.getGlobalLibMap());
     }
 
     private Object buildProjectSyncIssuesModel() {
@@ -415,7 +417,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 toAbsolutePath(
                         componentProperties
                                 .getArtifacts()
-                                .getOperations()
                                 .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
                                 .getOrNull()),
                 componentProperties.getTaskContainer().getBundleTask() == null
@@ -424,14 +425,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                 toAbsolutePath(
                         componentProperties
                                 .getArtifacts()
-                                .getOperations()
                                 .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
                                 .getOrNull()),
                 ExtractApksTask.Companion.getTaskName(componentProperties),
                 toAbsolutePath(
                         componentProperties
                                 .getArtifacts()
-                                .getOperations()
                                 .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
                                 .getOrNull()));
     }
@@ -623,15 +622,21 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
                 extraModelInfo.getExtraAndroidArtifacts(variantName));
+        LibraryDependencyCacheBuildService libraryDependencyCache =
+                BuildServicesKt.getBuildService(
+                                componentProperties.getServices().getBuildServiceRegistry(),
+                                LibraryDependencyCacheBuildService.class)
+                        .get();
         // Make sure all extra artifacts are serializable.
         List<JavaArtifact> clonedExtraJavaArtifacts =
-                extraModelInfo
-                        .getExtraJavaArtifacts(variantName)
-                        .stream()
+                extraModelInfo.getExtraJavaArtifacts(variantName).stream()
                         .map(
                                 javaArtifact ->
                                         JavaArtifactImpl.clone(
-                                                javaArtifact, modelLevel, modelWithFullDependency))
+                                                javaArtifact,
+                                                modelLevel,
+                                                modelWithFullDependency,
+                                                libraryDependencyCache))
                         .collect(Collectors.toList());
 
         if (componentProperties instanceof VariantPropertiesImpl) {
@@ -741,7 +746,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private JavaArtifactImpl createUnitTestsJavaArtifact(
             @NonNull VariantType variantType,
             @NonNull ComponentPropertiesImpl componentProperties) {
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        ArtifactsImpl artifacts = componentProperties.getArtifacts();
 
         SourceProviders sourceProviders = determineSourceProviders(componentProperties);
 
@@ -759,8 +764,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 .getUnitTests().isIncludeAndroidResources()) {
             additionalTestClasses.add(
                     artifacts
-                            .getFinalProduct(
-                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)
+                            .get(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)
                             .get()
                             .getAsFile());
         }
@@ -780,7 +784,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 componentProperties.getTaskContainer().getCompileTask().getName(),
                 Sets.newHashSet(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
                 getGeneratedSourceFoldersForUnitTests(componentProperties),
-                artifacts.getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
+                artifacts.get(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,
                 componentProperties.getVariantData().getJavaResourcesForUnitTesting(),
                 mockableJar,
@@ -900,16 +904,13 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        ArtifactsImpl artifacts = componentProperties.getArtifacts();
 
         return new AndroidArtifactImpl(
                 name,
                 globalScope.getProjectBaseName() + "-" + componentProperties.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
-                artifacts
-                        .getOperations()
-                        .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
-                        .getOrNull(),
+                artifacts.get(InternalArtifactType.APK_IDE_MODEL.INSTANCE).getOrNull(),
                 variantDslInfo.isSigningReady()
                         || componentProperties.getVariantData().outputsAreSigned,
                 signingConfigName,
@@ -918,7 +919,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getCompileTask().getName(),
                 getGeneratedSourceFolders(componentProperties),
                 getGeneratedResourceFolders(componentProperties),
-                artifacts.getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
+                artifacts.get(JAVAC.INSTANCE).get().getAsFile(),
                 additionalClasses,
                 componentProperties.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
@@ -935,15 +936,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getBundleTask() == null
                         ? componentProperties.computeTaskName("bundle")
                         : taskContainer.getBundleTask().getName(),
-                artifacts
-                        .getOperations()
-                        .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
-                        .getOrNull(),
+                artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
                 ExtractApksTask.Companion.getTaskName(componentProperties),
-                artifacts
-                        .getOperations()
-                        .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
-                        .getOrNull(),
+                artifacts.get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
                 variantScope.getCodeShrinker());
     }
 
@@ -1008,7 +1003,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         folders.add(
                 componentProperties
                         .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE)
+                        .get(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE)
                         .get()
                         .getAsFile());
         return folders;
@@ -1020,12 +1015,12 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (componentProperties == null) {
             return Collections.emptyList();
         }
-        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        ArtifactsImpl operations = componentProperties.getArtifacts();
 
         boolean isDataBindingEnabled = componentProperties.getBuildFeatures().getDataBinding();
         boolean isViewBindingEnabled = componentProperties.getBuildFeatures().getViewBinding();
         Directory dataBindingSources =
-                artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
+                operations.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
         boolean addBindingSources =
                 (isDataBindingEnabled || isViewBindingEnabled) && (dataBindingSources != null);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(componentProperties);
@@ -1040,9 +1035,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         folders.addAll(extraFolders);
 
         Directory aidlSources =
-                artifacts
-                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE)
-                        .getOrNull();
+                operations.get(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
+
         if (aidlSources != null) {
             folders.add(aidlSources.getAsFile());
         }
@@ -1052,9 +1046,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         boolean ndkMode = componentProperties.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =
-                    artifacts
-                            .getFinalProduct(
-                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
+                    operations
+                            .get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
                             .getOrNull();
             if (renderscriptSources != null) {
                 folders.add(renderscriptSources.getAsFile());

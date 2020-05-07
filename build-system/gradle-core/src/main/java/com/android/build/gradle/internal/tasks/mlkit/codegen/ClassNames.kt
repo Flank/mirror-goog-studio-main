@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen
 
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
+import com.squareup.javapoet.TypeName
 
 /** Stores class names used by code generator. */
 object ClassNames {
@@ -140,4 +141,13 @@ object ClassNames {
         "org.tensorflow.lite.support.tensorbuffer",
         "TensorBuffer"
     )
+
+    @JvmField
+    val MODEL_OPTIONS: ClassName = MODEL.nestedClass("Options")
+
+    @JvmField
+    val CATEGORY: ClassName = ClassName.get("org.tensorflow.lite.support.label", "Category")
+
+    @JvmField
+    val CATEGORY_LIST: TypeName = ParameterizedTypeName.get(LIST, CATEGORY)
 }

@@ -21,6 +21,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.services.BuildServiceRegistration
+import org.gradle.api.services.BuildServiceRegistry
 import java.util.UUID
 
 /** Registers and configures the build service with the specified type. */
@@ -42,19 +43,18 @@ abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
 
 /** Returns the build service with the specified type. Prefer reified [getBuildService] to this method. */
 fun <ServiceT : BuildService<out BuildServiceParameters>> getBuildService(
-    project: Project,
+    buildServiceRegistry: BuildServiceRegistry,
     buildServiceClass: Class<ServiceT>
 ): Provider<ServiceT> {
     @Suppress("UNCHECKED_CAST")
-    return (project.gradle.sharedServices.registrations.getByName(getBuildServiceName(buildServiceClass)) as BuildServiceRegistration<ServiceT, *>).getService()
+    return (buildServiceRegistry.registrations.getByName(getBuildServiceName(buildServiceClass)) as BuildServiceRegistration<ServiceT, *>).getService()
 }
 
 /** Returns the build service of [ServiceT] type. */
-inline fun <reified ServiceT : BuildService<out BuildServiceParameters>> getBuildService(project: Project): Provider<ServiceT> {
+inline fun <reified ServiceT : BuildService<out BuildServiceParameters>> getBuildService(buildServiceRegistry: BuildServiceRegistry): Provider<ServiceT> {
     @Suppress("UNCHECKED_CAST")
-    return (project.gradle.sharedServices.registrations.getByName(getBuildServiceName(ServiceT::class.java)) as BuildServiceRegistration<ServiceT, *>).getService()
+    return (buildServiceRegistry.registrations.getByName(getBuildServiceName(ServiceT::class.java)) as BuildServiceRegistration<ServiceT, *>).getService()
 }
-
 
 /**
  * Get build service name that works even if build service types come from different class loaders.

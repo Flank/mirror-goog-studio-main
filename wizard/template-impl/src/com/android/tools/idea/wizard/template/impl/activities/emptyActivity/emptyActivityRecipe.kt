@@ -24,9 +24,6 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateMan
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleLayout
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityKt
-import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityWithCppSupportJava
-import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.emptyActivityWithCppSupportKt
-import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src.nativeLibCpp
 
 fun RecipeExecutor.generateEmptyActivity(
   moduleData: ModuleTemplateData,
@@ -34,8 +31,7 @@ fun RecipeExecutor.generateEmptyActivity(
   generateLayout: Boolean,
   layoutName: String,
   isLauncher: Boolean,
-  packageName: PackageName,
-  includeCppSupport: Boolean = false
+  packageName: PackageName
 ) {
   val (projectData, srcOut) = moduleData
   val useAndroidX = projectData.androidXSupport
@@ -50,26 +46,16 @@ fun RecipeExecutor.generateEmptyActivity(
 
   addAllKotlinDependencies(moduleData)
 
-  if (generateLayout || includeCppSupport) {
-    generateSimpleLayout(moduleData, activityClass, layoutName, includeCppSupport = includeCppSupport)
+  if (generateLayout) {
+    generateSimpleLayout(moduleData, activityClass, layoutName)
+  }
+
+  val simpleActivity = when (projectData.language) {
+    Language.Kotlin -> emptyActivityKt(packageName, activityClass, layoutName, generateLayout, useAndroidX)
+    Language.Java -> emptyActivityJava(packageName, activityClass, layoutName, generateLayout, useAndroidX)
   }
 
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
-  if (includeCppSupport) {
-    val nativeSrcOut = moduleData.rootDir.resolve("src/main/cpp")
-    val simpleActivity = when (projectData.language) {
-      Language.Kotlin -> emptyActivityWithCppSupportKt(packageName, activityClass, layoutName, useAndroidX)
-      Language.Java -> emptyActivityWithCppSupportJava(packageName, activityClass, layoutName, useAndroidX)
-    }
-    save(simpleActivity, simpleActivityPath)
-    save(nativeLibCpp(packageName, activityClass), nativeSrcOut.resolve("native-lib.cpp"))
-  } else {
-    val simpleActivity = when (projectData.language) {
-      Language.Kotlin -> emptyActivityKt(packageName, activityClass, layoutName, generateLayout, useAndroidX)
-      Language.Java -> emptyActivityJava(packageName, activityClass, layoutName, generateLayout, useAndroidX)
-    }
-    save(simpleActivity, simpleActivityPath)
-  }
-
+  save(simpleActivity, simpleActivityPath)
   open(simpleActivityPath)
 }

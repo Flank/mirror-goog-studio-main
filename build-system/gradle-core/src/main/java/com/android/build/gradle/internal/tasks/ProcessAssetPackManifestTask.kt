@@ -82,11 +82,10 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAssetPackManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.ASSET_PACK_MANIFESTS,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessAssetPackManifestTask::processedManifests
-            )
+            ).on(InternalArtifactType.ASSET_PACK_MANIFESTS)
         }
 
         override fun configure(

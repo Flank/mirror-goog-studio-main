@@ -32,12 +32,13 @@ public class OverlayIdTest {
     public void testRealInstall() throws DeployerException {
         OverlayId realInstall = new OverlayId(makeApks(1));
         String stringRep = realInstall.getRepresentation();
-        Assert.assertEquals("Real APK ApkName0 has checksum of ApkChecksum0\n", stringRep);
+        Assert.assertEquals(
+                getFileHeader() + "Real APK ApkName0 has checksum of ApkChecksum0\n", stringRep);
 
         realInstall = new OverlayId(makeApks(1));
         String sha = realInstall.getSha();
         Assert.assertEquals(
-                "6a94b1483bd168a5a81097891ca3afa3e2ebbb499af3064950a87d93e39ab913", sha);
+                "3af200fe91ea16478c0dee3561a59a14f3abb3d0eaaad049a95f88262b0c102e", sha);
     }
 
     @Test
@@ -49,12 +50,13 @@ public class OverlayIdTest {
         OverlayId realInstall = new OverlayId(makeApks(2));
         String stringRep = realInstall.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n",
                 stringRep);
         String sha = realInstall.getSha();
         Assert.assertEquals(
-                "6d19902d86f5115131af14f9c35340916fd34cd5910c68c9afe7be2c02a7f07f", sha);
+                "572bf1f3899e02da013865345cd1491b050542347784865bf040e6b936bb70f4", sha);
 
         // *****************************************************
         // First IWI Swap
@@ -67,14 +69,15 @@ public class OverlayIdTest {
         OverlayId firstSwap = new OverlayId(realInstall, changes, ImmutableSet.of());
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
                         + " Has overlayfile dex1.dex with checksum 1\n",
                 stringRep);
         sha = firstSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "b213ed2220397f351fc67faf9f6f10defa49a5e2e3906d7c6d5498f9566061b4", sha);
+                "f63e09245e5182e0406fa46798d1a159d4964835ecf6fa444aab8d60f06ca790", sha);
 
         // *****************************************************
         // Second IWI Swap
@@ -87,7 +90,8 @@ public class OverlayIdTest {
         OverlayId secondSwap = new OverlayId(firstSwap, changes, ImmutableSet.of());
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
                         + " Has overlayfile dex1.dex with checksum 1\n"
                         + " Has overlayfile dex2.dex with checksum 2\n",
@@ -95,7 +99,7 @@ public class OverlayIdTest {
         sha = secondSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "b45cfffe85db65016781e516cc3cefa8736f0165be14eb5635f2bfd8945859a1", sha);
+                "82e4ddc3d0609c877f94f3f490da498afb7fa646412c9e3ec00aa41f34fad096", sha);
 
         // *****************************************************
         // Third IWI Swap
@@ -108,7 +112,8 @@ public class OverlayIdTest {
         OverlayId thirdSwap = new OverlayId(secondSwap, changes, ImmutableSet.of());
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
                         + " Has overlayfile dex1.dex with checksum 1\n"
                         + " Has overlayfile dex2.dex with checksum 200\n",
@@ -116,7 +121,7 @@ public class OverlayIdTest {
         sha = thirdSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "febeaca44e2aa6f3c78133aec0f0c747e098e73329cd722a5006de39ae349e2f", sha);
+                "de0ca2bc6919267e81741eeb93ec7990977e8406b6fdddc441c6b8f50ae418a6", sha);
     }
 
     @Test
@@ -128,12 +133,13 @@ public class OverlayIdTest {
         OverlayId realInstall = new OverlayId(makeApks(2));
         String stringRep = realInstall.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n",
                 stringRep);
         String sha = realInstall.getSha();
         Assert.assertEquals(
-                "6d19902d86f5115131af14f9c35340916fd34cd5910c68c9afe7be2c02a7f07f", sha);
+                "572bf1f3899e02da013865345cd1491b050542347784865bf040e6b936bb70f4", sha);
 
         // *****************************************************
         // First IWI Swap
@@ -146,14 +152,15 @@ public class OverlayIdTest {
         OverlayId firstSwap = new OverlayId(realInstall, dexChanges, resChanges);
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
                         + " Has overlayfile apk/res/1 with checksum 1\n",
                 stringRep);
         sha = firstSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "a7dc2e1b9223b78e88981ae7f4a99384529bbd803e3213d00129f346d08266a1", sha);
+                "b41e7471c56edaf8ca8932865673fa1db1ab9499b755d2067bc7a09bd89fd217", sha);
 
         // *****************************************************
         // Second IWI Swap
@@ -163,14 +170,15 @@ public class OverlayIdTest {
         OverlayId secondSwap = new OverlayId(firstSwap, dexChanges, resChanges);
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
                         + " Has overlayfile apk/res/1 with checksum 11\n",
                 stringRep);
         sha = secondSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "239b92a19c32958ef8bac062c48d5aa4a8e377d4d68dea77b5712189d51544e8", sha);
+                "0cd8fda9b3a54e1641f3b4f5239b8e53405159543525424940fb3b57b44f4eaa", sha);
 
         // *****************************************************
         // Third IWI Swap
@@ -181,7 +189,8 @@ public class OverlayIdTest {
         OverlayId thirdSwap = new OverlayId(secondSwap, dexChanges, resChanges);
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
-                "Real APK ApkName0 has checksum of ApkChecksum0\n"
+                getFileHeader()
+                        + "Real APK ApkName0 has checksum of ApkChecksum0\n"
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n"
                         + " Has overlayfile apk/res/1 with checksum 11\n"
                         + " Has overlayfile apk/res/2 with checksum 2\n",
@@ -189,7 +198,7 @@ public class OverlayIdTest {
         sha = thirdSwap.getSha();
         // SHA256 of the above string.
         Assert.assertEquals(
-                "d351af40711467cfd45d74f5f87ab27d5ccb2f0e793af1fbb5e04945c6ef880c", sha);
+                "633b0d701f88a7abe60abcdf12d542dba4930302d6106ba5a5687e1f79c50785", sha);
     }
 
     private List<Apk> makeApks(int size) {
@@ -204,5 +213,9 @@ public class OverlayIdTest {
                             .build());
         }
         return apks;
+    }
+
+    private static String getFileHeader() {
+        return "Apply Changes Overlay ID\n" + "Schema Version " + OverlayId.SCHEMA_VERSION + "\n";
     }
 }

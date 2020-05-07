@@ -184,7 +184,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         override fun handleProvider(
             taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
         ) {
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ShrinkBundleResourcesTask::compressedResources
             )
@@ -197,9 +197,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
@@ -207,20 +207,20 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
             task.dex = creationConfig.globalScope.project.files(
                 if (creationConfig.variantScope.consumesFeatureJars()) {
-                    creationConfig.artifacts.getFinalProduct(InternalArtifactType.BASE_DEX)
+                    creationConfig.artifacts.get(InternalArtifactType.BASE_DEX)
                 } else {
-                    operations.getAll(MultipleArtifactType.DEX)
+                    artifacts.getAll(MultipleArtifactType.DEX)
                 })
 
             if (creationConfig
                     .services.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
             ) {
-                operations.setTaskInputToFinalProduct(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
                 )
             } else {
-                operations.setTaskInputToFinalProduct(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.lightRClasses
                 )
@@ -231,15 +231,15 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                     .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
             )
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir)
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.mappingFileSrc)
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS,
                 task.mergedManifests)
         }

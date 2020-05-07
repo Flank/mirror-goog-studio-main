@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.getBuildService
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Sets
@@ -214,6 +215,10 @@ fun getAllArtifacts(
         """.trimMargin()
         }
 
+        val mavenCoordinatesCache =
+            getBuildService<MavenCoordinatesCacheBuildService>(
+                componentProperties.services.buildServiceRegistry
+            ).get()
         for (mainArtifact in mainArtifacts) {
             artifacts.add(
                 ResolvedArtifact(
@@ -221,7 +226,8 @@ fun getAllArtifacts(
                     extractedAar.firstOrNull(),
                     dependencyType,
                     isAarWrappedAsProject,
-                    buildMapping
+                    buildMapping,
+                    mavenCoordinatesCache
                 )
             )
         }

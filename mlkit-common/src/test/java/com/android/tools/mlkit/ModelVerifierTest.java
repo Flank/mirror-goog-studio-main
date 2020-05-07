@@ -18,9 +18,6 @@ package com.android.tools.mlkit;
 
 import static org.mockito.Mockito.when;
 
-import com.android.tools.mlkit.exception.InvalidTfliteException;
-import com.android.tools.mlkit.exception.TfliteModelException;
-import com.android.tools.mlkit.exception.UnsupportedTfliteException;
 import java.nio.ByteBuffer;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,12 +40,12 @@ public class ModelVerifierTest {
         ModelVerifier.verifyModel(metadataExtractor);
     }
 
-    @Test(expected = InvalidTfliteException.class)
+    @Test(expected = TfliteModelException.class)
     public void testInvalidModelThrowException() throws TfliteModelException {
         ModelVerifier.verifyModel(ByteBuffer.wrap(new byte[] {1, 2, 4, 6}));
     }
 
-    @Test(expected = UnsupportedTfliteException.class)
+    @Test(expected = TfliteModelException.class)
     public void testUnsupportedDataTypeThrowException() throws TfliteModelException {
         ModelVerifier.verifyDataType((byte) -1, 0, TensorInfo.Source.INPUT);
     }

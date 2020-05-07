@@ -252,6 +252,7 @@ public final class Log {
         }
     }
 
+    @VisibleForTesting
     public static void setLevel(LogLevel logLevel) {
         sLevel = logLevel;
     }

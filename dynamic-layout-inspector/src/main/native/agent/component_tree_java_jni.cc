@@ -70,27 +70,22 @@ Java_com_android_tools_agent_layoutinspector_ComponentTree_addString(
 /*
  * Add the root view or a sub view to a ComponentTreeEvent.
  */
-JNIEXPORT void JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_ComponentTree_addView(
     JNIEnv *env, jclass clazz, jlong jevent, bool isSubView, jlong drawId,
-    jint x, jint y, jint scrollX, jint scrollY, jint width, jint height,
-    jint className, jint packageName, jint textValue, jint layoutFlags) {
+    jint x, jint y, jint width, jint height, jint className, jint packageName,
+    jint textValue, jint layoutFlags) {
   View *view = selectView(env, jevent, isSubView);
   view->set_draw_id(drawId);
   view->set_x(x);
   view->set_y(y);
-  if (scrollX != 0) {
-    view->set_scroll_x(scrollX);
-  }
-  if (scrollY != 0) {
-    view->set_scroll_y(scrollY);
-  }
   view->set_width(width);
   view->set_height(height);
   view->set_class_name(className);
   view->set_package_name(packageName);
   view->set_text_value(textValue);
   view->set_layout_flags(layoutFlags);
+  return (long)view;
 }
 
 /*

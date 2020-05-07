@@ -15,6 +15,7 @@
  */
 package com.android.build.api.variant.impl
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.BuildConfigField
@@ -24,7 +25,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -43,7 +44,7 @@ abstract class VariantPropertiesImpl(
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
-    artifacts: BuildArtifactsHolder,
+    artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
@@ -70,7 +71,7 @@ abstract class VariantPropertiesImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-    override val buildConfigFields: MapProperty<String, BuildConfigField> by lazy {
+    override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,
@@ -99,6 +100,16 @@ abstract class VariantPropertiesImpl(
      */
     override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
+    }
+
+    override val manifestPlaceholders: MapProperty<String, String> by lazy {
+        @Suppress("UNCHECKED_CAST")
+        internalServices.mapPropertyOf(
+            String::class.java,
+            String::class.java,
+            variantDslInfo.manifestPlaceholders,
+            "$name:manifestPlaceholders"
+        )
     }
 
     // ---------------------------------------------------------------------------------------------

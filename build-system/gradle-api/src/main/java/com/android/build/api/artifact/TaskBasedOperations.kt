@@ -76,7 +76,7 @@ interface TaskBasedOperations<TaskT: Task> {
  * The implementation will take care of reading the source built artifacts from the input location
  * provided through the [TaskBasedOperations.toRead] method.
  *
- * The [Task] can then use one of the [submit] methods to provide a Gradle's [org.gradle.workers]
+ * The [Task] can then use one of the [submit] methods to provide a Gradle's `org.gradle.workers`
  * style of [WorkAction] to process each input [BuiltArtifact].
  * Alternatively, the [Task] can use the simpler synchronous lambda to process each input
  * [BuiltArtifact]
@@ -88,7 +88,7 @@ interface TaskBasedOperations<TaskT: Task> {
 interface ArtifactTransformationRequest {
 
     /**
-     * Submit a [org.gradle.workers] style of [WorkAction] to process each input [BuiltArtifact]
+     * Submit a `org.gradle.workers` style of [WorkAction] to process each input [BuiltArtifact]
      *
      * @param task : the Task initiating the [WorkQueue] requests.
      * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.

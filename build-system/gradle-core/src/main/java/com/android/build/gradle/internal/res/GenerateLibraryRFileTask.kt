@@ -200,28 +200,22 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_R_CLASS_JAR,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::rClassOutputJar,
-                fileName = "R.jar"
-            )
+                GenerateLibraryRFileTask::rClassOutputJar
+            ).withName("R.jar").on(InternalArtifactType.COMPILE_R_CLASS_JAR)
 
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_SYMBOL_LIST,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::textSymbolOutputFileProperty,
-                SdkConstants.FN_RESOURCE_TEXT
-            )
+                GenerateLibraryRFileTask::textSymbolOutputFileProperty
+            ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.COMPILE_SYMBOL_LIST)
 
             // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
             // process resources for local subprojects.
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile,
-                "package-aware-r.txt"
-            )
+                GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile
+            ).withName("package-aware-r.txt").on(InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
         }
 
         override fun configure(
@@ -266,10 +260,10 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.compileClasspathLibraryRClasses.setDisallowChanges(compileClasspathLibraryRClasses)
             task.packageForR.setDisallowChanges(creationConfig.packageName)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.mergedManifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit()
@@ -283,7 +277,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                 task.localResourcesFile)
         }
@@ -301,12 +295,10 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             taskProvider: TaskProvider<out GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                GenerateLibraryRFileTask::rClassOutputJar,
-                fileName = "R.jar"
-            )
+                GenerateLibraryRFileTask::rClassOutputJar
+            ).withName("R.jar").on(InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
         }
 
         override fun configure(
@@ -335,11 +327,11 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.useConstantIds.setDisallowChanges(false)
 
             creationConfig.onTestedConfig {
-                it.operations.setTaskInputToFinalProduct(
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles
                 )
 
-                it.operations.setTaskInputToFinalProduct(
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                     task.localResourcesFile
                 )

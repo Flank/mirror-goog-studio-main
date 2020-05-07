@@ -42,7 +42,7 @@ import org.gradle.api.Incubating
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html)
  */
 @Incubating
-interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildT : NdkBuild> {
+interface ExternalNativeBuild {
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path
@@ -59,7 +59,7 @@ interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildT : NdkBuild> {
      *
      * For more information about the properties you can configure in this block, see [NdkBuild]
      */
-    fun ndkBuild(action: NdkBuildT.() -> Unit)
+    fun ndkBuild(action: NdkBuild.() -> Unit)
 
     /**
      * Encapsulates per-variant configurations for your external ndk-build project, such as the path
@@ -75,6 +75,6 @@ interface ExternalNativeBuild<CMakeT : Cmake, NdkBuildT : NdkBuild> {
      *
      * For more information about the properties you can configure in this block, see [Cmake]
      */
-    fun cmake(action: CMakeT.() -> Unit)
+    fun cmake(action: Cmake.() -> Unit)
 
 }

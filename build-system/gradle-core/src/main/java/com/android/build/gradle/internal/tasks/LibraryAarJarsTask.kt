@@ -299,14 +299,12 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesFile(
-                artifactType = InternalArtifactType.AAR_MAIN_JAR,
-                taskProvider = taskProvider,
-                productProvider = LibraryAarJarsTask::mainClassLocation,
-                fileName = SdkConstants.FN_CLASSES_JAR
-            )
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                LibraryAarJarsTask::mainClassLocation
+            ).withName(SdkConstants.FN_CLASSES_JAR).on(InternalArtifactType.AAR_MAIN_JAR)
 
-            creationConfig.operations.setInitialProvider(
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LibraryAarJarsTask::localJarsLocation
             ).withName(SdkConstants.LIBS_FOLDER)
@@ -320,9 +318,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             task.dataBindingExcludeDelegate.configureFrom(creationConfig)
 
-            val operations = creationConfig.operations
+            val artifacts = creationConfig.artifacts
 
-            operations.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
                 task.typedefRecipe
             )
@@ -343,7 +341,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeClassFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
-                        .getFinalProduct(InternalArtifactType.SHRUNK_CLASSES)
+                        .get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(
@@ -364,7 +362,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeResourceFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
-                        .getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
+                        .get(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->

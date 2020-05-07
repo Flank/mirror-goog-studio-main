@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -71,7 +72,7 @@ public class GlobalScope {
 
     private Configuration androidJarConfig;
 
-    @NonNull private final BuildArtifactsHolder globalArtifacts;
+    @NonNull private final ArtifactsImpl globalArtifacts;
 
     @Nullable private Provider<List<RegularFile>> bootClasspath = null;
 
@@ -94,7 +95,8 @@ public class GlobalScope {
                 checkNotNull(dslServices.getProjectOptions().getOptionalCompilationSteps());
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
-        this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir);
+
+        this.globalArtifacts = new ArtifactsImpl(project, "global");
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();
@@ -306,7 +308,7 @@ public class GlobalScope {
     }
 
     @NonNull
-    public BuildArtifactsHolder getArtifacts() {
+    public ArtifactsImpl getGlobalArtifacts() {
         return globalArtifacts;
     }
 

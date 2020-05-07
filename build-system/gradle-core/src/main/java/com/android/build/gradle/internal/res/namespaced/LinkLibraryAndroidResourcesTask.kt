@@ -134,12 +134,10 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.RES_STATIC_LIBRARY,
+            creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                LinkLibraryAndroidResourcesTask::staticLibApk,
-                "res.apk"
-            )
+                LinkLibraryAndroidResourcesTask::staticLibApk
+            ).withName("res.apk").on(InternalArtifactType.RES_STATIC_LIBRARY)
         }
 
         override fun configure(
@@ -147,13 +145,13 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 task.manifestFile
             )
 
             task.inputResourcesDirectories.set(
-                creationConfig.artifacts.getOperations().getAll(
+                creationConfig.artifacts.getAll(
                     MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
                     creationConfig.variantDependencies.getArtifactFileCollection(
@@ -167,7 +165,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
             creationConfig.onTestedConfig {
-                it.operations.setTaskInputToFinalProduct(
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested
                 )
@@ -188,7 +186,9 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 creationConfig.services.projectOptions
             )
-            task.aapt2DaemonBuildService.setDisallowChanges(getBuildService(task.project))
+            task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }
