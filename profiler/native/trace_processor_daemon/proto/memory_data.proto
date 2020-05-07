@@ -26,14 +26,12 @@ message AllocationDataRequest {
 
 // Stack information.
 message StackPointer {
-    // The id of the current node in the stack.
-    int64 id = 1;
     // Parent StackPointer id of this node.
-    int64 parent_id = 2;
+    int64 parent_id = 1;
     // Frame id to allow mapping to name of function.
     // An id is used to reduce overhead of string
     // duplication.
-    int64 frame_id = 3;
+    int64 frame_id = 2;
 }
 
 // The name of each function collected.
@@ -70,6 +68,6 @@ message Allocation {
 // calls compared to transferring them individually.
 message NativeAllocationContext {
     repeated Allocation allocations = 1;
-    repeated StackPointer pointers = 2;
+    map<int64, StackPointer> pointers = 2;
     repeated StackFrame frames = 3;
   }
