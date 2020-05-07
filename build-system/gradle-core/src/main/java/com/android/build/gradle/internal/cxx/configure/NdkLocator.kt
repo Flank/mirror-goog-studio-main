@@ -73,30 +73,36 @@ private fun findNdkPathImpl(
         fun getNdkFolderRevision(ndkDirFolder: File) =
             getNdkFolderParsedRevision(ndkDirFolder, getNdkSourceProperties)
 
+        // Try to get the parsed revision for the requested version. If it's unparseable then
+        // emit an error and return.
+        val revisionFromNdkVersion =
+            parseRevision(getNdkVersionOrDefault(ndkVersionFromDsl)) ?: return null
+
         // If android.ndkPath value is present then use it.
         if (!ndkPathFromDsl.isNullOrBlank()) {
-            if (!ndkVersionFromDsl.isNullOrBlank()) {
-                // TODO(b/131320700) offer a hyperlink in Android Studio to remove ndkPath or ndkVersion
-                errorln("NDK from android.ndkPath '$ndkPathFromDsl' and " +
-                        "android.ndkVersion '$ndkVersionFromDsl' are both set. Only one is allowed.")
-                return null
-            }
             val ndkPathFolder = File(ndkPathFromDsl)
-            val revision = getNdkFolderRevision(ndkPathFolder)
-            if (revision == null) {
+            val revisionFromNdkPath = getNdkFolderRevision(ndkPathFolder)
+            if (revisionFromNdkPath == null) {
                 errorln(
-                    "Location specified by android.ndkPath ($ndkPathFolder) did not contain a valid " +
-                            "NDK and couldn't be used"
+                    "Location specified by android.ndkPath ($ndkPathFromDsl) did not contain " +
+                            "a valid NDK and couldn't be used"
                 )
                 return null
             }
-            return NdkLocatorRecord(ndkPathFolder, revision)
+            if (!ndkDirProperty.isNullOrBlank()) {
+                errorln("Both android.ndkPath and ndk.dir in local.properties are set")
+                return null
+            }
+            if (!ndkVersionFromDsl.isNullOrBlank()) {
+                if (revisionFromNdkVersion != revisionFromNdkPath) {
+                    errorln("android.ndkVersion is '$revisionFromNdkVersion' " +
+                            "but android.ndkPath '$ndkPathFolder' refers to a different version " +
+                            "('$revisionFromNdkPath').")
+                    return null
+                }
+            }
+            return NdkLocatorRecord(ndkPathFolder, revisionFromNdkPath)
         }
-
-        // Try to get the parsed revision for the requested version. If it's unparseable then
-        // emit an error and return.
-        val ndkVersion =
-            parseRevision(getNdkVersionOrDefault(ndkVersionFromDsl)) ?: return null
 
         // If ndk.dir value is present then use it.
         if (!ndkDirProperty.isNullOrBlank()) {
@@ -105,9 +111,9 @@ private fun findNdkPathImpl(
             if (revision != null) {
                 // If the user request a version in android.ndkVersion and it doesn't agree with
                 // the version of the NDK supplied by ndk.dir then report an error.
-                if (revision != ndkVersion && ndkVersionFromDsl != null) {
+                if (revision != revisionFromNdkVersion && ndkVersionFromDsl != null) {
                     errorln("NDK from ndk.dir at '$ndkDirFolder' had version $revision " +
-                            "which disagrees with android.ndkVersion $ndkVersion")
+                            "which disagrees with android.ndkVersion $revisionFromNdkVersion")
                     return null
                 }
                 warnln("NDK was located by using ndk.dir property. This method is " +
@@ -127,7 +133,7 @@ private fun findNdkPathImpl(
         // folder value is missing then don't search for sub-folders.
         if (sdkFolder != null) {
             // If a folder exists under $SDK/ndk/$ndkVersion then use it.
-            val versionedNdkPath = File(File(sdkFolder, FD_NDK_SIDE_BY_SIDE), "$ndkVersion")
+            val versionedNdkPath = File(File(sdkFolder, FD_NDK_SIDE_BY_SIDE), "$revisionFromNdkVersion")
             val sideBySideRevision = getNdkFolderRevision(versionedNdkPath)
             if (sideBySideRevision != null) {
                 return NdkLocatorRecord(versionedNdkPath, sideBySideRevision)
@@ -136,7 +142,7 @@ private fun findNdkPathImpl(
             // If $SDK/ndk-bundle exists and matches the requested version then use it.
             val ndkBundlePath = File(sdkFolder, FD_NDK)
             val bundleRevision = getNdkFolderRevision(ndkBundlePath)
-            if (bundleRevision != null && bundleRevision == ndkVersion) {
+            if (bundleRevision != null && bundleRevision == revisionFromNdkVersion) {
                 return NdkLocatorRecord(ndkBundlePath, bundleRevision)
             }
         }
@@ -147,11 +153,11 @@ private fun findNdkPathImpl(
         }
 
         infoln("No NDK was found. Trying to download it now.")
-        val downloaded = sdkHandler.installNdk(ndkVersion)
+        val downloaded = sdkHandler.installNdk(revisionFromNdkVersion)
 
         if (downloaded != null) {
-            infoln("NDK $ndkVersion was downloaded to $downloaded. Using that.")
-            return NdkLocatorRecord(downloaded, ndkVersion)
+            infoln("NDK $revisionFromNdkVersion was downloaded to $downloaded. Using that.")
+            return NdkLocatorRecord(downloaded, revisionFromNdkVersion)
         }
 
         // Throw error expected by Android Studio. If the text isn't this, then Android Studio won't
