@@ -123,7 +123,7 @@ interface LintOptions {
      * If empty, lint will detect the issues that are enabled by default plus
      * any issues enabled via [enable] and without issues disabled via [disable].
      */
-    val check: MutableSet<String>
+    val checkOnly: MutableSet<String>
 
     /** Whether lint should set the exit code of the process if errors are found */
     var isAbortOnError: Boolean

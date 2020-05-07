@@ -42,7 +42,7 @@ public class LintOptions
     @Nullable private final DslServices dslServices;
     private final Set<String> disable = Sets.newHashSet();
     private final Set<String> enable = Sets.newHashSet();
-    private final Set<String> check = Sets.newHashSet();
+    private final Set<String> checkOnly = Sets.newHashSet();
     private boolean abortOnError = true;
     private boolean absolutePaths = true;
     private boolean noLines;
@@ -80,7 +80,7 @@ public class LintOptions
     public LintOptions(
             @NonNull Set<String> disable,
             @NonNull Set<String> enable,
-            @NonNull Set<String> check,
+            @NonNull Set<String> checkOnly,
             @Nullable File lintConfig,
             boolean textReport,
             @Nullable File textOutput,
@@ -107,7 +107,7 @@ public class LintOptions
         this.dslServices = null;
         this.disable.addAll(disable);
         this.enable.addAll(enable);
-        this.check.addAll(check);
+        this.checkOnly.addAll(checkOnly);
         this.lintConfig = lintConfig;
         this.textReport = textReport;
         this.textOutput = textOutput;
@@ -143,7 +143,7 @@ public class LintOptions
         return new LintOptions(
                 source.getDisable(),
                 source.getEnable(),
-                source.getCheck(),
+                source.getCheckOnly(),
                 source.getLintConfig(),
                 source.getTextReport(),
                 source.getTextOutput(),
@@ -195,16 +195,24 @@ public class LintOptions
         }
     }
 
-    @Override
-    @NonNull
-    @Optional
     @Input
-    public Set<String> getCheck() {
-        return check;
+    @NonNull
+    @Override
+    public Set<String> getCheckOnly() {
+        return checkOnly;
     }
 
+    /** @deprecated Replaced by {@link #getCheckOnly()} */
+    @Deprecated
+    @Override
+    @NonNull
+    public Set<String> getCheck() {
+        return checkOnly;
+    }
+
+    @Deprecated
     public void setCheck(@NonNull Set<String> ids) {
-        check.addAll(ids);
+        checkOnly.addAll(ids);
     }
 
     @Override
@@ -524,7 +532,7 @@ public class LintOptions
 
     @Override
     public void checkOnly(@NonNull String id) {
-        check.add(id);
+        checkOnly.add(id);
     }
 
     @Override

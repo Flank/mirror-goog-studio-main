@@ -193,6 +193,7 @@ class KotlinDslTest {
     fun `AnnotationProcessorOptions arguments source compatibility`() {
         android.defaultConfig.javaCompileOptions.annotationProcessorOptions {
             arguments["a"] = "b"
+
             assertThat(arguments).containsExactly("a", "b")
             arguments += mapOf("c" to "d")
             assertThat(arguments).containsExactly("a", "b", "c", "d")
@@ -206,8 +207,8 @@ class KotlinDslTest {
             assertThat(enable).containsExactly("a")
             disable += "b"
             assertThat(disable).containsExactly("b")
-            check += "c"
-            assertThat(check).containsExactly("c")
+            checkOnly += "c"
+            assertThat(checkOnly).containsExactly("c")
         }
     }
 
