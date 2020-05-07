@@ -47,6 +47,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     @NonNull private final Collection<NativeSettings> mySettings;
     @NonNull private final Map<String, String> myFileExtensions;
     @Nullable private final Collection<String> myBuildSystems;
+    @NonNull private final String myDefaultNdkVersion;
     private final int myApiVersion;
     private final int myHashCode;
 
@@ -62,6 +63,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
         mySettings = Collections.emptyList();
         myFileExtensions = Collections.emptyMap();
         myBuildSystems = Collections.emptyList();
+        myDefaultNdkVersion = "";
         myApiVersion = 0;
 
         myHashCode = 0;
@@ -95,6 +97,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                         modelCache,
                         settings -> new IdeNativeSettings(settings));
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
+        myDefaultNdkVersion = project.getDefaultNdkVersion();
         myBuildSystems = copyBuildSystems(project);
         myHashCode = calculateHashCode();
     }
@@ -190,6 +193,16 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 "Unsupported method: NativeAndroidProject.getBuildSystems()");
     }
 
+    @NonNull
+    @Override
+    public String getDefaultNdkVersion() {
+        if (myDefaultNdkVersion != null) {
+            return myDefaultNdkVersion;
+        }
+        throw new UnsupportedOperationException(
+                "Unsupported method: NativeAndroidProject.getDefaultNdkVersion()");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -208,7 +221,8 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 && Objects.equals(myToolChains, project.myToolChains)
                 && Objects.equals(mySettings, project.mySettings)
                 && Objects.equals(myFileExtensions, project.myFileExtensions)
-                && Objects.equals(myBuildSystems, project.myBuildSystems);
+                && Objects.equals(myBuildSystems, project.myBuildSystems)
+                && Objects.equals(myDefaultNdkVersion, project.myDefaultNdkVersion);
     }
 
     @Override
@@ -227,7 +241,8 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 mySettings,
                 myFileExtensions,
                 myBuildSystems,
-                myApiVersion);
+                myApiVersion,
+                myDefaultNdkVersion);
     }
 
     @Override
@@ -253,6 +268,8 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 + myBuildSystems
                 + ", myApiVersion="
                 + myApiVersion
+                + ", myDefaultNdkVersion="
+                + myDefaultNdkVersion
                 + "}";
     }
 

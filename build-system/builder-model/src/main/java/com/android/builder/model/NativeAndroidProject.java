@@ -85,4 +85,8 @@ public interface NativeAndroidProject {
     /** Return the names of build systems used to create the native artifacts. */
     @NonNull
     Collection<String> getBuildSystems();
+
+    /** Get the default NDK version. */
+    @NonNull
+    String getDefaultNdkVersion();
 }
