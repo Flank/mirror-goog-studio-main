@@ -1454,7 +1454,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testReferenceFromViewBinding() {
+    public void testReferenceFromViewBinding_java() {
         //noinspection all // Sample code
         lint().files(
                         gradle(
@@ -1471,7 +1471,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"),
                         xml(
-                                "src/main/res/layout/activity_demo.xml",
+                                "src/main/res/layout/activity_dot_syntax.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
+                                "src/main/res/layout/activity_method_reference.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -1487,17 +1494,31 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    android:layout_height=\"match_parent\"\n"
                                         + "    tools:viewBindingIgnore=\"true\" />\n"),
 
-                        // View Binding usage here will reference activity_demo
+                        // View Binding usage here will reference activity_dot_syntax.xml
                         java(
                                 ""
                                         + "package my.pkg;\n"
                                         + "\n"
                                         + "import android.view.LayoutInflater;\n"
-                                        + "import my.pkg.databinding.ActivityDemoBinding;\n"
+                                        + "import my.pkg.databinding.ActivityDotSyntaxBinding;\n"
                                         + "\n"
-                                        + "public class DemoActivity {\n"
+                                        + "public class DotSyntaxActivity {\n"
                                         + "    public void test(LayoutInflater inflater){\n"
-                                        + "        final ActivityDemoBinding binding = ActivityDemoBinding.inflate(inflater);\n"
+                                        + "        ActivityDotSyntaxBinding.inflate(inflater);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
+                        // View Binding usage here will reference activity_method_reference.xml
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "import my.pkg.databinding.ActivityMethodReferenceBinding;\n"
+                                        + "\n"
+                                        + "public class MethodReferenceActivity {\n"
+                                        + "    public void test(LayoutInflater inflater){\n"
+                                        + "        ActivityMethodReferenceBinding::inflate;\n"
                                         + "    }\n"
                                         + "}\n"),
 
@@ -1521,14 +1542,28 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        final ActivityIgnoredBinding binding = ActivityIgnoredBinding.inflate(inflater);\n"
                                         + "    }\n"
                                         + "}\n"),
+
+                        // Here we provide code that would have been generated for view binding /
+                        // provided by the view binding lirary
                         java(
                                 ""
                                         + "package my.pkg.databinding;\n"
                                         + "\n"
                                         + "import android.view.LayoutInflater;\n"
                                         + "\n"
-                                        + "public final class ActivityDemoBinding implements androidx.viewbinding.ViewBinding {\n"
-                                        + "  public static ActivityDemoBinding inflate(LayoutInflater inflater) {\n"
+                                        + "public final class ActivityDotSyntaxBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityDotSyntaxBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityMethodReferenceBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityMethodReferenceBinding inflate(LayoutInflater inflater) {\n"
                                         + "    return this;\n"
                                         + "  }\n"
                                         + "}\n"),
@@ -1546,6 +1581,101 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                 + "^\n"
                                 + "0 errors, 1 warnings");
+    }
+
+    public void testReferenceFromViewBinding_kotlin() {
+        //noinspection all // Sample code
+        lint().files(
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "  dependencies {\n"
+                                        + "    classpath \"com.android.tools.build:gradle:3.6.0\"\n"
+                                        + "  }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    buildFeatures {\n"
+                                        + "        viewBinding true\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        xml(
+                                "src/main/res/layout/activity_dot_syntax.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
+                                "src/main/res/layout/activity_method_reference.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+
+                        // View Binding usage here will reference activity_dot_syntax.xml
+                        kotlin(
+                                ""
+                                        + "package my.pkg\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import my.pkg.databinding.ActivityDotSyntaxBinding\n"
+                                        + "\n"
+                                        + "class DotSyntaxActivity {\n"
+                                        + "    fun test(inflater: LayoutInflater){\n"
+                                        + "        ActivityDotSyntaxBinding.inflate(inflater)\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
+                        // View Binding usage here will reference activity_method_reference.xml
+                        kotlin(
+                                ""
+                                        + "package my.pkg\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import my.pkg.databinding.ActivityMethodReferenceBinding\n"
+                                        + "\n"
+                                        + "class MethodReferenceActivity {\n"
+                                        + "    fun test(inflater: LayoutInflater){\n"
+                                        + "        ActivityMethodReferenceBinding::inflate\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
+                        // Here we provide code that would have been generated for view binding /
+                        // provided by the view binding lirary
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityDotSyntaxBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityDotSyntaxBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityMethodReferenceBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityMethodReferenceBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package androidx.viewbinding;\n"
+                                        + "public interface ViewBinding {\n"
+                                        + "}"))
+                .client(
+                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                                CLIENT_GRADLE))
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("SpellCheckingInspection")
