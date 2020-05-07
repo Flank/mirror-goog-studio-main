@@ -196,6 +196,10 @@ open class GradleProperty<T>(
     override fun attachProducer(p0: ModelObject) {
         (property as PropertyInternal<T>).attachProducer(p0)
     }
+
+    override fun forUseAtConfigurationTime(): Provider<T> {
+        return property.forUseAtConfigurationTime()
+    }
 }
 
 /**

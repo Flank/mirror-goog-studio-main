@@ -36,7 +36,6 @@ class BasicInstantExecutionTest {
     @JvmField
     @Rule
     var project = GradleTestProject.builder()
-        .setTargetGradleVersion("6.4-rc-2")
         .fromTestApp(
             MultiModuleTestProject.builder()
                 .subproject(":app", app)
@@ -112,6 +111,6 @@ class BasicInstantExecutionTest {
         project.executor()
             .withLoggingLevel(LoggingLevel.LIFECYCLE)
             .withArgument("-Dorg.gradle.unsafe.instant-execution=true")
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=true")
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.max-problems=0")
+            // until b/154742527 is fixed we need to disable this
+            .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false")
 }
