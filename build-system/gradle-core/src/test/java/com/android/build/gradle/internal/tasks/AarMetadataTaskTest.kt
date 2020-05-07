@@ -23,10 +23,14 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import java.io.File
 import java.util.Properties
 
@@ -38,14 +42,19 @@ class AarMetadataTaskTest {
     @get: Rule
     val temporaryFolder = TemporaryFolder()
 
-    private lateinit var workQueue: WorkQueue
+    @Mock
+    lateinit var workerExecutor: WorkerExecutor
+
+    private lateinit var task: AarMetadataTask
     private lateinit var outputFile: File
 
     @Before
     fun setUp() {
-
+        MockitoAnnotations.initMocks(this)
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        workQueue = object: WorkQueue {
+        val taskProvider = project.tasks.register("aarMetadataTask", AarMetadataTask::class.java)
+        task = taskProvider.get()
+        val workQueue = object: WorkQueue {
             override fun <T : WorkParameters?> submit(
                 workActionClass: Class<out WorkAction<T>>?,
                 parameterAction: Action<in T>?
@@ -59,18 +68,17 @@ class AarMetadataTaskTest {
 
             override fun await() {}
         }
-
+        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
+        task.workerExecutorProperty.set(workerExecutor)
         outputFile = temporaryFolder.newFile("AarMetadata.xml")
     }
 
     @Test
     fun testBasic() {
-        AarMetadataTaskDelegate(
-            workQueue,
-            outputFile,
-            AarMetadataTask.aarVersion,
-            AarMetadataTask.aarMetadataVersion
-        ).run()
+        task.output.set(outputFile)
+        task.aarMetadataVersion.set(AarMetadataTask.aarMetadataVersion)
+        task.aarVersion.set(AarMetadataTask.aarVersion)
+        task.taskAction()
 
         checkAarMetadataFile(
             outputFile,
@@ -81,13 +89,11 @@ class AarMetadataTaskTest {
 
     @Test
     fun testMinCompileSdkVersion() {
-        AarMetadataTaskDelegate(
-            workQueue,
-            outputFile,
-            AarMetadataTask.aarVersion,
-            AarMetadataTask.aarMetadataVersion,
-            minCompileSdk = 28
-        ).run()
+        task.output.set(outputFile)
+        task.aarMetadataVersion.set(AarMetadataTask.aarMetadataVersion)
+        task.aarVersion.set(AarMetadataTask.aarVersion)
+        task.minCompileSdk.set(28)
+        task.taskAction()
 
         checkAarMetadataFile(
             outputFile,
