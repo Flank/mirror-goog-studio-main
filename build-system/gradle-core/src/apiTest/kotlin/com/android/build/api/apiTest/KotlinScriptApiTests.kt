@@ -16,6 +16,8 @@
  */
 
 package com.android.build.api.apiTest
+
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.google.common.truth.Truth
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -273,7 +275,7 @@ expected result : "Got an APK...." message.
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
-                "app-debug.apk", "output.json"
+                "app-debug.apk", BuiltArtifactsImpl.METADATA_FILE_NAME
             )
         }
     }
@@ -336,12 +338,12 @@ expected result : "Got an APK...." message.
                 """
 # artifacts.get in Kotlin
 
-This sample show how to obtain the obfuscation mapping file from the AGP. 
+This sample shows how to obtain the obfuscation mapping file from the AGP.
 The [onVariantProperties] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
 the [Artifacts.get] call with the right [ArtifactType]
 `mapping.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))`
 ## To Run
-/path/to/gradle debugMappingFileUpload 
+/path/to/gradle debugMappingFileUpload
 expected result : "Uploading .... to a fantasy server...s" message.
             """.trimIndent()
         }
@@ -423,82 +425,71 @@ expected result : "Got the Bundle ...." message.
     }
 
     @Test
-    fun bundleTransformerTest() {
+    fun getAarTest() {
         given {
-            tasksToInvoke.add(":app:debugConsumeBundleFile")
-            addModule(":app") {
+            tasksToInvoke.add(":lib:debugAarUpload")
+            addModule(":lib") {
                 @Suppress("RemoveExplicitTypeArguments")
                 buildFile =
                         // language=kotlin
                     """
-        plugins {
-                id("com.android.application")
-                kotlin("android")
-                kotlin("android.extensions")
-        }
-        import org.gradle.api.DefaultTask
-        import org.gradle.api.file.RegularFileProperty
-        import org.gradle.api.tasks.InputFiles
-        import org.gradle.api.tasks.TaskAction
-        import org.gradle.api.provider.Property
-        import org.gradle.api.tasks.Internal
-        import com.android.build.api.artifact.ArtifactType
-        import org.gradle.api.tasks.OutputFile
-        import com.android.utils.appendCapitalized
-
-        abstract class UpdateBundleFileTask: DefaultTask() {
-            @get: InputFiles
-            abstract val  initialBundleFile: RegularFileProperty
-
-            @get: OutputFile
-            abstract val updatedBundleFile: RegularFileProperty
-
-            @TaskAction
-            fun taskAction() {
-                val versionCode = "versionCode = 4"
-                println("bundleFilePresent = " + initialBundleFile.isPresent)
-                updatedBundleFile.get().asFile.writeText(versionCode)
+            plugins {
+                    id("com.android.library")
+                    kotlin("android")
+                    kotlin("android.extensions")
             }
-        }
-        abstract class ConsumeBundleFileTask: DefaultTask() {
-            @get: InputFiles
-            abstract val finalBundle: RegularFileProperty
-            
-            @TaskAction
-            fun taskAction() {
-                println(finalBundle.get().asFile.readText())
-            }
-        }
-        android {
-            ${testingElements.addCommonAndroidBuildLogic()}
-            defaultConfig {
-                versionCode = 3
-            }
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.TaskAction
 
-            onVariantProperties {
-                val updateBundle = project.tasks.register<UpdateBundleFileTask>("${'$'}{name}UpdateBundleFile") {
-                    initialBundleFile.set(artifacts.get(ArtifactType.BUNDLE))
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import com.android.build.api.artifact.ArtifactType
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+
+            abstract class AarUploadTask: DefaultTask() {
+
+                @get:InputFile
+                abstract val aar: RegularFileProperty
+
+                @TaskAction
+                fun taskAction() {
+                    println("Uploading ${'$'}{aar.get().asFile.absolutePath} to fantasy server...")
                 }
-                val finalBundle = project.tasks.register<ConsumeBundleFileTask>("${'$'}{name}ConsumeBundleFile") {
-                    finalBundle.set(artifacts.get(ArtifactType.BUNDLE))
-                }
-                artifacts.use(updateBundle)
-                    .wiredWithFiles(
-                        UpdateBundleFileTask::initialBundleFile,
-                        UpdateBundleFileTask::updatedBundleFile)
-                    .toTransform(ArtifactType.BUNDLE)
             }
-        }
-    """.trimIndent()
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+
+                onVariantProperties {
+                    project.tasks.register<AarUploadTask>("${ '$' }{name}AarUpload") {
+                        aar.set(artifacts.get(ArtifactType.AAR))
+                    }
+                }
+            }
+        """.trimIndent()
                 testingElements.addManifest(this)
             }
         }
+        withDocs {
+            index =
+                    // language=markdown
+                """
+# artifacts.get in Kotlin
+
+This sample shows how to obtain the aar from the AGP.
+The [onVariantProperties] block will wire the [AarUploadTask] input property (apkFolder) by using
+the [Artifacts.get] call with the right [ArtifactType]
+`aar.set(artifacts.get(ArtifactType.AAR))`
+## To Run
+/path/to/gradle debugAarUpload
+expected result : "Uploading .... to a fantasy server...s" message.
+            """.trimIndent()
+        }
         check {
             assertNotNull(this)
-            Truth.assertThat(output).contains("true")
-            Truth.assertThat(output).contains("versionCode = 4")
+            Truth.assertThat(output).contains("Uploading")
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
         }
     }
-
 }

@@ -16,6 +16,7 @@
  */
 package com.android.build.api.apiTest
 
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testkit.runner.TaskOutcome
@@ -336,7 +337,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
-                "app-debug.apk", "output.json"
+                "app-debug.apk", BuiltArtifactsImpl.METADATA_FILE_NAME
             )
         }
     }

@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
@@ -98,6 +99,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             }
             creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
                 .on(InternalArtifactType.AAR)
+
+            creationConfig.artifacts.republish(InternalArtifactType.AAR, ArtifactType.AAR)
         }
 
         override fun configure(
