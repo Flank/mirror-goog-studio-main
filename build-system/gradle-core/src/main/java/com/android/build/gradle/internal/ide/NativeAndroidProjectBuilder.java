@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonComposit
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStatsBuildingVisitor;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStreamingParser;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStreamingVisitor;
+import com.android.build.gradle.internal.cxx.json.CompileCommandFlagListInterner;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
@@ -32,7 +33,6 @@ import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantAbi;
 import com.android.builder.model.NativeVariantInfo;
-import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -55,6 +55,7 @@ class NativeAndroidProjectBuilder {
     @NonNull private final Map<String, String> extensions = Maps.newHashMap();
     @NonNull private final List<NativeArtifact> artifacts = Lists.newArrayList();
     @NonNull private final List<NativeToolchain> toolChains = Lists.newArrayList();
+    @NonNull private CompileCommandFlagListInterner interner = new CompileCommandFlagListInterner();
     @NonNull private final Map<List<String>, NativeSettings> settingsMap = Maps.newHashMap();
     @NonNull private final Set<String> buildSystems = Sets.newHashSet();
 
@@ -298,8 +299,7 @@ class NativeAndroidProjectBuilder {
         @Override
         public void visitLibraryFileFlags(@NonNull String flags) {
             if (isCurrentAbiAcceptable()) {
-                this.currentLibraryFileSettingsName =
-                        getSettingsName(StringHelper.tokenizeCommandLineToEscaped(flags));
+                this.currentLibraryFileSettingsName = getSettingsName(flags);
             }
         }
 
@@ -362,15 +362,14 @@ class NativeAndroidProjectBuilder {
             this.currentLibraryFileWorkingDirectory = null;
         }
 
-        private String getSettingsName(@NonNull List<String> flags) {
-            // Copy flags to ensure it is serializable.
-            List<String> flagsCopy = ImmutableList.copyOf(flags);
-            NativeSettings setting = builder.settingsMap.get(flags);
+        private String getSettingsName(@NonNull String flags) {
+            List<String> tokens = builder.interner.internFlags(flags);
+            NativeSettings setting = builder.settingsMap.get(tokens);
             if (setting == null) {
                 // Settings needs to be unique so that AndroidStudio can combine settings
                 // from multiple NativeAndroidAbi without worrying about collision.
-                setting = new NativeSettingsImpl("setting" + UUID.randomUUID(), flagsCopy);
-                builder.settingsMap.put(flagsCopy, setting);
+                setting = new NativeSettingsImpl("setting" + UUID.randomUUID(), tokens);
+                builder.settingsMap.put(tokens, setting);
             }
             return setting.getName();
         }
