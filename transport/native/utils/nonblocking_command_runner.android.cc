@@ -131,14 +131,18 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
   return true;
 }
 
-void NonBlockingCommandRunner::Kill() {
+void NonBlockingCommandRunner::Kill(bool blocks_for_callback) {
   if (IsRunning()) {
     int status;
     kill(child_process_id_, SIGINT);
     waitpid(child_process_id_, &status, 0);
     child_process_id_ = 0;
     if (read_data_thread_.joinable()) {
-      read_data_thread_.join();
+      if (blocks_for_callback) {
+        read_data_thread_.join();
+      } else {
+        read_data_thread_.detach();
+      }
     }
   }
 }
