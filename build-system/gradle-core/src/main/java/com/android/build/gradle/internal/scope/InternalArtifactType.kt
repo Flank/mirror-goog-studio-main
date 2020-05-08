@@ -421,6 +421,8 @@ InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     // A dummy output (folder) result of CheckDuplicateClassesTask execution
     object DUPLICATE_CLASSES_CHECK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // A dummy output (folder) result of CheckAarMetadataTask execution
+    object AAR_METADATA_CHECK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // File containing all generated proguard rules from Javac (by e.g. dagger) merged together
     object GENERATED_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable

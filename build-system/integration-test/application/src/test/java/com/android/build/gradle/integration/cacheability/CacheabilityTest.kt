@@ -47,6 +47,7 @@ class CacheabilityTest {
                 // Sort alphabetically for readability
                 FROM_CACHE to setOf(
                     ":app:bundleDebugClasses",
+                    ":app:checkDebugAarMetadata",
                     ":app:checkDebugDuplicateClasses",
                     ":app:compileDebugJavaWithJavac",
                     ":app:compileDebugUnitTestJavaWithJavac",

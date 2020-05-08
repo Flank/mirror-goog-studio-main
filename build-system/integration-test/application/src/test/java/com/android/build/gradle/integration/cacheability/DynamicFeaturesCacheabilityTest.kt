@@ -68,6 +68,7 @@ class DynamicFeaturesCacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":app:bundleDebugClasses",
+                    ":app:checkDebugAarMetadata",
                     ":app:checkDebugDuplicateClasses",
                     ":app:checkDebugLibraries",
                     ":app:compileDebugJavaWithJavac",
@@ -94,6 +95,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:signingConfigWriterDebug",
                     ":app:validateSigningDebug",
 
+                    ":feature1:checkDebugAarMetadata",
                     ":feature1:checkDebugDuplicateClasses",
                     ":feature1:compileDebugJavaWithJavac",
                     ":feature1:compressDebugAssets",
@@ -117,6 +119,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:processDebugManifestForPackage",
                     ":feature1:processManifestDebugForFeature",
 
+                    ":feature2:checkDebugAarMetadata",
                     ":feature2:checkDebugDuplicateClasses",
                     ":feature2:compileDebugJavaWithJavac",
                     ":feature2:compressDebugAssets",

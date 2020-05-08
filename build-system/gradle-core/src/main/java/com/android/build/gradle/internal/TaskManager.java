@@ -103,6 +103,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.CheckAarMetadataTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.CompressAssetsTask;
@@ -1210,6 +1211,9 @@ public abstract class TaskManager<
             @NonNull ComponentPropertiesImpl componentProperties,
             @Nullable SingleArtifactType<Directory> packageOutputType) {
         final GlobalScope globalScope = componentProperties.getGlobalScope();
+
+        // Check AAR metadata files
+        taskFactory.register(new CheckAarMetadataTask.CreationAction(componentProperties));
 
         // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(

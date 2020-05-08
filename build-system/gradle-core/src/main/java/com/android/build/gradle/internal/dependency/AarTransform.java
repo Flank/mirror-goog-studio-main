@@ -31,13 +31,13 @@ import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static com.android.SdkConstants.FN_R_CLASS_JAR;
 import static com.android.SdkConstants.FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.gradle.api.artifacts.transform.InputArtifact;
@@ -91,6 +91,7 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             ArtifactType.RES_STATIC_LIBRARY,
             ArtifactType.RES_SHARED_STATIC_LIBRARY,
             ArtifactType.PREFAB_PACKAGE,
+            ArtifactType.AAR_METADATA,
         };
     }
 
@@ -184,6 +185,11 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                 break;
             case PREFAB_PACKAGE:
                 outputIfExists(new File(input, FD_PREFAB_PACKAGE), transformOutputs);
+                break;
+            case AAR_METADATA:
+                outputIfExists(
+                        FileUtils.join(input, AarMetadataTask.AAR_METADATA_ENTRY_PATH.split("/")),
+                        transformOutputs);
                 break;
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);

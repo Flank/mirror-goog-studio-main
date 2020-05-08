@@ -1,0 +1,175 @@
+/*
+ * Copyright (C) 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal.tasks
+
+import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
+import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.build.gradle.internal.fixtures.DirectWorkQueue
+import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
+import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
+import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
+import com.google.common.truth.Truth.assertThat
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
+import org.junit.Assert.fail
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
+import java.lang.RuntimeException
+
+/**
+ * Unit tests for [CheckAarMetadataTask].
+ */
+class CheckAarMetadataTaskTest {
+
+    @get: Rule
+    val temporaryFolder = TemporaryFolder()
+
+    @Mock
+    lateinit var workerExecutor: WorkerExecutor
+
+    private lateinit var task: CheckAarMetadataTask
+
+    @Before
+    fun setUp() {
+        MockitoAnnotations.initMocks(this)
+        val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
+        val taskProvider =
+            project.tasks.register("checkAarMetadataTask", CheckAarMetadataTask::class.java)
+        task = taskProvider.get()
+        val workQueue = DirectWorkQueue(CheckAarMetadataWorkParameters::class.java)
+        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
+        task.workerExecutorProperty.set(workerExecutor)
+    }
+
+    @Test
+    fun testPassing() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-28")
+        task.taskAction()
+    }
+
+    @Test
+    fun testFailsOnAarFormatVersion() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = "2.0",
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set("1.0")
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-28")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).contains("The $AAR_FORMAT_VERSION_PROPERTY (2.0) specified")
+        }
+    }
+
+    @Test
+    fun testFailsOnAarMetadataVersion() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = "2.0",
+                                minCompileSdk = 28
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set("1.0")
+        task.compileSdkVersion.set("android-28")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).contains("The $AAR_METADATA_VERSION_PROPERTY (2.0) specified")
+        }
+    }
+
+    @Test
+    fun testFailsOnMinCompileSdkVersion() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-27")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).contains(
+                "greater than this module's compileSdkVersion (android-27)"
+            )
+        }
+    }
+}

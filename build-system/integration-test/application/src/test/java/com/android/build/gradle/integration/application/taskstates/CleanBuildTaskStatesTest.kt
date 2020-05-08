@@ -36,6 +36,7 @@ class CleanBuildTaskStatesTest {
             // Sort alphabetically for readability
             DID_WORK to setOf(
                 ":app:bundleDebugClasses",
+                ":app:checkDebugAarMetadata",
                 ":app:checkDebugDuplicateClasses",
                 ":app:compileDebugJavaWithJavac",
                 ":app:compileDebugUnitTestJavaWithJavac",

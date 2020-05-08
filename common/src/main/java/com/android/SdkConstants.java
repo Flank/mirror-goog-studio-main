@@ -83,6 +83,11 @@ public final class SdkConstants {
      */
     public static final String GRADLE_DISTRIBUTION_URL_PROPERTY = "distributionUrl"; //$NON-NLS-1$
 
+    /** Properties in aar-metadata.properties file */
+    public static final String AAR_FORMAT_VERSION_PROPERTY = "aarFormatVersion";
+    public static final String AAR_METADATA_VERSION_PROPERTY = "aarMetadataVersion";
+    public static final String MIN_COMPILE_SDK_PROPERTY = "minCompileSdk";
+
     /**
      * The encoding we strive to use for all files we write.
      *

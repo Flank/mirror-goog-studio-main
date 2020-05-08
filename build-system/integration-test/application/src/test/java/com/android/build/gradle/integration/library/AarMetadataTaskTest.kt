@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.integration.library
 
+import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
+import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.apksig.internal.util.ByteBufferUtils.toByteArray
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
@@ -38,13 +41,13 @@ class AarMetadataTaskTest {
         // first test that there is no AAR metadata file if the feature is not enabled.
         project.executor().run(":lib:assembleDebug")
         project.getSubproject("lib").withAar("debug") {
-            assertThat(getEntry(AarMetadataTask.aarMetadataEntryPath)).isNull()
+            assertThat(getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)).isNull()
         }
 
         // then test that AAR metadata file is present if the feature is enabled.
         project.executor().with(BooleanOption.ENABLE_AAR_METADATA, true).run(":lib:assembleDebug")
         project.getSubproject("lib").withAar("debug") {
-            assertThat(getEntry(AarMetadataTask.aarMetadataEntryPath)).isNotNull()
+            assertThat(getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)).isNotNull()
         }
     }
 
@@ -52,9 +55,9 @@ class AarMetadataTaskTest {
     fun testMinCompileSdkVersion() {
          val expectedAarMetadataBytes =
              """
-                |aarMetadataVersion=1.0
-                |aarVersion=1.0
-                |minCompileSdk=27
+                |$AAR_FORMAT_VERSION_PROPERTY=1.0
+                |$AAR_METADATA_VERSION_PROPERTY=1.0
+                |$MIN_COMPILE_SDK_PROPERTY=27
                 |"""
                  .trimMargin()
                  .replace("\n", System.lineSeparator())
@@ -66,7 +69,7 @@ class AarMetadataTaskTest {
             .with(BooleanOption.ENABLE_AAR_METADATA, true)
             .run(":lib:assembleDebug")
         project.getSubproject("lib").withAar("debug") {
-            val aarMetadataEntryPath = getEntry(AarMetadataTask.aarMetadataEntryPath)
+            val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
             ZipArchive(this.file.toFile()).use { aar ->
                 val aarMetadataBytes =
@@ -80,9 +83,9 @@ class AarMetadataTaskTest {
     fun testMinCompileSdkVersion_productFlavor() {
         val expectedAarMetadataBytes =
             """
-                |aarMetadataVersion=1.0
-                |aarVersion=1.0
-                |minCompileSdk=28
+                |$AAR_FORMAT_VERSION_PROPERTY=1.0
+                |$AAR_METADATA_VERSION_PROPERTY=1.0
+                |$MIN_COMPILE_SDK_PROPERTY=28
                 |"""
                 .trimMargin()
                 .replace("\n", System.lineSeparator())
@@ -106,7 +109,7 @@ class AarMetadataTaskTest {
             .with(BooleanOption.ENABLE_AAR_METADATA, true)
             .run(":lib:assemblePremiumDebug")
         project.getSubproject("lib").withAar(listOf("premium", "debug")) {
-            val aarMetadataEntryPath = getEntry(AarMetadataTask.aarMetadataEntryPath)
+            val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
             ZipArchive(this.file.toFile()).use { aar ->
                 val aarMetadataBytes =
@@ -120,9 +123,9 @@ class AarMetadataTaskTest {
     fun testMinCompileSdkVersion_buildType() {
         val expectedAarMetadataBytes =
             """
-                |aarMetadataVersion=1.0
-                |aarVersion=1.0
-                |minCompileSdk=29
+                |$AAR_FORMAT_VERSION_PROPERTY=1.0
+                |$AAR_METADATA_VERSION_PROPERTY=1.0
+                |$MIN_COMPILE_SDK_PROPERTY=29
                 |"""
                 .trimMargin()
                 .replace("\n", System.lineSeparator())
@@ -147,7 +150,7 @@ class AarMetadataTaskTest {
             .with(BooleanOption.ENABLE_AAR_METADATA, true)
             .run(":lib:assemblePremiumDebug")
         project.getSubproject("lib").withAar(listOf("premium", "debug")) {
-            val aarMetadataEntryPath = getEntry(AarMetadataTask.aarMetadataEntryPath)
+            val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
             ZipArchive(this.file.toFile()).use { aar ->
                 val aarMetadataBytes =

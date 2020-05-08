@@ -39,6 +39,7 @@ class NoOpIncrementalBuildTaskStatesTest {
             DID_WORK to emptySet(), // No tasks should run
             UP_TO_DATE to setOf(
                 ":app:assembleDebug",
+                ":app:checkDebugAarMetadata",
                 ":app:generateDebugAssets",
                 ":app:preBuild",
                 ":app:preDebugBuild",

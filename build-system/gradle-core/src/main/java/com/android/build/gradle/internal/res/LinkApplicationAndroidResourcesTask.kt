@@ -250,6 +250,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Nested
     abstract val variantOutputs : ListProperty<VariantOutputImpl>
 
+    // aarMetadataCheck doesn't affect the task output, but it's marked as an input so that this
+    // task depends on CheckAarMetadataTask.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val aarMetadataCheck: ConfigurableFileCollection
+
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
 
@@ -532,6 +538,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
 
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
+
+            task.aarMetadataCheck.from(
+                creationConfig.artifacts.get(InternalArtifactType.AAR_METADATA_CHECK)
+            )
         }
     }
 
