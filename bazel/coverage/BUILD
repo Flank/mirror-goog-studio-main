@@ -639,5 +639,6 @@ coverage_report(
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/idea/updater:integration_test",
         "//tools/vendor/google/android-apk:android-apk_tests",
+        "//tools/vendor/google/android-ndk:android-ndk_tests",
     ],
 )
