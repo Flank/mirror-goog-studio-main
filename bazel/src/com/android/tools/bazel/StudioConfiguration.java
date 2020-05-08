@@ -44,6 +44,7 @@ public class StudioConfiguration implements Configuration {
     @Override
     public boolean shouldSuppress(BazelRule rule) {
         return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/")
+                || rule.getLabel().endsWith(":intellij.gradle.toolingExtension.impl")  // b/156122269
                 || rule.getLabel().startsWith("//tools/vendor/google3/blaze/");
     }
 }
