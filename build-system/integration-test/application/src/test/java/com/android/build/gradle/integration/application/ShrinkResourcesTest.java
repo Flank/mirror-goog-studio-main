@@ -29,6 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -76,29 +77,39 @@ public class ShrinkResourcesTest {
 
     @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2} useRTxt={3} useNewShrinker={4}")
     public static Iterable<Object[]> data() {
-        return ImmutableList.of(false, true).stream()
-                .flatMap(useNewShrinker -> Stream.of(
-                        new Object[]{
-                                CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker
-                        },
-                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker},
-                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker},
-                        new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, useNewShrinker},
-                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, useNewShrinker},
-                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, useNewShrinker},
-                        new Object[]{
-                                CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker
-                        },
-                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker},
-                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker},
-                        new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, useNewShrinker},
-                        new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, useNewShrinker},
-                        new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, useNewShrinker}
-                ))
-                .collect(toImmutableList());
+        return ImmutableList.of(
+                // R classes and old resource shrinker.
+                new Object[]{
+                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, false
+                },
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, false},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, false},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, false},
+                // R text files and old resource shrinker.
+                new Object[]{
+                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, false
+                },
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, false},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, false},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, false},
+                // R text files and new resource shrinker.
+                new Object[]{
+                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, true
+                },
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, true},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, true},
+                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, true},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, true},
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, true}
+        );
     }
 
-    @Parameterized.Parameter public CodeShrinker shrinker;
+    @Parameterized.Parameter
+    public CodeShrinker shrinker;
 
     @Parameterized.Parameter(1)
     public ApkPipeline apkPipeline;
@@ -257,33 +268,33 @@ public class ShrinkResourcesTest {
         // Check that there is no shrinking in the other two targets:
         assertTrue(
                 FileUtils.join(
-                                intermediates,
-                                "processed_res",
-                                "debug",
-                                "out",
-                                "resources-debug.ap_")
+                        intermediates,
+                        "processed_res",
+                        "debug",
+                        "out",
+                        "resources-debug.ap_")
                         .exists());
         assertFalse(
                 FileUtils.join(
-                                intermediates,
-                                "shrunk_processed_res/debug"
-                                        + separator
-                                        + "resources-debug-stripped.ap_")
+                        intermediates,
+                        "shrunk_processed_res/debug"
+                                + separator
+                                + "resources-debug-stripped.ap_")
                         .exists());
         assertTrue(
                 FileUtils.join(
-                                intermediates,
-                                "processed_res",
-                                "minifyDontShrink",
-                                "out",
-                                "resources-minifyDontShrink.ap_")
+                        intermediates,
+                        "processed_res",
+                        "minifyDontShrink",
+                        "out",
+                        "resources-minifyDontShrink.ap_")
                         .exists());
         assertFalse(
                 new File(
-                                intermediates,
-                                "shrunk_processed_res/minifyDontShrink"
-                                        + separator
-                                        + "resources-minifyDontShrink-stripped.ap_")
+                        intermediates,
+                        "shrunk_processed_res/minifyDontShrink"
+                                + separator
+                                + "resources-minifyDontShrink-stripped.ap_")
                         .exists());
 
         List<String> expectedUnstrippedApk =

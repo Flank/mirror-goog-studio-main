@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import android.databinding.tool.util.Preconditions
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
@@ -28,11 +29,10 @@ import com.android.build.gradle.internal.res.shrinker.ApkFormat
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinker
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
-import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRFiles
+import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRTxt
 import com.android.build.gradle.internal.res.shrinker.graph.RawResourcesGraphBuilder
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappingsRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.DexClassesUsageRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.JvmClassesUsageRecorder
+import com.android.build.gradle.internal.res.shrinker.usages.DexUsageRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.XmlAndroidManifestUsageRecorder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
@@ -128,6 +128,14 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     abstract val compressedResources: DirectoryProperty
 
     override fun doTaskAction() {
+        if (useNewResourceShrinker.get()) {
+            Preconditions.check(
+                enableRTxtResourceShrinking.get(),
+                "New implementation of resource shrinker supports gathering resources from R " +
+                        "text files only. Enable 'android.enableRTxtResourceShrinking' flag to " +
+                        "use it."
+            )
+        }
 
         val mergedManifestsOutputs = BuiltArtifactsLoaderImpl().load(mergedManifests)
             ?: throw RuntimeException("Cannoft load merged manifests from $mergedManifests")
@@ -231,14 +239,11 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.artifactTransformationRequest.setDisallowChanges(artifactTransformationRequest)
 
-            task.enableRTxtResourceShrinking.set(
-                creationConfig
-                    .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
-            )
-            task.useNewResourceShrinker.set(
-                creationConfig
-                    .globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
-            )
+            task.enableRTxtResourceShrinking.set(creationConfig
+                .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
+            task.useNewResourceShrinker.set(creationConfig
+                .globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER])
+
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
             task.variantOutputs.disallowChanges()
 
@@ -378,8 +383,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             val classes = parameters.classes.get()
 
             val manifestUsageRecorder = XmlAndroidManifestUsageRecorder(mergedManifestFile)
-            val jvmClassesUsageRecorder = classes.map { JvmClassesUsageRecorder(it.toPath()) }
-            val dexClassesUsageRecorder = classes.map { DexClassesUsageRecorder(it.toPath()) }
+            val dexClassesUsageRecorder = classes.map { DexUsageRecorder(it.toPath()) }
 
             val reporter = LoggerAndFileDebugReporter(
                 Logging.getLogger(ShrinkResourcesTask::class.java),
@@ -387,9 +391,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             )
 
             return ResourceShrinkerImpl(
-                ResourcesGathererFromRFiles(parameters.rSourceVariant.get().asFile, ""),
+                ResourcesGathererFromRTxt(parameters.rSourceVariant.get().asFile, ""),
                 ProguardMappingsRecorder(parameters.mappingFile.get().asFile.toPath()),
-                listOf(manifestUsageRecorder) + jvmClassesUsageRecorder + dexClassesUsageRecorder,
+                listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
                 RawResourcesGraphBuilder(listOf(parameters.resourceDir.get().asFile.toPath())),
                 reporter,
                 ApkFormat.BINARY

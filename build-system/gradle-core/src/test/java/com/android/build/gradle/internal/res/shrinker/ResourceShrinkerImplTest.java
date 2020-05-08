@@ -23,15 +23,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRFiles;
+import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRTxt;
 import com.android.build.gradle.internal.res.shrinker.graph.RawResourcesGraphBuilder;
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappingsRecorder;
-import com.android.build.gradle.internal.res.shrinker.usages.DexClassesUsageRecorder;
-import com.android.build.gradle.internal.res.shrinker.usages.JvmClassesUsageRecorder;
+import com.android.build.gradle.internal.res.shrinker.usages.DexUsageRecorder;
 import com.android.build.gradle.internal.res.shrinker.usages.XmlAndroidManifestUsageRecorder;
-import com.android.build.gradle.tasks.ResourceUsageAnalyzerTest;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
-import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -51,35 +48,15 @@ import java.util.zip.ZipOutputStream;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** TODO: Test Resources#getIdentifier() handling */
 @SuppressWarnings("SpellCheckingInspection")
-@RunWith(Parameterized.class)
 public class ResourceShrinkerImplTest {
-
-    @NonNull private final RVarient rVariant;
-
-    public ResourceShrinkerImplTest(@NonNull RVarient param) {
-        this.rVariant = param;
-    }
 
     enum CodeInput {
         NO_SHRINKER,
         PROGUARD,
         R8
-    }
-
-    enum RVarient {
-        R_JAVA,
-        R_JAR,
-        R_TXT
-    }
-
-    @Parameterized.Parameters(name = "rVariant={0}")
-    public static RVarient[] getParameters() {
-        return new RVarient[] {RVarient.R_JAVA, RVarient.R_JAR, RVarient.R_TXT};
     }
 
     @ClassRule public static TemporaryFolder sTemporaryFolder = new TemporaryFolder();
@@ -119,18 +96,17 @@ public class ResourceShrinkerImplTest {
         File dir = sTemporaryFolder.newFolder();
         File resources = createResourceFolder(dir, true);
 
-        File rDir = createResourceSources(dir);
+        File rDir = createResourceTextFile(dir);
         File classes = createR8Dex(dir);
         File mergedManifest = createMergedManifest(dir);
         File mapping = createMappingFile(dir);
 
         ResourceShrinkerImpl analyzer =
                 new ResourceShrinkerImpl(
-                        new ResourcesGathererFromRFiles(rDir, "com.example.shrinkunittest.app"),
+                        new ResourcesGathererFromRTxt(rDir, "com.example.shrinkunittest.app"),
                         mapping == null ? null : new ProguardMappingsRecorder(mapping.toPath()),
                         Arrays.asList(
-                                new JvmClassesUsageRecorder(classes.toPath()),
-                                new DexClassesUsageRecorder(classes.toPath()),
+                                new DexUsageRecorder(classes.toPath()),
                                 new XmlAndroidManifestUsageRecorder(mergedManifest.toPath())),
                         new RawResourcesGraphBuilder(
                                 Collections.singletonList(resources.toPath())),
@@ -192,20 +168,19 @@ public class ResourceShrinkerImplTest {
         File mapping;
         File classes;
 
-        classes = createUnproguardedClasses(dir);
+        classes = createR8Dex(dir);
         mapping = null;
 
-        File rDir = createResourceSources(dir);
+        File rDir = createResourceTextFile(dir);
         File mergedManifest = createMergedManifest(dir);
         File resources = createResourceFolder(dir, false);
 
         ResourceShrinkerImpl analyzer =
                 new ResourceShrinkerImpl(
-                        new ResourcesGathererFromRFiles(rDir, "com.example.shrinkunittest.app"),
+                        new ResourcesGathererFromRTxt(rDir, "com.example.shrinkunittest.app"),
                         mapping == null ? null : new ProguardMappingsRecorder(mapping.toPath()),
                         Arrays.asList(
-                                new JvmClassesUsageRecorder(classes.toPath()),
-                                new DexClassesUsageRecorder(classes.toPath()),
+                                new DexUsageRecorder(classes.toPath()),
                                 new XmlAndroidManifestUsageRecorder(mergedManifest.toPath())),
                         new RawResourcesGraphBuilder(
                                 Collections.singletonList(resources.toPath())),
@@ -253,11 +228,11 @@ public class ResourceShrinkerImplTest {
         File classes;
         switch (codeInput) {
             case PROGUARD:
-                classes = createProguardedClasses(dir);
+                classes = createProguardedDex(dir);
                 mapping = createMappingFile(dir);
                 break;
             case NO_SHRINKER:
-                classes = createUnproguardedClasses(dir);
+                classes = createUnproguardedDex(dir);
                 mapping = null;
                 break;
             case R8:
@@ -267,27 +242,17 @@ public class ResourceShrinkerImplTest {
             default:
                 throw new AssertionError();
         }
-        File rSource = createResourceSources(dir);
+        File rSource = createResourceTextFile(dir);
 
         File mergedManifest = createMergedManifest(dir);
         File resources = createResourceFolder(dir, false);
 
-        /*ResourceUsageAnalyzer analyzer =
-        new ResourceUsageAnalyzer(
-                rSource,
-                Collections.singleton(classes),
-                mergedManifest,
-                mapping,
-                resources,
-                null,
-                ResourceUsageAnalyzer.ApkFormat.BINARY);*/
         ResourceShrinkerImpl analyzer =
                 new ResourceShrinkerImpl(
-                        new ResourcesGathererFromRFiles(rSource, "com.example.shrinkunittest.app"),
+                        new ResourcesGathererFromRTxt(rSource, "com.example.shrinkunittest.app"),
                         mapping == null ? null : new ProguardMappingsRecorder(mapping.toPath()),
                         Arrays.asList(
-                                new JvmClassesUsageRecorder(classes.toPath()),
-                                new DexClassesUsageRecorder(classes.toPath()),
+                                new DexUsageRecorder(classes.toPath()),
                                 new XmlAndroidManifestUsageRecorder(mergedManifest.toPath())),
                         new RawResourcesGraphBuilder(
                                 Collections.singletonList(resources.toPath())),
@@ -751,744 +716,38 @@ public class ResourceShrinkerImplTest {
                         + "</manifest>");
     }
 
-    private File createResourceSources(File dir) throws IOException {
-        if (rVariant == RVarient.R_JAR) {
-            return TestResources.getFile(ResourceUsageAnalyzerTest.class, "R.jar");
-        }
+    private File createResourceTextFile(File dir) throws IOException {
         File rDir = new File(dir, "app/build/source/r/release".replace('/', separatorChar));
         rDir.mkdirs();
-        if (rVariant == RVarient.R_JAVA) {
-            createFile(
-                    rDir,
-                    "com/example/shrinkunittest/app/R.java",
-                    ""
-                            + "/* AUTO-GENERATED FILE.  DO NOT MODIFY.\n"
-                            + " *\n"
-                            + " * This class was automatically generated by the\n"
-                            + " * aapt tool from the resource data it found.  It\n"
-                            + " * should not be modified by hand.\n"
-                            + " */\n"
-                            + "\n"
-                            + "package com.example.shrinkunittest.app;\n"
-                            + "\n"
-                            + "public final class R {\n"
-                            + "    public static final class attr {\n"
-                            + "        /** <p>Must be an integer value, such as \"<code>100</code>\".\n"
-                            + "<p>This may also be a reference to a resource (in the form\n"
-                            + "\"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>\") or\n"
-                            + "theme attribute (in the form\n"
-                            + "\"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>\")\n"
-                            + "containing a value of this type.\n"
-                            + "         */\n"
-                            + "        public static final int myAttr1=0x7f010000;\n"
-                            + "        /** <p>Must be a boolean value, either \"<code>true</code>\" or \"<code>false</code>\".\n"
-                            + "<p>This may also be a reference to a resource (in the form\n"
-                            + "\"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>\") or\n"
-                            + "theme attribute (in the form\n"
-                            + "\"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>\")\n"
-                            + "containing a value of this type.\n"
-                            + "         */\n"
-                            + "        public static final int myAttr2=0x7f010001;\n"
-                            + "    }\n"
-                            + "    public static final class dimen {\n"
-                            + "        public static final int activity_horizontal_margin=0x7f040000;\n"
-                            + "        public static final int activity_vertical_margin=0x7f040001;\n"
-                            + "    }\n"
-                            + "    public static final class drawable {\n"
-                            + "        public static final int ic_launcher=0x7f020000;\n"
-                            + "        public static final int unused=0x7f020001;\n"
-                            + "    }\n"
-                            + "    public static final class id {\n"
-                            + "        public static final int action_settings=0x7f080000;\n"
-                            + "        public static final int action_settings2=0x7f080001;\n"
-                            + "    }\n"
-                            + "    public static final class layout {\n"
-                            + "        public static final int activity_main=0x7f030000;\n"
-                            + "    }\n"
-                            + "    public static final class menu {\n"
-                            + "        public static final int main=0x7f070000;\n"
-                            + "    }\n"
-                            + "    public static final class raw {\n"
-                            + "        public static final int android_wear_micro_apk=0x7f090000;\n"
-                            + "        public static final int index1=0x7f090001;\n"
-                            + "        public static final int styles2=0x7f090002;\n"
-                            + "        public static final int my_js=0x7f090003;\n"
-                            + "        public static final int my_used_raw_drawable=0x7f090004;\n"
-                            + "    }"
-                            + "    public static final class string {\n"
-                            + "        public static final int action_settings=0x7f050000;\n"
-                            + "        public static final int action_settings2=0x7f050004;\n"
-                            + "        public static final int alias=0x7f050001;\n"
-                            + "        public static final int app_name=0x7f050002;\n"
-                            + "        public static final int hello_world=0x7f050003;\n"
-                            + "    }\n"
-                            + "    public static final class style {\n"
-                            + "        public static final int AppTheme=0x7f060000;\n"
-                            + "        public static final int MyStyle=0x7f060001;\n"
-                            + "        public static final int MyStyle_Child=0x7f060002;\n"
-                            + "    }\n"
-                            + "    public static final class xml {\n"
-                            + "        public static final int android_wear_micro_apk=0x7f0a0000;\n"
-                            + "    }"
-                            + "}");
-        }
-        if (rVariant == RVarient.R_TXT) {
-            createFile(
-                    rDir,
-                    "com/example/shrinkunittest/app/R.txt",
-                    "int attr myAttr1 0x7f010000\n"
-                            + "int attr myAttr2 0x7f010001\n"
-                            + "int dimen activity_horizontal_margin 0x7f040000\n"
-                            + "int dimen activity_vertical_margin 0x7f040001\n"
-                            + "int drawable ic_launcher 0x7f020000\n"
-                            + "int drawable unused 0x7f020001\n"
-                            + "int id action_settings 0x7f080000\n"
-                            + "int id action_settings2 0x7f080001\n"
-                            + "int layout activity_main 0x7f030000\n"
-                            + "int menu main 0x7f070000\n"
-                            + "int raw android_wear_micro_apk 0x7f090000\n"
-                            + "int raw index1 0x7f090001\n"
-                            + "int raw styles2 0x7f090002\n"
-                            + "int raw my_js 0x7f090003\n"
-                            + "int raw my_used_raw_drawable 0x7f090004\n"
-                            + "int string action_settings 0x7f050000\n"
-                            + "int string action_settings2 0x7f050004\n"
-                            + "int string alias 0x7f050001\n"
-                            + "int string app_name 0x7f050002\n"
-                            + "int string hello_world 0x7f050003\n"
-                            + "int style AppTheme 0x7f060000\n"
-                            + "int style MyStyle 0x7f060001\n"
-                            + "int style MyStyle_Child 0x7f060002\n"
-                            + "int xml android_wear_micro_apk 0x7f0a0000\n");
-        }
+        createFile(
+                rDir,
+                "com/example/shrinkunittest/app/R.txt",
+                "int attr myAttr1 0x7f010000\n"
+                        + "int attr myAttr2 0x7f010001\n"
+                        + "int dimen activity_horizontal_margin 0x7f040000\n"
+                        + "int dimen activity_vertical_margin 0x7f040001\n"
+                        + "int drawable ic_launcher 0x7f020000\n"
+                        + "int drawable unused 0x7f020001\n"
+                        + "int id action_settings 0x7f080000\n"
+                        + "int id action_settings2 0x7f080001\n"
+                        + "int layout activity_main 0x7f030000\n"
+                        + "int menu main 0x7f070000\n"
+                        + "int raw android_wear_micro_apk 0x7f090000\n"
+                        + "int raw index1 0x7f090001\n"
+                        + "int raw styles2 0x7f090002\n"
+                        + "int raw my_js 0x7f090003\n"
+                        + "int raw my_used_raw_drawable 0x7f090004\n"
+                        + "int string action_settings 0x7f050000\n"
+                        + "int string action_settings2 0x7f050004\n"
+                        + "int string alias 0x7f050001\n"
+                        + "int string app_name 0x7f050002\n"
+                        + "int string hello_world 0x7f050003\n"
+                        + "int style AppTheme 0x7f060000\n"
+                        + "int style MyStyle 0x7f060001\n"
+                        + "int style MyStyle_Child 0x7f060002\n"
+                        + "int xml android_wear_micro_apk 0x7f0a0000\n");
+
         return rDir;
-    }
-
-    private static File createProguardedClasses(File dir) throws IOException {
-        byte[] bytecode =
-                new byte[] {
-                    (byte) 80, (byte) 75, (byte) 3, (byte) 4, (byte) 20, (byte) 0, (byte) 8,
-                            (byte) 0,
-                    (byte) 8, (byte) 0, (byte) 12, (byte) 88, (byte) -62, (byte) 68, (byte) 0,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 49, (byte) 0, (byte) 0, (byte) 0, (byte) 99,
-                            (byte) 111,
-                    (byte) 109, (byte) 47, (byte) 101, (byte) 120, (byte) 97, (byte) 109,
-                            (byte) 112, (byte) 108,
-                    (byte) 101, (byte) 47, (byte) 115, (byte) 104, (byte) 114, (byte) 105,
-                            (byte) 110, (byte) 107,
-                    (byte) 117, (byte) 110, (byte) 105, (byte) 116, (byte) 116, (byte) 101,
-                            (byte) 115, (byte) 116,
-                    (byte) 47, (byte) 97, (byte) 112, (byte) 112, (byte) 47, (byte) 77, (byte) 97,
-                            (byte) 105,
-                    (byte) 110, (byte) 65, (byte) 99, (byte) 116, (byte) 105, (byte) 118,
-                            (byte) 105, (byte) 116,
-                    (byte) 121, (byte) 46, (byte) 99, (byte) 108, (byte) 97, (byte) 115, (byte) 115,
-                            (byte) 117,
-                    (byte) -110, (byte) -53, (byte) 78, (byte) -37, (byte) 64, (byte) 20,
-                            (byte) -122, (byte) -1,
-                    (byte) -63, (byte) 14, (byte) 14, (byte) 97, (byte) 32, (byte) 36, (byte) 36,
-                            (byte) -31,
-                    (byte) 82, (byte) 110, (byte) -31, (byte) -46, (byte) 58, (byte) -15,
-                            (byte) -62, (byte) 82,
-                    (byte) -73, (byte) -127, (byte) 74, (byte) -112, (byte) -107, (byte) -91,
-                            (byte) -94, (byte) 46,
-                    (byte) -112, (byte) 88, (byte) -80, (byte) -77, (byte) -30, (byte) 1, (byte) 70,
-                            (byte) 36,
-                    (byte) -29, (byte) 40, (byte) -98, (byte) -92, (byte) 101, (byte) -59,
-                            (byte) -85, (byte) -16,
-                    (byte) 0, (byte) 108, (byte) -70, (byte) 73, (byte) -44, (byte) 46, (byte) -6,
-                            (byte) 0,
-                    (byte) 60, (byte) 20, (byte) -22, (byte) -103, (byte) -60, (byte) 80,
-                            (byte) 110, (byte) -99,
-                    (byte) -111, (byte) -50, (byte) 57, (byte) -93, (byte) -1, (byte) 59, (byte) 23,
-                            (byte) -23,
-                    (byte) -52, (byte) -3, (byte) -61, (byte) -17, (byte) 63, (byte) 0, (byte) 62,
-                            (byte) -61,
-                    (byte) -77, (byte) 110, (byte) 44, (byte) -64, (byte) -70, (byte) 113,
-                            (byte) -116, (byte) -55,
-                    (byte) 2, (byte) 14, (byte) -74, (byte) 28, (byte) 84, (byte) 29, (byte) 108,
-                            (byte) 59,
-                    (byte) -40, (byte) -55, (byte) -63, (byte) 70, (byte) -34, (byte) -104,
-                            (byte) 69, (byte) 99,
-                    (byte) 74, (byte) 57, (byte) 100, (byte) 80, (byte) -52, (byte) 17, (byte) 81,
-                            (byte) 48,
-                    (byte) -90, (byte) 60, (byte) -117, (byte) 105, (byte) 44, (byte) 112,
-                            (byte) 108, (byte) 96,
-                    (byte) -103, (byte) 99, (byte) 23, (byte) 21, (byte) -114, (byte) 61, (byte) 44,
-                            (byte) 113,
-                    (byte) 124, (byte) -60, (byte) 42, (byte) -57, (byte) 39, (byte) 124,
-                            (byte) -32, (byte) -88,
-                    (byte) 97, (byte) -99, (byte) -93, (byte) -114, (byte) 21, (byte) 6, (byte) -53,
-                            (byte) -83,
-                    (byte) 5, (byte) 12, (byte) -21, (byte) 110, (byte) -19, (byte) 107, (byte) -88,
-                            (byte) -94,
-                    (byte) 94, (byte) 44, (byte) 35, (byte) 127, (byte) 32, (byte) -59, (byte) 119,
-                            (byte) -1,
-                    (byte) 88, (byte) -88, (byte) 126, (byte) -96, (byte) -50, (byte) -37,
-                            (byte) -95, (byte) 22,
-                    (byte) -67, (byte) -58, (byte) -104, (byte) 58, (byte) 101, (byte) -80,
-                            (byte) -35, (byte) -64,
-                    (byte) -72, (byte) 37, (byte) 55, (byte) 120, (byte) 11, (byte) 55, (byte) -116,
-                            (byte) 82,
-                    (byte) 113, (byte) -97, (byte) -124, (byte) 56, (byte) -15, (byte) -113,
-                            (byte) -6, (byte) 42,
-                    (byte) 106, (byte) -117, (byte) -41, (byte) -62, (byte) -77, (byte) -116,
-                            (byte) 51, (byte) -122,
-                    (byte) -43, (byte) 119, (byte) -124, (byte) 64, (byte) -117, (byte) -50,
-                            (byte) 88, (byte) -100,
-                    (byte) -34, (byte) -105, (byte) 74, (byte) -22, (byte) 47, (byte) -44,
-                            (byte) -72, (byte) 25,
-                    (byte) 71, (byte) -126, (byte) -95, (byte) -12, (byte) -120, (byte) -122,
-                            (byte) -35, (byte) -82,
-                    (byte) 127, (byte) -40, (byte) -46, (byte) 114, (byte) 32, (byte) -11,
-                            (byte) 53, (byte) -61,
-                    (byte) -54, (byte) 127, (byte) 39, (byte) 103, (byte) 40, (byte) -65, (byte) 91,
-                            (byte) -99,
-                    (byte) -63, (byte) 107, (byte) -59, (byte) 29, (byte) 95, (byte) -4, (byte) 8,
-                            (byte) 59,
-                    (byte) -35, (byte) -74, (byte) -16, (byte) -109, (byte) -53, (byte) -98,
-                            (byte) 84, (byte) 87,
-                    (byte) 125, (byte) -22, (byte) -91, (byte) 69, (byte) -94, (byte) -57,
-                            (byte) -43, (byte) -113,
-                    (byte) 67, (byte) -87, (byte) -2, (byte) 117, (byte) -104, (byte) -71,
-                            (byte) 16, (byte) -38,
-                    (byte) -28, (byte) 5, (byte) 17, (byte) 67, (byte) -98, (byte) -30, (byte) -105,
-                            (byte) 61,
-                    (byte) 28, (byte) 57, (byte) 9, (byte) 25, (byte) -78, (byte) -79, (byte) 106,
-                            (byte) -10,
-                    (byte) -60, (byte) 56, (byte) 92, (byte) 124, (byte) 12, (byte) -65, (byte) 117,
-                            (byte) -75,
-                    (byte) -116, (byte) 85, (byte) 98, (byte) 82, (byte) 104, (byte) -100,
-                            (byte) 88, (byte) -91,
-                    (byte) 111, (byte) 83, (byte) -18, (byte) 68, (byte) -76, (byte) 69, (byte) 75,
-                            (byte) 11,
-                    (byte) 42, (byte) 58, (byte) -97, (byte) 8, (byte) -35, (byte) -116,
-                            (byte) -107, (byte) 22,
-                    (byte) 74, (byte) -97, (byte) -46, (byte) -96, (byte) -88, (byte) -46,
-                            (byte) 18, (byte) 109,
-                    (byte) -104, (byte) 99, (byte) -125, (byte) -103, (byte) 53, (byte) -110,
-                            (byte) -35, (byte) -92,
-                    (byte) 87, (byte) -127, (byte) 60, (byte) 35, (byte) -97, (byte) -87,
-                            (byte) -113, (byte) -112,
-                    (byte) -3, (byte) -103, (byte) 2, (byte) -76, (byte) -47, (byte) 84, (byte) 94,
-                            (byte) -58,
-                    (byte) 20, (byte) 93, (byte) -128, (byte) -41, (byte) -67, (byte) 17,
-                            (byte) 102, (byte) -22,
-                    (byte) 69, (byte) 54, (byte) -60, (byte) -36, (byte) -124, (byte) 98,
-                            (byte) 112, (byte) -79,
-                    (byte) -10, (byte) 68, (byte) 89, (byte) 41, (byte) 53, (byte) 4, (byte) 47,
-                            (byte) 78,
-                    (byte) 121, (byte) 67, (byte) -52, (byte) -38, (byte) 119, (byte) 41, (byte) 69,
-                            (byte) 31,
-                    (byte) 35, (byte) -91, (byte) -86, (byte) -60, (byte) -48, (byte) -17,
-                            (byte) 67, (byte) -39,
-                    (byte) -5, (byte) -123, (byte) 121, (byte) -122, (byte) -125, (byte) -75,
-                            (byte) -94, (byte) 117,
-                    (byte) -117, (byte) -116, (byte) 125, (byte) 103, (byte) 74, (byte) -25,
-                            (byte) 38, (byte) 56,
-                    (byte) -2, (byte) 2, (byte) 80, (byte) 75, (byte) 7, (byte) 8, (byte) 39,
-                            (byte) -48,
-                    (byte) -69, (byte) -98, (byte) -101, (byte) 1, (byte) 0, (byte) 0, (byte) -86,
-                            (byte) 2,
-                    (byte) 0, (byte) 0, (byte) 80, (byte) 75, (byte) 1, (byte) 2, (byte) 20,
-                            (byte) 0,
-                    (byte) 20, (byte) 0, (byte) 8, (byte) 0, (byte) 8, (byte) 0, (byte) 12,
-                            (byte) 88,
-                    (byte) -62, (byte) 68, (byte) 39, (byte) -48, (byte) -69, (byte) -98,
-                            (byte) -101, (byte) 1,
-                    (byte) 0, (byte) 0, (byte) -86, (byte) 2, (byte) 0, (byte) 0, (byte) 49,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 99, (byte) 111, (byte) 109, (byte) 47, (byte) 101, (byte) 120, (byte) 97,
-                            (byte) 109,
-                    (byte) 112, (byte) 108, (byte) 101, (byte) 47, (byte) 115, (byte) 104,
-                            (byte) 114, (byte) 105,
-                    (byte) 110, (byte) 107, (byte) 117, (byte) 110, (byte) 105, (byte) 116,
-                            (byte) 116, (byte) 101,
-                    (byte) 115, (byte) 116, (byte) 47, (byte) 97, (byte) 112, (byte) 112, (byte) 47,
-                            (byte) 77,
-                    (byte) 97, (byte) 105, (byte) 110, (byte) 65, (byte) 99, (byte) 116, (byte) 105,
-                            (byte) 118,
-                    (byte) 105, (byte) 116, (byte) 121, (byte) 46, (byte) 99, (byte) 108, (byte) 97,
-                            (byte) 115,
-                    (byte) 115, (byte) 80, (byte) 75, (byte) 5, (byte) 6, (byte) 0, (byte) 0,
-                            (byte) 0,
-                    (byte) 0, (byte) 1, (byte) 0, (byte) 1, (byte) 0, (byte) 95, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) -6, (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0
-                };
-        return createFile(dir, "app/build/classes-proguard/release/classes.jar", bytecode);
-    }
-
-    private static File createUnproguardedClasses(File dir) throws IOException {
-        byte[] bytecode =
-                new byte[] {
-                    (byte) 80, (byte) 75, (byte) 3, (byte) 4, (byte) 20, (byte) 0, (byte) 8,
-                            (byte) 0,
-                    (byte) 8, (byte) 0, (byte) -11, (byte) -127, (byte) -61, (byte) 68, (byte) 0,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 9, (byte) 0, (byte) 4, (byte) 0, (byte) 77,
-                            (byte) 69,
-                    (byte) 84, (byte) 65, (byte) 45, (byte) 73, (byte) 78, (byte) 70, (byte) 47,
-                            (byte) -2,
-                    (byte) -54, (byte) 0, (byte) 0, (byte) 3, (byte) 0, (byte) 80, (byte) 75,
-                            (byte) 7,
-                    (byte) 8, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 2, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 80, (byte) 75,
-                            (byte) 3,
-                    (byte) 4, (byte) 20, (byte) 0, (byte) 8, (byte) 0, (byte) 8, (byte) 0,
-                            (byte) -11,
-                    (byte) -127, (byte) -61, (byte) 68, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 20,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 77, (byte) 69, (byte) 84, (byte) 65,
-                            (byte) 45,
-                    (byte) 73, (byte) 78, (byte) 70, (byte) 47, (byte) 77, (byte) 65, (byte) 78,
-                            (byte) 73,
-                    (byte) 70, (byte) 69, (byte) 83, (byte) 84, (byte) 46, (byte) 77, (byte) 70,
-                            (byte) -13,
-                    (byte) 77, (byte) -52, (byte) -53, (byte) 76, (byte) 75, (byte) 45, (byte) 46,
-                            (byte) -47,
-                    (byte) 13, (byte) 75, (byte) 45, (byte) 42, (byte) -50, (byte) -52, (byte) -49,
-                            (byte) -77,
-                    (byte) 82, (byte) 48, (byte) -44, (byte) 51, (byte) -32, (byte) -27, (byte) 114,
-                            (byte) 46,
-                    (byte) 74, (byte) 77, (byte) 44, (byte) 73, (byte) 77, (byte) -47, (byte) 117,
-                            (byte) -86,
-                    (byte) 4, (byte) 9, (byte) -104, (byte) -23, (byte) 25, (byte) -60, (byte) -101,
-                            (byte) -103,
-                    (byte) 42, (byte) 104, (byte) 56, (byte) 22, (byte) 20, (byte) -28, (byte) -92,
-                            (byte) 42,
-                    (byte) 120, (byte) -26, (byte) 37, (byte) -21, (byte) 105, (byte) -14,
-                            (byte) 114, (byte) -15,
-                    (byte) 114, (byte) 1, (byte) 0, (byte) 80, (byte) 75, (byte) 7, (byte) 8,
-                            (byte) 127,
-                    (byte) 71, (byte) 56, (byte) -57, (byte) 60, (byte) 0, (byte) 0, (byte) 0,
-                            (byte) 60,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 80, (byte) 75, (byte) 3, (byte) 4,
-                            (byte) 20,
-                    (byte) 0, (byte) 8, (byte) 0, (byte) 8, (byte) 0, (byte) -49, (byte) -127,
-                            (byte) -61,
-                    (byte) 68, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 49, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 99, (byte) 111, (byte) 109, (byte) 47, (byte) 101, (byte) 120,
-                            (byte) 97,
-                    (byte) 109, (byte) 112, (byte) 108, (byte) 101, (byte) 47, (byte) 115,
-                            (byte) 104, (byte) 114,
-                    (byte) 105, (byte) 110, (byte) 107, (byte) 117, (byte) 110, (byte) 105,
-                            (byte) 116, (byte) 116,
-                    (byte) 101, (byte) 115, (byte) 116, (byte) 47, (byte) 97, (byte) 112,
-                            (byte) 112, (byte) 47,
-                    (byte) 77, (byte) 97, (byte) 105, (byte) 110, (byte) 65, (byte) 99, (byte) 116,
-                            (byte) 105,
-                    (byte) 118, (byte) 105, (byte) 116, (byte) 121, (byte) 46, (byte) 99,
-                            (byte) 108, (byte) 97,
-                    (byte) 115, (byte) 115, (byte) -107, (byte) -109, (byte) -51, (byte) 82,
-                            (byte) 19, (byte) 65,
-                    (byte) 16, (byte) -57, (byte) -1, (byte) -109, (byte) 4, (byte) -106,
-                            (byte) -124, (byte) 13,
-                    (byte) -127, (byte) 64, (byte) -126, (byte) 32, (byte) 72, (byte) 16,
-                            (byte) -112, (byte) 124,
-                    (byte) 8, (byte) 43, (byte) -8, (byte) 45, (byte) -96, (byte) 66, (byte) 4,
-                            (byte) -115,
-                    (byte) 5, (byte) 90, (byte) 37, (byte) 22, (byte) 7, (byte) 47, (byte) -44,
-                            (byte) -110,
-                    (byte) -116, (byte) 48, (byte) -78, (byte) -103, (byte) 77, (byte) 101,
-                            (byte) 39, (byte) 81,
-                    (byte) -34, (byte) -58, (byte) 7, (byte) -32, (byte) 34, (byte) 7, (byte) 40,
-                            (byte) 61,
-                    (byte) -8, (byte) 0, (byte) 62, (byte) -109, (byte) 101, (byte) -39, (byte) -77,
-                            (byte) 89,
-                    (byte) 80, (byte) -85, (byte) 66, (byte) -91, (byte) -36, (byte) -61,
-                            (byte) -12, (byte) 108,
-                    (byte) 79, (byte) -9, (byte) 111, (byte) 122, (byte) -2, (byte) -45, (byte) -13,
-                            (byte) -29,
-                    (byte) -41, (byte) -73, (byte) -17, (byte) 0, (byte) 22, (byte) -15, (byte) 50,
-                            (byte) 6,
-                    (byte) 19, (byte) 51, (byte) 122, (byte) -72, (byte) 17, (byte) -59, (byte) 44,
-                            (byte) -78,
-                    (byte) 49, (byte) -12, (byte) 34, (byte) -89, (byte) -121, (byte) 124,
-                            (byte) 20, (byte) 5,
-                    (byte) -36, (byte) -116, (byte) 97, (byte) 14, (byte) -13, (byte) -67,
-                            (byte) -80, (byte) 112,
-                    (byte) 43, (byte) -118, (byte) 5, (byte) 44, (byte) -22, (byte) -72, (byte) -37,
-                            (byte) 6,
-                    (byte) -18, (byte) 24, (byte) -72, (byte) -53, (byte) -48, (byte) -67,
-                            (byte) 44, (byte) -92,
-                    (byte) 80, (byte) -113, (byte) 25, (byte) -62, (byte) -39, (byte) -36,
-                            (byte) 14, (byte) 67,
-                    (byte) -92, (byte) -24, (byte) 86, (byte) 56, (byte) 67, (byte) 98, (byte) 83,
-                            (byte) 72,
-                    (byte) -2, (byte) -86, (byte) 81, (byte) -35, (byte) -29, (byte) -11,
-                            (byte) -73, (byte) -10,
-                    (byte) -98, (byte) 67, (byte) -98, (byte) -28, (byte) -90, (byte) 91,
-                            (byte) -74, (byte) -99,
-                    (byte) 29, (byte) -69, (byte) 46, (byte) -12, (byte) 127, (byte) -32,
-                            (byte) -116, (byte) -88,
-                    (byte) 3, (byte) -31, (byte) 49, (byte) -52, (byte) 109, (byte) -106,
-                            (byte) -35, (byte) -86,
-                    (byte) -59, (byte) 63, (byte) -39, (byte) -43, (byte) -102, (byte) -61,
-                            (byte) 45, (byte) -17,
-                    (byte) -96, (byte) 46, (byte) -28, (byte) 97, (byte) -125, (byte) -88,
-                            (byte) -118, (byte) 123,
-                    (byte) -54, (byte) -78, (byte) 107, (byte) 53, (byte) 107, (byte) -53,
-                            (byte) 22, (byte) 114,
-                    (byte) -75, (byte) -84, (byte) 68, (byte) 83, (byte) -88, (byte) -93, (byte) 37,
-                            (byte) -122,
-                    (byte) 30, (byte) 87, (byte) 22, (byte) -21, (byte) -36, (byte) 86, (byte) 68,
-                            (byte) 72,
-                    (byte) 103, (byte) 55, (byte) 109, (byte) 89, (byte) -87, (byte) -69,
-                            (byte) -94, (byte) 98,
-                    (byte) -71, (byte) -98, (byte) -75, (byte) -42, (byte) -112, (byte) 21,
-                            (byte) -121, (byte) 47,
-                    (byte) -23, (byte) 66, (byte) -110, (byte) -98, (byte) -35, (byte) -28,
-                            (byte) -107, (byte) -110,
-                    (byte) -12, (byte) -108, (byte) 45, (byte) -53, (byte) 124, (byte) 91,
-                            (byte) -7, (byte) -47,
-                    (byte) -125, (byte) 109, (byte) -126, (byte) -55, (byte) 123, (byte) -114,
-                            (byte) 123, (byte) 93,
-                    (byte) 83, (byte) -62, (byte) -107, (byte) -34, (byte) 22, (byte) -105,
-                            (byte) -115, (byte) 127,
-                    (byte) -56, (byte) 77, (byte) -63, (byte) 63, (byte) 90, (byte) -38, (byte) -69,
-                            (byte) -108,
-                    (byte) 123, (byte) 71, (byte) 69, (byte) 87, (byte) -3, (byte) -11, (byte) -63,
-                            (byte) 54,
-                    (byte) -53, (byte) 12, (byte) 41, (byte) 87, (byte) 6, (byte) -108, (byte) -110,
-                            (byte) -30,
-                    (byte) -43, (byte) 109, (byte) -18, (byte) -16, (byte) -78, (byte) -30,
-                            (byte) 21, (byte) -122,
-                    (byte) -47, (byte) 54, (byte) 52, (byte) 29, (byte) -47, (byte) 34, (byte) 10,
-                            (byte) -102,
-                    (byte) 49, (byte) 12, (byte) 95, (byte) 18, (byte) -62, (byte) 16, (byte) 18,
-                            (byte) -124,
-                    (byte) 96, (byte) 37, (byte) -122, (byte) 56, (byte) 29, (byte) -92, (byte) 124,
-                            (byte) -72,
-                    (byte) 101, (byte) -41, (byte) 2, (byte) 1, (byte) 99, (byte) -37, (byte) 110,
-                            (byte) -93,
-                    (byte) 94, (byte) -26, (byte) 27, (byte) 66, (byte) -1, (byte) 12, (byte) -4,
-                            (byte) 45,
-                    (byte) -45, (byte) -4, (byte) 7, (byte) -69, (byte) 105, (byte) -101,
-                            (byte) -120, (byte) -93,
-                    (byte) -49, (byte) -60, (byte) 16, (byte) 82, (byte) 6, (byte) -18, (byte) -101,
-                            (byte) 120,
-                    (byte) -124, (byte) 73, (byte) 19, (byte) 75, (byte) 88, (byte) 54, (byte) -79,
-                            (byte) -126,
-                    (byte) -57, (byte) 6, (byte) -98, (byte) -104, (byte) 120, (byte) -118,
-                            (byte) 73, (byte) 3,
-                    (byte) -85, (byte) 38, (byte) -42, (byte) 80, (byte) 52, (byte) -16, (byte) -52,
-                            (byte) -60,
-                    (byte) 58, (byte) 54, (byte) 12, (byte) 60, (byte) 55, (byte) -15, (byte) 66,
-                            (byte) 71,
-                    (byte) -114, (byte) 97, (byte) -100, (byte) -95, (byte) -16, (byte) 31,
-                            (byte) 87, (byte) -61,
-                    (byte) 48, (byte) 116, (byte) 126, (byte) 2, (byte) -67, (byte) 116, (byte) -18,
-                            (byte) 54,
-                    (byte) 64, (byte) -107, (byte) -49, (byte) 118, (byte) -32, (byte) -68,
-                            (byte) -103, (byte) 118,
-                    (byte) -20, (byte) 35, (byte) -73, (byte) -95, (byte) -88, (byte) -93,
-                            (byte) -50, (byte) 39,
-                    (byte) 102, (byte) 73, (byte) 74, (byte) 94, (byte) 47, (byte) 58, (byte) -74,
-                            (byte) -25,
-                    (byte) 113, (byte) -22, (byte) -110, (byte) -72, (byte) 29, (byte) -16,
-                            (byte) 118, (byte) -85,
-                    (byte) -76, (byte) 39, (byte) 67, (byte) -97, (byte) -57, (byte) 85, (byte) -47,
-                            (byte) -107,
-                    (byte) -118, (byte) 75, (byte) -75, (byte) 67, (byte) 122, (byte) -111,
-                            (byte) -116, (byte) -39,
-                    (byte) -110, (byte) -66, (byte) -7, (byte) -60, (byte) 62, (byte) 87,
-                            (byte) -66, (byte) 118,
-                    (byte) -14, (byte) -67, (byte) 67, (byte) -105, (byte) 90, (byte) 103,
-                            (byte) 24, (byte) -49,
-                    (byte) -26, (byte) -38, (byte) 72, (byte) 27, (byte) 44, (byte) -109,
-                            (byte) -68, (byte) 51,
-                    (byte) 29, (byte) 107, (byte) 107, (byte) 93, (byte) 121, (byte) -92,
-                            (byte) -75, (byte) -15,
-                    (byte) -56, (byte) -91, (byte) 44, (byte) 6, (byte) 67, (byte) -76, (byte) -90,
-                            (byte) 116,
-                    (byte) -101, (byte) -39, (byte) 82, (byte) -69, (byte) 6, (byte) -94, (byte) 2,
-                            (byte) 83,
-                    (byte) 109, (byte) -81, (byte) -103, (byte) 33, (byte) 74, (byte) -123,
-                            (byte) -21, (byte) 89,
-                    (byte) -87, (byte) -30, (byte) -65, (byte) 38, (byte) 18, (byte) 109,
-                            (byte) -86, (byte) 99,
-                    (byte) 97, (byte) -70, (byte) 49, (byte) 18, (byte) 90, (byte) 24, (byte) 87,
-                            (byte) -18,
-                    (byte) -110, (byte) 30, (byte) 74, (byte) -56, (byte) 125, (byte) -110,
-                            (byte) 42, (byte) -45,
-                    (byte) 41, (byte) 15, (byte) -109, (byte) -12, (byte) -72, (byte) 77,
-                            (byte) -24, (byte) 47,
-                    (byte) 2, (byte) -90, (byte) -69, (byte) -124, (byte) -58, (byte) 4, (byte) -3,
-                            (byte) 89,
-                    (byte) 100, (byte) 25, (byte) -39, (byte) -82, (byte) -4, (byte) 25, (byte) -40,
-                            (byte) 23,
-                    (byte) -102, (byte) -124, (byte) -48, (byte) 79, (byte) 99, (byte) -73,
-                            (byte) -17, (byte) -116,
-                    (byte) 98, (byte) -128, (byte) 70, (byte) -77, (byte) 21, (byte) -128,
-                            (byte) 36, (byte) 6,
-                    (byte) -3, (byte) 116, (byte) -22, (byte) -82, (byte) 32, (byte) -71, (byte) 68,
-                            (byte) -47,
-                    (byte) 33, (byte) -78, (byte) -15, (byte) 124, (byte) -31, (byte) 12,
-                            (byte) -95, (byte) -4,
-                    (byte) 9, (byte) -62, (byte) -89, (byte) -120, (byte) -4, (byte) -127,
-                            (byte) -12, (byte) 33,
-                    (byte) -84, (byte) 23, (byte) 41, (byte) -75, (byte) -113, (byte) 32, (byte) 9,
-                            (byte) 31,
-                    (byte) -106, (byte) 110, (byte) 37, (byte) 4, (byte) 48, (byte) 61, (byte) 75,
-                            (byte) 99,
-                    (byte) -40, (byte) -81, (byte) -31, (byte) 10, (byte) 70, (byte) 2, (byte) -20,
-                            (byte) 58,
-                    (byte) -27, (byte) -75, (byte) -80, (byte) -89, (byte) -24, (byte) 58,
-                            (byte) 65, (byte) 119,
-                    (byte) -31, (byte) 20, (byte) 70, (byte) -28, (byte) -8, (byte) 2, (byte) 27,
-                            (byte) -13,
-                    (byte) 23, (byte) 83, (byte) 116, (byte) -96, (byte) -12, (byte) 37, (byte) -56,
-                            (byte) 81,
-                    (byte) 92, (byte) -11, (byte) -111, (byte) -44, (byte) -48, (byte) 1,
-                            (byte) -46, (byte) -95,
-                    (byte) 24, (byte) 93, (byte) 76, (byte) -70, (byte) -16, (byte) 21, (byte) 61,
-                            (byte) 12,
-                    (byte) 43, (byte) 99, (byte) 39, (byte) -120, (byte) 126, (byte) 70, (byte) 87,
-                            (byte) -28,
-                    (byte) 88, (byte) 87, (byte) 30, (byte) -45, (byte) -20, (byte) -80, (byte) -49,
-                            (byte) 78,
-                    (byte) -46, (byte) -7, (byte) -128, (byte) 107, (byte) 48, (byte) 48, (byte) 65,
-                            (byte) 69,
-                    (byte) 103, (byte) -56, (byte) 119, (byte) -35, (byte) -33, (byte) 35,
-                            (byte) -45, (byte) -54,
-                    (byte) -66, (byte) -40, (byte) 35, (byte) 77, (byte) 49, (byte) 19, (byte) -60,
-                            (byte) 54,
-                    (byte) -120, (byte) -98, (byte) 33, (byte) 113, (byte) 67, (byte) 20,
-                            (byte) -25, (byte) -85,
-                    (byte) -10, (byte) 19, (byte) -3, (byte) -12, (byte) 124, (byte) 49, (byte) -27,
-                            (byte) 87,
-                    (byte) 59, (byte) -115, (byte) -121, (byte) 100, (byte) 71, (byte) 41,
-                            (byte) 119, (byte) 22,
-                    (byte) -9, (byte) -16, (byte) -128, (byte) 14, (byte) 88, (byte) 32, (byte) 59,
-                            (byte) 74,
-                    (byte) 118, (byte) -127, (byte) 108, (byte) 6, (byte) 35, (byte) -65, (byte) 1,
-                            (byte) 80,
-                    (byte) 75, (byte) 7, (byte) 8, (byte) -67, (byte) 119, (byte) -82, (byte) 40,
-                            (byte) -35,
-                    (byte) 2, (byte) 0, (byte) 0, (byte) -111, (byte) 5, (byte) 0, (byte) 0,
-                            (byte) 80,
-                    (byte) 75, (byte) 3, (byte) 4, (byte) 20, (byte) 0, (byte) 8, (byte) 0,
-                            (byte) 8,
-                    (byte) 0, (byte) -49, (byte) -127, (byte) -61, (byte) 68, (byte) 0, (byte) 0,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 48, (byte) 0, (byte) 0, (byte) 0, (byte) 99, (byte) 111,
-                            (byte) 109,
-                    (byte) 47, (byte) 101, (byte) 120, (byte) 97, (byte) 109, (byte) 112,
-                            (byte) 108, (byte) 101,
-                    (byte) 47, (byte) 115, (byte) 104, (byte) 114, (byte) 105, (byte) 110,
-                            (byte) 107, (byte) 117,
-                    (byte) 110, (byte) 105, (byte) 116, (byte) 116, (byte) 101, (byte) 115,
-                            (byte) 116, (byte) 47,
-                    (byte) 97, (byte) 112, (byte) 112, (byte) 47, (byte) 66, (byte) 117, (byte) 105,
-                            (byte) 108,
-                    (byte) 100, (byte) 67, (byte) 111, (byte) 110, (byte) 102, (byte) 105,
-                            (byte) 103, (byte) 46,
-                    (byte) 99, (byte) 108, (byte) 97, (byte) 115, (byte) 115, (byte) -115,
-                            (byte) 81, (byte) -37,
-                    (byte) 110, (byte) -45, (byte) 64, (byte) 16, (byte) 61, (byte) -45, (byte) 92,
-                            (byte) -20,
-                    (byte) 4, (byte) -105, (byte) -74, (byte) -127, (byte) 2, (byte) -31, (byte) 82,
-                            (byte) 40,
-                    (byte) -41, (byte) 36, (byte) 20, (byte) -101, (byte) -10, (byte) -107,
-                            (byte) 10, (byte) 41,
-                    (byte) 23, (byte) -73, (byte) -118, (byte) 72, (byte) -109, (byte) -86,
-                            (byte) 105, (byte) 45,
-                    (byte) -47, (byte) -105, (byte) 104, (byte) -29, (byte) 44, (byte) -83,
-                            (byte) -117, (byte) 99,
-                    (byte) 71, (byte) -66, (byte) 32, (byte) 126, (byte) 11, (byte) -15, (byte) 0,
-                            (byte) -22,
-                    (byte) 3, (byte) 31, (byte) -64, (byte) 71, (byte) 33, (byte) -58, (byte) 38,
-                            (byte) 74,
-                    (byte) -115, (byte) 120, (byte) -31, (byte) 97, (byte) 103, (byte) -9,
-                            (byte) -52, (byte) -50,
-                    (byte) 57, (byte) 51, (byte) 123, (byte) -10, (byte) -25, (byte) -81,
-                            (byte) -53, (byte) 31,
-                    (byte) 0, (byte) 118, (byte) -96, (byte) -105, (byte) 81, (byte) -60, (byte) 35,
-                            (byte) 21,
-                    (byte) -101, (byte) 101, (byte) 60, (byte) -58, (byte) -109, (byte) 18,
-                            (byte) 10, (byte) 120,
-                    (byte) -86, (byte) -32, (byte) -103, (byte) -126, (byte) -25, (byte) -124,
-                            (byte) 66, (byte) -57,
-                    (byte) 108, (byte) -99, (byte) -20, (byte) 19, (byte) -24, (byte) -108,
-                            (byte) -96, (byte) 29,
-                    (byte) 54, (byte) -37, (byte) -17, (byte) -102, (byte) -5, (byte) -26,
-                            (byte) -88, (byte) -33,
-                    (byte) 60, (byte) 48, (byte) 9, (byte) -107, (byte) -34, (byte) -123, (byte) -8,
-                            (byte) 36,
-                    (byte) 12, (byte) 87, (byte) 120, (byte) 103, (byte) -58, (byte) 48, (byte) 10,
-                            (byte) 28,
-                    (byte) -17, (byte) -20, (byte) 13, (byte) 97, (byte) -71, (byte) -19,
-                            (byte) 123, (byte) 97,
-                    (byte) 36, (byte) -68, (byte) -56, (byte) 18, (byte) 110, (byte) 44, (byte) 85,
-                            (byte) -68,
-                    (byte) 32, (byte) -108, (byte) 91, (byte) 39, (byte) -35, (byte) 94, (byte) 103,
-                            (byte) 116,
-                    (byte) -4, (byte) -2, (byte) -48, (byte) 84, (byte) 81, (byte) 35, (byte) 20,
-                            (byte) -9,
-                    (byte) 122, (byte) 77, (byte) 107, (byte) 112, (byte) -92, (byte) -94,
-                            (byte) -50, (byte) -110,
-                    (byte) -106, (byte) 121, (byte) 52, (byte) -20, (byte) 14, (byte) -6,
-                            (byte) -93, (byte) -10,
-                    (byte) -96, (byte) -61, (byte) -110, (byte) -44, (byte) -51, (byte) -15,
-                            (byte) 64, (byte) -108,
-                    (byte) -55, (byte) 39, (byte) -83, (byte) 84, (byte) 52, (byte) -104,
-                            (byte) -75, (byte) -21,
-                    (byte) 120, (byte) 78, (byte) -12, (byte) -106, (byte) -112, (byte) -85,
-                            (byte) -43, (byte) 45,
-                    (byte) 66, (byte) -66, (byte) -19, (byte) 79, (byte) 36, (byte) 97, (byte) -91,
-                            (byte) -25,
-                    (byte) 120, (byte) -78, (byte) 31, (byte) 79, (byte) -57, (byte) 50, (byte) 56,
-                            (byte) 22,
-                    (byte) 99, (byte) 87, (byte) 38, (byte) 83, (byte) -7, (byte) -74, (byte) 112,
-                            (byte) 45,
-                    (byte) 17, (byte) 56, (byte) 9, (byte) -98, (byte) 39, (byte) -13, (byte) -47,
-                            (byte) -71,
-                    (byte) 19, (byte) 18, (byte) -74, (byte) 122, (byte) -74, (byte) 63, (byte) 53,
-                            (byte) -28,
-                    (byte) 103, (byte) 49, (byte) -99, (byte) -71, (byte) -46, (byte) 8, (byte) -49,
-                            (byte) 121,
-                    (byte) -26, (byte) -113, (byte) 49, (byte) -85, (byte) 70, (byte) 50,
-                            (byte) -116, (byte) 12,
-                    (byte) 49, (byte) -101, (byte) 25, (byte) -83, (byte) -40, (byte) 113,
-                            (byte) 39, (byte) -4,
-                    (byte) -126, (byte) 15, (byte) 78, (byte) -14, (byte) 22, (byte) 117,
-                            (byte) -41, (byte) 118,
-                    (byte) -25, (byte) 77, (byte) -53, (byte) 67, (byte) 63, (byte) 14, (byte) 108,
-                            (byte) -71,
-                    (byte) -25, (byte) 36, (byte) 106, (byte) -85, (byte) -103, (byte) 50,
-                            (byte) 61, (byte) -15,
-                    (byte) 64, (byte) -61, (byte) 45, (byte) -36, (byte) 78, (byte) -70, (byte) 4,
-                            (byte) -79,
-                    (byte) 84, (byte) -16, (byte) 82, (byte) -61, (byte) 22, (byte) 94, (byte) 105,
-                            (byte) 80,
-                    (byte) -96, (byte) 18, (byte) 26, (byte) -1, (byte) -33, (byte) -111,
-                            (byte) -123, (byte) -81,
-                    (byte) 12, (byte) 29, (byte) -116, (byte) 47, (byte) -92, (byte) 29, (byte) 17,
-                            (byte) 54,
-                    (byte) -104, (byte) -81, (byte) -49, (byte) -7, (byte) -6, (byte) -33,
-                            (byte) 124, (byte) -99,
-                    (byte) -7, (byte) -4, (byte) 65, (byte) 19, (byte) 57, (byte) -114, (byte) -103,
-                            (byte) 11,
-                    (byte) 118, (byte) 102, (byte) 91, (byte) 127, (byte) 77, (byte) 88, (byte) -69,
-                            (byte) 18,
-                    (byte) 105, (byte) -7, (byte) -66, (byte) 43, (byte) -123, (byte) -57,
-                            (byte) 118, (byte) -50,
-                    (byte) 68, (byte) 16, (byte) -54, (byte) 5, (byte) 92, (byte) -81, (byte) -3,
-                            (byte) -5,
-                    (byte) 117, (byte) -11, (byte) 83, (byte) 108, (byte) -13, (byte) -57,
-                            (byte) 23, (byte) -39,
-                    (byte) -1, (byte) 34, (byte) -86, (byte) -55, (byte) -16, (byte) 124,
-                            (byte) -86, (byte) -94,
-                    (byte) -124, (byte) 50, (byte) 43, (byte) 95, (byte) -29, (byte) -13, (byte) 18,
-                            (byte) 52,
-                    (byte) -58, (byte) -53, (byte) 25, (byte) 124, (byte) -99, (byte) -15,
-                            (byte) 74, (byte) 6,
-                    (byte) -81, (byte) 50, (byte) 94, (byte) 67, (byte) 101, (byte) -127,
-                            (byte) 111, (byte) 48,
-                    (byte) -66, (byte) -103, (byte) -71, (byte) 95, (byte) -25, (byte) 69,
-                            (byte) -119, (byte) 85,
-                    (byte) 28, (byte) -17, (byte) 112, (byte) -58, (byte) -32, (byte) -99, (byte) 7,
-                            (byte) 71,
-                    (byte) -95, (byte) -15, (byte) 13, (byte) -12, (byte) 37, (byte) 45, (byte) -87,
-                            (byte) -90,
-                    (byte) -19, (byte) 41, (byte) -115, (byte) 119, (byte) 57, (byte) 106,
-                            (byte) 127, (byte) 10,
-                    (byte) 112, (byte) 15, (byte) -9, (byte) 121, (byte) 87, (byte) -15, (byte) 96,
-                            (byte) 65,
-                    (byte) -34, (byte) 76, (byte) 111, (byte) -128, (byte) 82, (byte) 101,
-                            (byte) -23, (byte) 59,
-                    (byte) 114, (byte) 95, (byte) -111, (byte) 79, (byte) 4, (byte) 40, (byte) 35,
-                            (byte) -96,
-                    (byte) 112, (byte) -36, (byte) 72, (byte) 69, (byte) 31, (byte) -2, (byte) 6,
-                            (byte) 80,
-                    (byte) 75, (byte) 7, (byte) 8, (byte) -81, (byte) -102, (byte) -119, (byte) 99,
-                            (byte) -46,
-                    (byte) 1, (byte) 0, (byte) 0, (byte) -23, (byte) 2, (byte) 0, (byte) 0,
-                            (byte) 80,
-                    (byte) 75, (byte) 1, (byte) 2, (byte) 20, (byte) 0, (byte) 20, (byte) 0,
-                            (byte) 8,
-                    (byte) 0, (byte) 8, (byte) 0, (byte) -11, (byte) -127, (byte) -61, (byte) 68,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 2, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 9, (byte) 0, (byte) 4, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 77, (byte) 69,
-                            (byte) 84,
-                    (byte) 65, (byte) 45, (byte) 73, (byte) 78, (byte) 70, (byte) 47, (byte) -2,
-                            (byte) -54,
-                    (byte) 0, (byte) 0, (byte) 80, (byte) 75, (byte) 1, (byte) 2, (byte) 20,
-                            (byte) 0,
-                    (byte) 20, (byte) 0, (byte) 8, (byte) 0, (byte) 8, (byte) 0, (byte) -11,
-                            (byte) -127,
-                    (byte) -61, (byte) 68, (byte) 127, (byte) 71, (byte) 56, (byte) -57, (byte) 60,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 60, (byte) 0, (byte) 0, (byte) 0, (byte) 20,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 61, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 77, (byte) 69, (byte) 84, (byte) 65, (byte) 45, (byte) 73, (byte) 78,
-                            (byte) 70,
-                    (byte) 47, (byte) 77, (byte) 65, (byte) 78, (byte) 73, (byte) 70, (byte) 69,
-                            (byte) 83,
-                    (byte) 84, (byte) 46, (byte) 77, (byte) 70, (byte) 80, (byte) 75, (byte) 1,
-                            (byte) 2,
-                    (byte) 20, (byte) 0, (byte) 20, (byte) 0, (byte) 8, (byte) 0, (byte) 8,
-                            (byte) 0,
-                    (byte) -49, (byte) -127, (byte) -61, (byte) 68, (byte) -67, (byte) 119,
-                            (byte) -82, (byte) 40,
-                    (byte) -35, (byte) 2, (byte) 0, (byte) 0, (byte) -111, (byte) 5, (byte) 0,
-                            (byte) 0,
-                    (byte) 49, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) -69,
-                            (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 99, (byte) 111, (byte) 109, (byte) 47, (byte) 101,
-                            (byte) 120,
-                    (byte) 97, (byte) 109, (byte) 112, (byte) 108, (byte) 101, (byte) 47,
-                            (byte) 115, (byte) 104,
-                    (byte) 114, (byte) 105, (byte) 110, (byte) 107, (byte) 117, (byte) 110,
-                            (byte) 105, (byte) 116,
-                    (byte) 116, (byte) 101, (byte) 115, (byte) 116, (byte) 47, (byte) 97,
-                            (byte) 112, (byte) 112,
-                    (byte) 47, (byte) 77, (byte) 97, (byte) 105, (byte) 110, (byte) 65, (byte) 99,
-                            (byte) 116,
-                    (byte) 105, (byte) 118, (byte) 105, (byte) 116, (byte) 121, (byte) 46,
-                            (byte) 99, (byte) 108,
-                    (byte) 97, (byte) 115, (byte) 115, (byte) 80, (byte) 75, (byte) 1, (byte) 2,
-                            (byte) 20,
-                    (byte) 0, (byte) 20, (byte) 0, (byte) 8, (byte) 0, (byte) 8, (byte) 0,
-                            (byte) -49,
-                    (byte) -127, (byte) -61, (byte) 68, (byte) -81, (byte) -102, (byte) -119,
-                            (byte) 99, (byte) -46,
-                    (byte) 1, (byte) 0, (byte) 0, (byte) -23, (byte) 2, (byte) 0, (byte) 0,
-                            (byte) 48,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) -9, (byte) 3, (byte) 0,
-                    (byte) 0, (byte) 99, (byte) 111, (byte) 109, (byte) 47, (byte) 101, (byte) 120,
-                            (byte) 97,
-                    (byte) 109, (byte) 112, (byte) 108, (byte) 101, (byte) 47, (byte) 115,
-                            (byte) 104, (byte) 114,
-                    (byte) 105, (byte) 110, (byte) 107, (byte) 117, (byte) 110, (byte) 105,
-                            (byte) 116, (byte) 116,
-                    (byte) 101, (byte) 115, (byte) 116, (byte) 47, (byte) 97, (byte) 112,
-                            (byte) 112, (byte) 47,
-                    (byte) 66, (byte) 117, (byte) 105, (byte) 108, (byte) 100, (byte) 67,
-                            (byte) 111, (byte) 110,
-                    (byte) 102, (byte) 105, (byte) 103, (byte) 46, (byte) 99, (byte) 108, (byte) 97,
-                            (byte) 115,
-                    (byte) 115, (byte) 80, (byte) 75, (byte) 5, (byte) 6, (byte) 0, (byte) 0,
-                            (byte) 0,
-                    (byte) 0, (byte) 4, (byte) 0, (byte) 4, (byte) 0, (byte) 58, (byte) 1, (byte) 0,
-                    (byte) 0, (byte) 39, (byte) 6, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-                };
-        return createFile(dir, "app/build/intermediates/classes/debug/classes.jar", bytecode);
     }
 
     private static File createR8Dex(File dir) throws IOException {
@@ -1544,6 +803,20 @@ public class ResourceShrinkerImplTest {
                         + "    double to() -> to\n"
                         + "    boolean fromInclusive() -> fromInclusive\n"
                         + "    boolean toInclusive() -> toInclusive\n");
+    }
+
+    private static File createProguardedDex(File dir) throws IOException {
+        byte[] dexContent =
+                Resources.toByteArray(Resources.getResource("resourceShrinker/proguarded.dex"));
+        return createFile(
+                dir, "app/build/intermediates/transforms/r8/debug/0/classes.dex", dexContent);
+    }
+
+    private static File createUnproguardedDex(File dir) throws IOException {
+        byte[] dexContent =
+                Resources.toByteArray(Resources.getResource("resourceShrinker/notshrinked.dex"));
+        return createFile(
+                dir, "app/build/intermediates/transforms/r8/debug/0/classes.dex", dexContent);
     }
 
     /** Utility method to generate byte array literal dump (used by classesJarBytecode above) */

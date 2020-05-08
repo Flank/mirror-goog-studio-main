@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
+import android.databinding.tool.util.Preconditions
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
@@ -23,10 +24,10 @@ import com.android.build.gradle.internal.res.shrinker.ApkFormat
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinker
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
-import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRFiles
+import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRTxt
 import com.android.build.gradle.internal.res.shrinker.graph.RawResourcesGraphBuilder
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappingsRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.DexClassesUsageRecorder
+import com.android.build.gradle.internal.res.shrinker.usages.DexUsageRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.XmlAndroidManifestUsageRecorder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
@@ -102,8 +103,17 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     private lateinit var mainSplit: VariantOutput
 
     override fun doTaskAction() {
+        if (useNewResourceShrinker.get()) {
+            Preconditions.check(
+                enableRTxtResourceShrinking.get(),
+                "New implementation of resource shrinker supports gathering resources from R " +
+                        "text files only. Enable 'android.enableRTxtResourceShrinking' flag to " +
+                        "use it."
+            )
+        }
+
         val uncompressedResourceFile = uncompressedResources.get().asFile
-        val compressedResourceFile= compressedResources.get().asFile
+        val compressedResourceFile = compressedResources.get().asFile
 
         var reportFile: File? = null
         val mappingFile = mappingFileSrc.orNull?.asFile
@@ -205,10 +215,10 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         reportFile: File?
     ): ResourceShrinkerImpl {
         val manifestUsageRecorder = XmlAndroidManifestUsageRecorder(manifestFile.toPath())
-        val dexClassesUsageRecorder = dex.files.map { DexClassesUsageRecorder(it.toPath()) }
+        val dexClassesUsageRecorder = dex.files.map { DexUsageRecorder(it.toPath()) }
 
         return ResourceShrinkerImpl(
-            ResourcesGathererFromRFiles(rSource, ""),
+            ResourcesGathererFromRTxt(rSource, ""),
             mappingFileSrc.orNull?.asFile?.let { ProguardMappingsRecorder(it.toPath()) },
             listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
             RawResourcesGraphBuilder(listOf(resourceDir.get().asFile.toPath())),
@@ -277,15 +287,10 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 )
             }
 
-            task.enableRTxtResourceShrinking.set(
-                creationConfig.services
-                    .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
-            )
-
-            task.useNewResourceShrinker.set(
-                creationConfig.services
-                    .projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
-            )
+            task.enableRTxtResourceShrinking.set(creationConfig
+                .services.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
+            task.useNewResourceShrinker.set(creationConfig
+                .services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER])
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,

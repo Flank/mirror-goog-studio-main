@@ -106,6 +106,11 @@ public class ResourceShrinkerModel {
         this.foundWebContent = foundWebContent;
     }
 
+    /** Returns all string constants gathered from compiled classes. */
+    public Set<String> getStrings() {
+        return strings;
+    }
+
     /** Finds and returns unused resources */
     public List<Resource> findUnused() {
         return usageModel.findUnused();

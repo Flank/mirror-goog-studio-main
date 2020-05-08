@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.shrinker.gatherer;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel;
 import java.io.IOException;
 
@@ -29,5 +30,5 @@ public interface ResourcesGatherer {
      * Gathers application resources and contribute them to ResourceShrinkerModel via
      * ResourceShrinkerModel.addResource
      */
-    void gatherResourceValues(ResourceShrinkerModel model) throws IOException;
+    void gatherResourceValues(@NonNull ResourceShrinkerModel model) throws IOException;
 }

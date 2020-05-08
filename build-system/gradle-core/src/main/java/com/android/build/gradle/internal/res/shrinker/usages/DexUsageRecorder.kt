@@ -16,25 +16,66 @@
 
 package com.android.build.gradle.internal.res.shrinker.usages
 
+import com.android.SdkConstants.DOT_DEX
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ClassAndMethod
 import com.android.build.gradle.internal.res.shrinker.usages.AppCompat.isAppCompatClass
+import com.android.builder.dexing.AnalysisCallback
+import com.android.builder.dexing.runResourceShrinkerAnalysis
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.resources.ResourceType
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- *  Common methods that are shared between Dex and Jvm classes usage recorders and allow to
- *  record resource usages from compiled code.
+ * Records resource usages, detects usages of WebViews and {@code Resources#getIdentifier},
+ * gathers string constants from compiled .dex files.
+ *
+ * @param root directory starting from which all .dex files are analyzed.
  */
-internal class ClassesUsageSupport(private val model: ResourceShrinkerModel) {
+class DexUsageRecorder(val root: Path) : ResourceUsageRecorder {
+
+    override fun recordUsages(model: ResourceShrinkerModel) {
+        // Record resource usages from dex classes. The following cases are covered:
+        // 1. Integer constant which refers to resource id.
+        // 2. Reference to static field in R classes.
+        // 3. Usages of android.content.res.Resources.getIdentifier(...) and
+        //    android.webkit.WebView.load...
+        // 4. All strings which might be used to reference resources by name via
+        //    Resources.getIdentifier.
+
+        Files.walk(root)
+            .filter { Files.isRegularFile(it) }
+            .filter { it.toString().endsWith(DOT_DEX, ignoreCase = true) }
+            .forEach { path ->
+                runResourceShrinkerAnalysis(
+                    Files.readAllBytes(path),
+                    path,
+                    DexFileAnalysisCallback(path, model)
+                )
+            }
+    }
+}
+
+private class DexFileAnalysisCallback(
+    private val path: Path,
+    private val model: ResourceShrinkerModel
+) : AnalysisCallback {
     companion object {
         const val ANDROID_RES = "android_res/"
+
+        private fun String.toSourceClassName(): String {
+            return this.replace('/', '.')
+        }
     }
+
+    override fun shouldProcess(internalName: String): Boolean =
+        !isResourceClass(internalName)
 
     /** Returns whether the given class file name points to an aapt-generated compiled R class. */
     fun isResourceClass(internalName: String): Boolean {
-        val realClassName = model.obfuscatedClasses.resolveOriginalClass(internalName.toSourceClassName())
+        val realClassName =
+            model.obfuscatedClasses.resolveOriginalClass(internalName.toSourceClassName())
         val lastPart = realClassName.substringAfterLast('.')
         if (lastPart.startsWith("R$")) {
             val typeName = lastPart.substring(2)
@@ -43,18 +84,19 @@ internal class ClassesUsageSupport(private val model: ResourceShrinkerModel) {
         return false
     }
 
-    fun referencedInt(context: String, value: Int, path: Path, currentClass: String) {
+    override fun referencedInt(value: Int) {
         val resource = model.usageModel.getResource(value)
         if (ResourceUsageModel.markReachable(resource)) {
             model.debugReporter.debug {
-                "Marking $resource reachable: referenced from $context in $path: $currentClass"
+                "Marking $resource reachable: referenced from $path"
             }
         }
     }
 
-    fun referencedStaticField(internalClassName: String, fieldName: String) {
+    override fun referencedStaticField(internalName: String, fieldName: String) {
         val realMethod = model.obfuscatedClasses.resolveOriginalMethod(
-            ClassAndMethod(internalClassName.toSourceClassName(), fieldName))
+            ClassAndMethod(internalName.toSourceClassName(), fieldName)
+        )
 
         if (isValidResourceType(realMethod.className)) {
             val typePart = realMethod.className.substringAfterLast('$')
@@ -66,35 +108,34 @@ internal class ClassesUsageSupport(private val model: ResourceShrinkerModel) {
         }
     }
 
-    fun referencedString(string: String) {
+    override fun referencedString(value: String) {
         // See if the string is at all eligible; ignore strings that aren't identifiers (has java
         // identifier chars and nothing but .:/), or are empty or too long.
         // We also allow "%", used for formatting strings.
-        if (string.isEmpty() || string.length > 80) {
+        if (value.isEmpty() || value.length > 80) {
             return
         }
         fun isSpecialCharacter(c: Char) = c == '.' || c == ':' || c == '/' || c == '%'
 
-        if (string.all { Character.isJavaIdentifierPart(it) || isSpecialCharacter(it) } &&
-            string.any { Character.isJavaIdentifierPart(it) }) {
-            model.addStringConstant(string)
-            model.isFoundWebContent = model.isFoundWebContent || string.contains(ANDROID_RES)
+        if (value.all { Character.isJavaIdentifierPart(it) || isSpecialCharacter(it) } &&
+            value.any { Character.isJavaIdentifierPart(it) }) {
+            model.addStringConstant(value)
+            model.isFoundWebContent = model.isFoundWebContent || value.contains(ANDROID_RES)
         }
     }
 
-    fun referencedMethodInvocation(
-        owner: String,
-        name: String,
-        desc: String,
-        currentClass: String
+    override fun referencedMethod(
+        internalName: String,
+        methodName: String,
+        methodDescriptor: String
     ) {
-        if (owner == "android/content/res/Resources" &&
-            name == "getIdentifier" &&
-            desc == "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I"
+        if (internalName == "android/content/res/Resources" &&
+            methodName == "getIdentifier" &&
+            methodDescriptor == "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I"
         ) {
             // "benign" usages: don't trigger reflection mode just because the user has included
             // appcompat
-            if (isAppCompatClass(currentClass.toSourceClassName(), model.obfuscatedClasses)) {
+            if (isAppCompatClass(internalName.toSourceClassName(), model.obfuscatedClasses)) {
                 return
             }
             model.isFoundGetIdentifier = true
@@ -102,15 +143,11 @@ internal class ClassesUsageSupport(private val model: ResourceShrinkerModel) {
             // can more accurately dispatch the resource here rather than having to check the whole
             // string pool!
         }
-        if (owner == "android/webkit/WebView" && name.startsWith("load")) {
+        if (internalName == "android/webkit/WebView" && methodName.startsWith("load")) {
             model.isFoundWebContent = true
         }
     }
 
     private fun isValidResourceType(className: String): Boolean =
         className.substringAfterLast('.').startsWith("R$")
-}
-
-internal fun String.toSourceClassName(): String {
-    return this.replace('/', '.')
 }
