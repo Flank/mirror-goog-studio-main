@@ -59,6 +59,8 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
     protected TemporaryFolder dexLocation;
 
+    protected File dataDir;
+
     protected final String artFlag;
 
     public AgentBasedClassRedefinerTestBase(String artFlag) {
@@ -74,7 +76,8 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         String[] env = new String[] {
             "FAKE_DEVICE_ROOT=" + root.getAbsolutePath()
         };
-        File dotStudio = new File(root, "/data/data/" + PACKAGE + "/code_cache/.studio");
+        dataDir = new File(root, "/data/data/" + PACKAGE);
+        File dotStudio = new File(dataDir, "/code_cache/.studio");
         dotStudio.mkdirs();
         android = new FakeAndroidDriver(LOCAL_HOST, -1, artFlag, env);
         android.start();
@@ -86,6 +89,12 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     public void tearDown() {
         android.stop();
         redefiner.stopServer();
+    }
+
+    protected void startupAgent() {
+        // Ideally, we modify FakeAndroidDriver to do this, but this suffices to exercise the code
+        // path for now.
+        android.attachAgent(AGENT_LOCATION + "=" + dataDir.toString());
     }
 
     protected Deploy.SwapRequest createRequest(

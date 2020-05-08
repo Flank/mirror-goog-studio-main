@@ -16,9 +16,12 @@
 
 #include "tools/base/deploy/installer/server/install_server.h"
 
+#include <dirent.h>
+#include <fcntl.h>
 #include <ftw.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #include "tools/base/deploy/common/event.h"
@@ -146,6 +149,10 @@ void InstallServer::HandleRequest(const ServerRequest& request) {
       HandleOverlayUpdate(request.overlay_request(),
                           response.mutable_overlay_response());
       break;
+    case ServerRequest::MessageCase::kLogRequest:
+      HandleGetAgentExceptionLog(request.log_request(),
+                                 response.mutable_log_response());
+      break;
   }
 
   response.set_status(ServerResponse::REQUEST_COMPLETED);
@@ -213,6 +220,41 @@ void InstallServer::HandleOverlayUpdate(
   }
 
   response->set_status(proto::OverlayUpdateResponse::OK);
+}
+
+void InstallServer::HandleGetAgentExceptionLog(
+    const proto::GetAgentExceptionLogRequest& request,
+    proto::GetAgentExceptionLogResponse* response) const {
+  const std::string log_dir = GetAgentExceptionLogDir(request.package_name());
+  DIR* dir = opendir(log_dir.c_str());
+  if (dir == nullptr) {
+    return;
+  }
+  dirent* entry;
+  while ((entry = readdir(dir)) != nullptr) {
+    if (entry->d_type != DT_REG) {
+      continue;
+    }
+    const std::string log_path = log_dir + "/" + entry->d_name;
+
+    struct stat info;
+    if (stat(log_path.c_str(), &info) != 0) {
+      continue;
+    }
+
+    int fd = open(log_path.c_str(), O_RDONLY);
+    if (fd < 0) {
+      continue;
+    }
+
+    std::vector<char> bytes;
+    bytes.reserve(info.st_size);
+    if (read(fd, bytes.data(), info.st_size) == info.st_size) {
+      response->add_logs()->ParseFromArray(bytes.data(), info.st_size);
+    }
+    unlink(log_path.c_str());
+  }
+  closedir(dir);
 }
 
 namespace {

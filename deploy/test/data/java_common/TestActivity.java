@@ -100,6 +100,14 @@ public class TestActivity extends Activity {
         System.out.println(staticVarInit.waitThread());
     }
 
+    public void fakeCrash() throws Exception {
+        // Simulate the app crashing by calling the uncaught exception handler. We can't actually
+        // throw a runtime exception without breaking FakeAndroid.
+        Thread.class
+                .getMethod("dispatchUncaughtException", Throwable.class)
+                .invoke(Thread.currentThread(), new RuntimeException("crash"));
+    }
+
     public void getStaticFinalPrimitives() {
         byte b = -1;
         int i = -1;

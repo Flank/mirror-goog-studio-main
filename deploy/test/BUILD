@@ -49,6 +49,11 @@ swap_test(
     srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
 )
 
+swap_test(
+    name = "CrashLogTest",
+    srcs = ["java/com/android/tools/deployer/CrashLogTest.java"],
+)
+
 java_test(
     name = "D8DexSplitterTest",
     srcs = ["java/com/android/tools/deployer/D8DexSplitterTest.java"],

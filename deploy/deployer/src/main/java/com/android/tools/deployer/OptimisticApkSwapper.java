@@ -184,9 +184,13 @@ public class OptimisticApkSwapper {
         return nextOverlayId;
     }
 
-    private static void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)
+    private void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
+        for (Deploy.AgentExceptionLog log : swapResponse.getAgentLogsList()) {
+            // TODO: Report these as metrics somehow
+            logger.info("Agent log: %s", log.toString());
+        }
         new InstallerResponseHandler().handle(swapResponse);
     }
 }

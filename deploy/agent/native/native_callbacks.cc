@@ -16,6 +16,7 @@
 
 #include "tools/base/deploy/agent/native/native_callbacks.h"
 
+#include "tools/base/deploy/agent/native/crash_logger.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
 #include "tools/base/deploy/agent/native/swapper.h"
@@ -153,6 +154,12 @@ jarray Native_MakeInMemoryDexElements(JNIEnv* jni, jobject object,
        "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ldalvik/system/"
        "DexPathList$Element;"},
       args);
+}
+
+// TODO: Do we want to use any info about the exception itself?
+void Native_LogUnhandledException(JNIEnv* jni, jobject object, jobject thread,
+                                  jthrowable throwable) {
+  CrashLogger::Instance().LogUnhandledException();
 }
 
 }  // namespace deploy

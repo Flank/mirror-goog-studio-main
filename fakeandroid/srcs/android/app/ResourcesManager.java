@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,11 @@
  */
 package android.app;
 
-import android.content.res.Resources;
+import android.content.pm.ApplicationInfo;
 
-public class LoadedApk {
-    private ClassLoader mClassLoader;
-
-    LoadedApk(ClassLoader classLoader) {
-        mClassLoader = classLoader;
-    }
-
-    public ClassLoader getClassLoader() {
-        return mClassLoader;
-    }
-
-    public Resources getResources() {
-        return new Resources();
+public class ResourcesManager {
+    void applyNewResourceDirsLocked(final ApplicationInfo appInfo, final String[] oldPaths) {
+        // Intentionally empty; this method just needs to exist for the Apply Changes agent to
+        // instrument. Fake implementation will follow when required by tests.
     }
 }

@@ -235,5 +235,7 @@ public final class InstrumentationHooks {
 
     // Wrapper around ActivityThread#handleUpdateApplicationInfo(ApplicationInfo)
     public static native void updateApplicationInfo(Object activityThread);
+
+    public static native void logUnhandledException(Object thread, Throwable throwable);
 }
 

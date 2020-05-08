@@ -53,5 +53,9 @@ bool ReadFile(const std::string& file_path, std::string* content);
 // any existing file at that path.
 bool WriteFile(const std::string& file_path, const std::string& content);
 
+// Get the path where the agent will write exception logs.
+// TODO: This probably shouldn't live here.
+std::string GetAgentExceptionLogDir(const std::string& package_name);
+
 }  // namespace deploy
 #endif

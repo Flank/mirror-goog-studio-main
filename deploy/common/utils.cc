@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
@@ -138,6 +139,12 @@ bool WriteFile(const std::string& file_path, const std::string& content) {
   }
 
   return true;
+}
+
+std::string GetAgentExceptionLogDir(const std::string& package_name) {
+  std::ostringstream log_dir;
+  log_dir << Env::root() << "/data/data/" << package_name << "/.agent-logs";
+  return log_dir.str();
 }
 
 }  // namespace deploy

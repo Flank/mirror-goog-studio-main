@@ -25,6 +25,7 @@
 
 #include <string>
 
+#include "tools/base/deploy/agent/native/crash_logger.h"
 #include "tools/base/deploy/agent/native/instrumentation.jar.cc"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/native_callbacks.h"
@@ -124,6 +125,25 @@ bool ApplyTransform(jvmtiEnv* jvmti, JNIEnv* jni, const Transform& transform) {
   return success;
 }
 
+bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
+                     const std::vector<const Transform*> transforms) {
+  std::vector<std::string> failed_classes;
+  for (const auto& transform : transforms) {
+    // We intentionally do not stop if one transformation fails, because it's
+    // useful to collect data on every failing transform - and if one is failing
+    // due to platform/OEM changes, others might as well.
+    if (!ApplyTransform(jvmti, jni, *transform)) {
+      failed_classes.push_back(transform->GetClassName());
+    }
+  }
+
+  if (!failed_classes.empty()) {
+    CrashLogger::Instance().LogInstrumentationFailures(failed_classes);
+  }
+
+  return failed_classes.empty();
+}
+
 bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
                 bool overlay_swap) {
   // The breadcrumb class stores some checks between runs of the agent.
@@ -153,6 +173,12 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
     return true;
   }
 
+  const HookTransform thread(
+      /* target class */ "java/lang/Thread",
+      /* target method */ "dispatchUncaughtException",
+      /* target signature */ "(Ljava/lang/Throwable;)V",
+      "logUnhandledException", MethodHooks::kNoHook);
+
   const HookTransform activity_thread(
       /* target class */ "android/app/ActivityThread",
       /* target method */ "handleDispatchPackageBroadcast",
@@ -173,8 +199,9 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
 
   const MethodHooks split_dex_paths(
       /* target method */ "splitDexPath",
-      /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
-      MethodHooks::kNoHook, "handleSplitDexPathExit");
+      /* target signature */
+      "(Ljava/lang/String;)Ljava/util/List;", MethodHooks::kNoHook,
+      "handleSplitDexPathExit");
 
   const HookTransform dex_path_list(
       /* target class */ "dalvik/system/DexPathList",
@@ -200,14 +227,20 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
                      JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
                  "Could not enable class file load hook event");
 
-  success &= ApplyTransform(jvmti, jni, activity_thread);
-  success &= ApplyTransform(jvmti, jni, dex_path_list_element);
+  std::vector<const Transform*> transforms;
+  transforms.push_back(&activity_thread);
+  transforms.push_back(&dex_path_list_element);
 
   if (overlay_swap) {
-    success &= ApplyTransform(jvmti, jni, dex_path_list);
-    success &= ApplyTransform(jvmti, jni, res_manager);
-    success &= ApplyTransform(jvmti, jni, loaded_apk);
+    transforms.push_back(&dex_path_list);
+    transforms.push_back(&res_manager);
+    transforms.push_back(&loaded_apk);
+    // TODO: We probably want this exception logging on pre-R as well; for
+    // safety's sake, we'll start with it on R+ only.
+    transforms.push_back(&thread);
   }
+
+  success &= ApplyTransforms(jvmti, jni, transforms);
 
   // Failing to disable this event does not actually have any bearing on
   // whether or not instrumentation was a success, so we do not modify the
@@ -306,6 +339,12 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
   RegisterNative(
       jni, {kHandlerWrapperClass, "updateApplicationInfo",
             "(Ljava/lang/Object;)V", (void*)&Native_UpdateApplicationInfo});
+
+  if (overlay_swap) {
+    RegisterNative(jni, {kHandlerWrapperClass, "logUnhandledException",
+                         "(Ljava/lang/Object;Ljava/lang/Throwable;)V",
+                         (void*)&Native_LogUnhandledException});
+  }
 
   // Register utility methods.
   RegisterNative(jni,

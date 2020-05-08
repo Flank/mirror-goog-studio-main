@@ -144,9 +144,30 @@ void OverlaySwapCommand::BuildOverlayUpdateRequest(
 
 void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
   Phase p("PostSwap");
-  if (response->status() != proto::SwapResponse::OK) {
+
+  if (response->status() == proto::SwapResponse::OK) {
+    UpdateOverlay(response);
+  }
+
+  // Do this even if the deployment failed; it's retrieving data unrelated to
+  // the current deployment. We might want to find a better time to do this.
+  GetAgentLogs(response);
+
+  proto::InstallServerResponse install_response;
+  if (!client_->KillServerAndWait(&install_response)) {
+    response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
     return;
   }
+
+  // Convert proto events to events.
+  for (int i = 0; i < install_response.events_size(); i++) {
+    const proto::Event& event = install_response.events(i);
+    AddRawEvent(ConvertProtoEventToEvent(event));
+  }
+}
+
+void OverlaySwapCommand::UpdateOverlay(proto::SwapResponse* response) {
+  Phase p("UpdateOverlay");
 
   proto::InstallServerRequest install_request;
   install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
@@ -176,18 +197,32 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
   if (should_restart &&
       !cmd.UpdateAppInfo("all", request_.package_name(), &error)) {
     response->set_status(proto::SwapResponse::ACTIVITY_RESTART_FAILED);
+  }
+}
+
+void OverlaySwapCommand::GetAgentLogs(proto::SwapResponse* response) {
+  Phase p("GetAgentLogs");
+  proto::InstallServerRequest install_request;
+  install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  install_request.mutable_log_request()->set_package_name(
+      request_.package_name());
+
+  // If this fails, we don't really care - it's a best-effort situation; don't
+  // break the deployment because of it. Just log and move on.
+  if (!client_->Write(install_request)) {
+    Log::W("Could not write to server to retrieve agent logs.");
     return;
   }
 
-  if (!client_->KillServerAndWait(&install_response)) {
-    response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
+  proto::InstallServerResponse install_response;
+  if (!client_->Read(&install_response)) {
+    Log::W("Could not read from server while retrieving agent logs.");
     return;
   }
 
-  // Convert proto events to events.
-  for (int i = 0; i < install_response.events_size(); i++) {
-    const proto::Event& event = install_response.events(i);
-    AddRawEvent(ConvertProtoEventToEvent(event));
+  for (const auto& log : install_response.log_response().logs()) {
+    auto added = response->add_agent_logs();
+    *added = log;
   }
 }
 

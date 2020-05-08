@@ -57,6 +57,10 @@ void Native_FixActivityContext(JNIEnv* jni, jobject object,
 void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
                                   jobject activity_thread);
 
+// This method is bound to InstrumentationHooks#logUnhandledException()
+void Native_LogUnhandledException(JNIEnv* jni, jobject object, jobject thread,
+                                  jthrowable throwable);
+
 // This method is bound to DexUtility#makeInMemoryDexElements()
 jarray Native_MakeInMemoryDexElements(JNIEnv* jni, jobject object,
                                       jarray dex_files,

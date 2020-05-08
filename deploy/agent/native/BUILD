@@ -11,6 +11,8 @@ cc_binary(
     srcs = [
         "agent.cc",
         "capabilities.h",
+        "crash_logger.cc",
+        "crash_logger.h",
         "dex_verify.cc",
         "dex_verify.h",
         "hotswap.cc",

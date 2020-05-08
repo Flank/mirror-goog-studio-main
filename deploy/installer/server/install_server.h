@@ -51,6 +51,11 @@ class InstallServer {
 
   void HandleOverlayUpdate(const proto::OverlayUpdateRequest& request,
                            proto::OverlayUpdateResponse* response) const;
+
+  void HandleGetAgentExceptionLog(
+      const proto::GetAgentExceptionLogRequest& request,
+      proto::GetAgentExceptionLogResponse* response) const;
+
   bool DoesOverlayIdMatch(const std::string& overlay_folder,
                           const std::string& expected_id) const;
 };

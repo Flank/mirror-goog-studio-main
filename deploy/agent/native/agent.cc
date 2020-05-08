@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/agent/native/capabilities.h"
+#include "tools/base/deploy/agent/native/crash_logger.h"
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
@@ -81,6 +82,10 @@ jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
 
   const std::string package_name =
       app_data_dir.substr(app_data_dir.find_last_of('/') + 1);
+
+  CrashLogger::Instance().Initialize(package_name,
+                                     proto::AgentExceptionLog::STARTUP_AGENT);
+
   if (!InstrumentApplication(jvmti, jni, package_name, true)) {
     ErrEvent("Could not instrument application");
     jvmti->DisposeEnvironment();
@@ -126,6 +131,15 @@ jint HandleSwapAgent(JavaVM* vm, char* socket_name) {
     ErrEvent("Could not parse swap request");
     SendFailure(socket, proto::AgentSwapResponse::REQUEST_PARSE_FAILED);
     return JNI_OK;
+  }
+
+  // Only initialize exception logging if we're on R+, for now.
+
+  if (request.overlay_swap()) {
+    auto agent_purpose = request.restart_activity()
+                             ? proto::AgentExceptionLog::APPLY_CHANGES
+                             : proto::AgentExceptionLog::APPLY_CODE_CHANGES;
+    CrashLogger::Instance().Initialize(request.package_name(), agent_purpose);
   }
 
   // Set up the JVMTI and JNI environments.
