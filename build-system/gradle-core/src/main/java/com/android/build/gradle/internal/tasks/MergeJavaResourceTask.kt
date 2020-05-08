@@ -202,7 +202,7 @@ abstract class MergeJavaResourceTask
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeJavaResourceTask>
+            taskProvider: TaskProvider<MergeJavaResourceTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

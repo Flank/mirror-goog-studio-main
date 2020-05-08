@@ -171,7 +171,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
         override val name = internalName
         override val type = DexMergingTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DexMergingTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<DexMergingTask>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.append(taskProvider, DexMergingTask::outputDir).on(outputType)
         }

@@ -99,7 +99,7 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
             get() = ApkZipPackagingTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ApkZipPackagingTask>
+            taskProvider: TaskProvider<ApkZipPackagingTask>
         ) {
             super.handleProvider(taskProvider)
 

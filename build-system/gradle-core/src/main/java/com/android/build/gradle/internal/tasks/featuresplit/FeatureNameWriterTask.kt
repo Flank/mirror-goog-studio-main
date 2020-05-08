@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks.featuresplit
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.apache.commons.io.FileUtils
@@ -63,7 +62,7 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
             get() = FeatureNameWriterTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out FeatureNameWriterTask>
+            taskProvider: TaskProvider<FeatureNameWriterTask>
         ) {
             super.handleProvider(taskProvider)
 

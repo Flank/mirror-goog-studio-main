@@ -146,7 +146,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
             get() = MergeNativeDebugMetadataTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeNativeDebugMetadataTask>
+            taskProvider: TaskProvider<MergeNativeDebugMetadataTask>
         ) {
             super.handleProvider(taskProvider)
 

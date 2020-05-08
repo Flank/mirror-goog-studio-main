@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.DependencyFileProcessor
@@ -179,7 +178,7 @@ abstract class AidlCompile : NonIncrementalTask() {
         override val type: Class<AidlCompile> = AidlCompile::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out AidlCompile>
+            taskProvider: TaskProvider<AidlCompile>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.aidlCompileTask = taskProvider

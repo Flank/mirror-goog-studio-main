@@ -119,7 +119,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
     override val type: Class<SdkDependencyDataGeneratorTask> = SdkDependencyDataGeneratorTask::class.java
 
     override fun handleProvider(
-      taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>
+      taskProvider: TaskProvider<SdkDependencyDataGeneratorTask>
     ) {
       super.handleProvider(taskProvider)
       creationConfig.artifacts.setInitialProvider(

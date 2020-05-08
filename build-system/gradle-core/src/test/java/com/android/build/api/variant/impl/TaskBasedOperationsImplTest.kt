@@ -122,7 +122,7 @@ class TaskBasedOperationsImplTest {
 
             private lateinit var replacementRequest: ArtifactTransformationRequest
 
-            override fun handleProvider(taskProvider: TaskProvider<out SynchronousTask>) {
+            override fun handleProvider(taskProvider: TaskProvider<SynchronousTask>) {
                 super.handleProvider(taskProvider)
                 replacementRequest = component.artifacts
                     .use(taskProvider)
@@ -235,7 +235,7 @@ class TaskBasedOperationsImplTest {
 
             private lateinit var replacementRequest: ArtifactTransformationRequest
 
-            override fun handleProvider(taskProvider: TaskProvider<out InternalApiTask>) {
+            override fun handleProvider(taskProvider: TaskProvider<InternalApiTask>) {
                 super.handleProvider(taskProvider)
                 replacementRequest = component.artifacts
                     .use(taskProvider)

@@ -3147,8 +3147,7 @@ public abstract class TaskManager<
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends TaskT> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<TaskT> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
         }

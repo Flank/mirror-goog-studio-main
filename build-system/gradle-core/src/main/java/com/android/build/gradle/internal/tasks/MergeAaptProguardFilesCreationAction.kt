@@ -36,7 +36,7 @@ class MergeAaptProguardFilesCreationAction(
         get() = MergeFileTask::class.java
 
     override fun handleProvider(
-        taskProvider: TaskProvider<out MergeFileTask>
+        taskProvider: TaskProvider<MergeFileTask>
     ) {
         super.handleProvider(taskProvider)
 

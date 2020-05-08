@@ -55,7 +55,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
             get() = ProcessJavaResTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ProcessJavaResTask>
+            taskProvider: TaskProvider<ProcessJavaResTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processJavaResourcesTask = taskProvider

@@ -75,7 +75,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             get() = AarMetadataTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out AarMetadataTask>
+            taskProvider: TaskProvider<AarMetadataTask>
         ) {
             super.handleProvider(taskProvider)
 

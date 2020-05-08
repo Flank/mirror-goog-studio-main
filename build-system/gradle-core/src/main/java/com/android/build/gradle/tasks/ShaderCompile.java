@@ -220,8 +220,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<ShaderCompile> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig
                     .getArtifacts()

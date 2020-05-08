@@ -191,7 +191,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         private lateinit var artifactTransformationRequest: ArtifactTransformationRequest
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ShrinkResourcesTask>
+            taskProvider: TaskProvider<ShrinkResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 

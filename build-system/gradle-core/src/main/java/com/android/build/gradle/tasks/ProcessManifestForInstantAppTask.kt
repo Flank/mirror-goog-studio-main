@@ -131,7 +131,7 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
 
         private lateinit var transformationRequest: ArtifactTransformationRequest
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessManifestForInstantAppTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessManifestForInstantAppTask>) {
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.artifacts.use(taskProvider)
                 .toRead(

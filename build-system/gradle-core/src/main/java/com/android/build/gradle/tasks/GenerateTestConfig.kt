@@ -110,7 +110,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             get() = GenerateTestConfig::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateTestConfig>
+            taskProvider: TaskProvider<GenerateTestConfig>
         ) {
             super.handleProvider(taskProvider)
 

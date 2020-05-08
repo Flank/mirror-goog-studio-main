@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -147,7 +146,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             get() = StripDebugSymbolsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out StripDebugSymbolsTask>
+            taskProvider: TaskProvider<StripDebugSymbolsTask>
         ) {
             super.handleProvider(taskProvider)
 

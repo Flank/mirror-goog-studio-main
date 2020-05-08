@@ -69,7 +69,7 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
         override val type: Class<GenerateEmptyResourceFilesTask>
             get() = GenerateEmptyResourceFilesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateEmptyResourceFilesTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<GenerateEmptyResourceFilesTask>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

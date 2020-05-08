@@ -254,8 +254,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends InstallVariantTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<InstallVariantTask> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig.getTaskContainer().setInstallTask(taskProvider);
         }

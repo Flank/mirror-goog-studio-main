@@ -157,7 +157,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DesugarTask>
+            taskProvider: TaskProvider<DesugarTask>
         ) {
             super.handleProvider(taskProvider)
 

@@ -303,7 +303,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         override val type: Class<PrefabPackageTask>
             get() = PrefabPackageTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PrefabPackageTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<PrefabPackageTask>) {
             super.handleProvider(taskProvider)
 
             creationConfig.artifacts.setInitialProvider(

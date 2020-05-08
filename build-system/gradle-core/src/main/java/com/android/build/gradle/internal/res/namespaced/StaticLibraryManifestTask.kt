@@ -61,7 +61,7 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             get() = StaticLibraryManifestTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out StaticLibraryManifestTask>
+            taskProvider: TaskProvider<StaticLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

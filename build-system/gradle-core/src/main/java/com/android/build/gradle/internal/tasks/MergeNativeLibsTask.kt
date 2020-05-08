@@ -151,7 +151,7 @@ abstract class MergeNativeLibsTask
             get() = MergeNativeLibsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeNativeLibsTask>
+            taskProvider: TaskProvider<MergeNativeLibsTask>
         ) {
             super.handleProvider(taskProvider)
 

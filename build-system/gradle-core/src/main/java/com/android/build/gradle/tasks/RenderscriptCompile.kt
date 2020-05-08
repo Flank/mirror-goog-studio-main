@@ -22,10 +22,8 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NdkTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -259,7 +257,7 @@ abstract class RenderscriptCompile : NdkTask() {
             get() = RenderscriptCompile::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out RenderscriptCompile>
+            taskProvider: TaskProvider<RenderscriptCompile>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.renderscriptCompileTask = taskProvider

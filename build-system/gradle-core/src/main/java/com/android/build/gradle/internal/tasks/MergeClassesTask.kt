@@ -115,7 +115,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
                 }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeClassesTask>
+            taskProvider: TaskProvider<MergeClassesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

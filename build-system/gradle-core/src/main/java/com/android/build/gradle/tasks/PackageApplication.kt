@@ -67,7 +67,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             get() = PackageApplication::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PackageApplication>
+            taskProvider: TaskProvider<PackageApplication>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.packageAndroidTask = taskProvider

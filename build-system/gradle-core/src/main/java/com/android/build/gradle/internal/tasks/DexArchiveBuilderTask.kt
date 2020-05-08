@@ -446,7 +446,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
         override val type: Class<DexArchiveBuilderTask> = DexArchiveBuilderTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DexArchiveBuilderTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<DexArchiveBuilderTask>) {
             super.handleProvider(taskProvider)
 
             creationConfig.artifacts.setInitialProvider(

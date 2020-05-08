@@ -844,8 +844,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends MergeResources> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<MergeResources> taskProvider) {
             super.handleProvider(taskProvider);
             // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
             // MergeResources tasks sharing the same task type (MergeResources) and CreationAction

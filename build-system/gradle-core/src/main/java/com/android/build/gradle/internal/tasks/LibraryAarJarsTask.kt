@@ -295,7 +295,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         override val name =  computeTaskName("sync", "LibJars")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LibraryAarJarsTask>
+            taskProvider: TaskProvider<LibraryAarJarsTask>
         ) {
             super.handleProvider(taskProvider)
 

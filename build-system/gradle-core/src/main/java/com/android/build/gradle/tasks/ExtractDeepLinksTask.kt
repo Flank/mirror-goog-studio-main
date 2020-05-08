@@ -86,7 +86,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             get() = ExtractDeepLinksTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ExtractDeepLinksTask>
+            taskProvider: TaskProvider<ExtractDeepLinksTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

@@ -114,7 +114,7 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
         override val type: Class<ProcessManifestForMetadataFeatureTask>
             get() = ProcessManifestForMetadataFeatureTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessManifestForMetadataFeatureTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessManifestForMetadataFeatureTask>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

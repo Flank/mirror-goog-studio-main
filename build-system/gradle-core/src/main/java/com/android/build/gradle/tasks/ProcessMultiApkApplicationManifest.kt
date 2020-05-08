@@ -25,7 +25,6 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
@@ -163,7 +162,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
         override val type: Class<ProcessMultiApkApplicationManifest>
             get() = ProcessMultiApkApplicationManifest::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessMultiApkApplicationManifest>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessMultiApkApplicationManifest>) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
             creationConfig.artifacts.setInitialProvider(

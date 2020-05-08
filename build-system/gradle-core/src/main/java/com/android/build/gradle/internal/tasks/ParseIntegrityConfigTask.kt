@@ -117,7 +117,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             get() = ParseIntegrityConfigTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ParseIntegrityConfigTask>
+            taskProvider: TaskProvider<ParseIntegrityConfigTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

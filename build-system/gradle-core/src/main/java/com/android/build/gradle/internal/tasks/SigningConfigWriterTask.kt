@@ -74,7 +74,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             get() = SigningConfigWriterTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out SigningConfigWriterTask>
+            taskProvider: TaskProvider<SigningConfigWriterTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

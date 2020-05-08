@@ -191,7 +191,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out TaskT>
+            taskProvider: TaskProvider<TaskT>
         ) {
             super.handleProvider(taskProvider)
 

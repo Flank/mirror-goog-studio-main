@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_LINT_JAR
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -80,7 +79,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
         override val name = NAME
         override val type = PrepareLintJarForPublish::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PrepareLintJarForPublish>) {
+        override fun handleProvider(taskProvider: TaskProvider<PrepareLintJarForPublish>) {
             super.handleProvider(taskProvider)
             scope.globalArtifacts.setInitialProvider(
                 taskProvider,

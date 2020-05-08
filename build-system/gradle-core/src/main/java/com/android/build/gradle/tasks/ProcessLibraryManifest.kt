@@ -265,7 +265,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             get() = ProcessLibraryManifest::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ProcessLibraryManifest>
+            taskProvider: TaskProvider<ProcessLibraryManifest>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider

@@ -129,7 +129,7 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
             get() = GenerateLibraryProguardRulesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateLibraryProguardRulesTask>
+            taskProvider: TaskProvider<GenerateLibraryProguardRulesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

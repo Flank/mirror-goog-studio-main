@@ -439,7 +439,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         @Override
         public void handleProvider(
-                @NonNull TaskProvider<? extends DeviceProviderInstrumentTestTask> taskProvider) {
+                @NonNull TaskProvider<DeviceProviderInstrumentTestTask> taskProvider) {
             super.handleProvider(taskProvider);
 
             boolean isAdditionalAndroidTestOutputEnabled =

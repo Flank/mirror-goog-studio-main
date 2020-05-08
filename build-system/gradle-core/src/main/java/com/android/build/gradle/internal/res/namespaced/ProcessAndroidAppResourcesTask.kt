@@ -137,7 +137,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             get() = ProcessAndroidAppResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>
+            taskProvider: TaskProvider<ProcessAndroidAppResourcesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

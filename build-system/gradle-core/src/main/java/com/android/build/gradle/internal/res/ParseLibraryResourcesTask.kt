@@ -158,7 +158,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             get() = ParseLibraryResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ParseLibraryResourcesTask>
+            taskProvider: TaskProvider<ParseLibraryResourcesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

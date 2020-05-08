@@ -243,7 +243,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             get() = ShrinkBundleResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
+            taskProvider: TaskProvider<ShrinkBundleResourcesTask>
         ) {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

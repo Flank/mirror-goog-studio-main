@@ -220,7 +220,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out InstallVariantViaBundleTask>
+            taskProvider: TaskProvider<InstallVariantViaBundleTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.installTask = taskProvider

@@ -461,7 +461,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
             get() = ExternalNativeBuildTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ExternalNativeBuildTask>
+            taskProvider: TaskProvider<ExternalNativeBuildTask>
         ) {
             super.handleProvider(taskProvider)
             assert(creationConfig.taskContainer.externalNativeBuildTask == null)

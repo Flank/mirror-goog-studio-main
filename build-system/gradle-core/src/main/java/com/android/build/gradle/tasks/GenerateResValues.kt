@@ -63,7 +63,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
         override val type = GenerateResValues::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateResValues>
+            taskProvider: TaskProvider<GenerateResValues>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.generateResValuesTask = taskProvider

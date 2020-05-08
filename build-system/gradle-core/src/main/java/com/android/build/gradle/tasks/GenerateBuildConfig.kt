@@ -197,7 +197,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         override val type: Class<GenerateBuildConfig> = GenerateBuildConfig::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateBuildConfig>
+            taskProvider: TaskProvider<GenerateBuildConfig>
         ) {
             super.handleProvider(taskProvider)
             val outputBytecode = creationConfig.services.projectOptions

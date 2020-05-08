@@ -118,7 +118,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         override val type: Class<BundleAllClasses>
             get() = BundleAllClasses::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
+        override fun handleProvider(taskProvider: TaskProvider<BundleAllClasses>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

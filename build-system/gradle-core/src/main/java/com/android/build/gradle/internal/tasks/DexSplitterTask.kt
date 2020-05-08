@@ -99,7 +99,7 @@ abstract class DexSplitterTask : NonIncrementalTask() {
         override val name =  computeTaskName("split", "Dex")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DexSplitterTask>
+            taskProvider: TaskProvider<DexSplitterTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

@@ -44,7 +44,7 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
     override val type: Class<JavaCompile>
         get() = JavaCompile::class.java
 
-    override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
+    override fun handleProvider(taskProvider: TaskProvider<JavaCompile>) {
         super.handleProvider(taskProvider)
 
         component.artifacts.setInitialProvider(

@@ -161,7 +161,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
 
         override val type: Class<BundleLibraryClassesDir> = BundleLibraryClassesDir::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClassesDir>) {
+        override fun handleProvider(taskProvider: TaskProvider<BundleLibraryClassesDir>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts
                 .setInitialProvider(taskProvider, BundleLibraryClassesDir::output)
@@ -228,7 +228,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
         override val type: Class<BundleLibraryClassesJar> = BundleLibraryClassesJar::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleLibraryClassesJar>
+            taskProvider: TaskProvider<BundleLibraryClassesJar>
         ) {
             super.handleProvider(taskProvider)
 

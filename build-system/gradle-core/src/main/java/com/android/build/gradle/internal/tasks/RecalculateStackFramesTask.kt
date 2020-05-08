@@ -70,7 +70,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
         override val type = RecalculateStackFramesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out RecalculateStackFramesTask>
+            taskProvider: TaskProvider<RecalculateStackFramesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

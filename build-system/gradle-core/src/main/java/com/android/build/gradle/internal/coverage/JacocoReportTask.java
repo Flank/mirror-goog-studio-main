@@ -201,8 +201,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<JacocoReportTask> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig.getTaskContainer().setCoverageReportTask(taskProvider);
         }

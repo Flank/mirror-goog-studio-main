@@ -336,7 +336,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "Assets")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeSourceSetFolders>
+            taskProvider: TaskProvider<MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
 
@@ -422,7 +422,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "JniLibFolders")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeSourceSetFolders>
+            taskProvider: TaskProvider<MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
@@ -455,7 +455,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "Shaders")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeSourceSetFolders>
+            taskProvider: TaskProvider<MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
@@ -487,7 +487,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "MlModels")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeSourceSetFolders>
+            taskProvider: TaskProvider<MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

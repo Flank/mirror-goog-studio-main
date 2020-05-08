@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
@@ -77,7 +76,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -394,7 +392,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         protected open fun preconditionsCheck(creationConfig: BaseCreationConfig) {}
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
@@ -563,7 +561,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -639,7 +637,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     ) {
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 

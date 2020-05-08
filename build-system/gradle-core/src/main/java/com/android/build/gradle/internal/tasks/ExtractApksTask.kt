@@ -164,7 +164,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             get() = ExtractApksTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ExtractApksTask>
+            taskProvider: TaskProvider<ExtractApksTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

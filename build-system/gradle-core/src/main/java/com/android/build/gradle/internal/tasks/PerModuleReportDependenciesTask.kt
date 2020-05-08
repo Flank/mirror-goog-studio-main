@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -219,7 +218,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         override val type: Class<PerModuleReportDependenciesTask> = PerModuleReportDependenciesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PerModuleReportDependenciesTask>
+            taskProvider: TaskProvider<PerModuleReportDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
 

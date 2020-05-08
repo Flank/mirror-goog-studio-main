@@ -200,7 +200,7 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             get() = CompileSourceSetResources::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out CompileSourceSetResources>
+            taskProvider: TaskProvider<CompileSourceSetResources>
         ) {
             super.handleProvider(taskProvider)
 

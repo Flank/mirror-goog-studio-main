@@ -102,7 +102,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
         override val type = L8DexDesugarLibTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out L8DexDesugarLibTask>
+            taskProvider: TaskProvider<L8DexDesugarLibTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts

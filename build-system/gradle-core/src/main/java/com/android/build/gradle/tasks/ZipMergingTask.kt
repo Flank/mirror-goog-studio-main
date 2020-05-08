@@ -99,7 +99,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             get() = ZipMergingTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ZipMergingTask>
+            taskProvider: TaskProvider<ZipMergingTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

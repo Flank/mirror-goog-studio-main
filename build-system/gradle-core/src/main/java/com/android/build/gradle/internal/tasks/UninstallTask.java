@@ -142,8 +142,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends UninstallTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<UninstallTask> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig.getTaskContainer().setUninstallTask(taskProvider);
         }

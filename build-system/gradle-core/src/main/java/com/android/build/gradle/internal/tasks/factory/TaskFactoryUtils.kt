@@ -98,7 +98,7 @@ internal class TaskConfigurationActions<T: Task>(
         }
     }
 
-    fun postRegisterHook(taskProvider: TaskProvider<out T>) {
+    fun postRegisterHook(taskProvider: TaskProvider<T>) {
         creationAction?.preConfigure(taskProvider.name)
         preConfigAction?.preConfigure(taskProvider.name)
 

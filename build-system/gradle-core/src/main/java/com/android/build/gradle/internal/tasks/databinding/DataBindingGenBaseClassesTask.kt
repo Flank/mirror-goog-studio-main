@@ -174,7 +174,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             get() = DataBindingGenBaseClassesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>
+            taskProvider: TaskProvider<DataBindingGenBaseClassesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

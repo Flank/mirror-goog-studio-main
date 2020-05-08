@@ -131,7 +131,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             get() = LinkLibraryAndroidResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

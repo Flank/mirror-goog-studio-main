@@ -178,7 +178,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             get() = BundleToStandaloneApkTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleToStandaloneApkTask>
+            taskProvider: TaskProvider<BundleToStandaloneApkTask>
         ) {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.

@@ -86,7 +86,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             get() = BundleAar::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleAar>
+            taskProvider: TaskProvider<BundleAar>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.bundleLibraryTask = taskProvider

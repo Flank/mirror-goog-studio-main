@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -127,7 +126,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
 
         private lateinit var transformationRequest: ArtifactTransformationRequest
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessPackagedManifestTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessPackagedManifestTask>) {
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.artifacts.use(taskProvider)
                 .toRead(

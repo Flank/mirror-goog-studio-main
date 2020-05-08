@@ -121,7 +121,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         override val name = computeTaskName("link", "ManifestForAssetPacks")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkManifestForAssetPackTask>
+            taskProvider: TaskProvider<LinkManifestForAssetPackTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

@@ -21,7 +21,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
@@ -155,7 +154,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             get() = FinalizeBundleTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out FinalizeBundleTask>
+            taskProvider: TaskProvider<FinalizeBundleTask>
         ) {
             super.handleProvider(taskProvider)
 

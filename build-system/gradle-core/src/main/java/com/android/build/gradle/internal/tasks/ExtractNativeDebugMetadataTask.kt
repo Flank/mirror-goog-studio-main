@@ -132,7 +132,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             get() = computeTaskName("extract", "NativeDebugMetadata")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ExtractNativeDebugMetadataTask>
+            taskProvider: TaskProvider<ExtractNativeDebugMetadataTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
@@ -155,7 +155,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             get() = computeTaskName("extract", "NativeSymbolTables")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ExtractNativeDebugMetadataTask>
+            taskProvider: TaskProvider<ExtractNativeDebugMetadataTask>
         ) {
             super.handleProvider(taskProvider)
 

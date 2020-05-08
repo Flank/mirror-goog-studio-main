@@ -73,7 +73,7 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
         override val type = DataBindingMergeBaseClassLogTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingMergeBaseClassLogTask>
+            taskProvider: TaskProvider<DataBindingMergeBaseClassLogTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

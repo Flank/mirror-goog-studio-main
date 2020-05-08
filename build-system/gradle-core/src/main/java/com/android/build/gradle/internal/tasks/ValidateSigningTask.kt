@@ -140,7 +140,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             get() = ValidateSigningTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ValidateSigningTask>
+            taskProvider: TaskProvider<ValidateSigningTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

@@ -193,7 +193,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out AnalyzeDependenciesTask>
+            taskProvider: TaskProvider<AnalyzeDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
 

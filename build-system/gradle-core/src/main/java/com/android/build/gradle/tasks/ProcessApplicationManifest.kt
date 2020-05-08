@@ -306,7 +306,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ProcessApplicationManifest>
+            taskProvider: TaskProvider<ProcessApplicationManifest>
         ) {
             super.handleProvider(taskProvider)
             val artifacts = creationConfig.artifacts

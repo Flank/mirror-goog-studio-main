@@ -315,8 +315,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<ExtractAnnotations> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 

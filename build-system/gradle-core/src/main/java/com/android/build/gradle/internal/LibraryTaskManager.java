@@ -455,7 +455,7 @@ public class LibraryTaskManager
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends MergeResources> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<MergeResources> taskProvider) {
             variantProperties
                     .getArtifacts()
                     .setInitialProvider(taskProvider, MergeResources::getPublicFile)
