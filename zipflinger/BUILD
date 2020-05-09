@@ -16,7 +16,6 @@ maven_java_library(
     ],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/common:tools.common",
     ],
 )
 
