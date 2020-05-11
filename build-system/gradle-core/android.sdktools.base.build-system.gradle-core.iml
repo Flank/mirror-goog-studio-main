@@ -32,6 +32,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" name="proguard-gradle" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.aapt2-proto" />
     <orderEntry type="module" module-name="android.sdktools.base.build-system.aaptcompiler" />
     <orderEntry type="module" module-name="android.sdktools.base.build-system.builder" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.cli" />

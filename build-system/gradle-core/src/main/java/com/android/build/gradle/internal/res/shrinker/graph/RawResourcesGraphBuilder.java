@@ -39,28 +39,25 @@ import org.xml.sax.SAXException;
  */
 public class RawResourcesGraphBuilder implements ResourcesGraphBuilder {
 
-    private final Iterable<Path> resourceDirs;
+    private final Path resourceDir;
 
-    public RawResourcesGraphBuilder(@NonNull Iterable<Path> resourceDirs) {
-        this.resourceDirs = resourceDirs;
+    public RawResourcesGraphBuilder(@NonNull Path resourceDir) {
+        this.resourceDir = resourceDir;
     }
 
     @Override
     public void buildGraph(@NonNull ResourceShrinkerModel model) throws IOException {
-        for (Path resDir : resourceDirs) {
-            ImmutableList<Path> subDirs =
-                    Files.list(resDir)
-                            .filter(path -> Files.isDirectory(path))
-                            .collect(toImmutableList());
-            for (Path subDir : subDirs) {
-                ResourceFolderType folderType =
-                        ResourceFolderType.getFolderType(subDir.getFileName().toString());
-                if (folderType != null) {
-                    recordResources(model, folderType, subDir);
-                }
+        ImmutableList<Path> subDirs =
+                Files.list(resourceDir)
+                        .filter(path -> Files.isDirectory(path))
+                        .collect(toImmutableList());
+        for (Path subDir : subDirs) {
+            ResourceFolderType folderType =
+                    ResourceFolderType.getFolderType(subDir.getFileName().toString());
+            if (folderType != null) {
+                recordResources(model, folderType, subDir);
             }
         }
-        model.getUsageModel().processToolsAttributes();
     }
 
     private void recordResources(

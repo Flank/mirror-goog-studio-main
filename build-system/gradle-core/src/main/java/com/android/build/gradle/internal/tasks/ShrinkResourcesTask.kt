@@ -394,7 +394,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 ResourcesGathererFromRTxt(parameters.rSourceVariant.get().asFile, ""),
                 ProguardMappingsRecorder(parameters.mappingFile.get().asFile.toPath()),
                 listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
-                RawResourcesGraphBuilder(listOf(parameters.resourceDir.get().asFile.toPath())),
+                RawResourcesGraphBuilder(parameters.resourceDir.get().asFile.toPath()),
                 reporter,
                 ApkFormat.BINARY
             )

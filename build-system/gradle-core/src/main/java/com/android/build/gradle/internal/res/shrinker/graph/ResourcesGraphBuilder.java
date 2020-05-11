@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.shrinker.graph;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel;
 import java.io.IOException;
 
@@ -29,5 +30,5 @@ public interface ResourcesGraphBuilder {
      * Finds references between resources and connects them. May introduce and contribute new
      * resources to ResourceShrinkerModel.
      */
-    void buildGraph(ResourceShrinkerModel model) throws IOException;
+    void buildGraph(@NonNull ResourceShrinkerModel model) throws IOException;
 }

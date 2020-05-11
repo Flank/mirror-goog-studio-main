@@ -67,6 +67,7 @@ gradlePlugin {
 
 dependencies {
     compile project(':base:builder')
+    compile project(':base:build-system:aapt2-proto')
     compile project(':base:build-system:aaptcompiler')
     compile project(':analytics-library:crash')
     compile project(':base:lint-gradle-api')

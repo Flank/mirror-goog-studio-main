@@ -221,7 +221,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             ResourcesGathererFromRTxt(rSource, ""),
             mappingFileSrc.orNull?.asFile?.let { ProguardMappingsRecorder(it.toPath()) },
             listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
-            RawResourcesGraphBuilder(listOf(resourceDir.get().asFile.toPath())),
+            RawResourcesGraphBuilder(resourceDir.get().asFile.toPath()),
             LoggerAndFileDebugReporter(logger, reportFile),
             ApkFormat.PROTO
         )

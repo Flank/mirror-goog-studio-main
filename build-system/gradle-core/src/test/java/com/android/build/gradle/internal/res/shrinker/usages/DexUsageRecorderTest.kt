@@ -21,11 +21,11 @@ import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.android.resources.ResourceType
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
+import java.nio.file.Files
+import java.nio.file.Path
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.nio.file.Files
-import java.nio.file.Path
 
 class DexUsageRecorderTest {
     private val PACKAGE_NAME = "com.stub"
