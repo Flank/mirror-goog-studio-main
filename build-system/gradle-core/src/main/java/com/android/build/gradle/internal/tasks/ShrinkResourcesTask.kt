@@ -119,7 +119,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     abstract val variantOutputs: ListProperty<VariantOutputImpl>
 
     @get:Internal
-    abstract val artifactTransformationRequest: Property<ArtifactTransformationRequest>
+    abstract val artifactTransformationRequest: Property<ArtifactTransformationRequest<ShrinkResourcesTask>>
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -188,7 +188,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                         || contentTypes.contains(ExtendedContentType.DEX))
             }
 
-        private lateinit var artifactTransformationRequest: ArtifactTransformationRequest
+        private lateinit var artifactTransformationRequest: ArtifactTransformationRequest<ShrinkResourcesTask>
 
         override fun handleProvider(
             taskProvider: TaskProvider<ShrinkResourcesTask>

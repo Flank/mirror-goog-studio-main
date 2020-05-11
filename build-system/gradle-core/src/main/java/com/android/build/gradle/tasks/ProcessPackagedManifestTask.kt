@@ -64,7 +64,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
     abstract val mergedManifests: DirectoryProperty
 
     @get:Internal
-    abstract val transformationRequest: Property<ArtifactTransformationRequest>
+    abstract val transformationRequest: Property<ArtifactTransformationRequest<ProcessPackagedManifestTask>>
 
     // Use a property to hold the [WorkerExecutor] so unit tests can reset it if necessary.
     @get:Internal
@@ -124,7 +124,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
         override val type: Class<ProcessPackagedManifestTask>
             get() = ProcessPackagedManifestTask::class.java
 
-        private lateinit var transformationRequest: ArtifactTransformationRequest
+        private lateinit var transformationRequest: ArtifactTransformationRequest<ProcessPackagedManifestTask>
 
         override fun handleProvider(taskProvider: TaskProvider<ProcessPackagedManifestTask>) {
             super.handleProvider(taskProvider)

@@ -103,7 +103,7 @@ class TaskBasedOperationsImplTest {
         abstract val outputDir: DirectoryProperty
 
         @get:Internal
-        lateinit var replacementRequest: ArtifactTransformationRequest
+        lateinit var replacementRequest: ArtifactTransformationRequest<SynchronousTask>
 
         @TaskAction
         fun execute() {
@@ -120,7 +120,7 @@ class TaskBasedOperationsImplTest {
             override val type: Class<SynchronousTask>
                 get() = SynchronousTask::class.java
 
-            private lateinit var replacementRequest: ArtifactTransformationRequest
+            private lateinit var replacementRequest: ArtifactTransformationRequest<SynchronousTask>
 
             override fun handleProvider(taskProvider: TaskProvider<SynchronousTask>) {
                 super.handleProvider(taskProvider)
@@ -176,7 +176,7 @@ class TaskBasedOperationsImplTest {
         val useProfiler = AtomicBoolean(false)
 
         @get:Internal
-        lateinit var replacementRequest: ArtifactTransformationRequest
+        lateinit var replacementRequest: ArtifactTransformationRequest<InternalApiTask>
 
         interface WorkItemParameters: WorkParameters, Serializable {
             val builtArtifact: Property<BuiltArtifact>
@@ -233,7 +233,7 @@ class TaskBasedOperationsImplTest {
             override val type: Class<InternalApiTask>
                 get() = InternalApiTask::class.java
 
-            private lateinit var replacementRequest: ArtifactTransformationRequest
+            private lateinit var replacementRequest: ArtifactTransformationRequest<InternalApiTask>
 
             override fun handleProvider(taskProvider: TaskProvider<InternalApiTask>) {
                 super.handleProvider(taskProvider)

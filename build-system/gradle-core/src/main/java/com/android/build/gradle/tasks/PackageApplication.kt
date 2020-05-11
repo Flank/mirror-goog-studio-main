@@ -33,10 +33,10 @@ import java.nio.file.Files
 
 /** Task to package an Android application (APK).  */
 abstract class PackageApplication : PackageAndroidArtifact() {
-    private lateinit var transformationRequest: ArtifactTransformationRequest
+    private lateinit var transformationRequest: ArtifactTransformationRequest<PackageApplication>
 
     @Internal
-    override fun getTransformationRequest(): ArtifactTransformationRequest {
+    override fun getTransformationRequest(): ArtifactTransformationRequest<PackageApplication> {
         return transformationRequest
     }
     // ----- CreationAction -----
@@ -58,7 +58,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         manifestType,
         packageCustomClassDependencies
     ) {
-        private var transformationRequest: ArtifactTransformationRequest? = null
+        private var transformationRequest: ArtifactTransformationRequest<PackageApplication>? = null
         private var task: PackageApplication? = null
         override val name: String
             get() = computeTaskName("package")

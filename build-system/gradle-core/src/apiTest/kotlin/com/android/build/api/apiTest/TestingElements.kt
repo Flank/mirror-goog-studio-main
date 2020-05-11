@@ -551,7 +551,7 @@ fun getManifestProducerTask() =
                 abstract DirectoryProperty getOutFolder()
 
                 @Internal
-                abstract Property<ArtifactTransformationRequest> getTransformationRequest()
+                abstract Property<ArtifactTransformationRequest<CopyApksTask>> getTransformationRequest()
 
                 @TaskAction
                 void taskAction() {
@@ -597,7 +597,7 @@ fun getManifestProducerTask() =
                 abstract val outFolder: DirectoryProperty
 
                 @get:Internal
-                abstract val transformationRequest: Property<ArtifactTransformationRequest>
+                abstract val transformationRequest: Property<ArtifactTransformationRequest<CopyApksTask>>
 
                 @TaskAction
                 fun taskAction() {

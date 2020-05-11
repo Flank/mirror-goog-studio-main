@@ -168,18 +168,17 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
     }
 }
 
-// TODO : make ArtifactTransformationRequest parameterized on TaskT to avoid casting.
 class ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT: Task>(
     private val builtArtifactsReference: AtomicReference<BuiltArtifactsImpl>,
     private val inputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
     private val outputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
     private val outputArtifactType: ArtifactType<Directory>
-) : Serializable, ArtifactTransformationRequest
+) : Serializable, ArtifactTransformationRequest<TaskT>
         where ArtifactTypeT: ArtifactType<Directory>,
               ArtifactTypeT: ArtifactType.Single {
 
     override fun <ParamT> submit(
-        task: Task,
+        task: TaskT,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
         parameterType : Class<out ParamT>,
@@ -188,7 +187,7 @@ class ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT: Task>(
 
         val mapOfBuiltArtifactsToParameters = mutableMapOf<BuiltArtifact, File>()
         val sourceBuiltArtifacts =
-            BuiltArtifactsLoaderImpl().load(inputLocation(task as TaskT).get())
+            BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
 
         if (sourceBuiltArtifacts == null) {
             builtArtifactsReference.set(
@@ -317,7 +316,6 @@ method with a concrete WorkActionAdapter implementation.""")
                 ?: throw RuntimeException("No provided artifacts.")
 
         sourceBuiltArtifacts.elements.forEach { builtArtifact ->
-            @Suppress("UNCHECKED_CAST")
             workQueue.submit(concreteAction
                     as Class<out WorkActionAdapter<ParamT, ConcreteParametersT>>) {
                     parameters: ConcreteParametersT ->
@@ -370,10 +368,10 @@ method with a concrete WorkActionAdapter implementation.""")
     }
 
     override fun submit(
-        task: Task,
+        task: TaskT,
         transformer: (input: BuiltArtifact) -> File) {
 
-        val sourceBuiltArtifacts = BuiltArtifactsLoaderImpl().load(inputLocation(task as TaskT).get())
+        val sourceBuiltArtifacts = BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
             ?: throw RuntimeException("No provided artifacts.")
 
         builtArtifactsReference.set(BuiltArtifactsImpl(
