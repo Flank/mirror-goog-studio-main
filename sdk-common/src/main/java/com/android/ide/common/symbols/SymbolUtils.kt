@@ -29,7 +29,6 @@ import com.google.common.base.CharMatcher
 import com.google.common.base.Splitter
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -450,10 +449,10 @@ fun readAarRTxt(lines: Iterator<String>, visitor: SymbolListVisitor) {
     var styleableChildPrefix: String? = null
     while (lines.hasNext()) {
         val line = lines.next()
-        if (styleableChildPrefix != null && line.startsWith(styleableChildPrefix!!)) {
+        if (styleableChildPrefix != null && line.startsWith(styleableChildPrefix)) {
             // Extract the child name and write it to the same line.
-            val start = styleableChildPrefix!!.length + 1
-            val end = line.indexOf(' ', styleableChildPrefix!!.length)
+            val start = styleableChildPrefix.length + 1
+            val end = line.indexOf(' ', styleableChildPrefix.length)
             if (end != -1) {
                 visitor.child(line.substring(start, end))
             }
