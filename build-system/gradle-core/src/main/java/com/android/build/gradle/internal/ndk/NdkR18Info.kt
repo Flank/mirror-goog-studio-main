@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package com.android.build.gradle.internal.ndk
 
-import com.android.build.gradle.tasks.NativeBuildSystem
 import java.io.File
 
 /**
- * NdkInfo for r17.
+ * NdkInfo for r18.
  */
-open class NdkR17Info(root: File) : NdkR14Info(root) {
-    override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
-        NativeBuildSystem.CMAKE -> Stl.LIBCXX_STATIC
-        NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM
-    }
+open class NdkR18Info(root: File) : NdkR17Info(root) {
+    override val supportedStls = listOf(
+        Stl.LIBCXX_SHARED,
+        Stl.LIBCXX_STATIC,
+        Stl.NONE,
+        Stl.SYSTEM
+    )
 }
