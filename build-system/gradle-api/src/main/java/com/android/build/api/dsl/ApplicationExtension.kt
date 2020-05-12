@@ -56,10 +56,10 @@ interface ApplicationExtension<
 
     fun bundle(action: Bundle.() -> Unit)
 
-    var dynamicFeatures: MutableSet<String>
+    val dynamicFeatures: MutableSet<String>
 
     /**
      * Set of asset pack subprojects to be included in the app's bundle.
      */
-    var assetPacks: MutableSet<String>
+    val assetPacks: MutableSet<String>
 }

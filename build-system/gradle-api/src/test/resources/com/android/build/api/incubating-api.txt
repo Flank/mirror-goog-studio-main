@@ -221,8 +221,6 @@ com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java
 com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.ApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.ApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ApplicationProductFlavor.setDefault: void (boolean)

@@ -1248,6 +1248,10 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setTargets: 
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
+com.android.build.gradle.internal.dsl.InternalApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
+com.android.build.gradle.internal.dsl.InternalApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
+com.android.build.gradle.internal.dsl.InternalApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalCommonExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getAdbOptions: com.android.build.gradle.internal.dsl.AdbOptions ()
