@@ -202,16 +202,16 @@ class TestingElements(val language: ScriptingLanguage) {
                 @TaskAction
                 fun taskAction() {
 
-                    val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
-                    val error = firstProcess.errorStream.readBytes().decodeToString()
-                    if (error.isNotBlank()) {
-                        System.err.println("Git error : ${'$'}error")
-                    }
-                    var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
-                    if (gitVersion.isEmpty()) {
-                        gitVersion="12"
-                    }
-                    gitVersionOutputFile.get().asFile.writeText(gitVersion)
+                    // this would be the code to get the tip of tree version, 
+                    // val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
+                    // val error = firstProcess.errorStream.readBytes().decodeToString()
+                    // if (error.isNotBlank()) {
+                    //      System.err.println("Git error : ${'$'}error")
+                    // }
+                    // var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
+
+                    // but here, we are just hardcoding : 
+                    gitVersionOutputFile.get().asFile.writeText("1234")
                 }
             }
             """
@@ -414,7 +414,7 @@ fun getManifestProducerTask() =
                     val apk = File(builtArtifacts.elements.single().outputFile).toPath()
                     apkAnalyzer.resXml(apk, "/AndroidManifest.xml")
                     val manifest = byteArrayOutputStream.toString()
-                    println(if (manifest.contains("android:versionCode=\"12\"")) "SUCCESS" else "FAILED")
+                    println(if (manifest.contains("android:versionCode=\"1234\"")) "SUCCESS" else "FAILED")
                 }
             }
             """

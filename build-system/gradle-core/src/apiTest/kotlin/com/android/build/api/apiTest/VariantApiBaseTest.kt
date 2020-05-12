@@ -428,8 +428,10 @@ ${repositories.joinToString(
 
         val gradleRunner = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withArguments("-Dandroid.enableJvmResourceCompiler=true",
-                "--init-script", "${initScript.absolutePath}",
+            .withArguments(
+                "-Dorg.gradle.jvmargs=-Xmx2G",
+                "-Dandroid.enableJvmResourceCompiler=true",
+               "--init-script", "${initScript.absolutePath}",
                 *given.tasksToInvoke.toTypedArray(),
                 "--stacktrace")
             .forwardOutput()

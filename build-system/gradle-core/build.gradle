@@ -54,6 +54,7 @@ task apiTest(type: Test) {
 }
 
 check.dependsOn apiTest
+apiTest.dependsOn publishLocal
 
 gradlePlugin {
     testSourceSets sourceSets.apiTest
