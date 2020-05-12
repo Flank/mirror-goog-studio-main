@@ -33,8 +33,7 @@ interface LibraryExtension<
         BuildTypeT : LibraryBuildType<SigningConfigT>,
         DefaultConfigT : LibraryDefaultConfig<SigningConfigT>,
         ProductFlavorT : LibraryProductFlavor<SigningConfigT>,
-        SigningConfigT : SigningConfig,
-        PrefabOptionsT : PrefabPackagingOptions> :
+        SigningConfigT : SigningConfig> :
     CommonExtension<
         AndroidSourceSetT,
         LibraryBuildFeatures,

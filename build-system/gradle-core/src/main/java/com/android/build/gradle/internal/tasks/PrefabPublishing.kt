@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks
+package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl
 import com.android.build.gradle.internal.core.Abi
@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
 import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.sdklib.AndroidVersion
 import com.google.gson.GsonBuilder
@@ -121,7 +120,10 @@ data class ModuleMetadataV1(
     // packages because we wouldn't know whether the exported libraries were
     // Android specific or not.
     val android: PlatformSpecificModuleMetadataV1 =
-        PlatformSpecificModuleMetadataV1(null, null)
+        PlatformSpecificModuleMetadataV1(
+            null,
+            null
+        )
 )
 
 /**
@@ -225,7 +227,10 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
     private fun createModuleMetadata(module: PrefabModuleTaskData, installDir: File) {
         installDir.resolve("module.json").writeText(
             JsonSerializer().toJson(
-                ModuleMetadataV1(exportLibraries = emptyList(), libraryName = module.libraryName)
+                ModuleMetadataV1(
+                    exportLibraries = emptyList(),
+                    libraryName = module.libraryName
+                )
             )
         )
     }

@@ -1443,8 +1443,6 @@ com.android.build.gradle.internal.dsl.PrefabPackagingOptions.<init>: com.android
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.getHeaders: java.lang.String ()
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.getLibraryName: java.lang.String ()
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.getName: java.lang.String ()
-com.android.build.gradle.internal.dsl.PrefabPackagingOptions.headers: void (java.lang.String)
-com.android.build.gradle.internal.dsl.PrefabPackagingOptions.libraryName: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setName: void (java.lang.String)

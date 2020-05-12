@@ -24,12 +24,6 @@ open class PrefabPackagingOptions @Inject constructor(override var name: String)
     PrefabPackagingOptions, Serializable {
 
     override var headers: String? = null
-    open fun headers(headers: String) {
-        this.headers = headers
-    }
 
     override var libraryName: String? = null
-    open fun libraryName(libraryName: String) {
-        this.libraryName = libraryName
-    }
 }

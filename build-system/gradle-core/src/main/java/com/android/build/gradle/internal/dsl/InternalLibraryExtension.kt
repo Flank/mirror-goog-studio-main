@@ -31,8 +31,7 @@ interface InternalLibraryExtension :
         BuildType,
         DefaultConfig,
         ProductFlavor,
-        SigningConfig,
-        PrefabPackagingOptions>,
+        SigningConfig>,
         InternalCommonExtension<
                 LibraryBuildFeatures,
                 BuildType,
