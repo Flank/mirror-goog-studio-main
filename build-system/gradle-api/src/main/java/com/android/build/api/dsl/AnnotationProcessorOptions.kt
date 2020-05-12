@@ -30,7 +30,7 @@ interface AnnotationProcessorOptions {
      * annotation processor dependencies to your project, read
      * [Add annotation processors](https://d.android.com/studio/build/dependencies#annotation_processor).
      */
-    var classNames: MutableList<String>
+    val classNames: MutableList<String>
 
     /**
      * Adds an annotation processor class to run.
