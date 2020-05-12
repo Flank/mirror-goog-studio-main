@@ -741,7 +741,6 @@ com.android.build.api.dsl.VectorDrawables
 com.android.build.api.dsl.VectorDrawables.generatedDensities: void (java.lang.String[])
 com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
-com.android.build.api.dsl.VectorDrawables.setGeneratedDensities: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.AaptOptions

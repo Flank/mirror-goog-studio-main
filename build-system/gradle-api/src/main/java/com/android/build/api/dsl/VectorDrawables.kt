@@ -33,7 +33,7 @@ interface VectorDrawables {
      * See
      * [Supporting Multiple Screens](http://developer.android.com/guide/practices/screens_support.html).
      */
-    var generatedDensities: MutableSet<String>?
+    val generatedDensities: MutableSet<String>?
 
     /**
      * Densities used when generating PNGs from vector drawables at build time. For the PNGs to be

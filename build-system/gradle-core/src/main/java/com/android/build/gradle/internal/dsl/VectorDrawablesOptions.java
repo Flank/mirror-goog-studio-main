@@ -16,21 +16,15 @@
 
 package com.android.build.gradle.internal.dsl;
 
-import com.android.annotations.Nullable;
+import com.android.annotations.NonNull;
 import com.android.builder.core.DefaultVectorDrawablesOptions;
 import java.util.Arrays;
-import java.util.Set;
 
 public class VectorDrawablesOptions extends DefaultVectorDrawablesOptions
         implements com.android.build.api.dsl.VectorDrawables {
 
     @Override
-    public void generatedDensities(String... densities) {
+    public void generatedDensities(@NonNull String... densities) {
         setGeneratedDensities(Arrays.asList(densities));
-    }
-
-    @Override
-    public void setGeneratedDensities(@Nullable Set<String> generatedDensities) {
-        super.setGeneratedDensities(generatedDensities);
     }
 }

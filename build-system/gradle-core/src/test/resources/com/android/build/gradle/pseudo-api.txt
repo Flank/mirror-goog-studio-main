@@ -1536,7 +1536,6 @@ com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.ap
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions implements com.android.build.api.dsl.VectorDrawables
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.generatedDensities: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.VectorDrawablesOptions.setGeneratedDensities: void (java.util.Set<java.lang.String>)
 com.android.builder.core.AbstractBuildType extends com.android.builder.internal.BaseConfigImpl implements com.android.builder.model.BuildType
 com.android.builder.core.AbstractBuildType$Companion
 com.android.builder.core.AbstractBuildType$Companion.<init>: com.android.builder.core.AbstractBuildType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
