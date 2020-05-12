@@ -26,11 +26,26 @@ The library is made of four components named ZipArchive, Freestore, Mapper (Inpu
 
 Design choice discussion:
 
+Order of operations:
+====================
 In order to avoid creating holes when editing an archive, zipflinger recommends (but does not enforce)
 submitting all delete operations first and then submit add operations. A "deferred add" mechanism was
 initially used where delete operations were carried immediately but additions were deferred until the
 archive was closed. This approach was ultimately abandoned since it increased the memory footprint
 significantly when BytesSource were involved.
+
+Prevent silent overwrite:
+=========================
+It is by design that Zipflinger throws an exception when attempting to overwrite an entry in an archive.
+By asking developer to aknowledge an overwrite by first deleting an entry, this mecanism has allowed to
+surface many bugs.
+
+Load entries in memory:
+=======================
+Zipflinger loads entries in memory before adding them to an archive (unless the entry is coming from an
+other archive in which case a zero-copy transfer occurs). This design choice is a trade-off which
+increase speed (by allowing multithreaded-compression) and simplify the overall architecture at the
+cost of not supporting files bigger than 2GiB.  
 
 ## ZipArchive
 ZipArchive is the interface to the users of the library. This is where an archive is created and/or
