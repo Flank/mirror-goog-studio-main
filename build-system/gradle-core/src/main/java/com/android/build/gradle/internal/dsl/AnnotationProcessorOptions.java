@@ -105,7 +105,6 @@ public class AnnotationProcessorOptions
         return compilerArgumentProviders;
     }
 
-    @Override
     public void setCompilerArgumentProviders(
             @NonNull List<CommandLineArgumentProvider> compilerArgumentProviders) {
         this.compilerArgumentProviders.clear();

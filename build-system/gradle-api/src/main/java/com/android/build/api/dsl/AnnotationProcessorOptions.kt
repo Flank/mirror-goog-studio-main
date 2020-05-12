@@ -93,7 +93,7 @@ interface AnnotationProcessorOptions {
      * pass them to the Android plugin, read
      * [Pass arguments to annotation processors](https://developer.android.com/studio/build/dependencies#processor-arguments).
      */
-    var compilerArgumentProviders: MutableList<CommandLineArgumentProvider>
+    val compilerArgumentProviders: MutableList<CommandLineArgumentProvider>
 
     /**
      * Adds an argument for annotation processors that you want to pass to the Android plugin using
