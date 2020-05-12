@@ -39,7 +39,6 @@ interface TaskBasedOperations<TaskT: Task> {
      * Construct a new operation request where the [TaskT] expects to read the provided
      * [ArtifactTypeT] built artifacts from the location specified by the [at] parameter.
      *
-     *
      * @param type the artifact type the [TaskT] is interested in.
      * @param at the location at which the [TaskT] will be reading the built artifacts from.
      */
@@ -110,6 +109,11 @@ interface ArtifactTransformationRequest<TaskT: Task> {
 
     /**
      * Submit a lambda to process synchronously each input [BuiltArtifact]
+     *
+     * @param task the task instance requesting the item processing.
+     * @param transformer a lambda function that takes an input [BuiltArtifact] and produces a
+     * File for that input. The File will be used as the transformed version of the passed
+     * [BuiltArtifact]
      */
     fun submit(task: TaskT, transformer: (input: BuiltArtifact) -> File)
 }

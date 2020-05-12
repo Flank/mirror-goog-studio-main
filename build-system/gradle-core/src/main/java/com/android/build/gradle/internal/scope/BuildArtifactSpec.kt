@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api.artifact
+package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.api.artifact.SourceArtifactType
 
 /**
  * Specification to define supported features of [BuildArtifactType]
@@ -29,14 +28,19 @@ data class BuildArtifactSpec(
         val replaceable: Boolean) {
     companion object {
         private val specMap = mapOf(
-                //   type                                      appendable  replaceable
-                spec(BuildArtifactType.JAVAC_CLASSES,          true,       true),
-                spec(BuildArtifactType.JAVA_COMPILE_CLASSPATH, true,       false),
-                spec(SourceArtifactType.ANDROID_RESOURCES,     true,       true),
-                spec(InternalArtifactType.BASE_MODULE_METADATA, false, true))
+                //   type                                      appendable           replaceable
+            spec(BuildArtifactType.JAVAC_CLASSES,          true,       true),
+            spec(BuildArtifactType.JAVA_COMPILE_CLASSPATH, true,       false),
+            spec(SourceArtifactType.ANDROID_RESOURCES,     true,       true),
+            spec(InternalArtifactType.BASE_MODULE_METADATA,false,      true)
+        )
 
         fun spec(type : ArtifactType<*>, appendable : Boolean, replaceable: Boolean) =
-            type to BuildArtifactSpec(type, appendable, replaceable)
+            type to BuildArtifactSpec(
+                type,
+                appendable,
+                replaceable
+            )
 
         fun get(type : ArtifactType<*>) =
                 specMap[type]

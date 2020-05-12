@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.api.artifact
+package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.Incubating
@@ -27,7 +27,9 @@ import org.gradle.api.file.Directory
  * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
-sealed class BuildArtifactType : ArtifactType<Directory>(DIRECTORY) {
+sealed class BuildArtifactType : ArtifactType<Directory>(
+    DIRECTORY
+) {
 
     @Incubating
     object JAVAC_CLASSES : BuildArtifactType()

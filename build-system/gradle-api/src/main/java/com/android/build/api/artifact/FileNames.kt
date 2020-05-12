@@ -16,6 +16,11 @@
 
 package com.android.build.api.artifact
 
+/**
+ * Known file names for artifacts that will be stored in the final APK.
+ *
+ * @since 4.1
+ */
 enum class FileNames(val fileName: String) {
 
     ANDROID_MANIFEST_XML("AndroidManifest.xml"),

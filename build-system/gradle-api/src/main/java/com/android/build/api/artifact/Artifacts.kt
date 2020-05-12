@@ -29,15 +29,27 @@ import org.gradle.api.tasks.TaskProvider
 /**
  * Access to the artifacts on a Variant object.
  *
- * This interface is not implemented so far by the Android Gradle Plugin, it's work in
- * progress.
+ * Artifacts are temporary or final files or directories that are produced by the Android Gradle
+ * Plugin during the build. Depending on its configuration, each [Variant] produces different
+ * versions of some of the output artifacts.
+ *
+ * Example of temporary artifacts are .class files obtained from compiling source files that will
+ * eventually get transformed further into dex files. Final artifacts are APKs and bundle files that
+ * are not transformed further.
+ *
+ * Artifacts are uniquely defined by their [ArtifactType] and public artifact types that can be
+ * accessed from third party plugins or build script are defined in [ArtifactTypes]
+ *
+ * @since 4.1
  */
 @Incubating
 interface Artifacts {
 
     /**
-     * Provides an implementation of [BuiltArtifactsLoader] that can be used to load and save
-     * built artifacts metadata.
+     * Provides an implementation of [BuiltArtifactsLoader] that can be used to load built artifacts
+     * metadata.
+     *
+     * @return a thread safe implementation pf [BuiltArtifactsLoader] that can be reused.
      */
     fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
 
@@ -50,7 +62,7 @@ interface Artifacts {
             where ARTIFACT_TYPE: ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE: ArtifactType.Single
 
     /**
-     * Get all the [Provider] of [FILE_TYPE] for the passed [ArtifactType].
+     * Get all the [Provider]s of [FILE_TYPE] for the passed [ArtifactType].
      *
      * The [ArtifactType] must be [ArtifactType.Multiple]
      */
@@ -72,7 +84,7 @@ interface Artifacts {
      *          @get:OutputFile abstract val outputFile: RegularFileProperty
      *
      *          @TaskAction fun taskAction() {
-     *              ... write outputFile ...
+     *              ... outputFile.get().asFile.write( ... ) ...
      *          }
      *     }
      * </pre>
@@ -82,12 +94,12 @@ interface Artifacts {
      * <pre
      *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object MULTIPLE_FILE_ARTIFACT:
-     *                  ArtifactTypes<RegularFile>(FILE), Appendable
+     *                  ArtifactTypes<RegularFile>(FILE), Multiple, Appendable
      *     }
      * </pre>
      *
-     * you can then register a task as a Provider of [org.gradle.api.file.RegularFile] for the
-     * artifact type.
+     * you can then register the above task as a Provider of [org.gradle.api.file.RegularFile] for
+     * that artifact type.
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "appendTask")
@@ -103,16 +115,16 @@ interface Artifacts {
     ): AppendRequest<FILE_TYPE>
 
     /**
-     * Initiates a transform request using a [TaskProvider] instance with method references to
-     * set the input and the output of transformation.
+     * Initiates a transform request to a single [ArtifactType.Transformable] artifact type.
+     *
      * @param taskProvider the [TaskProvider] for the task transforming an instance of [FILE_TYPE]
-     * @param from the method reference to get a [Property] to set the transform input
-     * @param into the method reference to get the [Provider] to retrieve the produced [FILE_TYPE]
-     * when needed.
+     * @param from the method reference to get a [Property] of [FILE_TYPE] to set the transform input
+     * @param into the method reference to get the [Property] of [FILE_TYPE] to retrieve the
+     * produced [FILE_TYPE] when needed.
      *
      * The artifact type must be [ArtifactType.Single] and [ArtifactType.Transformable]
      *
-     * Let's take a [Task] with a [org.gradle.api.file.RegularFile] to transform an input into an
+     * Let's take a [Task] transforming an input [org.gradle.api.file.RegularFile] into an
      * output :
      * <pre>
      *     abstract class MyTask: DefaultTask() {
@@ -151,18 +163,18 @@ interface Artifacts {
     ): TransformRequest<FILE_TYPE>
 
     /**
-     * Initiates a transform request.
+     * Initiates a transform request to a multiple [ArtifactType.Transformable] artifact type.
      *
      * @param taskProvider the [TaskProvider] for the task transforming an instance of [FILE_TYPE]
      * @param from the method reference to get a [ListProperty] to set all the transform inputs
-     * @param into the method reference to get the [Provider] to retrieve the produced [FILE_TYPE]
+     * @param into the method reference to get the [Property] to retrieve the produced [FILE_TYPE]
      * when needed.
      *
      * The artifact type must be [ArtifactType.Multiple] and [ArtifactType.Transformable]
      *
      * The implementation of the task must combine all the inputs returned [from] the method
      * reference and store [into] a single output.
-     * Chained transforms will get a list of a single output from the upstream transform.
+     * Chained transforms will get a list of a single output from the upstream transforms.
      *
      * If some [append] calls are made on the same artifact type, the first transform will always
      * get the complete list of artifacts irrespective of the timing of the calls.
@@ -185,11 +197,11 @@ interface Artifacts {
      * <pre
      *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object MULTIPLE_FILE_ARTIFACT:
-     *                  ArtifactTypes<RegularFile>(FILE), Multiple, Replaceable
+     *                  ArtifactTypes<RegularFile>(FILE), Multiple, Transformable
      *     }
      * </pre>
      *
-     * you can register a transform to the collection of [org.gradle.api.file.RegularFile]
+     * you then register the task as follows :
      *
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
@@ -217,7 +229,7 @@ interface Artifacts {
     ): TaskBasedOperations<TASK>
 
     /**
-     * Initiates a replacement request
+     * Initiates a replacement request to a single [ArtifactType.Replaceable] artifact type.
      *
      * @param taskProvider a [TaskProvider] for the task producing an instance of [FILE_TYPE]
      * @param with the method reference to obtain the [Provider] for the produced [FILE_TYPE]

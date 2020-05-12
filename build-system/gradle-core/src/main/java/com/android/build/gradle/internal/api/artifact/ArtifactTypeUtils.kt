@@ -18,9 +18,9 @@
 package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.gradle.internal.scope.AnchorOutputType
+import com.android.build.gradle.internal.scope.BuildArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import java.lang.RuntimeException
 import kotlin.reflect.KClass
