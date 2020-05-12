@@ -16,8 +16,7 @@ readonly script_name="$(basename "$0")"
 "${script_dir}/bazel" clean --async
 
 config_options="--config=remote"
-runs_per_test=2000
-
+runs_per_test=1000
 
 readonly invocation_id_sanity_longrunning="$(uuidgen)"
 
@@ -52,6 +51,13 @@ readonly bazel_status_sanity_longrunning=$?
 
 if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_sanity_longrunning}'\" />" > "${dist_dir}"/upsalite_test_results.html
+
+  readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
+  mkdir "${dist_dir}"/testlogs
+
+  # aggregate test results into a single XML
+  ("${script_dir}"/utils/aggregate_xmls.py --testlogs_dir="${testlogs_dir}" --output_file="${dist_dir}"/testlogs/aggregated_results.xml)
+
 fi
 
 exit $bazel_status_sanity_longrunning
