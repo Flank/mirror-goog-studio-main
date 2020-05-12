@@ -97,7 +97,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                         modelCache,
                         settings -> new IdeNativeSettings(settings));
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
-        myDefaultNdkVersion = project.getDefaultNdkVersion();
+        myDefaultNdkVersion = copyDefaultNdkVersion(project);
         myBuildSystems = copyBuildSystems(project);
         myHashCode = calculateHashCode();
     }
@@ -118,6 +118,16 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                                                     Collections.emptyMap()))));
         } catch (UnsupportedOperationException e) {
             return Maps.newHashMap();
+        }
+    }
+
+    @NonNull
+    private static String copyDefaultNdkVersion(@NonNull NativeAndroidProject project) {
+        try {
+            return project.getDefaultNdkVersion();
+        } catch (UnsupportedOperationException e) {
+            // We have a serialized model from an older version of AGP.
+            return "";
         }
     }
 
