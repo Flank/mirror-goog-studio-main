@@ -518,7 +518,6 @@ com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFiles: java.la
 com.android.build.api.dsl.LibraryVariantDimension.getConsumerProguardFiles: java.util.List<java.io.File> ()
 com.android.build.api.dsl.LibraryVariantDimension.getMultiDexEnabled: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryVariantDimension.getSigningConfig: SigningConfigT ()
-com.android.build.api.dsl.LibraryVariantDimension.setConsumerProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.api.dsl.LibraryVariantDimension.setMultiDexEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryVariantDimension.setSigningConfig: void (SigningConfigT)
 com.android.build.api.dsl.LintOptions
@@ -730,8 +729,6 @@ com.android.build.api.dsl.VariantDimension.proguardFiles: java.lang.Object (java
 com.android.build.api.dsl.VariantDimension.resValue: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepFile: void (java.io.File)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepProguard: void (java.io.File)
-com.android.build.api.dsl.VariantDimension.setProguardFiles: void (java.util.List<java.io.File>)
-com.android.build.api.dsl.VariantDimension.setTestProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.api.dsl.VariantDimension.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Shaders, kotlin.Unit>)
 com.android.build.api.dsl.VariantDimension.testProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.VariantDimension.testProguardFiles: java.lang.Object (java.lang.Object[])

@@ -294,12 +294,9 @@ open class BuildType @Inject constructor(
         return this
     }
 
-    override var testProguardFiles: MutableList<File>
+    override val testProguardFiles: MutableList<File>
         get() = super.testProguardFiles
-        set(value) {
-            // Override to handle the testProguardFiles = ['string'] case.
-            setTestProguardFiles(value)
-        }
+
 
     override fun testProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile")
@@ -335,12 +332,8 @@ open class BuildType @Inject constructor(
         return this
     }
 
-    override var consumerProguardFiles: MutableList<File>
+    override val consumerProguardFiles: MutableList<File>
         get() = super.consumerProguardFiles
-        set(value) {
-            // Override to handle the consumerProguardFiles = ['string'] case.
-            setConsumerProguardFiles(value)
-        }
 
     override fun consumerProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(

@@ -121,26 +121,14 @@ abstract class BaseConfigImpl : Serializable,
         }
 
     /** {@inheritDoc}  */
-    override var proguardFiles: MutableList<File>
+    override val proguardFiles: MutableList<File>
         get() = mProguardFiles
-        set(value) {
-            mProguardFiles.clear()
-            mProguardFiles.addAll(value)
-        }
 
-    override var consumerProguardFiles: MutableList<File>
+    override val consumerProguardFiles: MutableList<File>
         get() = mConsumerProguardFiles
-        set(value) {
-            mConsumerProguardFiles.clear()
-            mConsumerProguardFiles.addAll(value)
-        }
 
-    override var testProguardFiles: MutableList<File>
+    override val testProguardFiles: MutableList<File>
         get() = mTestProguardFiles
-        set(value) {
-            mTestProguardFiles.clear()
-            mTestProguardFiles.addAll(value)
-        }
 
     override val manifestPlaceholders: MutableMap<String, Any>
         get() = mManifestPlaceholders

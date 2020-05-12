@@ -38,7 +38,7 @@ interface LibraryVariantDimension<SigningConfigT : SigningConfig> : VariantDimen
      *
      * This is only valid for Library project. This is ignored in Application project.
      */
-    var consumerProguardFiles: MutableList<File>
+    val consumerProguardFiles: MutableList<File>
 
     /**
      * Adds a proguard rule file to be included in the published AAR.
