@@ -262,7 +262,6 @@ com.android.build.api.dsl.BaseFlavor.setRenderscriptNdkModeEnabled: void (java.l
 com.android.build.api.dsl.BaseFlavor.setRenderscriptSupportModeBlasEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setRenderscriptSupportModeEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setRenderscriptTargetApi: void (java.lang.Integer)
-com.android.build.api.dsl.BaseFlavor.setResourceConfigurations: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.BaseFlavor.setTestApplicationId: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setTestFunctionalTest: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setTestHandleProfiling: void (java.lang.Boolean)
