@@ -50,7 +50,7 @@ fun ${greeting}(name: String) {
     Text(text = "Hello ${"$"}name!")
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun ${defaultPreview}() {
     MaterialTheme {
