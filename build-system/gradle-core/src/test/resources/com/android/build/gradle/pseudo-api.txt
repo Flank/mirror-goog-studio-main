@@ -1080,7 +1080,6 @@ com.android.build.gradle.internal.dsl.DensitySplitOptions.getCompatibleScreens: 
 com.android.build.gradle.internal.dsl.DensitySplitOptions.isStrict: boolean ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setAuto: void (boolean)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.List<java.lang.String>)
-com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setStrict: void (boolean)
 com.android.build.gradle.internal.dsl.DexOptions extends com.android.builder.core.DefaultDexOptions
 com.android.build.gradle.internal.dsl.DexOptions.<init>: com.android.build.gradle.internal.dsl.DexOptions (com.android.build.gradle.internal.errors.DeprecationReporter)

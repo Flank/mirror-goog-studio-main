@@ -418,7 +418,6 @@ com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Spli
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
-com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DependenciesInfo
 com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
