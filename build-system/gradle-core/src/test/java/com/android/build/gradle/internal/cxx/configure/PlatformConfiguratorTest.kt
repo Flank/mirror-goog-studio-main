@@ -20,11 +20,17 @@ import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLog
 import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.StringReader
 
 class PlatformConfiguratorTest {
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     private val defaultApiLevelFromDsl = AndroidVersion.DEFAULT.apiLevel
     private val expectedNdkR17MetaPlatforms = "{\n" +
             "  \"min\": 16,\n" +
@@ -47,6 +53,13 @@ class PlatformConfiguratorTest {
             "  }\n" +
             "}"
     private val logger = PassThroughDeduplicatingLoggingEnvironment()
+    private lateinit var ndk17: File
+
+    @Before
+    fun before() {
+        ndk17 = temporaryFolder.newFolder("17").absoluteFile
+    }
+
     @After
     fun after() {
         logger.close()
@@ -57,7 +70,7 @@ class PlatformConfiguratorTest {
     }
 
     private fun platformConfiguratorNdk16() : PlatformConfigurator {
-        val root = File("./16").absoluteFile
+        val root = temporaryFolder.newFolder("16").absoluteFile
         root.deleteRecursively()
         File(root, "platforms/android-14/arch-x86").mkdirs()
         File(root, "platforms/android-15/arch-x86").mkdirs()
@@ -73,7 +86,6 @@ class PlatformConfiguratorTest {
         return PlatformConfigurator(root)
     }
 
-    private val ndk17 = File("./17").absoluteFile
     private fun platformConfiguratorNdk17() : PlatformConfigurator {
         val root = ndk17
         root.deleteRecursively()
@@ -99,7 +111,7 @@ class PlatformConfiguratorTest {
     }
 
     private fun platformConfiguratorNdk17ButHasWeirdAndroidFolder() : PlatformConfigurator {
-        val root = File("./17-weird").absoluteFile
+        val root = temporaryFolder.newFolder("17-weird").absoluteFile
         root.deleteRecursively()
         File(root, "platforms/android-14/arch-x86").mkdirs()
         File(root, "platforms/android-15/arch-x86").mkdirs()
@@ -118,7 +130,7 @@ class PlatformConfiguratorTest {
     }
 
     private fun platformConfiguratorMissingSomePlatforms() : PlatformConfigurator {
-        val root = File("./17-incomplete").absoluteFile
+        val root = temporaryFolder.newFolder("17-incomplete").absoluteFile
         root.deleteRecursively()
         File(root, "platforms/android-19/arch-x86").mkdirs()
         File(root, "platforms/android-21/arch-x86").mkdirs()
