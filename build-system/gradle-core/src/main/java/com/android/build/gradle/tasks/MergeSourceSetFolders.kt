@@ -356,7 +356,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.assetsDirectories }
 
-            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).forUseAtConfigurationTime().orNull
 
             task.assetSets.set(creationConfig.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
@@ -439,7 +439,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.jniLibsDirectories }
-            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).forUseAtConfigurationTime().orNull
             task.assetSets.set(creationConfig.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
@@ -471,7 +471,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val variantSources = creationConfig.variantSources
 
             val assetDirFunction = Function<SourceProvider, Collection<File>> { it.shadersDirectories }
-            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).forUseAtConfigurationTime().orNull
             task.assetSets.set(creationConfig.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
@@ -504,7 +504,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val variantSources = creationConfig.variantSources
             val mlModelsDirFunction =
                 Function<SourceProvider, Collection<File>> { it.mlModelsDirectories }
-            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
+            task.aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).forUseAtConfigurationTime().orNull
             task.assetSets.setDisallowChanges(creationConfig.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(mlModelsDirFunction, task.aaptEnv)
             })
