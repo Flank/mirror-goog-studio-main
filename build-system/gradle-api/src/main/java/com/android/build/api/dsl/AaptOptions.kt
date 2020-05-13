@@ -35,17 +35,17 @@ interface AaptOptions {
      *
      * Equivalent of the -0 flag. See `aapt --help`
      */
-    var noCompress: MutableCollection<String>
+    val noCompress: MutableCollection<String>
 
     /**
-     * Sets extensions of files that will not be stored compressed in the APK.
+     * Adds extensions of files that will not be stored compressed in the APK.
      *
      * Equivalent of the -0 flag. See `aapt --help`
      */
     fun noCompress(noCompress: String)
 
     /**
-     * Sets extensions of files that will not be stored compressed in the APK.
+     * Adds extensions of files that will not be stored compressed in the APK.
      *
      * Equivalent of the -0 flag. See `aapt --help`
      */
@@ -59,7 +59,7 @@ interface AaptOptions {
     var failOnMissingConfigEntry: Boolean
 
     /** List of additional parameters to pass to `aapt`. */
-    var additionalParameters: MutableList<String>
+    val additionalParameters: MutableList<String>
 
     /** Adds additional parameters to be passed to `aapt`. */
     fun additionalParameters(params: String)
