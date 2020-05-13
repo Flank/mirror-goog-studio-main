@@ -105,6 +105,7 @@ class LmFactory : LmModuleLoader {
                 gradleVersion = gradleVersion,
                 buildFolder = project.buildFolder,
                 lintOptions = getLintOptions(project),
+                lintRuleJars = project.lintRuleJars,
                 buildFeatures = getBuildFeatures(project, gradleVersion),
                 resourcePrefix = project.resourcePrefix,
                 dynamicFeatures = project.dynamicFeatures,
@@ -907,6 +908,7 @@ class LmFactory : LmModuleLoader {
             get() = project.compileTarget
         override val oldProject: IdeAndroidProject?
             get() = project
+        override val lintRuleJars: List<File>? = project.lintRuleJars
 
         override fun neverShrinking(): Boolean {
             return isNeverShrinking(project)

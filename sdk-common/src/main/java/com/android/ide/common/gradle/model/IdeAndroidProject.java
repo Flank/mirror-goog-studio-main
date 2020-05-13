@@ -31,6 +31,7 @@ import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 public interface IdeAndroidProject extends Serializable {
@@ -302,4 +303,13 @@ public interface IdeAndroidProject extends Serializable {
      */
     @NonNull
     Collection<IdeVariantBuildInformation> getVariantsBuildInformation();
+
+    /**
+     * Returns the lint jars that this module uses to run extra lint checks.
+     *
+     * <p>If null, the model does not contain the information because AGP was an older version, and
+     * alternative ways to get the information should be used.
+     */
+    @Nullable
+    List<File> getLintRuleJars();
 }

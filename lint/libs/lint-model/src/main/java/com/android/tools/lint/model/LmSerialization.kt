@@ -614,6 +614,8 @@ private class LmModuleWriter(
         if (module.neverShrinking()) {
             printer.printAttribute("neverShrinking", VALUE_TRUE, indent)
         }
+        printer.printFiles("lintRuleJars", module.lintRuleJars, indent)
+
         printer.println(">")
 
         writeBuildFeatures(module.buildFeatures, indent + 1)
@@ -1345,6 +1347,7 @@ private class LmModuleReader(
             val compileTarget = getRequiredAttribute("compileTarget")
             val neverShrinking = getOptionalBoolean("neverShrinking", false)
             val variants = mutableListOf<LmVariant>()
+            val lintRuleJars = getFiles("lintRuleJars")
             var lintOptions: LmLintOptions? = null
             var buildFeatures: LmBuildFeatures? = null
 
@@ -1374,6 +1377,7 @@ private class LmModuleReader(
                 gradleVersion = gradleVersion,
                 buildFolder = buildFolder,
                 lintOptions = lintOptions!!,
+                lintRuleJars = lintRuleJars,
                 buildFeatures = buildFeatures!!,
                 resourcePrefix = resourcePrefix,
                 dynamicFeatures = dynamicFeatures,

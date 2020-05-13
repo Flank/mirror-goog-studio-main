@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -74,8 +75,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     private final JavaCompileOptions javaCompileOptions;
     @NonNull
     private final LintOptions lintOptions;
-    @NonNull
-    private final File buildFolder;
+    @NonNull private final List<File> lintRuleJars;
+    @NonNull private final File buildFolder;
     @NonNull
     private final String buildToolsVersion;
     @NonNull private final String ndkVersion;
@@ -125,6 +126,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @NonNull Collection<SyncIssue> syncIssues,
             @NonNull CompileOptions compileOptions,
             @NonNull LintOptions lintOptions,
+            @NonNull List<File> lintRuleJars,
             @NonNull File buildFolder,
             @Nullable String resourcePrefix,
             @NonNull Collection<NativeToolchain> nativeToolchains,
@@ -156,6 +158,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.syncIssues = syncIssues;
         this.javaCompileOptions = new DefaultJavaCompileOptions(compileOptions);
         this.lintOptions = lintOptions;
+        this.lintRuleJars = lintRuleJars;
         this.buildFolder = buildFolder;
         this.resourcePrefix = resourcePrefix;
         this.projectType = projectType;
@@ -376,6 +379,12 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return variantsBuildInformation;
     }
 
+    @NonNull
+    @Override
+    public List<File> getLintRuleJars() {
+        return lintRuleJars;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -398,6 +407,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(syncIssues, that.syncIssues)
                 && Objects.equals(javaCompileOptions, that.javaCompileOptions)
                 && Objects.equals(lintOptions, that.lintOptions)
+                && Objects.equals(lintRuleJars, that.lintRuleJars)
                 && Objects.equals(buildFolder, that.buildFolder)
                 && Objects.equals(buildToolsVersion, that.buildToolsVersion)
                 && Objects.equals(ndkVersion, that.ndkVersion)
@@ -432,6 +442,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 syncIssues,
                 javaCompileOptions,
                 lintOptions,
+                lintRuleJars,
                 buildFolder,
                 buildToolsVersion,
                 ndkVersion,

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -67,6 +68,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final Collection<NativeToolchain> myNativeToolchains;
     @NonNull private final Collection<SigningConfig> mySigningConfigs;
     @NonNull private final IdeLintOptions myLintOptions;
+    @Nullable private final List<File> myLintRuleJars;
     @NonNull private final Set<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
@@ -214,6 +216,10 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             groupId = project.getGroupId();
         }
 
+        List<File> lintRuleJarsCopy =
+                IdeModel.copyNewProperty(
+                        () -> ImmutableList.copyOf(project.getLintRuleJars()), null);
+
         // AndroidProject#isBaseSplit is always non null.
         //noinspection ConstantConditions
         boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
@@ -243,6 +249,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 nativeToolchainsCopy,
                 signingConfigsCopy,
                 lintOptionsCopy,
+                lintRuleJarsCopy,
                 unresolvedDependenciesCopy,
                 javaCompileOptionsCopy,
                 aaptOptionsCopy,
@@ -281,6 +288,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myNativeToolchains = Collections.emptyList();
         mySigningConfigs = Collections.emptyList();
         myLintOptions = new IdeLintOptions();
+        myLintRuleJars = Collections.emptyList();
         myUnresolvedDependencies = Collections.emptySet();
         myJavaCompileOptions = new IdeJavaCompileOptions();
         myAaptOptions = new IdeAaptOptions();
@@ -319,6 +327,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull Collection<SigningConfig> signingConfigs,
             @NonNull IdeLintOptions lintOptions,
+            @Nullable List<File> lintRuleJars,
             @NonNull Set<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
             @NonNull AaptOptions aaptOptions,
@@ -352,6 +361,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myNativeToolchains = nativeToolchains;
         mySigningConfigs = signingConfigs;
         myLintOptions = lintOptions;
+        myLintRuleJars = lintRuleJars;
         myUnresolvedDependencies = unresolvedDependencies;
         myJavaCompileOptions = javaCompileOptions;
         myAaptOptions = aaptOptions;
@@ -642,6 +652,12 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         return myVariantBuildInformation;
     }
 
+    @Nullable
+    @Override
+    public List<File> getLintRuleJars() {
+        return myLintRuleJars;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -673,6 +689,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 && Objects.equals(myNativeToolchains, project.myNativeToolchains)
                 && Objects.equals(mySigningConfigs, project.mySigningConfigs)
                 && Objects.equals(myLintOptions, project.myLintOptions)
+                && Objects.equals(myLintRuleJars, project.myLintRuleJars)
                 && Objects.equals(myUnresolvedDependencies, project.myUnresolvedDependencies)
                 && Objects.equals(myJavaCompileOptions, project.myJavaCompileOptions)
                 && Objects.equals(myAaptOptions, project.myAaptOptions)
@@ -711,6 +728,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 myNativeToolchains,
                 mySigningConfigs,
                 myLintOptions,
+                myLintRuleJars,
                 myUnresolvedDependencies,
                 myJavaCompileOptions,
                 myBuildFolder,

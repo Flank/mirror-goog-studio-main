@@ -159,29 +159,8 @@ class CustomRuleTest {
     }
 
     @Test
-    fun `Load lint custom rules from locally packaged lint jars (via lintChecks)`() {
-        // Regression test for https://issuetracker.google.com/65941946
-        // Copy lint.jar into build/intermediates/lint and make sure the custom rules
-        // are picked up in a Gradle project
-
+    fun `Load lint custom rules from lintChecks`() {
         val expected = "" +
-                "build/intermediates/lint/lint1.jar: Warning: Lint found an issue registry (android.support.v7.lint.AppCompatIssueRegistry) which did not specify the Lint API version it was compiled with.\n" +
-                "\n" +
-                "This means that the lint checks are likely not compatible.\n" +
-                "\n" +
-                "If you are the author of this lint check, make your lint IssueRegistry class contain\n" +
-                "  override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
-                "or from Java,\n" +
-                "  @Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }\n" +
-                "\n" +
-                "If you are just using lint checks from a third party library you have no control over, you can disable these lint checks (if they misbehave) like this:\n" +
-                "\n" +
-                "    android {\n" +
-                "        lintOptions {\n" +
-                "            disable \"UnitTestAppCompatMethod\"\n" +
-                "        }\n" +
-                "    }\n" +
-                " [ObsoleteLintCustomCheck]\n" +
                 "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
                 "        getActionBar();                    // ERROR\n" +
                 "        ~~~~~~~~~~~~\n" +
@@ -200,24 +179,8 @@ class CustomRuleTest {
                 "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
                 "        setProgressBarIndeterminateVisibility(true);\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "0 errors, 7 warnings"
+                "0 errors, 6 warnings"
 
-        // Copy lint.jar into build/intermediates/lint/
-        val listener = object : LintListener {
-            override fun update(
-                driver: LintDriver,
-                type: LintListener.EventType,
-                project: Project?,
-                context: Context?
-            ) {
-                if (type == LintListener.EventType.REGISTERED_PROJECT) {
-                    val buildFolder = project?.buildModule?.buildFolder ?: return
-                    val lintFolder = File(buildFolder, "intermediates/lint")
-                    lintFolder.mkdirs()
-                    lintJar.copyTo(File(lintFolder, lintJar.name))
-                }
-            }
-        }
         lint().files(
             classpath(),
             manifest().minSdk(1),
@@ -235,8 +198,10 @@ class CustomRuleTest {
             .incremental("build/intermediates/javac/debug/classes/test/pkg/AppCompatTest.class")
             .allowDelayedIssueRegistration()
             .issueIds("UnitTestAppCompatMethod")
-            .allowObsoleteLintChecks(false)
-            .listener(listener)
+            .allowObsoleteLintChecks(true)
+            .modifyGradleMocks { androidProject, _ ->
+                Mockito.`when`(androidProject.lintRuleJars).thenReturn(listOf(lintJar))
+            }
             .allowMissingSdk()
             .run()
             .expect(expected)
