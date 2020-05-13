@@ -170,9 +170,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             )
         )
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(input.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         var catDex = getDex(Cat::class.java)
@@ -186,7 +188,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.MODIFIED, Toy::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         catDex = getDex(Cat::class.java)
@@ -209,9 +212,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             )
         )
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(input.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         var tigerDex = getDex(Tiger::class.java)
@@ -224,7 +229,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.MODIFIED, Animal::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         tigerDex = getDex(Tiger::class.java)
@@ -237,7 +243,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.MODIFIED, Cat::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
         tigerDex = getDex(Tiger::class.java)
         carbonFormDex = getDex(CarbonForm::class.java)
@@ -253,6 +260,9 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             setOf(CarbonForm::class.java, Animal::class.java)
         )
 
+        val inputJarHashes = tmpDir.newFile().also {
+            writeEmptyInputJarHashes(it)
+        }
         getDelegate(
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(
@@ -262,7 +272,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
                 Animal::class.java
             ),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         val animalDex = getDex(Animal::class.java)
@@ -270,7 +281,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
         getDelegate(
             projectClasses = setOf(input.toFile()),
             projectOutput = out.toFile(),
-            isIncremental = false
+            isIncremental = false,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         val deletions = getChanges(input, ChangeType.REMOVED, Animal::class.java)
@@ -279,7 +291,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.REMOVED, Animal::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         assertThat(getDex(CarbonForm::class.java)).exists()
@@ -298,9 +311,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             input, setOf(Toy::class.java, Cat::class.java, Tiger::class.java)
         )
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(input.toFile(), jar.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashes =  inputJarHashes
         ).doProcess()
 
         val catTimestamp = getDex(Cat::class.java).lastModified()
@@ -316,7 +331,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
                 )
             ),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes =  inputJarHashes
         ).doProcess()
 
         assertThat(catTimestamp).isLessThan(getDex(Cat::class.java).lastModified())
