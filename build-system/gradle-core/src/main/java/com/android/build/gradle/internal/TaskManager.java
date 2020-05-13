@@ -38,7 +38,6 @@ import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.pub
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
@@ -129,7 +128,6 @@ import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask;
 import com.android.build.gradle.internal.tasks.OptimizeResourcesTask;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
-import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.ProguardTask;
@@ -280,6 +278,9 @@ public abstract class TaskManager<
             AndroidXDependencySubstitution.getAndroidXMappings()
                     .get("com.android.support:multidex-instrumentation");
 
+    // name of the task that triggers compilation of the custom lint Checks
+    private static final String COMPILE_LINT_CHECKS_TASK = "compileLintChecks";
+
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
     public static final String ANDROID_GROUP = "Android";
@@ -322,7 +323,7 @@ public abstract class TaskManager<
     @NonNull protected final Recorder recorder;
     @NonNull private final Logger logger;
     @NonNull protected final TaskFactory taskFactory;
-    @NonNull private final ImmutableList<VariantPropertiesT> variantPropertiesList;
+    @NonNull protected final ImmutableList<VariantPropertiesT> variantPropertiesList;
     @NonNull private final ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList;
     @NonNull private final ImmutableList<ComponentPropertiesImpl> allPropertiesList;
 
@@ -384,11 +385,15 @@ public abstract class TaskManager<
      */
     public void createTasks() {
         // this is call before all the variants are created since they are all going to depend
-        // on the global LINT_JAR and LINT_PUBLISH_JAR task output
+        // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        taskFactory.register(new PrepareLintJar.CreationAction(globalScope));
         taskFactory.register(new PrepareLintJarForPublish.CreationAction(globalScope));
+
+        // create a lifecycle task to build the lintChecks dependencies
+        taskFactory.register(
+                COMPILE_LINT_CHECKS_TASK,
+                task -> task.dependsOn(globalScope.getLocalCustomLintChecks()));
 
         // Create top level test tasks.
         createTopLevelTestTasks();
@@ -667,13 +672,6 @@ public abstract class TaskManager<
                 task ->
                         new LintFixTask.GlobalCreationAction(globalScope, variantPropertiesList)
                                 .configure(task));
-
-        // publish the local lint.jar to all the variants. This is not for the task output itself
-        // but for the artifact publishing.
-        for (VariantPropertiesT variant : variantPropertiesList) {
-            variant.getArtifacts()
-                    .copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getGlobalArtifacts());
-        }
     }
 
     private void configureKotlinPluginTasksForComposeIfNecessary() {
@@ -3086,8 +3084,10 @@ public abstract class TaskManager<
                         taskFactory.register(
                                 componentProperties.computeTaskName("generate", "Sources"),
                                 task -> {
-                                    task.dependsOn(PrepareLintJar.NAME);
-                                    task.dependsOn(PrepareLintJarForPublish.NAME);
+                                    task.dependsOn(COMPILE_LINT_CHECKS_TASK);
+                                    if (componentProperties.getVariantType().isAar()) {
+                                        task.dependsOn(PrepareLintJarForPublish.NAME);
+                                    }
                                     task.dependsOn(variantData.getExtraGeneratedResFolders());
                                 }));
         // and resGenTask

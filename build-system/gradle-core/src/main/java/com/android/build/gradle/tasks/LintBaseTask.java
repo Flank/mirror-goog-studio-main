@@ -21,7 +21,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS;
 
@@ -284,16 +283,13 @@ public abstract class LintBaseTask extends DefaultTask {
         private final ConfigurableFileCollection allInputs;
 
         public VariantInputs(@NonNull ComponentPropertiesImpl componentProperties) {
-            name = componentProperties.getName();
-            allInputs = componentProperties.getGlobalScope().getProject().files();
+            GlobalScope globalScope = componentProperties.getGlobalScope();
 
-            Provider<RegularFile> localLintJarCollection;
-            allInputs.from(
-                    localLintJarCollection =
-                            componentProperties
-                                    .getGlobalScope()
-                                    .getGlobalArtifacts()
-                                    .get(LINT_JAR.INSTANCE));
+            name = componentProperties.getName();
+            allInputs = globalScope.getProject().files();
+
+            FileCollection localLintJarCollection;
+            allInputs.from(localLintJarCollection = globalScope.getLocalCustomLintChecks());
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
@@ -302,8 +298,7 @@ public abstract class LintBaseTask extends DefaultTask {
                                     .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
             lintRuleJars =
-                    componentProperties
-                            .getGlobalScope()
+                    globalScope
                             .getProject()
                             .files(localLintJarCollection, dependencyLintJarCollection);
 

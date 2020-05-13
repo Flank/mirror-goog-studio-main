@@ -610,4 +610,19 @@ public class LibraryTaskManager
         TaskFactoryUtils.dependsOn(
                 variantProperties.getTaskContainer().getAssembleTask(), verifyLibraryResources);
     }
+
+    @Override
+    protected void configureGlobalLintTask() {
+        super.configureGlobalLintTask();
+
+        // publish the local lint.jar to all the variants.
+        // This takes the global jar (output of PrepareLintJar) and publishes to each variants
+        // as we don't have variant-free publishing at the moment.
+        for (LibraryVariantPropertiesImpl variant : variantPropertiesList) {
+            variant.getArtifacts()
+                    .copy(
+                            InternalArtifactType.LINT_PUBLISH_JAR.INSTANCE,
+                            globalScope.getGlobalArtifacts());
+        }
+    }
 }
