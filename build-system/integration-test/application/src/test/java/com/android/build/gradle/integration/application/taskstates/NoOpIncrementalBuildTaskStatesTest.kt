@@ -60,7 +60,7 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:mergeDebugAssets",
                 ":app:mergeDebugJavaResource",
                 ":app:mergeDebugJniLibFolders",
-                ":app:mergeDebugNativeLibs",
+                ":app:mergeDebugNativeLibs", /* Bug 154984238 */
                 ":app:mergeDebugResources",
                 ":app:mergeDebugShaders",
                 ":app:mergeDexDebug",

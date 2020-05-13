@@ -107,7 +107,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeDebugAssets",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:mergeDebugJniLibFolders",
-                    ":feature1:mergeDebugNativeLibs",
                     ":feature1:mergeDebugShaders",
                     ":feature1:mergeExtDexDebug",
                     ":feature1:mergeLibDexDebug",
@@ -131,7 +130,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeDebugAssets",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:mergeDebugJniLibFolders",
-                    ":feature2:mergeDebugNativeLibs",
                     ":feature2:mergeDebugShaders",
                     ":feature2:mergeExtDexDebug",
                     ":feature2:mergeLibDexDebug",
@@ -177,6 +175,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:compileDebugAidl",
                     ":feature1:compileDebugRenderscript",
                     ":feature1:compileDebugShaders",
+                    ":feature1:mergeDebugNativeLibs",
                     ":feature1:processDebugJavaRes",
                     ":feature1:stripDebugDebugSymbols",
 
@@ -184,6 +183,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:compileDebugAidl",
                     ":feature2:compileDebugRenderscript",
                     ":feature2:compileDebugShaders",
+                    ":feature2:mergeDebugNativeLibs",
                     ":feature2:processDebugJavaRes",
                     ":feature2:stripDebugDebugSymbols"
                 ),

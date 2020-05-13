@@ -41,6 +41,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
 import java.io.File
@@ -56,12 +57,15 @@ abstract class MergeNativeLibsTask
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:SkipWhenEmpty
     abstract val projectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
+    @get:SkipWhenEmpty
     abstract val subProjectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
+    @get:SkipWhenEmpty
     abstract val externalLibNativeLibs: ConfigurableFileCollection
 
     @get:Nested
@@ -265,6 +269,7 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
 
 fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
     val nativeLibs = componentProperties.globalScope.project.files()
+    // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
         componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -284,6 +289,7 @@ fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileC
 
 fun getExternalNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
     val nativeLibs = componentProperties.globalScope.project.files()
+    // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
         componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

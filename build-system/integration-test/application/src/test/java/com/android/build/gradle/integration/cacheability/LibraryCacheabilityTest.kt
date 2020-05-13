@@ -66,7 +66,6 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseGeneratedProguardFiles",
                     ":lib:mergeReleaseJavaResource",
                     ":lib:mergeReleaseJniLibFolders",
-                    ":lib:mergeReleaseNativeLibs",
                     ":lib:mergeReleaseShaders",
                     ":lib:mergeReleaseResources",
                     ":lib:packageReleaseAssets",
@@ -90,6 +89,7 @@ class LibraryCacheabilityTest {
                     ":lib:compileReleaseAidl",
                     ":lib:compileReleaseRenderscript",
                     ":lib:compileReleaseShaders",
+                    ":lib:mergeReleaseNativeLibs",
                     ":lib:packageReleaseRenderscript",
                     ":lib:processReleaseJavaRes",
                     ":lib:stripReleaseDebugSymbols"
