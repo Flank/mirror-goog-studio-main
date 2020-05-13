@@ -246,7 +246,7 @@ abstract class CommonExtensionImpl<
         variantPropertiesOperations.executeActions(variant)
     }
 
-    override var flavorDimensions: MutableList<String> = mutableListOf()
+    override val flavorDimensions: MutableList<String> = mutableListOf()
 
     override var resourcePrefix: String? = null
 

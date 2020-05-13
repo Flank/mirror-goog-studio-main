@@ -379,7 +379,6 @@ com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.A
 com.android.build.api.dsl.CommonExtension.setBuildToolsVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension.setFlavorDimensions: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.CommonExtension.setNdkPath: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setResourcePrefix: void (java.lang.String)

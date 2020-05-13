@@ -508,7 +508,7 @@ interface CommonExtension<
      * To learn more, read
      * [Combine multiple flavors](https://developer.android.com/studio/build/build-variants.html#flavor-dimensions).
      */
-    var flavorDimensions: MutableList<String>
+    val flavorDimensions: MutableList<String>
 
     /**
      * Specifies this project's resource prefix to Android Studio for editor features, such as Lint
