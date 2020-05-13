@@ -16,9 +16,22 @@
 
 package com.android.build.gradle.internal.fixtures
 
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 
-class FakeProviderFactory {
+class FakeProviderFactory(
+    private val originalFactory: ProviderFactory,
+    private val gradleProperties: Map<String, Any>
+) : ProviderFactory by originalFactory {
+
+    override fun gradleProperty(propertyName: String): Provider<String> {
+        if (gradleProperties.containsKey(propertyName)) {
+            return originalFactory.provider { gradleProperties.getValue(propertyName).toString() }
+        } else {
+            return originalFactory.provider { null }
+        }
+    }
+
     companion object {
         @JvmStatic
         val factory: ProviderFactory by lazy {

@@ -18,10 +18,11 @@ package com.android.build.gradle.api;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.FeaturePlugin;
+import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.plugins.AppPlugin;
 import com.android.build.gradle.internal.plugins.LibraryPlugin;
 import com.android.build.gradle.internal.plugins.TestPlugin;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -61,6 +62,7 @@ public class AppliedPluginTest {
     public void testAppliedPlugin() throws IOException {
         Project project =
                 ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build();
+        TestProjects.loadGradleProperties(project, ImmutableMap.of());
         project.getPluginManager().apply(pluginName);
         assertThat(project.getPlugins().findPlugin(pluginName)).isNotNull();
         assertThat(project.getPlugins().findPlugin(pluginClass)).isNotNull();

@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -70,12 +71,14 @@ class BundleAllClassesTest {
     @Before
     fun setUp() {
 
+        val gradleProperties = ImmutableMap.of<String, Any>(
+            BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+            false
+        )
         val projectServices = createProjectServices(
             projectOptions = ProjectOptions(
-                ImmutableMap.of<String, Any>(
-                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                    false
-                )
+                ImmutableMap.of(),
+                FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)
             )
         )
         val dslServices = createDslServices(projectServices)

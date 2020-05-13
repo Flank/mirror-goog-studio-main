@@ -89,10 +89,9 @@ class DependencyConfigurator(
     private val globalScope: GlobalScope,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) {
-
     fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
-        if (globalScope.projectOptions[BooleanOption.ENABLE_JETIFIER]) {
+        if (globalScope.projectOptions.getValue(BooleanOption.ENABLE_JETIFIER)) {
             replaceOldSupportLibraries(project)
         }
         return this
@@ -117,7 +116,7 @@ class DependencyConfigurator(
         } else {
             AndroidArtifacts.ArtifactType.PROCESSED_AAR
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_JETIFIER]) {
+        if (globalScope.projectOptions.getValue(BooleanOption.ENABLE_JETIFIER)) {
             dependencies.registerTransform(
                 JetifyTransform::class.java
             ) { spec: TransformSpec<JetifyTransform.Parameters> ->

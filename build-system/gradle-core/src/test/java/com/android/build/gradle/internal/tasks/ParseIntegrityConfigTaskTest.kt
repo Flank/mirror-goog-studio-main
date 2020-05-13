@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
@@ -52,12 +53,15 @@ class ParseIntegrityConfigTaskTest {
     // Under test
     lateinit var task: ParseIntegrityConfigTask
 
+    private val gradleProperties = ImmutableMap.of<String, Any>(
+        BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+        false
+    )
+
     private val projectServices = createProjectServices(
         projectOptions = ProjectOptions(
-            ImmutableMap.of<String, Any>(
-                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                false
-            )
+            ImmutableMap.of(),
+            FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)
         )
     )
     private val dslServices = createDslServices(projectServices)

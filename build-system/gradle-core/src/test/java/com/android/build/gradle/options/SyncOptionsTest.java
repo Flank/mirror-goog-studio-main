@@ -18,6 +18,7 @@ package com.android.build.gradle.options;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.options.SyncOptions.EvaluationMode;
 import com.google.common.collect.ImmutableMap;
@@ -26,28 +27,45 @@ import org.junit.Test;
 public class SyncOptionsTest {
     @Test
     public void getModelQueryMode() throws Exception {
-        ProjectOptions noOptions = new ProjectOptions(ImmutableMap.of());
+        ProjectOptions noOptions =
+                new ProjectOptions(
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), ImmutableMap.of()));
         assertThat(SyncOptions.getModelQueryMode(noOptions)).isEqualTo(EvaluationMode.STANDARD);
 
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of(
+                        "android.injected.build.model.only.advanced",
+                        "true",
+                        "android.injected.build.model.only",
+                        "true");
         ProjectOptions advancedOptions =
                 new ProjectOptions(
-                        ImmutableMap.of(
-                                "android.injected.build.model.only.advanced",
-                                "true",
-                                "android.injected.build.model.only",
-                                "true"));
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
         assertThat(SyncOptions.getModelQueryMode(advancedOptions)).isEqualTo(EvaluationMode.IDE);
     }
 
     @Test
     public void getErrorFormatMode() throws Exception {
 
-        ProjectOptions noOptions = new ProjectOptions(ImmutableMap.of());
+        ProjectOptions noOptions =
+                new ProjectOptions(
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), ImmutableMap.of()));
         assertThat(SyncOptions.getErrorFormatMode(noOptions))
                 .isEqualTo(ErrorFormatMode.HUMAN_READABLE);
 
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of("android.injected.invoked.from.ide", "true");
         ProjectOptions ideOptions =
-                new ProjectOptions(ImmutableMap.of("android.injected.invoked.from.ide", "true"));
+                new ProjectOptions(
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
         assertThat(SyncOptions.getErrorFormatMode(ideOptions))
                 .isEqualTo(ErrorFormatMode.MACHINE_PARSABLE);
     }

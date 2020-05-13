@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.plugins
 
 import com.android.SdkConstants
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.repository.GradleVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -39,7 +38,6 @@ class VersionCheckPlugin: Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        val projectOptions = ProjectOptions(project)
         val logger = project.logger
 
         val currentVersion = project.gradle.gradleVersion
@@ -51,12 +49,24 @@ class VersionCheckPlugin: Plugin<Project> {
                         + "If using the gradle wrapper, try editing the distributionUrl in ${file.absolutePath} "
                         + "to gradle-$GRADLE_MIN_VERSION-all.zip")
 
-            if (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)) {
+            if (getVersionCheckOverridePropertyValue(project)) {
                 logger.warn(errorMessage)
                 logger.warn("As ${BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.propertyName} is set, continuing anyway.")
             } else {
                 throw RuntimeException(errorMessage)
             }
+        }
+    }
+
+    // Version check override property is not compatible with new pipeline of accessing gradle
+    // properties because providerFactory.gradleProperty API doesn't exist in lower Gradle versions
+    private fun getVersionCheckOverridePropertyValue(project: Project) : Boolean {
+        val value = project.extensions.extraProperties.properties
+            .get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.propertyName)
+        return if (value == null) {
+            BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.defaultValue;
+        } else {
+             BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.parse(value);
         }
     }
 }

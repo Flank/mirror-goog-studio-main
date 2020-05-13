@@ -27,6 +27,8 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.fixture.TestProjects;
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -89,6 +91,7 @@ public class TaskTestUtils {
         File projectDirectory = temporaryFolder.newFolder();
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
+        TestProjects.loadGradleProperties(project, ImmutableMap.of());
         componentProperties = getComponentProperties();
         issueReporter = new FakeSyncIssueReporter();
         transformManager = new TransformManager(project, issueReporter, new NoOpRecorder());
@@ -278,7 +281,12 @@ public class TaskTestUtils {
     private static ComponentPropertiesImpl getComponentProperties() {
         GlobalScope globalScope = mock(GlobalScope.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
-        when(globalScope.getProjectOptions()).thenReturn(new ProjectOptions(ImmutableMap.of()));
+        when(globalScope.getProjectOptions())
+                .thenReturn(
+                        new ProjectOptions(
+                                ImmutableMap.of(),
+                                new FakeProviderFactory(
+                                        FakeProviderFactory.getFactory(), ImmutableMap.of())));
 
         ComponentPropertiesImpl componentProperties = mock(ComponentPropertiesImpl.class);
         when(componentProperties.getGlobalScope()).thenReturn(globalScope);

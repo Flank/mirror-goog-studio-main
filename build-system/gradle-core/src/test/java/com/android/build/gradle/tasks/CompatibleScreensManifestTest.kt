@@ -27,6 +27,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
@@ -109,7 +110,8 @@ class CompatibleScreensManifestTest {
                 ImmutableMap.of<String, Any>(
                     BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
                     false
-                )
+                ),
+                FakeProviderFactory.factory
             )
         )
         val applicationId = project.objects.property(String::class.java)

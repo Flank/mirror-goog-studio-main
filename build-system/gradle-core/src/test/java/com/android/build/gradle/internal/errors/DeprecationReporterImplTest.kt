@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
@@ -29,7 +30,7 @@ class DeprecationReporterImplTest {
 
     private val issueReporter = FakeSyncIssueReporter()
     private val reporter =
-        DeprecationReporterImpl(issueReporter, ProjectOptions(ImmutableMap.of()), "")
+        DeprecationReporterImpl(issueReporter, ProjectOptions(ImmutableMap.of(), FakeProviderFactory.factory), "")
 
     @After
     fun after() {

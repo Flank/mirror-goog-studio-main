@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -268,7 +269,11 @@ public class AnalyticsUtilTest {
 
     @Test
     public void checkEmptyProjectOptions() {
-        ProjectOptions options = new ProjectOptions(ImmutableMap.of());
+        ProjectOptions options =
+                new ProjectOptions(
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), ImmutableMap.of()));
         GradleProjectOptionsSettings gradleProjectOptionsSettings = AnalyticsUtil.toProto(options);
         assertThat(gradleProjectOptionsSettings.getTrueBooleanOptionsList()).isEmpty();
         assertThat(gradleProjectOptionsSettings.getFalseBooleanOptionsList()).isEmpty();
@@ -288,7 +293,11 @@ public class AnalyticsUtilTest {
         properties.put(OptionalBooleanOption.SIGNING_V2_ENABLED.getPropertyName(), false);
         properties.put(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION.getPropertyName(), 17);
         properties.put(StringOption.IDE_BUILD_TARGET_ABI.getPropertyName(), "x86");
-        ProjectOptions options = new ProjectOptions(properties.build());
+        ProjectOptions options =
+                new ProjectOptions(
+                        properties.build(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), properties.build()));
 
         GradleProjectOptionsSettings gradleProjectOptionsSettings = AnalyticsUtil.toProto(options);
         assertThat(gradleProjectOptionsSettings.getTrueBooleanOptionsList())

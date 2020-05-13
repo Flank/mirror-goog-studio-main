@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 
 /** Determines if various options, triggered from the command line or environment, are set. */
 @Immutable
@@ -39,19 +41,25 @@ public final class ProjectOptions {
             "android.testInstrumentationRunnerArguments.";
 
     private final ImmutableMap<ReplacedOption, String> replacedOptions;
-    private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
 
-    public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
+    private final ProviderFactory providerFactory;
+    private final ImmutableMap<BooleanOption, OptionValue<BooleanOption, Boolean>>
+            booleanOptionValues;
+
+    public ProjectOptions(
+            @NonNull ImmutableMap<String, Object> properties,
+            @NonNull ProviderFactory providerFactory) {
         replacedOptions = readOptions(ReplacedOption.values(), properties);
-        booleanOptions = readOptions(BooleanOption.values(), properties);
         optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
+        this.providerFactory = providerFactory;
+        booleanOptionValues = createOptionValues(BooleanOption.values());
     }
 
     /**
@@ -60,7 +68,7 @@ public final class ProjectOptions {
      * @param project the project containing the properties
      */
     public ProjectOptions(@NonNull Project project) {
-        this(copyProperties(project));
+        this(copyProperties(project), project.getProviders());
     }
 
     /**
@@ -72,7 +80,7 @@ public final class ProjectOptions {
      */
     public ProjectOptions(
             @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
-        this(copyAndModifyProperties(project, overwrites));
+        this(copyAndModifyProperties(project, overwrites), project.getProviders());
     }
 
     @NonNull
@@ -115,6 +123,17 @@ public final class ProjectOptions {
     }
 
     @NonNull
+    private <OptionT extends Option<ValueT>, ValueT>
+            ImmutableMap<OptionT, OptionValue<OptionT, ValueT>> createOptionValues(
+                    @NonNull OptionT[] options) {
+        ImmutableMap.Builder<OptionT, OptionValue<OptionT, ValueT>> map = ImmutableMap.builder();
+        for (OptionT option : options) {
+            map.put(option, new OptionValue<>(option));
+        }
+        return map.build();
+    }
+
+    @NonNull
     private static ImmutableMap<String, String> readTestRunnerArgs(
             @NonNull Map<String, ?> properties) {
         ImmutableMap.Builder<String, String> testRunnerArgsBuilder = ImmutableMap.builder();
@@ -130,7 +149,32 @@ public final class ProjectOptions {
     }
 
     public boolean get(BooleanOption option) {
-        return booleanOptions.getOrDefault(option, option.getDefaultValue());
+        return getValue(option);
+    }
+
+    /** Obtain the gradle property value immediately at configuration time. */
+    public boolean getValue(@NonNull BooleanOption option) {
+        Boolean value = booleanOptionValues.get(option).getValueForUseAtConfiguration();
+        if (value != null) {
+            return value;
+        } else {
+            return option.getDefaultValue();
+        }
+    }
+
+    /** Returns a provider which has the gradle property value to be obtained at execution time. */
+    @NonNull
+    public Provider<Boolean> getValueProvider(@NonNull BooleanOption option) {
+        return providerFactory.provider(
+                () -> {
+                    Boolean value =
+                            booleanOptionValues.get(option).getValueForUseAtExecution().getOrNull();
+                    if (value != null) {
+                        return value;
+                    } else {
+                        return option.getDefaultValue();
+                    }
+                });
     }
 
     @Nullable
@@ -168,7 +212,15 @@ public final class ProjectOptions {
     }
 
     public ImmutableMap<BooleanOption, Boolean> getExplicitlySetBooleanOptions() {
-        return booleanOptions;
+        ImmutableMap.Builder<BooleanOption, Boolean> mapBuilder = ImmutableMap.builder();
+        for (Map.Entry<BooleanOption, OptionValue<BooleanOption, Boolean>> entry :
+                booleanOptionValues.entrySet()) {
+            Boolean value = entry.getValue().getValueForUseAtConfiguration();
+            if (value != null) {
+                mapBuilder.put(entry.getKey(), value);
+            }
+        }
+        return mapBuilder.build();
     }
 
     public ImmutableMap<OptionalBooleanOption, Boolean> getExplicitlySetOptionalBooleanOptions() {
@@ -186,10 +238,62 @@ public final class ProjectOptions {
     public ImmutableMap<Option<?>, Object> getAllOptions() {
         return new ImmutableMap.Builder()
                 .putAll(replacedOptions)
-                .putAll(booleanOptions)
+                .putAll(getExplicitlySetBooleanOptions())
                 .putAll(optionalBooleanOptions)
                 .putAll(integerOptions)
                 .putAll(stringOptions)
                 .build();
+    }
+
+    private class OptionValue<OptionT extends Option<ValueT>, ValueT> {
+        @Nullable private Provider<ValueT> valueForUseAtConfiguration;
+        @Nullable private Provider<ValueT> valueForUseAtExecution;
+        @NonNull private OptionT option;
+
+        OptionValue(@NonNull OptionT option) {
+            this.option = option;
+        }
+
+        @Nullable
+        private ValueT getValueForUseAtConfiguration() {
+            if (valueForUseAtConfiguration == null) {
+                valueForUseAtConfiguration = setValueForUseAtConfiguration();
+            }
+            return valueForUseAtConfiguration.getOrNull();
+        }
+
+        @NonNull
+        private Provider<ValueT> getValueForUseAtExecution() {
+            if (valueForUseAtExecution == null) {
+                valueForUseAtExecution = setValueForUseAtExecution();
+            }
+            return valueForUseAtExecution;
+        }
+
+        @NonNull
+        private Provider<ValueT> setValueForUseAtConfiguration() {
+            Provider<String> rawValue = providerFactory.gradleProperty(option.getPropertyName());
+            return providerFactory.provider(
+                    () -> {
+                        String str = rawValue.forUseAtConfigurationTime().getOrNull();
+                        if (str == null) {
+                            return null;
+                        }
+                        return option.parse(str);
+                    });
+        }
+
+        @NonNull
+        private Provider<ValueT> setValueForUseAtExecution() {
+            Provider<String> rawValue = providerFactory.gradleProperty(option.getPropertyName());
+            return providerFactory.provider(
+                    () -> {
+                        String str = rawValue.getOrNull();
+                        if (str == null) {
+                            return null;
+                        }
+                        return option.parse(str);
+                    });
+        }
     }
 }
