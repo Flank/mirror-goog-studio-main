@@ -49,7 +49,8 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
 
-    @Parameterized.Parameters(name = "withIncrementalDexingV2_{0}, withDexingArtifactTransform_{1}")
+    @Parameterized.Parameters(
+            name = "withIncrementalDexingTaskV2_{0}, withDexingArtifactTransform_{1}")
     public static List<Object[]> parameters() {
         return ImmutableList.of(
                 new Object[] {true, true},
@@ -58,11 +59,12 @@ public class D8DesugaringTest {
                 new Object[] {false, false});
     }
 
-    private boolean withIncrementalDexingV2;
+    private boolean withIncrementalDexingTaskV2;
     private boolean withDexingArtifactTransform;
 
-    public D8DesugaringTest(boolean withIncrementalDexingV2, boolean withDexingArtifactTransform) {
-        this.withIncrementalDexingV2 = withIncrementalDexingV2;
+    public D8DesugaringTest(
+            boolean withIncrementalDexingTaskV2, boolean withDexingArtifactTransform) {
+        this.withIncrementalDexingTaskV2 = withIncrementalDexingTaskV2;
         this.withDexingArtifactTransform = withDexingArtifactTransform;
     }
 
@@ -77,9 +79,9 @@ public class D8DesugaringTest {
                                             ":lib",
                                             new EmptyAndroidTestApp())))
                     .addGradleProperties(
-                            BooleanOption.ENABLE_INCREMENTAL_DEXING_V2.getPropertyName()
+                            BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2.getPropertyName()
                                     + "="
-                                    + withIncrementalDexingV2)
+                                    + withIncrementalDexingTaskV2)
                     .addGradleProperties(
                             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
                                     + "="

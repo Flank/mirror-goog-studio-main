@@ -29,8 +29,8 @@ import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.testutils.apk.Dex
-import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
@@ -70,7 +70,7 @@ import kotlin.test.fail
 @RunWith(Parameterized::class)
 class DexArchiveBuilderDelegateTest(
     private var dexerTool: DexerTool,
-    private val withIncrementalDexingV2: Boolean
+    private val withIncrementalDexingTaskV2: Boolean
 ) {
 
     private lateinit var out: Path
@@ -407,8 +407,8 @@ class DexArchiveBuilderDelegateTest(
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = tmpDir.newFile(),
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDexingV2 = withIncrementalDexingV2,
-            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingV2 },
+            incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
+            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingTaskV2 },
             dexer = dexerTool,
             useGradleWorkers = false,
             projectVariant = "myVariant",
@@ -435,10 +435,10 @@ class DexArchiveBuilderDelegateTest(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDexingV2_{1}")
+        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDexingTaskV2_{1}")
         fun parameters() = listOf(
             arrayOf(DexerTool.DX, false),
-            // No need to test arrayOf(DexerTool.DX, true) as incrementalDexingV2 is only for D8
+            // No need to test arrayOf(DexerTool.DX, true) as incrementalDexingTaskV2 is only for D8
             arrayOf(DexerTool.D8, false),
             arrayOf(DexerTool.D8, true)
         )

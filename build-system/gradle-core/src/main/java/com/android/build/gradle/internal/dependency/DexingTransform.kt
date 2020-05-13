@@ -85,7 +85,7 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
         @get:Input
         val libConfiguration: Property<String>
         @get:Input
-        val incrementalDexingV2: Property<Boolean>
+        val incrementalDexingTransform: Property<Boolean>
     }
 
     @get:Inject
@@ -112,10 +112,10 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
     private fun doTransform(inputFile: File, outputDir: File) {
         val outputKeepRulesEnabled =
             parameters.libConfiguration.isPresent && !parameters.debuggable.get()
-        val incrementalDexingV2 = parameters.incrementalDexingV2.get()
+        val incrementalDexingTransform = parameters.incrementalDexingTransform.get()
 
         val provideIncrementalSupport =
-            !isJarFile(inputFile) && !outputKeepRulesEnabled && incrementalDexingV2
+            !isJarFile(inputFile) && !outputKeepRulesEnabled && incrementalDexingTransform
 
         val dexOutputDir =
             if (outputKeepRulesEnabled) {
@@ -335,7 +335,7 @@ fun getDexingArtifactConfiguration(component: ComponentPropertiesImpl): DexingAr
         enableDesugaring = component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
         enableCoreLibraryDesugaring = component.variantScope.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = component.variantScope.needsShrinkDesugarLibrary,
-        incrementalDexingV2 = component.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
+        incrementalDexingTransform = component.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
     )
 }
 
@@ -345,7 +345,7 @@ data class DexingArtifactConfiguration(
     private val enableDesugaring: Boolean,
     private val enableCoreLibraryDesugaring: Boolean,
     private val needsShrinkDesugarLibrary: Boolean,
-    private val incrementalDexingV2: Boolean
+    private val incrementalDexingTransform: Boolean
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -356,7 +356,7 @@ data class DexingArtifactConfiguration(
         bootClasspath: FileCollection,
         libConfiguration: Provider<String>,
         errorFormat: SyncOptions.ErrorFormatMode,
-        incrementalDexingV2: Boolean
+        incrementalDexingTransform: Boolean
     ) {
         dependencyHandler.registerTransform(getTransformClass()) { spec ->
             spec.parameters { parameters ->
@@ -372,10 +372,10 @@ data class DexingArtifactConfiguration(
                 if (enableCoreLibraryDesugaring) {
                     parameters.libConfiguration.set(libConfiguration)
                 }
-                parameters.incrementalDexingV2.set(incrementalDexingV2)
+                parameters.incrementalDexingTransform.set(incrementalDexingTransform)
             }
             // Put this behind a flag as we need to monitor the performance impact
-            if (incrementalDexingV2) {
+            if (incrementalDexingTransform) {
                 spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES.type)
             } else {
                 spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES_JAR.type)
@@ -409,7 +409,7 @@ data class DexingArtifactConfiguration(
             ATTR_MIN_SDK to minSdk.toString(),
             ATTR_IS_DEBUGGABLE to isDebuggable.toString(),
             ATTR_ENABLE_DESUGARING to enableDesugaring.toString(),
-            ATTR_INCREMENTAL_DEXING_V2 to incrementalDexingV2.toString()
+            ATTR_INCREMENTAL_DEXING_TRANSFORM to incrementalDexingTransform.toString()
         )
     }
 }
@@ -419,7 +419,7 @@ val ATTR_IS_DEBUGGABLE: Attribute<String> =
     Attribute.of("dexing-is-debuggable", String::class.java)
 val ATTR_ENABLE_DESUGARING: Attribute<String> =
     Attribute.of("dexing-enable-desugaring", String::class.java)
-val ATTR_INCREMENTAL_DEXING_V2: Attribute<String> =
-    Attribute.of("dexing-incremental-desugaring-v2", String::class.java)
+val ATTR_INCREMENTAL_DEXING_TRANSFORM: Attribute<String> =
+    Attribute.of("dexing-incremental-transform", String::class.java)
 
 const val DESUGAR_GRAPH_FILE_NAME = "desugar_graph.bin"

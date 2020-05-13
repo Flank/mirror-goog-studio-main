@@ -101,11 +101,11 @@ class DexArchiveBuilderTaskDelegate(
     private val desugarClasspathChangedClasses: Set<FileChange> = emptySet(),
 
     /** Whether incremental desugaring V2 is enabled. */
-    incrementalDexingV2: Boolean,
+    incrementalDexingTaskV2: Boolean,
 
     /**
      * Directory containing dependency graph(s) for desugaring, not `null` iff
-     * incrementalDexingV2 is enabled.
+     * incrementalDexingTaskV2 is enabled.
      */
     private val desugarGraphDir: File?,
 
@@ -146,7 +146,7 @@ class DexArchiveBuilderTaskDelegate(
     // Whether impacted files are computed lazily in the workers instead of being computed up front
     // before the workers are launched.
     private val isImpactedFilesComputedLazily: Boolean =
-        dexParams.withDesugaring && dexer == DexerTool.D8 && incrementalDexingV2
+        dexParams.withDesugaring && dexer == DexerTool.D8 && incrementalDexingTaskV2
 
     // desugarIncrementalHelper is not null iff
     // !isImpactedFilesComputedLazily && dexParams.withDesugaring
@@ -168,7 +168,7 @@ class DexArchiveBuilderTaskDelegate(
     private var inputJarHashesValues: MutableMap<File, String> = getCurrentJarInputHashes()
 
     init {
-        check(incrementalDexingV2 xor (desugarGraphDir == null))
+        check(incrementalDexingTaskV2 xor (desugarGraphDir == null))
     }
 
     /**

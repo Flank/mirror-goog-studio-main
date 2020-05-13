@@ -46,15 +46,14 @@ import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Objects
 import java.util.regex.Pattern
 
 @RunWith(Parameterized::class)
-class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV2: Boolean) {
+class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingTaskV2: Boolean) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "incrementalDexingV2_{0}")
+        @Parameterized.Parameters(name = "incrementalDexingTaskV2_{0}")
         @JvmStatic
         fun parameters() = arrayOf(true, false)
     }
@@ -71,7 +70,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
         out = tmpDir.root.toPath().resolve("out")
         Files.createDirectories(out)
 
-        desugarGraphDir = if (withIncrementalDexingV2) {
+        desugarGraphDir = if (withIncrementalDexingTaskV2) {
             tmpDir.root.toPath().resolve("desugarGraphDir")
         } else {
             null
@@ -456,7 +455,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
                 jumboMode = true
             ),
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDexingV2 = withIncrementalDexingV2,
+            incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
             desugarGraphDir =  desugarGraphDir?.toFile(),
             projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,
