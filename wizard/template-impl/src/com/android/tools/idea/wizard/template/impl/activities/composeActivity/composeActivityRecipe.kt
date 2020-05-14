@@ -53,10 +53,11 @@ fun RecipeExecutor.composeActivityRecipe(
     generateActivityTitle = true
   )
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
-  save(mainActivityKt(activityClass, defaultPreview, greeting, packageName), srcOut.resolve("${activityClass}.kt"))
+  val themeName = "${moduleData.themesData.appName}Theme"
+  save(mainActivityKt(activityClass, defaultPreview, greeting, packageName, themeName), srcOut.resolve("${activityClass}.kt"))
   save(colorKt(packageName), srcOut.resolve("ui/Color.kt"))
   save(shapeKt(packageName), srcOut.resolve("ui/Shape.kt"))
-  save(themeKt(packageName), srcOut.resolve("ui/Theme.kt"))
+  save(themeKt(packageName, themeName), srcOut.resolve("ui/Theme.kt"))
   save(typeKt(packageName), srcOut.resolve("ui/Type.kt"))
 
   requireJavaVersion("1.8", true)
