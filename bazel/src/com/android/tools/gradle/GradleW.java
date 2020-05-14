@@ -14,6 +14,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -32,6 +33,7 @@ class GradleW {
         LinkedList<File> repos = new LinkedList<>();
         LinkedList<String> tasks = new LinkedList<>();
         LinkedList<OutputFileEntry> outputFiles = new LinkedList<>();
+        List<String> gradleArgs = new ArrayList<>();
 
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
@@ -53,6 +55,9 @@ class GradleW {
                 tasks.add(it.next());
             } else if (arg.equals("--log_file") && it.hasNext()) {
                 logFile = Paths.get(it.next());
+            } else if (arg.equals("--max_workers") && it.hasNext()) {
+                gradleArgs.add("--max-workers");
+                gradleArgs.add(it.next());
             } else {
                 throw new IllegalArgumentException("Unknown argument '" + arg + "'.");
             }
@@ -65,6 +70,7 @@ class GradleW {
             for (File repo : repos) {
                 gradle.addRepo(repo);
             }
+            gradleArgs.forEach(gradle::addArgument);
             OutputStream out = new TeeOutputStream(System.out, log);
             OutputStream err = new TeeOutputStream(System.err, log);
             gradle.run(tasks, out, err);

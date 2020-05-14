@@ -13,6 +13,8 @@ def _gradle_build_impl(ctx):
         args += ["--repo", repo.path]
     for task in ctx.attr.tasks:
         args += ["--task", task]
+    if ctx.attr.max_workers:
+        args += ["--max_workers", str(ctx.attr.max_workers)]
 
     ctx.actions.run(
         inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, distribution],
@@ -36,6 +38,8 @@ _gradle_build_rule = rule(
         "repos": attr.label_list(allow_files = True),
         "output_log": attr.output(),
         "distribution": attr.label(allow_files = True),
+        # Max number of workers, 0 means unset (Gradle will use the default: number of CPU cores)
+        "max_workers": attr.int(default = 0),
         "_gradlew": attr.label(
             executable = True,
             cfg = "host",
@@ -56,6 +60,7 @@ def gradle_build(
         output_files = {},
         repos = [],
         tasks = [],
+        max_workers = 0,
         tags = []):
     output_file_destinations = []
     output_file_sources = []
@@ -84,4 +89,5 @@ def gradle_build(
         repos = repos,
         tags = tags,
         tasks = tasks,
+        max_workers = max_workers,
     )
