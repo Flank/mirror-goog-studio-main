@@ -36,8 +36,11 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import android.content.Intent
 import android.os.Bundle
+import ${getMaterialComponentName("android.support.v4.widget.NestedScrollView", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
+import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useMaterial2)}
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)}
 import android.view.LayoutInflater
 import android.view.View
@@ -46,9 +49,6 @@ import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 import ${packageName}.dummy.DummyContent
-import kotlinx.android.synthetic.main.activity_${itemListLayout}.*
-import kotlinx.android.synthetic.main.${itemListContentLayout}.view.*
-import kotlinx.android.synthetic.main.${collection_name}.*
 
 /**
  * An activity representing a list of Pings. This activity
@@ -70,15 +70,16 @@ class ${collectionName}Activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_${itemListLayout})
 
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.title = title
 
-        fab.setOnClickListener { view ->
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
 
-        if (${detailNameLayout}_container != null) {
+        if (findViewById<NestedScrollView>(R.id.${detailNameLayout}_container) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the
@@ -86,7 +87,7 @@ class ${collectionName}Activity : AppCompatActivity() {
             twoPane = true
         }
 
-        setupRecyclerView(${collection_name})
+        setupRecyclerView(findViewById(R.id.${collection_name}))
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
@@ -142,8 +143,8 @@ class ${collectionName}Activity : AppCompatActivity() {
         override fun getItemCount() = values.size
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val idView: TextView = view.id_text
-            val contentView: TextView = view.content
+            val idView: TextView = view.findViewById(R.id.id_text)
+            val contentView: TextView = view.findViewById(R.id.content)
         }
     }
 }

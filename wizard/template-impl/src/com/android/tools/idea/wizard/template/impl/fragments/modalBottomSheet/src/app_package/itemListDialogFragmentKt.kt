@@ -36,7 +36,7 @@ fun itemListDialogFragmentKt(
     else "import ${getMaterialComponentName("android.support.v7.widget.GridLayoutManager", useAndroidX)}"
 
   val layoutManagerInstantiation =
-    if (columnCount == 1) "list.layoutManager = LinearLayoutManager(context)"
+    if (columnCount == 1) "activity?.findViewById<RecyclerView>(R.id.list)?.layoutManager = LinearLayoutManager(context)"
     else "list.layoutManager = GridLayoutManager(context, ${columnCount})"
 
   return """
@@ -51,8 +51,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-import kotlinx.android.synthetic.main.${listLayout}.*
-import kotlinx.android.synthetic.main.${itemLayout}.view.*
 
 // TODO: Customize parameter argument names
 const val ARG_ITEM_COUNT = "item_count"
@@ -75,13 +73,13 @@ class ${fragmentClass} : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         $layoutManagerInstantiation
-        list.adapter = arguments?.getInt(ARG_ITEM_COUNT)?.let { ItemAdapter(it) }
+        activity?.findViewById<RecyclerView>(R.id.list)?.adapter = arguments?.getInt(ARG_ITEM_COUNT)?.let { ItemAdapter(it) }
     }
 
     private inner class ViewHolder internal constructor(inflater: LayoutInflater, parent: ViewGroup)
         : RecyclerView.ViewHolder(inflater.inflate(R.layout.${itemLayout}, parent, false)) {
 
-        internal val text: TextView = itemView.text
+        internal val text: TextView = itemView.findViewById(R.id.text)
     }
 
     private inner class ${objectKind}Adapter internal constructor(private val mItemCount: Int) : RecyclerView.Adapter<ViewHolder>() {
