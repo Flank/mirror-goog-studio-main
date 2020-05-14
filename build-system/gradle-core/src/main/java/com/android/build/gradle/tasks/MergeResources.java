@@ -242,6 +242,9 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     public abstract Property<String> getAaptEnv();
 
+    @Internal
+    public abstract RegularFileProperty getProjectRootDir();
+
     @Override
     protected void doFullTaskAction() throws IOException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
@@ -553,7 +556,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 // For cache relocatability, we want to use relative paths, but we
                 // can do that only for resource files that are located within the
                 // root project directory.
-                File rootProjectDir = getProject().getRootDir();
+                File rootProjectDir = getProjectRootDir().getAsFile().get();
                 RelativizableFile normalizedInputFile;
                 if (FileUtils.isFileInDirectory(inputFile, rootProjectDir)) {
                     // Check that the input file's absolute path has NOT been
@@ -1008,6 +1011,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                             Aapt2DaemonBuildService.class));
             task.getAaptEnv()
                     .set(task.getProject().getProviders().environmentVariable(ANDROID_AAPT_IGNORE));
+            task.getProjectRootDir().set(task.getProject().getRootDir());
         }
     }
 
