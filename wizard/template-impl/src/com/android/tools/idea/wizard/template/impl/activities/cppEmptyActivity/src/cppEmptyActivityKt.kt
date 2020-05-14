@@ -28,7 +28,7 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import android.os.Bundle
-import kotlinx.android.synthetic.main.${layoutName}.*
+import android.widget.TextView
 
 class $activityClass : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +36,7 @@ class $activityClass : AppCompatActivity() {
         setContentView(R.layout.$layoutName)
 
         // Example of a call to a native method
-        sample_text.text = stringFromJNI()
+        findViewById<TextView>(R.id.sample_text).text = stringFromJNI()
     }
     /**
       * A native method that is implemented by the 'native-lib' native library,

@@ -61,21 +61,20 @@ import android.view.MenuItem
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 $newProjectImportBlock
 $applicationPackageBlock
-
-import kotlinx.android.synthetic.main.$layoutName.*
 
 class $activityClass : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.$layoutName)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
 
-        fab.setOnClickListener { view ->
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }

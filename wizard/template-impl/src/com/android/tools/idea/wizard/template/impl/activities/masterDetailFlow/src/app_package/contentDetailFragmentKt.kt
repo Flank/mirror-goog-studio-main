@@ -33,13 +33,13 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", true)}
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 import ${packageName}.dummy.DummyContent
-import kotlinx.android.synthetic.main.activity_${detailNameLayout}.*
-import kotlinx.android.synthetic.main.${detailNameLayout}.view.*
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
@@ -63,7 +63,7 @@ class ${detailName}Fragment : Fragment() {
                 // arguments. In a real-world scenario, use a Loader
                 // to load content from a content provider.
                 item = DummyContent.ITEM_MAP[it.getString(ARG_ITEM_ID)]
-                activity?.toolbar_layout?.title = item?.content
+                activity?.findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout)?.title = item?.content
             }
         }
     }
@@ -74,7 +74,7 @@ class ${detailName}Fragment : Fragment() {
 
         // Show the dummy content as text in a TextView.
         item?.let {
-            rootView.${detailNameLayout}.text = it.details
+            rootView.findViewById<TextView>(R.id.${detailNameLayout}).text = it.details
         }
 
         return rootView

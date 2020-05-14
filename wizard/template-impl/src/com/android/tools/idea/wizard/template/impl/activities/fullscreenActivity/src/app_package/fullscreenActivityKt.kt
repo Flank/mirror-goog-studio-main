@@ -34,14 +34,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
 $applicationPackageBlock
-import kotlinx.android.synthetic.main.${layoutName}.*
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 class ${activityClass} : AppCompatActivity() {
+    private lateinit var fullscreenContent: TextView
+    private lateinit var fullscreenContentControls: LinearLayout
     private val hideHandler = Handler()
     @SuppressLint("InlinedApi")
     private val hidePart2Runnable = Runnable {
@@ -50,7 +54,7 @@ class ${activityClass} : AppCompatActivity() {
         // Note that some of these constants are new as of API 16 (Jelly Bean)
         // and API 19 (KitKat). It is safe to use them, as they are inlined
         // at compile-time and do nothing on earlier devices.
-        fullscreen_content.systemUiVisibility =
+        fullscreenContent.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
@@ -61,7 +65,7 @@ class ${activityClass} : AppCompatActivity() {
     private val showPart2Runnable = Runnable {
         // Delayed display of UI elements
         supportActionBar?.show()
-        fullscreen_content_controls.visibility = View.VISIBLE
+        fullscreenContentControls.visibility = View.VISIBLE
     }
     private var isFullscreen: Boolean = false
 
@@ -83,6 +87,7 @@ class ${activityClass} : AppCompatActivity() {
         false
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -92,12 +97,15 @@ class ${activityClass} : AppCompatActivity() {
         isFullscreen = true
 
         // Set up the user interaction to manually show or hide the system UI.
-        fullscreen_content.setOnClickListener { toggle() }
+        fullscreenContent = findViewById(R.id.fullscreen_content)
+        fullscreenContent.setOnClickListener { toggle() }
+
+        fullscreenContentControls = findViewById(R.id.fullscreen_content_controls)
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        dummy_button.setOnTouchListener(delayHideTouchListener)
+        findViewById<Button>(R.id.dummy_button).setOnTouchListener(delayHideTouchListener)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -120,7 +128,7 @@ class ${activityClass} : AppCompatActivity() {
     private fun hide() {
         // Hide UI first
         supportActionBar?.hide()
-        fullscreen_content_controls.visibility = View.GONE
+        fullscreenContentControls.visibility = View.GONE
         isFullscreen = false
 
         // Schedule a runnable to remove the status and navigation bar after a delay
@@ -130,7 +138,7 @@ class ${activityClass} : AppCompatActivity() {
 
     private fun show() {
         // Show the system bar
-        fullscreen_content.systemUiVisibility =
+        fullscreenContent.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                         View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         isFullscreen = true
