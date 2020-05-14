@@ -64,6 +64,16 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
                         myService.startLayoutInspector(added);
                     }
                     myRoots = newRoots;
+                    // If the windows have changed, make sure we send updates for all of them.
+                    for (View root : newRoots) {
+                        root.post(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        root.invalidate();
+                                    }
+                                });
+                    }
                 }
                 Thread.sleep(ONE_SECOND);
             } catch (Exception ex) {
