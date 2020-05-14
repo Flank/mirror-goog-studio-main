@@ -123,7 +123,8 @@ class HookTransform : public Transform {
         const ir::MethodId exit_hook(kHookClassName, hook.exit_hook.c_str());
         mi.AddTransformation<slicer::ExitHook>(exit_hook);
       }
-      const ir::MethodId target_method(ToJniFormat(GetClassName()).c_str(),
+      const std::string jni_name = ToJniFormat(GetClassName());
+      const ir::MethodId target_method(jni_name.c_str(),
                                        hook.method_name.c_str(),
                                        hook.method_signature.c_str());
       if (!mi.InstrumentMethod(target_method)) {
