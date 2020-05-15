@@ -42,7 +42,7 @@ public interface IdeAndroidProject extends Serializable {
     @Deprecated int PROJECT_TYPE_ATOM = 3;
     int PROJECT_TYPE_INSTANTAPP = 4; // Instant App Bundle
     int PROJECT_TYPE_FEATURE = 5; // com.android.feature module
-    int PROJECT_TYPE_DYNAMIC_FEATURE = 6; //com.android.dynamic-feature module
+    int PROJECT_TYPE_DYNAMIC_FEATURE = 6; // com.android.dynamic-feature module
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
@@ -312,4 +312,19 @@ public interface IdeAndroidProject extends Serializable {
      */
     @Nullable
     List<File> getLintRuleJars();
+
+    /**
+     * Temporary storage of named data associated with this project. Intended for purposes such as
+     * caching data associated with a project. A null value deletes the associated entry. Note that
+     * the data is transient and will not be kept across sessions.
+     */
+    @Nullable
+    Object putClientProperty(@NonNull String key, @Nullable Object value);
+
+    /**
+     * Retrieves named data that was previously stored via {@link #putClientProperty(String,
+     * Object)}.
+     */
+    @Nullable
+    Object getClientProperty(@NonNull String key);
 }

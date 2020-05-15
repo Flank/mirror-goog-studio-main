@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
@@ -39,8 +38,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -656,6 +657,35 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @Override
     public List<File> getLintRuleJars() {
         return myLintRuleJars;
+    }
+
+    @Nullable private transient Map<String, Object> clientProperties;
+
+    @Nullable
+    @Override
+    public Object putClientProperty(@NonNull String key, @Nullable Object value) {
+        if (value == null) {
+            if (clientProperties != null) {
+                clientProperties.remove(key);
+            }
+        } else {
+            if (clientProperties == null) {
+                clientProperties = new HashMap<>();
+            }
+            clientProperties.put(key, value);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    @Override
+    public Object getClientProperty(@NonNull String key) {
+        if (clientProperties == null) {
+            return null;
+        } else {
+            return clientProperties.get(key);
+        }
     }
 
     @Override

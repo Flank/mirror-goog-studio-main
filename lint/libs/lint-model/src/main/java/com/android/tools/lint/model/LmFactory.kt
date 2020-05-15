@@ -94,6 +94,11 @@ class LmFactory : LmModuleLoader {
      * of lazy lookup.
      */
     fun create(project: IdeAndroidProject, dir: File, deep: Boolean = true): LmModule {
+        val cached = project.getClientProperty(CACHE_KEY) as? LmModule
+        if (cached != null) {
+            return cached
+        }
+
         val gradleVersion = getGradleVersion(project)
 
         return if (deep) {
@@ -131,6 +136,8 @@ class LmFactory : LmModuleLoader {
                 dir = dir,
                 gradleVersion = gradleVersion
             )
+        }.also { module ->
+            project.putClientProperty(CACHE_KEY, module)
         }
     }
 
@@ -1063,6 +1070,8 @@ class LmFactory : LmModuleLoader {
     }
 
     companion object {
+        private const val CACHE_KEY = "lint-model"
+
         /**
          * Returns the [LmModuleType] for the given type ID. Type ids must be one of the values defined by
          * AndroidProjectTypes.PROJECT_TYPE_*.

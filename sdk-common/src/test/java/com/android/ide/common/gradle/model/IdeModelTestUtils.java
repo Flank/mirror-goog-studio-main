@@ -108,6 +108,9 @@ public final class IdeModelTestUtils {
     }
 
     private static boolean isGetter(@NonNull Method method) {
+        if (method.getParameterCount() != 0) {
+            return false;
+        }
         int modifiers = method.getModifiers();
         if (!isPublic(modifiers) || isStatic(modifiers)) {
             return false;

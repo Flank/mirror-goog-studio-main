@@ -25,6 +25,8 @@ import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
 import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_MAIN;
 import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_UNIT_TEST;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -109,6 +111,7 @@ import kotlin.text.StringsKt;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Contract;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.OngoingStubbing;
 
 /**
@@ -307,6 +310,23 @@ public class GradleModelMocker {
 
     private void initialize() {
         project = mock(IdeAndroidProject.class);
+
+        Map<String, Object> clientProperties = new HashMap<>();
+        when(project.getClientProperty(anyString()))
+                .thenAnswer(
+                        invocation -> {
+                            String key = invocation.getArgument(0);
+                            return clientProperties.get(key);
+                        });
+        when(project.putClientProperty(anyString(), any()))
+                .thenAnswer(
+                        (Answer<Void>)
+                                invocation -> {
+                                    String key = invocation.getArgument(0);
+                                    Object value = invocation.getArgument(1);
+                                    clientProperties.put(key, value);
+                                    return null;
+                                });
 
         when(project.getModelVersion()).thenReturn(modelVersion.toString());
         int apiVersion = modelVersion.getMajor() >= 2 ? 3 : 2;
