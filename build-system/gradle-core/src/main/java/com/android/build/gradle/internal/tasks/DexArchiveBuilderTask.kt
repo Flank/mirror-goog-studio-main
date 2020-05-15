@@ -571,8 +571,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             if (libraryDesugaring) {
-                task.dexParams.coreLibDesugarConfig
-                    .set(getDesugarLibConfig(creationConfig.globalScope.project))
+                task.dexParams.coreLibDesugarConfig.set(getDesugarLibConfig(task.project))
             }
 
             if (dexExternalLibsInArtifactTransform) {
@@ -597,9 +596,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     this.bootClasspath.from(task.dexParams.desugarBootclasspath)
                     this.desugaringClasspath.from(desugaringClasspathForArtifactTransforms)
                     this.enableDesugaring.set(task.dexParams.withDesugaring)
-                    if (task.dexParams.coreLibDesugarConfig.isPresent) {
-                        this.libConfiguration.set(task.dexParams.coreLibDesugarConfig)
-                    }
+                    this.libConfiguration.set(task.dexParams.coreLibDesugarConfig)
                     this.errorFormat.set(task.dexParams.errorFormatMode)
                     // External libraries do not require incremental support
                     this.incrementalDexingTransform.set(false)
