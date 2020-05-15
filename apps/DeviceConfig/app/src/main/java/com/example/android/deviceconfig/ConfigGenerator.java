@@ -33,7 +33,9 @@ import android.hardware.camera2.CameraMetadata;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -159,6 +161,7 @@ class ConfigGenerator {
     private static final String NODE_ID = "id";
     private static final String NODE_SKIN = "skin";
     private static final String NODE_MANUFACTURER = "manufacturer";
+    private static final String NODE_PLAY_STORE = "playstore-enabled";
     private static final String NODE_API_LEVEL = "api-level";
     private static final String ATTR_DEFAULT = "default";
     private static final String ATTR_UNIT = "unit";
@@ -259,11 +262,20 @@ class ConfigGenerator {
 
             Element id = doc.createElement(PREFIX + NODE_ID);
             device.appendChild(id);
-            id.appendChild(doc.createTextNode(android.os.Build.MODEL));
+            // "Pixel 4 XL" -> "pixel_4_xl"
+            String deviceId = Build.MODEL.toLowerCase(Locale.US).replace(" ", "_");
+            id.appendChild(doc.createTextNode(deviceId));
 
             Element manufacturer = doc.createElement(PREFIX + NODE_MANUFACTURER);
             device.appendChild(manufacturer);
             manufacturer.appendChild(doc.createTextNode(android.os.Build.MANUFACTURER));
+
+            // Eligible for play store? XL devices in emulator not yet passing CTS
+            if (deviceId.startsWith("pixel_") && !deviceId.endsWith("_xl")) {
+                Element playstore = doc.createElement(PREFIX + NODE_PLAY_STORE);
+                device.appendChild(playstore);
+                playstore.appendChild(doc.createTextNode("true"));
+            }
 
             Element hardware = doc.createElement(PREFIX + NODE_HARDWARE);
             device.appendChild(hardware);
@@ -794,8 +806,8 @@ class ConfigGenerator {
             DOMSource source = new DOMSource(doc);
             String filename = String.format(Locale.US, "devices_%1$tm_%1$td_%1$ty.xml",
                                             Calendar.getInstance().getTime());
-            //File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File dir = mCtx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            File dir = new File(mCtx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "deviceconfig");
+            dir.mkdirs();
             File outFile = new File(dir, filename);
             FileOutputStream out = new FileOutputStream(new File(dir, filename));
             StreamResult result = new StreamResult(out);
@@ -818,7 +830,7 @@ class ConfigGenerator {
     }
 
     // For API 23 and higher, use the Camera 2 HAL
-    @TargetApi(23)
+    @RequiresApi(23)
     private List<Element> getCamera2Elements(Document doc) {
         List<Element> cList = new ArrayList<>();
         CameraManager cameraManager = (CameraManager)mCtx.getSystemService(Context.CAMERA_SERVICE);

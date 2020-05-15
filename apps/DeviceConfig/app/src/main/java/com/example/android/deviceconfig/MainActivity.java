@@ -34,13 +34,16 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+
 import java.io.File;
 import java.util.Locale;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MainActivity extends Activity implements OnClickListener {
+public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     private static GLView mGl;
 
@@ -148,8 +151,11 @@ public class MainActivity extends Activity implements OnClickListener {
             emailIntent.putExtra(Intent.EXTRA_TEXT, "Note: This is intended to generate a base "
                     + "XML description. After running this, you should double check the generated "
                     + "information and add all of the missing fields.");
-            emailIntent.putExtra(Intent.EXTRA_STREAM,
-                    Uri.parse("file://" + devicesXml.getAbsolutePath()));
+            Uri uri = FileProvider.getUriForFile(
+                    MainActivity.this,
+                    "com.example.android.deviceconfig.fileprovider",
+                    devicesXml);
+            emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
             startActivity(emailIntent);
         }
     }
