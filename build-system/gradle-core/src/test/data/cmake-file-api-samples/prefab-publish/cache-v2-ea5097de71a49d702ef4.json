@@ -23,7 +23,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/{NDK}/21.2.6472646"
+			"value" : "/{NDK}/21.3.6528147"
 		},
 		{
 			"name" : "ANDROID_PLATFORM",
@@ -63,7 +63,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-addr2line"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-addr2line"
 		},
 		{
 			"name" : "CMAKE_ANDROID_ARCH_ABI",
@@ -87,7 +87,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/{NDK}/21.2.6472646"
+			"value" : "/{NDK}/21.3.6528147"
 		},
 		{
 			"name" : "CMAKE_AR",
@@ -103,7 +103,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-ar"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-ar"
 		},
 		{
 			"name" : "CMAKE_ASM_FLAGS",
@@ -659,7 +659,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-ld"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-ld"
 		},
 		{
 			"name" : "CMAKE_MAKE_PROGRAM",
@@ -767,7 +767,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-nm"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-nm"
 		},
 		{
 			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
@@ -795,7 +795,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-objcopy"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-objcopy"
 		},
 		{
 			"name" : "CMAKE_OBJDUMP",
@@ -811,7 +811,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-objdump"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-objdump"
 		},
 		{
 			"name" : "CMAKE_PLATFORM_INFO_INITIALIZED",
@@ -935,7 +935,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-ranlib"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-ranlib"
 		},
 		{
 			"name" : "CMAKE_READELF",
@@ -951,7 +951,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-readelf"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-readelf"
 		},
 		{
 			"name" : "CMAKE_ROOT",
@@ -1183,7 +1183,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-strip"
+			"value" : "/{NDK}/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-strip"
 		},
 		{
 			"name" : "CMAKE_SYSTEM_NAME",
@@ -1219,7 +1219,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/{NDK}/21.2.6472646/build/cmake/android.toolchain.cmake"
+			"value" : "/{NDK}/21.3.6528147/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"name" : "CMAKE_UNAME",

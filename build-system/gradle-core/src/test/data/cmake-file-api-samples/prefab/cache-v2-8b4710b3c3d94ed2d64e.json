@@ -23,7 +23,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147"
 		},
 		{
 			"name" : "ANDROID_PLATFORM",
@@ -63,7 +63,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-addr2line"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-addr2line"
 		},
 		{
 			"name" : "CMAKE_ANDROID_ARCH_ABI",
@@ -87,7 +87,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147"
 		},
 		{
 			"name" : "CMAKE_AR",
@@ -103,7 +103,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ar"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ar"
 		},
 		{
 			"name" : "CMAKE_ASM_FLAGS",
@@ -659,7 +659,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ld"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ld"
 		},
 		{
 			"name" : "CMAKE_MAKE_PROGRAM",
@@ -767,7 +767,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-nm"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-nm"
 		},
 		{
 			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
@@ -795,7 +795,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-objcopy"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-objcopy"
 		},
 		{
 			"name" : "CMAKE_OBJDUMP",
@@ -811,7 +811,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-objdump"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-objdump"
 		},
 		{
 			"name" : "CMAKE_PLATFORM_INFO_INITIALIZED",
@@ -935,7 +935,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ranlib"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-ranlib"
 		},
 		{
 			"name" : "CMAKE_READELF",
@@ -951,7 +951,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-readelf"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-readelf"
 		},
 		{
 			"name" : "CMAKE_ROOT",
@@ -1183,7 +1183,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-strip"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-strip"
 		},
 		{
 			"name" : "CMAKE_SYSTEM_NAME",
@@ -1219,7 +1219,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/build/cmake/android.toolchain.cmake"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"name" : "CMAKE_UNAME",
@@ -1259,7 +1259,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/21/liblog.so"
+			"value" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/21/liblog.so"
 		},
 		{
 			"name" : "app_BINARY_DIR",
@@ -1283,7 +1283,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "general;/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/21/liblog.so;general;curl::curl;general;jsoncpp::jsoncpp;"
+			"value" : "general;/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/21/liblog.so;general;curl::curl;general;jsoncpp::jsoncpp;"
 		},
 		{
 			"name" : "app_SOURCE_DIR",

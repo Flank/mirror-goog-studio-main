@@ -1,8 +1,8 @@
 {
   "stringTable": {
     "0": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/.cxx/cmake/debug/x86_64",
-    "1": "--target=x86_64-none-linux-android21 --gcc-toolchain=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64 --sysroot=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dbar_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -DTEST_CPP_FLAG -O0 -fno-limit-debug-info -fPIC",
-    "2": "--target=x86_64-none-linux-android21 --gcc-toolchain=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64 --sysroot=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dfoo_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -DTEST_CPP_FLAG -O0 -fno-limit-debug-info -fPIC"
+    "1": "--target=x86_64-none-linux-android21 --gcc-toolchain=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64 --sysroot=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dbar_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -DTEST_CPP_FLAG -O0 -fno-limit-debug-info -fPIC",
+    "2": "--target=x86_64-none-linux-android21 --gcc-toolchain=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64 --sysroot=/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dfoo_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -DTEST_CPP_FLAG -O0 -fno-limit-debug-info -fPIC"
   },
   "buildFiles": [
     "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/CMakeLists.txt"
@@ -51,7 +51,7 @@
   },
   "toolchains": {
     "2706082800": {
-      "cppCompilerExecutable": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
+      "cppCompilerExecutable": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
     }
   },
   "cFileExtensions": [],

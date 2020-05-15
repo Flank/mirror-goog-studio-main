@@ -1,23 +1,23 @@
 {
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "/{PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"target_link_libraries"
 		],
-		"files" : 
+		"files" :
 		[
 			"CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -36,36 +36,36 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -DTEST_C_FLAG -DTEST_C_FLAG_2 -O0 -fno-limit-debug-info  -fPIC  "
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"define" : "hello_jni_EXPORTS"
 				}
 			],
 			"language" : "C",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "{SDK}/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "{SDK}/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
 	"id" : "hello-jni::@6890427a1f51a3e7e1df",
-	"link" : 
+	"link" :
 	{
-		"commandFragments" : 
+		"commandFragments" :
 		[
 			{
 				"fragment" : "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a -Wl,--exclude-libs,libatomic.a -static-libstdc++ -Wl,--build-id -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments",
@@ -82,29 +82,29 @@
 			}
 		],
 		"language" : "C",
-		"sysroot" : 
+		"sysroot" :
 		{
-			"path" : "{SDK}/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			"path" : "{SDK}/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 		}
 	},
 	"name" : "hello-jni",
 	"nameOnDisk" : "libhello-jni.so",
-	"paths" : 
+	"paths" :
 	{
 		"build" : ".",
 		"source" : "."
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

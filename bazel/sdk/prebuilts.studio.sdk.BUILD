@@ -28,9 +28,23 @@ java_binary(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/29.0.2"],
+    srcs = [":build-tools/30.0.0"],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "build-tools/29.0.2",
+    srcs = sdk_glob(
+        include = ["build-tools/29.0.2/**"],
+    ),
+    visibility = [
+        "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//tools/adt/idea/sync-perf-tests:__pkg__",
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
+        "//tools/base/build-system/previous-versions:__pkg__",
+    ],
+)
+
 
 filegroup(
     name = "build-tools/28.0.3",
@@ -51,9 +65,9 @@ filegroup(
 )
 
 filegroup(
-    name = "build-tools/29.0.2",
+    name = "build-tools/30.0.0",
     srcs = sdk_glob(
-        include = ["build-tools/29.0.2/**"],
+        include = ["build-tools/30.0.0/**"],
     ),
     visibility = ["//visibility:private"],
 )
@@ -282,7 +296,7 @@ filegroup(
 filegroup(
     name = "ndk",
     srcs = sdk_glob(
-        include = ["ndk/21.2.6472646/**"],
+        include = ["ndk/21.3.6528147/**"],
     ),
     visibility = ["//visibility:public"],
 )
