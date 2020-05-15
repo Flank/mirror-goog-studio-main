@@ -124,8 +124,6 @@ dependencies {
     }
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_support
-
-    apiTestImplementation project(":base:apkparser:apkanalyzer-cli")
 }
 
 protobuf {
@@ -197,6 +195,9 @@ apiTest {
             new File(rootProject.ext.androidHostOut, "repo").toString()
                     + File.pathSeparator
                     + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
+
+    dependsOn ':publishAndroidGradleLocal'
+    dependsOn ':base:apkparser:apkanalyzer-cli:publishLocal'
 }
 
 javadoc {
