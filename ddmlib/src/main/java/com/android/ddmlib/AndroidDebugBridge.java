@@ -589,6 +589,11 @@ public class AndroidDebugBridge {
         sBridgeListeners.remove(listener);
     }
 
+    @VisibleForTesting
+    public static int getDebugBridgeChangeListenerCount() {
+        return sBridgeListeners.size();
+    }
+
     /**
      * Adds the listener to the collection of listeners who will be notified when a {@link IDevice}
      * is connected, disconnected, or when its properties or its {@link ClientImpl} list changed, by
@@ -609,6 +614,11 @@ public class AndroidDebugBridge {
      */
     public static void removeDeviceChangeListener(IDeviceChangeListener listener) {
         sDeviceListeners.remove(listener);
+    }
+
+    @VisibleForTesting
+    public static int getDeviceChangeListenerCount() {
+        return sDeviceListeners.size();
     }
 
     /**
