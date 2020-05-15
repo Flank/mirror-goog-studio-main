@@ -19,6 +19,7 @@ package com.android.tools.agent.layoutinspector;
 import android.os.AsyncTask;
 import android.view.View;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +30,9 @@ import java.util.concurrent.TimeUnit;
  * <p>This code will handle activity changes in an application.
  */
 class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
-    private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
+    @VisibleForTesting long myCheckInterval = TimeUnit.SECONDS.toMillis(1);
     private final LayoutInspectorService myService;
     private List<View> myRoots;
-    private boolean myQuit;
 
     public DetectRootViewChange(LayoutInspectorService service) {
         myService = service;
@@ -40,19 +40,14 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
 
     public void start(@NonNull List<View> roots) {
         myRoots = roots;
-        myQuit = false;
         execute();
-    }
-
-    public void stop() {
-        myQuit = true;
     }
 
     @Override
     protected Void doInBackground(Void... arg0) {
-        while (!myQuit) {
+        while (!isCancelled()) {
             try {
-                List<View> newRoots = myService.getRootViews();
+                List<View> newRoots = new ArrayList<>(myService.getRootViews());
                 if (!newRoots.equals(myRoots)) {
                     List<View> newlyAdded = new ArrayList<>(newRoots);
                     newlyAdded.removeAll(myRoots);
@@ -63,9 +58,11 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
                     for (View added : newlyAdded) {
                         myService.startLayoutInspector(added);
                     }
-                    myRoots = newRoots;
-                    // If the windows have changed, make sure we send updates for all of them.
-                    for (View root : newRoots) {
+                    // If we just removed a window make sure we send an update so the new window
+                    // list is captured. Otherwise if none of the other windows happen to be updated
+                    // the removed window will still be shown.
+                    if (!myRoots.isEmpty() && newlyAdded.isEmpty()) {
+                        View root = newRoots.get(0);
                         root.post(
                                 new Runnable() {
                                     @Override
@@ -74,8 +71,9 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
                                     }
                                 });
                     }
+                    myRoots = newRoots;
                 }
-                Thread.sleep(ONE_SECOND);
+                Thread.sleep(myCheckInterval);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
