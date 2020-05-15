@@ -25,7 +25,6 @@ import java.util.List;
 import org.junit.Test;
 
 public class ApkDifferTest {
-
   @Test
   public void testNoDiff() throws DeployerException {
         Apk before =
@@ -181,6 +180,48 @@ public class ApkDifferTest {
         ApkTestUtils.assertApkEntryEquals(apk2.checksum, "dex4", 0x04, diff.get(3).oldFile);
     }
 
+    @Test
+    public void testSpecDiffNoChange() throws DeployerException {
+        Apk before =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("res/a.xml", 0x01)
+                        .build();
+
+        Apk after =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("efgh")
+                        .addApkEntry("res/a.xml", 0x01)
+                        .build();
+
+        List<FileDiff> diff = checkSpecDiffs(before, after);
+        assertEquals(1, diff.size());
+        assertEquals(FileDiff.Status.RESOURCE_NOT_IN_OVERLAY, diff.get(0).status);
+    }
+
+    @Test
+    public void testSpecDiffResourceChanged() throws DeployerException {
+        Apk before =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("res/a.xml", 0x01)
+                        .build();
+
+        Apk after =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("efgh")
+                        .addApkEntry("res/a.xml", 0x02)
+                        .build();
+
+        List<FileDiff> diff = checkSpecDiffs(before, after);
+        assertEquals(1, diff.size());
+        assertEquals(FileDiff.Status.MODIFIED, diff.get(0).status);
+    }
+
     private static List<FileDiff> checkDiffs(Apk before, Apk after) throws DeployerException {
         return checkDiffs(ImmutableList.of(before), ImmutableList.of(after));
     }
@@ -189,5 +230,17 @@ public class ApkDifferTest {
             throws DeployerException {
         ApkDiffer differ = new ApkDiffer();
         return differ.diff(before, after);
+    }
+
+    private static List<FileDiff> checkSpecDiffs(Apk before, Apk after) throws DeployerException {
+        return checkSpecDiffs(ImmutableList.of(before), ImmutableList.of(after));
+    }
+
+    private static List<FileDiff> checkSpecDiffs(List<Apk> before, List<Apk> after)
+            throws DeployerException {
+        ApkDiffer differ = new ApkDiffer();
+        DeploymentCacheDatabase fakeDb = new DeploymentCacheDatabase(1);
+        fakeDb.store("serial", "app.id", before, new OverlayId(before));
+        return differ.specDiff(fakeDb.get("serial", "app.id"), after);
   }
 }

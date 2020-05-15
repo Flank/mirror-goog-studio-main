@@ -42,9 +42,17 @@ public class ApkDiffer {
                             cacheEntry.getOverlayFiles().contains(newFile.getQualifiedPath());
                     boolean isResource = newFile.getName().startsWith("res");
                     if (!inOverlay && isResource) {
-                        return Optional.of(
-                                new FileDiff(
-                                        null, newFile, FileDiff.Status.RESOURCE_NOT_IN_OVERLAY));
+
+                        Optional<FileDiff> normalDiff = standardDiff(oldFile, newFile);
+                        if (normalDiff.isPresent()) {
+                            return normalDiff;
+                        } else {
+                            return Optional.of(
+                                    new FileDiff(
+                                            null,
+                                            newFile,
+                                            FileDiff.Status.RESOURCE_NOT_IN_OVERLAY));
+                        }
                     }
                     return standardDiff(oldFile, newFile);
                 };
