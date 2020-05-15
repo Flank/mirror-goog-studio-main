@@ -83,8 +83,6 @@ data class AndroidGradlePluginAttributionData(
                 }
             } catch (e: Exception) {
                 return null
-            } finally {
-                FileUtils.deleteRecursivelyIfExists(file.parentFile)
             }
         }
     }
