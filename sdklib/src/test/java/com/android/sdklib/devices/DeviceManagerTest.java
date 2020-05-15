@@ -142,6 +142,8 @@ public class DeviceManagerTest {
                         "Pixel 3 XL",
                         "Pixel 3a",
                         "Pixel 3a XL",
+                        "Pixel 4",
+                        "Pixel 4 XL",
                         "Polestar 2");
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
@@ -193,6 +195,8 @@ public class DeviceManagerTest {
                         "Pixel 3 XL",
                         "Pixel 3a",
                         "Pixel 3a XL",
+                        "Pixel 4",
+                        "Pixel 4 XL",
                         "Polestar 2");
     }
 
@@ -292,6 +296,8 @@ public class DeviceManagerTest {
                         "Pixel 3 XL",
                         "Pixel 3a",
                         "Pixel 3a XL",
+                        "Pixel 4",
+                        "Pixel 4 XL",
                         "Polestar 2");
 
         assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES)))
@@ -342,6 +348,8 @@ public class DeviceManagerTest {
                         "Pixel 3 XL",
                         "Pixel 3a",
                         "Pixel 3a XL",
+                        "Pixel 4",
+                        "Pixel 4 XL",
                         "Polestar 2");
     }
 
@@ -430,6 +438,8 @@ public class DeviceManagerTest {
                         "Pixel 3 XL",
                         "Pixel 3a",
                         "Pixel 3a XL",
+                        "Pixel 4",
+                        "Pixel 4 XL",
                         "Polestar 2");
 
         assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES)))
@@ -480,6 +490,8 @@ public class DeviceManagerTest {
                         "Pixel 3 XL",
                         "Pixel 3a",
                         "Pixel 3a XL",
+                        "Pixel 4",
+                        "Pixel 4 XL",
                         "Polestar 2");
     }
 
