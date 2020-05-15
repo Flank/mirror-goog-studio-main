@@ -70,14 +70,6 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
             @NonNull String name, @NonNull Class[] constructorSignature, Object[] constructorArgs)
             throws Exception;
 
-    /**
-     * Returns the namespace URI of the application.
-     *
-     * <p>Used by the Layoutlib to load custom attributes for custom views.
-     */
-    @NonNull
-    public abstract String getNamespace();
-
     /** Finds the resource with a given id. */
     @Nullable
     public abstract ResourceReference resolveResourceId(int id);
