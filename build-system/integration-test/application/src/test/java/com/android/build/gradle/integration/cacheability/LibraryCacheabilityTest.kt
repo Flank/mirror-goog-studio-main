@@ -27,16 +27,11 @@ import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 
 /**
- * Tests cacheability of tasks. Similar to [CacheabilityTest], but builds the release version of a
- * library module in order to verify the cacheability of a different set of tasks.
- *
- * See https://guides.gradle.org/using-build-cache/ for information on the Gradle build cache.
+ * Similar to [CacheabilityTest], but targeting the release version of a library module to verify a
+ * different set of tasks.
  */
-@RunWith(JUnit4::class)
 class LibraryCacheabilityTest {
 
     companion object {

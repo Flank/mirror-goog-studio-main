@@ -56,8 +56,12 @@ class TaskStateAssertionHelper(
 
         if (exhaustive) {
             assert(expectedTaskStates.size == actualTaskStates.size) {
-                "The list of expected tasks is not exhaustive, the following tasks are missing: " +
-                (actualTaskStates.keys - expectedTaskStates.keys).joinToString(", ")
+                "The list of expected tasks is not exhaustive, the following tasks are missing:\n" +
+                        actualTaskStates
+                            .filter { it.key !in expectedTaskStates.keys}
+                            .toSortedMap()
+                            .map { "\"${it.key}\" to ${it.value}" }
+                            .joinToString(",\n")
             }
         }
 

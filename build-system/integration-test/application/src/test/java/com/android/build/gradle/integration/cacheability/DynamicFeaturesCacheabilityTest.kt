@@ -28,15 +28,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 
 /**
- * Tests cacheability of tasks.
- *
- * See https://guides.gradle.org/using-build-cache/ for information on the Gradle build cache.
+ * Similar to [CacheabilityTest], but targeting projects using dynamic features to verify a
+ * different set of tasks.
  */
-@RunWith(JUnit4::class)
 class DynamicFeaturesCacheabilityTest {
 
     companion object {
