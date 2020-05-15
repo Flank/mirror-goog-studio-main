@@ -43,7 +43,9 @@ import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import java.io.File
+import java.nio.file.Paths
 import com.android.builder.model.level2.Library as LibraryL2
 
 /**
@@ -105,7 +107,7 @@ class LmFactory : LmModuleLoader {
                 gradleVersion = gradleVersion,
                 buildFolder = project.buildFolder,
                 lintOptions = getLintOptions(project),
-                lintRuleJars = project.lintRuleJars,
+                lintRuleJars = project.getLintRuleJarsForAnyAgpVersion(),
                 buildFeatures = getBuildFeatures(project, gradleVersion),
                 resourcePrefix = project.resourcePrefix,
                 dynamicFeatures = project.dynamicFeatures,
@@ -131,6 +133,23 @@ class LmFactory : LmModuleLoader {
             )
         }
     }
+
+    /**
+     * Returns the list of Lint Rule file, no matter what the AGP version is.
+     */
+    private fun IdeAndroidProject.getLintRuleJarsForAnyAgpVersion() = lintRuleJars ?: listOf(
+        FileUtils.join(buildFolder, "intermediates", "lint", "lint.jar"),
+        FileUtils.join(buildFolder, "intermediates", "lint_jar", "lint.jar"),
+        FileUtils.join(
+            buildFolder,
+            "intermediates",
+            "lint_jar",
+            "global",
+            "prepareLintJar",
+            "lint.jar"
+        )
+    )
+
 
     private fun getDependencies(
         graph: DependencyGraphs,
@@ -908,7 +927,7 @@ class LmFactory : LmModuleLoader {
             get() = project.compileTarget
         override val oldProject: IdeAndroidProject?
             get() = project
-        override val lintRuleJars: List<File>? = project.lintRuleJars
+        override val lintRuleJars: List<File> = project.getLintRuleJarsForAnyAgpVersion()
 
         override fun neverShrinking(): Boolean {
             return isNeverShrinking(project)

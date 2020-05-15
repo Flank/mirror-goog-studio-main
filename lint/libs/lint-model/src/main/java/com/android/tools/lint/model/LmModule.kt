@@ -59,10 +59,9 @@ interface LmModule {
     /**
      * The lint jars that this module uses to run extra lint checks.
      *
-     * If null, the model does not contain the information because AGP was an older version, and
-     * alternative ways to get the information should be used.
+     * The files may, or may not exist
      */
-    val lintRuleJars: List<File>?
+    val lintRuleJars: List<File>
 
     /** Build features in effect */
     val buildFeatures: LmBuildFeatures
@@ -160,7 +159,7 @@ class DefaultLmModule(
     override val gradleVersion: GradleVersion?,
     override val buildFolder: File,
     override val lintOptions: LmLintOptions,
-    override val lintRuleJars: List<File>?,
+    override val lintRuleJars: List<File>,
     override val buildFeatures: LmBuildFeatures,
     override val resourcePrefix: String?,
     override val dynamicFeatures: Collection<String>,

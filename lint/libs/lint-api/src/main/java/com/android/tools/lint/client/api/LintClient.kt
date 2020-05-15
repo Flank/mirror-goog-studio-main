@@ -1224,7 +1224,7 @@ abstract class LintClient {
                     val model = variant.module
 
                     // Locally packaged jars
-                    rules.addAll(model.lintRuleJars ?: model.findLegacyLocalRuleJars())
+                    rules.addAll(model.lintRuleJars.filter { it.exists() })
 
                     if (rules.isNotEmpty()) {
                         return rules
@@ -1239,37 +1239,6 @@ abstract class LintClient {
         }
 
         return emptyList()
-    }
-
-    /**
-     * Returns the location of the local rules jar as defined in the module by the `lintChecks`
-     * dependency.
-     *
-     * This is for pre-4.1 AGP versions that do not contain the information in their model.
-     */
-    private fun LmModule.findLegacyLocalRuleJars(): List<File> {
-        val lintPaths = arrayOf(
-            Paths.get("intermediates", "lint"),
-            Paths.get("intermediates", "lint_jar", "global"),
-            Paths.get(
-                "intermediates",
-                "lint_jar",
-                "global",
-                "prepareLintJar"
-            )
-        )
-
-        return lintPaths
-            .asSequence()
-            .map { File(buildFolder, it.toString()) }
-            .filter { it.exists() }
-            .flatMap { lintFolder ->
-                // Note that currently there will just be a single one
-                // for now (b/66164808), and it will always be named lint.jar.
-                lintFolder.listFiles()?.asSequence()?.filter { it.path.endsWith(DOT_JAR) }
-                    ?: sequenceOf()
-            }
-            .toList()
     }
 
     /**
