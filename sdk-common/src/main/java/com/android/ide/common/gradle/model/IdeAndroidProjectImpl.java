@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
 public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 9L;
+    private static final long serialVersionUID = 10L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
