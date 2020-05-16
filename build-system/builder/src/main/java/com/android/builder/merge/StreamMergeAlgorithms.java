@@ -72,11 +72,17 @@ public final class StreamMergeAlgorithms {
             Preconditions.checkArgument(!from.isEmpty(), "from.isEmpty()");
             from.forEach(closer::register);
             if (from.size() > 1) {
-                throw new DuplicateRelativeFileException(
-                        "More than one file was found with "
-                                + "OS independent path '"
-                                + path
-                                + "'");
+                StringBuilder messageBuilder = new StringBuilder();
+                messageBuilder.append("More than one file was found with OS independent path '");
+                messageBuilder.append(path);
+                messageBuilder.append("'.");
+                if (path.endsWith(".so")) {
+                    messageBuilder.append(
+                            " If you are using jniLibs and CMake IMPORTED targets, see ");
+                    messageBuilder.append(
+                            "https://developer.android.com/studio/preview/features#automatic_packaging_of_prebuilt_dependencies_used_by_cmake");
+                }
+                throw new DuplicateRelativeFileException(messageBuilder.toString());
             }
 
             return from.get(0);

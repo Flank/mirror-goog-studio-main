@@ -40,7 +40,7 @@ fun RecipeExecutor.googleMapsWearActivityRecipe(
   addAllKotlinDependencies(moduleData)
 
   addDependency("com.google.android.gms:play-services-wearable:+")
-  addDependency("com.google.android.gms:play-services-maps:+")
+  addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
   addDependency("com.google.android.support:wearable:+")
   addDependency("com.google.android.wearable:wearable:+", "provided")
   addDependency("com.android.support:wear:+")

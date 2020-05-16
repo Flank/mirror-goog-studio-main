@@ -18,17 +18,18 @@ package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow
 
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
-import com.android.tools.idea.wizard.template.Constraint.*
+import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
-import com.android.tools.idea.wizard.template.PackageNameWidget
-import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
+import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.TemplateData
+import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
-import com.android.tools.idea.wizard.template.template
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
+import com.android.tools.idea.wizard.template.template
 import masterDetailFlowRecipe
 import java.io.File
 
@@ -71,12 +72,7 @@ val masterDetailFlowTemplate
       help = "If true, the primary activity in the flow will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-      suggest = { packageName }
-    }
+    val packageName = defaultPackageNameParameter
 
     widgets(
       TextFieldWidget(objectKind),

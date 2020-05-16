@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
@@ -33,6 +32,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import googleAdMobAdsFragmentRecipe
@@ -80,11 +80,7 @@ val googleAdMobAdsFragmentTemplate
       help = "Select Interstitial Ad or Banner Ad"
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-    }
+    val packageName = defaultPackageNameParameter
 
     widgets(
       TextFieldWidget(fragmentClass),

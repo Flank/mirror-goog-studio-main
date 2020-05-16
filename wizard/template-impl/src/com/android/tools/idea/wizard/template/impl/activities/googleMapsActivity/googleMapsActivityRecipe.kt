@@ -44,7 +44,7 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   val simpleName = activityToLayout(activityClass)
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.google.android.gms:play-services-maps:+")
+  addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support:appcompat-v7:${buildApi}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
