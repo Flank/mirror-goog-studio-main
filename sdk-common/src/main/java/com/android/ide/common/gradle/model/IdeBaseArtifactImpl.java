@@ -115,7 +115,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myAdditionalClassFolders =
                 IdeModel.copyNewProperty(
                         artifact::getAdditionalClassesFolders, Collections.emptySet());
-        myLevel2Dependencies = dependenciesFactory.create(artifact, modelVersion);
+        myLevel2Dependencies = dependenciesFactory.create(artifact);
         hashCode = calculateHashCode();
     }
 

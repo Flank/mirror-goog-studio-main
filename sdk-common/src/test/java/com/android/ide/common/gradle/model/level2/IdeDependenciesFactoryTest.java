@@ -27,13 +27,7 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
 import com.android.ide.common.gradle.model.stubs.DependenciesStub;
-import com.android.ide.common.gradle.model.stubs.DependencyGraphsStub;
-import com.android.ide.common.gradle.model.stubs.GlobalLibraryMapStub;
-import com.android.ide.common.gradle.model.stubs.GradleStubBuilderUtil;
-import com.android.ide.common.gradle.model.stubs.GraphItemStub;
 import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
-import com.android.ide.common.repository.GradleVersion;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.Collections;
@@ -135,8 +129,7 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
-        IdeDependencies level2Dependencies =
-                myDependenciesFactory.create(baseArtifactStub, GradleVersion.parse("2.3.0"));
+        IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
 
         assertThat(level2Dependencies.getAndroidLibraries()).hasSize(0);
 
@@ -183,8 +176,7 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
-        IdeDependencies level2Dependencies =
-                myDependenciesFactory.create(baseArtifactStub, GradleVersion.parse("2.3.0"));
+        IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
 
         assertThat(
                         level2Dependencies
