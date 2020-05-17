@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -60,7 +61,7 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         new DefaultIssueReporter(new LoggerWrapper(getLogger())))) {
-            generator.get().build(execOperations::exec, execOperations::javaexec);
+            generator.get().build(false, execOperations::exec, execOperations::javaexec);
         }
     }
 

@@ -53,7 +53,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>,
     stats: GradleBuildVariant.Builder
-) : ExternalNativeJsonGenerator(build, variant, abis, stats) {
+) : ExternalNativeJsonGeneratorBase(build, variant, abis, stats) {
     @Throws(IOException::class)
     override fun processBuildOutput(
         buildOutput: String,

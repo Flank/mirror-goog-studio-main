@@ -76,6 +76,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -172,7 +173,7 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
+import com.android.build.gradle.tasks.ExternalNativeJsonGeneratorBase;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateTestConfig;
@@ -1590,7 +1591,7 @@ public abstract class TaskManager<
                 .setExternalNativeJsonGenerator(
                         project.provider(
                                 () ->
-                                        ExternalNativeJsonGenerator.create(
+                                        ExternalNativeJsonGeneratorBase.create(
                                                 module, componentProperties)));
     }
 
