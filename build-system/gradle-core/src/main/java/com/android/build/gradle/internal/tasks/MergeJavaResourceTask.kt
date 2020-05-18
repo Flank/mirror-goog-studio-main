@@ -259,7 +259,7 @@ abstract class MergeJavaResourceTask
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
             if (creationConfig is ApkCreationConfig) {
-                task.noCompress.set(creationConfig.aaptOptions.noCompress)
+                task.noCompress.set(creationConfig.globalScope.extension.aaptOptions.noCompress)
             }
             task.noCompress.disallowChanges()
         }

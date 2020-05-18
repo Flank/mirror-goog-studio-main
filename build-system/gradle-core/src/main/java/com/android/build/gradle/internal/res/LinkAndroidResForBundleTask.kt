@@ -261,7 +261,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
-            task.noCompress.setDisallowChanges(creationConfig.aaptOptions.noCompress)
+            task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             task.aaptAdditionalParameters.setDisallowChanges(
                 creationConfig.aaptOptions.additionalParameters
             )
