@@ -46,4 +46,8 @@ class FakeGradleProvider<T>(private val v: (()-> T)?): Provider<T> {
     override fun orElse(p0: Provider<out T>): Provider<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    override fun forUseAtConfigurationTime(): Provider<T> {
+        TODO("Not yet implemented")
+    }
 }

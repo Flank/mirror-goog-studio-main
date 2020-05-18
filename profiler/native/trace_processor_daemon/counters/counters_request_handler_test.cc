@@ -68,6 +68,7 @@ TEST(CountersRequestHandlerTest, PopulateCounters) {
   CountersResult result;
   handler.PopulateCounters(params_proto, &result);
 
+  EXPECT_EQ(result.process_id(), TANK_PROCESS_PID);
   EXPECT_EQ(result.counter_size(), 11);
 
   std::unordered_map<std::string, counter_accumulator> counter_map;
@@ -125,6 +126,7 @@ TEST(CountersRequestHandlerTest, PopulateCountersNoProcessId) {
   CountersResult result;
   handler.PopulateCounters(params_proto, &result);
 
+  EXPECT_EQ(result.process_id(), 0);
   EXPECT_EQ(result.counter_size(), 0);
 }
 

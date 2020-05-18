@@ -91,6 +91,7 @@ message QueryParameters {
 
   // Returns all CPU scheduling events for all threads part of the process
   // identified by process_id or for a single thread identified by thread_id.
+  // If no criteria is set, return all the scheduling data contained in the trace.
   // See SchedulingEventsResults for the data returned from this.
   message SchedulingEventsParameters {
     oneof criteria {
@@ -174,18 +175,19 @@ message SchedulingEventsResult {
   int32 num_cores = 2;
 
   message SchedulingEvent {
-    int64 thread_id = 1;
+    int64 process_id = 1;
+    int64 thread_id = 2;
     // In which cpu core the event happened.
     // Will be in [0, num_cores).
-    int32 cpu = 2;
+    int32 cpu = 3;
 
     // The timestamp in nanoseconds of when this event happened.
-    int64 timestamp_nanoseconds = 3;
+    int64 timestamp_nanoseconds = 4;
     // For how long the thread stayed in this state.
-    int64 duration_nanoseconds = 4;
+    int64 duration_nanoseconds = 5;
 
-    SchedulingState state = 5;
-    int32 priority = 6;
+    SchedulingState state = 6;
+    int32 priority = 7;
 
     enum SchedulingState {
       UNKNOWN = 0;
@@ -196,12 +198,14 @@ message SchedulingEventsResult {
       DEAD = 5;
     }
   }
-
 }
 
 message CountersResult {
+  // The id of the process from which these counters belongs to.
+  int64 process_id = 1;
+
   // List of counters.
-  repeated Counter counter = 1;
+  repeated Counter counter = 2;
 
   message Counter {
     // The counter name.

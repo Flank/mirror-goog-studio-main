@@ -92,4 +92,8 @@ class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
     override fun disallowUnsafeRead() {
         TODO("Not yet implemented")
     }
+
+    override fun forUseAtConfigurationTime(): Provider<T> {
+        TODO("Not yet implemented")
+    }
 }

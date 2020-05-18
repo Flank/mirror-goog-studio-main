@@ -1035,7 +1035,7 @@ public class TestLintClient extends LintCliClient {
         ResourceNamespace namespace = project.getResourceNamespace();
         ResourceSet resourceSet =
                 new ResourceSet(
-                        project.getName(), namespace, getProjectResourceLibraryName(), true) {
+                        project.getName(), namespace, getProjectResourceLibraryName(), true, null) {
                     @Override
                     protected void checkItems() {
                         // No checking in ProjectResources; duplicates can happen, but

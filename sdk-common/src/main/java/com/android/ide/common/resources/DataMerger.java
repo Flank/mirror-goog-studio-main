@@ -71,7 +71,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
         mFactory.setIgnoringComments(true);
     }
 
-    protected abstract S createFromXml(Node node) throws MergingException;
+    protected abstract S createFromXml(Node node, @Nullable String aaptEnv) throws MergingException;
 
     protected abstract boolean requiresMerge(@NonNull String dataItemKey);
 
@@ -306,13 +306,14 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      * @param blobRootFolder the root folder where blobs are store.
      * @param consumer the merge consumer that was used by the merge.
      * @param includeTimestamps true if the files should be tagged with lastModified timestamps
-     *
      * @throws MergingException if something goes wrong
-     *
-     * @see #loadFromBlob(File, boolean)
+     * @see #loadFromBlob(File, boolean, String)
      */
-    public void writeBlobTo(@NonNull File blobRootFolder, @NonNull MergeConsumer<I> consumer,
-            boolean includeTimestamps) throws MergingException {
+    public void writeBlobTo(
+            @NonNull File blobRootFolder,
+            @NonNull MergeConsumer<I> consumer,
+            boolean includeTimestamps)
+            throws MergingException {
         // write "compact" blob
         DocumentBuilder builder;
 
@@ -360,21 +361,20 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      *
      * @param blobRootFolder the root folder where blobs are store.
      * @param consumer the merge consumer that was used by the merge.
-     *
      * @throws MergingException if something goes wrong
-     *
-     * @see #loadFromBlob(File, boolean)
+     * @see #loadFromBlob(File, boolean, String)
      */
-    public void writeBlobToWithTimestamps(@NonNull File blobRootFolder,
-            @NonNull MergeConsumer<I> consumer) throws MergingException {
+    public void writeBlobToWithTimestamps(
+            @NonNull File blobRootFolder, @NonNull MergeConsumer<I> consumer)
+            throws MergingException {
         writeBlobTo(blobRootFolder, consumer, true);
     }
 
     /**
      * Loads the merger state from a blob file.
      *
-     * <p>This can be loaded into two different ways that differ only by the state on
-     * the {@link DataItem} objects.
+     * <p>This can be loaded into two different ways that differ only by the state on the {@link
+     * DataItem} objects.
      *
      * <p>If <var>incrementalState</var> is <code>true</code> then the items that are on disk are
      * marked as written ({@link DataItem#isWritten()} returning <code>true</code>. This is to be
@@ -385,11 +385,13 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      *
      * @param blobRootFolder the folder containing the blob.
      * @param incrementalState whether to load into an incremental state or a new state.
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable
      * @return true if the blob was loaded.
      * @throws MergingException if something goes wrong
      * @see #writeBlobTo(File, MergeConsumer, boolean)
      */
-    public boolean loadFromBlob(@NonNull File blobRootFolder, boolean incrementalState)
+    public boolean loadFromBlob(
+            @NonNull File blobRootFolder, boolean incrementalState, @Nullable String aaptEnv)
             throws MergingException {
         File file = new File(blobRootFolder, FN_MERGER_XML);
         if (!file.isFile()) {
@@ -425,7 +427,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
                 }
 
                 if (NODE_DATA_SET.equals(node.getLocalName())) {
-                    S dataSet = createFromXml(node);
+                    S dataSet = createFromXml(node, aaptEnv);
                     if (dataSet != null) {
                         addDataSet(dataSet);
                     }
@@ -473,14 +475,14 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     /**
      * Sets the post blob load state to WRITTEN.
      *
-     * After a load from the blob file, all items have their state set to nothing.
-     * If the load mode is set to incrementalState then we want the items that are in the current
-     * merge result to have their state be WRITTEN.
+     * <p>After a load from the blob file, all items have their state set to nothing. If the load
+     * mode is set to incrementalState then we want the items that are in the current merge result
+     * to have their state be WRITTEN.
      *
-     * This will allow further updates with {@link #mergeData(MergeConsumer, boolean)} to
-     * ignore the state at load time and only apply the new changes.
+     * <p>This will allow further updates with {@link #mergeData(MergeConsumer, boolean)} to ignore
+     * the state at load time and only apply the new changes.
      *
-     * @see #loadFromBlob(java.io.File, boolean)
+     * @see #loadFromBlob(java.io.File, boolean, String)
      * @see DataItem#isWritten()
      */
     private void setPostBlobLoadStateToWritten() {
@@ -505,14 +507,14 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     /**
      * Sets the post blob load state to TOUCHED.
      *
-     * After a load from the blob file, all items have their state set to nothing.
-     * If the load mode is not set to incrementalState then we want the items that are in the
-     * current merge result to have their state be TOUCHED.
+     * <p>After a load from the blob file, all items have their state set to nothing. If the load
+     * mode is not set to incrementalState then we want the items that are in the current merge
+     * result to have their state be TOUCHED.
      *
-     * This will allow the first use of {@link #mergeData(MergeConsumer, boolean)} to add these
+     * <p>This will allow the first use of {@link #mergeData(MergeConsumer, boolean)} to add these
      * to the consumer as if they were new items.
      *
-     * @see #loadFromBlob(java.io.File, boolean)
+     * @see #loadFromBlob(java.io.File, boolean, String)
      * @see DataItem#isTouched()
      */
     private void setPostBlobLoadStateToTouched() {

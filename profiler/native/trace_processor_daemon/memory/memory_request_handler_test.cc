@@ -82,10 +82,10 @@ TEST(MemoryRequestHandlerTest, TestMemoryDataPopulated) {
   EXPECT_EQ(context.frames_size(), 599);
 
   // Validate allocations point to a valid stack
-  long stack_id = context.allocations(0).stack_id();
+  long long stack_id = context.allocations(0).stack_id();
   EXPECT_LT(stack_id, context.pointers_size());
   // Validate stack points to a valid frame
-  long frame_id = context.pointers(stack_id).frame_id();
+  long frame_id = context.pointers().at(stack_id).frame_id();
   EXPECT_NE(frame_id, 0);
   EXPECT_LT(frame_id, context.frames_size());
   // Validate frame has a name

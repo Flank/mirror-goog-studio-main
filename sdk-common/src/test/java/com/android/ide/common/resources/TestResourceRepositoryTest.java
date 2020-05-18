@@ -251,7 +251,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         File root = getIncMergeRoot("basicFiles");
         File fakeRoot = getMergedBlobFolder(root);
         ResourceMerger resourceMerger = new ResourceMerger(0);
-        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/);
+        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/, null);
         checkSourceFolders(resourceMerger);
 
         List<ResourceSet> sets = resourceMerger.getDataSets();
@@ -341,7 +341,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         File root = getIncMergeRoot("basicValues");
         File fakeRoot = getMergedBlobFolder(root);
         ResourceMerger resourceMerger = new ResourceMerger(0);
-        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/);
+        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/, null);
         checkSourceFolders(resourceMerger);
 
         List<ResourceSet> sets = resourceMerger.getDataSets();
@@ -421,7 +421,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         File root = getIncMergeRoot("basicValues2");
         File fakeRoot = getMergedBlobFolder(root);
         ResourceMerger resourceMerger = new ResourceMerger(0);
-        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/);
+        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/, null);
         checkSourceFolders(resourceMerger);
 
         List<ResourceSet> sets = resourceMerger.getDataSets();
@@ -477,7 +477,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         File root = getIncMergeRoot("filesVsValues");
         File fakeRoot = getMergedBlobFolder(root);
         ResourceMerger resourceMerger = new ResourceMerger(0);
-        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/);
+        resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/, null);
         checkSourceFolders(resourceMerger);
 
         List<ResourceSet> sets = resourceMerger.getDataSets();
@@ -543,7 +543,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         File root = getIncMergeRoot("oldMerge");
         File fakeRoot = getMergedBlobFolder(root);
         ResourceMerger resourceMerger = new ResourceMerger(0);
-        assertFalse(resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/));
+        assertFalse(resourceMerger.loadFromBlob(fakeRoot, false /*incrementalState*/, null));
     }
 
     private static void checkRemovedItems(DataMap<? extends DataItem> dataMap) {
@@ -564,7 +564,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
 
         RecordingLogger logger = new RecordingLogger();
 
-        ResourceSet overlay = new ResourceSet("overlay", RES_AUTO, null, true);
+        ResourceSet overlay = new ResourceSet("overlay", RES_AUTO, null, true, null);
         overlay.addSource(new File(root, "overlay"));
         overlay.loadFromFiles(logger);
 

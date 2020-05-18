@@ -185,12 +185,13 @@ abstract class AbstractProductFlavor(
         this.testInstrumentationRunner = testInstrumentationRunner
     }
 
-    override var testInstrumentationRunnerArguments: MutableMap<String, String> = Maps.newHashMap()
+    override val testInstrumentationRunnerArguments: MutableMap<String, String> = Maps.newHashMap()
 
     fun setTestInstrumentationRunnerArguments(
         testInstrumentationRunnerArguments: MutableMap<String, String>
     ): ProductFlavor {
-        this.testInstrumentationRunnerArguments = testInstrumentationRunnerArguments
+        this.testInstrumentationRunnerArguments.clear()
+        this.testInstrumentationRunnerArguments.putAll(testInstrumentationRunnerArguments)
         return this
     }
 
@@ -563,7 +564,8 @@ abstract class AbstractProductFlavor(
             applicationId = thatProductFlavor.applicationId
             testApplicationId = thatProductFlavor.testApplicationId
             testInstrumentationRunner = thatProductFlavor.testInstrumentationRunner
-            testInstrumentationRunnerArguments = Maps.newHashMap(thatProductFlavor.testInstrumentationRunnerArguments)
+            testInstrumentationRunnerArguments.clear()
+            testInstrumentationRunnerArguments.putAll(thatProductFlavor.testInstrumentationRunnerArguments)
             testHandleProfiling = thatProductFlavor.testHandleProfiling
             testFunctionalTest = thatProductFlavor.testFunctionalTest
             // should this be a copy instead?

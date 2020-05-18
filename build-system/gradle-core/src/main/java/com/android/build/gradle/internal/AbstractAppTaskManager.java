@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
@@ -291,17 +292,18 @@ public abstract class AbstractAppTaskManager<
                 true,
                 Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
-        // TODO(b/138780301): Also use it in android tests.
-        if (variantProperties
-                        .getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+        ProjectOptions projectOptions = variantProperties.getServices().getProjectOptions();
+        // TODO: get rid of separate flag for app modules.
+        boolean nonTransitiveR =
+                projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS)
+                        && projectOptions.get(BooleanOption.NON_TRANSITIVE_APP_R_CLASS);
+        boolean namespaced =
+                variantProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
+
+        // TODO(b/138780301): Also use compile time R class in android tests.
+        if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)
                 && !variantProperties.getVariantType().isForTesting()
-                && !variantProperties
-                        .getGlobalScope()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getNamespaced()) {
+                && !namespaced) {
             // The "small merge" of only the app's local resources (can be multiple source-sets, but
             // most of the time it's just one). This is used by the Process for generating the local
             // R-def.txt file containing a list of resources defined in this module.

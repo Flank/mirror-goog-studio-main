@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.json
 
-import com.android.utils.tokenizeCommandLineToEscaped
+import com.android.utils.TokenizedCommandLineMap
 import com.google.gson.stream.JsonReader
 import java.nio.file.Paths
 
@@ -28,13 +28,16 @@ import java.nio.file.Paths
  */
 class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
     CompilationDatabaseStreamingVisitor() {
-    private var compiler = ""
     private var flags = ""
     private var file = "."
     private val map = mutableMapOf<String, Int>()
+    private val interner = TokenizedCommandLineMap<String>(raw = true) { tokens ->
+        tokens.removeNth(0) // Remove the path to clang.exe
+        tokens.removeTokenGroup("-c", 1) // Remove -c and one following token
+        tokens.removeTokenGroup("-o", 1) // Remove -o and one following token
+    }
 
     override fun beginCommand() {
-        compiler = ""
         flags = ""
         file = "."
     }
@@ -47,22 +50,7 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
      * Intern each command after stripping -o and -c flags
      */
     override fun visitCommand(command: String) {
-        val tokens = command.tokenizeCommandLineToEscaped()
-        compiler = tokens.first()
-        val stripped = mutableListOf<String>()
-        var skipNext = true // Initially true to remove the actual clang++.exe
-        for (token in tokens) {
-            if (skipNext) {
-                skipNext = false
-            } else {
-                when (token) {
-                    "-o", "-c" -> skipNext = true
-                    else -> stripped += token
-                }
-            }
-        }
-        val recombined = stripped.joinToString(" ")
-        this.flags = recombined
+        this.flags = interner.computeIfAbsent(command) { it.toString() }
     }
 
     override fun endCommand() {

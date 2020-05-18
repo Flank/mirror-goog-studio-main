@@ -75,6 +75,8 @@ class NdkHandler(
     private fun getNdkInfo(ndk: NdkLocatorRecord) = when {
         ndk.revision.major >= 21 -> NdkR21Info(ndk.ndk)
         ndk.revision.major >= 19 -> NdkR19Info(ndk.ndk)
+        ndk.revision.major >= 18 -> NdkR18Info(ndk.ndk)
+        ndk.revision.major >= 17 -> NdkR17Info(ndk.ndk)
         ndk.revision.major >= 14 -> NdkR14Info(ndk.ndk)
         else -> DefaultNdkInfo(ndk.ndk)
     }

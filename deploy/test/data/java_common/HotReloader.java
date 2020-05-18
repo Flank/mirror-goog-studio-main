@@ -16,20 +16,17 @@
 package androidx.compose;
 
 /** Mock the Jet Pack Compose Runtime */
-public class Compose {
+public class HotReloader {
     public static String state = "";
+    public static Companion Companion = new Companion();
 
-    public static class HotReloader {
-        public static Companion Companion;
+    public static class Companion {
+        public void saveStateAndDispose(Object c) {
+            state += " saveStateAndDispose()";
+        }
 
-        public static class Companion {
-            public void saveStateAndDispose(android.content.Context c) {
-                state += " saveStateAndDispose()";
-            }
-
-            public void loadStateAndCompose(android.content.Context c) {
-                state += " loadStateAndCompose()";
-            }
+        public void loadStateAndCompose(Object c) {
+            state += " loadStateAndCompose()";
         }
     }
 }

@@ -75,6 +75,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMember;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,6 +85,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.uast.UCallableReferenceExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Document;
@@ -608,7 +610,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Nullable
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
-        return Collections.singletonList(USimpleNameReferenceExpression.class);
+        return Arrays.asList(
+                USimpleNameReferenceExpression.class, UCallableReferenceExpression.class);
     }
 
     @Nullable
@@ -633,12 +636,32 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     if (resolved instanceof PsiClass) {
                         JavaEvaluator evaluator = context.getEvaluator();
                         PsiClass binding = (PsiClass) resolved;
-                        if (evaluator.extendsClass(
-                                        binding, "android.databinding.ViewDataBinding", true)
-                                || evaluator.extendsClass(
-                                        binding, "androidx.databinding.ViewDataBinding", true)
-                                || evaluator.extendsClass(
-                                        binding, "androidx.viewbinding.ViewBinding", true)) {
+                        if (isBindingClass(evaluator, binding)) {
+                            ResourceUsageModel.markReachable(
+                                    model.getResource(ResourceType.LAYOUT, resourceName));
+                        }
+                    }
+                }
+            }
+
+            private boolean isBindingClass(JavaEvaluator evaluator, PsiClass binding) {
+                return evaluator.extendsClass(binding, "android.databinding.ViewDataBinding", true)
+                        || evaluator.extendsClass(
+                                binding, "androidx.databinding.ViewDataBinding", true)
+                        || evaluator.extendsClass(
+                                binding, "androidx.viewbinding.ViewBinding", true);
+            }
+
+            @Override
+            public void visitCallableReferenceExpression(
+                    @NonNull UCallableReferenceExpression node) {
+                PsiElement resolved = node.resolve();
+                if (resolved instanceof PsiMember) {
+                    PsiClass psiClass = ((PsiMember) resolved).getContainingClass();
+                    if (psiClass != null) {
+                        String resourceName = bindingClasses.get(psiClass.getName());
+                        if (resourceName != null
+                                && isBindingClass(context.getEvaluator(), psiClass)) {
                             ResourceUsageModel.markReachable(
                                     model.getResource(ResourceType.LAYOUT, resourceName));
                         }

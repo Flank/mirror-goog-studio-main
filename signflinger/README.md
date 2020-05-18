@@ -1,8 +1,36 @@
 # Signflinger
 
-Signflinger is a library dedicated to signing Android apks with V2 signing (V1 signing will follow in the next CL). It works as a decorator to Zipflinger ZipArchive class. Beside having to create a signing option object, it is a drop-in replacement to zipflinger.
+Signflinger is a library dedicated to signing Android apks with V1, V2, V3 and V4 signing. It works as a decorator to Zipflinger ZipArchive class. Beside having to create a signing option object, it is a drop-in replacement to zipflinger.
 
+# Why?
 
+It is legitimate to question the existence of a signing library since there is already another library, apksign, taking care of signing apks. If all we had to support was V2, V3, and V4 there would be little need for signflinger (except removing cost of spawning apksigner).
+
+The problem signflinger solves is FAST V1 signing. In a typical dev workflow, a file is changed, it is processed and added to an apk. This apk then needs to be signed.
+
+If signing was implemented with a "second pass" with apksigner, we would have to parse the apk Central Directory, decompress the file that was just compressed, hash it and update the Manifest signature. Signflinger merges packaging file and signing them by retaining file in memory in order to provides them as fast as possible to the Signing Engine. The speed up is near 10x, bringing down runtime from 1XXms to 1Xms.
+
+```
++----------------+    +------------------------------------------------------+
+|                |    | APKSIG      +-----------------------------------+    |
+|                |    |             |          APKSIGNER TOOL           |    |
+|   Signflinger  |    |             |                                   |    |
+|                |    |             +-----------------------------------+    |
+|                |    |                                                      |
+|                |    |             +------------------------------------+   |
+|                |    |             |                                    |   |
+|                +--------------------->       SIGNING ENGINE            |   |
+|                |    |             |                                    |   |
+|                |    |             +------------------------------------+   |
+|                |    |                                                      |
+|                |    |             +------------------------------------+   |
+|                |    |             |                                    |   |
+|                |    |             |                CORE                |   |
+|                |    |             +------------------------------------+   |
++----------------+    +------------------------------------------------------+
+```
+
+# Cookbook
 Manipulating a zip with zipflinger happens as follow:
 
 ```

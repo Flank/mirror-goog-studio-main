@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_library")
 
 # managed by go/iml_to_build
 iml_module(
@@ -21,7 +22,7 @@ iml_module(
     ],
 )
 
-java_library(
+coverage_java_library(
     name = "tools.mlkit-common",
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],

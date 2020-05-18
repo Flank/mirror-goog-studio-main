@@ -97,6 +97,7 @@ java_binary(
 
 kotlin_library(
     name = "original_kotlin",
+    testonly = True,  # Needed to be explicit for macro to pickup
     srcs = glob([
         "data/kotlin/**/*.kt",
         "data/kotlin/**/*.java",
@@ -129,6 +130,7 @@ java_binary(
 
 kotlin_library(
     name = "swapped_kotlin",
+    testonly = True,  # Needed to be explicit for macro to pickup
     srcs = glob([
         "data/kotlin_swap/**/*.kt",
         "data/kotlin_swap/**/*.java",

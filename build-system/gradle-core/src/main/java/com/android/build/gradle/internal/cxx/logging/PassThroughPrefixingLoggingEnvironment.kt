@@ -25,12 +25,16 @@ import java.io.File
  */
 class PassThroughPrefixingLoggingEnvironment(
     val file : File? = null,
-    val tag : String? = null)
+    val tag : String? = null,
+    val treatWarningsAndErrorsAsInfo : Boolean = false)
     : PassThroughDeduplicatingLoggingEnvironment() {
     override fun log(message: LoggingMessage) {
         val newFile = message.file ?: file
         val newTag = message.tag ?: tag
+        val newLevel =
+            if (treatWarningsAndErrorsAsInfo) LoggingLevel.INFO else message.level
         super.log(message.copy(
+            level = newLevel,
             file = newFile,
             tag = newTag
         ))

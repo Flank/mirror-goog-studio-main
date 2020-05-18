@@ -2,6 +2,7 @@
 """Runs the bazel executable for the platform, passing args along."""
 
 import os
+import os.path
 import re
 import subprocess
 import sys
@@ -55,7 +56,12 @@ def main():
         'Please install VC++ build tools for bazel to work. For a consistent version\n' +
         'use Visual C++ 2015 Build Tools which you can find at:\n' +
         'http://landinghub.visualstudio.com/visual-cpp-build-tools')
-    define_env(env, 'BAZEL_PYTHON', 'C:\\python_27_amd64\\files\\python.exe')
+    python_path = 'C:\\python27\\python.exe'
+    if not os.path.exists(python_path):
+        # Use path from Windows 2016 images.
+        # TODO(b/153749013) Remove after completing Windows 2019 migration.
+        python_path = 'C:\\python_27_amd64\\files\\python.exe'
+    define_env(env, 'BAZEL_PYTHON', python_path)
     # Bazel for windows requires a couple of extra env vars be set
     # SYSTEMROOT must be defined to run a win .exe; otherwise, subprocess.call
     # will hang.

@@ -240,8 +240,8 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun `ndkPath properties has -rc2 in version`() {
-        val path = findNdkPath(
+    fun `ndkPath properties has -rc2 in version and ndkVersion exists`() {
+        val ndk = findNdkPath(
             ndkVersionFromDsl = "21.0.6011959-rc2",
             ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             ndkDirProperty = null,
@@ -259,7 +259,7 @@ class NdkLocatorKtTest {
             },
             sdkHandler = null
         )
-        assertThat(path).isNull() // It's an error to have android.ndkPath and android.ndkVersion
+        assertThat(ndk?.ndk?.path).isEqualTo("/my/ndk/folder".toSlash())
     }
 
     @Test
@@ -591,7 +591,7 @@ class NdkLocatorKtTest {
 
     @Test
     fun ndkPathPropertyLocationExistsWithDslVersion() {
-        val path = findNdkPath(
+        val ndk = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
             ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             ndkDirProperty = null,
@@ -609,7 +609,7 @@ class NdkLocatorKtTest {
             },
             sdkHandler = null
         )
-        assertThat(path).isEqualTo(null) // android.ndkVersion and android.ndkPath are mutually exclusive
+        assertThat(ndk?.ndk?.path).isEqualTo("/my/ndk/folder".toSlash())
     }
 
     @Test
@@ -762,7 +762,7 @@ class NdkLocatorKtTest {
 
     @Test
     fun ndkPathPropertyLocationExistsWithDslVersionWithVersionedNdk() {
-        val path = findNdkPath(
+        val ndk = findNdkPath(
             ndkVersionFromDsl = "18.1.23456",
             ndkPathFromDsl = "/my/ndk/folder".toSlash(),
             ndkDirProperty = null,
@@ -780,7 +780,7 @@ class NdkLocatorKtTest {
             },
             sdkHandler = null
         )
-        assertThat(path).isEqualTo(null) // android.ndkVersion and android.ndkPath are mutually exclusive
+        assertThat(ndk?.ndk?.path).isEqualTo("/my/ndk/folder".toSlash())
     }
 
     @Test

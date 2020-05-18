@@ -23,10 +23,15 @@ import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.ResourceShrinker
 import com.android.tools.r8.origin.PathOrigin
 import java.io.File
+import java.nio.file.Path
 
 fun runResourceShrinkerAnalysis(bytes: ByteArray, file: File, callback: AnalysisCallback) {
+    runResourceShrinkerAnalysis(bytes, file.toPath(), callback)
+}
+
+fun runResourceShrinkerAnalysis(bytes: ByteArray, file: Path, callback: AnalysisCallback) {
     val resource =
-        ProgramResource.fromBytes(PathOrigin(file.toPath()), ProgramResource.Kind.DEX, bytes, null)
+        ProgramResource.fromBytes(PathOrigin(file), ProgramResource.Kind.DEX, bytes, null)
     val provider = ProgramResourceProvider { listOf(resource) }
 
     val command = ResourceShrinker.Builder().addProgramResourceProvider(provider).build()

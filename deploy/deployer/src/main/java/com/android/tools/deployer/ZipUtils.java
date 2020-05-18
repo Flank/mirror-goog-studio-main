@@ -19,6 +19,7 @@ package com.android.tools.deployer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.io.BaseEncoding;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -36,7 +37,7 @@ public class ZipUtils {
     private static final int LOCAL_DIRECTORY_FILE_HEADER_SIZE = 30;
     private static final String DIGEST_ALGORITHM = "SHA-1";
 
-    public static class ZipEntry {
+    public static class ZipEntry implements Serializable {
         public final long crc;
         public final String name;
         public final long start; // Offset in the archive to the Local File Header location

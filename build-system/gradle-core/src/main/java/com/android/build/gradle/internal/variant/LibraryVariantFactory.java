@@ -296,8 +296,9 @@ public class LibraryVariantFactory
                             dslContainers) {
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.
-        dslContainers.getSigningConfigContainer().create(DEBUG);
+        SigningConfig signingConfig = dslContainers.getSigningConfigContainer().create(DEBUG);
         dslContainers.getBuildTypeContainer().create(DEBUG);
         dslContainers.getBuildTypeContainer().create(RELEASE);
+        dslContainers.getDefaultConfig().setSigningConfig(signingConfig);
     }
 }

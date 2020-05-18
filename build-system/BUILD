@@ -107,7 +107,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.4-rc-2"
+GRADLE_VERSION = "6.5-milestone-1"
 
 filegroup(
     name = "gradle-distrib",
@@ -118,12 +118,6 @@ filegroup(
 filegroup(
     name = "gradle-distrib-5.5",
     srcs = ["//tools/external/gradle:gradle-distrib-5.5"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gradle-distrib-6.4-rc-2",
-    srcs = ["//tools/external/gradle:gradle-distrib-6.4-rc-2"],
     visibility = ["//visibility:public"],
 )
 

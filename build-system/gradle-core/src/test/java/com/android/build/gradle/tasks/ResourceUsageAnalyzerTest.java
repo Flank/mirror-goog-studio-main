@@ -28,6 +28,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.res.shrinker.ApkFormat;
+import com.android.build.gradle.internal.res.shrinker.DummyContent;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
@@ -126,7 +128,7 @@ public class ResourceUsageAnalyzerTest {
 
         File rDir = createResourceSources(dir);
         File mergedManifest = createMergedManifest(dir);
-        File resources = createResourceFolder(dir);
+        File resources = createResourceFolder(dir, false);
 
         ResourceUsageAnalyzer analyzer =
                 new ResourceUsageAnalyzer(
@@ -136,7 +138,7 @@ public class ResourceUsageAnalyzerTest {
                         mapping,
                         resources,
                         null,
-                        ResourceUsageAnalyzer.ApkFormat.BINARY);
+                        ApkFormat.BINARY);
         analyzer.analyze();
         checkState(analyzer);
         assertEquals(
@@ -172,6 +174,69 @@ public class ResourceUsageAnalyzerTest {
                 analyzer.getModel().dumpConfig());
     }
 
+    @Test
+    public void testToolsKeepDiscard() throws Exception {
+        File dir = sTemporaryFolder.newFolder();
+        File resources = createResourceFolder(dir, true);
+
+        ResourceUsageAnalyzer analyzer =
+                new ResourceUsageAnalyzer(
+                        createResourceSources(dir),
+                        Collections.singleton(createR8Dex(dir)),
+                        createMergedManifest(dir),
+                        createMappingFile(dir),
+                        resources,
+                        null,
+                        ApkFormat.BINARY);
+
+        analyzer.analyze();
+        checkState(analyzer);
+
+        assertEquals(
+                ""
+                        + "@attr/myAttr1 : reachable=false\n"
+                        + "@attr/myAttr2 : reachable=false\n"
+                        + "@dimen/activity_horizontal_margin : reachable=true\n"
+                        + "@dimen/activity_vertical_margin : reachable=true\n"
+                        + "@drawable/avd_heart_fill : reachable=false\n"
+                        + "    @drawable/avd_heart_fill_1\n"
+                        + "    @drawable/avd_heart_fill_2\n"
+                        + "@drawable/avd_heart_fill_1 : reachable=true\n"
+                        + "@drawable/avd_heart_fill_2 : reachable=false\n"
+                        + "@drawable/ic_launcher : reachable=true\n"
+                        + "@drawable/unused : reachable=false\n"
+                        + "@id/action_settings : reachable=true\n"
+                        + "@id/action_settings2 : reachable=false\n"
+                        + "@layout/activity_main : reachable=true\n"
+                        + "    @dimen/activity_vertical_margin\n"
+                        + "    @dimen/activity_horizontal_margin\n"
+                        + "    @string/hello_world\n"
+                        + "    @style/MyStyle_Child\n"
+                        + "@menu/main : reachable=false\n"
+                        + "    @string/action_settings\n"
+                        + "@menu/menu2 : reachable=false\n"
+                        + "    @string/action_settings2\n"
+                        + "@raw/android_wear_micro_apk : reachable=true\n"
+                        + "@raw/index1 : reachable=false\n"
+                        + "    @raw/my_used_raw_drawable\n"
+                        + "@raw/keep : reachable=false\n"
+                        + "@raw/my_js : reachable=false\n"
+                        + "@raw/my_used_raw_drawable : reachable=false\n"
+                        + "@raw/styles2 : reachable=false\n"
+                        + "@string/action_settings : reachable=false\n"
+                        + "@string/action_settings2 : reachable=false\n"
+                        + "@string/alias : reachable=false\n"
+                        + "    @string/app_name\n"
+                        + "@string/app_name : reachable=true\n"
+                        + "@string/hello_world : reachable=true\n"
+                        + "@style/AppTheme : reachable=false\n"
+                        + "@style/MyStyle : reachable=true\n"
+                        + "@style/MyStyle_Child : reachable=true\n"
+                        + "    @style/MyStyle\n"
+                        + "@xml/android_wear_micro_apk : reachable=true\n"
+                        + "    @raw/android_wear_micro_apk\n",
+                analyzer.getModel().dumpResourceModel());
+    }
 
     private void check(CodeInput codeInput, boolean inPlace) throws Exception {
         File dir = sTemporaryFolder.newFolder();
@@ -197,7 +262,7 @@ public class ResourceUsageAnalyzerTest {
         File rSource = createResourceSources(dir);
 
         File mergedManifest = createMergedManifest(dir);
-        File resources = createResourceFolder(dir);
+        File resources = createResourceFolder(dir, false);
 
         ResourceUsageAnalyzer analyzer =
                 new ResourceUsageAnalyzer(
@@ -207,7 +272,7 @@ public class ResourceUsageAnalyzerTest {
                         mapping,
                         resources,
                         null,
-                        ResourceUsageAnalyzer.ApkFormat.BINARY);
+                        ApkFormat.BINARY);
         analyzer.analyze();
         checkState(analyzer);
         assertEquals(""
@@ -389,11 +454,11 @@ public class ResourceUsageAnalyzerTest {
                     dumpZipContents(compressedFile));
 
             if (REPLACE_DELETED_WITH_EMPTY) {
-                assertTrue(Arrays.equals(ResourceUsageAnalyzer.TINY_PNG,
+                assertTrue(Arrays.equals(DummyContent.TINY_PNG,
                         getZipContents(compressedFile, "res/drawable-xxhdpi/unused.png")));
             }
 
-            analyzer.dispose();
+            analyzer.close();
 
             uncompressedFile.delete();
             compressedFile.delete();
@@ -448,7 +513,7 @@ public class ResourceUsageAnalyzerTest {
         }
     }
 
-    private static File createResourceFolder(File dir) throws IOException {
+    private static File createResourceFolder(File dir, boolean addKeepXml) throws IOException {
         File resources = new File(dir, "app/build/res/all/release".replace('/', separatorChar));
         //noinspection ResultOfMethodCallIgnored
         resources.mkdirs();
@@ -536,60 +601,75 @@ public class ResourceUsageAnalyzerTest {
                 + "    <rawPathResId>android_wear_micro_apk</rawPathResId>\n"
                 + "</wearableApp>");
 
+        if (addKeepXml) {
+            createFile(
+                    resources,
+                    "raw/keep.xml",
+                    ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                            + "    tools:keep=\"@drawable/avd_heart_fill_1\" "
+                            + "    tools:discard=\"@menu/main\" />");
+        }
+
         // RAW content for HTML/web
-        createFile(resources, "raw/index1.html", ""
-                // TODO: Test single quotes, attribute without quotes, spaces around = etc, prologue, xhtml
-                + "<!DOCTYPE html>\n"
-                + "<html>\n"
-                + "<!--\n"
-                + " Blah blah\n"
-                + "-->\n"
-                + "<head>\n"
-                + "  <meta charset=\"utf-8\">\n"
-                + "  <link href=\"http://fonts.googleapis.com/css?family=Alegreya:400italic,900italic|Alegreya+Sans:300\" rel=\"stylesheet\">\n"
-                + "  <link href=\"http://yui.yahooapis.com/2.8.0r4/build/reset/reset-min.css\" rel=\"stylesheet\">\n"
-                + "  <link href=\"static/landing.css\" rel=\"stylesheet\">\n"
-                + "  <script src=\"http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js\"></script>\n"
-                + "  <script src=\"static/modernizr.custom.14469.js\"></script>\n"
-                + "  <meta name=\"viewport\" content=\"width=690\">\n"
-                + "  <style type=\"text/css\">\n"
-                + "html, body {\n"
-                + "  margin: 0;\n"
-                + "  height: 100%;\n"
-                + "  background-image: url(file:///android_res/raw/my_used_raw_drawable);\n"
-                + "}\n"
-                + "</style>"
-                + "</head>\n"
-                + "<body>\n"
-                + "\n"
-                + "<div id=\"container\">\n"
-                + "\n"
-                + "  <div id=\"logo\"></div>\n"
-                + "\n"
-                + "  <div id=\"text\">\n"
-                + "    <p>\n"
-                + "      More ignored text here\n"
-                + "    </p>\n"
-                + "  </div>\n"
-                + "\n"
-                + "  <a id=\"playlink\" href=\"file/foo.png\">&nbsp;</a>\n"
-                + "</div>\n"
-                + "<script>\n"
-                + "\n"
-                + "if (Modernizr.cssanimations &&\n"
-                + "    Modernizr.svg &&\n"
-                + "    Modernizr.csstransforms3d &&\n"
-                + "    Modernizr.csstransitions) {\n"
-                + "\n"
-                + "  // progressive enhancement\n"
-                + "  $('#device-screen').css('display', 'block');\n"
-                + "  $('#device-frame').css('background-image', 'url( 'drawable-mdpi/tilted.png')' );\n"
-                + "  $('#opentarget').css('visibility', 'visible');\n"
-                + "  $('body').addClass('withvignette');\n"
-                + "</script>\n"
-                + "\n"
-                + "</body>\n"
-                + "</html>");
+        createFile(
+                resources,
+                "raw/index1.html",
+                ""
+                        // TODO: Test single quotes, attribute without quotes, spaces around = etc,
+                        // prologue, xhtml
+                        + "<!DOCTYPE html>\n"
+                        + "<html>\n"
+                        + "<!--\n"
+                        + " Blah blah\n"
+                        + "-->\n"
+                        + "<head>\n"
+                        + "  <meta charset=\"utf-8\">\n"
+                        + "  <link href=\"http://fonts.googleapis.com/css?family=Alegreya:400italic,900italic|Alegreya+Sans:300\" rel=\"stylesheet\">\n"
+                        + "  <link href=\"http://yui.yahooapis.com/2.8.0r4/build/reset/reset-min.css\" rel=\"stylesheet\">\n"
+                        + "  <link href=\"static/landing.css\" rel=\"stylesheet\">\n"
+                        + "  <script src=\"http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js\"></script>\n"
+                        + "  <script src=\"static/modernizr.custom.14469.js\"></script>\n"
+                        + "  <meta name=\"viewport\" content=\"width=690\">\n"
+                        + "  <style type=\"text/css\">\n"
+                        + "html, body {\n"
+                        + "  margin: 0;\n"
+                        + "  height: 100%;\n"
+                        + "  background-image: url(file:///android_res/raw/my_used_raw_drawable);\n"
+                        + "}\n"
+                        + "</style>"
+                        + "</head>\n"
+                        + "<body>\n"
+                        + "\n"
+                        + "<div id=\"container\">\n"
+                        + "\n"
+                        + "  <div id=\"logo\"></div>\n"
+                        + "\n"
+                        + "  <div id=\"text\">\n"
+                        + "    <p>\n"
+                        + "      More ignored text here\n"
+                        + "    </p>\n"
+                        + "  </div>\n"
+                        + "\n"
+                        + "  <a id=\"playlink\" href=\"file/foo.png\">&nbsp;</a>\n"
+                        + "</div>\n"
+                        + "<script>\n"
+                        + "\n"
+                        + "if (Modernizr.cssanimations &&\n"
+                        + "    Modernizr.svg &&\n"
+                        + "    Modernizr.csstransforms3d &&\n"
+                        + "    Modernizr.csstransitions) {\n"
+                        + "\n"
+                        + "  // progressive enhancement\n"
+                        + "  $('#device-screen').css('display', 'block');\n"
+                        + "  $('#device-frame').css('background-image', 'url( 'drawable-mdpi/tilted.png')' );\n"
+                        + "  $('#opentarget').css('visibility', 'visible');\n"
+                        + "  $('body').addClass('withvignette');\n"
+                        + "</script>\n"
+                        + "\n"
+                        + "</body>\n"
+                        + "</html>");
 
         createFile(resources, "raw/styles2.css", ""
                 + "/**\n"
@@ -1321,7 +1401,7 @@ public class ResourceUsageAnalyzerTest {
                         mappingFile,
                         dummy,
                         null,
-                        ResourceUsageAnalyzer.ApkFormat.BINARY);
+                        ApkFormat.BINARY);
         analyzer.getModel().addDeclaredResource(ResourceType.LAYOUT, "structure_status_view", null, true);
         analyzer.recordMapping(mappingFile);
         assertTrue(analyzer.isResourceClass("android/support/v7/appcompat/R$attr.class"));

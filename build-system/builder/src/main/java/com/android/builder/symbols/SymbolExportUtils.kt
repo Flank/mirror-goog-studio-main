@@ -24,7 +24,6 @@ import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.getPackageNameFromManifest
-import com.android.ide.common.symbols.loadDependenciesSymbolTables
 import com.android.ide.common.symbols.mergeAndRenumberSymbols
 import com.android.ide.common.symbols.parseManifest
 import com.android.resources.ResourceType
@@ -69,7 +68,7 @@ fun processLibraryMainSymbolTable(
     val finalPackageName = mainPackageName ?: getPackageNameFromManifest(parseManifest(manifestFile))
 
     // Get symbol tables of the libraries we depend on.
-    val depSymbolTables = loadDependenciesSymbolTables(libraries)
+    val depSymbolTables = SymbolIo().loadDependenciesSymbolTables(libraries)
     val tablesToWrite =
         processLibraryMainSymbolTable(
             finalPackageName,
@@ -92,7 +91,7 @@ fun processLibraryMainSymbolTable(
 internal fun processLibraryMainSymbolTable(
     finalPackageName: String,
     librarySymbols: SymbolTable,
-    depSymbolTables: Set<SymbolTable>,
+    depSymbolTables: List<SymbolTable>,
     platformSymbols: SymbolTable,
     nonTransitiveRClass: Boolean,
     symbolFileOut: Path?,

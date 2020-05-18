@@ -200,16 +200,16 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testVersionsFromGradleCache() {
         val expected = "" +
-                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [GradleDependency]\n" +
+                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [GradleDependency]\n" +
                 "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:10: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
+                "build.gradle:11: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
                 "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:11: Warning: A newer version of com.android.support:recyclerview-v7 than 25.0.0 is available: 26.0.0 [GradleDependency]\n" +
+                "build.gradle:12: Warning: A newer version of com.android.support:recyclerview-v7 than 25.0.0 is available: 26.0.0 [GradleDependency]\n" +
                 "    compile 'com.android.support:recyclerview-v7:25.0.0'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:12: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n" +
+                "build.gradle:13: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n" +
                 "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "0 errors, 4 warnings\n"
@@ -219,6 +219,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                         "buildscript {\n" +
                         "    repositories {\n" +
+                        "        google()\n" +
                         "        jcenter()\n" +
                         "    }\n" +
                         "    dependencies {\n" +
@@ -237,20 +238,20 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                        "Fix for build.gradle line 5: Change to 3.5.0-alpha10:\n" +
-                        "@@ -6 +6\n" +
+                        "Fix for build.gradle line 7: Change to 3.5.0-alpha10:\n" +
+                        "@@ -7 +7\n" +
                         "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
                         "+         classpath 'com.android.tools.build:gradle:3.5.0-alpha10'\n" +
-                        "Fix for build.gradle line 9: Change to 4.4:\n" +
-                        "@@ -10 +10\n" +
+                        "Fix for build.gradle line 11: Change to 4.4:\n" +
+                        "@@ -11 +11\n" +
                         "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
                         "+     compile 'org.apache.httpcomponents:httpcomponents-core:4.4'\n" +
-                        "Fix for build.gradle line 10: Change to 26.0.0:\n" +
-                        "@@ -11 +11\n" +
+                        "Fix for build.gradle line 12: Change to 26.0.0:\n" +
+                        "@@ -12 +12\n" +
                         "-     compile 'com.android.support:recyclerview-v7:25.0.0'\n" +
                         "+     compile 'com.android.support:recyclerview-v7:26.0.0'\n" +
-                        "Fix for build.gradle line 11: Change to 11.0.0:\n" +
-                        "@@ -12 +12\n" +
+                        "Fix for build.gradle line 13: Change to 11.0.0:\n" +
+                        "@@ -13 +13\n" +
                         "-     compile 'com.google.firebase:firebase-messaging:10.2.1'\n" +
                         "+     compile 'com.google.firebase:firebase-messaging:11.0.0'\n"
             )
@@ -262,6 +263,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "" +
                             "buildscript {\n" +
                             "    repositories {\n" +
+                            "        google()\n" +
                             "        jcenter()\n" +
                             "    }\n" +
                             "    dependencies {\n" +
@@ -277,19 +279,19 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 "" +
-                        "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [GradleDependency]\n" +
+                        "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [GradleDependency]\n" +
                         "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
                         "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "0 errors, 1 warnings"
             )
             .expectFixDiffs(
                 "" +
-                        "Fix for build.gradle line 6: Change to 3.3.2:\n" +
-                        "@@ -6 +6\n" +
+                        "Fix for build.gradle line 7: Change to 3.3.2:\n" +
+                        "@@ -7 +7\n" +
                         "-         classpath 'com.android.tools.build:gradle:3.0.0'\n" +
                         "+         classpath 'com.android.tools.build:gradle:3.3.2'\n" +
-                        "Fix for build.gradle line 6: Change to 3.0.1:\n" +
-                        "@@ -6 +6\n" +
+                        "Fix for build.gradle line 7: Change to 3.0.1:\n" +
+                        "@@ -7 +7\n" +
                         "-         classpath 'com.android.tools.build:gradle:3.0.0'\n" +
                         "+         classpath 'com.android.tools.build:gradle:3.0.1'"
             )
@@ -545,7 +547,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         // Same (older) version of Studio and Gradle:
         // Studio 3.0, gradle: 3.0.0-alpha4: Offer latest 3.0.0, not 3.1 or 3.2 etc
         val expected = "" +
-                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]\n" +
+                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]\n" +
                 "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "0 errors, 1 warnings"
@@ -555,6 +557,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 buildscript {
                   repositories {
+                    google()
                     mavenCentral()
                   }
                   dependencies {
@@ -588,6 +591,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 buildscript {
                   repositories {
+                    google()
                     mavenCentral()
                   }
                   dependencies {
@@ -610,7 +614,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             })
             .run().expect(
                 "" +
-                        "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [GradleDependency]\n" +
+                        "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [GradleDependency]\n" +
                         "    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'\n" +
                         "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "0 errors, 1 warnings"
@@ -626,6 +630,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 buildscript {
                   repositories {
+                    google()
                     mavenCentral()
                   }
                   dependencies {
@@ -648,7 +653,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             })
             .run().expect(
                 """
-                build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]
+                build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]
                     classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
@@ -1242,20 +1247,55 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPreviewVersions() {
         val expected = "" +
+                "build.gradle:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+                GRADLE_PLUGIN_RECOMMENDED_VERSION +
+                " [GradlePluginVersion]\n" +
+                "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
+                GRADLE_PLUGIN_RECOMMENDED_VERSION +
+                " [GradleDependency]\n" +
+                "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [GradleDependency]\n" +
+                "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 2 warnings\n"
+
+        lint().files(
+            gradle(
+                "" +
+                        "buildscript {\n" +
+                        "    repositories {\n" +
+                        "        google()\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "    dependencies {\n" +
+                        "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
+                        "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
+                        "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "allprojects {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "}\n"
+            )
+        ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
+    }
+
+    fun testPreviewVersionsNoGoogleMaven() {
+        // regression test for b/144442233: if we don't have google() in buildscript repositories,
+        // we probably shouldn't blindly update AGP version dependencies.
+        val expected = "" +
                 "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
                 GRADLE_PLUGIN_RECOMMENDED_VERSION +
                 " [GradlePluginVersion]\n" +
                 "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
-                GRADLE_PLUGIN_RECOMMENDED_VERSION +
-                " [GradleDependency]\n" +
-                "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [GradleDependency]\n" +
-                "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "1 errors, 2 warnings\n"
+                "1 errors, 0 warnings\n"
 
         lint().files(
             gradle(
@@ -1277,7 +1317,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "    }\n" +
                         "}\n"
             )
-        ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
+        ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run()
+            .expect(expected)
+            .expectFixDiffs("")
     }
 
     fun testDependenciesInVariables() {

@@ -142,12 +142,8 @@ abstract class BaseConfigImpl : Serializable,
             mTestProguardFiles.addAll(value)
         }
 
-    override var manifestPlaceholders: MutableMap<String, Any>
+    override val manifestPlaceholders: MutableMap<String, Any>
         get() = mManifestPlaceholders
-        set(manifestPlaceholders) {
-            mManifestPlaceholders.clear()
-            mManifestPlaceholders.putAll(manifestPlaceholders)
-        }
 
     fun addManifestPlaceholders(manifestPlaceholders: Map<String, Any>) {
         mManifestPlaceholders.putAll(manifestPlaceholders)

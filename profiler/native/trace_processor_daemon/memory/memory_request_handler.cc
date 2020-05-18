@@ -35,10 +35,10 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
     auto id = callsite.Get(0).long_value;
     auto parent_id = callsite.Get(1).long_value;
     auto frame_id = callsite.Get(2).long_value;
-    auto pointer = batch->add_pointers();
-    pointer->set_id(id);
-    pointer->set_parent_id(parent_id);
-    pointer->set_frame_id(frame_id);
+    auto frame = profiler::perfetto::proto::StackPointer();
+    frame.set_parent_id(parent_id);
+    frame.set_frame_id(frame_id);
+    (*batch->mutable_pointers())[id] = frame;
   }
 
   auto frames = processor_->ExecuteQuery(

@@ -28,6 +28,8 @@ void CountersRequestHandler::PopulateCounters(CountersParameters params,
     return;
   }
 
+  result->set_process_id(params.process_id());
+
   std::unordered_map<std::string, CountersResult::Counter*> counters_map;
 
   std::string query_string =

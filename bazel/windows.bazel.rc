@@ -1,7 +1,7 @@
 import %workspace%/tools/base/bazel/common.bazel.rc
 
 build:remote --config=remote_common
-build:remote --jobs=100
+build:remote --jobs=150
 
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/windows
 

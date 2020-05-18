@@ -51,66 +51,12 @@ data class BuildConfigField<T: Serializable>(
     @Incubating
     sealed class SupportedType<T: Serializable>: Serializable {
         @Incubating
-        object Boolean: SupportedType<kotlin.Boolean>() {
-            fun make(
-                value: kotlin.Boolean,
-                comment: kotlin.String? = null
-            ): BuildConfigField<kotlin.Boolean> =
-                BuildConfigField(Boolean, value, comment)
-
-            fun make(value: kotlin.String, comment: kotlin.String? = null) =
-                make(value.toBoolean(), comment)
-        }
+        object BOOLEAN: SupportedType<kotlin.Boolean>()
         @Incubating
-        object Int: SupportedType<kotlin.Int>() {
-            fun make(
-                value: kotlin.Int,
-                comment: kotlin.String? = null
-            ): BuildConfigField<kotlin.Int> =
-                BuildConfigField(Int, value, comment)
-
-            fun make(value: kotlin.String, comment: kotlin.String? = null) =
-                make(value.toInt(), comment)
-        }
-
+        object INT: SupportedType<Int>()
         @Incubating
-        object Long: SupportedType<kotlin.Long>() {
-            fun make(
-                value: kotlin.Long,
-                comment: kotlin.String? = null
-            ): BuildConfigField<kotlin.Long> =
-                BuildConfigField(Long, value, comment)
-
-            fun make(value: kotlin.String, comment: kotlin.String? = null): BuildConfigField<kotlin.Long> {
-                return if (value.endsWith("L")) {
-                    make(value.dropLast(1))
-                } else make(value.toLong(), comment)
-            }
-        }
-
+        object LONG: SupportedType<Long>()
         @Incubating
-        object String: SupportedType<kotlin.String>() {
-            fun make(
-                value: kotlin.String,
-                comment: kotlin.String? = null
-            ): BuildConfigField<kotlin.String> =
-                BuildConfigField(String, value, comment)
-        }
-    }
-
-    @Incubating
-    companion object {
-
-        /**
-         * make a new instance of [BuildConfigField] with a type as a [SupportedType] and value.
-         */
-        @JvmStatic
-        @JvmOverloads
-        fun <T : Serializable> make(
-            supportedType: SupportedType<T>,
-            value: T,
-            comment: String? = "Field from Variant API"
-        ) =
-            BuildConfigField<T>(supportedType, value, comment)
+        object STRING: SupportedType<String>()
     }
 }

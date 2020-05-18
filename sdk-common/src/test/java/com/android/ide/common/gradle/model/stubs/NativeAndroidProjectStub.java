@@ -35,6 +35,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
     @NonNull private final Collection<NativeSettings> mySettings;
     @NonNull private final Map<String, String> myFileExtensions;
     @NonNull private final Collection<String> myBuildSystems;
+    @NonNull private final String myDefaultNdkVersion;
     private final int myApiVersion;
 
     public NativeAndroidProjectStub() {
@@ -50,7 +51,8 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
                 Collections.singletonList(new NativeSettingsStub()),
                 ImmutableMap.<String, String>builder().put("key", "value").build(),
                 Collections.singletonList("buildSystem"),
-                1);
+                1,
+                "55.5.5");
     }
 
     public NativeAndroidProjectStub(
@@ -63,7 +65,8 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
             @NonNull Collection<NativeSettings> settings,
             @NonNull Map<String, String> fileExtensions,
             @NonNull Collection<String> buildSystems,
-            int apiVersion) {
+            int apiVersion,
+            @NonNull String defaultNdkVersion) {
         myModelVersion = modelVersion;
         myName = name;
         myBuildFiles = buildFiles;
@@ -74,6 +77,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
         myFileExtensions = fileExtensions;
         myBuildSystems = buildSystems;
         myApiVersion = apiVersion;
+        myDefaultNdkVersion = defaultNdkVersion;
     }
 
     @Override
@@ -133,6 +137,12 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
     @NonNull
     public Collection<String> getBuildSystems() {
         return myBuildSystems;
+    }
+
+    @Override
+    @NonNull
+    public String getDefaultNdkVersion() {
+        return myDefaultNdkVersion;
     }
 
     @Override

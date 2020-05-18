@@ -1022,7 +1022,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             ResourceSet resourceSet =
                     new ResourceSet(
-                            project.getName(), RES_AUTO, getProjectResourceLibraryName(), true) {
+                            project.getName(),
+                            RES_AUTO,
+                            getProjectResourceLibraryName(),
+                            true,
+                            null) {
                         @Override
                         protected void checkItems() {
                             // No checking in ProjectResources; duplicates can happen, but

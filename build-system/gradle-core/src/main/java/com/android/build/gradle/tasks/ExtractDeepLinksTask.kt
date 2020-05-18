@@ -21,6 +21,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
 import com.android.utils.FileUtils
@@ -98,9 +99,10 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             task: ExtractDeepLinksTask
         ) {
             super.configure(task)
+            val aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).orNull
             task.navFilesFolders =
                 creationConfig.variantSources
-                    .getResourceSets(false).stream()
+                    .getResourceSets(false, aaptEnv).stream()
                     .flatMap {
                         it.sourceFiles.stream().map { File(it, FD_RES_NAVIGATION) }
                     }.collect(Collectors.toList()).reversed()

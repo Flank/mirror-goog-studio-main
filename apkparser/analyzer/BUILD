@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
 
 # managed by go/iml_to_build
 iml_module(
@@ -57,7 +57,7 @@ iml_module(
         "//tools/idea/.idea/libraries:error-prone-annotations",
         "//tools/idea/.idea/libraries:javax.annotation-api",
         "//tools/idea/java/ide-resources:intellij.java.ide.resources",
-        "//prebuilts/tools/common/m2/repository/com/jetbrains/intellij/documentation/tips-intellij-idea-community/201.8:jar",
+        "//prebuilts/tools/common/m2/repository/com/jetbrains/intellij/documentation/tips-intellij-idea-community/201.11:jar",
     ],
     # do not sort: must match IML order
     deps = [
@@ -80,7 +80,7 @@ iml_module(
     ],
 )
 
-java_library(
+coverage_java_library(
     name = "tools.analyzer",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],

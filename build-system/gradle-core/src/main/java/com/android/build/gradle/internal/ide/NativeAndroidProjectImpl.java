@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
@@ -137,6 +138,12 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
     }
 
     @Override
+    @NonNull
+    public String getDefaultNdkVersion() {
+        return NdkLocatorKt.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -178,6 +185,7 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
                 .add("apiVersion", apiVersion)
                 .add("modelVersion", modelVersion)
                 .add("name", name)
+                .add("defaultNdkVersion", getDefaultNdkVersion())
                 .add("variantInfos", variantInfos)
                 .add("buildFiles", buildFiles)
                 .add("artifacts", artifacts)

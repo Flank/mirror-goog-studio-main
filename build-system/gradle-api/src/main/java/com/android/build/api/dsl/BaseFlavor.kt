@@ -104,7 +104,7 @@ interface BaseFlavor : VariantDimension {
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
-    var testInstrumentationRunnerArguments: MutableMap<String, String>
+    val testInstrumentationRunnerArguments: MutableMap<String, String>
 
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).

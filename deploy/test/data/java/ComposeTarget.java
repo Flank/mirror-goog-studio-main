@@ -18,6 +18,6 @@ package app;
 /** Simulate a composable function */
 public class ComposeTarget {
     public static String getStatus() {
-        return "ComposeTarget" + androidx.compose.Compose.state + " NOT SWAPPED";
+        return "ComposeTarget" + androidx.compose.HotReloader.state + " NOT SWAPPED";
     }
 }

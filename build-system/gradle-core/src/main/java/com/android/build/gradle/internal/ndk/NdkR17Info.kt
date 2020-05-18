@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.internal.ndk
 
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
 import java.io.File
 
 /**
  * NdkInfo for r17.
  */
-class NdkR17Info(root: File) : NdkR14Info(root) {
+open class NdkR17Info(root: File) : NdkR14Info(root) {
     override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
         NativeBuildSystem.CMAKE -> Stl.LIBCXX_STATIC
         NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM

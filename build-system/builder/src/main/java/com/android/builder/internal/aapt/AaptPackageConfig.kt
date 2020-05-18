@@ -34,6 +34,7 @@ data class AaptPackageConfig(
     val sourceOutputDir: File? = null,
     val resourceOutputApk: File? = null,
     val librarySymbolTableFiles: ImmutableCollection<File> = ImmutableList.of(),
+    val localSymbolTableFile: File? = null,
     val symbolOutputDir: File? = null,
     val verbose: Boolean = false,
     val resourceDirs: ImmutableList<File> = ImmutableList.of(),
@@ -81,6 +82,7 @@ data class AaptPackageConfig(
         private var sourceOutputDir: File? = null
         private var resourceOutputApk: File? = null
         private var librarySymbolTableFiles: ImmutableCollection<File> = ImmutableSet.of()
+        private var localSymbolTableFile: File? = null
         private var symbolOutputDir: File? = null
         private var isVerbose: Boolean = false
         private var resourceDirsBuilder: ImmutableList.Builder<File> = ImmutableList.builder()
@@ -121,6 +123,7 @@ data class AaptPackageConfig(
                 sourceOutputDir = sourceOutputDir,
                 resourceOutputApk = resourceOutputApk,
                 librarySymbolTableFiles = librarySymbolTableFiles,
+                localSymbolTableFile = localSymbolTableFile,
                 symbolOutputDir = symbolOutputDir,
                 verbose = isVerbose,
                 resourceDirs = resourceDirsBuilder.build(),
@@ -182,6 +185,11 @@ data class AaptPackageConfig(
                 this.librarySymbolTableFiles = ImmutableSet.copyOf(libraries)
             }
 
+            return this
+        }
+
+        fun setLocalSymbolTableFile(localSymbolTableFile: File?): Builder {
+            this.localSymbolTableFile = localSymbolTableFile
             return this
         }
 

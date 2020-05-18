@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 load("//tools/base/bazel:utils.bzl", "flat_archive")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_library")
 
 kotlin_test(
     name = "agent_tests",
@@ -41,7 +42,7 @@ kotlin_test(
     ],
 )
 
-java_library(
+coverage_java_library(
     name = "agent",
     srcs = glob(["src/main/**/*.java"]),
     deps = [

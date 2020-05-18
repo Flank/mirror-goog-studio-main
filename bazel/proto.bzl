@@ -190,6 +190,7 @@ def java_proto_library(
             pom = pom,
             srcs = outs,
             deps = java_deps,
+            baseline_coverage = False,
             visibility = visibility,
             **kwargs
         )

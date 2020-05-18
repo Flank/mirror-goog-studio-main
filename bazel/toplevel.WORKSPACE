@@ -44,14 +44,18 @@ setup_external_sdk(
     name = "externsdk",
 )
 
+## Coverage related workspaces
+# Coverage reports construction
 local_repository(
     name = "cov",
     path = "tools/base/bazel/coverage",
 )
-
+# Coverage results processing
 load("@cov//:results.bzl", "setup_testlogs_loop_repo")
-
 setup_testlogs_loop_repo()
+# Coverage baseline construction
+load("@cov//:baseline.bzl", "setup_bin_loop_repo")
+setup_bin_loop_repo()
 
 load("@bazel_toolchains//rules/exec_properties:exec_properties.bzl",
      "create_rbe_exec_properties_dict",

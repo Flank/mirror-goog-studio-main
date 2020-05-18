@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.common
+package com.android.ide.common.resources
 
-import com.android.tools.idea.wizard.template.renderIf
-
-fun jniCodeSnippet(includeCppSupport: Boolean): String = renderIf(includeCppSupport) {
-  """
 /**
- * A native method that is implemented by the 'native-lib' native library,
- * which is packaged with this application.
+ * A Wrapper class which contains the value of "ANDROID_AAPT_IGNORE" environment variable.
  */
-external fun stringFromJNI(): String
+class AndroidAaptIgnore(val aaptIgnoreValue: String?)
 
-companion object {
-
-  // Used to load the 'native-lib' library on application startup.
-  init {
-    System.loadLibrary("native-lib"
-  }
-}
-"""
-}
+const val ANDROID_AAPT_IGNORE: String = "ANDROID_AAPT_IGNORE"

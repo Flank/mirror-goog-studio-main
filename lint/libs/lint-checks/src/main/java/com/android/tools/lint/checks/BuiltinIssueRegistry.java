@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 382;
+    public static final int INITIAL_CAPACITY = 383;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -276,6 +276,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(NetworkSecurityConfigDetector.MISSING_BACKUP_PIN);
         issues.add(NetworkSecurityConfigDetector.PIN_SET_EXPIRY);
         issues.add(NfcTechListDetector.ISSUE);
+        issues.add(NonConstantResourceIdDetector.NON_CONSTANT_RESOURCE_ID);
         issues.add(NonInternationalizedSmsDetector.ISSUE);
         issues.add(ObjectAnimatorDetector.BROKEN_PROPERTY);
         issues.add(ObjectAnimatorDetector.MISSING_KEEP);

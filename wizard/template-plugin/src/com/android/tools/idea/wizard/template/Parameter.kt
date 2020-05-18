@@ -52,8 +52,6 @@ enum class Constraint {
   NAVIGATION,
   /** The associated value should represent a valid values file name. */
   VALUES,
-  /** The associated value should represent a valid id resource name. */
-  ID,
   /** The associated value should represent a valid source directory name. */
   SOURCE_SET_FOLDER,
   /** The associated value should represent a valid string resource name. */

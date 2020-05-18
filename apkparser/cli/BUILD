@@ -1,7 +1,7 @@
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
 load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 
-java_library(
+coverage_java_library(
     name = "tools.analyzer-cli",
     srcs = glob(["src/main/java/**"]),
     visibility = ["//visibility:public"],

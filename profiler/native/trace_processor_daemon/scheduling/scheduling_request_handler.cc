@@ -31,8 +31,7 @@ const std::string STATE_TASK_DEAD = std::string("x");
 
 void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
                                               SchedulingEventsResult* result) {
-  if (result == nullptr ||
-      params.criteria_case() == SchedulingEventsParameters::CRITERIA_NOT_SET) {
+  if (result == nullptr) {
     return;
   }
 
@@ -40,7 +39,7 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
   switch (params.criteria_case()) {
     case SchedulingEventsParameters::kProcessId:
       query_string =
-          "SELECT tid, cpu, ts, dur, end_state, priority "
+          "SELECT tid, pid, cpu, ts, dur, end_state, priority "
           "FROM sched INNER JOIN thread using(utid) "
           "           INNER JOIN process using(upid) "
           "WHERE pid = " +
@@ -50,13 +49,20 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
       break;
     case SchedulingEventsParameters::kThreadId:
       query_string =
-          "SELECT tid, cpu, ts, dur, end_state, priority "
+          "SELECT tid, pid, cpu, ts, dur, end_state, priority "
           "FROM sched INNER JOIN thread using(utid) "
+          "           INNER JOIN process using(upid) "
           "WHERE tid = " +
           std::to_string(params.thread_id()) +
           " "
           "ORDER BY tid ASC, ts ASC";
       break;
+    case SchedulingEventsParameters::CRITERIA_NOT_SET:
+      query_string =
+          "SELECT tid, pid, cpu, ts, dur, end_state, priority "
+          "FROM sched INNER JOIN thread using(utid) "
+          "           INNER JOIN process using(upid) "
+          "ORDER BY tid ASC, ts ASC";
     default:
       std::cerr << "SchedulingEventsParameters with no criteria set."
                 << std::endl;
@@ -69,19 +75,22 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
     auto thread_id = it_sched.Get(0).long_value;
     sched_proto->set_thread_id(thread_id);
 
-    auto cpu_core = it_sched.Get(1).long_value;
+    auto thread_gid = it_sched.Get(1).long_value;
+    sched_proto->set_process_id(thread_gid);
+
+    auto cpu_core = it_sched.Get(2).long_value;
     sched_proto->set_cpu(cpu_core);
 
-    auto ts_nanos = it_sched.Get(2).long_value;
+    auto ts_nanos = it_sched.Get(3).long_value;
     sched_proto->set_timestamp_nanoseconds(ts_nanos);
 
-    auto dur_nanos = it_sched.Get(3).long_value;
+    auto dur_nanos = it_sched.Get(4).long_value;
     sched_proto->set_duration_nanoseconds(dur_nanos);
 
-    auto priority = it_sched.Get(5).long_value;
+    auto priority = it_sched.Get(6).long_value;
     sched_proto->set_priority(priority);
 
-    auto state_sql_value = it_sched.Get(4);
+    auto state_sql_value = it_sched.Get(5);
     if (state_sql_value.is_null()) {
       sched_proto->set_state(SchedulingEventsResult::SchedulingEvent::UNKNOWN);
     } else {

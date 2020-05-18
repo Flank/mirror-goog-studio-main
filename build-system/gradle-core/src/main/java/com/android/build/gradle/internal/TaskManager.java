@@ -1209,13 +1209,22 @@ public abstract class TaskManager<
                 MergeType.MERGE,
                 globalScope.getProjectBaseName());
 
-        // TODO(b/138780301): Also use it in android tests.
-        if (componentProperties
-                        .getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+        ProjectOptions projectOptions = componentProperties.getServices().getProjectOptions();
+        // TODO(b/156339511): get rid of separate flag for app modules.
+        boolean nonTransitiveR =
+                projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS)
+                        && projectOptions.get(BooleanOption.NON_TRANSITIVE_APP_R_CLASS);
+        boolean namespaced =
+                componentProperties
+                        .getGlobalScope()
+                        .getExtension()
+                        .getAaptOptions()
+                        .getNamespaced();
+
+        // TODO(b/138780301): Also use compile time R class in android tests.
+        if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)
                 && !componentProperties.getVariantType().isForTesting()
-                && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
+                && !namespaced) {
             // Generate the COMPILE TIME only R class using the local resources instead of waiting
             // for the above full link to finish. Linking will still output the RUN TIME R class.
             // Since we're gonna use AAPT2 to generate the keep rules, do not generate them here.
@@ -1310,10 +1319,17 @@ public abstract class TaskManager<
                         new GenerateLibraryProguardRulesTask.CreationAction(componentProperties));
             }
 
+            boolean nonTransitiveRClassInApp =
+                    projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS)
+                            && projectOptions.get(BooleanOption.NON_TRANSITIVE_APP_R_CLASS);
             // Generate the R class for a library using both local symbols and symbols
             // from dependencies.
-            taskFactory.register(
-                    new GenerateLibraryRFileTask.CreationAction(componentProperties, isLibrary()));
+            // TODO: double check this (what about dynamic features?)
+            if (!nonTransitiveRClassInApp || isLibrary()) {
+                taskFactory.register(
+                        new GenerateLibraryRFileTask.CreationAction(
+                                componentProperties, isLibrary()));
+            }
 
             if (!componentProperties.getVariantDslInfo().isDebuggable()
                     && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
@@ -2850,6 +2866,11 @@ public abstract class TaskManager<
                                     .get(InternalArtifactType.BUNDLE.INSTANCE));
                 },
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
+
+        // republish Bundle to the external world.
+        componentProperties
+                .getArtifacts()
+                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactTypes.BUNDLE.INSTANCE);
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(

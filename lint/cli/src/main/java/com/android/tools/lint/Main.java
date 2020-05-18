@@ -1019,7 +1019,13 @@ public class Main {
                     }
                     try {
                         LmSerialization reader = LmSerialization.INSTANCE;
-                        LmModule module = reader.readModule(input, Collections.emptyList());
+                        LmModule module =
+                                reader.readModule(
+                                        input,
+                                        Collections.emptyList(),
+                                        // TODO: Define any path variables Gradle may be setting!
+                                        true,
+                                        Collections.emptyList());
                         modules.add(module);
                     } catch (Throwable error) {
                         System.err.println(

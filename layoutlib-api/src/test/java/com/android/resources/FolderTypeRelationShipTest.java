@@ -24,7 +24,9 @@ public class FolderTypeRelationShipTest extends TestCase {
         // All resource type except AAPT and SAMPLE_DATA should be in the FolderTypeRelationShip map.
         // Loop on all of the enum, and make sure there's at least one folder type for it.
         for (ResourceType type : ResourceType.values()) {
-            if (type == ResourceType.AAPT || type == ResourceType.SAMPLE_DATA) {
+            if (type == ResourceType.AAPT
+                    || type == ResourceType.SAMPLE_DATA
+                    || type == ResourceType.OVERLAYABLE) {
                 continue;
             }
             assertTrue(type.getDisplayName(),

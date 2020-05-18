@@ -5,6 +5,16 @@
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 
+if [[ $BUILD_NUMBER != SNAPSHOT ]];
+then
+  WORKER_INSTANCES=auto
+else
+  # Assuming manual user invocation and using limited host resources.
+  # This should prevent bazel from causing the host to freeze due to using
+  # too much memory.
+  WORKER_INSTANCES=2
+fi
+
 if [[ $BUILD_NUMBER =~ ^[0-9]+$ ]];
 then
   IS_POST_SUBMIT=true
@@ -27,6 +37,7 @@ readonly invocation_id="$(uuidgen)"
   test \
   --keep_going \
   ${config_options} \
+  --worker_max_instances=${WORKER_INSTANCES} \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-41b1a9209c835310ddc162d241f2e8ca951393b3c906aee249d7eee25d5b98a2
+101f4d3dfffd84ffae38e11254a3865242166407693161f1c84bba79d8a65bd5
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -271,6 +271,7 @@ com.android.builder.model.NativeAndroidProject.getApiVersion: int ()
 com.android.builder.model.NativeAndroidProject.getArtifacts: java.util.Collection<com.android.builder.model.NativeArtifact> ()
 com.android.builder.model.NativeAndroidProject.getBuildFiles: java.util.Collection<java.io.File> ()
 com.android.builder.model.NativeAndroidProject.getBuildSystems: java.util.Collection<java.lang.String> ()
+com.android.builder.model.NativeAndroidProject.getDefaultNdkVersion: java.lang.String ()
 com.android.builder.model.NativeAndroidProject.getFileExtensions: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.builder.model.NativeAndroidProject.getModelVersion: java.lang.String ()
 com.android.builder.model.NativeAndroidProject.getName: java.lang.String ()

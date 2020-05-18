@@ -154,7 +154,7 @@ jclass HotSwap::FindClass(const std::string& name) const {
 // Can be null if the application isn't a JetPack Compose application.
 jobject HotSwap::GetComposeHotReload() const {
   jclass klass = FindInClassLoader(GetApplicationClassLoader(jni_),
-                                   "androidx/compose/Compose$HotReloader");
+                                   "androidx/compose/HotReloader");
   if (klass == nullptr) {
     jni_->ExceptionClear();
     return nullptr;
@@ -162,7 +162,7 @@ jobject HotSwap::GetComposeHotReload() const {
   Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");
   JniClass reloaderClass(jni_, klass);
   return reloaderClass.GetStaticField<jobject>(
-      {"Companion", "Landroidx/compose/Compose$HotReloader$Companion;"});
+      {"Companion", "Landroidx/compose/HotReloader$Companion;"});
 }
 
 void HotSwap::SaveStateAndDispose(jobject reloader) const {
@@ -173,7 +173,7 @@ void HotSwap::SaveStateAndDispose(jobject reloader) const {
   jvalue loader_args[1];
   loader_args[0].l = context;
   reloader_jnio.CallMethod<void>(
-      {"saveStateAndDispose", "(Landroid/content/Context;)V"}, loader_args);
+      {"saveStateAndDispose", "(Ljava/lang/Object;)V"}, loader_args);
 
   // TODO Although unlikely, we should fail hard on this.
   if (jni_->ExceptionCheck()) {
@@ -190,7 +190,7 @@ void HotSwap::LoadStateAndCompose(jobject reloader) const {
   jvalue loader_args[1];
   loader_args[0].l = context;
   reloader_jnio.CallMethod<void>(
-      {"loadStateAndCompose", "(Landroid/content/Context;)V"}, loader_args);
+      {"loadStateAndCompose", "(Ljava/lang/Object;)V"}, loader_args);
 
   // TODO Although unlikely, we should fail hard on this.
   if (jni_->ExceptionCheck()) {

@@ -85,7 +85,9 @@ void StatsdSubscriber::Stop() {
   subscription_.clear_pushed();
   subscription_.clear_pulled();
   pulled_atoms_.clear();
-  runner_->Kill();
+  // Don't block on the callback thread as it might still be waiting for statsd
+  // output.
+  runner_->Kill(false);
 }
 
 void StatsdSubscriber::HandleOutput(int stdout_fd) {

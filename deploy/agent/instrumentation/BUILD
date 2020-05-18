@@ -1,6 +1,7 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_library")
 
-java_library(
+coverage_java_library(
     name = "instrumentation_java",
     srcs = glob([
         "src/**/*.java",

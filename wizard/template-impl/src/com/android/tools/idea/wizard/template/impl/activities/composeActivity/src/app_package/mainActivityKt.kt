@@ -31,14 +31,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Text
-import androidx.ui.material.MaterialTheme
 import androidx.ui.tooling.preview.Preview
+import ${escapeKotlinIdentifier(packageName)}.ui.AppTheme
 
 class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            AppTheme {
                 ${greeting}("Android")
             }
         }
@@ -50,10 +50,10 @@ fun ${greeting}(name: String) {
     Text(text = "Hello ${"$"}name!")
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun ${defaultPreview}() {
-    MaterialTheme {
+    AppTheme {
         ${greeting}("Android")
     }
 }

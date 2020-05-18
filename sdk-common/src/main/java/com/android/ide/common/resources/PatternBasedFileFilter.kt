@@ -30,8 +30,8 @@ class PatternBasedFileFilter {
      * Creates default resource file filter. The default ignored patterns are the same as used by
      * aapt but can be customized via the `ANDROID_AAPT_IGNORE` environment variable.
      */
-    constructor() {
-        var patterns: String? = System.getenv("ANDROID_AAPT_IGNORE")
+    constructor(androidAaptIgnore: AndroidAaptIgnore) {
+        var patterns: String? = androidAaptIgnore.aaptIgnoreValue
         if (patterns == null || patterns.isEmpty()) {
             // Matches aapt: frameworks/base/tools/aapt/AaptAssets.cpp:gDefaultIgnoreAssets
             patterns = "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"

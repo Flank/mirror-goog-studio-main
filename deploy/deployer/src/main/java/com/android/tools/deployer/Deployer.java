@@ -342,19 +342,15 @@ public class Deployer {
         TaskResult result = runner.run();
         result.getMetrics().forEach(metrics::add);
 
+        if (!result.isSuccess()) {
+            throw result.getException();
+        }
+
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
         // Note we artificially block this task until swap is done.
-        if (result.isSuccess()) {
-            runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
-
-            // Wait only for swap to finish
-            runner.runAsync();
-        } else {
-            throw result.getException();
-        }
-
+        runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
         runner.create(
                 Tasks.DEPLOY_CACHE_STORE,
                 deployCache::store,
@@ -362,6 +358,9 @@ public class Deployer {
                 packageName,
                 newFiles,
                 nextOverlayId);
+
+        // Wait only for swap to finish
+        runner.runAsync();
 
         Result deployResult = new Result();
         // TODO: May be notify user we IWI'ed.

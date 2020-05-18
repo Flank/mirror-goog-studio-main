@@ -18,6 +18,9 @@ package com.android.utils
 
 import com.android.SdkConstants
 import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.google.common.annotations.VisibleForTesting
+import java.lang.Character.isWhitespace
+import kotlin.math.abs
 
 const val ZERO_ALLOC_TOKENIZER_END_OF_TOKEN = Int.MAX_VALUE
 const val ZERO_ALLOC_TOKENIZER_END_OF_COMMAND = Int.MIN_VALUE
@@ -30,7 +33,7 @@ const val ZERO_ALLOC_TOKENIZER_END_OF_COMMAND = Int.MIN_VALUE
  * The first element of the buffer is a generation counter. If the buffer
  * is shared between multiple parses each parse will increment the generation.
  * If a buffer is used with an older [TokenizedCommandLine] then that's a
- * bug in the calling code so an exception will be thrown.
+ * bug in the calling code so an exception will be thrown. 
  *
  * After the first element, the buffer consists of indexes of characters within
  * the original [commandLine] delimited by [ZERO_ALLOC_TOKENIZER_END_OF_TOKEN]
@@ -49,14 +52,101 @@ class TokenizedCommandLine(
     val commandLine: String,
     val raw: Boolean,
     val platform: Int = SdkConstants.currentPlatform(),
-    private val indexes: IntArray = allocateTokenizeCommandLineBuffer(commandLine)) {
+    private var indexes: IntArray = allocateTokenizeCommandLineBuffer(commandLine)) {
     private val generation = ++indexes[0]
+    private var toStringValue : String? = null
     init {
+        checkGeneration()
         if (platform == PLATFORM_WINDOWS) {
             zeroAllocTokenizeWindows(raw)
         } else {
             zeroAllocTokenizePOSIX(raw)
         }
+    }
+
+    /**
+     * Remove tokens matching [token] and also remove up to [extra] additional tokens
+     * following that.
+     *
+     * This function updates [indexes] without resizing it or allocating memory. It
+     * works by maintaining a 'read' pointer and a 'write' that are pointers within
+     * [indexes].
+     *
+     * In the beginning read and write are the same. When a matching token is found
+     * then the read pointer is moved forward past the end of the matching token
+     * along with any [extra] tokens.
+     *
+     * So for example, if removeTokenGroup("-c", 1) is called then the pointers will
+     * look like this after the '-c' and one extra token have been skipped.
+     *
+     *                            read
+     *                            v
+     *   clang.exe -c my-file.cpp -o my-file.o
+     *             ^
+     *             write
+     *
+     */
+    fun removeTokenGroup(token: String, extra: Int) {
+        checkGeneration()
+        invalidate()
+        var read = 1
+        var write = 1
+        do {
+            // Check invariants:
+            //   write point can't move past read pointer
+            assert(read >= write)
+            //   read pointer always points to the start of a token
+            assert(isStartOfToken(read))
+            //   write pointer always points to the start of a token
+            assert(isStartOfToken(write))
+
+            // If token matches the one pointed to be read pointer then skip it and also
+            // skip any extra tokens.
+            if (tokenMatches(token, read)) {
+                var count = 0
+                while(count != extra + 1 && !isEndOfCommand(read)) {
+                    read = nextTokenAfter(read)
+                    ++count
+                }
+            } else {
+                // Skip both read and write pointers to the start of the next token.
+                if (!isEndOfCommand(read) && !isEndOfCommand(write)) {
+                    do {
+                        indexes[write++] = indexes[read++]
+                    } while (!isEndOfToken(read - 1))
+                }
+            }
+        } while(!isEndOfCommand(read))
+        indexes[write] = ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
+    }
+
+    /**
+     * Remove and return the n-th token and return its value as a string.
+     * Will return null if the requested token [n] is out of range.
+     * 
+     * This function operates in a manner similar to [removeTokenGroup] in
+     * that it uses a read pointer and write pointer to walk across the
+     * [commandLine] and it relies on the read pointer being the same as 
+     * write pointer or larger.
+     */
+    fun removeNth(n: Int) : String? {
+        checkGeneration()
+        invalidate()
+        val token = StringBuilder()
+        var tokenNumber = 0
+        var write = 1
+        for(read in 1 until indexes.size) {
+            if (tokenNumber != n) indexes[write++] = indexes[read]
+            when (val offset = indexes[read]) {
+                ZERO_ALLOC_TOKENIZER_END_OF_COMMAND -> {
+                    if (token.isEmpty()) return null
+                    return token.toString()
+                }
+                ZERO_ALLOC_TOKENIZER_END_OF_TOKEN -> tokenNumber++
+                else -> if (tokenNumber == n) token.append(commandLine[offset])
+            }
+        }
+        return null
     }
 
     /**
@@ -66,28 +156,20 @@ class TokenizedCommandLine(
         checkGeneration()
         val result = mutableListOf<String>()
         val token = StringBuilder()
-        for(index in 1 until indexes.size) {
-            when (val offset = indexes[index]) {
-                ZERO_ALLOC_TOKENIZER_END_OF_COMMAND -> {
+        var i = 1
+        while(!isEndOfCommand(i)) {
+            when(val c = charAt(i)) {
+                null -> {
                     if (token.isNotEmpty()) {
                         result.add(token.toString())
+                        token.setLength(0)
                     }
-                    return result
                 }
-                ZERO_ALLOC_TOKENIZER_END_OF_TOKEN -> if (token.isNotEmpty()) {
-                    result.add(token.toString())
-                    token.setLength(0)
-                }
-                else -> {
-                    if (offset < 0)
-                        throw IndexOutOfBoundsException("Negative index ($offset) seen tokenizing '$commandLine'")
-                    if (offset >= commandLine.length)
-                        throw IndexOutOfBoundsException("Index ($offset) out of range seen tokenizing '$commandLine'")
-                    token.append(commandLine[offset])
-                }
+                else -> token.append(c)
             }
+            ++i
         }
-        throw Exception("Unreachable")
+        return result
     }
 
     /**
@@ -121,14 +203,14 @@ class TokenizedCommandLine(
      */
     private fun zeroAllocTokenizeWindows(raw: Boolean) : TokenizedCommandLine {
         checkGeneration()
+        invalidate()
         var quoting = false
         var i = 0
         val length = commandLine.length // Calculate length once
         var c: Char?
         var offset = 1 // One because first element is generation
-        fun add(index: Int) {
-            indexes[offset++] = index
-        }
+        
+        while(i < length && isWhitespace(commandLine[i])) i++
 
         while (i < length) {
             c = commandLine[i]
@@ -138,7 +220,9 @@ class TokenizedCommandLine(
                     // This is an opening or closing double-quote("). Whichever it is, move to the
                     // opposite quoting state for subsequent iterations. If this is raw mode then
                     // the double-quote(") will also be sent.
-                    if (raw) add(i) // The double-quote(").
+                    if (raw) {
+                        indexes[offset++] = i
+                    } // The double-quote(").
                     quoting = !quoting
                     ++i
                 }
@@ -161,11 +245,11 @@ class TokenizedCommandLine(
                     }
                     // Emit the right number of backslashes(\).
                     repeat(slashCount) { j ->
-                        add(i + j)
+                        indexes[offset++] = i + j
                     }
                     // If odd backslashes(\) then treat a double-quote(") as literal
                     if (odd && quote) {
-                        add(forward++)
+                        indexes[offset++] = forward++
                     }
                     i = forward
                 }
@@ -176,25 +260,31 @@ class TokenizedCommandLine(
                     // characters.
                     c = commandLine.getOrNull(++i)
                     // If raw or next character was end of command then write caret(^)
-                    if (raw || c == null) add(i - 1)
+                    if (raw || c == null) {
+                        indexes[offset++] = i - 1
+                    }
                     // caret(^) is escaped by caret(^)
-                    if (c == '^') add(i++)
+                    if (c == '^') {
+                        indexes[offset++] = i++
+                    }
                     // Move past EOL characters.
                     while (c == '\r' || c == '\n') c = commandLine.getOrNull(++i)
                 }
-                !quoting && Character.isWhitespace(c) -> {
+                !quoting && isWhitespace(c) -> {
                     // Whitespace outside of quotes terminates the token. Send a special
                     // Int.MAX_VALUE to indicate the token is ended.
-                    add(ZERO_ALLOC_TOKENIZER_END_OF_TOKEN)
+                    indexes[offset++] = ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
                     c = commandLine.getOrNull(++i)
                     // Skip any additional whitespace that follows the initial whitespace
-                    while (c != null && Character.isWhitespace(c)) c = commandLine.getOrNull(++i)
+                    while (c != null && isWhitespace(c)) c = commandLine.getOrNull(++i)
                 }
-                else -> add(i++)
+                else -> indexes[offset++] = i++
             }
         }
-        add(ZERO_ALLOC_TOKENIZER_END_OF_TOKEN)
-        add(ZERO_ALLOC_TOKENIZER_END_OF_COMMAND)
+        if (!isEndOfToken(offset - 1)) {
+            indexes[offset++] = ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
+        }
+        indexes[offset++] = ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
         return this
     }
 
@@ -228,6 +318,7 @@ class TokenizedCommandLine(
      */
     private fun zeroAllocTokenizePOSIX(raw: Boolean) : TokenizedCommandLine {
         checkGeneration()
+        invalidate()
         var quoting = false
         var quote = '\u0000' // POSIX quote can be either " or '
         var escaping = false
@@ -236,28 +327,25 @@ class TokenizedCommandLine(
         var c: Char
         val length = commandLine.length
         var offset = 1 // One because first element is generation
-        fun add(index: Int) {
-            indexes[offset++] = index
-        }
         while(i < length) {
             c = commandLine[i++]
             if (skipping) {
-                skipping = if (Character.isWhitespace(c)) {
+                skipping = if (isWhitespace(c)) {
                     continue
                 } else {
                     false
                 }
             }
-            if (quoting || !Character.isWhitespace(c)) {
+            if (quoting || !isWhitespace(c)) {
                 if (raw) {
-                    add(i - 1)
+                    indexes[offset++] = i - 1
                 }
             }
             if (escaping) {
                 escaping = false
                 if (c != '\n') {
                     if (!raw) {
-                        add(i - 1)
+                        indexes[offset++] = i - 1
                     }
                 }
                 continue
@@ -273,28 +361,152 @@ class TokenizedCommandLine(
                 quote = '\u0000'
                 continue
             }
-            if (!quoting && Character.isWhitespace(c)) {
+            if (!quoting && isWhitespace(c)) {
                 skipping = true
-                add(ZERO_ALLOC_TOKENIZER_END_OF_TOKEN)
+                indexes[offset++] = ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
                 continue
             }
             if (!raw) {
-                add(i - 1)
+                indexes[offset++] = i - 1
             }
         }
-        add(ZERO_ALLOC_TOKENIZER_END_OF_TOKEN) // End of token
-        add(ZERO_ALLOC_TOKENIZER_END_OF_COMMAND) // End of command-line
+        if (!isEndOfToken(offset - 1)) {
+            indexes[offset++] = ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
+        }
+        indexes[offset] = ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
         return this
     }
 
+    /**
+     * Return true if the token at [offset] matches [token].
+     * [offset] is a pointer into [indexes] so it is one-relative to
+     * account for the generation counter.
+     */
+    @VisibleForTesting
+    fun tokenMatches(token: String, offset: Int) : Boolean {
+        checkGeneration()
+        var i = 0
+        var index = indexes[offset]
+        while(index != ZERO_ALLOC_TOKENIZER_END_OF_COMMAND) {
+            val endOfToken = index == ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
+            if (i == token.length) {
+                return endOfToken
+            }
+            if (endOfToken) {
+                return false
+            }
+            if (token[i] != commandLine[index]) {
+                return false
+            }
+            ++i
+            index = indexes[offset + i]
+        }
+        return false
+    }
+
+    /**
+     * Skip to the start of the next token [offset] is the one-relative starting
+     * pointer. The return value is the offset to the start of the next token.
+     */
+    @VisibleForTesting
+    fun nextTokenAfter(offset: Int) : Int {
+        checkGeneration()
+        var result = offset
+        while(!isEndOfToken(result) && !isEndOfCommand(result)) ++result
+        return result + 1
+    }
+
+    private fun isEndOfToken(i : Int) =
+        i < indexes.size && indexes[i] == ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
+
+    private fun isEndOfCommand(i : Int) =
+        i >= indexes.size || indexes[i] == ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
+
+    private fun isStartOfToken(i : Int) = i == 1 || isEndOfToken(i - 1)
+
+    private fun charAt(i : Int) =
+        if (isEndOfToken(i)) null else commandLine[indexes[i]]
+
+    /**
+     * This is what the length of the normalized command-line string would be if it was created.
+     */
+    fun normalizedCommandLineLength() : Int {
+        return if (isEndOfCommand(1)) {
+            0
+        } else {
+            var i = 1
+            while (!isEndOfCommand(i + 1)) ++i
+            i - 1
+        }
+    }
+
+    /**
+     * Not hashCode() to avoid giving the impression [TokenizedCommandLine] can be directly
+     * stored in a hashtable.
+     * It is *not* the same same as toString().hashCode(), but it is guaranteed to be a good
+     * hash function.
+     */
+    fun computeNormalizedCommandLineHashCode(): Int {
+        checkGeneration()
+        var hash = 1469598103934665603
+        var i = 1
+        while (!isEndOfCommand(i) && !isEndOfCommand(i + 1)) {
+            hash = hash xor (charAt(i) ?: ' ').toLong()
+            hash *= 1099511628211
+            ++i
+        }
+        return hash.toInt()
+    }
+
+    /**
+     * Check whether the normalized command-line would equal the given string if created.
+     */
+    fun normalizedCommandLineEquals(other: String): Boolean {
+        val length1 = normalizedCommandLineLength()
+        val length2 = other.length
+        if (length1 == 0 && length2 == 0) return true
+        if (length1 != length2) return false
+        
+        // It's okay for indexes size to be different. What matters
+        // is that they both have the same values up to ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
+        for (i in 1 until length1) {
+            if (charAt(i) ?: ' ' != other[i - 1]) return false
+        }
+        return true
+    }
+    
+    fun toString(separator: String): String {
+        checkGeneration()
+        var i = 1
+        if (isEndOfCommand(i)) return ""
+        val sb = StringBuilder()
+        while(!isEndOfCommand(i + 1)) {
+            sb.append(charAt(i) ?: separator) 
+            ++i
+        }
+        return sb.toString()
+    }
+
+    /**
+     * Return the normalize command-line string.
+     */
+    override fun toString() : String {
+        if (toStringValue != null) return toStringValue!!
+        toStringValue = toString(" ")
+        return toStringValue!!
+    }
+    
+    private fun invalidate() {
+        toStringValue = null
+    }
+
     private fun checkGeneration() {
-        if (generation != indexes[0]) {
+        if (generation != abs(indexes[0])) {
             throw Exception("Buffer indexes was shared with another " +
                     "TokenizedCommandLine after this one")
         }
     }
 }
-
 
 /**
  * Allocate a buffer large enough to hold [commandLine] indexes.
@@ -311,5 +523,8 @@ class TokenizedCommandLine(
  * [ZERO_ALLOC_TOKENIZER_END_OF_TOKEN].
  */
 fun allocateTokenizeCommandLineBuffer(commandLine: String) =
-    IntArray(commandLine.length + 3)
+    IntArray(minimumSizeOfTokenizeCommandLineBuffer(commandLine))
+
+fun minimumSizeOfTokenizeCommandLineBuffer(commandLine: String) =
+    commandLine.length + 3
 

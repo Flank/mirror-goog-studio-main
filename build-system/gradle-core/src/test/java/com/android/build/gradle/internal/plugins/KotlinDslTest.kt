@@ -158,13 +158,9 @@ class KotlinDslTest {
             setManifestPlaceholders(ImmutableMap.of())
             manifestPlaceholders["c"] = 3
             assertThat(manifestPlaceholders).containsExactly("c", 3)
-            // Prior to this change
-            //     New DSL: Re-add setManifestPlaceholders to preserve source compatibility
-            // the set method manifestPlaceholders(Map) was implemented by the Gradle decorator.
-            // Verify that the explicitly implemented method does actually set, not append.
-            manifestPlaceholders = mutableMapOf("a" to "b")
-            manifestPlaceholders(mapOf("d" to "D"))
-            assertThat(manifestPlaceholders).containsExactly("d", "D")
+            // Check use of overloaded +=
+            manifestPlaceholders += mapOf("d" to "D")
+            assertThat(manifestPlaceholders).containsExactly("c", 3,"d", "D")
         }
     }
 
@@ -181,6 +177,25 @@ class KotlinDslTest {
         applicationVariants.first().also { variant ->
             assertThat(variant.mergedFlavor.manifestPlaceholders).containsExactly("a", "b")
             assertThat(variant.mergedFlavor.testInstrumentationRunnerArguments).containsExactly("c", "d")
+        }
+    }
+
+    @Test
+    fun `testInstrumentationRunnerArguments source compatibility`() {
+        android.defaultConfig.testInstrumentationRunnerArguments.put("a", "b")
+        assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b")
+
+        android.defaultConfig.testInstrumentationRunnerArguments += "c" to "d"
+        assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b", "c", "d")
+    }
+
+    @Test
+    fun `AnnotationProcessorOptions arguments source compatibility`() {
+        android.defaultConfig.javaCompileOptions.annotationProcessorOptions {
+            arguments["a"] = "b"
+            assertThat(arguments).containsExactly("a", "b")
+            arguments += mapOf("c" to "d")
+            assertThat(arguments).containsExactly("a", "b", "c", "d")
         }
     }
 

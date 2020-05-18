@@ -17,6 +17,7 @@
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.util.List;
 import org.w3c.dom.Node;
 
@@ -27,9 +28,9 @@ import org.w3c.dom.Node;
 public class AssetMerger extends DataMerger<AssetItem, AssetFile, AssetSet> {
 
     @Override
-    protected AssetSet createFromXml(Node node) throws MergingException {
-        AssetSet set = new AssetSet("");
-        return (AssetSet) set.createFromXml(node);
+    protected AssetSet createFromXml(Node node, @Nullable String aaptEnv) throws MergingException {
+        AssetSet set = new AssetSet("", aaptEnv);
+        return (AssetSet) set.createFromXml(node, aaptEnv);
     }
 
     @Override

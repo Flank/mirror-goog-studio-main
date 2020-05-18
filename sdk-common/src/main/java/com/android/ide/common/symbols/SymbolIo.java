@@ -25,11 +25,9 @@ import com.android.io.NonClosingStreams;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
 import com.android.utils.FileUtils;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.io.BufferedInputStream;
@@ -231,8 +229,7 @@ public final class SymbolIo {
      * @throws IOException failed to read the table
      */
     @NonNull
-    @VisibleForTesting
-    SymbolTable readSymbolListWithPackageName(@NonNull Path file) throws IOException {
+    public SymbolTable readSymbolListWithPackageName(@NonNull Path file) throws IOException {
         try (Stream<String> lines = Files.lines(file, UTF_8)) {
             return readWithPackage(
                     lines, file.toString(), ReadConfiguration.SYMBOL_LIST_WITH_PACKAGE);
@@ -826,9 +823,9 @@ public final class SymbolIo {
      * @param libraries libraries which the main library/application depends on
      * @return a set of `symbol table for each library
      */
-    public ImmutableSet<SymbolTable> loadDependenciesSymbolTables(Iterable<File> libraries)
+    public ImmutableList<SymbolTable> loadDependenciesSymbolTables(Iterable<File> libraries)
             throws IOException {
-        ImmutableSet.Builder<SymbolTable> tables = ImmutableSet.builder();
+        ImmutableList.Builder<SymbolTable> tables = ImmutableList.builder();
         for (File dependency : libraries) {
             tables.add(readSymbolListWithPackageName(dependency.toPath()));
         }

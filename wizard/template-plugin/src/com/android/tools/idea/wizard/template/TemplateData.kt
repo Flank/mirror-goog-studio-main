@@ -51,7 +51,7 @@ enum class Language(val string: String, val extension: String) {
 // We define a new enum here instead of reusing existing ones because it should be available
 // both from intellij.android.core and wizardTemplate modules.
 enum class BytecodeLevel(val description: String, val versionString: String) {
-  L6("6 (less features)", "1.6"),
+  L6("6 (fewer features)", "1.6"),
   L7("7", "1.7"),
   L8("8 (slower build)", "1.8");
 

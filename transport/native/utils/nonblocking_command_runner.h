@@ -49,14 +49,18 @@ class NonBlockingCommandRunner {
   virtual bool Run(const char* const arguments[], const std::string& input,
                    StdoutCallback* callback, const char* const env_args[]);
 
-  // Helper function to read /proc/|child_process_id_|/cmdline and match it against
-  // |executable_path_|. The cmdline file is read from multiple times in a retry
-  // loop, true is returned if the match is found, otherwise false.
+  // Helper function to read /proc/|child_process_id_|/cmdline and match it
+  // against |executable_path_|. The cmdline file is read from multiple times in
+  // a retry loop, true is returned if the match is found, otherwise false.
   virtual bool BlockUntilChildprocessExec();
 
   // Kills the running child process by sending SEGINT then blocks for the
-  // process to complete.
-  virtual void Kill();
+  // callback thread to complete.
+  virtual void Kill() { Kill(true); }
+  // Kills the running child process. Blocks for the callback to complete if
+  // [blocks_for_callback] is set to true. Otherwise detach the callback thread.
+  virtual void Kill(bool block_for_callback);
+
   virtual bool IsRunning() { return child_process_id_ > 0; }
 
  private:

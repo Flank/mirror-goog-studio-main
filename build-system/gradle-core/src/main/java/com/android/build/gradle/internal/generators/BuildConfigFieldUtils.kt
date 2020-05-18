@@ -30,13 +30,13 @@ import javax.lang.model.element.Modifier
 fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: ClassWriter) {
     val pfsOpcodes = Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL + Opcodes.ACC_STATIC
     when (type) {
-        BuildConfigField.SupportedType.Boolean ->
+        BuildConfigField.SupportedType.BOOLEAN ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Boolean::class.java), null, value).visitEnd()
-        BuildConfigField.SupportedType.Int ->
+        BuildConfigField.SupportedType.INT ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Int::class.java), null, value).visitEnd()
-        BuildConfigField.SupportedType.Long ->
+        BuildConfigField.SupportedType.LONG ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Long::class.java), null, value).visitEnd()
-        BuildConfigField.SupportedType.String ->
+        BuildConfigField.SupportedType.STRING ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(String::class.java), null, value).visitEnd()
         else -> throw IllegalArgumentException(
             """BuildConfigField name: $name type: $type and value type: ${value.javaClass
@@ -71,13 +71,13 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: JavaWriter)
     }
 
     when (type) {
-        BuildConfigField.SupportedType.Boolean ->
+        BuildConfigField.SupportedType.BOOLEAN ->
             writer.emitField("boolean", name, publicStaticFinal, emitValue)
-        BuildConfigField.SupportedType.Int ->
+        BuildConfigField.SupportedType.INT ->
             writer.emitField("int", name, publicStaticFinal, emitValue)
-        BuildConfigField.SupportedType.Long ->
+        BuildConfigField.SupportedType.LONG ->
             writer.emitField("long", name, publicStaticFinal, "${emitValue}L")
-        BuildConfigField.SupportedType.String ->
+        BuildConfigField.SupportedType.STRING ->
             writer.emitField("String", name, publicStaticFinal, emitValue)
         else -> throw IllegalArgumentException(
             """BuildConfigField name: $name type: $type and value type: ${value.javaClass

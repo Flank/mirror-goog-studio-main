@@ -17,6 +17,7 @@ package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.utils.ILogger;
 import java.io.File;
@@ -31,25 +32,31 @@ import org.w3c.dom.Node;
 public class GeneratedResourceSet extends ResourceSet {
     public static final String ATTR_GENERATED = "generated";
 
-    public GeneratedResourceSet(ResourceSet originalSet) {
+    public GeneratedResourceSet(ResourceSet originalSet, @Nullable String aaptEnv) {
         super(
                 originalSet.getConfigName() + "$Generated",
                 originalSet.getNamespace(),
                 originalSet.getLibraryName(),
-                originalSet.getValidateEnabled());
+                originalSet.getValidateEnabled(),
+                aaptEnv);
         for (File source : originalSet.getSourceFiles()) {
             addSource(source);
         }
     }
 
-    public GeneratedResourceSet(String name, ResourceNamespace namespace, String libraryName) {
-        super(name, namespace, libraryName, true);
+    public GeneratedResourceSet(
+            String name,
+            ResourceNamespace namespace,
+            String libraryName,
+            @Nullable String aaptEnv) {
+        super(name, namespace, libraryName, true, aaptEnv);
     }
 
     @Override
     @NonNull
-    protected DataSet<ResourceMergerItem, ResourceFile> createSet(@NonNull String name) {
-        return new GeneratedResourceSet(name, ResourceNamespace.TODO(), getLibraryName());
+    protected DataSet<ResourceMergerItem, ResourceFile> createSet(
+            @NonNull String name, @Nullable String aaptEnv) {
+        return new GeneratedResourceSet(name, ResourceNamespace.TODO(), getLibraryName(), aaptEnv);
     }
 
     @Override

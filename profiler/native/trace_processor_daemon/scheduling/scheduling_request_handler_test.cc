@@ -73,6 +73,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByProcessId) {
   };
 
   for (auto event : result.sched_event()) {
+    EXPECT_EQ(event.process_id(), TANK_PROCESS_PID);
     EXPECT_LT(event.cpu(), result.num_cores());
 
     EXPECT_GE(event.timestamp_nanoseconds(), 0);
@@ -113,6 +114,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByThreadId) {
   };
 
   for (auto event : result.sched_event()) {
+    EXPECT_EQ(event.process_id(), TANK_PROCESS_PID);
     EXPECT_EQ(event.thread_id(), TANK_PROCESS_UNITY_MAIN_THREAD_ID);
     EXPECT_LT(event.cpu(), result.num_cores());
 
@@ -131,7 +133,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByThreadId) {
   EXPECT_EQ(states_count[SchedulingEvent::DEAD], 0);
 }
 
-TEST(SchedulingRequestHandlerTest, PopulateEventsNoIds) {
+TEST(SchedulingRequestHandlerTest, PopulateEventsAllData) {
   auto tp = LoadTrace(TESTDATA_PATH);
   auto handler = SchedulingRequestHandler(tp.get());
 
@@ -140,8 +142,10 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsNoIds) {
   SchedulingEventsResult result;
   handler.PopulateEvents(params_proto, &result);
 
-  EXPECT_EQ(result.sched_event_size(), 0);
-  EXPECT_EQ(result.num_cores(), 0);
+  // Very simple test to make sure we are returning more data than the
+  // tests above.
+  EXPECT_EQ(result.sched_event_size(), 583930);
+  EXPECT_EQ(result.num_cores(), 8);
 }
 
 }  // namespace

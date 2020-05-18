@@ -164,7 +164,7 @@ class MergeSourceSetFoldersTest {
         name: String,
         vararg files: File
     ): AssetSet {
-        val mainSet = AssetSet(name)
+        val mainSet = AssetSet(name, null)
         mainSet.addSources(Arrays.asList(*files))
         task.assetSets.add(mainSet)
         return mainSet
@@ -200,7 +200,7 @@ class MergeSourceSetFoldersTest {
             `when`(artifact.id).thenReturn(artifactId)
 
             // create a resource set that must match the one returned by the computation
-            val set = AssetSet(path)
+            val set = AssetSet(path, null)
             set.addSource(file)
             assetSets.add(set)
             i += 2

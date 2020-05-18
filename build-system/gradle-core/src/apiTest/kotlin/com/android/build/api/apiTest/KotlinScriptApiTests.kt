@@ -347,4 +347,153 @@ expected result : "Uploading .... to a fantasy server...s" message.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
         }
     }
+
+    @Test
+    fun getBundleTest() {
+        given {
+            tasksToInvoke.add(":app:debugDisplayBundleFile")
+            addModule(":app") {
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=kotlin
+                    """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.InputFile
+            import org.gradle.api.tasks.TaskAction
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import com.android.build.api.artifact.ArtifactTypes
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+
+            abstract class DisplayBundleFileTask: DefaultTask() {
+                @get:InputFile
+                abstract val bundleFile: RegularFileProperty
+
+                @TaskAction
+                fun taskAction() {
+                    println("Got the Bundle  ${'$'}{bundleFile.get().asFile.absolutePath}")
+                }
+            }
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+                defaultConfig {
+                    versionCode = 3
+                }
+
+                onVariantProperties {
+                    project.tasks.register<DisplayBundleFileTask>("${ '$' }{name}DisplayBundleFile") {
+                        bundleFile.set(artifacts.get(ArtifactTypes.BUNDLE))
+                    }
+                }
+            }
+        """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        withDocs {
+            index =
+                    // language=markdown
+                """
+# Artifacts.get in Kotlin
+
+This sample shows how to obtain the bundle file from the AGP.
+The [onVariantProperties] block will wire the [DisplayBundleFile] input property (bundleFile) by using
+the Artifacts.get call with the right ArtifactTypes
+`bundleFile.set(artifacts.get(ArtifactTypes.BUNDLE))`
+## To Run
+/path/to/gradle debugDisplayBundleFile
+expected result : "Got the Bundle ...." message.
+            """.trimIndent()
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("Got the Bundle")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+        }
+    }
+
+    @Test
+    fun bundleTransformerTest() {
+        given {
+            tasksToInvoke.add(":app:debugConsumeBundleFile")
+            addModule(":app") {
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=kotlin
+                    """
+        plugins {
+                id("com.android.application")
+                kotlin("android")
+                kotlin("android.extensions")
+        }
+        import org.gradle.api.DefaultTask
+        import org.gradle.api.file.RegularFileProperty
+        import org.gradle.api.tasks.InputFiles
+        import org.gradle.api.tasks.TaskAction
+        import org.gradle.api.provider.Property
+        import org.gradle.api.tasks.Internal
+        import com.android.build.api.artifact.ArtifactTypes
+        import org.gradle.api.tasks.OutputFile
+        import com.android.utils.appendCapitalized
+
+        abstract class UpdateBundleFileTask: DefaultTask() {
+            @get: InputFiles
+            abstract val  initialBundleFile: RegularFileProperty
+
+            @get: OutputFile
+            abstract val updatedBundleFile: RegularFileProperty
+
+            @TaskAction
+            fun taskAction() {
+                val versionCode = "versionCode = 4"
+                println("bundleFilePresent = " + initialBundleFile.isPresent)
+                updatedBundleFile.get().asFile.writeText(versionCode)
+            }
+        }
+        abstract class ConsumeBundleFileTask: DefaultTask() {
+            @get: InputFiles
+            abstract val finalBundle: RegularFileProperty
+            
+            @TaskAction
+            fun taskAction() {
+                println(finalBundle.get().asFile.readText())
+            }
+        }
+        android {
+            ${testingElements.addCommonAndroidBuildLogic()}
+            defaultConfig {
+                versionCode = 3
+            }
+
+            onVariantProperties {
+                val updateBundle = project.tasks.register<UpdateBundleFileTask>("${'$'}{name}UpdateBundleFile") {
+                    initialBundleFile.set(artifacts.get(ArtifactTypes.BUNDLE))
+                }
+                val finalBundle = project.tasks.register<ConsumeBundleFileTask>("${'$'}{name}ConsumeBundleFile") {
+                    finalBundle.set(artifacts.get(ArtifactTypes.BUNDLE))
+                }
+                artifacts.transform(updateBundle,
+                        UpdateBundleFileTask::initialBundleFile,
+                        UpdateBundleFileTask::updatedBundleFile)
+                .on(ArtifactTypes.BUNDLE)
+            }
+        }
+    """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("true")
+            Truth.assertThat(output).contains("versionCode = 4")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+        }
+    }
+
 }
