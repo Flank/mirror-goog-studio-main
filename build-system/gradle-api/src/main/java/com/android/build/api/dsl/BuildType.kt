@@ -151,5 +151,5 @@ interface BuildType : Named,
      *
      * @return the names of product flavors to use, in descending priority order
      */
-    var matchingFallbacks: MutableList<String>
+    val matchingFallbacks: MutableList<String>
 }
