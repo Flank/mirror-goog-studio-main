@@ -1,7 +1,7 @@
 #
 # Test:
-# check that ENFORCE_UNIQUE_PACKAGE_NAME works correctly and gives warning when the flag is
-# not set
+# check that whitelisted package for androidx.test doesn't produce an error nor a warning, but is
+# instead logged to info
 #
 
 @main
@@ -32,7 +32,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.lib1" >
+    package="androidx.test" >
 
 </manifest>
 
@@ -40,7 +40,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.lib1" >
+    package="androidx.test" >
 
 </manifest>
 
@@ -56,4 +56,4 @@
 
 @errors
 
-WARNING:Package name 'com.example.lib1' used in: ManifestMerger2Test1_lib1.xml, ManifestMerger2Test2_lib2.xml.
+INFO:Package name 'androidx.test' used in: ManifestMerger2Test1_lib1.xml, ManifestMerger2Test2_lib2.xml.
