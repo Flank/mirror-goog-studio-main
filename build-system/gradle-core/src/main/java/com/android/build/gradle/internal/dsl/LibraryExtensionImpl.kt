@@ -46,8 +46,6 @@ class LibraryExtensionImpl(
     ),
     InternalLibraryExtension {
 
-    private var _aidlPackageWhiteList: MutableCollection<String> = Lists.newArrayList()
-
     override val buildFeatures: LibraryBuildFeatures =
         dslServices.newInstance(LibraryBuildFeaturesImpl::class.java)
 
@@ -68,9 +66,8 @@ class LibraryExtensionImpl(
             LibraryVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
 
-    override var aidlPackageWhiteList: MutableCollection<String>
-        get() = _aidlPackageWhiteList
+    override var aidlPackageWhiteList: MutableCollection<String> = ArrayList<String>()
         set(value) {
-            _aidlPackageWhiteList.addAll(value)
+            field.addAll(value)
         }
 }

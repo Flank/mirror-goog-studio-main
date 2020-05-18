@@ -130,12 +130,6 @@ open class LibraryExtension(
         libraryVariantList.add(variant as LibraryVariant)
     }
 
-    override var aidlPackageWhiteList: MutableCollection<String>
-        get() = publicExtensionImpl.aidlPackageWhiteList
-        set(value) {
-            publicExtensionImpl.aidlPackageWhiteList = value
-        }
-
     fun aidlPackageWhiteList(vararg aidlFqcns: String) {
         Collections.addAll(publicExtensionImpl.aidlPackageWhiteList, *aidlFqcns)
     }

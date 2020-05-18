@@ -1269,6 +1269,8 @@ com.android.build.gradle.internal.dsl.InternalCommonExtension.getSplits: com.and
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalLibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
+com.android.build.gradle.internal.dsl.InternalLibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions, com.android.build.api.dsl.JavaCompileOptions
 com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions (com.android.build.gradle.internal.services.DslServices)

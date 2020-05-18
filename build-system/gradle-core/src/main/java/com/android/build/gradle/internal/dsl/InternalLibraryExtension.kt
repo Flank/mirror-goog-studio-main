@@ -38,4 +38,6 @@ interface InternalLibraryExtension :
                 DefaultConfig,
                 ProductFlavor,
                 LibraryVariant<LibraryVariantProperties>,
-                LibraryVariantProperties>
+                LibraryVariantProperties> {
+    override var aidlPackageWhiteList: MutableCollection<String>
+}
