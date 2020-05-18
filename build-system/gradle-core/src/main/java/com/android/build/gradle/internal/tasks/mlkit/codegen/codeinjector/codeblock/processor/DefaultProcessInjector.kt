@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor
 
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessedTypeName
@@ -26,7 +27,7 @@ class DefaultProcessInjector : CodeBlockInjector() {
     override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
         methodBuilder.addStatement(
             "\$T \$L = \$L",
-            getParameterType(tensorInfo),
+            ClassNames.TENSOR_BUFFER,
             getProcessedTypeName(tensorInfo),
             tensorInfo.identifierName
         )

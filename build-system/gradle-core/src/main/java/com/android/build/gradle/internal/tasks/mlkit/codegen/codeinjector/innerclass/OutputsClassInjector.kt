@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.inner
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getGetterMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultGetMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.NoMetadataGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getDataType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
 import com.android.tools.mlkit.MlNames
@@ -76,7 +78,16 @@ class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
 
         // Add getter methods for each param.
         for (tensorInfo in tensorInfos) {
-            getGetterMethodInjector(tensorInfo).inject(builder, tensorInfo)
+            val methodInjector = getGetterMethodInjector(tensorInfo)
+            methodInjector.inject(builder, tensorInfo)
+            // Add getter method to return generic TensorBuffer type if missing.
+            if (methodInjector !is DefaultGetMethodInjector && methodInjector !is NoMetadataGetMethodInjector) {
+                if (tensorInfo.isMetadataExisted) {
+                    DefaultGetMethodInjector().inject(builder, tensorInfo)
+                } else {
+                    NoMetadataGetMethodInjector().inject(builder, tensorInfo)
+                }
+            }
         }
 
         // Add getBuffer method for inner usage.

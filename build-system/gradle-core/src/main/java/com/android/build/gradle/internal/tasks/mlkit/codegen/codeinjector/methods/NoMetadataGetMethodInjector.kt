@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.metho
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterTypeName
 import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
@@ -25,34 +25,20 @@ import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
 
 /**
- * Injector to inject default implementation for getter method, which returns [java.nio.ByteBuffer]
- * and assume data type has method `getBuffer`.
+ * Injector to inject getter method when there is no metadata.
  */
-class DefaultGetMethodInjector : MethodInjector() {
+class NoMetadataGetMethodInjector : MethodInjector() {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
         val defaultType = ClassNames.TENSOR_BUFFER
-        val advancedType = getOutputParameterType(tensorInfo)
         val methodSpecBuilder = MethodSpec.methodBuilder(
             MlNames.formatGetterName(
-                tensorInfo.identifierName, defaultType.simpleName()
+                tensorInfo.identifierName, ClassNames.TENSOR_BUFFER.simpleName()
             )
         )
             .addModifiers(Modifier.PUBLIC)
             .returns(defaultType)
             .addAnnotation(ClassNames.NON_NULL)
-        if (advancedType == ClassNames.TENSOR_IMAGE) {
-            methodSpecBuilder.addStatement(
-                "return \$L.process(\$L).getTensorBuffer()",
-                getProcessorName(tensorInfo),
-                tensorInfo.identifierName
-            )
-        } else {
-            methodSpecBuilder.addStatement(
-                "return \$L.process(\$L)",
-                getProcessorName(tensorInfo),
-                tensorInfo.identifierName
-            )
-        }
+            .addStatement("return \$L", tensorInfo.identifierName)
 
         classBuilder.addMethod(methodSpecBuilder.build())
     }
