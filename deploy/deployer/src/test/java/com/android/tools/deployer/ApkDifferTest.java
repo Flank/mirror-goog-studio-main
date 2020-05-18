@@ -22,6 +22,8 @@ import com.android.tools.deployer.model.FileDiff;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.Test;
 
 public class ApkDifferTest {
@@ -220,6 +222,40 @@ public class ApkDifferTest {
         List<FileDiff> diff = checkSpecDiffs(before, after);
         assertEquals(1, diff.size());
         assertEquals(FileDiff.Status.MODIFIED, diff.get(0).status);
+    }
+
+    @Test
+    public void testSpecDiffDeletedResource() throws DeployerException {
+        Apk before =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("abcd")
+                        .addApkEntry("res/a.xml", 0x01)
+                        .addApkEntry("res/b.xml", 0x02)
+                        .build();
+
+        Apk after =
+                Apk.builder()
+                        .setName("apk.apk")
+                        .setChecksum("efgh")
+                        .addApkEntry("res/a.xml", 0x01)
+                        .build();
+
+        List<FileDiff> diff = checkSpecDiffs(before, after);
+        assertEquals(2, diff.size());
+
+        Map<FileDiff.Status, FileDiff> diffMap =
+                diff.stream().collect(Collectors.toMap(d -> d.status, d -> d));
+        assertTrue(diffMap.containsKey(FileDiff.Status.DELETED));
+        assertTrue(diffMap.containsKey(FileDiff.Status.RESOURCE_NOT_IN_OVERLAY));
+
+        assertNull(diffMap.get(FileDiff.Status.DELETED).newFile);
+        assertEquals("res/b.xml", diffMap.get(FileDiff.Status.DELETED).oldFile.getName());
+
+        assertNull(diffMap.get(FileDiff.Status.RESOURCE_NOT_IN_OVERLAY).oldFile);
+        assertEquals(
+                "res/a.xml",
+                diffMap.get(FileDiff.Status.RESOURCE_NOT_IN_OVERLAY).newFile.getName());
     }
 
     private static List<FileDiff> checkDiffs(Apk before, Apk after) throws DeployerException {
