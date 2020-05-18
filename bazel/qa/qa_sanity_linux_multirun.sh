@@ -16,7 +16,7 @@ readonly script_name="$(basename "$0")"
 "${script_dir}/bazel" clean --async
 
 config_options="--config=remote"
-runs_per_test=1000
+runs_per_test=10
 
 readonly invocation_id_sanity_longrunning="$(uuidgen)"
 
