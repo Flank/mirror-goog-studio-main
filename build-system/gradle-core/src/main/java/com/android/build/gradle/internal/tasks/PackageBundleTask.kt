@@ -386,7 +386,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 MergeNativeDebugMetadataTask.getNativeDebugMetadataFiles(creationConfig)
             )
 
-            task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.aaptOptions.noCompress)
+            task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
 
             task.bundleOptions =
                 ((creationConfig.globalScope.extension as BaseAppModuleExtension).bundle).convert()

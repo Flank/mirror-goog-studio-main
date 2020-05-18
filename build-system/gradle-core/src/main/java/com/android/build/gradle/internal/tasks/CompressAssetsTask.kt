@@ -123,7 +123,7 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
                 InternalArtifactType.MERGED_ASSETS,
                 task.inputDir
             )
-            task.noCompress.setDisallowChanges(creationConfig.aaptOptions.noCompress)
+            task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             task.compressionLevel.setDisallowChanges(
                 if (creationConfig.variantDslInfo.isDebuggable) {
                     BEST_SPEED
