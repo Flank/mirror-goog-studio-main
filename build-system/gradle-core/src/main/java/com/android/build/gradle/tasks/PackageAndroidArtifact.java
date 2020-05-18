@@ -152,13 +152,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Input
     @NonNull
-    public Set<String> getAbiFilters() {
-        return abiFilters;
-    }
-
-    public void setAbiFilters(@Nullable Set<String> abiFilters) {
-        this.abiFilters = abiFilters != null ? abiFilters : ImmutableSet.of();
-    }
+    public abstract SetProperty<String> getAbiFilters();
 
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
@@ -214,8 +208,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Input
     public abstract Property<String> getCreatedBy();
-
-    private Set<String> abiFilters;
 
     private boolean jniDebugBuild;
 
@@ -441,8 +433,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter.getSigningConfig().set(signingConfig.convertToParams());
 
             if (getAppMetadata().isEmpty()) {
-                parameter.getAbiFilters().set(abiFilters);
+                parameter.getAbiFilters().set(getAbiFilters());
             } else {
+                // Dynamic feature
                 List<String> appAbiFilters;
                 try {
                     appAbiFilters =
@@ -450,15 +443,15 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                if (appAbiFilters == null) {
-                    // we assign abiFilters to task.abiFilters (instead of
-                    // an empty list) because
-                    // we're in a dynamic-feature, so task.abiFilters will
-                    // be empty unless ABIs have
-                    // been injected from the IDE, and that's what we want.
-                    parameter.getAbiFilters().set(abiFilters);
+                if (appAbiFilters.isEmpty()) {
+                    // No ABI Filters were applied from the base application, but we still want
+                    // to respect injected filters from studio, so use the task field (rather than
+                    // just empty list)
+                    parameter.getAbiFilters().set(getAbiFilters());
                 } else {
-                    parameter.getAbiFilters().set(ImmutableSet.copyOf(appAbiFilters));
+                    // Respect the build author's explicit choice, even in the presence of injected
+                    // ABI information from Studio
+                    parameter.getAbiFilters().set(appAbiFilters);
                 }
             }
             parameter.getJniFolders().set(getJniFolders().getFiles());
@@ -1044,15 +1037,21 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
             packageAndroidArtifact.getAppMetadata().disallowChanges();
-            if (variantDslInfo.getSupportedAbis() != null) {
-                packageAndroidArtifact.setAbiFilters(variantDslInfo.getSupportedAbis());
+            if (!variantDslInfo.getSupportedAbis().isEmpty()) {
+                // If the build author has set the supported Abis that is respected
+                packageAndroidArtifact.getAbiFilters().set(variantDslInfo.getSupportedAbis());
             } else {
-                packageAndroidArtifact.setAbiFilters(
-                        projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
-                                ? firstValidInjectedAbi(
-                                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
-                                : null);
+                // Otherwise, use the injected Abis if set.
+                packageAndroidArtifact
+                        .getAbiFilters()
+                        .set(
+                                projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+                                        ? firstValidInjectedAbi(
+                                                projectOptions.get(
+                                                        StringOption.IDE_BUILD_TARGET_ABI))
+                                        : ImmutableSet.of());
             }
+            packageAndroidArtifact.getAbiFilters().disallowChanges();
             packageAndroidArtifact.buildTargetDensity =
                     globalScope.getExtension().getSplits().getDensity().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
@@ -1147,20 +1146,19 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             ImmutableMap.of(MODULE_PATH, project.getPath()));
         }
 
-        @Nullable
-        private Set<String> firstValidInjectedAbi(@Nullable String abis) {
+        @NonNull
+        private static Set<String> firstValidInjectedAbi(@Nullable String abis) {
             if (abis == null) {
-                return null;
+                return ImmutableSet.of();
             }
             Set<String> allowedAbis =
                     Abi.getDefaultValues().stream().map(Abi::getTag).collect(Collectors.toSet());
             java.util.Optional<String> firstValidAbi =
-                    Arrays.asList(abis.split(","))
-                            .stream()
-                            .map(abi -> abi.trim())
-                            .filter(abi -> allowedAbis.contains(abi))
+                    Arrays.stream(abis.split(","))
+                            .map(String::trim)
+                            .filter(allowedAbis::contains)
                             .findFirst();
-            return firstValidAbi.isPresent() ? ImmutableSet.of(firstValidAbi.get()) : null;
+            return firstValidAbi.map(ImmutableSet::of).orElseGet(ImmutableSet::of);
         }
 
         @NonNull

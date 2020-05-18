@@ -61,7 +61,7 @@ interface Ndk {
      * versions of your native libraries, Gradle creates a separate APK for each ABI you want to
      * support and only packages the files each ABI needs.
      */
-    var abiFilters: MutableSet<String>?
+    val abiFilters: MutableSet<String>
 
     /**
      * The APP_STL value
