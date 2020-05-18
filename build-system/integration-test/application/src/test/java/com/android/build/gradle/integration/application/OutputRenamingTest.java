@@ -19,12 +19,11 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.android.build.api.variant.BuiltArtifact;
-import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -34,8 +33,10 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Locale;
+import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -105,30 +106,22 @@ public class OutputRenamingTest {
         assertNotNull(outputs);
         assertThat(outputs).hasSize(5);
 
+        List<String> expectedFileNames =
+                Arrays.asList(
+                        "project--112-" + buildType + "-null-signed.apk",
+                        "project--212-" + buildType + "-mdpi-signed.apk",
+                        "project--312-" + buildType + "-hdpi-signed.apk",
+                        "project--412-" + buildType + "-xhdpi-signed.apk",
+                        "project--512-" + buildType + "-xxhdpi-signed.apk");
+
+        List<String> actualFileNames = new ArrayList<>();
         for (BuiltArtifact builtArtifact :
                 ProjectBuildOutputUtils.getBuiltArtifacts(buildOutput).getElements()) {
-            String filterValue =
-                    builtArtifact.getFilters().stream()
-                            .filter(
-                                    filter ->
-                                            filter.getFilterType()
-                                                    .equals(FilterConfiguration.FilterType.DENSITY))
-                            .map(FilterConfiguration::getIdentifier)
-                            .findFirst()
-                            .orElse("null");
-
-            // FIXME b/150290712
-            String expectedFileName =
-                    "project--"
-                            + builtArtifact.getVersionCode()
-                            + "-"
-                            + buildType.toLowerCase(Locale.ENGLISH)
-                            + "-"
-                            + filterValue
-                            + "-signed.apk";
-
-            assertEquals(expectedFileName, new File(builtArtifact.getOutputFile()).getName());
-            assertTrue(new File(builtArtifact.getOutputFile()).exists());
+            File outputFile = new File(builtArtifact.getOutputFile());
+            actualFileNames.add(outputFile.getName());
+            assertThat(outputFile).exists();
         }
+
+        assertThat(actualFileNames).containsExactlyElementsIn(expectedFileNames);
     }
 }
