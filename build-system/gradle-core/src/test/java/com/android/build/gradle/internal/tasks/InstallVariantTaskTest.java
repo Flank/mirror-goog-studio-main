@@ -110,7 +110,6 @@ public class InstallVariantTaskTest {
 
         verify(deviceConnector, atLeastOnce()).getName();
         verify(deviceConnector, atLeastOnce()).getApiLevel();
-        verify(deviceConnector, atLeastOnce()).getDensity();
         verify(deviceConnector, atLeastOnce()).getAbis();
         verify(deviceConnector, atLeastOnce()).getDeviceConfig();
         verify(deviceConnector).installPackage(eq(mainOutputFileApk), any(), anyInt(), any());

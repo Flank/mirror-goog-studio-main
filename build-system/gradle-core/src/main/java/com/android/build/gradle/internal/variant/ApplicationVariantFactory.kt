@@ -314,7 +314,6 @@ class ApplicationVariantFactory(
         val computedBestArtifact = GenericBuiltArtifactsSplitOutputMatcher.computeBestArtifact(
             genericBuiltArtifacts.keys,
             supportedAbis,
-            density?.dpiValue ?: -1,
             Arrays.asList(
                 *Strings.nullToEmpty(
                     buildTargetAbi
