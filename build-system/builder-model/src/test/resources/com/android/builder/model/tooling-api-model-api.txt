@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a84d570f3addc1f110128d83f9e30533544a58fdab576469dd1703a5372638b5
+2417d19ef30eca0bee4980e30bd6f51c423fa89f048dc1406444b36f117f7bc2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -662,13 +662,6 @@ com.android.builder.model.v2.DimensionAware.getDimension: java.lang.String ()
 com.android.builder.model.v2.FilterData
 com.android.builder.model.v2.FilterData.getFilterType: java.lang.String ()
 com.android.builder.model.v2.FilterData.getIdentifier: java.lang.String ()
-com.android.builder.model.v2.InstantAppProjectBuildOutput
-com.android.builder.model.v2.InstantAppProjectBuildOutput.getInstantAppVariantsBuildOutput: java.util.Collection<com.android.builder.model.v2.InstantAppVariantBuildOutput> ()
-com.android.builder.model.v2.InstantAppVariantBuildOutput
-com.android.builder.model.v2.InstantAppVariantBuildOutput.getApplicationId: java.lang.String ()
-com.android.builder.model.v2.InstantAppVariantBuildOutput.getFeatureOutputs: java.util.Collection<com.android.builder.model.v2.OutputFile> ()
-com.android.builder.model.v2.InstantAppVariantBuildOutput.getName: java.lang.String ()
-com.android.builder.model.v2.InstantAppVariantBuildOutput.getOutput: com.android.builder.model.v2.OutputFile ()
 com.android.builder.model.v2.JavaArtifact implements com.android.builder.model.v2.BaseArtifact
 com.android.builder.model.v2.JavaArtifact.getMockablePlatformJar: java.io.File ()
 com.android.builder.model.v2.JavaCompileOptions
