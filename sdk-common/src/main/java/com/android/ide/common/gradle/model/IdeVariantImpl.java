@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /** Creates a deep copy of a {@link Variant}. */
 public final class IdeVariantImpl implements IdeVariant, Serializable {
@@ -96,13 +95,9 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 IdeModel.copy(
                         variant.getExtraJavaArtifacts(),
                         modelCache,
-                        (Function<JavaArtifact, JavaArtifact>)
-                                artifact ->
-                                        new IdeJavaArtifact(
-                                                artifact,
-                                                modelCache,
-                                                dependenciesFactory,
-                                                modelVersion));
+                        artifact ->
+                                new IdeJavaArtifactImpl(
+                                        artifact, modelCache, dependenciesFactory, modelVersion));
         myBuildType = variant.getBuildType();
         myProductFlavors = ImmutableList.copyOf(variant.getProductFlavors());
         myMergedFlavor =

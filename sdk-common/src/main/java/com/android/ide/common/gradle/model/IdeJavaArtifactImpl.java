@@ -24,7 +24,7 @@ import java.io.File;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link JavaArtifact}. */
-public final class IdeJavaArtifact extends IdeBaseArtifactImpl implements JavaArtifact {
+public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements IdeJavaArtifact {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -33,13 +33,13 @@ public final class IdeJavaArtifact extends IdeBaseArtifactImpl implements JavaAr
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    IdeJavaArtifact() {
+    IdeJavaArtifactImpl() {
         myMockablePlatformJar = null;
 
         myHashCode = 0;
     }
 
-    public IdeJavaArtifact(
+    public IdeJavaArtifactImpl(
             @NonNull JavaArtifact artifact,
             @NonNull ModelCache seen,
             @NonNull IdeDependenciesFactory dependenciesFactory,
@@ -61,20 +61,20 @@ public final class IdeJavaArtifact extends IdeBaseArtifactImpl implements JavaAr
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeJavaArtifact)) {
+        if (!(o instanceof IdeJavaArtifactImpl)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-        IdeJavaArtifact artifact = (IdeJavaArtifact) o;
+        IdeJavaArtifactImpl artifact = (IdeJavaArtifactImpl) o;
         return artifact.canEquals(this)
                 && Objects.equals(myMockablePlatformJar, artifact.myMockablePlatformJar);
     }
 
     @Override
     protected boolean canEquals(Object other) {
-        return other instanceof IdeJavaArtifact;
+        return other instanceof IdeJavaArtifactImpl;
     }
 
     @Override

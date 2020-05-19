@@ -110,7 +110,7 @@ public class IdeBaseArtifactImplTest {
                 .withRedefinedSubclass(IdeAndroidArtifactImpl.class)
                 .verify();
         createEqualsVerifier(IdeBaseArtifactImpl.class, "hashCode")
-                .withRedefinedSubclass(IdeJavaArtifact.class)
+                .withRedefinedSubclass(IdeJavaArtifactImpl.class)
                 .verify();
     }
 }
