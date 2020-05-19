@@ -67,6 +67,6 @@ public class IdeVariantImplTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVariantImpl.class).verify();
+        createEqualsVerifier(IdeVariantImpl.class, "hashCode").verify();
     }
 }
