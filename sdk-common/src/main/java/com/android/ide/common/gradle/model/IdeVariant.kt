@@ -13,25 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model;
+package com.android.ide.common.gradle.model
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.Variant;
-import java.io.Serializable;
-import java.util.Collection;
+import com.android.builder.model.Variant
+import java.io.Serializable
 
-public interface IdeVariant extends Variant, Serializable {
-    @Override
-    @NonNull
-    IdeAndroidArtifact getMainArtifact();
-
-    @Nullable
-    IdeAndroidArtifact getAndroidTestArtifact();
-
-    @Nullable
-    IdeJavaArtifact getUnitTestArtifact();
-
-    @NonNull
-    Collection<IdeBaseArtifact> getTestArtifacts();
+interface IdeVariant : Variant, Serializable {
+  override fun getMainArtifact(): IdeAndroidArtifact
+  val androidTestArtifact: IdeAndroidArtifact?
+  val unitTestArtifact: IdeJavaArtifact?
+  val testArtifacts: Collection<IdeBaseArtifact>
 }

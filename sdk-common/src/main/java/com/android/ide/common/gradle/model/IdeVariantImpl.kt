@@ -97,14 +97,13 @@ class IdeVariantImpl : IdeVariant, Serializable {
 
   override fun getTestedTargetVariants(): Collection<TestedTargetVariant> = testedTargetVariants
 
-  override fun getTestArtifacts(): Collection<IdeBaseArtifact> {
-    return ImmutableList.copyOf(
+  override val testArtifacts: Collection<IdeBaseArtifact>
+    get() = ImmutableList.copyOf(
       (extraAndroidArtifacts.asSequence() + extraJavaArtifacts.asSequence()).filter { it.isTestArtifact }.asIterable())
-  }
 
-  override fun getAndroidTestArtifact(): IdeAndroidArtifact? = extraAndroidArtifacts.firstOrNull { it.isTestArtifact }
+  override val androidTestArtifact: IdeAndroidArtifact? get() = extraAndroidArtifacts.firstOrNull { it.isTestArtifact }
 
-  override fun getUnitTestArtifact(): IdeJavaArtifact? = extraJavaArtifacts.firstOrNull { it.isTestArtifact }
+  override val unitTestArtifact: IdeJavaArtifact? get() = extraJavaArtifacts.firstOrNull { it.isTestArtifact }
 
   override fun isInstantAppCompatible(): Boolean = instantAppCompatible
 
