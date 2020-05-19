@@ -57,7 +57,19 @@ if [[ -d "${dist_dir}" ]]; then
 
   # aggregate test results into a single XML
   ("${script_dir}"/utils/aggregate_xmls.py --testlogs_dir="${testlogs_dir}" --output_file="${dist_dir}"/testlogs/aggregated_results.xml)
-
 fi
 
-exit $bazel_status_sanity_longrunning
+# See https://docs.bazel.build/versions/master/guide.html#what-exit-code-will-i-get
+# Exit code 0: successful test run
+# Exit code 3: tests failed or timed out, ignore for manual review
+# Exit code 4: No tests found, check filters (maybe)
+case $bazel_status_sanity_longrunning in
+  [034])
+    exit 0
+    ;;
+  *)
+    exit $bazel_status_sanity_longrunning
+    ;;
+esac
+
+exit 0
