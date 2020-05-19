@@ -25,7 +25,6 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.Variant;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
@@ -116,7 +115,7 @@ public interface IdeAndroidProject extends Serializable {
      * @return a list of the variants.
      */
     @NonNull
-    Collection<Variant> getVariants();
+    Collection<IdeVariant> getVariants();
 
     /**
      * Returns a list of all the variant names.

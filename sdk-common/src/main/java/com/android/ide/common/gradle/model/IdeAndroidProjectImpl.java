@@ -60,7 +60,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final Collection<BuildTypeContainer> myBuildTypes;
     @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
-    @NonNull private final Collection<Variant> myVariants;
+    @NonNull private final Collection<IdeVariant> myVariants;
     @NonNull private final Collection<String> myVariantNames;
     @Nullable private final String myDefaultVariant;
     @NonNull private final Collection<String> myFlavorDimensions;
@@ -128,8 +128,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         Collection<SyncIssue> syncIssuesCopy =
                 new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssue::new));
 
-        Collection<Variant> variantsCopy =
-                new ArrayList<>(
+        Collection<IdeVariant> variantsCopy =
+                new ArrayList<IdeVariant>(
                         IdeModel.copy(
                                 (variants == null) ? project.getVariants() : variants,
                                 modelCache,
@@ -319,7 +319,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull Collection<BuildTypeContainer> buildTypes,
             @NonNull Collection<ProductFlavorContainer> productFlavors,
             @NonNull Collection<SyncIssue> syncIssues,
-            @NonNull Collection<Variant> variants,
+            @NonNull Collection<IdeVariant> variants,
             @NonNull Collection<String> variantNames,
             @Nullable String defaultVariant,
             @NonNull Collection<String> flavorDimensions,
@@ -397,7 +397,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     }
 
     @NonNull
-    private static ImmutableList<String> computeVariantNames(Collection<Variant> variants) {
+    private static ImmutableList<String> computeVariantNames(Collection<IdeVariant> variants) {
         return variants.stream().map(Variant::getName).collect(ImmutableList.toImmutableList());
     }
 
@@ -495,7 +495,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     @NonNull
-    public Collection<Variant> getVariants() {
+    public Collection<IdeVariant> getVariants() {
         return ImmutableList.copyOf(myVariants);
     }
 

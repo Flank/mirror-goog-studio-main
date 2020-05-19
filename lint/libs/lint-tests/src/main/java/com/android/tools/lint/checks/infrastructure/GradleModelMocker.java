@@ -61,8 +61,12 @@ import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
+import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeDependencies;
+import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeLintOptions;
+import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -133,7 +137,7 @@ public class GradleModelMocker {
                     "^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*");
 
     private IdeAndroidProject project;
-    private Variant variant;
+    private IdeVariant variant;
     private GlobalLibraryMap globalLibraryMap;
     private final List<BuildType> buildTypes = Lists.newArrayList();
     private final List<AndroidLibrary> androidLibraries = Lists.newArrayList();
@@ -335,7 +339,7 @@ public class GradleModelMocker {
         when(project.getName()).thenReturn("test_project");
         when(project.getCompileTarget()).thenReturn("android-" + SdkVersionInfo.HIGHEST_KNOWN_API);
 
-        variant = mock(Variant.class);
+        variant = mock(IdeVariant.class);
         when(project.getVariants()).thenReturn(Collections.singletonList(variant));
 
         lintOptions = new IdeLintOptions();
@@ -355,9 +359,9 @@ public class GradleModelMocker {
         when(defaultFlavor.getVersionCode())
                 .thenReturn(null); // don't default to Integer.valueOf(0) !
 
-        Dependencies dependencies = mock(Dependencies.class);
-        Dependencies testDependencies = mock(Dependencies.class);
-        Dependencies androidTestDependencies = mock(Dependencies.class);
+        IdeDependencies dependencies = mock(IdeDependencies.class);
+        IdeDependencies testDependencies = mock(IdeDependencies.class);
+        IdeDependencies androidTestDependencies = mock(IdeDependencies.class);
 
         when(dependencies.getLibraries()).thenReturn(androidLibraries);
 
@@ -434,9 +438,9 @@ public class GradleModelMocker {
         when(project.getProductFlavors()).thenReturn(flavorContainers);
 
         // Artifacts
-        AndroidArtifact artifact = mock(AndroidArtifact.class);
-        JavaArtifact testArtifact = mock(JavaArtifact.class);
-        AndroidArtifact androidTestArtifact = mock(AndroidArtifact.class);
+        IdeAndroidArtifact artifact = mock(IdeAndroidArtifact.class);
+        IdeJavaArtifact testArtifact = mock(IdeJavaArtifact.class);
+        IdeAndroidArtifact androidTestArtifact = mock(IdeAndroidArtifact.class);
 
         String applicationId = project.getDefaultConfig().getProductFlavor().getApplicationId();
         if (applicationId == null) {
@@ -591,7 +595,7 @@ public class GradleModelMocker {
         when(mergedFlavor.getResourceConfigurations()).thenReturn(resourceConfigurations);
 
         // Attempt to make additional variants?
-        List<Variant> variants = new ArrayList<>();
+        List<IdeVariant> variants = new ArrayList<>();
         variants.add(variant);
         for (BuildType buildType : buildTypes) {
             String buildTypeName = buildType.getName();
@@ -603,7 +607,7 @@ public class GradleModelMocker {
                 String variantName = flavor.getName() + StringsKt.capitalize(buildType.getName());
                 System.out.println();
                 if (!variantName.equals(variant.getName())) {
-                    Variant newVariant = mock(Variant.class, Mockito.RETURNS_SMART_NULLS);
+                    IdeVariant newVariant = mock(IdeVariant.class, Mockito.RETURNS_SMART_NULLS);
                     when(newVariant.getName()).thenReturn(variantName);
                     when(newVariant.getBuildType()).thenReturn(buildTypeName);
                     List<String> productFlavorNames = Collections.singletonList(flavor.getName());
@@ -630,12 +634,12 @@ public class GradleModelMocker {
 
                     when(newVariant.getMergedFlavor()).thenReturn(variantFlavor);
 
-                    AndroidArtifact mainArtifact = variant.getMainArtifact();
+                    IdeAndroidArtifact mainArtifact = variant.getMainArtifact();
                     when(newVariant.getMainArtifact()).thenReturn(mainArtifact);
 
                     // Customize artifacts instead of just pointing to the main one
                     // to avoid really redundant long dependency lists
-                    artifact = mock(AndroidArtifact.class);
+                    artifact = mock(IdeAndroidArtifact.class);
                     when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
                     when(artifact.getClassesFolder())
                             .thenReturn(
@@ -651,7 +655,7 @@ public class GradleModelMocker {
                                                     projectDir,
                                                     "build/tmp/kotlin-classes/" + variantName)));
                     when(artifact.getApplicationId()).thenReturn(applicationId);
-                    dependencies = mock(Dependencies.class);
+                    dependencies = mock(IdeDependencies.class);
                     when(dependencies.getLibraries()).thenReturn(Collections.emptyList());
                     when(artifact.getDependencies()).thenReturn(dependencies);
                     when(newVariant.getMainArtifact()).thenReturn(artifact);
