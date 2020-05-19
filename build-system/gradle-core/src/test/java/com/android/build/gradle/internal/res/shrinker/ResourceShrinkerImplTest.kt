@@ -362,7 +362,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         )
 
         val compressedFile = File(dir, "compressed.ap_")
-        analyzer.rewriteResourceZip(uncompressedFile, compressedFile)
+        analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile)
 
         assertEquals(
             dumpZipContents(uncompressedFile),

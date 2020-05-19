@@ -424,7 +424,7 @@ public class ResourceUsageAnalyzerTest {
 
             File compressedFile = File.createTempFile("compressed", ".ap_");
 
-            analyzer.rewriteResourceZip(uncompressedFile, compressedFile);
+            analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile);
 
             // Check contents
             assertEquals(""

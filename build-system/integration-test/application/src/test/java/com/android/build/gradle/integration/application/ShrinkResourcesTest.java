@@ -21,7 +21,6 @@ import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELET
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
 import static org.junit.Assert.assertEquals;
@@ -29,7 +28,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -97,12 +95,12 @@ public class ShrinkResourcesTest {
                 new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, false},
                 new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, false},
                 // R text files and new resource shrinker.
+                // Bundles with new shrinker are tested in ShrinkBundleResourcesTest because build
+                // pipeline is different.
                 new Object[]{
                         CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, true
                 },
                 new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, true},
-                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, true},
-                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, true},
                 new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, true},
                 new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, true}
         );
@@ -157,7 +155,7 @@ public class ShrinkResourcesTest {
                         "shrunk_processed_res", "release", "resources-release-stripped.ap_");
             case BUNDLE:
                 return project.getIntermediateFile(
-                        "shrunk_linked_res_for_bundle",
+                        "legacy_shrunk_linked_res_for_bundle",
                         "release",
                         "shrunk-bundled-res.ap_");
         }
@@ -307,6 +305,7 @@ public class ShrinkResourcesTest {
                         "res/layout/l_used_b2.xml",
                         "res/layout/l_used_c.xml",
                         "res/layout/lib_unused.xml",
+                        "res/layout/marked_as_used_by_old.xml",
                         "res/layout-v17/notification_action.xml",
                         "res/layout-v21/notification_action.xml",
                         "res/layout/notification_action.xml",
@@ -387,8 +386,7 @@ public class ShrinkResourcesTest {
                         "res/layout/used17.xml",
                         "res/layout/used18.xml",
                         "res/layout/used19.xml",
-                        "res/layout/used20.xml",
-                        "res/layout/used21.xml");
+                        "res/layout/used20.xml");
 
         List<String> expectedStrippedApkContents =
                 ImmutableList.of(
@@ -397,6 +395,7 @@ public class ShrinkResourcesTest {
                         "res/layout/l_used_a.xml",
                         "res/layout/l_used_b2.xml",
                         "res/layout/l_used_c.xml",
+                        "res/layout/marked_as_used_by_old.xml",
                         "res/layout/prefix_3_suffix.xml",
                         "res/layout/prefix_used_1.xml",
                         "res/layout/prefix_used_2.xml",
@@ -420,8 +419,7 @@ public class ShrinkResourcesTest {
                         "res/layout/used17.xml",
                         "res/layout/used18.xml",
                         "res/layout/used19.xml",
-                        "res/layout/used20.xml",
-                        "res/layout/used21.xml");
+                        "res/layout/used20.xml");
         if (REPLACE_DELETED_WITH_EMPTY) {
             // If replacing deleted files with empty files, the file list will include
             // the "unused" files too, though they will be much smaller. This is checked
@@ -436,6 +434,7 @@ public class ShrinkResourcesTest {
                             "res/layout/l_used_b2.xml",
                             "res/layout/l_used_c.xml",
                             "res/layout/lib_unused.xml",
+                            "res/layout/marked_as_used_by_old.xml",
                             "res/layout-v17/notification_action.xml",
                             "res/layout-v21/notification_action.xml",
                             "res/layout/notification_action.xml",
@@ -516,16 +515,15 @@ public class ShrinkResourcesTest {
                             "res/layout/used17.xml",
                             "res/layout/used18.xml",
                             "res/layout/used19.xml",
-                            "res/layout/used20.xml",
-                            "res/layout/used21.xml");
+                            "res/layout/used20.xml");
         }
 
         // Should not have any unused resources in the compressed list
         if (!REPLACE_DELETED_WITH_EMPTY) {
             assertThat(Joiner.on('\n').join(expectedStrippedApkContents)).doesNotContain("unused");
         }
-        // Should have *all* the used resources, currently 1-21
-        for (int i = 1; i <= 21; i++) {
+        // Should have *all* the used resources, currently 1-20
+        for (int i = 1; i <= 20; i++) {
             String name = "/used" + i + ".";
             assertTrue(
                     "Missing used" + i + " in " + expectedStrippedApkContents,

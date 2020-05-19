@@ -311,7 +311,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources
                 try {
-                    analyzer.rewriteResourceZip(
+                    analyzer.rewriteResourcesInApkFormat(
                         parameters.uncompressedResourceFile.get().asFile,
                         parameters.outputFile.get().asFile
                     )

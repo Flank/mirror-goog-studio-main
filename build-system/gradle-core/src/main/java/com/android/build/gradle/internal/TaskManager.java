@@ -159,7 +159,7 @@ import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
-import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
+import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -3029,7 +3029,7 @@ public abstract class TaskManager<
     }
 
     /**
-     * Checks if {@link ShrinkResourcesTask} and {@link ShrinkBundleResourcesTask} should be added
+     * Checks if {@link ShrinkResourcesTask} and {@link LegacyShrinkBundleModuleResourcesTask} should be added
      * to the build pipeline and creates the tasks
      */
     protected void maybeCreateResourcesShrinkerTasks(
@@ -3044,7 +3044,10 @@ public abstract class TaskManager<
         taskFactory.register(new ShrinkResourcesTask.CreationAction(componentProperties));
 
         // And for the bundle
-        taskFactory.register(new ShrinkBundleResourcesTask.CreationAction(componentProperties));
+        if (!globalScope.getProjectOptions().get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
+            taskFactory.register(
+                    new LegacyShrinkBundleModuleResourcesTask.CreationAction(componentProperties));
+        }
     }
 
     private void createReportTasks() {

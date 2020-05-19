@@ -341,12 +341,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName =
-                "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 PackageBundleTask::bundleFile
-            ).withName(bundleName).on(InternalArtifactType.INTERMEDIARY_BUNDLE)
+            ).on(InternalArtifactType.INTERMEDIARY_BUNDLE)
         }
 
         override fun configure(

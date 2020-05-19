@@ -6,7 +6,13 @@
     <include tools:layout="@layout/unused14"
              layout="@layout/used2" />
 
-    <!-- Explicit keep reference -->
-    <include tools:keep="@layout/used21"
+    <!--
+    tools:keep inside <include> tag should not count as keep reference as tools:keep intended for
+    <resources>: https://developer.android.com/studio/write/tool-attributes#toolskeep
+
+    @layout/marked_as_used_by_legacy is marked as used by old resource shrinker implementation and
+    not marked by new one.
+     -->
+    <include tools:keep="@layout/marked_as_used_by_old"
              layout="@layout/used2"/>
 </merge>

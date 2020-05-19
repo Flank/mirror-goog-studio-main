@@ -128,7 +128,13 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
     }
 
     @Override
-    public void rewriteResourceZip(@NonNull File source, @NonNull File dest) throws IOException {
+    public void rewriteResourcesInApkFormat(
+            @NonNull File source, @NonNull File dest) throws IOException {
+        rewriteResourceZip(source, dest, "");
+    }
+
+    public void rewriteResourceZip(@NonNull File source, @NonNull File dest,
+                                   @NonNull String modulePrefix) throws IOException {
         if (dest.exists()) {
             boolean deleted = dest.delete();
             if (!deleted) {
@@ -147,7 +153,7 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry current = entries.nextElement();
-                if (shouldBeReplacedWithDummy(current)) {
+                if (shouldBeReplacedWithDummy(current, modulePrefix)) {
                     replaceWithDummyEntry(zos, current);
                 } else {
                     copyToOutput(zipFile.getInputStream(current), zos, current);
@@ -170,11 +176,12 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
         }
     }
 
-    private boolean shouldBeReplacedWithDummy(ZipEntry entry) {
-        if (entry.isDirectory() || !entry.getName().startsWith("res/")) {
+    private boolean shouldBeReplacedWithDummy(ZipEntry entry, String modulePrefix) {
+        String resPath = (modulePrefix.isEmpty() ? "" : modulePrefix + "/") + "res/";
+        if (entry.isDirectory() || !entry.getName().startsWith(resPath)) {
             return false;
         }
-        Resource resource = getResourceByJarPath(entry.getName());
+        Resource resource = getResourceByJarPath(modulePrefix, entry.getName());
         Preconditions.checkNotNull(resource,
                 "Resource for entry '" + entry.getName() + "' was not gathered.");
         return !resource.isReachable();
@@ -258,13 +265,9 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
     }
 
     @Nullable
-    private Resource getResourceByJarPath(String path) {
-        if (!path.startsWith("res/")) {
-            return null;
-        }
-
+    private Resource getResourceByJarPath(String moduleName, String path) {
         // Jars use forward slash paths, not File.separator
-        int folderStart = 4; // "res/".length
+        int folderStart = (moduleName.isEmpty() ? 0 : moduleName.length() + 1) + 4; // "res/".length
         int folderEnd = path.indexOf('/', folderStart);
         if (folderEnd == -1) {
             return null;

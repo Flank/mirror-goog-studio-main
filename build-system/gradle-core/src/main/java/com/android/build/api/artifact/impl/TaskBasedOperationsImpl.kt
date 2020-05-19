@@ -17,6 +17,7 @@
 package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
@@ -69,13 +70,17 @@ class TaskBasedOperationsImpl<TaskT: Task>(
     ) where ArtifactTypeT : Artifact.Single, ArtifactTypeT : Artifact.Transformable {
         val artifactContainer = artifacts.getArtifactContainer(type)
         val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
+        val fileName = when (type.kind) {
+            is ArtifactKind.FILE -> DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
+            else -> ""
+        }
         taskProvider.configure {
             from(it).set(currentProvider)
             // since the task will now execute, resolve its output path.
             into(it).set(
                 artifacts.getOutputPath(type,
                     taskProvider.name,
-                    type.getFileSystemLocationName()
+                    fileName
                 )
             )
         }

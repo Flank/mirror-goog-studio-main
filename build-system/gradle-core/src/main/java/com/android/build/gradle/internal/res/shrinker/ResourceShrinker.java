@@ -59,5 +59,5 @@ public interface ResourceShrinker extends AutoCloseable {
      *
      * <p>Should be called after {@code ResourceShrinker#analyze}.
      */
-    void rewriteResourceZip(@NonNull File source, @NonNull File dest) throws IOException;
+    void rewriteResourcesInApkFormat(@NonNull File source, @NonNull File dest) throws IOException;
 }

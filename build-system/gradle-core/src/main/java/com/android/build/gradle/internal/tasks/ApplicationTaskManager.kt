@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
+import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.errors.IssueReporter
@@ -271,7 +272,6 @@ class ApplicationTaskManager(
         if (variantProperties.variantType.isBaseModule) {
             taskFactory.register(ParseIntegrityConfigTask.CreationAction(variantProperties))
             taskFactory.register(PackageBundleTask.CreationAction(variantProperties))
-            taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
             if (!debuggable) {
                 if (includeSdkInfoInBundle) {
                     taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
@@ -281,9 +281,17 @@ class ApplicationTaskManager(
                     taskFactory.register(SdkDependencyDataGeneratorTask.CreationAction(variantProperties))
                 }
             }
+
+            if (variantProperties.variantScope.useResourceShrinker()
+                && globalScope.projectOptions.get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
+                taskFactory.register(ShrinkAppBundleResourcesTask.CreationAction(variantProperties))
+            }
+
+            taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
             taskFactory.register(BundleToApkTask.CreationAction(variantProperties))
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variantProperties))
             taskFactory.register(ExtractApksTask.CreationAction(variantProperties))
+
             val mergeNativeDebugMetadataTask =
                 taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variantProperties))
             variantProperties.taskContainer.assembleTask.dependsOn(mergeNativeDebugMetadataTask)

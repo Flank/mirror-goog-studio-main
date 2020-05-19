@@ -357,7 +357,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
      * @param dest a new .ap_ file with unused file-based resources removed
      */
     @Override
-    public void rewriteResourceZip(@NonNull File source, @NonNull File dest)
+    public void rewriteResourcesInApkFormat(@NonNull File source, @NonNull File dest)
             throws IOException {
         if (dest.exists()) {
             boolean deleted = dest.delete();

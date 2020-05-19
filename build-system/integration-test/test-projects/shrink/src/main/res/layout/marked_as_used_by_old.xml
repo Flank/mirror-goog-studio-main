@@ -1,0 +1,6 @@
+<merge>
+    <!--
+    Referenced from a tools:keep attribute in <include> tag. Marked as reachable by the old resource
+    shrinker and not marked by the new one.
+    -->
+</merge>
