@@ -29,16 +29,9 @@ import java.util.List;
  */
 public interface AndroidProject {
     //  Injectable properties to use with -P
-    // Sent by Studio 1.0 ONLY
-    String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
-    // Sent by Studio 1.1+
-    String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = "android.injected.build.model.only.advanced";
-    // Sent by Studio 2.4+. The value of the prop is a monotonically increasing integer.
-    // see MODEL_LEVEL_* constants
-    String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
-    // Sent by Studio 2.4+. Additional model feature trigger on a case by case basis
-    // Value is simply true to enable.
-    String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
+
+    // Sent by Studio 4.2+
+    String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.v2";
 
     // Sent by Studio 2.2+ and Android Support plugin running with IDEA from 4.1+
     // This property will enable compatibility checks between Android Support plugin and the Android
@@ -70,11 +63,6 @@ public interface AndroidProject {
     //   1) Generate machine-readable errors
     //   2) Generate build metadata JSON files
     String PROPERTY_INVOKED_FROM_IDE = "android.injected.invoked.from.ide";
-
-    // deprecated. Kept here so that newew Studio can still inject it for older plugin
-    // but newer plugin don't do anything different based on this property.
-    @SuppressWarnings("unused")
-    String PROPERTY_GENERATE_SOURCES_ONLY = "android.injected.generateSourcesOnly";
 
     String PROPERTY_SIGNING_STORE_FILE = "android.injected.signing.store.file";
     String PROPERTY_SIGNING_STORE_PASSWORD = "android.injected.signing.store.password";
@@ -124,17 +112,6 @@ public interface AndroidProject {
     String FD_LOGS = "logs";
     String FD_OUTPUTS = "outputs";
     String FD_GENERATED = "generated";
-
-    int GENERATION_ORIGINAL = 1;
-    int GENERATION_COMPONENT = 2; // component plugin is not supported since 3.5
-
-    int MODEL_LEVEL_0_ORIGINAL = 0 ; // studio 1.0, no support for SyncIssue
-    int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
-    //int MODEL_LEVEL_2_DONT_USE = 2; // Don't use this. Go level 1 to level 3 when ready.
-    int MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD =
-            3; // Model for 3.0 with no variant output in import sync model.
-    int MODEL_LEVEL_4_NEW_DEP_MODEL = 4;
-    int MODEL_LEVEL_LATEST = MODEL_LEVEL_4_NEW_DEP_MODEL;
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
@@ -345,15 +322,6 @@ public interface AndroidProject {
      */
     @NonNull
     String getNdkVersion();
-
-    /**
-     * Returns the generation of the plugin.
-     *
-     * <p>1 is original plugin, 2 is component based plugin (AKA experimental, not used anymore)
-     *
-     * @return the generation value
-     */
-    int getPluginGeneration();
 
     /**
      * Returns true if this is the base feature split.
