@@ -136,6 +136,8 @@ public class JarContentsTest {
                 "com/android/builder/model/",
                 "com/android/builder/model/level2/",
                 "com/android/builder/model/version.properties",
+                "com/android/builder/model/v2/",
+                "com/android/builder/model/v2/level2/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
