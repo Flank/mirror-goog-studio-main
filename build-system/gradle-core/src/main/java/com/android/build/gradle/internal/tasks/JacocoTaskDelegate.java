@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
@@ -216,7 +217,7 @@ public class JacocoTaskDelegate {
         }
 
         // process changes
-        for (Path basePath : basePathToProcess.keys()) {
+        for (Path basePath : basePathToProcess.keySet()) {
             Map<Action, List<File>> toProcess = new EnumMap<>(Action.class);
             for (Path changed : basePathToProcess.get(basePath)) {
                 Action action = calculateAction(changed.toFile(), basePath.toFile());
@@ -352,6 +353,10 @@ public class JacocoTaskDelegate {
     }
 
     private static class JacocoWorkerAction implements Runnable {
+        @NonNull
+        private static final LoggerWrapper logger =
+                LoggerWrapper.getLogger(JacocoWorkerAction.class);
+
         @NonNull private Map<Action, List<File>> inputs;
         @NonNull private File inputDir;
         @NonNull private File outputDir;
@@ -367,7 +372,9 @@ public class JacocoTaskDelegate {
         public void run() {
             Instrumenter instrumenter =
                     new Instrumenter(new OfflineInstrumentationAccessGenerator());
+            logger.info("Processing entries from input dir: " + inputDir.getAbsolutePath());
             for (File toInstrument : inputs.getOrDefault(Action.INSTRUMENT, ImmutableList.of())) {
+                logger.info("Instrumenting file: " + toInstrument.getAbsolutePath());
                 try (InputStream inputStream =
                         Files.asByteSource(toInstrument).openBufferedStream()) {
                     byte[] instrumented =
