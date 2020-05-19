@@ -143,7 +143,7 @@ interface AndroidProject {
      * @return the type of project.
      * @since 2.3
      */
-    val projectType: Int
+    val projectType: ProjectType
 
     /**
      * Returns the optional group-id of the artifact represented by this project.
@@ -295,14 +295,6 @@ interface AndroidProject {
      * @return the NDK version.
      */
     val ndkVersion: String
-
-    /**
-     * Returns true if this is the base feature split.
-     *
-     * @return true if this is the base feature split
-     * @since 2.4
-     */
-    val isBaseSplit: Boolean
 
     /**
      * Returns the list of dynamic features.

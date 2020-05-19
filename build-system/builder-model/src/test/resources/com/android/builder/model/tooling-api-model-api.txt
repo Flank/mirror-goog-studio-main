@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-bcb8d24c3b5dcc1f2ff5ff73eb6b77bf0b8b0c41720b2d19d4c3077162a7425b
+6c91fb1bf43bc21caa147140ca4dbb2a2cddfb589fccb405a8434532274642c2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -528,14 +528,13 @@ com.android.builder.model.v2.AndroidProject.getName: java.lang.String ()
 com.android.builder.model.v2.AndroidProject.getNativeToolchains: java.util.Collection<com.android.builder.model.NativeToolchain> ()
 com.android.builder.model.v2.AndroidProject.getNdkVersion: java.lang.String ()
 com.android.builder.model.v2.AndroidProject.getProductFlavors: java.util.Collection<com.android.builder.model.v2.ProductFlavorContainer> ()
-com.android.builder.model.v2.AndroidProject.getProjectType: int ()
+com.android.builder.model.v2.AndroidProject.getProjectType: com.android.builder.model.v2.ProjectType ()
 com.android.builder.model.v2.AndroidProject.getResourcePrefix: java.lang.String ()
 com.android.builder.model.v2.AndroidProject.getSigningConfigs: java.util.Collection<com.android.builder.model.v2.SigningConfig> ()
 com.android.builder.model.v2.AndroidProject.getVariantNames: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.AndroidProject.getVariants: java.util.Collection<com.android.builder.model.v2.Variant> ()
 com.android.builder.model.v2.AndroidProject.getVariantsBuildInformation: java.util.Collection<com.android.builder.model.v2.VariantBuildInformation> ()
 com.android.builder.model.v2.AndroidProject.getViewBindingOptions: com.android.builder.model.v2.ViewBindingOptions ()
-com.android.builder.model.v2.AndroidProject.isBaseSplit: boolean ()
 com.android.builder.model.v2.ApiVersion
 com.android.builder.model.v2.ApiVersion.getApiLevel: int ()
 com.android.builder.model.v2.ApiVersion.getApiString: java.lang.String ()
@@ -729,6 +728,9 @@ com.android.builder.model.v2.ProductFlavorContainer.getProductFlavor: com.androi
 com.android.builder.model.v2.ProductFlavorContainer.getSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.ProjectSyncIssues
 com.android.builder.model.v2.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.SyncIssue> ()
+com.android.builder.model.v2.ProjectType extends java.lang.Enum
+com.android.builder.model.v2.ProjectType.valueOf: com.android.builder.model.v2.ProjectType (java.lang.String)
+com.android.builder.model.v2.ProjectType.values: com.android.builder.model.v2.ProjectType[] ()
 com.android.builder.model.v2.SigningConfig
 com.android.builder.model.v2.SigningConfig.getKeyAlias: java.lang.String ()
 com.android.builder.model.v2.SigningConfig.getKeyPassword: java.lang.String ()
