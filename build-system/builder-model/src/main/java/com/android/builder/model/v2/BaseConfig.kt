@@ -24,7 +24,7 @@ import java.io.File
  * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
  */
 interface BaseConfig: Named {
-    override fun getName(): String
+
     /**
      * The application id suffix applied to this base config.
      * To get the final application id, use [AndroidArtifact.getApplicationId].

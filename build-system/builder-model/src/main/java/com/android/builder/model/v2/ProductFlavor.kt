@@ -29,8 +29,6 @@ package com.android.builder.model.v2
  * @see BaseArtifact.getDependencies
  */
 interface ProductFlavor : BaseConfig, DimensionAware {
-    /** The name of the flavor. */
-    override fun getName(): String
 
     /**
      * The name of the product flavor. This is only the value set on this product flavor.

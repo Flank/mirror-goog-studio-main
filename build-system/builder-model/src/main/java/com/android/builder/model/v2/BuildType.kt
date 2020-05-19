@@ -28,9 +28,6 @@ package com.android.builder.model.v2
  * @see AndroidArtifact.getDependencies
  */
 interface BuildType : BaseConfig {
-    /** The name of the build type.*/
-    override fun getName(): String
-
     /** Whether the build type is configured to generate a debuggable apk. */
     val isDebuggable: Boolean
 
