@@ -23,7 +23,13 @@ def merge_xmls(filelist):
   root = ET.Element('testsuites')
   for filename in filelist:
     data = ET.parse(filename).getroot()
-    for child in data:
+    for child in data.findall('testsuite'):
+      for subchild in child:
+        if subchild.tag != "testcase":
+          continue
+        else:
+          root.append(child)
+          break
       if child.find('testcase'):
         root.append(child)
   return root
