@@ -13,7 +13,7 @@ readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
-"${script_dir}/bazel" clean --async
+"${script_dir}/../bazel" clean --async
 
 config_options="--config=remote"
 runs_per_test=10
@@ -21,7 +21,7 @@ runs_per_test=10
 readonly invocation_id_sanity_longrunning="$(uuidgen)"
 
 target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
-"${script_dir}/bazel" \
+"${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
   --runs_per_test=${runs_per_test} \
@@ -52,7 +52,7 @@ readonly bazel_status_sanity_longrunning=$?
 if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_sanity_longrunning}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
-  readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
+  readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs
 
   # aggregate test results into a single XML

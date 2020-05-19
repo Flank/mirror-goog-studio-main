@@ -10,7 +10,7 @@ readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
-"${script_dir}/bazel" clean --async
+"${script_dir}/../bazel" clean --async
 
 config_options="--config=remote"
 
@@ -22,7 +22,7 @@ config_options="--config=remote"
 readonly invocation_id_sanity_no_emu="$(uuidgen)"
 
 target_filters=qa_sanity_unreliable,-no_linux,-no_test_linux
-"${script_dir}/bazel" \
+"${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
   --keep_going \
@@ -50,7 +50,7 @@ readonly invocation_id_fast_no_emu="$(uuidgen)"
 
 # Run Bazel tests, which only those requiring emulator
 target_filters=qa_fast_unreliable,-no_linux,-no_test_linux
-"${script_dir}/bazel" \
+"${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
   --keep_going \
@@ -77,7 +77,7 @@ fi
 readonly invocation_id_sanity_emu="$(uuidgen)"
 
 target_filters=qa_sanity_unreliable_emu,-no_linux,-no_test_linux
-QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
+QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
   --keep_going \
@@ -107,7 +107,7 @@ readonly invocation_id_fast_emu="$(uuidgen)"
 
 # Run Bazel tests, which only those requiring emulator
 target_filters=qa_fast_unreliable_emu,-no_linux,-no_test_linux
-QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
+QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
   --keep_going \
@@ -126,7 +126,7 @@ readonly bazel_status_fast_emu=$?
 if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_fast_emu}'\" />" > "${dist_dir}"/upsalite_flaky_fast_emu_test_results.html
 
-  readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
+  readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs
   (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
 

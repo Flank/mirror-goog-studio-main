@@ -13,7 +13,7 @@ readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
 readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
-"${script_dir}/bazel" clean --async  --expunge
+"${script_dir}/../bazel" clean --async  --expunge
 
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
@@ -37,7 +37,7 @@ if [[ $lsb_release == "crostini" ]]; then
   readonly build_invocation_id="$(uuidgen)"
 
   #Build the project for crostini, 2 jobs at a time to address OOM issues
-  "${script_dir}/bazel" \
+  "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     build \
     ${config_options} \
@@ -52,7 +52,7 @@ if [[ $lsb_release == "crostini" ]]; then
   readonly test_invocation_id="$(uuidgen)"
 
   #Run the tests one at a time for crostini
-  "${script_dir}/bazel" \
+  "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
     --keep_going \
@@ -87,7 +87,7 @@ else #Executes normally on linux as before
 
   # Run Bazel tests - no emulator tests should run here
   target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
-  "${script_dir}/bazel" \
+  "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
     --keep_going \
@@ -108,7 +108,7 @@ else #Executes normally on linux as before
 fi
 
 if [[ -d "${dist_dir}" ]]; then
-  readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
+  readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs
   (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
 
