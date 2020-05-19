@@ -320,7 +320,9 @@ public class HardwareConfigHelper {
 
     /** Whether the given device is an Automotive device */
     public static boolean isAutomotive(@Nullable Device device) {
-        return device != null && "android-automotive".equals(device.getTagId());
+        return device != null
+                && ("android-automotive".equals(device.getTagId())
+                        || "android-automotive-playstore".equals(device.getTagId()));
     }
 
     /**

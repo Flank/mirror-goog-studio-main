@@ -49,6 +49,10 @@ public class SystemImage implements ISystemImage {
     public static final IdDisplay AUTOMOTIVE_TAG =
             IdDisplay.create("android-automotive", "Android Automotive");
 
+    /** Tag to apply to system images for Android Automotive that have Google Play Store. */
+    public static final IdDisplay AUTOMOTIVE_PLAY_STORE_TAG =
+            IdDisplay.create("android-automotive-playstore", "Android Automotive with Google Play");
+
     /** Tag to apply to system images for Chrome OS device. */
     public static final IdDisplay CHROMEOS_TAG = IdDisplay.create("chromeos", "Chrome OS Device");
 
@@ -168,7 +172,7 @@ public class SystemImage implements ISystemImage {
 
     @Override
     public boolean hasPlayStore() {
-        if (PLAY_STORE_TAG.equals(getTag())) {
+        if (PLAY_STORE_TAG.equals(getTag()) || AUTOMOTIVE_PLAY_STORE_TAG.equals(getTag())) {
             return true;
         }
         // A Wear system image has Play Store if it is

@@ -20,6 +20,7 @@
         <d:name>Automotive (1024p landscape)</d:name>
         <d:id>automotive_1024p_landscape</d:id>
         <d:manufacturer>Google</d:manufacturer>
+        <d:playstore-enabled>true</d:playstore-enabled>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -77,7 +78,7 @@
             <d:keyboard-state>keyssoft</d:keyboard-state>
             <d:nav-state>nonav</d:nav-state>
         </d:state>
-        <d:tag-id>android-automotive</d:tag-id>
+        <d:tag-id>android-automotive-playstore</d:tag-id>
     </d:device>
 
     <d:device>
