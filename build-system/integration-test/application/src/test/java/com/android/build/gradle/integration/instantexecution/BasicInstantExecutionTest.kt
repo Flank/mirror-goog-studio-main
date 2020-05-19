@@ -109,8 +109,8 @@ class BasicInstantExecutionTest {
 
     private fun executor(): GradleTaskExecutor =
         project.executor()
+            .withConfigurationCaching(true)
             .withLoggingLevel(LoggingLevel.LIFECYCLE)
-            .withArgument("-Dorg.gradle.unsafe.instant-execution=true")
             // until b/154742527 is fixed we need to disable this
             .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false")
 }

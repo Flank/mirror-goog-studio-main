@@ -95,6 +95,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     private boolean sdkInLocalProperties = false;
     private boolean localAndroidSdkHome = false;
     private boolean failOnWarning = true;
+    private boolean configurationCaching = false;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -204,6 +205,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
+    public final T withConfigurationCaching(boolean configurationCaching) {
+        this.configurationCaching = configurationCaching;
+        return (T) this;
+    }
+
     protected final List<String> getArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
         arguments.addAll(this.arguments);
@@ -222,6 +228,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (failOnWarning) {
             arguments.add("--warning-mode=fail");
         }
+        arguments.add("-Dorg.gradle.unsafe.instant-execution=" + configurationCaching);
 
         if (!sdkInLocalProperties) {
             Path androidSdkHome;
