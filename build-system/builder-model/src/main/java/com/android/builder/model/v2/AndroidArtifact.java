@@ -33,11 +33,6 @@ import java.util.Set;
  */
 public interface AndroidArtifact extends BaseArtifact {
 
-    /** @deprecated Use post-build model instead. See {@link VariantBuildInformation} */
-    @Deprecated
-    @NonNull
-    Collection<AndroidArtifactOutput> getOutputs();
-
     /**
      * Returns whether the output file is signed. This can only be true for the main apk of an
      * application project.

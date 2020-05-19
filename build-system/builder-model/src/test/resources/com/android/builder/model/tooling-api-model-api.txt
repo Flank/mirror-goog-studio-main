@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2417d19ef30eca0bee4980e30bd6f51c423fa89f048dc1406444b36f117f7bc2
+20ed4e080571272ff27ea1ff689861c124c12b92a258718a5401cea5cf7f8217
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -494,15 +494,11 @@ com.android.builder.model.v2.AndroidArtifact.getGeneratedResourceFolders: java.u
 com.android.builder.model.v2.AndroidArtifact.getGeneratedSourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.AndroidArtifact.getInstrumentedTestTaskName: java.lang.String ()
 com.android.builder.model.v2.AndroidArtifact.getNativeLibraries: java.util.Collection<com.android.builder.model.v2.NativeLibrary> ()
-com.android.builder.model.v2.AndroidArtifact.getOutputs: java.util.Collection<com.android.builder.model.v2.AndroidArtifactOutput> ()
 com.android.builder.model.v2.AndroidArtifact.getResValues: java.util.Map<java.lang.String, com.android.builder.model.v2.ClassField> ()
 com.android.builder.model.v2.AndroidArtifact.getSigningConfigName: java.lang.String ()
 com.android.builder.model.v2.AndroidArtifact.getSourceGenTaskName: java.lang.String ()
 com.android.builder.model.v2.AndroidArtifact.getTestOptions: com.android.builder.model.v2.TestOptions ()
 com.android.builder.model.v2.AndroidArtifact.isSigned: boolean ()
-com.android.builder.model.v2.AndroidArtifactOutput implements com.android.builder.model.v2.OutputFile
-com.android.builder.model.v2.AndroidArtifactOutput.getAssembleTaskName: java.lang.String ()
-com.android.builder.model.v2.AndroidArtifactOutput.getGeneratedManifest: java.io.File ()
 com.android.builder.model.v2.AndroidBundle implements com.android.builder.model.v2.Library
 com.android.builder.model.v2.AndroidBundle.getAssetsFolder: java.io.File ()
 com.android.builder.model.v2.AndroidBundle.getBundle: java.io.File ()
@@ -599,9 +595,6 @@ com.android.builder.model.v2.BaseArtifact.getJavaResourcesFolder: java.io.File (
 com.android.builder.model.v2.BaseArtifact.getMultiFlavorSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.BaseArtifact.getName: java.lang.String ()
 com.android.builder.model.v2.BaseArtifact.getVariantSourceProvider: com.android.builder.model.v2.SourceProvider ()
-com.android.builder.model.v2.BaseBuildOutput
-com.android.builder.model.v2.BaseBuildOutput.getName: java.lang.String ()
-com.android.builder.model.v2.BaseBuildOutput.getOutputs: java.util.Collection<com.android.builder.model.v2.OutputFile> ()
 com.android.builder.model.v2.BaseConfig implements com.android.builder.model.v2.Named
 com.android.builder.model.v2.BaseConfig.getApplicationIdSuffix: java.lang.String ()
 com.android.builder.model.v2.BaseConfig.getBuildConfigFields: java.util.Map<java.lang.String, com.android.builder.model.v2.ClassField> ()
@@ -786,8 +779,6 @@ com.android.builder.model.v2.NativeVariantInfo.getBuildRootFolderMap: java.util.
 com.android.builder.model.v2.OptionalCompilationStep extends java.lang.Enum
 com.android.builder.model.v2.OptionalCompilationStep.valueOf: com.android.builder.model.v2.OptionalCompilationStep (java.lang.String)
 com.android.builder.model.v2.OptionalCompilationStep.values: com.android.builder.model.v2.OptionalCompilationStep[] ()
-com.android.builder.model.v2.OutputFile implements com.android.builder.model.v2.VariantOutput
-com.android.builder.model.v2.OutputFile.getOutputFile: java.io.File ()
 com.android.builder.model.v2.PackagingOptions
 com.android.builder.model.v2.PackagingOptions.getDoNotStrip: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.PackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
@@ -818,8 +809,6 @@ com.android.builder.model.v2.ProductFlavorContainer
 com.android.builder.model.v2.ProductFlavorContainer.getExtraSourceProviders: java.util.Collection<com.android.builder.model.v2.SourceProviderContainer> ()
 com.android.builder.model.v2.ProductFlavorContainer.getProductFlavor: com.android.builder.model.v2.ProductFlavor ()
 com.android.builder.model.v2.ProductFlavorContainer.getSourceProvider: com.android.builder.model.v2.SourceProvider ()
-com.android.builder.model.v2.ProjectBuildOutput
-com.android.builder.model.v2.ProjectBuildOutput.getVariantsBuildOutput: java.util.Collection<com.android.builder.model.v2.VariantBuildOutput> ()
 com.android.builder.model.v2.ProjectSyncIssues
 com.android.builder.model.v2.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.SyncIssue> ()
 com.android.builder.model.v2.SigningConfig
@@ -862,12 +851,6 @@ com.android.builder.model.v2.TestOptions$Execution.valueOf: com.android.builder.
 com.android.builder.model.v2.TestOptions$Execution.values: com.android.builder.model.v2.TestOptions$Execution[] ()
 com.android.builder.model.v2.TestOptions.getAnimationsDisabled: boolean ()
 com.android.builder.model.v2.TestOptions.getExecution: com.android.builder.model.v2.TestOptions$Execution ()
-com.android.builder.model.v2.TestVariantBuildOutput implements com.android.builder.model.v2.BaseBuildOutput
-com.android.builder.model.v2.TestVariantBuildOutput$TestType extends java.lang.Enum
-com.android.builder.model.v2.TestVariantBuildOutput$TestType.valueOf: com.android.builder.model.v2.TestVariantBuildOutput$TestType (java.lang.String)
-com.android.builder.model.v2.TestVariantBuildOutput$TestType.values: com.android.builder.model.v2.TestVariantBuildOutput$TestType[] ()
-com.android.builder.model.v2.TestVariantBuildOutput.getTestedVariantName: java.lang.String ()
-com.android.builder.model.v2.TestVariantBuildOutput.getType: java.lang.String ()
 com.android.builder.model.v2.TestedTargetVariant
 com.android.builder.model.v2.TestedTargetVariant.getTargetProjectPath: java.lang.String ()
 com.android.builder.model.v2.TestedTargetVariant.getTargetVariant: java.lang.String ()
@@ -891,25 +874,9 @@ com.android.builder.model.v2.VariantBuildInformation.getAssembleTaskOutputListin
 com.android.builder.model.v2.VariantBuildInformation.getBundleTaskName: java.lang.String ()
 com.android.builder.model.v2.VariantBuildInformation.getBundleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.v2.VariantBuildInformation.getVariantName: java.lang.String ()
-com.android.builder.model.v2.VariantBuildOutput implements com.android.builder.model.v2.BaseBuildOutput
-com.android.builder.model.v2.VariantBuildOutput.getTestingVariants: java.util.Collection<com.android.builder.model.v2.TestVariantBuildOutput> ()
-com.android.builder.model.v2.VariantOutput
-com.android.builder.model.v2.VariantOutput$FilterType extends java.lang.Enum
-com.android.builder.model.v2.VariantOutput$FilterType.valueOf: com.android.builder.model.v2.VariantOutput$FilterType (java.lang.String)
-com.android.builder.model.v2.VariantOutput$FilterType.values: com.android.builder.model.v2.VariantOutput$FilterType[] ()
-com.android.builder.model.v2.VariantOutput$OutputType extends java.lang.Enum
-com.android.builder.model.v2.VariantOutput$OutputType.valueOf: com.android.builder.model.v2.VariantOutput$OutputType (java.lang.String)
-com.android.builder.model.v2.VariantOutput$OutputType.values: com.android.builder.model.v2.VariantOutput$OutputType[] ()
-com.android.builder.model.v2.VariantOutput.getFilterTypes: java.util.Collection<java.lang.String> ()
-com.android.builder.model.v2.VariantOutput.getFilters: java.util.Collection<com.android.builder.model.v2.FilterData> ()
-com.android.builder.model.v2.VariantOutput.getMainOutputFile: com.android.builder.model.v2.OutputFile ()
-com.android.builder.model.v2.VariantOutput.getOutputType: java.lang.String ()
-com.android.builder.model.v2.VariantOutput.getOutputs: java.util.Collection<? extends com.android.builder.model.v2.OutputFile> ()
-com.android.builder.model.v2.VariantOutput.getVersionCode: int ()
 com.android.builder.model.v2.VectorDrawablesOptions
 com.android.builder.model.v2.VectorDrawablesOptions.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.VectorDrawablesOptions.getUseSupportLibrary: java.lang.Boolean ()
-com.android.builder.model.v2.Version
 com.android.builder.model.v2.ViewBindingOptions
 com.android.builder.model.v2.ViewBindingOptions.isEnabled: boolean ()
 com.android.builder.model.v2.level2.DependencyGraphs
