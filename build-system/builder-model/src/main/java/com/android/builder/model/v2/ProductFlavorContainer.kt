@@ -33,10 +33,6 @@ interface ProductFlavorContainer {
      */
     val sourceProvider: SourceProvider
 
-    /**
-     * Returns a list of ArtifactMetaData/SourceProvider association.
-     *
-     * @return a list of ArtifactMetaData/SourceProvider association.
-     */
-    val extraSourceProviders: Collection<SourceProviderContainer>
+    val androidTestSourceProvider: SourceProvider?
+    val unitTestSourceProvider: SourceProvider?
 }

@@ -53,8 +53,8 @@ interface Variant {
      * @return the artifact.
      */
     val mainArtifact: AndroidArtifact
-    val extraAndroidArtifacts: Collection<AndroidArtifact>
-    val extraJavaArtifacts: Collection<JavaArtifact>
+    val androidTestArtifact: AndroidArtifact?
+    val unitTestArtifact: JavaArtifact?
 
     /**
      * Returns the build type. All variants have a build type, so this is never null.
@@ -69,19 +69,6 @@ interface Variant {
      * @return a list of flavors which can be empty.
      */
     val productFlavors: List<String>
-
-    /**
-     * The result of the merge of all the flavors and of the main default config. If no flavors
-     * are defined then this is the same as the default config.
-     *
-     * This is directly a ProductFlavor instance of a ProductFlavorContainer since this a composite
-     * of existing ProductFlavors.
-     *
-     * @return the merged flavors.
-     *
-     * @see AndroidProject.getDefaultConfig
-     */
-    val mergedFlavor: ProductFlavor
 
     /**
      * Returns the list of target projects and the variants that this variant is testing.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.builder.model.v2
 
 /**
- * Meta Data for an Artifact.
+ * the dependencies for a given variants.
+ *
+ * This will contain the dependencies for the variant's main artifact as well as its tests (if
+ * applicable)
  */
-interface ArtifactMetaData {
+interface VariantDependencies {
+    /**
+     * Returns the name of the variant. It is made up of the build type and flavors (if applicable)
+     *
+     * @return the name of the variant.
+     */
     val name: String
-    val isTest: Boolean
-    val type: Int
 
-    companion object {
-        const val TYPE_ANDROID = 1
-        const val TYPE_JAVA = 2
-    }
+    val mainArtifact: DependencyGraphs
+
+    val androidTestArtifact: DependencyGraphs?
+    val unitTestArtifact: DependencyGraphs?
 }

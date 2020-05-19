@@ -95,11 +95,9 @@ interface AndroidProject {
          * Comma separated list of on-demand dynamic modules or instant app modules names that are
          * selected by the user for installation on the device during deployment.
          */
-        const val PROPERTY_INJECTED_DYNAMIC_MODULES_LIST =
-            "android.injected.modules.install.list"
-        const val ARTIFACT_MAIN = "_main_"
-        const val ARTIFACT_ANDROID_TEST = "_android_test_"
-        const val ARTIFACT_UNIT_TEST = "_unit_test_"
+        const val PROPERTY_INJECTED_DYNAMIC_MODULES_LIST = "android.injected.modules.install.list"
+
+
         const val FD_INTERMEDIATES = "intermediates"
         const val FD_LOGS = "logs"
         const val FD_OUTPUTS = "outputs"
@@ -184,16 +182,12 @@ interface AndroidProject {
     val variants: Collection<Variant>
 
     /**
-     * Returns a list of all the variant names.
+     * Returns the minimal information of variants for this project, excluding test related
+     * variants.
      *
-     *
-     * This does not include test variant. Test variants are additional artifacts in their
-     * respective variant info.
-     *
-     * @return a list of all the variant names.
-     * @since 3.2.
+     * @since 4.1
      */
-    val variantNames: Collection<String>
+    val variantsBuildInformation: Collection<VariantBuildInformation>
 
     /**
      * Returns the name of the variant the IDE should use when opening the project for the first
@@ -211,13 +205,6 @@ interface AndroidProject {
      * @return a list of the flavor dimensions.
      */
     val flavorDimensions: Collection<String>
-
-    /**
-     * Returns a list of extra artifacts meta data. This does not include the main artifact.
-     *
-     * @return a list of extra artifacts
-     */
-    val extraArtifacts: Collection<ArtifactMetaData>
 
     /**
      * Returns the compilation target as a string. This is the full extended target hash string.
@@ -313,15 +300,6 @@ interface AndroidProject {
     /** Returns the AGP flags for this project.  */
     val flags: AndroidGradlePluginProjectFlags
 
-    /**
-     * Returns the minimal information of variants for this project, excluding test related
-     * variants.
-     *
-     * @since 4.1
-     */
-    val variantsBuildInformation: Collection<VariantBuildInformation>
-
     /** Returns the lint jars that this module uses to run extra lint checks  */
     val lintRuleJars: List<File>
-
 }

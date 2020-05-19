@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-6c91fb1bf43bc21caa147140ca4dbb2a2cddfb589fccb405a8434532274642c2
+67667cf5122c50bb83b8ee0b59d4c2b21e7ce877b01a978fca19aa22370ca71c
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -515,7 +515,6 @@ com.android.builder.model.v2.AndroidProject.getDefaultConfig: com.android.builde
 com.android.builder.model.v2.AndroidProject.getDefaultVariant: java.lang.String ()
 com.android.builder.model.v2.AndroidProject.getDependenciesInfo: com.android.builder.model.v2.DependenciesInfo ()
 com.android.builder.model.v2.AndroidProject.getDynamicFeatures: java.util.Collection<java.lang.String> ()
-com.android.builder.model.v2.AndroidProject.getExtraArtifacts: java.util.Collection<com.android.builder.model.v2.ArtifactMetaData> ()
 com.android.builder.model.v2.AndroidProject.getFlags: com.android.builder.model.v2.AndroidGradlePluginProjectFlags ()
 com.android.builder.model.v2.AndroidProject.getFlavorDimensions: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.AndroidProject.getFrameworkSources: java.util.Collection<java.io.File> ()
@@ -531,7 +530,6 @@ com.android.builder.model.v2.AndroidProject.getProductFlavors: java.util.Collect
 com.android.builder.model.v2.AndroidProject.getProjectType: com.android.builder.model.v2.ProjectType ()
 com.android.builder.model.v2.AndroidProject.getResourcePrefix: java.lang.String ()
 com.android.builder.model.v2.AndroidProject.getSigningConfigs: java.util.Collection<com.android.builder.model.v2.SigningConfig> ()
-com.android.builder.model.v2.AndroidProject.getVariantNames: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.AndroidProject.getVariants: java.util.Collection<com.android.builder.model.v2.Variant> ()
 com.android.builder.model.v2.AndroidProject.getVariantsBuildInformation: java.util.Collection<com.android.builder.model.v2.VariantBuildInformation> ()
 com.android.builder.model.v2.AndroidProject.getViewBindingOptions: com.android.builder.model.v2.ViewBindingOptions ()
@@ -545,23 +543,16 @@ com.android.builder.model.v2.AppBundleVariantBuildOutput
 com.android.builder.model.v2.AppBundleVariantBuildOutput.getApkFolder: java.io.File ()
 com.android.builder.model.v2.AppBundleVariantBuildOutput.getBundleFile: java.io.File ()
 com.android.builder.model.v2.AppBundleVariantBuildOutput.getName: java.lang.String ()
-com.android.builder.model.v2.ArtifactMetaData
-com.android.builder.model.v2.ArtifactMetaData$Companion
-com.android.builder.model.v2.ArtifactMetaData.getName: java.lang.String ()
-com.android.builder.model.v2.ArtifactMetaData.getType: int ()
-com.android.builder.model.v2.ArtifactMetaData.isTest: boolean ()
 com.android.builder.model.v2.BaseArtifact
 com.android.builder.model.v2.BaseArtifact.getAdditionalClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.BaseArtifact.getAssembleTaskName: java.lang.String ()
 com.android.builder.model.v2.BaseArtifact.getAssembleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.v2.BaseArtifact.getClassesFolder: java.io.File ()
 com.android.builder.model.v2.BaseArtifact.getCompileTaskName: java.lang.String ()
-com.android.builder.model.v2.BaseArtifact.getDependencyGraphs: com.android.builder.model.v2.DependencyGraphs ()
 com.android.builder.model.v2.BaseArtifact.getGeneratedSourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.BaseArtifact.getIdeSetupTaskNames: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.BaseArtifact.getJavaResourcesFolder: java.io.File ()
 com.android.builder.model.v2.BaseArtifact.getMultiFlavorSourceProvider: com.android.builder.model.v2.SourceProvider ()
-com.android.builder.model.v2.BaseArtifact.getName: java.lang.String ()
 com.android.builder.model.v2.BaseArtifact.getVariantSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.BaseConfig implements com.android.builder.model.v2.Named
 com.android.builder.model.v2.BaseConfig.getApplicationIdSuffix: java.lang.String ()
@@ -587,9 +578,10 @@ com.android.builder.model.v2.BuildType.isRenderscriptDebuggable: boolean ()
 com.android.builder.model.v2.BuildType.isTestCoverageEnabled: boolean ()
 com.android.builder.model.v2.BuildType.isZipAlignEnabled: boolean ()
 com.android.builder.model.v2.BuildTypeContainer
+com.android.builder.model.v2.BuildTypeContainer.getAndroidTestSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.BuildTypeContainer.getBuildType: com.android.builder.model.v2.BuildType ()
-com.android.builder.model.v2.BuildTypeContainer.getExtraSourceProviders: java.util.Collection<com.android.builder.model.v2.SourceProviderContainer> ()
 com.android.builder.model.v2.BuildTypeContainer.getSourceProvider: com.android.builder.model.v2.SourceProvider ()
+com.android.builder.model.v2.BuildTypeContainer.getUnitTestSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.ClassField
 com.android.builder.model.v2.ClassField.getAnnotations: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.ClassField.getDocumentation: java.lang.String ()
@@ -723,9 +715,10 @@ com.android.builder.model.v2.ProductFlavor.getVersionCode: java.lang.Integer ()
 com.android.builder.model.v2.ProductFlavor.getVersionName: java.lang.String ()
 com.android.builder.model.v2.ProductFlavor.getWearAppUnbundled: java.lang.Boolean ()
 com.android.builder.model.v2.ProductFlavorContainer
-com.android.builder.model.v2.ProductFlavorContainer.getExtraSourceProviders: java.util.Collection<com.android.builder.model.v2.SourceProviderContainer> ()
+com.android.builder.model.v2.ProductFlavorContainer.getAndroidTestSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.ProductFlavorContainer.getProductFlavor: com.android.builder.model.v2.ProductFlavor ()
 com.android.builder.model.v2.ProductFlavorContainer.getSourceProvider: com.android.builder.model.v2.SourceProvider ()
+com.android.builder.model.v2.ProductFlavorContainer.getUnitTestSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.ProjectSyncIssues
 com.android.builder.model.v2.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.SyncIssue> ()
 com.android.builder.model.v2.ProjectType extends java.lang.Enum
@@ -755,9 +748,6 @@ com.android.builder.model.v2.SourceProvider.getRenderscriptDirectories: java.uti
 com.android.builder.model.v2.SourceProvider.getResDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.SourceProvider.getResourcesDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.SourceProvider.getShadersDirectories: java.util.Collection<java.io.File> ()
-com.android.builder.model.v2.SourceProviderContainer
-com.android.builder.model.v2.SourceProviderContainer.getArtifactName: java.lang.String ()
-com.android.builder.model.v2.SourceProviderContainer.getSourceProvider: com.android.builder.model.v2.SourceProvider ()
 com.android.builder.model.v2.SyncIssue
 com.android.builder.model.v2.SyncIssue$Companion
 com.android.builder.model.v2.SyncIssue.getData: java.lang.String ()
@@ -775,16 +765,15 @@ com.android.builder.model.v2.TestedTargetVariant
 com.android.builder.model.v2.TestedTargetVariant.getTargetProjectPath: java.lang.String ()
 com.android.builder.model.v2.TestedTargetVariant.getTargetVariant: java.lang.String ()
 com.android.builder.model.v2.Variant
+com.android.builder.model.v2.Variant.getAndroidTestArtifact: com.android.builder.model.v2.AndroidArtifact ()
 com.android.builder.model.v2.Variant.getBuildType: java.lang.String ()
 com.android.builder.model.v2.Variant.getDesugaredMethods: java.util.List<java.lang.String> ()
 com.android.builder.model.v2.Variant.getDisplayName: java.lang.String ()
-com.android.builder.model.v2.Variant.getExtraAndroidArtifacts: java.util.Collection<com.android.builder.model.v2.AndroidArtifact> ()
-com.android.builder.model.v2.Variant.getExtraJavaArtifacts: java.util.Collection<com.android.builder.model.v2.JavaArtifact> ()
 com.android.builder.model.v2.Variant.getMainArtifact: com.android.builder.model.v2.AndroidArtifact ()
-com.android.builder.model.v2.Variant.getMergedFlavor: com.android.builder.model.v2.ProductFlavor ()
 com.android.builder.model.v2.Variant.getName: java.lang.String ()
 com.android.builder.model.v2.Variant.getProductFlavors: java.util.List<java.lang.String> ()
 com.android.builder.model.v2.Variant.getTestedTargetVariants: java.util.Collection<com.android.builder.model.v2.TestedTargetVariant> ()
+com.android.builder.model.v2.Variant.getUnitTestArtifact: com.android.builder.model.v2.JavaArtifact ()
 com.android.builder.model.v2.Variant.isInstantAppCompatible: boolean ()
 com.android.builder.model.v2.VariantBuildInformation
 com.android.builder.model.v2.VariantBuildInformation.getApkFromBundleTaskName: java.lang.String ()
@@ -794,6 +783,11 @@ com.android.builder.model.v2.VariantBuildInformation.getAssembleTaskOutputListin
 com.android.builder.model.v2.VariantBuildInformation.getBundleTaskName: java.lang.String ()
 com.android.builder.model.v2.VariantBuildInformation.getBundleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.v2.VariantBuildInformation.getVariantName: java.lang.String ()
+com.android.builder.model.v2.VariantDependencies
+com.android.builder.model.v2.VariantDependencies.getAndroidTestArtifact: com.android.builder.model.v2.DependencyGraphs ()
+com.android.builder.model.v2.VariantDependencies.getMainArtifact: com.android.builder.model.v2.DependencyGraphs ()
+com.android.builder.model.v2.VariantDependencies.getName: java.lang.String ()
+com.android.builder.model.v2.VariantDependencies.getUnitTestArtifact: com.android.builder.model.v2.DependencyGraphs ()
 com.android.builder.model.v2.VectorDrawablesOptions
 com.android.builder.model.v2.VectorDrawablesOptions.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.builder.model.v2.VectorDrawablesOptions.getUseSupportLibrary: java.lang.Boolean ()

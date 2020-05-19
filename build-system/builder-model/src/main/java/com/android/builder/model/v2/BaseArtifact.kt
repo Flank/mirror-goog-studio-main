@@ -21,10 +21,6 @@ import java.io.File
  * The base information for all generated artifacts
  */
 interface BaseArtifact {
-    /**
-     * Name of the artifact. This should match [ArtifactMetaData.getName].
-     */
-    val name: String
 
     /**
      * @return the name of the task used to compile the code.
@@ -64,16 +60,6 @@ interface BaseArtifact {
      * on the classpath.
      */
     val javaResourcesFolder: File
-
-    /**
-     * Returns the resolved dependencies for this artifact.
-     *
-     * This is a composite of all the
-     * dependencies for that artifact: default config + build type + flavor(s).
-     *
-     * @return The dependencies.
-     */
-    val dependencyGraphs: DependencyGraphs
 
     /**
      * A SourceProvider specific to the variant. This can be null if there is no flavors as

@@ -24,8 +24,6 @@ package com.android.builder.model.v2
  * Each graph is fairly lightweight, with each artifact node being mostly an address, children,
  * and modifiers that are specific to this particular usage of the artifact rather than
  * artifact properties.*
- *
- * @see AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES
  */
 interface DependencyGraphs {
     /**
