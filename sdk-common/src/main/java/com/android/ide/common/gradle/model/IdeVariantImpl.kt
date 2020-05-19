@@ -85,9 +85,9 @@ class IdeVariantImpl : IdeVariant, Serializable {
 
   override fun getMainArtifact(): IdeAndroidArtifact = mainArtifact
 
-  override fun getExtraAndroidArtifacts(): Collection<AndroidArtifact> = extraAndroidArtifacts
+  override fun getExtraAndroidArtifacts(): Collection<IdeAndroidArtifact> = extraAndroidArtifacts
 
-  override fun getExtraJavaArtifacts(): Collection<JavaArtifact> = extraJavaArtifacts
+  override fun getExtraJavaArtifacts(): Collection<IdeJavaArtifact> = extraJavaArtifacts
 
   override fun getBuildType(): String = buildType
 

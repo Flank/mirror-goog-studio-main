@@ -35,7 +35,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
@@ -44,7 +43,6 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
@@ -449,8 +447,8 @@ public class GradleModelMocker {
         when(artifact.getApplicationId()).thenReturn(applicationId);
         when(androidTestArtifact.getApplicationId()).thenReturn(applicationId);
 
-        Collection<JavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
-        Collection<AndroidArtifact> extraAndroidArtifacts =
+        Collection<IdeJavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
+        Collection<IdeAndroidArtifact> extraAndroidArtifacts =
                 Collections.singletonList(androidTestArtifact);
 
         //noinspection deprecation

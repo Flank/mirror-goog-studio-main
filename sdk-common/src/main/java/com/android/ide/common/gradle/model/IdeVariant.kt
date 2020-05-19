@@ -22,5 +22,7 @@ interface IdeVariant : Variant, Serializable {
   override fun getMainArtifact(): IdeAndroidArtifact
   val androidTestArtifact: IdeAndroidArtifact?
   val unitTestArtifact: IdeJavaArtifact?
+  override fun getExtraAndroidArtifacts(): Collection<IdeAndroidArtifact>
+  override fun getExtraJavaArtifacts(): Collection<IdeJavaArtifact>
   val testArtifacts: Collection<IdeBaseArtifact>
 }
