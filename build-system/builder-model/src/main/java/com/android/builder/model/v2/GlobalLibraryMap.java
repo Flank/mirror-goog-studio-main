@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,23 @@
 package com.android.builder.model.v2;
 
 import com.android.annotations.NonNull;
-import java.io.File;
-import java.util.List;
+import java.util.Map;
 
 /**
- * A Java library.
+ * Global map of all the {@link Library} instances used in a single or multi-module gradle project.
+ *
+ * This is a separate model to query (the same way {@link AndroidProject} is queried). It must
+ * be queried after all the models have been queried for their {@link AndroidProject}.
+ *
+ * @since 2.3
  */
-public interface JavaLibrary extends Library {
-    /**
-     * Returns the library's jar file.
-     */
-    @NonNull
-    File getJarFile();
+public interface GlobalLibraryMap {
 
     /**
-     * Returns the direct dependencies of this library.
+     * the list of external libraries used by all the variants in the module.
+     *
+     * @return the map of address to library
      */
     @NonNull
-    List<? extends JavaLibrary> getDependencies();
+    Map<String, Library> getLibraries();
 }

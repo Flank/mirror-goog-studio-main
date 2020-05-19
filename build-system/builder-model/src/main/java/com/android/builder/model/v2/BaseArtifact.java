@@ -18,7 +18,6 @@ package com.android.builder.model.v2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.v2.level2.DependencyGraphs;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
@@ -78,12 +77,6 @@ public interface BaseArtifact {
      */
     @NonNull
     File getJavaResourcesFolder();
-
-    /**
-     * Return the level 0-1 type dependencies
-     */
-    @NonNull
-    Dependencies getDependencies();
 
     /**
      * Returns the resolved dependencies for this artifact.
