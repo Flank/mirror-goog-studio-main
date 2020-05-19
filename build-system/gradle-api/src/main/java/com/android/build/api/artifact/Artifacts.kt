@@ -54,29 +54,29 @@ interface Artifacts {
     fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
 
     /**
-     * Get the [Provider] of [FILE_TYPE] for the passed [ArtifactType].
+     * Get the [Provider] of [FILE_TYPE] for the passed [Artifact].
      *
-     * The [ArtifactType] must be of the [FILE_TYPE] and [ArtifactType.Single]
+     * The [Artifact] must be of the [FILE_TYPE] and [Artifact.Single]
      */
     fun <FILE_TYPE: FileSystemLocation, ARTIFACT_TYPE> get(type: ARTIFACT_TYPE): Provider<FILE_TYPE>
-            where ARTIFACT_TYPE: ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE: ArtifactType.Single
+            where ARTIFACT_TYPE: ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE: Artifact.Single
 
     /**
-     * Get all the [Provider]s of [FILE_TYPE] for the passed [ArtifactType].
+     * Get all the [Provider]s of [FILE_TYPE] for the passed [Artifact].
      *
-     * The [ArtifactType] must be [ArtifactType.Multiple]
+     * The [Artifact] must be [Artifact.Multiple]
      */
     fun <FILE_TYPE: FileSystemLocation, ARTIFACT_TYPE> getAll(type: ARTIFACT_TYPE): Provider<List<FILE_TYPE>>
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Multiple
+            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>, ARTIFACT_TYPE : Artifact.Multiple
 
     /**
-     * Initiates an append request to a [ArtifactType.Multiple] artifact type.
+     * Initiates an append request to a [Artifact.Multiple] artifact type.
      *
      * @param taskProvider the [TaskProvider] for the task producing an instance of [FILE_TYPE]
      * @param with the method reference to get the [FileSystemLocationProperty] to retrieve the
      * produced [FILE_TYPE] when needed.
      *
-     * The artifact type must be [ArtifactType.Multiple] and [ArtifactType.Appendable]
+     * The artifact type must be [Artifact.Multiple] and [Artifact.Appendable]
      *
      * Let's take a [Task] with a [org.gradle.api.file.RegularFile] output :
      * <pre>
@@ -92,9 +92,9 @@ interface Artifacts {
      * and an ArtifactType defined as follows :
      *
      * <pre
-     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object MULTIPLE_FILE_ARTIFACT:
-     *                  ArtifactTypes<RegularFile>(FILE), Multiple, Appendable
+     *                  ArtifactType<RegularFile>(FILE), Multiple, Appendable
      *     }
      * </pre>
      *
@@ -104,7 +104,7 @@ interface Artifacts {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "appendTask")
      *     artifacts.append(taskProvider, MyTask::outputFile)
-     *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
+     *              .on(ArtifactType.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return an [AppendRequest] to finish the append request.
@@ -122,7 +122,7 @@ interface Artifacts {
      * @param into the method reference to get the [Property] of [FILE_TYPE] to retrieve the
      * produced [FILE_TYPE] when needed.
      *
-     * The artifact type must be [ArtifactType.Single] and [ArtifactType.Transformable]
+     * The artifact type must be [Artifact.Single] and [Artifact.Transformable]
      *
      * Let's take a [Task] transforming an input [org.gradle.api.file.RegularFile] into an
      * output :
@@ -140,9 +140,9 @@ interface Artifacts {
      * and an ArtifactType defined as follows :
      *
      * <pre
-     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object SINGLE_FILE_ARTIFACT:
-     *                  ArtifactTypes<RegularFile>(FILE), Single, Transformable
+     *                  ArtifactType<RegularFile>(FILE), Single, Transformable
      *     }
      * </pre>
      *
@@ -151,7 +151,7 @@ interface Artifacts {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "transformTask")
      *     artifacts.transform(taskProvider, MyTask::inputFile, MyTask::outputFile)
-     *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
+     *              .on(ArtifactType.SINGLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return an instance of [TransformRequest] that can be used to specify the artifact type.
@@ -170,7 +170,7 @@ interface Artifacts {
      * @param into the method reference to get the [Property] to retrieve the produced [FILE_TYPE]
      * when needed.
      *
-     * The artifact type must be [ArtifactType.Multiple] and [ArtifactType.Transformable]
+     * The artifact type must be [Artifact.Multiple] and [Artifact.Transformable]
      *
      * The implementation of the task must combine all the inputs returned [from] the method
      * reference and store [into] a single output.
@@ -195,9 +195,9 @@ interface Artifacts {
      * and an ArtifactType defined as follows :
      *
      * <pre
-     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object MULTIPLE_FILE_ARTIFACT:
-     *                  ArtifactTypes<RegularFile>(FILE), Multiple, Transformable
+     *                  ArtifactType<RegularFile>(FILE), Multiple, Transformable
      *     }
      * </pre>
      *
@@ -206,7 +206,7 @@ interface Artifacts {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
      *     artifacts.transformAll(taskProvider, MyTask::inputFiles, MyTask::outputFile)
-     *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
+     *              .on(ArtifactType.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return an instance of [TransformRequest] that can be used to specify the artifact type.
@@ -234,14 +234,14 @@ interface Artifacts {
      * @param taskProvider a [TaskProvider] for the task producing an instance of [FILE_TYPE]
      * @param with the method reference to obtain the [Provider] for the produced [FILE_TYPE]
      *
-     * The artifact type must be [ArtifactType.Replaceable]
+     * The artifact type must be [Artifact.Replaceable]
      *
      * A replacement request does not care about the existing producer as it replaces it. Therefore
      * the existing producer will not execute.
      * Please note that when such replace requests are made, the TASK will replace initial AGP
      * providers.
      *
-     * You cannot replace [ArtifactType.Multiple] artifact type, therefore you must instead combine
+     * You cannot replace [Artifact.Multiple] artifact type, therefore you must instead combine
      * it using the [Artifacts.transformAll] API.
      *
      * Let's take a [Task] with a [org.gradle.api.file.RegularFile] output :
@@ -259,9 +259,9 @@ interface Artifacts {
      * and an ArtifactType defined as follows :
      *
      * <pre
-     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object SINGLE_FILE_ARTIFACT:
-     *                  ArtifactTypes<RegularFile>(FILE), Replaceable
+     *                  ArtifactType<RegularFile>(FILE), Replaceable
      *     }
      * </pre>
      *
@@ -270,7 +270,7 @@ interface Artifacts {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "replaceTask")
      *     artifacts.replace(taskProvider, MyTask::outputFile)
-     *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
+     *              .on(ArtifactType.SINGLE_FILE_ARTIFACT)
      * </pre>
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> replace(
@@ -287,12 +287,12 @@ interface TransformRequest<FILE_TYPE: FileSystemLocation> {
     /**
      * Specifies the artifact type this single file transform request applies to.
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
-     * [ArtifactType.Transformable] and [ArtifactType.Single]
+     * [Artifact.Transformable] and [Artifact.Single]
      */
     fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
             where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE: ArtifactType.Transformable,
-                  ARTIFACT_TYPE: ArtifactType.Single
+                  ARTIFACT_TYPE: Artifact.Transformable,
+                  ARTIFACT_TYPE: Artifact.Single
 }
 
 /**
@@ -303,12 +303,12 @@ interface MultipleTransformRequest<FILE_TYPE: FileSystemLocation> {
     /**
      * Specifies the artifact type this multiple file transform request applies to.
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
-     * [ArtifactType.Transformable] and [ArtifactType.Multiple]
+     * [Artifact.Transformable] and [Artifact.Multiple]
      */
     fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
             where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE: ArtifactType.Transformable,
-                  ARTIFACT_TYPE: ArtifactType.Multiple
+                  ARTIFACT_TYPE: Artifact.Transformable,
+                  ARTIFACT_TYPE: Artifact.Multiple
 }
 
 /**
@@ -319,11 +319,11 @@ interface ReplaceRequest<FILE_TYPE: FileSystemLocation> {
     /**
      * Specifies the artifact type this multiple file replace request applies to.
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
-     * [ArtifactType.Replaceable].
+     * [Artifact.Replaceable].
      */
     fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
             where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE: ArtifactType.Replaceable
+                  ARTIFACT_TYPE: Artifact.Replaceable
 }
 
 /**
@@ -334,9 +334,9 @@ interface AppendRequest<FILE_TYPE: FileSystemLocation> {
     /**
      * Specifies the artifact type this multiple file append request applies to.
      * @param type the artifact type which must be of the right [FILE_TYPE], but also
-     * [ArtifactType.Appendable] and [ArtifactType.Multiple]
+     * [Artifact.Appendable] and [Artifact.Multiple]
      */
     fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE): AppendRequest<FILE_TYPE>
             where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE: ArtifactType.Appendable
+                  ARTIFACT_TYPE: Artifact.Appendable
 }

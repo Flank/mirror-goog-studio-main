@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
@@ -32,7 +32,7 @@ import java.util.function.Supplier
 
 class BuiltArtifactsImpl(
     override val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
-    override val artifactType: ArtifactType<*>,
+    override val artifactType: Artifact<*>,
     override val applicationId: String,
     override val variantName: String,
     override val elements: Collection<BuiltArtifactImpl>)
@@ -62,7 +62,7 @@ class BuiltArtifactsImpl(
      * TODO : move those 2 APIs to TaskBaseOperationsImpl class.
      */
     internal fun <T: BuiltArtifacts.TransformParams> transform(
-        newArtifactType: ArtifactType<Directory>,
+        newArtifactType: Artifact<Directory>,
         workerFacade: WorkerExecutorFacade,
         transformRunnableClass: Class<out Runnable>,
         parametersFactory: (builtArtifact: BuiltArtifact) -> T
@@ -101,7 +101,7 @@ class BuiltArtifactsImpl(
     private fun persist(projectPath: Path): String {
         val gsonBuilder = GsonBuilder()
         gsonBuilder.registerTypeAdapter(BuiltArtifactImpl::class.java, BuiltArtifactTypeAdapter())
-        gsonBuilder.registerTypeHierarchyAdapter(ArtifactType::class.java, ArtifactTypeTypeAdapter())
+        gsonBuilder.registerTypeHierarchyAdapter(Artifact::class.java, ArtifactTypeTypeAdapter())
         val gson = gsonBuilder
             .enableComplexMapKeySerialization()
             .setPrettyPrinting()

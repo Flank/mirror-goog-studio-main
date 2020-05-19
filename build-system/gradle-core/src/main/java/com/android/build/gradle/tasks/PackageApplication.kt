@@ -16,7 +16,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -49,7 +49,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         private val outputDirectory: File,
         useResourceShrinker: Boolean,
         manifests: Provider<Directory?>,
-        manifestType: ArtifactType<Directory>,
+        manifestType: Artifact<Directory>,
         packageCustomClassDependencies: Boolean
     ) : PackageAndroidArtifact.CreationAction<PackageApplication>(
         creationConfig,

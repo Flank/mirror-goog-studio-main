@@ -16,7 +16,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -94,17 +94,17 @@ class BaseAppModuleExtensionTest {
     fun testOnVariantsProperties() {
         appExtension.onVariantProperties
             .withName("foo", Action {
-                it.artifacts.get(ArtifactTypes.APK) })
+                it.artifacts.get(ArtifactType.APK) })
         appExtension.onVariantProperties
             .withFlavor("f1" to "dim1", Action {
-                it.artifacts.get(ArtifactTypes.APK) }
+                it.artifacts.get(ArtifactType.APK) }
             )
 
         appExtension.onVariantProperties
             .withType(ApplicationVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1", Action {
-                it.artifacts.get(ArtifactTypes.APK)
+                it.artifacts.get(ArtifactType.APK)
             })
 
         appExtension.onVariantProperties
@@ -112,7 +112,7 @@ class BaseAppModuleExtensionTest {
             .withBuildType("debug")
             .withFlavor("f1" to "dim1")
             .withFlavor("f2" to "dim2", Action {
-                it.artifacts.get(ArtifactTypes.APK)
+                it.artifacts.get(ArtifactType.APK)
             })
     }
 }

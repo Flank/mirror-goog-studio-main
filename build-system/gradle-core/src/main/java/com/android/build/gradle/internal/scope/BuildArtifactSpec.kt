@@ -16,14 +16,14 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
 
 /**
  * Specification to define supported features of [BuildArtifactType]
  */
 data class BuildArtifactSpec(
-        val type : ArtifactType<*>,
+        val type : Artifact<*>,
         val appendable : Boolean,
         val replaceable: Boolean) {
     companion object {
@@ -35,17 +35,17 @@ data class BuildArtifactSpec(
             spec(InternalArtifactType.BASE_MODULE_METADATA,false,      true)
         )
 
-        fun spec(type : ArtifactType<*>, appendable : Boolean, replaceable: Boolean) =
+        fun spec(type : Artifact<*>, appendable : Boolean, replaceable: Boolean) =
             type to BuildArtifactSpec(
                 type,
                 appendable,
                 replaceable
             )
 
-        fun get(type : ArtifactType<*>) =
+        fun get(type : Artifact<*>) =
                 specMap[type]
                         ?: throw RuntimeException("Specification is not defined for type '$type'.")
 
-        fun has(type : ArtifactType<*>) = specMap.containsKey(type)
+        fun has(type : Artifact<*>) = specMap.containsKey(type)
     }
 }

@@ -28,7 +28,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactTransformationRequest;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.Artifact;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
@@ -168,7 +168,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @OutputDirectory
     public abstract DirectoryProperty getIncrementalFolder();
 
-    protected ArtifactType<Directory> manifestType;
+    protected Artifact<Directory> manifestType;
 
     @Input
     public String getManifestTypeName() {
@@ -560,7 +560,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         public abstract Property<SerializableInputChanges> getJavaResourceFiles();
 
         @NonNull
-        public abstract Property<ArtifactType<Directory>> getManifestType();
+        public abstract Property<Artifact<Directory>> getManifestType();
 
         @NonNull
         public abstract Property<IncrementalPackagerBuilder.ApkFormat> getApkFormat();
@@ -957,14 +957,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
         protected boolean useResourceShrinker;
-        @NonNull private final ArtifactType<Directory> manifestType;
+        @NonNull private final Artifact<Directory> manifestType;
         private final boolean packageCustomClassDependencies;
 
         public CreationAction(
                 @NonNull ApkCreationConfig creationConfig,
                 boolean useResourceShrinker,
                 @NonNull Provider<Directory> manifests,
-                @NonNull ArtifactType<Directory> manifestType,
+                @NonNull Artifact<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
             super(creationConfig);
             this.project = creationConfig.getGlobalScope().getProject();

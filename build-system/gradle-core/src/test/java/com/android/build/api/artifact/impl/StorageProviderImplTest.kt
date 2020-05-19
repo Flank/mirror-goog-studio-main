@@ -17,7 +17,7 @@
 package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.ArtifactKind
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.google.common.truth.Truth
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -49,7 +49,7 @@ class StorageProviderImplTest {
         MockitoAnnotations.initMocks(this)
     }
 
-    sealed class TestTypes<T: FileSystemLocation>(kind: ArtifactKind<T>): ArtifactType<T>(kind) {
+    sealed class TestTypes<T: FileSystemLocation>(kind: ArtifactKind<T>): Artifact<T>(kind) {
         object SINGLE_FILE: TestTypes<RegularFile>(ArtifactKind.FILE), Single
         object SINGLE_DIRECTORY: TestTypes<Directory>(ArtifactKind.DIRECTORY), Single
         object MULTIPLE_FILES: TestTypes<RegularFile>(ArtifactKind.FILE), Multiple

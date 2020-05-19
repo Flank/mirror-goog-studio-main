@@ -93,11 +93,11 @@ class TestingElements(val language: ScriptingLanguage) {
             import org.gradle.workers.WorkParameters
             import org.gradle.workers.WorkerExecutor
             import org.gradle.workers.WorkAction
-            import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.artifact.ArtifactKind
             import com.android.build.api.artifact.ArtifactType
-            import com.android.build.api.artifact.ArtifactType.Replaceable
-            import com.android.build.api.artifact.ArtifactType.ContainsMany
+            import com.android.build.api.artifact.ArtifactKind
+            import com.android.build.api.artifact.Artifact
+            import com.android.build.api.artifact.Artifact.Replaceable
+            import com.android.build.api.artifact.Artifact.ContainsMany
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
 
@@ -450,7 +450,7 @@ fun getManifestProducerTask() =
             """
                 ScriptingLanguage.Groovy ->
             // language=groovy
-            """
+                    """
             import org.gradle.api.DefaultTask
             import org.gradle.api.file.Directory
             import org.gradle.api.file.DirectoryProperty
@@ -460,11 +460,10 @@ fun getManifestProducerTask() =
             import java.io.PrintStream
 
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.variant.BuiltArtifacts
             import org.gradle.api.provider.Property
-            import org.gradle.api.tasks.Internal
-            import java.io.File
+            import org.gradle.api.tasks.Internal 
 
             abstract class DisplayApksTask extends DefaultTask {
 
@@ -482,7 +481,7 @@ fun getManifestProducerTask() =
                         throw new RuntimeException("Cannot load APKs")
                     }
                     artifacts.elements.forEach {
-                        println("Got an APK at ${ '$' }{it.outputFile}")
+                        println("Got an APK at ${'$'}{it.outputFile}")
                     }
                 }
             }
@@ -502,17 +501,11 @@ fun getManifestProducerTask() =
             import org.gradle.api.tasks.InputFiles
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
-            import java.io.ByteArrayOutputStream
-            import java.io.PrintStream
-
-            import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.variant.BuiltArtifact
-            import com.android.build.api.variant.BuiltArtifacts
-            import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.variant.BuiltArtifact
+import com.android.build.api.artifact.ArtifactTransformationRequest
             import org.gradle.api.tasks.Internal
-            import java.io.File
-            import java.nio.file.Files
+
+import java.nio.file.Files
 
             interface WorkItemParameters extends WorkParameters, Serializable {
                 RegularFileProperty getInputApkFile()

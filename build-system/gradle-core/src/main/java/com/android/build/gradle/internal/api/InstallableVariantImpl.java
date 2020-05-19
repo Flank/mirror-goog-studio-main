@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.Artifact;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
@@ -113,7 +113,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @NonNull
     @Incubating
     public Provider<FileCollection> getFinalArtifact(
-            @NonNull ArtifactType<? extends FileSystemLocation> artifactType) {
+            @NonNull Artifact<? extends FileSystemLocation> artifactType) {
         return componentProperties
                 .getGlobalScope()
                 .getProject()

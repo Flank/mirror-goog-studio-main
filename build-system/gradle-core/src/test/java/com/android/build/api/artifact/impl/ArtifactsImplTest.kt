@@ -17,15 +17,15 @@
 package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.ArtifactKind
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_DIRECTORIES
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_DIRECTORY
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_FILE
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_FILES
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_REPLACABLE_DIRECTORY
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_REPLACABLE_FILE
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY
-import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_FILE
+import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_DIRECTORIES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_DIRECTORY
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_FILE
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_FILES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_REPLACABLE_DIRECTORY
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_REPLACABLE_FILE
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_TRANSFORMABLE_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
@@ -51,11 +51,11 @@ import org.junit.rules.TemporaryFolder
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-class OperationsImplTest {
+class ArtifactsImplTest {
 
     @Suppress("ClassName")
     sealed class TestArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>) :
-        ArtifactType<T>(kind) {
+        Artifact<T>(kind) {
 
         object TEST_FILE : TestArtifactType<RegularFile>(FILE), Single
         object TEST_FILES : TestArtifactType<RegularFile>(FILE), Multiple

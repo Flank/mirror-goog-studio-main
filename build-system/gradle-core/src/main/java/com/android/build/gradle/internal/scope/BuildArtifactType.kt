@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 
@@ -27,7 +27,7 @@ import org.gradle.api.file.Directory
  * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
-sealed class BuildArtifactType : ArtifactType<Directory>(
+sealed class BuildArtifactType : Artifact<Directory>(
     DIRECTORY
 ) {
 

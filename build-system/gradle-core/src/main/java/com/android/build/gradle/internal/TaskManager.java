@@ -52,7 +52,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.ArtifactTypes;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
@@ -2668,7 +2668,7 @@ public abstract class TaskManager<
         // republish APK to the external world.
         creationConfig
                 .getArtifacts()
-                .republish(InternalArtifactType.APK.INSTANCE, ArtifactTypes.APK.INSTANCE);
+                .republish(InternalArtifactType.APK.INSTANCE, ArtifactType.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
@@ -2883,7 +2883,7 @@ public abstract class TaskManager<
         // republish Bundle to the external world.
         componentProperties
                 .getArtifacts()
-                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactTypes.BUNDLE.INSTANCE);
+                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactType.BUNDLE.INSTANCE);
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(

@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.workers.WorkParameters
@@ -28,7 +28,7 @@ import java.util.ServiceLoader
  * Represents a [Collection] of [BuiltArtifact] produced by a [org.gradle.api.Task].
  *
  * Tasks in Android Gradle Plugin can produce more than one file in the output folder so any
- * [ArtifactType] with a [ArtifactType.kind] of type
+ * [Artifact] with a [Artifact.kind] of type
  * [com.android.build.api.artifact.ArtifactKind.DIRECTORY] can actually contain several produced
  * [File]. For instance, when dealing with multi-apk, there will be several manifest files or APKs
  * produced by the Android Gradle Plugin.
@@ -76,12 +76,12 @@ interface BuiltArtifacts {
     }
 
     /**
-     * Identifies the [ArtifactType] for this [Collection] of [BuiltArtifact], all [BuiltArtifact]
+     * Identifies the [Artifact] for this [Collection] of [BuiltArtifact], all [BuiltArtifact]
      * are the same type of artifact.
      *
-     * @return the [ArtifactType] for all the [BuiltArtifact] instances.
+     * @return the [Artifact] for all the [BuiltArtifact] instances.
      */
-    val artifactType: ArtifactType<*>
+    val artifactType: Artifact<*>
 
     /**
      * Returns the application ID for these [BuiltArtifact] instances.

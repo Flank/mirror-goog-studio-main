@@ -5,6 +5,22 @@ below are backwards compatible.
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Artifact implements java.io.Serializable
+com.android.build.api.artifact.Artifact$Appendable implements com.android.build.api.artifact.Artifact$Multiple
+com.android.build.api.artifact.Artifact$Companion
+com.android.build.api.artifact.Artifact$Companion.<init>: com.android.build.api.artifact.Artifact$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.Artifact$ContainsMany
+com.android.build.api.artifact.Artifact$Multiple
+com.android.build.api.artifact.Artifact$Multiple.name: java.lang.String ()
+com.android.build.api.artifact.Artifact$Replaceable implements com.android.build.api.artifact.Artifact$Single
+com.android.build.api.artifact.Artifact$Single
+com.android.build.api.artifact.Artifact$Single.name: java.lang.String ()
+com.android.build.api.artifact.Artifact$Transformable
+com.android.build.api.artifact.Artifact.<init>: com.android.build.api.artifact.Artifact<T> (com.android.build.api.artifact.ArtifactKind<T>)
+com.android.build.api.artifact.Artifact.getFileSystemLocationName: java.lang.String ()
+com.android.build.api.artifact.Artifact.getFolderName: java.lang.String ()
+com.android.build.api.artifact.Artifact.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
+com.android.build.api.artifact.Artifact.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactKind implements java.io.Serializable
 com.android.build.api.artifact.ArtifactKind$DIRECTORY extends com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()
@@ -15,29 +31,13 @@ com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> (
 com.android.build.api.artifact.ArtifactTransformationRequest
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (TaskT, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (TaskT, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
-com.android.build.api.artifact.ArtifactType implements java.io.Serializable
-com.android.build.api.artifact.ArtifactType$Appendable implements com.android.build.api.artifact.ArtifactType$Multiple
-com.android.build.api.artifact.ArtifactType$Companion
-com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.artifact.ArtifactType$ContainsMany
-com.android.build.api.artifact.ArtifactType$Multiple
-com.android.build.api.artifact.ArtifactType$Multiple.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactType$Replaceable implements com.android.build.api.artifact.ArtifactType$Single
-com.android.build.api.artifact.ArtifactType$Single
-com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind<T>)
+com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact
+com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
+com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Transformable
+com.android.build.api.artifact.ArtifactType$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
+com.android.build.api.artifact.ArtifactType$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single
+com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
-com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
-com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
-com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactTypes extends com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single, com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$ContainsMany
-com.android.build.api.artifact.ArtifactTypes$BUNDLE extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single, com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single, com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactTypes$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single
-com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.artifact.ArtifactTypes.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.Artifacts
 com.android.build.api.artifact.Artifacts.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Artifacts.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
@@ -774,7 +774,7 @@ com.android.build.api.variant.BuiltArtifacts$Companion
 com.android.build.api.variant.BuiltArtifacts$TransformParams implements org.gradle.workers.WorkParameters, java.io.Serializable
 com.android.build.api.variant.BuiltArtifacts$TransformParams.getOutput: java.io.File ()
 com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
-com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
+com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.Artifact<?> ()
 com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
 com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)

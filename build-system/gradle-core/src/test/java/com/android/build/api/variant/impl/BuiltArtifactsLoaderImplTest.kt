@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
@@ -49,7 +49,7 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(builtArtifacts).isNotNull()
 
         val newBuiltArtifacts = BuiltArtifactsImpl(
-            artifactType = ArtifactTypes.APK,
+            artifactType = ArtifactType.APK,
             applicationId = builtArtifacts!!.applicationId,
             variantName = builtArtifacts.variantName,
             elements = builtArtifacts.elements.map {
@@ -72,7 +72,7 @@ class BuiltArtifactsLoaderImplTest {
 
         assertThat(updatedBuiltArtifacts!!.applicationId).isEqualTo(builtArtifacts.applicationId)
         assertThat(updatedBuiltArtifacts.variantName).isEqualTo(builtArtifacts.variantName)
-        assertThat(updatedBuiltArtifacts.artifactType).isEqualTo(ArtifactTypes.APK)
+        assertThat(updatedBuiltArtifacts.artifactType).isEqualTo(ArtifactType.APK)
         assertThat(updatedBuiltArtifacts.elements).hasSize(1)
         val updatedBuiltArtifact = updatedBuiltArtifacts.elements.first()
         assertThat(File(updatedBuiltArtifact.outputFile).name).isEqualTo("file1.xml.new")
@@ -128,7 +128,7 @@ class BuiltArtifactsLoaderImplTest {
 
         assertThat(builtArtifacts).isNotNull()
         val newBuiltArtifacts = BuiltArtifactsImpl(
-            artifactType = ArtifactTypes.APK,
+            artifactType = ArtifactType.APK,
             applicationId = builtArtifacts!!.applicationId,
             variantName = builtArtifacts.variantName,
             elements = builtArtifacts.elements.map {
@@ -150,7 +150,7 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(updatedBuiltArtifacts).isNotNull()
         assertThat(updatedBuiltArtifacts!!.applicationId).isEqualTo(builtArtifacts.applicationId)
         assertThat(updatedBuiltArtifacts.variantName).isEqualTo(builtArtifacts.variantName)
-        assertThat(updatedBuiltArtifacts.artifactType).isEqualTo(ArtifactTypes.APK)
+        assertThat(updatedBuiltArtifacts.artifactType).isEqualTo(ArtifactType.APK)
         assertThat(updatedBuiltArtifacts.elements).hasSize(2)
         updatedBuiltArtifacts.elements.forEach { builtArtifact ->
             assertThat(builtArtifact.filters).hasSize(1)

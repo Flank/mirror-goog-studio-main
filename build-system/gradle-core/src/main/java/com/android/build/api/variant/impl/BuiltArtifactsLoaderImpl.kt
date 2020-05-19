@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
@@ -61,7 +61,7 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                 BuiltArtifactTypeAdapter()
             )
             gsonBuilder.registerTypeHierarchyAdapter(
-                ArtifactType::class.java,
+                Artifact::class.java,
                 ArtifactTypeTypeAdapter()
             )
 

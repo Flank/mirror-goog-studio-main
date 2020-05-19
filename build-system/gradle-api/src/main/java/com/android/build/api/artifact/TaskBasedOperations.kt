@@ -43,7 +43,7 @@ interface TaskBasedOperations<TaskT: Task> {
      * @param at the location at which the [TaskT] will be reading the built artifacts from.
      */
     fun <ArtifactTypeT> toRead(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): TaskBasedOperations<TaskT>
-            where ArtifactTypeT: ArtifactType<Directory>, ArtifactTypeT: ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+            where ArtifactTypeT: Artifact<Directory>, ArtifactTypeT: Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
 
     /**
      * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
@@ -53,7 +53,7 @@ interface TaskBasedOperations<TaskT: Task> {
      * @param at the location it produces these artifacts in.
      */
     fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): ArtifactTransformationRequest<TaskT>
-        where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+        where ArtifactTypeT : Artifact<Directory>, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
 
     /**
      * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
@@ -65,12 +65,12 @@ interface TaskBasedOperations<TaskT: Task> {
      */
     // TODO : consider moving both andWrite to a separate interface to support atLocation, withName...
     fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>, atLocation: String): ArtifactTransformationRequest<TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+            where ArtifactTypeT : Artifact<Directory>, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
 }
 
 /**
  * Denotes a completed transformation request where a [Task] will be transforming an incoming
- * [ArtifactType] into an outgoing [ArtifactType].
+ * [Artifact] into an outgoing [Artifact].
  *
  * The implementation will take care of reading the source built artifacts from the input location
  * provided through the [TaskBasedOperations.toRead] method.

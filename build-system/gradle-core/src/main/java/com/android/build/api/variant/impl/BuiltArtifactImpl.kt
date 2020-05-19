@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
@@ -135,10 +135,10 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
     }
 }
 
-internal class ArtifactTypeTypeAdapter : TypeAdapter<ArtifactType<*>>() {
+internal class ArtifactTypeTypeAdapter : TypeAdapter<Artifact<*>>() {
 
     @Throws(IOException::class)
-    override fun write(out: JsonWriter, value: ArtifactType<*>) {
+    override fun write(out: JsonWriter, value: Artifact<*>) {
         out.beginObject()
         out.name("type").value(value.name())
         out.name("kind").value(value.kind.dataType().simpleName)
@@ -146,9 +146,9 @@ internal class ArtifactTypeTypeAdapter : TypeAdapter<ArtifactType<*>>() {
     }
 
     @Throws(IOException::class)
-    override fun read(reader: JsonReader): ArtifactType<*> {
+    override fun read(reader: JsonReader): Artifact<*> {
         reader.beginObject()
-        var artifactType: ArtifactType<*>? = null
+        var artifactType: Artifact<*>? = null
         while (reader.hasNext()) {
             when (reader.nextName()) {
                 "type" -> artifactType = reader.nextString().toArtifactType()
