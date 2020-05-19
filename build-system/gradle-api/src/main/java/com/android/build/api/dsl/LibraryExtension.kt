@@ -18,8 +18,8 @@ package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
-import com.android.builder.model.PrefabPackagingOptions
 import org.gradle.api.Incubating
+import org.gradle.api.NamedDomainObjectContainer
 
 /**
  * Extension for the Android Library Gradle Plugin.
@@ -47,4 +47,9 @@ interface LibraryExtension<
     // TODO(b/140406102)
     /** Aidl files to package in the aar. */
     val aidlPackageWhiteList: MutableCollection<String>
+
+    /**
+     * container of Prefab options
+     */
+    val prefab: NamedDomainObjectContainer<PrefabPackagingOptions>
 }

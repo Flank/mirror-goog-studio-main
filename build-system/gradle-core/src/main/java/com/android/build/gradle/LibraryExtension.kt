@@ -16,41 +16,21 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.ViewBindingOptions
-import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
-import com.android.build.gradle.internal.dsl.AaptOptions
-import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
-import com.android.build.gradle.internal.dsl.AdbOptions
-import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.CmakeOptions
-import com.android.build.gradle.internal.dsl.DataBindingOptions
-import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.DensitySplitOptions
-import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
-import com.android.build.gradle.internal.dsl.LintOptions
-import com.android.build.gradle.internal.dsl.NdkBuildOptions
-import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.dsl.PrefabModuleFactory
-import com.android.build.gradle.internal.dsl.PrefabPackagingOptions
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.dsl.Splits
-import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
 import org.gradle.api.Action
@@ -147,10 +127,4 @@ open class LibraryExtension(
 
     override val libraryRequests: MutableCollection<LibraryRequest>
         get() = publicExtensionImpl.libraryRequests
-
-    val prefab: NamedDomainObjectContainer<PrefabPackagingOptions> =
-        dslServices.domainObjectContainer(
-            PrefabPackagingOptions::class.java,
-            PrefabModuleFactory(dslServices)
-        )
 }

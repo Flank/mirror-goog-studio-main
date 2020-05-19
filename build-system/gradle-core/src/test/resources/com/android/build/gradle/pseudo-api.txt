@@ -229,7 +229,7 @@ com.android.build.gradle.LibraryExtension.getOnVariantProperties: com.android.bu
 com.android.build.gradle.LibraryExtension.getOnVariants: com.android.build.api.component.GenericFilteredComponentActionRegistrar<com.android.build.api.variant.LibraryVariant<com.android.build.api.variant.LibraryVariantProperties>> ()
 com.android.build.gradle.LibraryExtension.getPackagingOptions: com.android.build.api.dsl.PackagingOptions ()
 com.android.build.gradle.LibraryExtension.getPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions ()
-com.android.build.gradle.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.PrefabPackagingOptions> ()
+com.android.build.gradle.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
 com.android.build.gradle.LibraryExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.LibraryExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.LibraryExtension.getResourcePrefix: java.lang.String ()
@@ -1443,9 +1443,9 @@ com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFile: void
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.PrefabModuleFactory implements org.gradle.api.NamedDomainObjectFactory
 com.android.build.gradle.internal.dsl.PrefabModuleFactory.<init>: com.android.build.gradle.internal.dsl.PrefabModuleFactory (com.android.build.gradle.internal.services.DslServices)
-com.android.build.gradle.internal.dsl.PrefabModuleFactory.create: com.android.build.gradle.internal.dsl.PrefabPackagingOptions (java.lang.String)
+com.android.build.gradle.internal.dsl.PrefabModuleFactory.create: com.android.build.api.dsl.PrefabPackagingOptions (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabModuleFactory.create: java.lang.Object (java.lang.String)
-com.android.build.gradle.internal.dsl.PrefabPackagingOptions implements com.android.builder.model.PrefabPackagingOptions, java.io.Serializable
+com.android.build.gradle.internal.dsl.PrefabPackagingOptions implements com.android.build.api.dsl.PrefabPackagingOptions, java.io.Serializable
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.<init>: com.android.build.gradle.internal.dsl.PrefabPackagingOptions (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.getHeaders: java.lang.String ()
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.getLibraryName: java.lang.String ()

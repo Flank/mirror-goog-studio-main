@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.builder.model
+package com.android.build.api.dsl
+
+import org.gradle.api.Incubating
 
 /**
  * Options for including [Prefab](https://google.github.io/prefab/) packages in AARs.
  */
+@Incubating
 interface PrefabPackagingOptions {
     /**
      * The name of the library from the external native build to include in the AAR.

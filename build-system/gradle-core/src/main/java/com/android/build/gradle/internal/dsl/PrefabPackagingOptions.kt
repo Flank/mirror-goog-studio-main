@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.builder.model.PrefabPackagingOptions
+import com.android.build.api.dsl.PrefabPackagingOptions
 import java.io.Serializable
 import javax.inject.Inject
 

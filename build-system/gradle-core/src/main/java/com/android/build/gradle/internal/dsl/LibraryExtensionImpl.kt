@@ -20,6 +20,7 @@ import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.google.common.collect.Lists
+import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
 class LibraryExtensionImpl(
@@ -70,4 +72,10 @@ class LibraryExtensionImpl(
         set(value) {
             field.addAll(value)
         }
+
+    override val prefab: NamedDomainObjectContainer<PrefabPackagingOptions> =
+        dslServices.domainObjectContainer(
+            PrefabPackagingOptions::class.java,
+            PrefabModuleFactory(dslServices)
+        )
 }
