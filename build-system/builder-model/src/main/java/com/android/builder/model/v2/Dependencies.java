@@ -50,21 +50,6 @@ public interface Dependencies {
     @NonNull
     Collection<JavaLibrary> getJavaLibraries();
 
-    /**
-     * The list of project dependencies. This is only for non Android module dependencies (which
-     * right now is Java-only modules).
-     *
-     * <p>IMPORTANT: This is not compatible with Composite Builds. This should not be used anymore
-     * starting with version 3.1. This is now superseded by {@link #getJavaModules()}.
-     *
-     * @return the list of projects.
-     * @see #getJavaLibraries()
-     * @see #getJavaModules()
-     */
-    @NonNull
-    @Deprecated
-    Collection<String> getProjects();
-
     /** ' A Unique identifier for a project. */
     interface ProjectIdentifier {
         /** The build id. This is typically the root dir of the build */

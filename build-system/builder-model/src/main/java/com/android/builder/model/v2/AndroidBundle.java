@@ -43,16 +43,6 @@ public interface AndroidBundle extends Library {
     File getBundle();
 
     /**
-     * Returns the location of the unzipped AAR folder.
-     *
-     * @deprecated Users of this model are strongly encouraged to migrate to using the methods for
-     *     the individual artifacts within the AAR instead.
-     */
-    @Deprecated
-    @NonNull
-    File getFolder();
-
-    /**
      * Returns the list of direct library dependencies of this dependency.
      * The order is important.
      */

@@ -39,15 +39,6 @@ public interface AndroidProject {
     // Sent by Studio 2.4+. Additional model feature trigger on a case by case basis
     // Value is simply true to enable.
     String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
-    /**
-     * Was a property to disable source download during model sync, which is no longer done by AGP.
-     *
-     * @deprecated Only has effect in AGP 3.5. Android Studio 3.6 onwards downloads sources using an
-     *     injected gradle tooling model and model builder.
-     */
-    @Deprecated
-    String PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD =
-            "android.injected.build.model.disable.src.download";
 
     // Sent by Studio 2.2+ and Android Support plugin running with IDEA from 4.1+
     // This property will enable compatibility checks between Android Support plugin and the Android
@@ -104,19 +95,8 @@ public interface AndroidProject {
     /** Version code to be used in the built APK. */
     String PROPERTY_VERSION_CODE = "android.injected.version.code";
 
-    /** Version code injected by Android Studio when using Instant Run. */
-    int INSTANT_RUN_VERSION_CODE = Integer.MAX_VALUE;
-
     /** Version name to be used in the built APK. */
     String PROPERTY_VERSION_NAME = "android.injected.version.name";
-
-    /** Version name injected by Android Studio when using Instant Run. */
-    String INSTANT_RUN_VERSION_NAME = "INSTANT_RUN";
-
-    /**
-     * Comma-separated list of {@link OptionalCompilationStep} value names, used with Instant Run.
-     */
-    String PROPERTY_OPTIONAL_COMPILATION_STEPS = "android.optional.compilation";
 
     /**
      * Location for APKs. If defined as a relative path, then it is resolved against the
@@ -186,14 +166,6 @@ public interface AndroidProject {
      */
     @NonNull
     String getName();
-
-    /**
-     * Returns whether this is a library.
-     * @return true for a library module.
-     * @deprecated use {@link #getProjectType()} instead.
-     */
-    @Deprecated
-    boolean isLibrary();
 
     /**
      * Returns the type of project: Android application, library, feature, instantApp.
@@ -334,32 +306,6 @@ public interface AndroidProject {
      */
     @NonNull
     LintOptions getLintOptions();
-
-    /**
-     * Returns the dependencies that were not successfully resolved. The returned list gets
-     * populated only if the system property {@link #PROPERTY_BUILD_MODEL_ONLY} has been
-     * set to {@code true}.
-     * <p>
-     * Each value of the collection has the format group:name:version, for example:
-     * com.google.guava:guava:15.0.2
-     *
-     * @return the dependencies that were not successfully resolved.
-     * @deprecated use {@link #getSyncIssues()}
-     */
-    @Deprecated
-    @NonNull
-    Collection<String> getUnresolvedDependencies();
-
-    /**
-     * Returns issues found during sync.  The returned list gets
-     * populated only if the system property {@link #PROPERTY_BUILD_MODEL_ONLY} has been
-     * set to {@code true}.
-     *
-     * @deprecated request {@link ProjectSyncIssues} instead.
-     */
-    @Deprecated
-    @NonNull
-    Collection<SyncIssue> getSyncIssues();
 
     /**
      * Returns the compile options for Java code.

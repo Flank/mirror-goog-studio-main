@@ -107,11 +107,4 @@ public interface AndroidLibrary extends AndroidBundle {
      */
     @Override
     boolean isProvided();
-
-    /**
-     * @deprecated Use {@link #isProvided()} instead
-     */
-    @Deprecated
-    boolean isOptional();
-
 }
