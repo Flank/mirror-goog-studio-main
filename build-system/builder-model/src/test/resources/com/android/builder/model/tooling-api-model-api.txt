@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-f8a31e1b1d620d469b52fa8c64c703e99cff5688c98d67a51b0b15cf031ab376
+a84d570f3addc1f110128d83f9e30533544a58fdab576469dd1703a5372638b5
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -492,7 +492,6 @@ com.android.builder.model.v2.AndroidArtifact.getBundleTaskOutputListingFile: jav
 com.android.builder.model.v2.AndroidArtifact.getCodeShrinker: com.android.builder.model.v2.CodeShrinker ()
 com.android.builder.model.v2.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.AndroidArtifact.getGeneratedSourceFolders: java.util.Collection<java.io.File> ()
-com.android.builder.model.v2.AndroidArtifact.getInstantRun: com.android.builder.model.v2.InstantRun ()
 com.android.builder.model.v2.AndroidArtifact.getInstrumentedTestTaskName: java.lang.String ()
 com.android.builder.model.v2.AndroidArtifact.getNativeLibraries: java.util.Collection<com.android.builder.model.v2.NativeLibrary> ()
 com.android.builder.model.v2.AndroidArtifact.getOutputs: java.util.Collection<com.android.builder.model.v2.AndroidArtifactOutput> ()
@@ -670,10 +669,6 @@ com.android.builder.model.v2.InstantAppVariantBuildOutput.getApplicationId: java
 com.android.builder.model.v2.InstantAppVariantBuildOutput.getFeatureOutputs: java.util.Collection<com.android.builder.model.v2.OutputFile> ()
 com.android.builder.model.v2.InstantAppVariantBuildOutput.getName: java.lang.String ()
 com.android.builder.model.v2.InstantAppVariantBuildOutput.getOutput: com.android.builder.model.v2.OutputFile ()
-com.android.builder.model.v2.InstantRun
-com.android.builder.model.v2.InstantRun.getInfoFile: java.io.File ()
-com.android.builder.model.v2.InstantRun.getSupportStatus: int ()
-com.android.builder.model.v2.InstantRun.isSupportedByArtifact: boolean ()
 com.android.builder.model.v2.JavaArtifact implements com.android.builder.model.v2.BaseArtifact
 com.android.builder.model.v2.JavaArtifact.getMockablePlatformJar: java.io.File ()
 com.android.builder.model.v2.JavaCompileOptions

@@ -119,13 +119,6 @@ public interface AndroidArtifact extends BaseArtifact {
     Map<String, ClassField> getResValues();
 
     /**
-     * Returns the InstantRun feature related model.
-     * @return the model for all InstantRun related information.
-     */
-    @NonNull
-    InstantRun getInstantRun();
-
-    /**
      * Returns a list of additional APKs that need to installed on the device for this artifact to
      * work correctly.
      *
