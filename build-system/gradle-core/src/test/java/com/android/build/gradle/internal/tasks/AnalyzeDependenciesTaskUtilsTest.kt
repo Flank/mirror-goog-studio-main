@@ -170,7 +170,24 @@ class AnalyzeDependenciesTaskUtilsTest {
         File(barValues, "strings.xml").also { it.writeText(barValuesStrings) }
         File(barLayout, "bar_view.xml").also { it.writeText(barLayoutView) }
 
-        // Add app resource which will depend on a resource from bar.
+        // Add app resources which will depend on a resource from bar.
+        val appManifest =
+            // language=XML
+            """
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                                  xmlns:tools="http://schemas.android.com/tools"
+                                  package="com.example.resdependnecies">
+                            <application>
+                                    <meta-data
+                                            android:name="resdependnecies"
+                                            android:value="1"/>
+                            </application>
+                        </manifest>
+                    """.trimIndent()
+        val appManifestFile = File(appProject, SdkConstants.ANDROID_MANIFEST_XML).also {
+            it.writeText(appManifest)
+        }
+        // @string/test_string_from_bar is a declared in bar.
         val appMainActivty =
                 // language=XML
             """<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -212,7 +229,7 @@ class AnalyzeDependenciesTaskUtilsTest {
                         FakeComponentIdentifier(bazProject.name))
         ))
 
-        val finder = ResourcesFinder(listOf(appRes), artifacts)
+        val finder = ResourcesFinder(appManifestFile, listOf(appRes), artifacts)
 
         assertThat(finder.findUsedDependencies())
                 .containsExactlyElementsIn(setOf(fooProject.name, barProject.name))
@@ -220,6 +237,57 @@ class AnalyzeDependenciesTaskUtilsTest {
                 .containsExactlyElementsIn(setOf(bazProject.name))
         assertThat(finder.find("string:app_name:-1").size).isEqualTo(2)
         assertThat(finder.find("string:test_string_from_bar:-1").size).isEqualTo(1)
+    }
+
+    @Test
+    fun testResourceFinderIdentifiesManifestReferences() {
+        val appProject = tmp.newFolder("app")
+        val fooProject = tmp.newFolder("foo")
+        val emptyProject = tmp.newFolder("empty")
+        val fooDependencySources = tmp.newFolder("dependency-sources-foo")
+        val emptyDependencySources = tmp.newFolder("dependency-sources-empty")
+
+        addResourceTestDirectoryTo(fooProject)
+
+        val fooResSymbols = getResourcesFromExplodedAarToFile(fooProject)
+        val emptyResSymbols = getResourcesFromExplodedAarToFile(emptyProject)
+
+        writePathsToFile(
+                File(fooDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
+                fooResSymbols)
+        writePathsToFile(
+                File(emptyDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
+                emptyResSymbols)
+        val artifacts = FakeArtifactCollection(
+                mutableSetOf(
+                        FakeResolvedArtifactResult(
+                                fooDependencySources,
+                                FakeComponentIdentifier(fooProject.name)
+                        ),
+                        FakeResolvedArtifactResult(
+                                emptyDependencySources,
+                                FakeComponentIdentifier(emptyProject.name)
+                        )
+                )
+        )
+
+        val appManifest = // language=XML
+                """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                             xmlns:tools="http://schemas.android.com/tools"
+                             package="com.example.resdependnecies">
+                        <application>
+                            <meta-data
+                                android:name="@string/app_name"
+                                android:value="1"/>
+                        </application>
+                   </manifest>"""
+        val appManifestFile = File(appProject, SdkConstants.ANDROID_MANIFEST_XML).also {
+            it.writeText(appManifest)
+        }
+
+        val finder = ResourcesFinder(appManifestFile, emptyList(), artifacts)
+        assertThat(finder.findUsedDependencies()).isEqualTo(setOf("foo"))
+        assertThat(finder.findUnUsedDependencies()).isEqualTo(setOf("empty"))
     }
 
     @Test

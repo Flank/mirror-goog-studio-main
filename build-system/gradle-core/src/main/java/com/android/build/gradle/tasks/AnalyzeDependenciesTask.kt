@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -24,6 +25,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.SourceProvider
+import com.android.tools.build.jetifier.core.utils.Log
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
@@ -31,7 +33,11 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -57,6 +63,11 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     val externalArtifacts: FileCollection by lazy { externalArtifactCollection.artifactFiles }
 
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val mergedManifest: RegularFileProperty
+
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
@@ -68,11 +79,12 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         val variantDepsHolder = VariantDependenciesHolder(
-            allDirectDependencies,
-            apiDirectDependenciesConfiguration?.allDependencies)
+                allDirectDependencies,
+                apiDirectDependenciesConfiguration?.allDependencies)
         val variantClassHolder = VariantClassesHolder(variantArtifact)
         val classFinder = ClassFinder(externalArtifactCollection)
-        val resourcesFinder = ResourcesFinder(resourceSourceSets.toList(), externalArtifactCollection)
+        val resourcesFinder = ResourcesFinder(
+                mergedManifest.orNull?.asFile , resourceSourceSets.toList(), externalArtifactCollection)
 
         val depsUsageFinder =
             DependencyUsageFinder(classFinder, variantClassHolder, variantDepsHolder)
@@ -205,6 +217,10 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             task.resourceSourceSets.from(Callable {
                 creationConfig.variantSources.getSourceFiles(resDirFunction)
             })
+
+            creationConfig
+                    .artifacts
+                    .setTaskInputToFinalProduct(ArtifactType.MERGED_MANIFEST, task.mergedManifest)
         }
 
         override fun handleProvider(

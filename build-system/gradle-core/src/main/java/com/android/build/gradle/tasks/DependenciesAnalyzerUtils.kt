@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.ide.common.resources.usage.getDeclaredAndReferencedResourcesFrom
 import com.android.ide.common.resources.usage.getResourcesFromDirectory
 import com.android.utils.FileUtils
 import com.google.gson.GsonBuilder
@@ -155,6 +156,7 @@ data class ResourceDependencyHolder(
 )
 
 class ResourcesFinder(
+        private val manifest: File?,
         private val resourceSets: List<File>,
         private val externalArtifactCollection: ArtifactCollection) {
 
@@ -165,8 +167,16 @@ class ResourcesFinder(
     private fun getMapByFileName(fileName: String): Map<String, ResourceDependencyHolder> {
         val resourceToDependency = mutableMapOf<String, ResourceDependencyHolder>()
 
+        // Extract resource usages from manifest, if it exists.
+        val manifestResources: List<String> = if (manifest != null) {
+            getDeclaredAndReferencedResourcesFrom(manifest).map { it.toString() }
+        } else {
+            emptyList()
+        }
         // Extract resources from application modules.
-        val usedResources = resourceSets.flatMap(this::parseResourceSourceSet)
+        val usedResources: List<String> = resourceSets
+                .flatMap(this::parseResourceSourceSet)
+                .plus(manifestResources)
 
         usedResources.forEach {
             resourceToDependency[it] = ResourceDependencyHolder(it, true)
@@ -256,21 +266,19 @@ class DependencyUsageReporter(
 
     fun writeUnusedDependencies(destinationFile: File) {
         val toRemove = depsUsageFinder.unusedDirectDependencies
-            .filter { graphAnalyzer.renderableDependencies.containsKey(it) }
-        val toAdd = graphAnalyzer.findIndirectRequiredDependencies()
+                .intersect(graphAnalyzer.renderableDependencies.keys)
+                .minus(resourceFinder.findUsedDependencies())
+                .toList()
+        val toAdd = graphAnalyzer.findIndirectRequiredDependencies().toList()
 
-        val report = DependenciesUsageReport(
-                add = toAdd.toList(),
-                remove = toRemove.minus(resourceFinder.findUsedDependencies())
-        )
-
+        val report = DependenciesUsageReport(toAdd, toRemove)
         writeToFile(report, destinationFile)
     }
 
     fun writeMisconfiguredDependencies(destinationFile: File) {
         val apiDependencies = variantClasses.getPublicClasses()
             .mapNotNull { classFinder.find(it) }
-            .filter { variantDependencies.api.contains(it) }
+            .intersect(variantDependencies.api)
 
         val misconfiguredDependencies = variantDependencies.api.minus(apiDependencies)
 
