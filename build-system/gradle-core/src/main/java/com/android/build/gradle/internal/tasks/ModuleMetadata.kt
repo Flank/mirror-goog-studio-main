@@ -29,7 +29,7 @@ class ModuleMetadata(
     val versionCode: String?,
     val versionName: String?,
     val debuggable: Boolean,
-    val abiFilters: List<String>
+    val abiFilters: List<String>?
 ) {
 
     @Throws(IOException::class)

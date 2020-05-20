@@ -170,7 +170,7 @@ abstract class RenderscriptCompile : NdkTask() {
             isNdkMode,
             isSupportMode,
             useAndroidX,
-            ndkConfig?.abiFilters ?: setOf(),
+            if (ndkConfig == null) null else ndkConfig!!.abiFilters,
             LoggedProcessOutputHandler(LoggerWrapper(logger)),
             buildToolsInfo
         )
@@ -213,7 +213,7 @@ abstract class RenderscriptCompile : NdkTask() {
         ndkMode: Boolean,
         supportMode: Boolean,
         useAndroidX: Boolean,
-        abiFilters: Set<String>,
+        abiFilters: Set<String>?,
         processOutputHandler: ProcessOutputHandler,
         buildToolInfo: BuildToolInfo
     ) {

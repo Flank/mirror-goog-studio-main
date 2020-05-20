@@ -66,7 +66,7 @@ fun createNativeBuildSystemVariantConfig(
      *     }
      * </pre>
      */
-    val ndkAbiFilters: Set<String> = variantDslInfo.ndkConfig.abiFilters
+    val ndkAbiFilters: Set<String> = variantDslInfo.ndkConfig.abiFilters ?: setOf()
 
 
     /**

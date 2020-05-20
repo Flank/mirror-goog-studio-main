@@ -43,7 +43,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutputs(
             deviceConfigProvider,
             wrap(outputs),
-            setOf() /* variantAbiFilters */
+            null /* variantAbiFilters */
         )
     }
 

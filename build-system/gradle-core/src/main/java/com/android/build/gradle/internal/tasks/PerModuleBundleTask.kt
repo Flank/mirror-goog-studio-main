@@ -43,7 +43,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -95,7 +94,9 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     abstract val nativeLibsFiles: ConfigurableFileCollection
 
     @get:Input
-    abstract val abiFilters: SetProperty<String>
+    @get:Optional
+    var abiFilters: Set<String>? = null
+        private set
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -120,8 +121,8 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
 
         val filters = appMetadata.singleOrNull()?.let {
-            ModuleMetadata.load(it).abiFilters.toSet()
-        } ?: abiFilters.get()
+            ModuleMetadata.load(it).abiFilters?.toSet()
+        } ?: abiFilters
 
         val abiFilter = filters?.let { NativeLibraryAbiPredicate(it, false) }
 
@@ -281,9 +282,8 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     )
                 )
             } else {
-                task.abiFilters.set(creationConfig.variantDslInfo.supportedAbis)
+                task.abiFilters = creationConfig.variantDslInfo.supportedAbis
             }
-            task.abiFilters.disallowChanges()
             task.appMetadata.disallowChanges()
 
             task.jarCreatorType.set(creationConfig.variantScope.jarCreatorType)

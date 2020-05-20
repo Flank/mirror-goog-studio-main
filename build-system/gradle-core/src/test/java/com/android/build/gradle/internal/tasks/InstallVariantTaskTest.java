@@ -34,7 +34,6 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.logging.Logger;
@@ -94,7 +93,7 @@ public class InstallVariantTaskTest {
                 new FakeDeviceProvider(ImmutableList.of(deviceConnector)),
                 new AndroidVersion(1),
                 builtArtifacts,
-                ImmutableSet.of(),
+                null,
                 ImmutableList.of(),
                 4000,
                 logger);

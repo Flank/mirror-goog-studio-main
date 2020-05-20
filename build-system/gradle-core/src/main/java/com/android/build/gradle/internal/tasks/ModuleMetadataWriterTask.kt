@@ -57,6 +57,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
     abstract val debuggable: Property<Boolean>
 
     @get:Input
+    @get:Optional
     abstract val abiFilters: ListProperty<String>
 
     @get:OutputFile
@@ -69,7 +70,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
                 versionCode = versionCode.orNull?.toString(),
                 versionName = versionName.orNull,
                 debuggable = debuggable.get(),
-                abiFilters = abiFilters.get()
+                abiFilters = abiFilters.orNull
             )
 
         declaration.save(outputFile.get().asFile)
@@ -105,7 +106,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             task.debuggable.setDisallowChanges(creationConfig.debuggable)
             task.versionCode.setDisallowChanges(creationConfig.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(creationConfig.outputs.getMainSplit().versionName)
-            task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis.sorted())
+            task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis?.sorted())
         }
     }
 }

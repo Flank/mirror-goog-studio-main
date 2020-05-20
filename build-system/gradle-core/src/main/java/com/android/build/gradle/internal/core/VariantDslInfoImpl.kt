@@ -972,13 +972,13 @@ open class VariantDslInfoImpl internal constructor(
         get() = mergedAarMetadata
 
     /**
-     * Returns the ABI filters associated with the artifact, or empty set if there are no filters.
+     * Returns the ABI filters associated with the artifact, or null if there are no filters.
      *
      * If the list contains values, then the artifact only contains these ABIs and excludes
      * others.
      */
-    override val supportedAbis: Set<String>
-        get() = if (variantType.isDynamicFeature) setOf() else mergedNdkConfig.abiFilters
+    override val supportedAbis: Set<String>?
+        get() = if (variantType.isDynamicFeature) null else mergedNdkConfig.abiFilters
 
     override fun gatherProguardFiles(type: ProguardFileType): List<File> {
         val result: MutableList<File> = ArrayList(defaultConfig.getProguardFiles(type))
