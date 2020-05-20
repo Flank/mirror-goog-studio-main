@@ -90,16 +90,17 @@ class DependencyConfigurator(
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) {
 
-    fun configureGeneralTransforms(): DependencyConfigurator {
-        val dependencies: DependencyHandler = project.dependencies
-
+    fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
         if (globalScope.projectOptions[BooleanOption.ENABLE_JETIFIER]) {
             replaceOldSupportLibraries(project)
         }
-        /*
-         * Register transforms.
-         */
+        return this
+    }
+
+    fun configureGeneralTransforms(): DependencyConfigurator {
+        val dependencies: DependencyHandler = project.dependencies
+
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         // Arguments passed to an ArtifactTransform must not be null

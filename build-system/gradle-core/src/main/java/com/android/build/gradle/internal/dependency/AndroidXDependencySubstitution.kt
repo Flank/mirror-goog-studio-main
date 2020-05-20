@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.options.BooleanOption
 import com.android.Version
+import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.Processor
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.DependencySubstitution
 import org.gradle.api.artifacts.DirectDependencyMetadata
-import org.gradle.api.artifacts.component.ModuleComponentSelector
 
 /**
  * Singleton object that maintains AndroidX mappings and configures AndroidX dependency substitution
@@ -44,25 +42,30 @@ object AndroidXDependencySubstitution {
             dataBindingVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
         ).getDependenciesMap(filterOutBaseLibrary = false)
 
+    // Data binding base library may or may not need to be substituted (see
+    // https://issuetracker.google.com/78202536)
+    private val androidXMappingsWithoutDataBindingBaseLibrary = androidXMappings.filterKeys {
+        it != COM_ANDROID_DATABINDING_BASELIBRARY
+    }
+
     /**
-     * Replaces old support libraries with new ones.
+     * Replaces old support libraries with AndroidX.
      */
-    @JvmStatic
     fun replaceOldSupportLibraries(project: Project) {
         // TODO (AGP): This is a quick fix to work around Gradle bug with dependency
         // substitution (https://github.com/gradle/gradle/issues/5174). Once Gradle has fixed
         // this issue, this should be removed.
+        // Note that this complements but does not replace the dependency substitution rules that
+        // follow (at the end of this method)
         project.dependencies.components.all { component ->
             component.allVariants { variant ->
                 variant.withDependencies { metadata ->
                     val oldDeps = mutableSetOf<DirectDependencyMetadata>()
                     val newDeps = mutableListOf<String>()
-                    metadata.forEach { it ->
-                        val newDep = if (bypassDependencySubstitution(it)) {
-                            null
-                        } else {
-                            androidXMappings["${it.group}:${it.name}"]
-                        }
+                    metadata.forEach {
+                        // Data binding base library will be handled later
+                        val newDep =
+                            androidXMappingsWithoutDataBindingBaseLibrary["${it.group}:${it.name}"]
                         if (newDep != null) {
                             oldDeps.add(it)
                             newDeps.add(newDep)
@@ -82,85 +85,54 @@ object AndroidXDependencySubstitution {
 
         project.configurations.all { config ->
             // Only consider resolvable configurations
-            if (config.isCanBeResolved) {
-                config.resolutionStrategy.dependencySubstitution.all { it ->
-                    maybeSubstituteDependency(it, config, androidXMappings)
+            if (!config.isCanBeResolved) {
+                return@all
+            }
+
+            val mappings = if (skipDataBindingBaseLibrarySubstitution(config)) {
+                androidXMappingsWithoutDataBindingBaseLibrary
+            } else {
+                androidXMappings
+            }
+            config.resolutionStrategy.dependencySubstitution {
+                for (entry in mappings) {
+                    // entry.key is in the form of "group:module" (without a version), and Gradle
+                    // accepts that form.
+                    it.substitute(it.module(entry.key))
+                        .because("${BooleanOption.ENABLE_JETIFIER.propertyName}=true")
+                        .with(it.module(entry.value))
                 }
             }
         }
     }
 
     /**
-     * Replaces the given dependency with the new support library if the given dependency is an
-     * old support library.
+     * Returns `true` if the data binding base library (com.android.databinding:baseLibrary) should
+     * not be replaced with AndroidX in the given configuration (see
+     * https://issuetracker.google.com/78202536).
+     *
+     * Specifically:
+     *   - When data binding is enabled, the annotation processor classpath will contain
+     *     androidx.databinding:databinding-compiler, which (transitively) depends on
+     *     com.android.databinding:baseLibrary. In that case, com.android.databinding:baseLibrary
+     *     should not be replaced with AndroidX.
+     *   - If com.android.databinding:baseLibrary appears in a configuration that is not an
+     *     annotation processor classpath, then it should still be replaced with AndroidX.
      */
-    private fun maybeSubstituteDependency(
-        dependencySubstitution: DependencySubstitution,
-        configuration: Configuration,
-        androidXMappings: Map<String, String>
-    ) {
-        // Only consider Gradle module dependencies (in the form of group:module:version)
-        if (dependencySubstitution.requested !is ModuleComponentSelector) {
-            return
-        }
-
-        val requestedDependency = dependencySubstitution.requested as ModuleComponentSelector
-        if (bypassDependencySubstitution(requestedDependency, configuration)) {
-            return
-        }
-
-        androidXMappings[requestedDependency.group + ":" + requestedDependency.module]?.let {
-            dependencySubstitution.useTarget(
-                it,
-                BooleanOption.ENABLE_JETIFIER.name + " is enabled"
-            )
-        }
-    }
-
-    /**
-     * Returns `true` if the requested dependency should not be substituted.
-     */
-    private fun bypassDependencySubstitution(
-        requestedDependency: DirectDependencyMetadata
-    ): Boolean {
-        // See bypassDependencySubstitution(ModuleComponentSelector, Configuration).
-        // This condition is more relaxed (catches more cases) than the condition in the
-        // other method, since the configuration information is not available when this
-        // method is called. That is acceptable as dependency substitution happens at two
-        // phases (due to a Gradle bug as mentioned in the replaceOldSupportLibraries()
-        // method): the first one can be relaxed but the second one should be strict.
-        return requestedDependency.group == "com.android.databinding"
-                && requestedDependency.name == "baseLibrary"
-    }
-
-    /**
-     * Returns `true` if the requested dependency should not be substituted.
-     */
-    private fun bypassDependencySubstitution(
-        requestedDependency: ModuleComponentSelector,
-        configuration: Configuration
-    ): Boolean {
-        // androidx.databinding:databinding-compiler has a transitive dependency on
-        // com.android.databinding:baseLibrary, which shouldn't be replaced with AndroidX.
-        // Note that if com.android.databinding:baseLibrary doesn't come as a transitive
-        // dependency of androidx.databinding:databinding-compiler (e.g., a configuration
-        // explicitly depends on it), then we should still replace it. See
-        // https://issuetracker.google.com/78202536.
-        return requestedDependency.group == "com.android.databinding"
-                && requestedDependency.module == "baseLibrary"
-                && configuration.allDependencies.any { dependency ->
-            dependency.group == "androidx.databinding"
-                    && dependency.name == "databinding-compiler"
-        }
+    private fun skipDataBindingBaseLibrarySubstitution(configuration: Configuration): Boolean {
+        return configuration.name.endsWith("AnnotationProcessorClasspath")
+                || configuration.name.startsWith("kapt")
     }
 
     /**
      * Returns `true` if the given dependency (formatted as `group:name:version`) is an AndroidX
      * dependency.
      */
-    @JvmStatic
     fun isAndroidXDependency(dependency: String): Boolean {
         return dependency.startsWith("androidx")
-                || dependency.startsWith("com.google.android.material")
+                || dependency.startsWith(COM_GOOGLE_ANDROID_MATERIAL)
     }
+
+    private const val COM_ANDROID_DATABINDING_BASELIBRARY = "com.android.databinding:baseLibrary"
+    private const val COM_GOOGLE_ANDROID_MATERIAL = "com.google.android.material"
 }

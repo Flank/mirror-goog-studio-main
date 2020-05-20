@@ -588,6 +588,7 @@ public abstract class BasePlugin<
         taskManager.createTasks();
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
+                .configureDependencySubstitutions()
                 .configureGeneralTransforms()
                 .configureVariantTransforms(variants, variantManager.getTestComponents());
 

@@ -22,8 +22,8 @@ import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.google.common.truth.Truth.assertThat
 import com.google.common.base.Throwables
+import com.google.common.truth.Truth.assertThat
 import org.gradle.tooling.BuildException
 import org.junit.Assert.fail
 import org.junit.Assume.assumeFalse
@@ -98,6 +98,9 @@ class JetifierTest(private val withKotlin: Boolean) {
     @Test
     fun testJetifierEnabledAndroidXEnabled() {
         prepareProjectForAndroidX()
+
+        // Add this check as regression test for bug 156449751
+        addCheckThatDependenciesAreNotResolvedBeforeTaskExecutionPhase()
 
         // Build the project with Jetifier enabled and AndroidX enabled
         project.executor()
@@ -225,6 +228,35 @@ class JetifierTest(private val withKotlin: Boolean) {
             .with(BooleanOption.USE_ANDROID_X, true)
             .with(BooleanOption.ENABLE_JETIFIER, true)
             .run("assembleDebug")
+    }
+
+    private fun addCheckThatDependenciesAreNotResolvedBeforeTaskExecutionPhase() {
+        // This configuration is resolved before task execution phase, so we blacklist it for now.
+        val kotlinCompilerClasspath = "kotlinCompilerClasspath"
+
+        project.buildFile.appendText(
+            """
+            def beforeTaskExecutionPhase = true
+            gradle.taskGraph.whenReady {
+                beforeTaskExecutionPhase = false
+            }
+            
+            allprojects {
+                project.configurations.all {
+                    it.incoming.beforeResolve { configuration ->
+                        if (configuration.name != "classpath"
+                                && configuration.name != "$kotlinCompilerClasspath"
+                                && beforeTaskExecutionPhase) {
+                            throw new RuntimeException(
+                                    configuration.name +
+                                            " is being resolved before task execution phase." +
+                                            " Run with --stacktrace for more details.")
+                        }
+                    }
+                }
+            }
+            """.trimIndent()
+        )
     }
 
     private fun prepareProjectForAndroidX() {
