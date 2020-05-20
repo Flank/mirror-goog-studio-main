@@ -137,6 +137,10 @@ object ClassNames {
         ClassName.get("org.tensorflow.lite.support.model", "Model")
 
     @JvmField
+    val METADATA_EXTRACTOR: ClassName =
+        ClassName.get("org.tensorflow.lite.support.metadata", "MetadataExtractor")
+
+    @JvmField
     val TENSOR_BUFFER: ClassName = ClassName.get(
         "org.tensorflow.lite.support.tensorbuffer",
         "TensorBuffer"

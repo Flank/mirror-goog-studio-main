@@ -24,13 +24,13 @@ import com.squareup.javapoet.MethodSpec
 /**
  * Injector to load associated file. It will create code like:
  *
- * <pre>file = FileUtil.loadLabels(getAssociatedFile(fileName))</pre>
+ * <pre>file = FileUtil.loadLabels(extractor.getAssociatedFile(fileName))</pre>
  */
 class AssociatedFileInjector : CodeBlockInjector() {
     override fun inject(methodBuilder: MethodSpec.Builder, tensorInfo: TensorInfo) {
         if (!Strings.isNullOrEmpty(tensorInfo.fileName)) {
             methodBuilder.addStatement(
-                "\$L = \$T.loadLabels(getAssociatedFile(context, \$S))",
+                "\$L = \$T.loadLabels(extractor.getAssociatedFile(\$S))",
                 getIdentifierFromFileName(tensorInfo.fileName),
                 ClassNames.FILE_UTIL,
                 tensorInfo.fileName
