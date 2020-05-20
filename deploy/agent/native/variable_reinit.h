@@ -47,8 +47,8 @@ struct ClassVarReInitWorkItem;
 
 class VariableReinitializer {
  public:
-  VariableReinitializer(jvmtiEnv* jvmti, JNIEnv* jni)
-      : jvmti_(jvmti), jni_(jni) {}
+  VariableReinitializer(bool var_reinit, jvmtiEnv* jvmti, JNIEnv* jni)
+      : var_reinit(var_reinit), jvmti_(jvmti), jni_(jni) {}
 
   // Called before code swap for each class to be swapped.
   // This is the gathering step that populate the worklist.
@@ -60,6 +60,7 @@ class VariableReinitializer {
   SwapResult::Status ReinitializeVariables(std::string* error_msg);
 
  private:
+  bool var_reinit;
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
   std::vector<ClassVarReInitWorkItem*> new_static_vars_;

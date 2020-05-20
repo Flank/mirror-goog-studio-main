@@ -112,6 +112,7 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   request.set_package_name(package_name_);
   request.set_restart_activity(request_.restart_activity());
   request.set_structural_redefinition(request_.structural_redefinition());
+  request.set_variable_reinitialization(request_.variable_reinitialization());
   request.set_overlay_swap(true);
   return request;
 }

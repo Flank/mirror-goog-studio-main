@@ -62,6 +62,11 @@ proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
     response.set_status(
         proto::AgentSwapResponse::UNSUPPORTED_REINIT_STATIC_PRIMITIVE);
     response.set_error_msg(result.error_details);
+  } else if (result.status ==
+             SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT) {
+    response.set_status(proto::AgentSwapResponse::
+                            UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT);
+    response.set_error_msg(result.error_details);
   } else if (result.status == SwapResult::UNSUPPORTED_REINIT_STATIC_OBJECT) {
     response.set_status(
         proto::AgentSwapResponse::UNSUPPORTED_REINIT_STATIC_OBJECT);

@@ -65,6 +65,8 @@ public class InstallerResponseHandler {
                 || failedAgent.getStatus()
                         == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE
                 || failedAgent.getStatus()
+                        == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT
+                || failedAgent.getStatus()
                         == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_OBJECT
                 || failedAgent.getStatus()
                         == AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_ARRAY

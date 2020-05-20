@@ -50,6 +50,7 @@ public class OptimisticApkSwapper {
 
     // Temp flag.
     private final boolean useStructuralRedefinition;
+    private final boolean useVariableReinitialization;
 
     /**
      * @param installer used to perform swaps on device.
@@ -62,12 +63,14 @@ public class OptimisticApkSwapper {
             Map<Integer, ClassRedefiner> redefiners,
             boolean restart,
             boolean useStructuralRedefinition,
+            boolean useVariableReinitialization,
             AdbClient adb,
             ILogger logger) {
         this.installer = installer;
         this.redefiners = redefiners;
         this.restart = restart;
         this.useStructuralRedefinition = useStructuralRedefinition;
+        this.useVariableReinitialization = useVariableReinitialization;
         this.adb = adb;
         this.logger = logger;
     }
@@ -137,6 +140,7 @@ public class OptimisticApkSwapper {
         }
 
         request.setStructuralRedefinition(useStructuralRedefinition);
+        request.setVariableReinitialization(useVariableReinitialization);
 
         Deploy.OverlaySwapRequest swapRequest = request.build();
 
