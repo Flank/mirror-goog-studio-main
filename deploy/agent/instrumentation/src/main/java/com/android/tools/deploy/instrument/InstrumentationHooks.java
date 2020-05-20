@@ -19,14 +19,12 @@ package com.android.tools.deploy.instrument;
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
 import android.content.pm.ApplicationInfo;
+import android.content.res.Resources;
 import android.os.Build;
 import android.util.Log;
 import java.io.File;
-import java.lang.ref.Reference;
-import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -48,8 +46,6 @@ public final class InstrumentationHooks {
     // Current installation path of the running package. Written by
     // handleDispatchPackageBroadcastExit; read by handleFindResourceEntry.
     private static Path currentPackagePath;
-
-    private static Object resourcesLoader = null;
 
     public static void setRestart(boolean restart) {
         mRestart = restart;
@@ -102,53 +98,20 @@ public final class InstrumentationHooks {
         return file -> file.toPath().startsWith(prefix);
     }
 
-    public static void addResourceOverlays(
-            Object resourcesManager, ApplicationInfo appInfo, String[] oldPaths) {
-        try {
-            // A container for supplying ResourcesProvider to Resources objects. ResourcesLoader are
-            // added to Resources objects to supply additional resources and assets or modify the
-            // values of existing resources and assets.
-            Class<?> resourcesLoaderClass =
-                    Class.forName("android.content.res.loader.ResourcesLoader");
-            Class<?> resourcesProviderClass =
-                    Class.forName("android.content.res.loader.ResourcesProvider");
-            Class<?> assetsProviderClass =
-                    Class.forName("android.content.res.loader.AssetsProvider");
-
-            if (resourcesLoader == null) {
-                resourcesLoader = resourcesLoaderClass.newInstance();
-            }
-
-            Object[] loaderList = (Object[]) Array.newInstance(resourcesLoaderClass, 1);
-            loaderList[0] = resourcesLoader;
-
-            // Enumerate every Resources object that currently exists in the application. Add our
-            // resources loader to each one.
-            Object resourcesRefs = getDeclaredField(resourcesManager, "mResourceReferences");
-            for (Object ref : (Collection) resourcesRefs) {
-                Object resources = call(ref, Reference.class, "get");
-                if (resources == null) {
-                    continue;
-                }
-
-                call(resources, "addLoaders", arg(loaderList));
-            }
-
-            Object activityThread = getActivityThread();
-            Overlay overlay = new Overlay(getPackageName(activityThread));
-
-            List<Object> providers = new ArrayList<>();
-            for (File resDir : overlay.getResourceDirs()) {
-                Arg path = arg(resDir.getAbsolutePath());
-                Arg assets = arg(null, assetsProviderClass);
-                providers.add(call(resourcesProviderClass, "loadFromDirectory", path, assets));
-            }
-
-            // This will update every AssetManager that currently references our loader.
-            call(resourcesLoader, "setProviders", arg(providers, List.class));
-        } catch (Exception e) {
-            Log.e(TAG, "Exception", e);
+    public static Resources addResourceOverlays(Resources resources) throws Exception {
+        // LoadedApk maintains a single Resources object, which it returns when getResources() is
+        // called. If we've already added the loader to that object, don't bother trying to add it
+        // a second time.
+        List existingLoaders = (List) call(resources, "getLoaders");
+        if (!existingLoaders.contains(resources)) {
+            ResourceOverlays.addResourceOverlays(resources);
         }
+        return resources;
+    }
+
+    public static void addResourceOverlays(
+            Object resourcesManager, ApplicationInfo appInfo, String[] oldPaths) throws Exception {
+        ResourceOverlays.addResourceOverlays(resourcesManager);
     }
 
     // Instruments DexPathList$Element#findResource(). Checks to see if an Element object refers

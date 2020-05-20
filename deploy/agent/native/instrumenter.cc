@@ -187,6 +187,13 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
       "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
       "addResourceOverlays", MethodHooks::kNoHook);
 
+  const HookTransform loaded_apk(
+      /* target class */ "android/app/LoadedApk",
+      /* target method */ "getResources",
+      /* target signature */
+      "()Landroid/content/res/Resources;", MethodHooks::kNoHook,
+      "addResourceOverlays");
+
   bool success = true;
   success &=
       CheckJvmti(jvmti->SetEventNotificationMode(
@@ -199,6 +206,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   if (overlay_swap) {
     success &= ApplyTransform(jvmti, jni, dex_path_list);
     success &= ApplyTransform(jvmti, jni, res_manager);
+    success &= ApplyTransform(jvmti, jni, loaded_apk);
   }
 
   // Failing to disable this event does not actually have any bearing on
