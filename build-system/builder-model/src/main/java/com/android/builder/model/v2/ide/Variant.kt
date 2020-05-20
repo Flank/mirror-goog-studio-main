@@ -33,35 +33,38 @@ package com.android.builder.model.v2.ide
  */
 interface Variant {
     /**
-     * Returns the name of the variant. It is made up of the build type and flavors (if applicable)
-     *
-     * @return the name of the variant.
+     * The name of the variant. It is made up of the build type and flavors (if applicable)
      */
     val name: String
 
     /**
-     * Returns a display name for the variant. It is made up of the build type and flavors
+     * The display name for the variant. It is made up of the build type and flavors
      * (if applicable)
-     *
-     * @return the name.
      */
     val displayName: String
 
     /**
-     * Returns the main artifact for this variant.
-     *
-     * @return the artifact.
+     * The main artifact for this variant.
      */
     val mainArtifact: AndroidArtifact
+
+    /**
+     * The AndroidTest artifact for this variant, if applicable.
+     */
     val androidTestArtifact: AndroidArtifact?
+
+    /**
+     * The Unit Test artifact for this variant, if applicable.
+     */
     val unitTestArtifact: JavaArtifact?
 
     /**
-     * Returns the build type. All variants have a build type, so this is never null.
+     * The build type name.
      *
-     * @return the name of the build type.
+     * If null, no build type is associated with the variant (this generally means that no build
+     * types exist, which can only happen for libraries)
      */
-    val buildType: String
+    val buildType: String?
 
     /**
      * Returns the flavors for this variants. This can be empty if no flavors are configured.

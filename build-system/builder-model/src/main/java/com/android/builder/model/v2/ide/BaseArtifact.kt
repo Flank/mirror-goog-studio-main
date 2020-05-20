@@ -48,7 +48,7 @@ interface BaseArtifact {
     val additionalClassesFolders: Set<File>
 
     /**
-     * Returns the folder containing resource files that classes form this artifact expect to find
+     * Returns the folder containing resource files that classes from this artifact expect to find
      * on the classpath.
      */
     val javaResourcesFolder: File
@@ -56,8 +56,6 @@ interface BaseArtifact {
     /**
      * A SourceProvider specific to the variant. This can be null if there is no flavors as
      * the "variant" is equal to the build type.
-     *
-     * @return the variant specific source provider
      */
     val variantSourceProvider: SourceProvider?
 
@@ -68,8 +66,6 @@ interface BaseArtifact {
      * common to all variant using these two flavors and any of the build type.
      *
      * This can be null if there is less than 2 flavors.
-     *
-     * @return the multi flavor specific source provider
      */
     val multiFlavorSourceProvider: SourceProvider?
 

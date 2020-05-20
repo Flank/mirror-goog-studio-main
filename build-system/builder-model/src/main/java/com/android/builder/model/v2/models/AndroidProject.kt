@@ -125,12 +125,10 @@ interface AndroidProject {
     /**
      * Returns the model api version.
      *
-     *
-     * This is different from [.getModelVersion] in a way that new model
+     * This is different from [modelVersion] in a way that new model
      * version might increment model version but keep existing api. That means that
      * code which was built against particular 'api version' might be safely re-used for all
      * new model versions as long as they don't change the api.
-     *
      *
      * Every new model version is assumed to return an 'api version' value which
      * is equal or greater than the value used by the previous model version.
@@ -140,17 +138,12 @@ interface AndroidProject {
     val apiVersion: Int
 
     /**
-     * Returns the name of the module.
-     *
-     * @return the name of the module.
+     * The path of the module.
      */
-    val name: String
+    val path: String
 
     /**
-     * Returns the type of project: Android application, library, feature, instantApp.
-     *
-     * @return the type of project.
-     * @since 2.3
+     * The type of project: Android application, library, feature, instantApp.
      */
     val projectType: ProjectType
 
@@ -223,7 +216,7 @@ interface AndroidProject {
      *
      * @return a list of jar files.
      */
-    val bootClasspath: Collection<String>
+    val bootClasspath: Collection<File>
 
     /**
      * Returns a list of folders or jar files that contains the framework source code.
@@ -271,38 +264,44 @@ interface AndroidProject {
      *
      * @return the optional resource prefix, or null if not set
      */
-    val resourcePrefix: String
+    val resourcePrefix: String?
 
     /**
-     * Returns the build tools version used by this module.
-     * @return the build tools version.
+     * The build tools version used by this module.
      */
     val buildToolsVersion: String
 
     /**
-     * Returns the NDK version used by this module.
-     *
-     * @return the NDK version.
+     * The NDK version used by this module.
      */
     val ndkVersion: String
 
     /**
-     * Returns the list of dynamic features.
+     * The list of dynamic features.
      *
+     * The values are Gradle project paths.
      *
-     * The values are Gradle path. Only valid for base splits.
-     *
-     * @return
+     * Only non-null for [projectType] with values [ProjectType.APPLICATION]
      */
-    val dynamicFeatures: Collection<String>
+    val dynamicFeatures: Collection<String>?
 
-    /** Returns the options for view binding.  */
-    val viewBindingOptions: ViewBindingOptions
+    /**
+     * The options for view binding.
+     *
+     * Only non-null if view-binding is enabled
+     */
+    val viewBindingOptions: ViewBindingOptions?
+
+    /**
+     * The options for Dependencies inclusion in APKs.
+     *
+     * Only non-null for [projectType] with values [ProjectType.APPLICATION]
+     */
     val dependenciesInfo: DependenciesInfo?
 
     /** Returns the AGP flags for this project.  */
     val flags: AndroidGradlePluginProjectFlags
 
-    /** Returns the lint jars that this module uses to run extra lint checks  */
+    /** The lint jars that this module uses to run extra lint checks  */
     val lintRuleJars: List<File>
 }

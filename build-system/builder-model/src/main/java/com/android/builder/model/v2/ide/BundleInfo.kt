@@ -16,6 +16,8 @@
 
 package com.android.builder.model.v2.ide
 
+import java.io.File
+
 /**
  * Information for artifact that generates bundle
  */
@@ -58,4 +60,21 @@ interface BundleInfo {
      * @return the file path for the [.getApkFromBundleTaskName] output model.
      */
     val apkFromBundleTaskOutputListingFile: String?
+
+    /**
+     * The bundle file (.aab file).
+     *
+     * TODO is this still needed now that we have bundleTaskOutputListingFile?
+     */
+    val bundleFile: File
+
+    /**
+     * The location of the generated APK(s) from the bundle.
+     *
+     * The location is always returned but it may not have been generated if the build request
+     * only built the bundle.
+     *
+     * TODO is this still needed now that we have apkFromBundleTaskOutputListingFile?
+     */
+    val apkFolder: File
 }

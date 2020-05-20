@@ -19,7 +19,7 @@ package com.android.builder.model.v2.models
 import com.android.builder.model.v2.ide.DependencyGraphs
 
 /**
- * the dependencies for a given variants.
+ * The dependencies for a given variants.
  *
  * This will contain the dependencies for the variant's main artifact as well as its tests (if
  * applicable)

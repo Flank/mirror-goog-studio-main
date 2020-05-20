@@ -66,33 +66,6 @@ interface AndroidArtifact : BaseArtifact {
      */
     val abiFilters: Set<String>?
 
-    /**
-     * Returns a list of additional APKs that need to installed on the device for this artifact to
-     * work correctly.
-     *
-     *
-     * For test artifacts, these will be "buddy APKs" from the `androidTestUtil`
-     * configuration.
-     *
-     * @since 3.0
-     */
-    val additionalRuntimeApks: Collection<File>
-
-    /**
-     * Returns the test options only if the variant type is testing.
-     *
-     * @since 3.0
-     */
-    val testOptions: TestOptions?
-
-    /**
-     * Returns the name of the task used to run instrumented tests or null if the variant is not a
-     * test variant.
-     *
-     * @since 3.1
-     * @return name of the task used to run instrumented tests
-     */
-    val instrumentedTestTaskName: String?
 
     /**
      * Returns the absolute path for the listing file that will get updated after each build. The
@@ -102,6 +75,10 @@ interface AndroidArtifact : BaseArtifact {
      */
     val assembleTaskOutputListingFile: String
 
+    /**
+     * The test info, if applicable, otherwise null
+     */
+    val testInfo: TestInfo?
     /**
      * The bundle info if applicable, otherwise null.
      */

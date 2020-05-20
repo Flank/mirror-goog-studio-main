@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d8e5139cb1857ab0b176c13372477a53246ba70fbe3e9c90cdfe31d78cf1de29
+c6a4883dadeffb8ed00c74d6e042b8a69b40cacd3134dd5390a5a5ac674aa0d8
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -554,15 +554,13 @@ com.android.builder.model.v2.ide.AdbOptions.getInstallOptions: java.util.Collect
 com.android.builder.model.v2.ide.AdbOptions.getTimeOutInMs: int ()
 com.android.builder.model.v2.ide.AndroidArtifact implements com.android.builder.model.v2.ide.BaseArtifact
 com.android.builder.model.v2.ide.AndroidArtifact.getAbiFilters: java.util.Set<java.lang.String> ()
-com.android.builder.model.v2.ide.AndroidArtifact.getAdditionalRuntimeApks: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.AndroidArtifact.getAssembleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getBundleInfo: com.android.builder.model.v2.ide.BundleInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.getCodeShrinker: com.android.builder.model.v2.ide.CodeShrinker ()
 com.android.builder.model.v2.ide.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
-com.android.builder.model.v2.ide.AndroidArtifact.getInstrumentedTestTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSigningConfigName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSourceGenTaskName: java.lang.String ()
-com.android.builder.model.v2.ide.AndroidArtifact.getTestOptions: com.android.builder.model.v2.ide.TestOptions ()
+com.android.builder.model.v2.ide.AndroidArtifact.getTestInfo: com.android.builder.model.v2.ide.TestInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.isSigned: boolean ()
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag extends java.lang.Enum
@@ -574,10 +572,6 @@ com.android.builder.model.v2.ide.ApiVersion
 com.android.builder.model.v2.ide.ApiVersion.getApiLevel: int ()
 com.android.builder.model.v2.ide.ApiVersion.getApiString: java.lang.String ()
 com.android.builder.model.v2.ide.ApiVersion.getCodename: java.lang.String ()
-com.android.builder.model.v2.ide.AppBundleVariantBuildOutput
-com.android.builder.model.v2.ide.AppBundleVariantBuildOutput.getApkFolder: java.io.File ()
-com.android.builder.model.v2.ide.AppBundleVariantBuildOutput.getBundleFile: java.io.File ()
-com.android.builder.model.v2.ide.AppBundleVariantBuildOutput.getName: java.lang.String ()
 com.android.builder.model.v2.ide.BaseArtifact
 com.android.builder.model.v2.ide.BaseArtifact.getAdditionalClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.BaseArtifact.getAssembleTaskName: java.lang.String ()
@@ -594,18 +588,15 @@ com.android.builder.model.v2.ide.BuildTypeContainer.getBuildType: com.android.bu
 com.android.builder.model.v2.ide.BuildTypeContainer.getSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BuildTypeContainer.getUnitTestSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BundleInfo
+com.android.builder.model.v2.ide.BundleInfo.getApkFolder: java.io.File ()
 com.android.builder.model.v2.ide.BundleInfo.getApkFromBundleTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.BundleInfo.getApkFromBundleTaskOutputListingFile: java.lang.String ()
+com.android.builder.model.v2.ide.BundleInfo.getBundleFile: java.io.File ()
 com.android.builder.model.v2.ide.BundleInfo.getBundleTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.BundleInfo.getBundleTaskOutputListingFile: java.lang.String ()
 com.android.builder.model.v2.ide.CodeShrinker extends java.lang.Enum
 com.android.builder.model.v2.ide.CodeShrinker.valueOf: com.android.builder.model.v2.ide.CodeShrinker (java.lang.String)
 com.android.builder.model.v2.ide.CodeShrinker.values: com.android.builder.model.v2.ide.CodeShrinker[] ()
-com.android.builder.model.v2.ide.DataBindingOptions
-com.android.builder.model.v2.ide.DataBindingOptions.getAddDefaultAdapters: boolean ()
-com.android.builder.model.v2.ide.DataBindingOptions.getVersion: java.lang.String ()
-com.android.builder.model.v2.ide.DataBindingOptions.isEnabled: boolean ()
-com.android.builder.model.v2.ide.DataBindingOptions.isEnabledForTests: boolean ()
 com.android.builder.model.v2.ide.DependencyGraphs
 com.android.builder.model.v2.ide.DependencyGraphs.getCompileDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
 com.android.builder.model.v2.ide.DependencyGraphs.getPackageDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
@@ -710,12 +701,14 @@ com.android.builder.model.v2.ide.SyncIssue.getMessage: java.lang.String ()
 com.android.builder.model.v2.ide.SyncIssue.getMultiLineMessage: java.util.List<java.lang.String> ()
 com.android.builder.model.v2.ide.SyncIssue.getSeverity: int ()
 com.android.builder.model.v2.ide.SyncIssue.getType: int ()
-com.android.builder.model.v2.ide.TestOptions
-com.android.builder.model.v2.ide.TestOptions$Execution extends java.lang.Enum
-com.android.builder.model.v2.ide.TestOptions$Execution.valueOf: com.android.builder.model.v2.ide.TestOptions$Execution (java.lang.String)
-com.android.builder.model.v2.ide.TestOptions$Execution.values: com.android.builder.model.v2.ide.TestOptions$Execution[] ()
-com.android.builder.model.v2.ide.TestOptions.getAnimationsDisabled: boolean ()
-com.android.builder.model.v2.ide.TestOptions.getExecution: com.android.builder.model.v2.ide.TestOptions$Execution ()
+com.android.builder.model.v2.ide.TestInfo
+com.android.builder.model.v2.ide.TestInfo$Execution extends java.lang.Enum
+com.android.builder.model.v2.ide.TestInfo$Execution.valueOf: com.android.builder.model.v2.ide.TestInfo$Execution (java.lang.String)
+com.android.builder.model.v2.ide.TestInfo$Execution.values: com.android.builder.model.v2.ide.TestInfo$Execution[] ()
+com.android.builder.model.v2.ide.TestInfo.getAdditionalRuntimeApks: java.util.Collection<java.io.File> ()
+com.android.builder.model.v2.ide.TestInfo.getAnimationsDisabled: boolean ()
+com.android.builder.model.v2.ide.TestInfo.getExecution: com.android.builder.model.v2.ide.TestInfo$Execution ()
+com.android.builder.model.v2.ide.TestInfo.getInstrumentedTestTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.TestedTargetVariant
 com.android.builder.model.v2.ide.TestedTargetVariant.getTargetProjectPath: java.lang.String ()
 com.android.builder.model.v2.ide.TestedTargetVariant.getTargetVariant: java.lang.String ()
@@ -739,7 +732,7 @@ com.android.builder.model.v2.models.AndroidProject
 com.android.builder.model.v2.models.AndroidProject$Companion
 com.android.builder.model.v2.models.AndroidProject.getAaptOptions: com.android.builder.model.v2.ide.AaptOptions ()
 com.android.builder.model.v2.models.AndroidProject.getApiVersion: int ()
-com.android.builder.model.v2.models.AndroidProject.getBootClasspath: java.util.Collection<java.lang.String> ()
+com.android.builder.model.v2.models.AndroidProject.getBootClasspath: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getBuildFolder: java.io.File ()
 com.android.builder.model.v2.models.AndroidProject.getBuildToolsVersion: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getBuildTypes: java.util.Collection<com.android.builder.model.v2.ide.BuildTypeContainer> ()
@@ -756,17 +749,15 @@ com.android.builder.model.v2.models.AndroidProject.getJavaCompileOptions: com.an
 com.android.builder.model.v2.models.AndroidProject.getLintOptions: com.android.builder.model.v2.ide.LintOptions ()
 com.android.builder.model.v2.models.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getModelVersion: java.lang.String ()
-com.android.builder.model.v2.models.AndroidProject.getName: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getNativeToolchains: java.util.Collection<com.android.builder.model.NativeToolchain> ()
 com.android.builder.model.v2.models.AndroidProject.getNdkVersion: java.lang.String ()
+com.android.builder.model.v2.models.AndroidProject.getPath: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getProductFlavors: java.util.Collection<com.android.builder.model.v2.ide.ProductFlavorContainer> ()
 com.android.builder.model.v2.models.AndroidProject.getProjectType: com.android.builder.model.v2.ide.ProjectType ()
 com.android.builder.model.v2.models.AndroidProject.getResourcePrefix: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getSigningConfigs: java.util.Collection<com.android.builder.model.v2.dsl.SigningConfig> ()
 com.android.builder.model.v2.models.AndroidProject.getVariants: java.util.Collection<com.android.builder.model.v2.ide.Variant> ()
 com.android.builder.model.v2.models.AndroidProject.getViewBindingOptions: com.android.builder.model.v2.ide.ViewBindingOptions ()
-com.android.builder.model.v2.models.AppBundleProjectBuildOutput
-com.android.builder.model.v2.models.AppBundleProjectBuildOutput.getAppBundleVariantsBuildOutput: java.util.Collection<com.android.builder.model.v2.ide.AppBundleVariantBuildOutput> ()
 com.android.builder.model.v2.models.GlobalLibraryMap
 com.android.builder.model.v2.models.GlobalLibraryMap.getLibraries: java.util.Map<java.lang.String, com.android.builder.model.v2.ide.Library> ()
 com.android.builder.model.v2.models.ModelBuilderParameter

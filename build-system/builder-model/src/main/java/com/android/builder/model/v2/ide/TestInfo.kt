@@ -13,10 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.builder.model.v2.ide
 
-/** Test options for running tests - e.g. instrumented or not.  */
-interface TestOptions {
+import java.io.File
+
+/**
+ * Information for test Artifacts.
+ *
+ * This includes both Android test components in app/lib modules, and the main component
+ * in test modules.
+ */
+interface TestInfo {
+
     enum class Execution {
         /** On device orchestration is not used in this case.  */
         HOST,
@@ -30,4 +39,24 @@ interface TestOptions {
 
     val animationsDisabled: Boolean
     val execution: Execution?
+    /**
+     * Returns a list of additional APKs that need to installed on the device for this artifact to
+     * work correctly.
+     *
+     *
+     * For test artifacts, these will be "buddy APKs" from the `androidTestUtil`
+     * configuration.
+     *
+     * @since 3.0
+     */
+    val additionalRuntimeApks: Collection<File>
+
+    /**
+     * Returns the name of the task used to run instrumented tests or null if the variant is not a
+     * test variant.
+     *
+     * @since 3.1
+     * @return name of the task used to run instrumented tests
+     */
+    val instrumentedTestTaskName: String?
 }

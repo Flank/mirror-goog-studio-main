@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,14 @@
  */
 package com.android.builder.model.v2.ide
 
-import com.android.builder.model.v2.ide.BaseArtifact
 import java.io.File
 
 /**
  * The information for a generated Java artifact.
+ *
+ * This artifact is for Java components inside an Android project.
+ *
+ * As of 4.1 this is only for the unit test component.
  */
 interface JavaArtifact : BaseArtifact {
     /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */
