@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.Version
+import com.google.common.base.CharMatcher
 import com.google.common.base.Splitter
 import org.gradle.api.InvalidUserDataException
 
@@ -58,14 +59,34 @@ internal fun verifyIDEIsNotOld(
 }
 
 /** This will accept some things that are not valid versions as it ignores everything after the
- * second. */
+ * second.
+ *
+ * There are two possible types of format that we can obtain from the IDE, in versions before
+ * 4.0, the application ID is send. This will be either eg - "2020.1.4535" if run from IDEA or
+ * eg 0 "3.6.3" if send from Android Studio.
+ *
+ * On and after 4.0 this version will be the version of the Android Support Plugin which will
+ * be the same between Android Studio and Intellij IDEA. This will be in the form 10.x.y.* where
+ * x and y are the major and minor versions respectively.
+ *
+ * This is also called with the raw version of AGP and also need to handle that case. This will
+ * be in the form x.y.*.
+ *
+ */
 @VisibleForTesting
 internal fun parseVersion(version: String): MajorMinorVersion? {
     val segments = SPLITTER.split(version).iterator()
     if (!segments.hasNext()) {
         return null
     }
-    val majorVersion = segments.next().toIntOrNull() ?: return null
+    var majorVersion = segments.next().toIntOrNull() ?: return null
+    if (majorVersion == 10) {
+        if (!segments.hasNext()) {
+            return null
+        }
+        majorVersion = segments.next().toIntOrNull() ?: return null
+    }
+
     if (!segments.hasNext()) {
         return null
     }
@@ -94,7 +115,7 @@ internal data class MajorMinorVersion(
     }
 }
 
-private val SPLITTER = Splitter.on('.')
+private val SPLITTER = Splitter.on(CharMatcher.anyOf(". "))
 
 private val ANDROID_GRADLE_PLUGIN_VERSION =
     parseVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)!!
