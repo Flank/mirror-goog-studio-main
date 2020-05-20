@@ -67,8 +67,11 @@ struct View {
 
 class TreeBuildingCanvas : public SkCanvas {
  public:
-  static void ParsePicture(const char* skp, size_t len,
-                           ::layoutinspector::proto::InspectorView* root) {
+  static void ParsePicture(
+      const char* skp, size_t len, int version,
+      const ::google::protobuf::RepeatedField< ::google::protobuf::int64>*
+          known_ids,
+      ::layoutinspector::proto::InspectorView* root) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
     std::cerr << "###start" << std::endl;
 #endif
@@ -79,7 +82,7 @@ class TreeBuildingCanvas : public SkCanvas {
       return;
     }
     picture->ref();
-    TreeBuildingCanvas canvas(root);
+    TreeBuildingCanvas canvas(version, root, known_ids);
     picture->playback(&canvas);
 
     picture->unref();
@@ -91,9 +94,13 @@ class TreeBuildingCanvas : public SkCanvas {
   ~TreeBuildingCanvas() override;
 
  protected:
-  explicit TreeBuildingCanvas(::layoutinspector::proto::InspectorView* r)
+  explicit TreeBuildingCanvas(
+      int version, ::layoutinspector::proto::InspectorView* r,
+      const ::google::protobuf::RepeatedField< ::google::protobuf::int64>* ids)
       : SkCanvas() {
+    request_version = version;
     root = r;
+    known_ids = ids;
   }
 
   void didConcat(const SkMatrix& matrix) override;
@@ -214,7 +221,10 @@ class TreeBuildingCanvas : public SkCanvas {
   // parent node. This is a hack to make them go into the right place--while
   // we're "inHeader", the commands are applied to the parent.
   bool inHeader = true;
+  int request_version;
   ::layoutinspector::proto::InspectorView* root;
+  const ::google::protobuf::RepeatedField< ::google::protobuf::int64>*
+      known_ids;
 
   // Create a view tree node to go into the returned proto. This will release
   // &data and give ownership of it to the newly created node.
@@ -222,6 +232,8 @@ class TreeBuildingCanvas : public SkCanvas {
       std::string& id, std::string& type, int offsetX, int offsetY, int width,
       int height, std::unique_ptr<std::string> data,
       std::reverse_iterator<std::deque<View>::iterator>& parent);
+
+  bool isKnownId(std::string& id);
 };
 
 #endif  // SKIA_TREEBUILDINGCANVAS_H

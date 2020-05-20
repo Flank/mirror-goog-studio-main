@@ -8,8 +8,14 @@ service SkiaParserService {
   rpc GetViewTree(GetViewTreeRequest) returns (GetViewTreeResponse) {}
 }
 
+// Version of GetViewTreeRequest:
+// - : skp field only, from: AS 4.0
+// 1 : known_ids added, from: AS 4.1
+
 message GetViewTreeRequest {
   bytes skp = 1;
+  int32 version = 2;             // See above for description
+  repeated int64 known_ids = 3;  // Sorted list of known ids
 }
 
 message InspectorView {
@@ -25,6 +31,11 @@ message InspectorView {
   repeated InspectorView children = 9;
 }
 
+// Version of GetViewTreeResponse:
+// - : Include images for all render nodes found, from: AS 4.0
+// 1 : Collect images only for known ids, from AS 4.1
+
 message GetViewTreeResponse {
   InspectorView root = 1;
+  int32 version = 2;
 }

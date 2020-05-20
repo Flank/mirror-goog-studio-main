@@ -333,12 +333,17 @@ void TreeBuildingCanvas::onDrawPicture(const SkPicture* picture,
 
 void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
                                           SkData* value) {
-  // TODO(b/154023953) Remove the check for name,  merge the images in Studio.
 #ifdef TREEBUILDINGCANVAS_DEBUG
   std::cerr << "annotation: " << key << std::endl;
 #endif
 
-  if (!strstr(key, "RenderNode") || strstr(key, "name=''")) {
+  if (!strstr(key, "RenderNode")) {
+    return;
+  }
+  auto id = parseIdFromLabel(key);
+  if (request_version >= 1 && !isKnownId(id)) {
+    // The id is not found in the views or compose nodes in the component tree.
+    // Paint this part on the parent canvas.
     return;
   }
   if (key[0] != '/') {
@@ -361,6 +366,12 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
       views.back().label = label;
     }
   }
+}
+
+bool TreeBuildingCanvas::isKnownId(std::string& idStr) {
+  auto ptr = known_ids->begin();
+  auto id = std::stol(idStr);
+  return std::binary_search(known_ids->begin(), known_ids->end(), id);
 }
 
 ::layoutinspector::proto::InspectorView* TreeBuildingCanvas::createNode(
