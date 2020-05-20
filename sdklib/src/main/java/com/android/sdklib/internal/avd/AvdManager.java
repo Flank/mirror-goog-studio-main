@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.sdklib.internal.avd;
 
 import com.android.SdkConstants;
@@ -739,19 +738,18 @@ public class AvdManager {
 
     /**
      * Reloads a single AVD but does not update the list.
+     *
      * @param avdInfo an existing AVD
-     * @param log the log object to receive action logs. Cannot be null.
+     * @param log the log object to receive action logs
      * @return an updated AVD
-     * @throws AndroidLocationException if there was an error finding the location of the
-     * AVD folder.
      */
-    public AvdInfo reloadAvd(AvdInfo avdInfo, ILogger log) throws AndroidLocationException {
+    public AvdInfo reloadAvd(@NonNull AvdInfo avdInfo, @NonNull ILogger log) {
         AvdInfo newInfo = parseAvdInfo(avdInfo.getIniFile(), log);
         synchronized (mAllAvdList) {
             int index = mAllAvdList.indexOf(avdInfo);
             if (index >= 0) {
-                // Update the existing list of AVDs
-                // Unless the original AVD is not found, in which case someone else may already have updated the list
+                // Update the existing list of AVDs, unless the original AVD is not found, in which
+                // case someone else may already have updated the list.
                 replaceAvd(avdInfo, newInfo);
             }
         }
