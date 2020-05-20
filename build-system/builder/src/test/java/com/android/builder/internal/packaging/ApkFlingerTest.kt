@@ -18,7 +18,6 @@ package com.android.builder.internal.packaging
 
 import com.android.apksig.ApkVerifier
 import com.android.builder.packaging.JarFlinger
-import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.TestResources
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject.assertThat
@@ -56,14 +55,16 @@ class ApkFlingerTest {
     lateinit var creationData: ApkCreatorFactory.CreationData
 
     private lateinit var apkFile: File
+    private lateinit var v4SignatureFile: File
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
         apkFile = tmp.root.resolve("out.apk")
+        v4SignatureFile = tmp.root.resolve("out.apk.idsig")
         Mockito.`when`(creationData.apkPath).thenReturn(apkFile)
         Mockito.`when`(creationData.nativeLibrariesPackagingMode).thenReturn(COMPRESSED)
-        Mockito.`when`(creationData.noCompressPredicate).thenReturn(Predicate<String> { false })
+        Mockito.`when`(creationData.noCompressPredicate).thenReturn(Predicate { false })
         Mockito.`when`(creationData.signingOptions).thenReturn(Optional.absent())
     }
 
@@ -162,40 +163,119 @@ class ApkFlingerTest {
     }
 
     @Test
-    fun signApk() {
-        // First copy existing test apk
+    fun testV1Signing() {
+        testSigning(
+            enableV1 = true,
+            enableV2 = false,
+            enableV3 = false,
+            enableV4 = false,
+            minSdk = 1
+        )
+    }
+
+    @Test
+    fun testV2Signing() {
+        // API 24 is the first to support V2 signing
+        testSigning(
+            enableV1 = false,
+            enableV2 = true,
+            enableV3 = false,
+            enableV4 = false,
+            minSdk = 24
+        )
+    }
+
+    @Test
+    fun testV3Signing() {
+        // API 28 is the first to support V3 signing
+        testSigning(
+            enableV1 = false,
+            enableV2 = false,
+            enableV3 = true,
+            enableV4 = false,
+            minSdk = 28
+        )
+    }
+
+    @Test
+    fun testV4AndV2Signing() {
+        // API 28 is the first to support V4 signing
+        testSigning(
+            enableV1 = false,
+            enableV2 = true,
+            enableV3 = false,
+            enableV4 = true,
+            minSdk = 28
+        )
+    }
+
+    @Test
+    fun testV4AndV3Signing() {
+        // API 28 is the first to support V4 signing
+        testSigning(
+            enableV1 = false,
+            enableV2 = false,
+            enableV3 = true,
+            enableV4 = true,
+            minSdk = 28
+        )
+    }
+
+    @Test
+    fun testSigningWithAllVersions() {
+        testSigning(
+            enableV1 = true,
+            enableV2 = true,
+            enableV3 = true,
+            enableV4 = true,
+            minSdk = 1
+        )
+    }
+
+    private fun testSigning(
+        enableV1: Boolean,
+        enableV2: Boolean,
+        enableV3: Boolean,
+        enableV4: Boolean,
+        minSdk: Int
+    ) {
         FileUtils.copyFile(TestResources.getFile("/testData/packaging/test.apk"), apkFile)
-        for (minSdk in 1..SdkVersionInfo.HIGHEST_KNOWN_API) {
-            // Delete META-INF files with signing disabled
-            Mockito.`when`(creationData.signingOptions).thenReturn(Optional.absent())
-            ApkFlinger(creationData, Deflater.BEST_SPEED).use {
-                it.deleteFile("META-INF/MANIFEST.MF")
-                it.deleteFile("META-INF/CERT.RSA")
-                it.deleteFile("META-INF/CERT.SF")
-            }
-            Zip(apkFile).use {
-                assertThat(it).doesNotContain("META-INF/MANIFEST.MF")
-                assertThat(it).doesNotContain("META-INF/CERT.RSA")
-                assertThat(it).doesNotContain("META-INF/CERT.SF")
-            }
-            // Then sign and verify apk
-            val signingOptions =
-                SigningOptions.builder()
-                    .setV1SigningEnabled(true)
-                    .setV2SigningEnabled(true)
-                    .setMinSdkVersion(minSdk)
-                    .setKey(getPrivateKey())
-                    .setCertificates(ImmutableList.copyOf(getCertificates()))
-                    .build()
-            Mockito.`when`(creationData.signingOptions).thenReturn(Optional.of(signingOptions))
-            ApkFlinger(creationData, Deflater.BEST_SPEED).use {}
+        // Delete META-INF files with signing disabled
+        Mockito.`when`(creationData.signingOptions).thenReturn(Optional.absent())
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use {
+            it.deleteFile("META-INF/MANIFEST.MF")
+            it.deleteFile("META-INF/CERT.RSA")
+            it.deleteFile("META-INF/CERT.SF")
+        }
+        Zip(apkFile).use {
+            assertThat(it).doesNotContain("META-INF/MANIFEST.MF")
+            assertThat(it).doesNotContain("META-INF/CERT.RSA")
+            assertThat(it).doesNotContain("META-INF/CERT.SF")
+        }
+        // Then sign and verify apk
+        val signingOptions =
+            SigningOptions.builder()
+                .setV1SigningEnabled(enableV1)
+                .setV2SigningEnabled(enableV2)
+                .setMinSdkVersion(minSdk)
+                .setKey(getPrivateKey())
+                .setCertificates(ImmutableList.copyOf(getCertificates()))
+                .build()
+        Mockito.`when`(creationData.signingOptions).thenReturn(Optional.of(signingOptions))
+        ApkFlinger(
+            creationData,
+            Deflater.BEST_SPEED,
+            enableV3Signing = enableV3,
+            enableV4Signing = enableV4
+        ).use {}
+        if (enableV1) {
             Zip(apkFile).use {
                 assertThat(it).contains("META-INF/MANIFEST.MF")
                 assertThat(it).contains("META-INF/CERT.RSA")
                 assertThat(it).contains("META-INF/CERT.SF")
             }
-            verifyApk(apkFile, minSdk)
         }
+        verifyApk(apkFile, minSdk, enableV4)
     }
 
     private fun getPrivateKey(): PrivateKey {
@@ -214,8 +294,16 @@ class ApkFlingerTest {
             .map { it as X509Certificate }
     }
 
-    private fun verifyApk(apk: File, minSdk: Int) {
-        val apkVerifier = ApkVerifier.Builder(apk).setMinCheckedPlatformVersion(minSdk).build()
+    private fun verifyApk(apk: File, minSdk: Int, v4Enabled: Boolean) {
+        val apkVerifier =
+            ApkVerifier.Builder(apk)
+                .setMinCheckedPlatformVersion(minSdk)
+                .also {
+                    if (v4Enabled) {
+                        it.setV4SignatureFile(File("${apk.absolutePath}.idsig"))
+                    }
+                }
+                .build()
         assertThat(apkVerifier.verify().isVerified).isTrue()
     }
 }

@@ -26,13 +26,15 @@ import javax.inject.Inject
 open class SigningConfig @Inject constructor(name: String) : DefaultSigningConfig(name),
     Serializable, Named, com.android.build.api.dsl.SigningConfig {
 
-    fun initWith(that: com.android.builder.model.SigningConfig): SigningConfig? {
+    fun initWith(that: DefaultSigningConfig): SigningConfig {
         setStoreFile(that.storeFile)
         setStorePassword(that.storePassword)
         setKeyAlias(that.keyAlias)
         setKeyPassword(that.keyPassword)
         internalSetV1SigningEnabled(that.isV1SigningEnabled)
         internalSetV2SigningEnabled(that.isV2SigningEnabled)
+        enableV3Signing = that.enableV3Signing
+        enableV4Signing = that.enableV4Signing
         setStoreType(that.storeType)
         return this
     }
@@ -49,11 +51,14 @@ open class SigningConfig @Inject constructor(name: String) : DefaultSigningConfi
             .add("v2SigningEnabled", isV2SigningEnabled)
             .add("v1SigningConfigured", isV1SigningConfigured)
             .add("v2SigningConfigured", isV2SigningConfigured)
+            .add("enableV3Signing", enableV3Signing)
+            .add("enableV4Signing", enableV4Signing)
             .toString()
     }
 
     // The following setters exist because of a bug where gradle is generating two groovy setters
     // for each field, since each value exists twice in the implemented interfaces
+    // TODO - do we need setters for v3 and v4 here as well?
 
     open fun storeFile(storeFile: File?) {
         this.storeFile = storeFile

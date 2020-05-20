@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.internal.signing
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
 import com.android.build.gradle.options.SigningOptions
 import org.gradle.api.file.Directory
@@ -124,7 +122,9 @@ class SigningConfigProvider(
                             v1SigningEnabled = signingOptions.v1Enabled!!,
                             v2SigningEnabled = signingOptions.v2Enabled!!,
                             v1SigningConfigured = signingOptions.v1Configured,
-                            v2SigningConfigured = signingOptions.v2Configured
+                            v2SigningConfigured = signingOptions.v2Configured,
+                            enableV3Signing = signingOptions.enableV3Signing,
+                            enableV4Signing = signingOptions.enableV4Signing
                         ),
                         signingConfigFileCollection = null,
                         // Validation for this case is currently missing because the base module

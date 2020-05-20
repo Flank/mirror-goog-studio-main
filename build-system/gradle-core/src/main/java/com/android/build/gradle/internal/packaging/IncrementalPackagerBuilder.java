@@ -62,7 +62,8 @@ import java.util.function.Predicate;
  * {@link #build()} method for information on which parameters are mandatory.
  */
 public class IncrementalPackagerBuilder {
-    private static int NO_V1_SDK = 24;
+    // The lowest API with v2 signing support
+    private static final int MIN_V2_SDK = 24;
 
     /**
      * Type of build that invokes the instance of IncrementalPackagerBuilder
@@ -103,6 +104,16 @@ public class IncrementalPackagerBuilder {
      * Is the build debuggable?
      */
     private boolean debuggableBuild;
+
+    /**
+     * Is v3 signing enabled?
+     */
+    private boolean enableV3Signing = false;
+
+    /**
+     * Is v4 signing enabled?
+     */
+    private boolean enableV4Signing = false;
 
     /**
      * Is the build JNI-debuggable?
@@ -177,15 +188,11 @@ public class IncrementalPackagerBuilder {
     @VisibleForTesting
     static boolean enableV1Signing(
             boolean v1Enabled, boolean v1Configured, int minSdk, @Nullable Integer targetApi) {
-        if (!v1Enabled) {
-            return false;
+        // we do optimization (disable signing) only if there is no user input
+        if (v1Configured) {
+            return v1Enabled;
         }
-
-        // we only do optimization(disable signing) if there is no user input
-        if (!v1Configured && (targetApi != null && targetApi >= NO_V1_SDK || minSdk >= NO_V1_SDK)) {
-            return false;
-        }
-        return true;
+        return v1Enabled && (targetApi == null || targetApi < MIN_V2_SDK) && minSdk < MIN_V2_SDK;
     }
 
     /**
@@ -194,20 +201,20 @@ public class IncrementalPackagerBuilder {
      * @param v2Enabled if v2 signature is enabled by default or by the user
      * @param v2Configured if v2 signature is configured by the user
      * @param targetApi optional injected target Api
+     * @param v3Signed if the package will be signed with v3 signing
      * @return if we actually sign with v2 signature
      */
     @VisibleForTesting
     static boolean enableV2Signing(
-            boolean v2Enabled, boolean v2Configured, @Nullable Integer targetApi) {
-        if (!v2Enabled) {
-            return false;
+            boolean v2Enabled,
+            boolean v2Configured,
+            @Nullable Integer targetApi,
+            boolean v3Signed) {
+        // we do optimization (disable signing) only if there is no user input
+        if (v2Configured) {
+            return v2Enabled;
         }
-
-        // we only do optimization(disable signing) if there is no user input
-        if (!v2Configured && (targetApi != null && targetApi < NO_V1_SDK)) {
-            return false;
-        }
-        return true;
+        return v2Enabled && !v3Signed && (targetApi == null || targetApi >= MIN_V2_SDK);
     }
 
     /**
@@ -244,17 +251,31 @@ public class IncrementalPackagerBuilder {
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
 
+            enableV4Signing = signingConfig.getEnableV4Signing();
+            enableV3Signing = signingConfig.getEnableV3Signing();
+
+            boolean enableV2Signing =
+                    enableV2Signing(
+                            signingConfig.getV2SigningEnabled(),
+                            signingConfig.getV2SigningConfigured(),
+                            targetApi,
+                            enableV3Signing);
+
             boolean enableV1Signing =
                     enableV1Signing(
                             signingConfig.getV1SigningEnabled(),
                             signingConfig.getV1SigningConfigured(),
                             minSdk,
                             targetApi);
-            boolean enableV2Signing =
-                    enableV2Signing(
-                            signingConfig.getV2SigningEnabled(),
-                            signingConfig.getV2SigningConfigured(),
-                            targetApi);
+
+            // Check that v2 or v3 signing is enabled if v4 signing is enabled.
+            if (enableV4Signing) {
+                Preconditions.checkState(
+                        enableV2Signing || enableV3Signing,
+                        "V4 signing enabled, but v2 and v3 signing are not enabled. V4 signing " +
+                                "requires either v2 or v3 signing."
+                );
+            }
 
             creationDataBuilder.setSigningOptions(
                     SigningOptions.builder()
@@ -559,6 +580,8 @@ public class IncrementalPackagerBuilder {
                     abiFilters,
                     jniDebuggableBuild,
                     debuggableBuild,
+                    enableV3Signing,
+                    enableV4Signing,
                     apkCreatorType,
                     changedDexFiles,
                     changedJavaResources,

@@ -22,9 +22,8 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.signing.DefaultSigningConfig;
 import java.io.File;
 import org.gradle.api.NamedDomainObjectFactory;
-import org.gradle.api.model.ObjectFactory;
 
-/** Factory to create SigningConfig object using an {@link ObjectFactory} to add the DSL methods. */
+/** Factory to create SigningConfig objects. */
 public class SigningConfigFactory implements NamedDomainObjectFactory<SigningConfig> {
     @NonNull private final DslServices dslServices;
     private final File defaultDebugKeystoreLocation;

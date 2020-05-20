@@ -123,6 +123,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     .setInputApk(params.intermediaryBundleFile)
                     .setV2SigningEnabled(false)
                     .setV3SigningEnabled(false)
+                    .setV4SigningEnabled(false)
                     .setMinSdkVersion(18) // So that RSA + SHA256 are used
                     .build()
                     .sign()

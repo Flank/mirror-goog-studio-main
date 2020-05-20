@@ -61,7 +61,9 @@ class SigningConfigUtilsTest {
             v1SigningEnabled = false,
             v2SigningEnabled = true,
             v1SigningConfigured = false,
-            v2SigningConfigured = false
+            v2SigningConfigured = false,
+            enableV3Signing = false,
+            enableV4Signing = false
         )
         SigningConfigUtils.save(outputDirectory, signingConfig)
 
@@ -85,7 +87,9 @@ class SigningConfigUtilsTest {
             v1SigningEnabled = false,
             v2SigningEnabled = true,
             v1SigningConfigured = false,
-            v2SigningConfigured = false
+            v2SigningConfigured = false,
+            enableV3Signing = false,
+            enableV4Signing = false
         )
         SigningConfigUtils.save(outputDirectory, signingConfig)
 

@@ -943,6 +943,9 @@ public class VariantManager<
                 signingConfigDsl.setV2SigningEnabled(signingOptions.getV2Enabled());
             }
 
+            signingConfigDsl.setEnableV3Signing(signingOptions.getEnableV3Signing());
+            signingConfigDsl.setEnableV4Signing(signingOptions.getEnableV4Signing());
+
             return signingConfigDsl;
         }
         return null;
