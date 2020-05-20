@@ -79,25 +79,7 @@ public class IdeDependenciesFactory {
             @NonNull BaseArtifact artifact, @Nullable GradleVersion modelVersion) {
         // Create a fresh model cache for this class, since current instance is based on dependencyGraphs or dependencies, which
         // ha1ve been copied in the constructor of IdeBaseArtifact.
-        ModelCache modelCache = new ModelCache();
-        if (modelVersion != null
-                && modelVersion.getMajor() >= 3
-                && !artifact.getDependencyGraphs().getCompileDependencies().isEmpty()) {
-            return createFromDependencyGraphs(artifact.getDependencyGraphs());
-        }
         return createFromDependencies(artifact.getDependencies());
-    }
-
-    /** Call this method on level 4 DependencyGraphs. */
-    @VisibleForTesting
-    @NonNull
-    public IdeDependencies createFromDependencyGraphs(@NonNull DependencyGraphs graphs) {
-        return createInstance(
-                graphs.getCompileDependencies()
-                        .stream()
-                        .map(GraphItem::getArtifactAddress)
-                        .collect(Collectors.toList()),
-                Collections.emptyList());
     }
 
     /** Call this method on level 1 Dependencies model. */

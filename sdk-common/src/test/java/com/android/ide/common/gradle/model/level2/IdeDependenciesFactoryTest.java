@@ -52,52 +52,6 @@ public class IdeDependenciesFactoryTest {
     }
 
     @Test
-    public void createFromDependencyGraph() {
-        GraphItemStub javaGraphItem = new GraphItemStub("javaLibrary", Collections.emptyList(), "");
-        GraphItemStub androidGraphItem =
-                new GraphItemStub("androidLibrary", Collections.emptyList(), "");
-        GraphItemStub moduleGraphItem = new GraphItemStub("module", Collections.emptyList(), "");
-
-        Library level2AndroidLibrary = GradleStubBuilderUtil.l2AndroidLibrary("androidLibrary");
-        Library level2JavaLibrary = GradleStubBuilderUtil.l2JavaLibrary("javaLibrary");
-        Library level2ModuleLibrary = GradleStubBuilderUtil.l2ModuleLibrary("module");
-
-        DependencyGraphsStub dependencyGraphsStub =
-                new DependencyGraphsStub(
-                        Arrays.asList(javaGraphItem, androidGraphItem, moduleGraphItem),
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        Collections.emptyList());
-
-        myDependenciesFactory.setUpGlobalLibraryMap(
-                singletonList(
-                        new GlobalLibraryMapStub(
-                                ImmutableMap.of(
-                                        "javaLibrary", level2JavaLibrary,
-                                        "androidLibrary", level2AndroidLibrary,
-                                        "moduleLibrary", level2ModuleLibrary))));
-        IdeDependencies level2Dependencies =
-                myDependenciesFactory.createFromDependencyGraphs(dependencyGraphsStub);
-
-        assertThat(level2Dependencies.getAndroidLibraries()).hasSize(1);
-        assertThat(level2Dependencies.getAndroidLibraries().iterator().next().getArtifactAddress())
-                .isEqualTo("androidLibrary");
-
-        assertThat(level2Dependencies.getJavaLibraries()).hasSize(1);
-        assertThat(level2Dependencies.getJavaLibraries().iterator().next().getArtifactAddress())
-                .isEqualTo("javaLibrary");
-
-        assertThat(level2Dependencies.getModuleDependencies()).hasSize(1);
-        assertThat(
-                        level2Dependencies
-                                .getModuleDependencies()
-                                .iterator()
-                                .next()
-                                .getArtifactAddress())
-                .isEqualTo("module");
-    }
-
-    @Test
     public void createFromDependencies() {
         JavaLibrary javaLibraryA =
                 new com.android.ide.common.gradle.model.stubs.JavaLibraryStub() {
