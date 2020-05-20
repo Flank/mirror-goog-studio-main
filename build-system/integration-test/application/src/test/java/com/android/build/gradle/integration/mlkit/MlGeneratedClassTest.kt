@@ -52,8 +52,7 @@ class MlGeneratedClassTest {
                 dependencies {
                     implementation 'androidx.appcompat:appcompat:1.1.0'
                     implementation 'org.apache.commons:commons-compress:1.18'
-                    implementation 'org.tensorflow:tensorflow-lite:1.12.0'
-                    implementation 'org.tensorflow:tensorflow-lite-support:0.0.0-nightly'
+                    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc0'
                 }
             """
         )

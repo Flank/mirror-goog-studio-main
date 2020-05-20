@@ -40,8 +40,7 @@ android {
 dependencies {
 
     implementation 'org.apache.commons:commons-compress:1.18'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.0.0-nightly'
-    implementation 'org.tensorflow:tensorflow-lite:2.1.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc0'
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
     testImplementation 'junit:junit:4.12'
