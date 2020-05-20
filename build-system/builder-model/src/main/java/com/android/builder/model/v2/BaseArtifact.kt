@@ -35,14 +35,6 @@ interface BaseArtifact {
     val assembleTaskName: String
 
     /**
-     * Returns the absolute path for the listing file that will get updated after each build. The
-     * model file will contain deployment related information like applicationId, list of APKs.
-     *
-     * @return the path to a json file.
-     */
-    val assembleTaskOutputListingFile: String
-
-    /**
      * Returns the folder containing the class files. This is the output of the java compilation.
      *
      * @return a folder.

@@ -182,14 +182,6 @@ interface AndroidProject {
     val variants: Collection<Variant>
 
     /**
-     * Returns the minimal information of variants for this project, excluding test related
-     * variants.
-     *
-     * @since 4.1
-     */
-    val variantsBuildInformation: Collection<VariantBuildInformation>
-
-    /**
      * Returns the name of the variant the IDE should use when opening the project for the first
      * time.
      *

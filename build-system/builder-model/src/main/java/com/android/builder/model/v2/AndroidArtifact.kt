@@ -43,13 +43,6 @@ interface AndroidArtifact : BaseArtifact {
     val signingConfigName: String?
 
     /**
-     * Returns the application id of this artifact.
-     *
-     * @return the application id.
-     */
-    val applicationId: String
-
-    /**
      * Returns the name of the task used to generate the source code. The actual value might
      * depend on the build system front end.
      *
@@ -102,42 +95,17 @@ interface AndroidArtifact : BaseArtifact {
     val instrumentedTestTaskName: String?
 
     /**
-     * Returns the name of the task used to generate the bundle file (.aab), or null if the task is
-     * not supported.
+     * Returns the absolute path for the listing file that will get updated after each build. The
+     * model file will contain deployment related information like applicationId, list of APKs.
      *
-     * @since 3.2
-     * @return name of the task used to generate the bundle file (.aab)
+     * @return the path to a json file.
      */
-    val bundleTaskName: String?
+    val assembleTaskOutputListingFile: String
 
     /**
-     * Returns the path to the listing file generated after each [.getBundleTaskName] task
-     * execution. The listing file will contain a reference to the produced bundle file (.aab).
-     * Returns null when [.getBundleTaskName] returns null.
-     *
-     * @since 4.0
-     * @return the file path for the bundle model file.
+     * The bundle info if applicable, otherwise null.
      */
-    val bundleTaskOutputListingFile: String?
-
-    /**
-     * Returns the name of the task used to generate APKs via the bundle file (.aab), or null if the
-     * task is not supported.
-     *
-     * @since 3.2
-     * @return name of the task used to generate the APKs via the bundle
-     */
-    val apkFromBundleTaskName: String?
-
-    /**
-     * Returns the path to the model file generated after each [.getApkFromBundleTaskName]
-     * task execution. The model will contain a reference to the folder where APKs from bundle are
-     * placed into. Returns null when [.getApkFromBundleTaskName] returns null.
-     *
-     * @since 4.0
-     * @return the file path for the [.getApkFromBundleTaskName] output model.
-     */
-    val apkFromBundleTaskOutputListingFile: String?
+    val bundleInfo: BundleInfo?
 
     /**
      * Returns the code shrinker used by this artifact or null if no shrinker is used to build this
