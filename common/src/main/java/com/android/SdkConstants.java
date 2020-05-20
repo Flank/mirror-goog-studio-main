@@ -854,6 +854,12 @@ public final class SdkConstants {
             AndroidxName.of("android.support.constraint.", "TableConstraintLayout");
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_GUIDELINE =
             AndroidxName.of("android.support.constraint.", "Guideline");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_MOCK_VIEW =
+            AndroidxName.of("android.support.constraint.utils.", "MockView");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_IMAGE_FILTER_VIEW =
+            AndroidxName.of("android.support.constraint.utils.", "ImageFilterView");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_IMAGE_FILTER_BUTTON =
+            AndroidxName.of("android.support.constraint.utils.", "ImageFilterButton");
 
     // Flow Alignment values.
     public static class FlowAlignment {
