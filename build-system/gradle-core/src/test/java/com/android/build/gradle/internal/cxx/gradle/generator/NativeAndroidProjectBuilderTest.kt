@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.ide
+package com.android.build.gradle.internal.cxx.gradle.generator
 
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStreamingParser
 import com.google.common.truth.Truth.assertThat
@@ -27,7 +27,10 @@ import java.io.StringReader
 class NativeAndroidProjectBuilderTest {
     @Test
     fun testHeaderFileThatWasPassedAsSource() {
-        val builder = NativeAndroidProjectBuilder("project")
+        val builder =
+            NativeAndroidProjectBuilder(
+                "project"
+            )
         val visitor = NativeAndroidProjectBuilder.JsonStreamingVisitor(builder, "variant", null)
         val reader = JsonReader(
             StringReader(
@@ -86,7 +89,10 @@ class NativeAndroidProjectBuilderTest {
     @Test
     fun testStringTable() {
 
-        val builder = NativeAndroidProjectBuilder("project")
+        val builder =
+            NativeAndroidProjectBuilder(
+                "project"
+            )
         val visitor = NativeAndroidProjectBuilder.JsonStreamingVisitor(builder, "variant", null)
         val reader = JsonReader(
             StringReader(
@@ -186,7 +192,10 @@ class NativeAndroidProjectBuilderTest {
             )
         )
 
-        val builder = NativeAndroidProjectBuilder("name")
+        val builder =
+            NativeAndroidProjectBuilder(
+                "name"
+            )
         builder.addJson(
             reader,
             "variant-name",
@@ -243,7 +252,10 @@ class NativeAndroidProjectBuilderTest {
                         "}"
             )
         )
-        val builder = NativeAndroidProjectBuilder("name")
+        val builder =
+            NativeAndroidProjectBuilder(
+                "name"
+            )
         builder.addJson(
             reader,
             "variant-name",
@@ -301,7 +313,11 @@ class NativeAndroidProjectBuilderTest {
             )
         )
 
-        val builder = NativeAndroidProjectBuilder("name", "armeabi-v7a")
+        val builder =
+            NativeAndroidProjectBuilder(
+                "name",
+                "armeabi-v7a"
+            )
         builder.addJson(
             reader,
             "variant-name",
@@ -359,7 +375,11 @@ class NativeAndroidProjectBuilderTest {
             )
         )
 
-        val builder = NativeAndroidProjectBuilder("name", "x86")
+        val builder =
+            NativeAndroidProjectBuilder(
+                "name",
+                "x86"
+            )
         builder.addJson(
             reader,
             "variant-name",
