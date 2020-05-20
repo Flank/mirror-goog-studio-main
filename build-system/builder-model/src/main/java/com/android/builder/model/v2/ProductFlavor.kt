@@ -117,7 +117,7 @@ interface ProductFlavor : BaseConfig, DimensionAware {
     val resourceConfigurations: Collection<String>
 
     /** The associated signing config or null if none are set on the product flavor.*/
-    val signingConfig: SigningConfig?
+    val signingConfig: String?
 
     val vectorDrawables: VectorDrawablesOptions
     /**

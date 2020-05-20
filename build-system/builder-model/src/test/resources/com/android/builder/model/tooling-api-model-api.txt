@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-67667cf5122c50bb83b8ee0b59d4c2b21e7ce877b01a978fca19aa22370ca71c
+53650894d18ea6e54d5fbe591d7cf68596f6aa8f829d978737364607e6dfcee5
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -568,7 +568,7 @@ com.android.builder.model.v2.BaseConfig.getTestProguardFiles: java.util.Collecti
 com.android.builder.model.v2.BaseConfig.getVersionNameSuffix: java.lang.String ()
 com.android.builder.model.v2.BuildType implements com.android.builder.model.v2.BaseConfig
 com.android.builder.model.v2.BuildType.getRenderscriptOptimLevel: int ()
-com.android.builder.model.v2.BuildType.getSigningConfig: com.android.builder.model.v2.SigningConfig ()
+com.android.builder.model.v2.BuildType.getSigningConfig: java.lang.String ()
 com.android.builder.model.v2.BuildType.isDebuggable: boolean ()
 com.android.builder.model.v2.BuildType.isEmbedMicroApp: boolean ()
 com.android.builder.model.v2.BuildType.isJniDebuggable: boolean ()
@@ -703,7 +703,7 @@ com.android.builder.model.v2.ProductFlavor.getRenderscriptSupportModeBlasEnabled
 com.android.builder.model.v2.ProductFlavor.getRenderscriptSupportModeEnabled: java.lang.Boolean ()
 com.android.builder.model.v2.ProductFlavor.getRenderscriptTargetApi: java.lang.Integer ()
 com.android.builder.model.v2.ProductFlavor.getResourceConfigurations: java.util.Collection<java.lang.String> ()
-com.android.builder.model.v2.ProductFlavor.getSigningConfig: com.android.builder.model.v2.SigningConfig ()
+com.android.builder.model.v2.ProductFlavor.getSigningConfig: java.lang.String ()
 com.android.builder.model.v2.ProductFlavor.getTargetSdkVersion: com.android.builder.model.v2.ApiVersion ()
 com.android.builder.model.v2.ProductFlavor.getTestApplicationId: java.lang.String ()
 com.android.builder.model.v2.ProductFlavor.getTestFunctionalTest: java.lang.Boolean ()

@@ -25,7 +25,7 @@ import java.io.File
  */
 interface SigningConfig {
     /** Returns the name of the Signing config */
-    fun getName(): String
+    val name: String
 
     /** The keystore file. */
     val storeFile: File?
