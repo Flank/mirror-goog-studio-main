@@ -33,6 +33,8 @@ message SwapRequest {
 
   // Lets the agent know what instrumentation to apply.
   bool overlay_swap = 10;
+
+  bool variable_reinitialization = 11;
 }
 
 message OverlaySwapRequest {
@@ -65,6 +67,7 @@ message OverlaySwapRequest {
   Arch arch = 10;
 
   bool structural_redefinition = 11;
+  bool variable_reinitialization = 12;
 }
 
 message OverlayIdPush {
@@ -140,6 +143,7 @@ message AgentSwapResponse {
     UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE = 14;
     UNSUPPORTED_REINIT_NON_STATIC_OBJECT = 15;
     UNSUPPORTED_REINIT_NON_STATIC_ARRAY = 16;
+    UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT = 17;
   }
 
   // The state of the swap that was requested.

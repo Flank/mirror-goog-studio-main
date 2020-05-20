@@ -107,6 +107,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
                         .setPackageName(PACKAGE)
                         .setRestartActivity(restart)
                         .setStructuralRedefinition(true)
+                        .setVariableReinitialization(true)
                         .build();
         return request;
     }

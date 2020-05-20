@@ -195,7 +195,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
         Assert.assertEquals(
-                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE,
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT,
                 response.getStatus());
     }
 
