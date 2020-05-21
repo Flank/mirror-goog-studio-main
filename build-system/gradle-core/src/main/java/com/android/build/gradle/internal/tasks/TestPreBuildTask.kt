@@ -58,9 +58,19 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
             task: TestPreBuildTask
         ) {
             super.configure(task)
-            task.runtimeClasspath = creationConfig.variantDependencies.runtimeClasspath
-            task.compileClasspath = testComponentProperties.testedVariant.variantDependencies.runtimeClasspath
-
+            val runtimeClasspath = creationConfig.variantDependencies.runtimeClasspath
+            val compileClasspath =
+                testComponentProperties.testedVariant.variantDependencies.runtimeClasspath
+            task.runtimeVersionMap.set(
+                task.project.providers.provider {
+                    runtimeClasspath.toVersionMap()
+                }
+            )
+            task.compileVersionMap.set(
+                task.project.providers.provider {
+                    compileClasspath.toVersionMap()
+                }
+            )
             task.fakeOutputDirectory = File(
                 creationConfig.globalScope.intermediatesDir,
                 "prebuild/${creationConfig.dirName}"

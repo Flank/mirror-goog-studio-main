@@ -108,6 +108,13 @@ class BasicInstantExecutionTest {
         executor().run(":app:mergeDebugJniLibFolders")
     }
 
+    @Test
+    fun testAndroidTestBuild() {
+        executor().run(":app:assembleDebugAndroidTest")
+        executor().run("clean")
+        executor().run(":app:assembleDebugAndroidTest")
+    }
+
     private fun executor(): GradleTaskExecutor =
         project.executor()
             // until b/154742527 is fixed we need to disable this

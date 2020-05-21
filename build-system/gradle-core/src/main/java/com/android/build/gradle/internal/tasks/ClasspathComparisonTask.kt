@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -31,21 +32,11 @@ import java.io.File
  */
 abstract class ClasspathComparisonTask : NonIncrementalTask() {
 
-    @get:Internal
-    protected lateinit var runtimeClasspath: Configuration
+    @get:Input
+    abstract val runtimeVersionMap: MapProperty<Info, String>
 
     @get:Input
-    val runtimeVersionMap: Map<Info, String> by lazy {
-        runtimeClasspath.toVersionMap()
-    }
-
-    @get:Internal
-    protected lateinit var compileClasspath: Configuration
-
-    @get:Input
-    val compileVersionMap: Map<Info, String> by lazy {
-        compileClasspath.toVersionMap()
-    }
+    abstract val compileVersionMap: MapProperty<Info, String>
 
     // fake output dir so that the task doesn't run unless an input has changed.
     @get:OutputDirectory
@@ -60,8 +51,8 @@ abstract class ClasspathComparisonTask : NonIncrementalTask() {
     )
 
     override fun doTaskAction() {
-        val runtimeMap = runtimeVersionMap
-        for (compileEntry in compileVersionMap.entries) {
+        val runtimeMap = runtimeVersionMap.get()
+        for (compileEntry in compileVersionMap.get().entries) {
             val runtimeVersion = runtimeMap[compileEntry.key] ?: continue
 
             if (runtimeVersion != compileEntry.value) {
@@ -81,7 +72,7 @@ data class Info(
     val module: String
 )
 
-private fun Configuration.toVersionMap(): Map<Info, String> =
+fun Configuration.toVersionMap(): Map<Info, String> =
     incoming.resolutionResult.allComponents
         .asSequence()
         .filter { it.id is ModuleComponentIdentifier }

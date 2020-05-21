@@ -86,8 +86,18 @@ dependencies {
         override fun configure(task: AppClasspathCheckTask) {
             task.variantName = componentProperties.name
 
-            task.runtimeClasspath = componentProperties.variantDependencies.runtimeClasspath
-            task.compileClasspath = componentProperties.variantDependencies.compileClasspath
+            val runtimeClasspath = componentProperties.variantDependencies.runtimeClasspath
+            val compileClasspath = componentProperties.variantDependencies.compileClasspath
+            task.runtimeVersionMap.set(
+                task.project.providers.provider {
+                    runtimeClasspath.toVersionMap()
+                }
+            )
+            task.compileVersionMap.set(
+                task.project.providers.provider {
+                    compileClasspath.toVersionMap()
+                }
+            )
             task.fakeOutputDirectory = FileUtils.join(
                 componentProperties.globalScope.intermediatesDir,
                 name,
