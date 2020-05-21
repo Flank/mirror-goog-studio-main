@@ -111,13 +111,6 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     abstract val mergedManifests: DirectoryProperty
 
     override fun doTaskAction() {
-        // must clear the folder in case the packagename changed, otherwise,
-        // there'll be two classes.
-        if (sourceOutputDir.isPresent) {
-            val destinationDir = sourceOutputDir.get().asFile
-            FileUtils.cleanOutputDir(destinationDir)
-        }
-
         val itemsToGenerate = items.get()
 
         val buildConfigData = BuildConfigData.Builder()
@@ -162,12 +155,17 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
         val generator: GeneratedCodeFileCreator =
                 if (bytecodeOutputFile.isPresent) {
+                    FileUtils.deleteIfExists(bytecodeOutputFile.get().asFile)
                     val byteCodeBuildConfigData = buildConfigData
                             .setOutputPath(bytecodeOutputFile.get().asFile.parentFile.toPath())
                             .addBooleanField("DEBUG", debuggable.get())
                             .build()
                     BuildConfigByteCodeGenerator(byteCodeBuildConfigData)
                 } else {
+                    // must clear the folder in case the packagename changed, otherwise,
+                    // there'll be two classes.
+                    val destinationDir = sourceOutputDir.get().asFile
+                    FileUtils.cleanOutputDir(destinationDir)
                     val sourceCodeBuildConfigData = buildConfigData
                             .setOutputPath(sourceOutputDir.get().asFile.toPath())
                             .apply {

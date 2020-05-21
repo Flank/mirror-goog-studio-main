@@ -45,36 +45,23 @@ class BuildConfigData private constructor(
 
         @JvmOverloads
         fun addStringField(name: String, value: String, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField(
-                BuildConfigField.SupportedType.STRING,
-                value,
-                comment)
+            buildConfigFields[name] = BuildConfigField("String", value, comment)
         }
 
         @JvmOverloads
         fun addIntField(name: String, value: Int, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField(
-                BuildConfigField.SupportedType.INT,
-                value,
-                comment)
+            buildConfigFields[name] = BuildConfigField("int", value, comment)
         }
 
         @JvmOverloads
         fun addBooleanField(name: String, value: Boolean, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField(
-                BuildConfigField.SupportedType.BOOLEAN,
-                value,
-                comment)
+            buildConfigFields[name] = BuildConfigField("boolean", value, comment)
         }
 
         @JvmOverloads
         fun addLongField(name: String, value: Long, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField(
-                BuildConfigField.SupportedType.LONG,
-                value,
-                comment)
+            buildConfigFields[name] = BuildConfigField("long", value, comment)
         }
-
 
         fun addItem(name: String, field: BuildConfigField<out Serializable>) = apply {
             buildConfigFields[name] = field

@@ -41,6 +41,8 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
+                    addBuildConfigField("FloatValue", "1f", "Float Value")
+                    addBuildConfigField("LongValue", "1L", "Long Value")
                     addBuildConfigField("VariantName", "${'$'}{name}", "Variant Name")
                 }
             }
@@ -60,6 +62,8 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                         override fun onCreate(savedInstanceState: Bundle?) {
                             super.onCreate(savedInstanceState)
                             val label = TextView(this)
+                            label.setText("Hello ${'$'}{BuildConfig.FloatValue}")
+                            label.setText("Hello ${'$'}{BuildConfig.LongValue}")
                             label.setText("Hello ${'$'}{BuildConfig.VariantName}")
                             setContentView(label)
                         }
@@ -123,7 +127,7 @@ The added field is used in the MainActivity.kt file.
                 onVariantProperties {
                     buildConfigFields.put("GitVersion", gitVersionProvider.map {  task ->
                         BuildConfigField(
-                            BuildConfigField.SupportedType.STRING,
+                            "String",
                             task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8), 
                             "Git Version")
                     })

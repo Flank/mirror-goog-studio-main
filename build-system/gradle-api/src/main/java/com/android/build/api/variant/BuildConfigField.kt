@@ -28,9 +28,9 @@ import java.lang.Boolean
 @Incubating
 data class BuildConfigField<T: Serializable>(
     /**
-     * Generated field type, must be one of the [SupportedType]
+     * Value to be written as BuildConfig field type.
      */
-    val type: SupportedType<T>,
+    val type: String,
 
     /**
      * Value of the generated field.

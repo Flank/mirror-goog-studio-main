@@ -55,7 +55,10 @@ public class BuildConfigTest {
                         + "  defaultConfig {\n"
                         + "    buildConfigField \"int\", \"VALUE_DEFAULT\", \"1\"\n"
                         + "    buildConfigField \"int\", \"VALUE_DEBUG\",   \"1\"\n"
+                        + "    buildConfigField \"java.util.OptionalInt\", \"VALUE_EXPRESSION\", \"java.util.OptionalInt.empty()\"\n"
+                        + "    buildConfigField \"long\", \"VALUE_LONG\", \"50L\"\n"
                         + "    buildConfigField \"int\", \"VALUE_FLAVOR\",  \"1\"\n"
+                        + "    buildConfigField \"float\", \"VALUE_FLOAT\", \"5f\"\n"
                         + "    buildConfigField \"int\", \"VALUE_VARIANT\", \"1\"\n"
                         + "  }\n"
                         + "\n"
@@ -106,9 +109,12 @@ public class BuildConfigTest {
     @Test
     public void modelDefaultConfig() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
-        map.put("VALUE_FLAVOR", "1");
         map.put("VALUE_DEBUG", "1");
+        map.put("VALUE_DEFAULT", "1");
+        map.put("VALUE_EXPRESSION", "java.util.OptionalInt.empty()");
+        map.put("VALUE_FLAVOR", "1");
+        map.put("VALUE_FLOAT", "5f");
+        map.put("VALUE_LONG", "50L");
         map.put("VALUE_VARIANT", "1");
         checkMaps(
                 map,
@@ -135,8 +141,14 @@ public class BuildConfigTest {
                         + "  public static final int VALUE_DEBUG = 100;\n"
                         + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final java.util.OptionalInt VALUE_EXPRESSION = java.util.OptionalInt.empty();\n"
                         + "  // Field from product flavor: flavor1\n"
                         + "  public static final int VALUE_FLAVOR = 10;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final float VALUE_FLOAT = 5f;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final long VALUE_LONG = 50L;\n"
                         + "  // Field from the variant API\n"
                         + "  public static final int VALUE_VARIANT = 1000;\n"
                         + "}\n";
@@ -171,8 +183,14 @@ public class BuildConfigTest {
                         + "  public static final int VALUE_DEBUG = 100;\n"
                         + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final java.util.OptionalInt VALUE_EXPRESSION = java.util.OptionalInt.empty();\n"
                         + "  // Field from product flavor: flavor2\n"
                         + "  public static final int VALUE_FLAVOR = 20;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final float VALUE_FLOAT = 5f;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final long VALUE_LONG = 50L;\n"
                         + "  // Field from the variant API\n"
                         + "  public static final int VALUE_VARIANT = 1000;\n"
                         + "}\n";
@@ -206,8 +224,14 @@ public class BuildConfigTest {
                         + "  public static final int VALUE_DEBUG = 10;\n"
                         + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final java.util.OptionalInt VALUE_EXPRESSION = java.util.OptionalInt.empty();\n"
                         + "  // Field from product flavor: flavor1\n"
                         + "  public static final int VALUE_FLAVOR = 10;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final float VALUE_FLOAT = 5f;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final long VALUE_LONG = 50L;\n"
                         + "  // Field from product flavor: flavor1\n"
                         + "  public static final int VALUE_VARIANT = 10;\n"
                         + "}\n";
@@ -242,8 +266,14 @@ public class BuildConfigTest {
                         + "  public static final int VALUE_DEBUG = 20;\n"
                         + "  // Field from default config.\n"
                         + "  public static final int VALUE_DEFAULT = 1;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final java.util.OptionalInt VALUE_EXPRESSION = java.util.OptionalInt.empty();\n"
                         + "  // Field from product flavor: flavor2\n"
                         + "  public static final int VALUE_FLAVOR = 20;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final float VALUE_FLOAT = 5f;\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final long VALUE_LONG = 50L;\n"
                         + "  // Field from product flavor: flavor2\n"
                         + "  public static final int VALUE_VARIANT = 20;\n"
                         + "}\n";
