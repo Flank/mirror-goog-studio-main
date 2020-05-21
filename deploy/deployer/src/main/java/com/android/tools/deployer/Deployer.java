@@ -371,7 +371,7 @@ public class Deployer {
     private static DeploymentCacheDatabase.Entry verifyCache(
             DeploymentCacheDatabase.Entry entry, ApplicationDumper dumper)
             throws DeployerException {
-        if (!entry.getOverlayId().isBaseInstall()) {
+        if (entry == null || !entry.getOverlayId().isBaseInstall()) {
             return entry;
         }
 
