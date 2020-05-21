@@ -21,8 +21,6 @@ package com.android.builder.model.v2.ide
  * This does not directly contain artifact information, instead it focuses on the graph
  * information (transitive dependencies) as well as the usage of this particular dependency
  * in this node of the graph (ie what are its modifiers: what version was originally requested.)
- *
- * @since 2.3
  */
 interface GraphItem {
     /**

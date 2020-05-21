@@ -19,18 +19,17 @@ import java.io.File
 
 /**
  * Represent a variant/module/artifact dependency.
- * @since 2.3
  */
 interface Library {
     /**
      * The type of the dependency
      *
      * @return the type
-     * @see .LIBRARY_ANDROID
+     * @see [LIBRARY_ANDROID]
      *
-     * @see .LIBRARY_JAVA
+     * @see [LIBRARY_JAVA]
      *
-     * @see .LIBRARY_MODULE
+     * @see [LIBRARY_MODULE]
      */
     val type: Int
 
@@ -43,183 +42,155 @@ interface Library {
     val artifactAddress: String
 
     /**
-     * Returns the artifact location.
+     * The artifact location.
+     *
+     * Only valid for instances where [type] is [LIBRARY_JAVA]
      */
-    val artifact: File
+    val artifact: File?
 
     /**
      * Returns the build id.
      *
-     *
-     * This is only valid if the [.getProjectPath] is not null. However this can still be
-     * null if this is the root project.
+     * Only valid for instances where [type] is [LIBRARY_MODULE]. Null in this case indicates
+     * the root build.
      *
      * @return the build id or null.
      */
     val buildId: String?
 
     /**
-     * Returns the gradle path.
+     * The gradle path.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_MODULE]
+     * Only valid for instances where [type] is [LIBRARY_MODULE]
      */
     val projectPath: String?
 
     /**
-     * Returns an optional variant name if the consumed artifact of the library is associated
+     * On optional variant name if the consumed artifact of the library is associated
      * to one.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_MODULE]
+     * Only valid for instances where [type] is [LIBRARY_MODULE]
      */
     val variant: String?
 
     /**
-     * Returns the location of the unzipped bundle folder.
+     * The location of the manifest file.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val folder: File
+    val manifest: File?
 
     /**
-     * Returns the location of the manifest relative to the folder.
+     * The list of jar files for compilation.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val manifest: String
+    val compileJarFiles: List<File>?
 
     /**
-     * Returns the location of the jar file to use for compiling and packaging.
+     * The list of jar files for runtime/packaging.
      *
-     *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID].
-     *
-     * @return the path to the jar file. The path may not point to an existing file.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val jarFile: String
+    val runtimeJarFiles: List<File>?
 
     /**
-     * Returns the location of the jar file to use for compilation.
+     * The android resource folder.
      *
+     * The folder may not exist.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID].
-     *
-     * @return path to the jar file used for compilation. The path may not point to an existing
-     * file.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val compileJarFile: String
+    val resFolder: File?
 
     /**
-     * Returns the location of the res folder.
+     * The namespaced resources static library (res.apk).
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
-     *
-     * @return a File for the res folder. The file may not point to an existing folder.
-     */
-    val resFolder: String
-
-    /**
-     * Returns the location of the namespaced resources static library (res.apk).
-     *
-     *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
-     *
-     *
-     * TODO(b/109854607): When rewriting dependencies, this should be populated with the
-     * rewritten artifact, which will not be in the exploded AAR directory.
-     *
-     * @return the static library apk. Null if the library is not namespaced.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]. This can still be null if the
+     * library is not namespaced.
      */
     val resStaticLibrary: File?
 
     /**
-     * Returns the location of the assets folder.
+     * The assets folder.
      *
+     * The folder may not exist.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
-     *
-     * @return a File for the assets folder. The file may not point to an existing folder.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val assetsFolder: String
+    val assetsFolder: File?
 
     /**
-     * Returns the list of local Jar files that are included in the dependency.
+     * The jni libraries folder.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The folder may not exist.
      *
-     * @return a list of File. May be empty but not null.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val localJars: Collection<String>
+    val jniFolder: File?
 
     /**
-     * Returns the location of the jni libraries folder.
+     * The AIDL import folder
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The folder may not exist.
      *
-     * @return a File for the folder. The file may not point to an existing folder.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val jniFolder: String
+    val aidlFolder: File?
 
     /**
-     * Returns the location of the aidl import folder.
+     * The RenderScript import folder
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The folder may not exist.
      *
-     * @return a File for the folder. The file may not point to an existing folder.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val aidlFolder: String
+    val renderscriptFolder: File?
 
     /**
-     * Returns the location of the renderscript import folder.
+     * The proguard file rule.
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The file may not exist.
      *
-     * @return a File for the folder. The file may not point to an existing folder.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val renderscriptFolder: String
+    val proguardRules: File?
 
     /**
-     * Returns the location of the proguard files.
+     * The jar containing custom lint checks
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The file may not exist.
      *
-     * @return a File for the file. The file may not point to an existing file.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val proguardRules: String
+    val lintJar: File?
 
     /**
-     * Returns the location of the lint jar.
+     * the zip file with external annotations
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The file may not exist.
      *
-     * @return a File for the jar file. The file may not point to an existing file.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val lintJar: String
+    val externalAnnotations: File?
 
     /**
-     * Returns the location of the external annotations zip file (which may not exist)
+     * The file listing the public resources
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The file may not exist.
      *
-     * @return a File for the zip file. The file may not point to an existing file.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val externalAnnotations: String
+    val publicResources: File?
 
     /**
-     * Returns the location of an optional file that lists the only
-     * resources that should be considered public.
+     * The symbol list file
      *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
+     * The file may not exist.
      *
-     * @return a File for the file. The file may not point to an existing file.
+     * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
-    val publicResources: String
-
-    /**
-     * Returns the location of the text symbol file
-     *
-     * Only valid for Android Library where [.getType] is [.LIBRARY_ANDROID]
-     */
-    val symbolFile: String
+    val symbolFile: File?
 
     companion object {
         const val LIBRARY_ANDROID = 1

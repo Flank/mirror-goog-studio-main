@@ -37,24 +37,4 @@ interface DependencyGraphs {
      * Only valid in full dependency mode.
      */
     val packageDependencies: List<GraphItem>
-
-    /**
-     * Returns the list of provided libraries.
-     *
-     * The values in the list match the values returned by [GraphItem.getArtifactAddress]
-     * and [Library.getArtifactAddress].
-     *
-     * Only valid in full dependency mode.
-     */
-    val providedLibraries: List<String>
-
-    /**
-     * Returns the list of skipped libraries.
-     *
-     * The values in the list match the values returned by [GraphItem.getArtifactAddress]
-     * and [Library.getArtifactAddress].
-     *
-     * Only valid in full dependency mode.
-     */
-    val skippedLibraries: List<String>
 }
