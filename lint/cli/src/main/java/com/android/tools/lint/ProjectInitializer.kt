@@ -659,7 +659,7 @@ private class ProjectInitializer(
         sourceRoots: MutableList<File>
     ) {
         val iterator = list.listIterator()
-        if (iterator.hasNext()) {
+        while (iterator.hasNext()) {
             val file = iterator.next()
             if (file.path.endsWith(DOT_SRCJAR)) {
                 iterator.remove()
@@ -676,14 +676,31 @@ private class ProjectInitializer(
                         }
                         val path = file.path + URLUtil.JAR_SEPARATOR + zipEntry.name
                         val newFile = File(path)
+                        // Check for referential equality to avoid ConcurrentModificationException
                         if (path.endsWith(ANDROID_MANIFEST_XML)) {
-                            manifests.add(newFile)
+                            if (list === manifests) {
+                                iterator.add(newFile)
+                            } else {
+                                manifests.add(newFile)
+                            }
                         } else if (path.endsWith(DOT_XML)) {
-                            resources.add(newFile)
+                            if (list === resources) {
+                                iterator.add(newFile)
+                            } else {
+                                resources.add(newFile)
+                            }
                         } else if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
-                            sources.add(newFile)
+                            if (list === sources) {
+                                iterator.add(newFile)
+                            } else {
+                                sources.add(newFile)
+                            }
                         } else if (path.endsWith(DOT_CLASS)) {
-                            classes.add(newFile)
+                            if (list === classes) {
+                                iterator.add(newFile)
+                            } else {
+                                classes.add(newFile)
+                            }
                         }
                     }
                 }

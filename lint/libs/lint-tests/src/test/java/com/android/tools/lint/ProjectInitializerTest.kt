@@ -855,6 +855,19 @@ class ProjectInitializerTest {
                     }
                     """
                 ).indented()
+            ),
+            jar(
+                "src/my2.srcjar",
+                java(
+                    "test/pkg/Test2.java", """
+                    package test.pkg;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class Test2 {
+                        public String path = "/sdcard/my2.path";
+                    }
+                    """
+                ).indented()
             )
         ).createProjects(root)
         val projectDir = projects[0]
@@ -866,6 +879,7 @@ class ProjectInitializerTest {
             <root dir="$projectDir" />
                 <module name="M" android="true" library="false">
                 <src file="src/my.srcjar" />
+                <src file="src/my2.srcjar" />
             </module>
             </project>""".trimIndent()
         val descriptorFile = File(root, "project.xml")
@@ -876,7 +890,10 @@ class ProjectInitializerTest {
                 src/my.srcjar!/test/pkg/Test.java:5: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
                     public String path = "/sdcard/my.path";
                                          ~~~~~~~~~~~~~~~~~
-                0 errors, 1 warnings
+                src/my2.srcjar!/test/pkg/Test2.java:5: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+                    public String path = "/sdcard/my2.path";
+                                         ~~~~~~~~~~~~~~~~~~
+                0 errors, 2 warnings
                             """,
             "",
 
