@@ -18,7 +18,6 @@ package com.android.tools.lint.model
 
 import com.android.AndroidProjectTypes
 import com.android.builder.model.AaptOptions
-import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidBundle
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
@@ -26,7 +25,6 @@ import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseArtifact
 import com.android.builder.model.BuildType
 import com.android.builder.model.ClassField
-import com.android.builder.model.JavaArtifact
 import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Library
 import com.android.builder.model.LintOptions
@@ -38,14 +36,17 @@ import com.android.builder.model.Variant
 import com.android.builder.model.level2.DependencyGraphs
 import com.android.builder.model.level2.GlobalLibraryMap
 import com.android.builder.model.level2.GraphItem
+import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
+import com.android.ide.common.gradle.model.IdeBaseArtifact
+import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
+import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import java.io.File
-import java.nio.file.Paths
 import com.android.builder.model.level2.Library as LibraryL2
 
 /**
@@ -339,7 +340,7 @@ class LmFactory : LmModuleLoader {
     }
 
     private fun getDependencies(
-        artifact: BaseArtifact
+        artifact: IdeBaseArtifact
     ): LmDependencies {
         val compileItems = ArrayList<LmDependency>()
         val packagedItems = ArrayList<LmDependency>()
@@ -463,7 +464,7 @@ class LmFactory : LmModuleLoader {
         }
 
     private fun getArtifact(
-        artifact: AndroidArtifact
+        artifact: IdeAndroidArtifact
     ): LmAndroidArtifact {
         return DefaultLmAndroidArtifact(
             applicationId = artifact.applicationId,
@@ -475,7 +476,7 @@ class LmFactory : LmModuleLoader {
     }
 
     private fun getArtifact(
-        artifact: JavaArtifact
+        artifact: IdeJavaArtifact
     ): LmJavaArtifact {
         return DefaultLmJavaArtifact(
             dependencies = getDependencies(artifact),
@@ -502,7 +503,7 @@ class LmFactory : LmModuleLoader {
     private fun getVariant(
         module: LmModule,
         project: IdeAndroidProject,
-        variant: Variant
+        variant: IdeVariant
     ): LmVariant {
         val buildType = getBuildType(project, variant)
         return DefaultLmVariant(
@@ -550,14 +551,14 @@ class LmFactory : LmModuleLoader {
         return variant.mergedFlavor.resourceConfigurations
     }
 
-    private fun getAndroidTestArtifact(variant: Variant): LmAndroidArtifact? {
+    private fun getAndroidTestArtifact(variant: IdeVariant): LmAndroidArtifact? {
         val artifact = variant.extraAndroidArtifacts.firstOrNull {
             it.name == AndroidProject.ARTIFACT_ANDROID_TEST
         } ?: return null
         return getArtifact(artifact)
     }
 
-    private fun getTestArtifact(variant: Variant): LmJavaArtifact? {
+    private fun getTestArtifact(variant: IdeVariant): LmJavaArtifact? {
         val artifact = variant.extraJavaArtifacts.firstOrNull {
             it.name == AndroidProject.ARTIFACT_UNIT_TEST
         } ?: return null
@@ -988,7 +989,7 @@ class LmFactory : LmModuleLoader {
     inner class LazyLmVariant(
         override val module: LmModule,
         private val project: IdeAndroidProject,
-        private val variant: Variant,
+        private val variant: IdeVariant,
         override val libraryResolver: LmLibraryResolver
     ) : LmVariant {
         private val buildType = getBuildType(project, variant)
