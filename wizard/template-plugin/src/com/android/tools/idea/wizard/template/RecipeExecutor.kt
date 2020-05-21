@@ -135,6 +135,11 @@ interface RecipeExecutor {
   fun setBuildFeature(name: String, value: Boolean)
 
   /**
+   * Sets Compose Options field values
+   */
+  fun setComposeOptions(kotlinCompilerExtensionVersion: String?, kotlinCompilerVersion: String?)
+
+  /**
    * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.
    */
   fun requireJavaVersion(version: String, kotlinSupport: Boolean = false)
