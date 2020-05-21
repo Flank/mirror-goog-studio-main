@@ -49,6 +49,7 @@ class SubtractingArtifactCollection(
      *   different names so the subtraction doesn't work
      *   (The classifier is actually duplicated in the name in some cases)
      */
+    @delegate:Transient
     private val artifactResults: MutableSet<ResolvedArtifactResult> by lazy {
         val removed = HashSet<ComponentArtifactIdentifier>(removedArtifacts.artifacts.size)
         removedArtifacts.artifacts.mapTo(removed) { it.id }
