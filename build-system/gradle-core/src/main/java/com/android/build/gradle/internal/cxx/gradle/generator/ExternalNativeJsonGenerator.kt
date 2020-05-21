@@ -22,13 +22,9 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.google.gson.stream.JsonReader
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFiles
-import org.gradle.process.ExecResult
-import org.gradle.process.ExecSpec
-import org.gradle.process.JavaExecSpec
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -55,21 +51,8 @@ interface ExternalNativeJsonGenerator {
 
     // Gradle model generator support below here.
     // TODO(153964094) expose gradle model directly here rather than utility functions that allow it
-    fun buildForOneAbiName(
-        forceJsonGeneration: Boolean,
-        abiName: String,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    )
+    fun buildForOneAbiName(forceJsonGeneration: Boolean, abiName: String)
     fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit)
-    fun parallelBuild(
-        forceJsonGeneration: Boolean,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ): List<Callable<Void?>>
-    fun build(
-        forceJsonGeneration: Boolean,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    )
+    fun parallelBuild(forceJsonGeneration: Boolean): List<Callable<Void?>>
+    fun build(forceJsonGeneration: Boolean)
 }

@@ -32,14 +32,11 @@ import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
-import org.gradle.api.Action
 import java.io.File
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.process.ExecResult
-import org.gradle.process.ExecSpec
 import java.io.IOException
 
 /**
@@ -95,10 +92,10 @@ internal abstract class CmakeExternalNativeJsonGenerator(
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
     @Throws(IOException::class, ProcessException::class)
-    abstract fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: (Action<in ExecSpec?>) -> ExecResult): String
+    abstract fun executeProcessAndGetOutput(abi: CxxAbiModel): String
 
-    override fun executeProcess(abi: CxxAbiModel, execOperation: (Action<in ExecSpec?>) -> ExecResult): String {
-        val output = executeProcessAndGetOutput(abi, execOperation)
+    override fun executeProcess(abi: CxxAbiModel): String {
+        val output = executeProcessAndGetOutput(abi)
         return makeCmakeMessagePathsAbsolute(output, makefile.parentFile)
     }
 

@@ -37,18 +37,15 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.process.ExecOperations;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
 
     private Provider<ExternalNativeJsonGenerator> generator;
-    @NonNull private final ExecOperations execOperations;
 
     @Inject
-    public ExternalNativeBuildJsonTask(@NonNull ExecOperations execOperations) {
+    public ExternalNativeBuildJsonTask() {
         super("Generate json model is always run.");
-        this.execOperations = execOperations;
     }
 
     @InputFiles
@@ -61,7 +58,7 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         new DefaultIssueReporter(new LoggerWrapper(getLogger())))) {
-            generator.get().build(false, execOperations::exec, execOperations::javaexec);
+            generator.get().build(false);
         }
     }
 

@@ -64,9 +64,6 @@ import com.google.common.collect.Maps
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
-import org.gradle.process.ExecResult
-import org.gradle.process.ExecSpec
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
@@ -89,10 +86,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
     stats: GradleBuildVariant.Builder
 ) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
     @Throws(ProcessException::class, IOException::class)
-    override fun executeProcessAndGetOutput(
-        abi: CxxAbiModel,
-        execOperations: (Action<in ExecSpec?>) -> ExecResult
-    ): String {
+    override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         // Once a Cmake server object is created
         // - connect to the server
         // - perform a handshake

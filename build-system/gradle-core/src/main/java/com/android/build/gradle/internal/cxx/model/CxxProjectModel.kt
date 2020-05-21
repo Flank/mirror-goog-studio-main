@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -80,4 +81,10 @@ interface CxxProjectModel {
      * Feature flag enabling prefab for the project.
      */
     val isPrefabEnabled: Boolean
+
+    /**
+     * Service provider entry for project-level services. These are services naturally
+     * scoped at the project level.
+     */
+    val services: CxxServiceRegistry
 }

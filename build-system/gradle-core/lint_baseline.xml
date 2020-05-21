@@ -5,24 +5,8 @@
         id="ProjectExecOperations"
         message="Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution.">
         <location
-            file="src/main/java/com/android/build/gradle/internal/ide/NativeModelBuilder.kt"
-            line="155"/>
-    </issue>
-
-    <issue
-        id="ProjectExecOperations"
-        message="Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution.">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/ide/NativeModelBuilder.kt"
-            line="228"/>
-    </issue>
-
-    <issue
-        id="ProjectExecOperations"
-        message="Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution.">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/ide/NativeModelBuilder.kt"
-            line="249"/>
+            file="src/main/java/com/android/build/gradle/internal/cxx/services/CxxExecService.kt"
+            line="46"/>
     </issue>
 
     <issue
