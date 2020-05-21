@@ -299,11 +299,19 @@ class ComposeTree {
     private Rect getBounds(@NonNull Object group) throws ReflectiveOperationException {
         Rect bounds = new Rect();
         Object box = mGetBox.invoke(group);
-        bounds.left = (int) mGetPx.invoke(mGetLeft.invoke(box));
-        bounds.right = (int) mGetPx.invoke(mGetRight.invoke(box));
-        bounds.top = (int) mGetPx.invoke(mGetTop.invoke(box));
-        bounds.bottom = (int) mGetPx.invoke(mGetBottom.invoke(box));
+        bounds.left = getPixels(mGetLeft.invoke(box));
+        bounds.right = getPixels(mGetRight.invoke(box));
+        bounds.top = getPixels(mGetTop.invoke(box));
+        bounds.bottom = getPixels(mGetBottom.invoke(box));
         return bounds;
+    }
+
+    private int getPixels(@NonNull Object pixels) throws ReflectiveOperationException {
+        if (pixels instanceof Integer) {
+            return (int) pixels;
+        }
+        // for dev09 and earlier...
+        return (int) mGetPx.invoke(pixels);
     }
 
     @NonNull
