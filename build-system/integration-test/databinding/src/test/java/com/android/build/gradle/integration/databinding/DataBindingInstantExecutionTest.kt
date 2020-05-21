@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.databinding
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
-import com.android.build.gradle.options.BooleanOption
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -31,37 +29,9 @@ class DataBindingInstantExecutionTest {
         .fromTestProject("databinding")
         .create()
 
-    @Before
-    fun setUp() {
-        project.testDir.resolve(".instant-execution-state").deleteRecursively()
-
-        project.buildFile.appendText("""
-
-            android {
-                lintOptions {
-                    checkReleaseBuilds false
-                }
-            }
-        """.trimIndent())
-    }
-
-    @Test
-    fun testCleanBuild() {
-        executor()
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.max-problems=6")
-            .run("assemble")
-        executor()
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.max-problems=4")
-            .run("clean")
-        executor()
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.max-problems=0")
-            .run("assemble")
-
-    }
-
     @Test
     fun testProjectInstanceAccessAtTaskExecution() {
-        val result = executor().run("assemble")
+        val result = executor().run("assembleDebug")
         result.stdout.use {
             ScannerSubject.assertThat(it)
                 .doesNotContain("invocation of 'Task.project' at execution time is unsupported")
@@ -72,5 +42,4 @@ class DataBindingInstantExecutionTest {
         project.executor()
             .withArgument("-Dorg.gradle.unsafe.instant-execution=true")
             .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false")
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 }
