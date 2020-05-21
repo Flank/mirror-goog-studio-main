@@ -56,7 +56,8 @@ AppInspectionService* AppInspectionService::create(JNIEnv* env) {
   return service;
 }
 
-AppInspectionService::AppInspectionService(jvmtiEnv* jvmti) : jvmti_(jvmti) {}
+AppInspectionService::AppInspectionService(jvmtiEnv* jvmti)
+    : jvmti_(jvmti), next_tag_(1) {}
 
 // Used on devices with API level < 29
 // Names of HeapIterationCallback and HeapObjectCallback are unfortunately
@@ -137,7 +138,7 @@ jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
     return result;
   }
 
-  jlong tag = nextTag++;
+  jlong tag = next_tag_++;
 
   bool error = DeviceInfo::feature_level() < DeviceInfo::Q
                    ? tagClassInstancesO(jni, clazz, tag)
