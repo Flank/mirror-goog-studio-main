@@ -17,6 +17,7 @@
 #ifndef APP_INSPECTION_SERVICE_H_
 #define APP_INSPECTION_SERVICE_H_
 
+#include <atomic>
 #include <string>
 
 #include "jvmti.h"
@@ -53,6 +54,7 @@ class AppInspectionService {
   void Initialize();
 
   jvmtiEnv* jvmti_;
+  std::atomic<long> next_tag_;
 
   void AddTransform(JNIEnv* jni, const std::string& class_name,
                     const std::string& method_name,
@@ -70,7 +72,6 @@ class AppInspectionService {
                                 jint* new_class_data_len,
                                 unsigned char** new_class_data);
 
-  jlong nextTag = 1;
 };
 
 }  // namespace app_inspection
