@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
+import jdk.internal.org.objectweb.asm.Type
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -705,29 +706,8 @@ open class VariantDslInfoImpl internal constructor(
 
         fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
             if (!buildConfigFieldsMap.containsKey(classField.name)) {
-
-                buildConfigFieldsMap[classField.name] = when (classField.type) {
-                    "boolean" -> BuildConfigField(
-                        BuildConfigField.SupportedType.BOOLEAN,
-                        classField.value.toBoolean(),
-                        comment
-                    )
-                    "int" -> BuildConfigField(
-                        BuildConfigField.SupportedType.INT,
-                        classField.value.toInt(),
-                        comment)
-                    "long" -> BuildConfigField(
-                        BuildConfigField.SupportedType.LONG,
-                        if (classField.value.endsWith("L"))
-                            classField.value.dropLast(1).toLong()
-                        else classField.value.toLong(),
-                        comment)
-                    "String" ->BuildConfigField(
-                        BuildConfigField.SupportedType.STRING,
-                        classField.value,
-                        comment)
-                    else -> throw java.lang.RuntimeException("Unsupported BuildConfig type : ${classField.type}")
-                }
+                buildConfigFieldsMap[classField.name] =
+                        BuildConfigField(classField.type , classField.value, comment)
             }
         }
 

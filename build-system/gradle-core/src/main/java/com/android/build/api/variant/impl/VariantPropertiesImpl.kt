@@ -33,8 +33,10 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
+import jdk.internal.org.objectweb.asm.Type
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
@@ -80,20 +82,11 @@ abstract class VariantPropertiesImpl(
         )
     }
 
-    override fun addBuildConfigField(
-        key: String,
-        value: Serializable,
-        comment: String?
-    ) {
-        buildConfigFields.put(key,
-            when(value) {
-                is Long -> BuildConfigField(BuildConfigField.SupportedType.LONG, value, comment)
-                is Int -> BuildConfigField(BuildConfigField.SupportedType.INT, value, comment)
-                is Boolean -> BuildConfigField(BuildConfigField.SupportedType.BOOLEAN, value, comment)
-                is String -> BuildConfigField(BuildConfigField.SupportedType.STRING, value, comment)
-                else -> throw IllegalArgumentException(
-                    "Value $value is not of the supported types : Boolean, Long, Int, String")
-            })
+    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
+        val descriptor = Type.getDescriptor(value::class.java)
+                .removePrefix("Ljava/lang/")
+                .removeSuffixIfPresent(";")
+        buildConfigFields.put(key, BuildConfigField(descriptor, value, comment))
     }
 
     /**
