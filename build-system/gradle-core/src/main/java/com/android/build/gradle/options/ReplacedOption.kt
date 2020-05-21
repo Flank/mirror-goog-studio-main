@@ -122,6 +122,14 @@ enum class ReplacedOption(
         "This property has been replaced by android.buildFeatures.prefab (DSL)"
     ),
 
+    // The flag was renamed.
+    @Suppress("unused")
+    ENABLE_STABLE_IDS(
+        "android.experimental.enableStableIds",
+        VERSION_4_1,
+        "This property has been replaced by ${BooleanOption.ENABLE_STABLE_IDS.propertyName}"
+    )
+
     ;
 
     override val status: Option.Status
