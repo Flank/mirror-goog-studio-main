@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.AdbExecutableInput;
@@ -113,7 +112,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             @NonNull DeviceProvider deviceProvider,
             @NonNull AndroidVersion minSkdVersion,
             @NonNull BuiltArtifacts builtArtifacts,
-            @Nullable Set<String> supportedAbis,
+            @NonNull Set<String> supportedAbis,
             @NonNull Collection<String> installOptions,
             int timeOutInMs,
             @NonNull Logger logger)

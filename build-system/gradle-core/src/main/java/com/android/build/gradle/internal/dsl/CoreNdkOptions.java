@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,7 @@ public interface CoreNdkOptions {
     @Nullable
     List<String> getLdLibs();
 
-    @Nullable
+    @NonNull
     Set<String> getAbiFilters();
 
     @Nullable

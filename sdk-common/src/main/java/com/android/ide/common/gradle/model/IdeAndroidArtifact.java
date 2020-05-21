@@ -15,7 +15,14 @@
  */
 package com.android.ide.common.gradle.model;
 
+import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidArtifact;
 import java.io.Serializable;
+import java.util.Set;
 
-public interface IdeAndroidArtifact extends Serializable, IdeBaseArtifact, AndroidArtifact {}
+public interface IdeAndroidArtifact extends Serializable, IdeBaseArtifact, AndroidArtifact {
+
+    @NonNull
+    @Override
+    Set<String> getAbiFilters();
+}

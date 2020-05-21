@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.InstantRun;
@@ -30,6 +31,7 @@ import com.android.testutils.Serialization;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -159,6 +161,27 @@ public class IdeAndroidArtifactImplTest {
                 new IdeAndroidArtifactImpl(
                         original, myModelCache, myDependenciesFactory, myGradleVersion);
         assertThat(copy.getOutputs()).isEmpty();
+    }
+
+    /**
+     * Older AGPs may return null for AbiFilters, verify that IdeAndroidArtifactImpl normalizes that
+     * to empty set.
+     */
+    @Test
+    public void nullAbiFilterMappedToEmptySet() throws Throwable {
+        AndroidArtifact original =
+                new AndroidArtifactStub() {
+                    @Nullable
+                    @Override
+                    public Set<String> getAbiFilters() {
+                        return null;
+                    }
+                };
+        IdeAndroidArtifactImpl copy =
+                new IdeAndroidArtifactImpl(
+                        original, myModelCache, myDependenciesFactory, myGradleVersion);
+        assertThat(original.getAbiFilters()).isNull();
+        assertThat(copy.getAbiFilters()).isEmpty();
     }
 
     @Test

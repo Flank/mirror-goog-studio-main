@@ -54,7 +54,7 @@ class RenderScriptProcessor(
     private val ndkMode: Boolean,
     private val supportMode: Boolean,
     private val useAndroidX: Boolean,
-    private val abiFilters: Set<String>?,
+    private val abiFilters: Set<String>,
     private val logger: ILogger
 ) {
     // These indicate whether to compile with ndk for 32 or 64 bits
@@ -123,7 +123,7 @@ class RenderScriptProcessor(
         }
 
         // If no abi filters were set, assume compilation for both 32 bit and 64 bit
-        if (abiFilters == null || abiFilters.isEmpty()) {
+        if (abiFilters.isEmpty()) {
             is32Bit = true
             is64Bit = true
         } else {
@@ -340,7 +340,7 @@ class RenderScriptProcessor(
             val soName = "librs." + name.replace("\\.bc".toRegex(), ".so")
 
             for (abi in abis) {
-                if (abiFilters != null && !abiFilters.contains(abi.device)) {
+                if (abiFilters.isNotEmpty() && !abiFilters.contains(abi.device)) {
                     continue
                 }
                 // only build for the ABIs bundled in Build-Tools.

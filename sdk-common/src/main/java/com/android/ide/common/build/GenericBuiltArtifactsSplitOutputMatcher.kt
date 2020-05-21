@@ -37,7 +37,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
     fun computeBestOutputs(
         deviceConfigProvider: DeviceConfigProvider,
         builtArtifacts: GenericBuiltArtifacts,
-        variantAbiFilters: Collection<String?>?
+        variantAbiFilters: Collection<String>
     ): List<File> {
         // now look for a matching output file
         return computeBestOutput(
@@ -56,14 +56,14 @@ object GenericBuiltArtifactsSplitOutputMatcher {
      *
      * @param outputs the outputs to choose from.
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
-     * of the outputs, if there is a single output with no abi filters. If the list is null,
+     * of the outputs, if there is a single output with no abi filters. If the list is empty
      * then the variant does not restrict ABI packaging.
      * @param deviceAbis a list of ABIs supported by the device.
      * @return the list of APKs to install or null if none are compatible.
      */
     fun computeBestOutput(
         outputs: GenericBuiltArtifacts,
-        variantAbiFilters: Collection<String?>?,
+        variantAbiFilters: Collection<String>,
         deviceAbis: List<String?>
     ): List<File> =
         computeBestArtifact(outputs.elements, variantAbiFilters, deviceAbis)?.let {
@@ -80,14 +80,14 @@ object GenericBuiltArtifactsSplitOutputMatcher {
      *
      * @param outputs the outputs to choose from.
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
-     * of the outputs, if there is a single output with no abi filters. If the list is null,
+     * of the outputs, if there is a single output with no abi filters. If the list is empty
      * then the variant does not restrict ABI packaging.
      * @param deviceAbis a list of ABIs supported by the device.
      * @return the list of APKs to install or null if none are compatible.
      */
     fun computeBestArtifact(
         outputs: Collection<GenericBuiltArtifact>,
-        variantAbiFilters: Collection<String?>?,
+        variantAbiFilters: Collection<String>,
         deviceAbis: List<String?>
     ): GenericBuiltArtifact? {
         // gather all compatible matches.
@@ -162,11 +162,10 @@ object GenericBuiltArtifactsSplitOutputMatcher {
 
     private fun isMainApkCompatibleWithDevice(
         mainBuiltArtifact: GenericBuiltArtifact,
-        variantAbiFilters: Collection<String?>?,
+        variantAbiFilters: Collection<String>,
         deviceAbis: Collection<String?>
     ): Boolean { // so far, we are not dealing with the pure split files...
-        if (getFilter(mainBuiltArtifact, "ABI")
-            == null && variantAbiFilters != null && !variantAbiFilters.isEmpty()
+        if ((getFilter(mainBuiltArtifact, "ABI") == null) && !variantAbiFilters.isEmpty()
         ) { // if we have a match that has no abi filter, and we have variant-level filters, then
 // we need to make sure that the variant filters are compatible with the device abis.
             for (abi in deviceAbis) {

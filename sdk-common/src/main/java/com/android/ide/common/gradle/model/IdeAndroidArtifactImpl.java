@@ -26,7 +26,9 @@ import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.TestOptions;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +50,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull private final Collection<File> myAdditionalRuntimeApks;
     @Nullable private final IdeInstantRun myInstantRun;
     @Nullable private final String mySigningConfigName;
-    @Nullable private final Set<String> myAbiFilters;
+    @NonNull private final Set<String> myAbiFilters;
     @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final IdeTestOptions myTestOptions;
     @Nullable private final String myInstrumentedTestTaskName;
@@ -71,7 +73,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myAdditionalRuntimeApks = Collections.emptyList();
         myInstantRun = null;
         mySigningConfigName = null;
-        myAbiFilters = null;
+        myAbiFilters = Collections.emptySet();
         myNativeLibraries = null;
         myTestOptions = null;
         myInstrumentedTestTaskName = null;
@@ -99,7 +101,10 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 IdeModel.copyNewProperty(
                         modelCache, artifact::getInstantRun, IdeInstantRun::new, null);
         mySigningConfigName = artifact.getSigningConfigName();
-        myAbiFilters = IdeModel.copy(artifact.getAbiFilters());
+        // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
+        myAbiFilters =
+                ImmutableSet.copyOf(
+                        MoreObjects.firstNonNull(artifact.getAbiFilters(), ImmutableSet.of()));
         myNativeLibraries = copy(modelCache, artifact.getNativeLibraries());
         mySigned = artifact.isSigned();
         myAdditionalRuntimeApks =
@@ -262,7 +267,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     }
 
     @Override
-    @Nullable
+    @NonNull
     public Set<String> getAbiFilters() {
         return myAbiFilters;
     }
