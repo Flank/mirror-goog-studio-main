@@ -345,7 +345,7 @@ interface VariantDslInfo {
      * If the list contains values, then the artifact only contains these ABIs and excludes
      * others.
      */
-    val supportedAbis: Set<String>?
+    val supportedAbis: Set<String>
 
 
     fun gatherProguardFiles(type: ProguardFileType): List<File>
