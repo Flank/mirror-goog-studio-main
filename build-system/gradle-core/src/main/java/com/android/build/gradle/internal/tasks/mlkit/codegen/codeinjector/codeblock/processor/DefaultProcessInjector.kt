@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeb
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessedTypeName
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec

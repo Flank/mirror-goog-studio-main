@@ -16,8 +16,6 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterTypeName
 import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
