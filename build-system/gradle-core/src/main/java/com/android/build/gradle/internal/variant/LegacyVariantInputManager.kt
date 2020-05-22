@@ -58,7 +58,7 @@ class LegacyVariantInputManager(
     override val signingConfigContainer: NamedDomainObjectContainer<SigningConfig> =
         dslServices.domainObjectContainer(
             SigningConfig::class.java,
-            SigningConfigFactory(dslServices, getDefaultDebugKeystoreLocation())
+            SigningConfigFactory(dslServices, getDefaultDebugKeystoreLocation(dslServices.gradleEnvironmentProvider))
         )
 
     override val defaultConfig: DefaultConfig = dslServices.newInstance(DefaultConfig::class.java, BuilderConstants.MAIN, dslServices)

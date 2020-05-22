@@ -99,7 +99,9 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             task: ExtractDeepLinksTask
         ) {
             super.configure(task)
-            val aaptEnv = task.project.providers.environmentVariable(ANDROID_AAPT_IGNORE).forUseAtConfigurationTime().orNull
+            val aaptEnv = creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
+                ANDROID_AAPT_IGNORE
+            ).forUseAtConfigurationTime().orNull
             task.navFilesFolders =
                 creationConfig.variantSources
                     .getResourceSets(false, aaptEnv).stream()

@@ -1009,7 +1009,11 @@ public abstract class MergeResources extends ResourceAwareTask {
                             creationConfig.getServices().getBuildServiceRegistry(),
                             Aapt2DaemonBuildService.class));
             task.getAaptEnv()
-                    .set(task.getProject().getProviders().environmentVariable(ANDROID_AAPT_IGNORE));
+                    .set(
+                            creationConfig
+                                    .getServices()
+                                    .getGradleEnvironmentProvider()
+                                    .getEnvVariable(ANDROID_AAPT_IGNORE));
             task.getProjectRootDir().set(task.getProject().getRootDir());
         }
     }
