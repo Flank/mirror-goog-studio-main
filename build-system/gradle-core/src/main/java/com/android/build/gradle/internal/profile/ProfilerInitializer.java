@@ -83,7 +83,8 @@ public final class ProfilerInitializer {
                     project.getRootProject().getProjectDir(),
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
-                    projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON));
+                    projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON),
+                    new GradleAnalyticsEnvironment(project.getProviders()));
             recordingBuildListener =
                     new RecordingBuildListener(project.getName(), ProcessProfileWriter.get());
             project.getGradle().addListener(recordingBuildListener);
