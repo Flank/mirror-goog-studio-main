@@ -2703,7 +2703,8 @@ public abstract class TaskManager<
         taskFactory.register(
                 new ValidateSigningTask.CreationAction(
                         componentProperties,
-                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
+                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
+                                componentProperties.getServices().getGradleEnvironmentProvider())));
     }
 
     /**

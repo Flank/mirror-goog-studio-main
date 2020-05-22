@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.internal.fixtures.DirectGradleEnvironmentProvider;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantInputModel;
@@ -369,7 +370,9 @@ public class AppPluginInternalTest {
         assertNotNull(file);
         assertThat(file.getAbsolutePath())
                 .isEqualTo(
-                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
+                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
+                                        new DirectGradleEnvironmentProvider())
+                                .getAbsolutePath());
 
         variant = VariantCheckers.findComponent(components, "flavor1Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
@@ -388,7 +391,9 @@ public class AppPluginInternalTest {
         assertNotNull(file1);
         assertThat(file1.getAbsolutePath())
                 .isEqualTo(
-                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
+                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
+                                        new DirectGradleEnvironmentProvider())
+                                .getAbsolutePath());
 
         variant = VariantCheckers.findComponent(components, "flavor2Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();

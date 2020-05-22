@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.services
+package com.android.build.gradle.internal.fixtures
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.utils.GradleEnvironmentProvider
-import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.IssueReporter
-import org.gradle.api.services.BuildServiceRegistry
+import org.gradle.api.provider.Provider
 
-/**
- * Interface providing services useful everywhere.
- */
-interface BaseServices {
+class DirectGradleEnvironmentProvider: GradleEnvironmentProvider {
+    override fun getSystemProperty(key: String): Provider<String> {
+        return FakeGradleProvider(System.getProperty(key))
+    }
 
-    val issueReporter: IssueReporter
-    val deprecationReporter: DeprecationReporter
-    val projectOptions: ProjectOptions
-    val buildServiceRegistry: BuildServiceRegistry
-    val gradleEnvironmentProvider: GradleEnvironmentProvider
-
-    fun <T> newInstance(type: Class<T>, vararg args: Any?): T
+    override fun getEnvVariable(key: String): Provider<String> {
+        return FakeGradleProvider(System.getenv(key))
+    }
 }
