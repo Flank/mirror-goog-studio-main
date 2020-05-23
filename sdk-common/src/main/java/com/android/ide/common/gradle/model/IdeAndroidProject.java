@@ -25,12 +25,12 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.Variant;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 public interface IdeAndroidProject extends Serializable {
@@ -41,7 +41,7 @@ public interface IdeAndroidProject extends Serializable {
     @Deprecated int PROJECT_TYPE_ATOM = 3;
     int PROJECT_TYPE_INSTANTAPP = 4; // Instant App Bundle
     int PROJECT_TYPE_FEATURE = 5; // com.android.feature module
-    int PROJECT_TYPE_DYNAMIC_FEATURE = 6; //com.android.dynamic-feature module
+    int PROJECT_TYPE_DYNAMIC_FEATURE = 6; // com.android.dynamic-feature module
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
@@ -115,7 +115,7 @@ public interface IdeAndroidProject extends Serializable {
      * @return a list of the variants.
      */
     @NonNull
-    Collection<Variant> getVariants();
+    Collection<IdeVariant> getVariants();
 
     /**
      * Returns a list of all the variant names.
@@ -302,4 +302,28 @@ public interface IdeAndroidProject extends Serializable {
      */
     @NonNull
     Collection<IdeVariantBuildInformation> getVariantsBuildInformation();
+
+    /**
+     * Returns the lint jars that this module uses to run extra lint checks.
+     *
+     * <p>If null, the model does not contain the information because AGP was an older version, and
+     * alternative ways to get the information should be used.
+     */
+    @Nullable
+    List<File> getLintRuleJars();
+
+    /**
+     * Temporary storage of named data associated with this project. Intended for purposes such as
+     * caching data associated with a project. A null value deletes the associated entry. Note that
+     * the data is transient and will not be kept across sessions.
+     */
+    @Nullable
+    Object putClientProperty(@NonNull String key, @Nullable Object value);
+
+    /**
+     * Retrieves named data that was previously stored via {@link #putClientProperty(String,
+     * Object)}.
+     */
+    @Nullable
+    Object getClientProperty(@NonNull String key);
 }

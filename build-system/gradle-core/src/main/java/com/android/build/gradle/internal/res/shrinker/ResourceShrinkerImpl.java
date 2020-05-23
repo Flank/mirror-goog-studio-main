@@ -34,26 +34,25 @@ import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGatherer
 import com.android.build.gradle.internal.res.shrinker.graph.ResourcesGraphBuilder;
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ObfuscationMappingsRecorder;
 import com.android.build.gradle.internal.res.shrinker.usages.ResourceUsageRecorder;
-import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.InvalidPathException;
+import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Unit that analyzes all resources (after resource merging, compilation and code shrinking has
@@ -109,6 +108,8 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
             usageRecorder.recordUsages(model);
         }
         graphBuilder.buildGraph(model);
+
+        model.getUsageModel().processToolsAttributes();
         model.keepPossiblyReferencedResources();
 
         debugReporter.debug(() -> model.getUsageModel().dumpResourceModel());
@@ -134,37 +135,24 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
                 throw new IOException("Could not delete " + dest);
             }
         }
-
-        try (JarInputStream zis =
-                        new JarInputStream(new BufferedInputStream(new FileInputStream(source)));
-                JarOutputStream zos =
-                        new JarOutputStream(new BufferedOutputStream(new FileOutputStream(dest)))) {
+        try (ZipFile zipFile = new ZipFile(source);
+             JarOutputStream zos =
+                     new JarOutputStream(new BufferedOutputStream(new FileOutputStream(dest)))) {
 
             // Rather than using Deflater.DEFAULT_COMPRESSION we use 9 here,
             // since that seems to match the compressed sizes we observe in source
             // .ap_ files encountered by the resource shrinker:
             zos.setLevel(9);
 
-            ZipEntry entry = zis.getNextEntry();
-            while (entry != null) {
-                final ZipEntry currentEntry = entry;
-                String name = entry.getName();
-                boolean directory = entry.isDirectory();
-                Resource resource = getResourceByJarPath(name);
-                if (!ZipEntryUtils.isValidZipEntryName(entry)) {
-                    throw new InvalidPathException(
-                            entry.getName(), "Entry name contains invalid characters");
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry current = entries.nextElement();
+                if (shouldBeReplacedWithDummy(current)) {
+                    replaceWithDummyEntry(zos, current);
+                } else {
+                    copyToOutput(zipFile.getInputStream(current), zos, current);
                 }
-                if (resource == null || resource.isReachable()) {
-                    copyToOutput(zis, zos, entry, name, directory);
-                } else if (!directory) {
-                    replaceWithDummyEntry(zos, entry, name);
-                }
-
-                debugReporter.info(() -> "Skipped unused resource " + name + ": " + currentEntry.getSize() + " bytes");
-                entry = zis.getNextEntry();
             }
-            zos.flush();
         }
 
         // If net negative, copy original back. This is unusual, but can happen
@@ -182,10 +170,21 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
         }
     }
 
+    private boolean shouldBeReplacedWithDummy(ZipEntry entry) {
+        if (entry.isDirectory() || !entry.getName().startsWith("res/")) {
+            return false;
+        }
+        Resource resource = getResourceByJarPath(entry.getName());
+        Preconditions.checkNotNull(resource,
+                "Resource for entry '" + entry.getName() + "' was not gathered.");
+        return !resource.isReachable();
+    }
+
     /** Replaces the given entry with a minimal valid file of that type. */
-    private void replaceWithDummyEntry(JarOutputStream zos, ZipEntry entry, String name)
+    private void replaceWithDummyEntry(JarOutputStream zos, ZipEntry entry)
             throws IOException {
         // Create a new entry so that the compressed len is recomputed.
+        String name = entry.getName();
         byte[] bytes;
         long crc;
         if (name.endsWith(DOT_9PNG)) {
@@ -228,8 +227,7 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
                 + " bytes (replaced with small dummy file of size " + bytes.length + " bytes)");
     }
 
-    private static void copyToOutput(
-            JarInputStream zis, JarOutputStream zos, ZipEntry entry, String name, boolean directory)
+    private static void copyToOutput(InputStream zis, JarOutputStream zos, ZipEntry entry)
             throws IOException {
         // We can't just compress all files; files that are not
         // compressed in the source .ap_ file must be left uncompressed
@@ -241,7 +239,7 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
             outEntry = new JarEntry(entry);
         } else {
             // Create a new entry so that the compressed len is recomputed.
-            outEntry = new JarEntry(name);
+            outEntry = new JarEntry(entry.getName());
             if (entry.getTime() != -1L) {
                 outEntry.setTime(entry.getTime());
             }
@@ -249,7 +247,7 @@ public class ResourceShrinkerImpl implements ResourceShrinker {
 
         zos.putNextEntry(outEntry);
 
-        if (!directory) {
+        if (!entry.isDirectory()) {
             byte[] bytes = ByteStreams.toByteArray(zis);
             if (bytes != null) {
                 zos.write(bytes);

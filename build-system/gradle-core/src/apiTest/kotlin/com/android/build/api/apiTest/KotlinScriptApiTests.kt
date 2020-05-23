@@ -46,7 +46,7 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
             import org.gradle.api.tasks.TaskAction
 
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
 
@@ -56,13 +56,13 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
 
                 onVariantProperties {
                     project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
-                        apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                        apkFolder.set(artifacts.get(ArtifactType.APK))
                         builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                     }
                 }
             }
         """.trimIndent()
-                testingElements.addManifest(this)
+                testingElements.addManifest( this)
             }
         }
         withDocs {
@@ -72,10 +72,10 @@ class KotlinScriptApiTests: VariantApiBaseTest(TestType.Script) {
 # artifacts.get in Kotlin
 
 This sample show how to obtain a built artifact from the AGP. The built artifact is identified by
-its [ArtifactTypes] and in this case, it's [ArtifactTypes.APK].
+its [ArtifactType] and in this case, it's [ArtifactType.APK].
 The [onVariantProperties] block will wire the [DisplayApksTask] input property (apkFolder) by using
-the [Artifacts.get] call with the right [ArtifactTypes]
-`apkFolder.set(artifacts.get(ArtifactTypes.APK))`
+the [Artifacts.get] call with the right [ArtifactType]
+`apkFolder.set(artifacts.get(ArtifactType.APK))`
 Since more than one APK can be produced by the build when dealing with multi-apk, you should use the
 [BuiltArtifacts] interface to load the metadata associated with produced files using
 [BuiltArtifacts.load] method.
@@ -110,7 +110,7 @@ expected result : "Got an APK...." message.
             import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
             ${testingElements.getGitVersionTask()}
             ${testingElements.getManifestProducerTask()}
             android {
@@ -129,7 +129,7 @@ expected result : "Got an APK...." message.
                         )
                     }
                     artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
-                        .on(ArtifactTypes.MERGED_MANIFEST)
+                        .on(ArtifactType.MERGED_MANIFEST)
                 }
             }
                 """.trimIndent()
@@ -183,7 +183,7 @@ expected result : "Got an APK...." message.
                     artifacts.transform(manifestUpdater,
                             ManifestTransformerTask::mergedManifest,
                             ManifestTransformerTask::updatedManifest)
-                    .on(com.android.build.api.artifact.ArtifactTypes.MERGED_MANIFEST)
+                    .on(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)
                 }
             }
             """.trimIndent()
@@ -225,20 +225,20 @@ expected result : "Got an APK...." message.
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
-            import com.android.build.api.artifact.ArtifactTypes 
+            import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
 
             import com.android.build.api.artifact.ArtifactKind
-            import com.android.build.api.artifact.ArtifactType
-            import com.android.build.api.artifact.ArtifactType.Replaceable
-            import com.android.build.api.artifact.ArtifactType.ContainsMany
+            import com.android.build.api.artifact.Artifact
+            import com.android.build.api.artifact.Artifact.Replaceable
+            import com.android.build.api.artifact.Artifact.ContainsMany
 
-            sealed class AcmeArtifactTypes<T : FileSystemLocation>(
+            sealed class AcmeArtifactType<T : FileSystemLocation>(
                 kind: ArtifactKind<T>
-            ) : ArtifactType<T>(kind) {
+            ) : Artifact<T>(kind) {
 
-                object ACME_APK: AcmeArtifactTypes<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
+                object ACME_APK: AcmeArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
             }
 
             ${testingElements.getCopyApksTask()}
@@ -250,8 +250,8 @@ expected result : "Got an APK...." message.
                     val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")
 
                     val transformationRequest = artifacts.use(copyApksProvider)
-                        .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
-                        .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
+                        .toRead(type = ArtifactType.APK, at = CopyApksTask::apkFolder)
+                        .andWrite(type = AcmeArtifactType.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
 
                     copyApksProvider.configure {
                         this.transformationRequest.set(transformationRequest)
@@ -294,7 +294,7 @@ expected result : "Got an APK...." message.
             import org.gradle.api.tasks.TaskAction
 
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
 
@@ -318,7 +318,7 @@ expected result : "Got an APK...." message.
 
                 onVariantProperties {
                     project.tasks.register<MappingFileUploadTask>("${ '$' }{name}MappingFileUpload") {
-                        mappingFile.set(artifacts.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))
+                        mappingFile.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))
                     }
                 }
             }
@@ -334,8 +334,8 @@ expected result : "Got an APK...." message.
 
 This sample show how to obtain the obfuscation mapping file from the AGP. 
 The [onVariantProperties] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
-the [Artifacts.get] call with the right [ArtifactTypes]
-`mapping.set(artifacts.get(ArtifactTypes.OBFUSCATION_MAPPING_FILE))`
+the [Artifacts.get] call with the right [ArtifactType]
+`mapping.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))`
 ## To Run
 /path/to/gradle debugMappingFileUpload 
 expected result : "Uploading .... to a fantasy server...s" message.
@@ -367,7 +367,7 @@ expected result : "Uploading .... to a fantasy server...s" message.
             import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
 
@@ -388,7 +388,7 @@ expected result : "Uploading .... to a fantasy server...s" message.
 
                 onVariantProperties {
                     project.tasks.register<DisplayBundleFileTask>("${ '$' }{name}DisplayBundleFile") {
-                        bundleFile.set(artifacts.get(ArtifactTypes.BUNDLE))
+                        bundleFile.set(artifacts.get(ArtifactType.BUNDLE))
                     }
                 }
             }
@@ -404,8 +404,8 @@ expected result : "Uploading .... to a fantasy server...s" message.
 
 This sample shows how to obtain the bundle file from the AGP.
 The [onVariantProperties] block will wire the [DisplayBundleFile] input property (bundleFile) by using
-the Artifacts.get call with the right ArtifactTypes
-`bundleFile.set(artifacts.get(ArtifactTypes.BUNDLE))`
+the Artifacts.get call with the right ArtifactType
+`bundleFile.set(artifacts.get(ArtifactType.BUNDLE))`
 ## To Run
 /path/to/gradle debugDisplayBundleFile
 expected result : "Got the Bundle ...." message.
@@ -438,7 +438,7 @@ expected result : "Got the Bundle ...." message.
         import org.gradle.api.tasks.TaskAction
         import org.gradle.api.provider.Property
         import org.gradle.api.tasks.Internal
-        import com.android.build.api.artifact.ArtifactTypes
+        import com.android.build.api.artifact.ArtifactType
         import org.gradle.api.tasks.OutputFile
         import com.android.utils.appendCapitalized
 
@@ -473,15 +473,15 @@ expected result : "Got the Bundle ...." message.
 
             onVariantProperties {
                 val updateBundle = project.tasks.register<UpdateBundleFileTask>("${'$'}{name}UpdateBundleFile") {
-                    initialBundleFile.set(artifacts.get(ArtifactTypes.BUNDLE))
+                    initialBundleFile.set(artifacts.get(ArtifactType.BUNDLE))
                 }
                 val finalBundle = project.tasks.register<ConsumeBundleFileTask>("${'$'}{name}ConsumeBundleFile") {
-                    finalBundle.set(artifacts.get(ArtifactTypes.BUNDLE))
+                    finalBundle.set(artifacts.get(ArtifactType.BUNDLE))
                 }
                 artifacts.transform(updateBundle,
                         UpdateBundleFileTask::initialBundleFile,
                         UpdateBundleFileTask::updatedBundleFile)
-                .on(ArtifactTypes.BUNDLE)
+                .on(ArtifactType.BUNDLE)
             }
         }
     """.trimIndent()

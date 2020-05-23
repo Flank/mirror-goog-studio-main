@@ -58,6 +58,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.InputChanges
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -78,39 +79,24 @@ import javax.inject.Inject
  * determine if dex files can be just copied to output, or we have to merge them. If the number of
  * dex files is at least [mergingThreshold], the files will be merged in a single invocation.
  * Otherwise, we will just copy the dex files to the output directory.
- *
- * This task is not incremental. Any input change will trigger full processing. However, due to
- * nature of dex merging, making it incremental will not bring any benefits: 1) if a project dex
- * file changes, we will need to at least re-merge entire project; 2) if an external library
- * changes, at least all external libraries will be re-merged; 3) if a library project dex file
- * changes we will at least need to either re-merge all library dex files, or copy them to output.
- *
- * As you can see, only scenario in which we are doing some more work is when a library project dex
- * file changes, and when we copy those files to output. An optimization would be to copy only the
- * changed dex file. However, just copying files is reasonable fast, so this should not result in an
- * performance regression.
  */
 @CacheableTask
-abstract class DexMergingTask : NonIncrementalTask() {
+abstract class DexMergingTask : NewIncrementalTask() {
 
     @get:Input
-    lateinit var dexingType: DexingType
-        private set
+    abstract val dexingType: Property<DexingType>
 
     @get:Input
-    lateinit var dexMerger: DexMergerTool
-        private set
+    abstract val dexMerger: Property<DexMergerTool>
 
     @get:Input
-    var minSdkVersion: Int = 0
-        private set
+    abstract val minSdkVersion: Property<Int>
 
     @get:Input
     abstract val debuggable: Property<Boolean>
 
     @get:Input
-    var mergingThreshold: Int = 0
-        private set
+    abstract val mergingThreshold: Property<Int>
 
     @get:Optional
     @get:InputFiles
@@ -137,22 +123,23 @@ abstract class DexMergingTask : NonIncrementalTask() {
     abstract val outputDir: DirectoryProperty
 
     @get:Internal
-    lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
-        private set
+    abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
 
     @get:Internal
     abstract val dxStateBuildService: Property<DxStateBuildService>
 
-    override fun doTaskAction() {
+    override fun doTaskAction(inputChanges: InputChanges) {
+        // TODO(132615300) Make this task incremental
         getWorkerFacadeWithWorkers().use {
             it.submit(
-                DexMergingTaskRunnable::class.java, DexMergingParams(
-                    dexingType,
-                    errorFormatMode,
-                    dexMerger,
-                    minSdkVersion,
+                DexMergingTaskRunnable::class.java,
+                DexMergingParams(
+                    dexingType.get(),
+                    errorFormatMode.get(),
+                    dexMerger.get(),
+                    minSdkVersion.get(),
                     debuggable.get(),
-                    mergingThreshold,
+                    mergingThreshold.get(),
                     mainDexListFile.orNull?.asFile,
                     dexFiles.files,
                     fileDependencyDexFiles.orNull?.asFile,
@@ -160,7 +147,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                 )
             )
         }
-        if (dexMerger == DexMergerTool.DX) {
+        if (dexMerger.get() == DexMergerTool.DX) {
             dxStateBuildService.get().clearStateAfterBuild()
         }
     }
@@ -172,9 +159,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
         private val outputType: MultipleArtifactType<Directory> = MultipleArtifactType.DEX
-    ) : VariantTaskCreationAction<DexMergingTask, ComponentPropertiesImpl>(
-        componentProperties
-    ) {
+    ) : VariantTaskCreationAction<DexMergingTask, ComponentPropertiesImpl>(componentProperties) {
 
         private val internalName: String = when (action) {
             DexMergingAction.MERGE_LIBRARY_PROJECTS -> componentProperties.computeTaskName("mergeLibDex")
@@ -186,36 +171,32 @@ abstract class DexMergingTask : NonIncrementalTask() {
         override val name = internalName
         override val type = DexMergingTask::class.java
 
-        override fun handleProvider(
-            taskProvider: TaskProvider<out DexMergingTask>
-        ) {
+        override fun handleProvider(taskProvider: TaskProvider<DexMergingTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.append(
-                taskProvider, DexMergingTask::outputDir).on(outputType)
+            creationConfig.artifacts.append(taskProvider, DexMergingTask::outputDir).on(outputType)
         }
 
-        override fun configure(
-            task: DexMergingTask
-        ) {
+        override fun configure(task: DexMergingTask) {
             super.configure(task)
 
             task.dexFiles = getDexFiles(creationConfig, action)
-            task.mergingThreshold = getMergingThreshold(action, task, creationConfig)
+            task.mergingThreshold.setDisallowChanges(getMergingThreshold(action, creationConfig))
 
-            task.dexingType = dexingType
+            task.dexingType.setDisallowChanges(dexingType)
             if (DexMergingAction.MERGE_ALL == action && dexingType === DexingType.LEGACY_MULTIDEX) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
                     task.mainDexListFile)
             }
 
-            task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
-            task.dexMerger = creationConfig.variantScope.dexMerger
-            task.minSdkVersion = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
-            task.debuggable
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
-            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+            task.errorFormatMode.setDisallowChanges(
+                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions))
+            task.dexMerger.setDisallowChanges(creationConfig.variantScope.dexMerger)
+            task.minSdkVersion.setDisallowChanges(
+                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
+            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            if (creationConfig.services
+                    .projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                     task.duplicateClassesCheck
@@ -226,10 +207,9 @@ abstract class DexMergingTask : NonIncrementalTask() {
                     InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
                     task.fileDependencyDexFiles
                 )
-            } else {
-                task.fileDependencyDexFiles.set(null as Directory?)
             }
-            task.dxStateBuildService.set(DxStateBuildService.RegistrationAction(task.project).execute())
+            task.dxStateBuildService.setDisallowChanges(
+                DxStateBuildService.RegistrationAction(task.project).execute())
         }
 
         private fun getDexFiles(
@@ -271,7 +251,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
                         } else {
                             component.globalScope.project.files(
-                                component.artifacts.get(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE));
+                                component.artifacts.get(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE))
                         }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
@@ -288,11 +268,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                     // If dexing using artifact transforms, library production code will
                                     // be dex'ed in a task, so we need to fetch the output directly.
                                     // Otherwise, it will be in the dex'ed in the dex builder transform.
-                                    files.from(
-                                        it.artifacts.getAll(
-                                            MultipleArtifactType.DEX
-                                        )
-                                    )
+                                    files.from(it.artifacts.getAll(MultipleArtifactType.DEX))
                                 }
                             }
                         }
@@ -311,9 +287,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
                             } else {
                                 // we merge external dex in a separate task
-                                component.artifacts.getAll(
-                                    MultipleArtifactType.EXTERNAL_LIBS_DEX
-                                )
+                                component.artifacts.getAll(MultipleArtifactType.EXTERNAL_LIBS_DEX)
                             })
                     }
                 }
@@ -330,7 +304,6 @@ abstract class DexMergingTask : NonIncrementalTask() {
          */
         private fun getMergingThreshold(
             action: DexMergingAction,
-            task: DexMergingTask,
             component: ComponentPropertiesImpl
         ): Int {
             return when (action) {
@@ -361,7 +334,7 @@ private fun getAllRegularFiles(files: Iterable<File>): List<File> {
         if (it.isFile) listOf(it)
         else {
             it.walkTopDown()
-                .filter { it.isFile }
+                .filter(File::isFile)
                 .sortedWith(
                     Comparator { left, right ->
                         val systemIndependentLeft = toSystemIndependentPath(left.toPath())
@@ -426,11 +399,10 @@ class DexMergingTaskRunnable @Inject constructor(
         try {
             processOutput = outputHandler.createOutput()
 
-
             // Analyze top-level inputs, and find all jars in dirs. These jars will be part of the
             // input dex files to merge.
-            val jarsInInput = params.getAllDexFiles().filter { it.isDirectory }.flatMap {
-                it.walkTopDown()
+            val jarsInInput = params.getAllDexFiles().filter { it.isDirectory }.flatMap { dir ->
+                dir.walkTopDown()
                     .filter { it.isFile && it.extension == SdkConstants.EXT_JAR }
                     .toSet()
             }
@@ -510,6 +482,7 @@ data class DexMergingParams(
     private val fileDependencyDexFiles: File?,
     val outputDir: File
 ) : Serializable {
+
     fun getAllDexFiles(): List<File> {
         val allDexFiles = ArrayList<File>(dexFiles)
         fileDependencyDexFiles?.let {
@@ -521,6 +494,6 @@ data class DexMergingParams(
                 }
             }
         }
-        return Collections.unmodifiableList<File>(allDexFiles)
+        return Collections.unmodifiableList(allDexFiles)
     }
 }

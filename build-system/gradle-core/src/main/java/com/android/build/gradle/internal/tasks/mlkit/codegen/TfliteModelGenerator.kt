@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultProcessInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getAssociatedFileInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getFieldInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getInputProcessorInjector
@@ -68,6 +69,10 @@ class TfliteModelGenerator(
         buildStaticNewInstanceMethods(classBuilder)
         buildGetAssociatedFileMethod(classBuilder)
         buildProcessMethod(classBuilder)
+        // RGB image is the only advanced input, so we can check it like this.
+        if( modelInfo.inputs.any { it.isRGBImage }) {
+            buildProcessMethod(classBuilder, isGeneric = true)
+        }
         buildInnerClass(classBuilder)
 
         // Final steps.
@@ -161,7 +166,7 @@ class TfliteModelGenerator(
         classBuilder.addMethod(constructorBuilder.build())
     }
 
-    private fun buildProcessMethod(classBuilder: TypeSpec.Builder) {
+    private fun buildProcessMethod(classBuilder: TypeSpec.Builder, isGeneric : Boolean = false) {
         val outputType: TypeName = ClassName.get(packageName, className)
             .nestedClass(MlNames.OUTPUTS)
         val localOutputs = "outputs"
@@ -172,14 +177,19 @@ class TfliteModelGenerator(
         val byteBufferList: MutableList<String> = ArrayList()
         for (tensorInfo in modelInfo.inputs) {
             val processedTypeName = getProcessedTypeName(tensorInfo)
-            val parameterSpec = ParameterSpec.builder(getParameterType(tensorInfo), tensorInfo.identifierName)
+            val parameterType = if(isGeneric) ClassNames.TENSOR_BUFFER else getParameterType(tensorInfo)
+            val parameterSpec = ParameterSpec.builder(parameterType, tensorInfo.identifierName)
                 .addAnnotation(ClassNames.NON_NULL)
                 .build()
             methodBuilder.addParameter(parameterSpec)
             byteBufferList.add("$processedTypeName.getBuffer()")
         }
         for (tensorInfo in modelInfo.inputs) {
-            getProcessInjector(tensorInfo).inject(methodBuilder, tensorInfo)
+            if (isGeneric) {
+                DefaultProcessInjector().inject(methodBuilder, tensorInfo)
+            } else {
+                getProcessInjector(tensorInfo).inject(methodBuilder, tensorInfo)
+            }
         }
         methodBuilder.addStatement("\$T \$L = new \$T(model)", outputType, localOutputs, outputType)
         methodBuilder.addStatement(

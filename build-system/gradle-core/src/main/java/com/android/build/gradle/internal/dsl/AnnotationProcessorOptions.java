@@ -58,7 +58,6 @@ public class AnnotationProcessorOptions
         return classNames;
     }
 
-    @Override
     public void setClassNames(@NonNull List<String> classNames) {
         this.classNames.clear();
         this.classNames.addAll(classNames);
@@ -105,7 +104,6 @@ public class AnnotationProcessorOptions
         return compilerArgumentProviders;
     }
 
-    @Override
     public void setCompilerArgumentProviders(
             @NonNull List<CommandLineArgumentProvider> compilerArgumentProviders) {
         this.compilerArgumentProviders.clear();

@@ -86,7 +86,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
         override val name: String = computeTaskName("generate", "MlModelClass")
         override val type: Class<GenerateMlModelClass> = GenerateMlModelClass::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateMlModelClass>) {
+        override fun handleProvider(taskProvider: TaskProvider<GenerateMlModelClass>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

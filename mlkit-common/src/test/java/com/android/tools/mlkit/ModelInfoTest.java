@@ -143,7 +143,8 @@ public class ModelInfoTest {
         testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata.tflite");
     }
 
-    private void testModelInfoSerialization(String modelPath) throws TfliteModelException, IOException {
+    private static void testModelInfoSerialization(String modelPath)
+            throws TfliteModelException, IOException {
         ModelInfo originalModelInfo =
                 ModelInfo.buildFrom(
                         extractByteBufferFromModel(modelPath));

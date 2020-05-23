@@ -28,9 +28,10 @@ import com.android.builder.dexing.DexerTool
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
+import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
-import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
@@ -58,6 +59,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import java.io.File
+import java.io.ObjectOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
@@ -70,7 +72,7 @@ import kotlin.test.fail
 @RunWith(Parameterized::class)
 class DexArchiveBuilderDelegateTest(
     private var dexerTool: DexerTool,
-    private val withIncrementalDexingV2: Boolean
+    private val withIncrementalDexingTaskV2: Boolean
 ) {
 
     private lateinit var out: Path
@@ -158,9 +160,11 @@ class DexArchiveBuilderDelegateTest(
         dirWithEmptyClasses(inputDir, ImmutableList.of("$PACKAGE/A", "$PACKAGE/B"))
         jarWithEmptyClasses(inputJar, ImmutableList.of("$PACKAGE/C"))
 
+        val inputFileHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(inputDir.toFile(), inputJar.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashesFile = inputFileHashes
         ).doProcess()
 
         assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isFile()
@@ -172,9 +176,11 @@ class DexArchiveBuilderDelegateTest(
             toDelete, ChangeType.REMOVED, FileType.FILE, "$PACKAGE/B.class"
         )
         getDelegate(
+            projectClasses = setOf(inputDir.toFile(), inputJar.toFile()),
             isIncremental = true,
             projectChanges = setOf(change),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashesFile = inputFileHashes
         ).doProcess()
 
         assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isNull()
@@ -210,10 +216,14 @@ class DexArchiveBuilderDelegateTest(
         val input = tmpDir.newFolder("classes").toPath()
         dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"))
 
+        val inputJarHashesFile = tmpDir.newFile().also {
+            writeEmptyInputJarHashes(it)
+        }
         getDelegate(
             isIncremental = true,
             projectClasses = setOf(input.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashesFile = inputJarHashesFile
         ).doProcess()
 
         assertThat(FileUtils.getAllFiles(out.toFile())).isEmpty()
@@ -228,6 +238,9 @@ class DexArchiveBuilderDelegateTest(
         val nestedDirOutput = out.resolve("nested_dir")
         Files.createDirectories(nestedDirOutput)
 
+        val inputJarHashesFile = tmpDir.newFile().also {
+            writeEmptyInputJarHashes(it)
+        }
         getDelegate(
             isIncremental = true,
             projectClasses = setOf(input.toFile()),
@@ -237,7 +250,8 @@ class DexArchiveBuilderDelegateTest(
                 ChangeType.REMOVED,
                 FileType.DIRECTORY,
                 "nested_dir"
-            ))
+            )),
+            inputJarHashesFile = inputJarHashesFile
         ).doProcess()
 
         assertThat(nestedDirOutput.toFile()).doesNotExist()
@@ -356,6 +370,34 @@ class DexArchiveBuilderDelegateTest(
             .hasSize(1)
     }
 
+    @Test
+    fun test_removingInputHashesRunsNonIncrementally() {
+        val input = tmpDir.root.toPath().resolve("input")
+        dirWithEmptyClasses(input, listOf("test/A", "test/B"))
+
+        val inputJarHashes = tmpDir.newFile()
+        getDelegate(
+            projectClasses = setOf(input.toFile()),
+            projectOutput = out.toFile(),
+            inputJarHashesFile = inputJarHashes
+        ).doProcess()
+
+        val initialTimestamp = FileUtils.find(out.toFile(), "A.dex").get().lastModified()
+        inputJarHashes.delete()
+        TestUtils.waitForFileSystemTick()
+
+        getDelegate(
+            projectClasses = setOf(input.toFile()),
+            projectOutput = out.toFile(),
+            isIncremental = true,
+            inputJarHashesFile = inputJarHashes
+        ).doProcess()
+
+        assertThat(FileUtils.find(out.toFile(), "A.dex").get().lastModified()).isGreaterThan(
+            initialTimestamp
+        )
+    }
+
     private fun findOutputBucketForDirInput(numberOfBuckets: Int): String =
         (0 until numberOfBuckets).find {
             FileUtils.find(out.resolve(it.toString()).toFile(),
@@ -385,7 +427,8 @@ class DexArchiveBuilderDelegateTest(
         libConfiguration: String? = null,
         projectOutputKeepRules: File? = null,
         externalLibsOutputKeepRules: File? = null,
-        numberOfBuckets: Int = 1
+        numberOfBuckets: Int = 1,
+        inputJarHashesFile: File = tmpDir.newFile()
     ): DexArchiveBuilderTaskDelegate {
         return DexArchiveBuilderTaskDelegate(
             isIncremental = isIncremental,
@@ -405,10 +448,10 @@ class DexArchiveBuilderDelegateTest(
             externalLibsOutputKeepRules = externalLibsOutputKeepRules,
             mixedScopeOutputDex = tmpDir.newFolder(),
             mixedScopeOutputKeepRules = null,
-            inputJarHashesFile = tmpDir.newFile(),
+            inputJarHashesFile = inputJarHashesFile,
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDexingV2 = withIncrementalDexingV2,
-            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingV2 },
+            incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
+            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingTaskV2 },
             dexer = dexerTool,
             useGradleWorkers = false,
             projectVariant = "myVariant",
@@ -435,13 +478,19 @@ class DexArchiveBuilderDelegateTest(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDexingV2_{1}")
+        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDexingTaskV2_{1}")
         fun parameters() = listOf(
             arrayOf(DexerTool.DX, false),
-            // No need to test arrayOf(DexerTool.DX, true) as incrementalDexingV2 is only for D8
+            // No need to test arrayOf(DexerTool.DX, true) as incrementalDexingTaskV2 is only for D8
             arrayOf(DexerTool.D8, false),
             arrayOf(DexerTool.D8, true)
         )
+    }
+}
+
+internal fun writeEmptyInputJarHashes(file: File) {
+    ObjectOutputStream(file.outputStream().buffered()).use {
+        it.writeObject(mutableMapOf<File, String>())
     }
 }
 

@@ -39,11 +39,8 @@ import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrame
 import android.support.wearable.activity.WearableActivity
 import android.view.Gravity
 import android.view.View
-import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.Toast
-
-import kotlinx.android.synthetic.main.${layoutName}.*
 
 class ${activityClass} : WearableActivity(), OnMapReadyCallback {
 
@@ -52,6 +49,7 @@ class ${activityClass} : WearableActivity(), OnMapReadyCallback {
      * See [onMapReady]
      */
     private lateinit var mMap: GoogleMap
+    private lateinit var swipeDismissRootContainer: SwipeDismissFrameLayout
 
     public override fun onCreate(savedState: Bundle?) {
         super.onCreate(savedState)
@@ -65,7 +63,8 @@ class ${activityClass} : WearableActivity(), OnMapReadyCallback {
         // Swipe-To-Dismiss is a standard pattern in Wear for closing an app and needs to be
         // manually enabled for any Google Maps Activity. For more information, review our docs:
         // https://developer.android.com/training/wearables/ui/exit.html
-        swipe_dismiss_root_container.addCallback(object : SwipeDismissFrameLayout.Callback() {
+        swipeDismissRootContainer = findViewById(R.id.swipe_dismiss_root_container)
+        swipeDismissRootContainer.addCallback(object : SwipeDismissFrameLayout.Callback() {
             override fun onDismissed(layout: SwipeDismissFrameLayout?) {
                 // Hides view before exit to avoid stutter.
                 layout?.visibility = View.GONE
@@ -74,10 +73,10 @@ class ${activityClass} : WearableActivity(), OnMapReadyCallback {
         })
 
         // Adjusts margins to account for the system window insets when they become available.
-        swipe_dismiss_root_container.setOnApplyWindowInsetsListener { _, insetsArg ->
-            val insets = swipe_dismiss_root_container.onApplyWindowInsets(insetsArg)
-
-            val params = map_container.layoutParams as FrameLayout.LayoutParams
+        swipeDismissRootContainer.setOnApplyWindowInsetsListener { _, insetsArg ->
+            val insets = swipeDismissRootContainer.onApplyWindowInsets(insetsArg)
+            val mapContainer = findViewById<FrameLayout>(R.id.map_container)
+            val params = mapContainer.layoutParams as FrameLayout.LayoutParams
 
             // Add Wearable insets to FrameLayout container holding map as margins
             params.setMargins(
@@ -85,13 +84,16 @@ class ${activityClass} : WearableActivity(), OnMapReadyCallback {
                     insets.systemWindowInsetTop,
                     insets.systemWindowInsetRight,
                     insets.systemWindowInsetBottom)
-            map_container.layoutParams = params
+            mapContainer.layoutParams = params
 
             insets
         }
 
         // Obtain the MapFragment and set the async listener to be notified when the map is ready.
-        val mapFragment = map as MapFragment
+        @Suppress("Deprecation")
+        // Suppressing deprecation since WearableActivity doesn't extend FragmentManager, thus
+        // getSupportFragmentManager can't be used
+        val mapFragment = fragmentManager.findFragmentById(R.id.map) as MapFragment
         mapFragment.getMapAsync(this)
     }
 

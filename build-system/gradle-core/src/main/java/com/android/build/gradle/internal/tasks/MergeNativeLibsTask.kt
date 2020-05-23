@@ -41,6 +41,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
 import java.io.File
@@ -56,12 +57,15 @@ abstract class MergeNativeLibsTask
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:SkipWhenEmpty
     abstract val projectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
+    @get:SkipWhenEmpty
     abstract val subProjectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
+    @get:SkipWhenEmpty
     abstract val externalLibNativeLibs: ConfigurableFileCollection
 
     @get:Nested
@@ -151,7 +155,7 @@ abstract class MergeNativeLibsTask
             get() = MergeNativeLibsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out MergeNativeLibsTask>
+            taskProvider: TaskProvider<MergeNativeLibsTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -244,12 +248,12 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
                 project.files(artifacts.get(RENDERSCRIPT_LIB))
-        val rsLibs = globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
+        val rsLibs = globalScope.sdkComponents.get().supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)
         }
         if (componentProperties.variantDslInfo.renderscriptSupportModeBlasEnabled) {
-            val rsBlasLib = globalScope.sdkComponents.supportBlasLibFolderProvider.orNull
+            val rsBlasLib = globalScope.sdkComponents.get().supportBlasLibFolderProvider.orNull
             if (rsBlasLib == null || !rsBlasLib.isDirectory) {
                 throw GradleException(
                     "Renderscript BLAS support mode is not supported in BuildTools $rsBlasLib"
@@ -265,6 +269,7 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
 
 fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
     val nativeLibs = componentProperties.globalScope.project.files()
+    // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
         componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -284,6 +289,7 @@ fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileC
 
 fun getExternalNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
     val nativeLibs = componentProperties.globalScope.project.files()
+    // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
         componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

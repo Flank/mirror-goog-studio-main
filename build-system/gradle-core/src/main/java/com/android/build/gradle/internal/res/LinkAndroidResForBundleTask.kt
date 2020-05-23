@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.res
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
@@ -47,17 +46,15 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -86,11 +83,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     abstract val manifestMergeBlameFile: RegularFileProperty
 
     private var buildTargetDensity: String? = null
-
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
 
     @get:OutputFile
     abstract val bundledResFile: RegularFileProperty
@@ -121,6 +113,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
 
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
+
     private var compiledDependenciesResources: ArtifactCollection? = null
 
     override fun doTaskAction() {
@@ -144,7 +139,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             getCompiledDependenciesResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
 
         val config = AaptPackageConfig(
-            androidJarPath = androidJar.get().absolutePath,
+            androidJarPath = androidJarInput.getAndroidJar().get().absolutePath,
             generateProtos = true,
             manifestFile = manifestFile,
             options = AaptOptions(noCompress.get(), aaptAdditionalParameters.get()),
@@ -228,7 +223,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             get() = LinkAndroidResForBundleTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkAndroidResForBundleTask>
+            taskProvider: TaskProvider<LinkAndroidResForBundleTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
@@ -288,7 +283,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.resConfig = creationConfig.variantDslInfo.resourceConfigurations
 
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 creationConfig.services.projectOptions
@@ -306,6 +300,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 )
             }
             task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }

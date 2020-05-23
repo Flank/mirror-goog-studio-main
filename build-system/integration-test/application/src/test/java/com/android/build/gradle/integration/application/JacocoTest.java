@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
@@ -29,12 +30,14 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.truth.DexClassSubject;
 import com.android.testutils.truth.DexSubject;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -132,5 +135,35 @@ public class JacocoTest {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "com.android.application", "com.android.library");
         project.executor().withArgument("--dry-run").run("createDebugAndroidTestCoverageReport");
+    }
+
+    /** Regression test for b/154069245. */
+    @Test
+    public void testIncrementalChangesProcessedOnce() throws Exception {
+        project.execute("assembleDebug");
+
+        File dataSrc = new File(project.getMainSrcDir(), "test/Data.java");
+        FileUtils.mkdirs(dataSrc.getParentFile());
+        String dataSrcContent = "package test; public class Data {} class AnotherClass {}";
+        java.nio.file.Files.write(dataSrc.toPath(), dataSrcContent.getBytes(Charsets.UTF_8));
+
+        GradleBuildResult result =
+                project.executor().withEnableInfoLogging(true).run("assembleDebug");
+        int numberOfDirsProcessed = 0;
+        int numberOfFilesProcessed = 0;
+        try (Scanner scanner = result.getStdout()) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.contains("Processing entries from input dir: ")) {
+                    numberOfDirsProcessed++;
+                } else if (line.contains("Instrumenting file: ")) {
+                    numberOfFilesProcessed++;
+                }
+            }
+        }
+        assertThat(numberOfDirsProcessed)
+                .named("number of base directories processed with Jacoco")
+                .isEqualTo(1);
+        assertThat(numberOfFilesProcessed).named("number of files with Jacoco").isEqualTo(2);
     }
 }

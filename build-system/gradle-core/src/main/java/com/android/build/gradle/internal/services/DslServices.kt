@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import java.io.File
 import kotlin.properties.ReadWriteProperty
 
@@ -38,7 +39,7 @@ interface DslServices: BaseServices {
 
     val logger: Logger
     val buildDirectory: DirectoryProperty
-    val sdkComponents: SdkComponents
+    val sdkComponents: Provider<SdkComponentsBuildService>
 
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
     fun <T> domainObjectContainer(

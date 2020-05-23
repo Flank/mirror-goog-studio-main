@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
@@ -71,7 +71,7 @@ class UtpConfigFactory {
                                 testData: StaticTestData,
                                 apks: Iterable<File>,
                                 configurations: ConfigurationContainer,
-                                sdkComponents: SdkComponents,
+                                sdkComponents: SdkComponentsBuildService,
                                 outputDir: File,
                                 tmpDir: File,
                                 testLogDir: File,
@@ -140,7 +140,7 @@ class UtpConfigFactory {
                                   apks: Iterable<File>,
                                   testData: StaticTestData,
                                   configurations: ConfigurationContainer,
-                                  sdkComponents: SdkComponents,
+                                  sdkComponents: SdkComponentsBuildService,
                                   outputDir: File,
                                   tmpDir: File,
                                   testLogDir: File,
@@ -201,7 +201,7 @@ class UtpConfigFactory {
             tmpDir: File,
             testLogDir: File,
             testRunLogDir: File,
-            sdkComponents: SdkComponents
+            sdkComponents: SdkComponentsBuildService
     ): EnvironmentProto.Environment {
         return EnvironmentProto.Environment.newBuilder().apply {
             outputDirBuilder.apply {
@@ -213,7 +213,7 @@ class UtpConfigFactory {
             androidEnvironmentBuilder.apply {
                 androidSdkBuilder.apply {
                     sdkPathBuilder.apply {
-                        path = sdkComponents.getSdkDirectory().absolutePath
+                        path = sdkComponents.sdkDirectoryProvider.get().asFile.absolutePath
                     }
                     adbPathBuilder.apply {
                         path = sdkComponents.adbExecutableProvider.get().asFile.absolutePath

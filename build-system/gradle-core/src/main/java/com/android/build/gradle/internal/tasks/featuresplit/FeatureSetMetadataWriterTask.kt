@@ -117,7 +117,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             get() = FeatureSetMetadataWriterTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>
+            taskProvider: TaskProvider<FeatureSetMetadataWriterTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

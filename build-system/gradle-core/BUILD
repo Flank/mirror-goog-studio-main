@@ -76,6 +76,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.test.platform_core-proto",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
+        "//tools/base/third_party:com.android.tools.build_aapt2-proto",
         "//tools/base/third_party:com.android.tools.build_bundletool",
         "//tools/base/third_party:com.android.tools.build_transform-api",
         "//tools/base/third_party:com.google.code.gson_gson",

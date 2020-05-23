@@ -59,6 +59,7 @@ import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -68,6 +69,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -433,6 +435,15 @@ public class ResourceUsageModel {
 
     public String dumpConfig() {
         StringBuilder sb = new StringBuilder();
+        mResources.sort(
+                (resource1, resource2) -> {
+                    int delta = resource1.type.compareTo(resource2.type);
+                    if (delta != 0) {
+                        return delta;
+                    }
+                    return resource1.name.compareTo(resource2.name);
+                });
+
         for (Resource resource : mResources) {
             sb.append(resource.type);
             sb.append('/');
@@ -722,22 +733,46 @@ public class ResourceUsageModel {
         String localName = attr.getLocalName();
         String value = attr.getValue();
         if (ATTR_KEEP.equals(localName)) {
-            if (mKeepAttributes == null) {
-                mKeepAttributes = Lists.newArrayList();
-            }
-            mKeepAttributes.add(value);
+            recordKeepToolAttribute(value);
         } else if (ATTR_DISCARD.equals(localName)) {
-            if (mDiscardAttributes == null) {
-                mDiscardAttributes = Lists.newArrayList();
-            }
-            mDiscardAttributes.add(value);
+            recordDiscardToolAttribute(value);
         } else if (ATTR_SHRINK_MODE.equals(localName)) {
-            if (VALUE_STRICT.equals(value)) {
-                mSafeMode = false;
-            } else if (VALUE_SAFE.equals(value)) {
-                mSafeMode = true;
-            }
+            recordShrinkModeAttribute(value);
         }
+    }
+
+    public void recordKeepToolAttribute(@NonNull String value) {
+        if (mKeepAttributes == null) {
+            mKeepAttributes = Lists.newArrayList();
+        }
+        mKeepAttributes.add(value);
+    }
+
+    public void recordDiscardToolAttribute(@NonNull String value) {
+        if (mDiscardAttributes == null) {
+            mDiscardAttributes = Lists.newArrayList();
+        }
+        mDiscardAttributes.add(value);
+    }
+
+    public void recordShrinkModeAttribute(@NonNull String value) {
+        if (VALUE_STRICT.equals(value)) {
+            mSafeMode = false;
+        } else if (VALUE_SAFE.equals(value)) {
+            mSafeMode = true;
+        }
+    }
+
+    public List<String> getKeepAttributes() {
+        return mKeepAttributes == null
+                ? Collections.emptyList()
+                : ImmutableList.copyOf(mKeepAttributes);
+    }
+
+    public List<String> getDiscardAttributes() {
+        return mDiscardAttributes == null
+                ? Collections.emptyList()
+                : ImmutableList.copyOf(mDiscardAttributes);
     }
 
     protected Resource declareResource(ResourceType type, String name, Node node) {
@@ -1618,39 +1653,44 @@ public class ResourceUsageModel {
     /** Look through binary/unknown files looking for resource URLs */
     public void tokenizeUnknownBinary(@Nullable Resource from, @NonNull File file) {
         try {
-            if (sAndroidResBytes == null) {
-                sAndroidResBytes = ANDROID_RES.getBytes(SdkConstants.UTF_8);
-            }
-            byte[] bytes = Files.toByteArray(file);
-            int index = 0;
-            while (index != -1) {
-                index = indexOf(bytes, sAndroidResBytes, index);
-                if (index != -1) {
-                    index += sAndroidResBytes.length;
+            tokenizeUnknownBinary(from, Files.toByteArray(file));
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
 
-                    // Find the end of the URL
-                    int begin = index;
-                    int end = begin;
-                    for (; end < bytes.length; end++) {
-                        byte c = bytes[end];
-                        if (c != '/' && !Character.isJavaIdentifierPart((char)c)) {
-                            // android_res/raw/my_drawable.png ⇒ @raw/my_drawable
-                            String url = "@" + new String(bytes, begin, end - begin, UTF_8);
-                            Resource resource = getResourceFromUrl(url);
-                            if (resource != null) {
-                                if (from != null) {
-                                    from.addReference(resource);
-                                } else {
-                                    markReachable(resource);
-                                }
+    /** Look through binary/unknown files looking for resource URLs */
+    public void tokenizeUnknownBinary(@Nullable Resource from, @NonNull byte[] bytes)
+            throws IOException {
+        if (sAndroidResBytes == null) {
+            sAndroidResBytes = ANDROID_RES.getBytes(SdkConstants.UTF_8);
+        }
+        int index = 0;
+        while (index != -1) {
+            index = indexOf(bytes, sAndroidResBytes, index);
+            if (index != -1) {
+                index += sAndroidResBytes.length;
+
+                // Find the end of the URL
+                int begin = index;
+                int end = begin;
+                for (; end < bytes.length; end++) {
+                    byte c = bytes[end];
+                    if (c != '/' && !Character.isJavaIdentifierPart((char) c)) {
+                        // android_res/raw/my_drawable.png ⇒ @raw/my_drawable
+                        String url = "@" + new String(bytes, begin, end - begin, UTF_8);
+                        Resource resource = getResourceFromUrl(url);
+                        if (resource != null) {
+                            if (from != null) {
+                                from.addReference(resource);
+                            } else {
+                                markReachable(resource);
                             }
-                            break;
                         }
+                        break;
                     }
                 }
             }
-        } catch (IOException e) {
-            // Ignore
         }
     }
 

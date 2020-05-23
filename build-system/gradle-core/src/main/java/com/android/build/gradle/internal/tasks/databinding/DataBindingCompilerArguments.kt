@@ -162,7 +162,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(componentProperties),
                 packageName = componentProperties.packageName,
                 minApi = componentProperties.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkComponents.getSdkDirectory(),
+                sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile,
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(componentProperties)),
                 classLogDir = artifacts.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),

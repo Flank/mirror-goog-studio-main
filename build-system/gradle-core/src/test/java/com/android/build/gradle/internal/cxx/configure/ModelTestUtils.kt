@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
@@ -38,7 +39,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
-import com.google.common.base.Supplier
 import org.gradle.api.Project
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
@@ -51,7 +51,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val cmake = Mockito.mock(CmakeOptions::class.java)
     val ndkBuild = Mockito.mock(NdkBuildOptions::class.java)
     val project = Mockito.mock(Project::class.java)
-    val sdkComponents = Mockito.mock(SdkComponents::class.java)
+    val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
     val componentPropertiesImpl = Mockito.mock(ComponentPropertiesImpl::class.java)
@@ -83,8 +83,8 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(projectOptions).`when`(global).projectOptions
     Mockito.doReturn(projectDir).`when`(project).rootDir
     Mockito.doReturn(moduleDir).`when`(project).projectDir
-    Mockito.doReturn(sdkComponents).`when`(global).sdkComponents
-    Mockito.doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
+    Mockito.doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
+    Mockito.doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
     Mockito.doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
     Mockito.doReturn(ndkPlatform).`when`(ndkHandler).getNdkPlatform(true)
     Mockito.doReturn(buildDir).`when`(project).buildDir

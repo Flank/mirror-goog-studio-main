@@ -38,7 +38,8 @@ import com.android.build.gradle.internal.DependencyResolutionChecks;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
-import com.android.build.gradle.internal.SdkComponents;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
+import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
@@ -108,8 +109,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gradle.BuildAdapter;
-import org.gradle.BuildResult;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -121,6 +120,7 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -261,9 +261,6 @@ public abstract class BasePlugin<
         ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
-        new Aapt2WorkersBuildService.RegistrationAction(project, projectOptions).execute();
-        new Aapt2DaemonBuildService.RegistrationAction(project).execute();
-
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(getAnalyticsPluginType())
@@ -303,14 +300,22 @@ public abstract class BasePlugin<
         ProjectOptions projectOptions = projectServices.getProjectOptions();
         IssueReporter issueReporter = projectServices.getIssueReporter();
 
-        SdkComponents sdkComponents =
-                SdkComponents.Companion.createSdkComponents(
-                        project,
-                        projectOptions,
-                        // We pass a supplier here because extension will only be set later.
-                        this::getExtension,
-                        getLogger(),
-                        issueReporter);
+        new Aapt2WorkersBuildService.RegistrationAction(project, projectOptions).execute();
+        new Aapt2DaemonBuildService.RegistrationAction(project).execute();
+        new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
+                        project, SyncOptions.getModelQueryMode(projectOptions))
+                .execute();
+        Provider<SdkComponentsBuildService> sdkComponentsBuildService =
+                new SdkComponentsBuildService.RegistrationAction(
+                                project,
+                                projectOptions,
+                                project.getProviders()
+                                        .provider(() -> extension.getCompileSdkVersion()),
+                                project.getProviders()
+                                        .provider(() -> extension.getBuildToolsRevision()),
+                                project.getProviders().provider(() -> extension.getNdkVersion()),
+                                project.getProviders().provider(() -> extension.getNdkPath()))
+                        .execute();
 
         projectOptions
                 .getAllOptions()
@@ -326,7 +331,9 @@ public abstract class BasePlugin<
 
         dslServices =
                 new DslServicesImpl(
-                        projectServices, new DslVariableFactory(syncIssueReporter), sdkComponents);
+                        projectServices,
+                        new DslVariableFactory(syncIssueReporter),
+                        sdkComponentsBuildService);
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(
@@ -338,7 +345,7 @@ public abstract class BasePlugin<
                         project,
                         creator,
                         dslServices,
-                        sdkComponents,
+                        sdkComponentsBuildService,
                         registry,
                         messageReceiver,
                         componentFactory);
@@ -352,23 +359,6 @@ public abstract class BasePlugin<
 
         // As soon as project is evaluated we can clear the shared state for deprecation reporting.
         gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
-
-        // call back on execution. This is called after the whole build is done (not
-        // after the current project is done).
-        // This is will be called for each (android) projects though, so this should support
-        // being called 2+ times.
-        gradle.addBuildListener(
-                new BuildAdapter() {
-                    @Override
-                    public void buildFinished(@NonNull BuildResult buildResult) {
-                        // Do not run buildFinished for included project in composite build.
-                        if (buildResult.getGradle().getParent() != null) {
-                            return;
-                        }
-                        sdkComponents.unload();
-                        SdkLocator.resetCache();
-                    }
-                });
 
         createLintClasspathConfiguration(project);
     }
@@ -598,6 +588,7 @@ public abstract class BasePlugin<
         taskManager.createTasks();
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
+                .configureDependencySubstitutions()
                 .configureGeneralTransforms()
                 .configureVariantTransforms(variants, variantManager.getTestComponents());
 
@@ -633,7 +624,10 @@ public abstract class BasePlugin<
 
     private String findHighestSdkInstalled() {
         String highestSdk = null;
-        File folder = new File(globalScope.getSdkComponents().getSdkDirectory(), "platforms");
+        File folder =
+                new File(
+                        SdkComponentsKt.getSdkDir(project.getRootDir(), syncIssueReporter),
+                        "platforms");
         File[] listOfFiles = folder.listFiles();
 
         if (listOfFiles != null) {

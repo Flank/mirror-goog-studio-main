@@ -66,7 +66,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
             get() = CreateNonNamespacedLibraryManifestTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out CreateNonNamespacedLibraryManifestTask>
+            taskProvider: TaskProvider<CreateNonNamespacedLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

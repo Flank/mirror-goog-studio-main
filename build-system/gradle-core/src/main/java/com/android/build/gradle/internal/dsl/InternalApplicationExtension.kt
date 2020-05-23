@@ -38,4 +38,7 @@ interface InternalApplicationExtension :
                 DefaultConfig,
                 ProductFlavor,
                 ApplicationVariant<ApplicationVariantProperties>,
-                ApplicationVariantProperties>
+                ApplicationVariantProperties> {
+    override var dynamicFeatures: MutableSet<String>
+    override var assetPacks: MutableSet<String>
+}

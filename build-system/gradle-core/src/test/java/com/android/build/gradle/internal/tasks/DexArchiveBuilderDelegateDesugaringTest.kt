@@ -46,15 +46,14 @@ import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Objects
 import java.util.regex.Pattern
 
 @RunWith(Parameterized::class)
-class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV2: Boolean) {
+class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingTaskV2: Boolean) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "incrementalDexingV2_{0}")
+        @Parameterized.Parameters(name = "incrementalDexingTaskV2_{0}")
         @JvmStatic
         fun parameters() = arrayOf(true, false)
     }
@@ -71,7 +70,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
         out = tmpDir.root.toPath().resolve("out")
         Files.createDirectories(out)
 
-        desugarGraphDir = if (withIncrementalDexingV2) {
+        desugarGraphDir = if (withIncrementalDexingTaskV2) {
             tmpDir.root.toPath().resolve("desugarGraphDir")
         } else {
             null
@@ -171,9 +170,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             )
         )
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(input.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         var catDex = getDex(Cat::class.java)
@@ -187,7 +188,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.MODIFIED, Toy::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         catDex = getDex(Cat::class.java)
@@ -210,9 +212,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             )
         )
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(input.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         var tigerDex = getDex(Tiger::class.java)
@@ -225,7 +229,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.MODIFIED, Animal::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         tigerDex = getDex(Tiger::class.java)
@@ -238,7 +243,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.MODIFIED, Cat::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
         tigerDex = getDex(Tiger::class.java)
         carbonFormDex = getDex(CarbonForm::class.java)
@@ -254,6 +260,9 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             setOf(CarbonForm::class.java, Animal::class.java)
         )
 
+        val inputJarHashes = tmpDir.newFile().also {
+            writeEmptyInputJarHashes(it)
+        }
         getDelegate(
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(
@@ -263,7 +272,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
                 Animal::class.java
             ),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         val animalDex = getDex(Animal::class.java)
@@ -271,7 +281,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
         getDelegate(
             projectClasses = setOf(input.toFile()),
             projectOutput = out.toFile(),
-            isIncremental = false
+            isIncremental = false,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         val deletions = getChanges(input, ChangeType.REMOVED, Animal::class.java)
@@ -280,7 +291,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             projectClasses = setOf(input.toFile()),
             projectChanges = getChanges(input, ChangeType.REMOVED, Animal::class.java),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes = inputJarHashes
         ).doProcess()
 
         assertThat(getDex(CarbonForm::class.java)).exists()
@@ -299,9 +311,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             input, setOf(Toy::class.java, Cat::class.java, Tiger::class.java)
         )
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
             projectClasses = setOf(input.toFile(), jar.toFile()),
-            projectOutput = out.toFile()
+            projectOutput = out.toFile(),
+            inputJarHashes =  inputJarHashes
         ).doProcess()
 
         val catTimestamp = getDex(Cat::class.java).lastModified()
@@ -317,7 +331,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
                 )
             ),
             projectOutput = out.toFile(),
-            isIncremental = true
+            isIncremental = true,
+            inputJarHashes =  inputJarHashes
         ).doProcess()
 
         assertThat(catTimestamp).isLessThan(getDex(Cat::class.java).lastModified())
@@ -456,7 +471,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
                 jumboMode = true
             ),
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDexingV2 = withIncrementalDexingV2,
+            incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
             desugarGraphDir =  desugarGraphDir?.toFile(),
             projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,

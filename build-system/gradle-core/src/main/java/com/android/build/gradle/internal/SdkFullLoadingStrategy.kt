@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,11 @@ import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.OptionalLibrary
 import java.io.File
-import java.util.function.Supplier
 
 class SdkFullLoadingStrategy(
-    private val sdkHandlerSupplier: Supplier<SdkHandler>,
-    private val platformTargetHashSupplier: Supplier<String?>,
-    private val buildToolRevisionSupplier: Supplier<Revision?>,
+    private val sdkHandler: SdkHandler,
+    private val platformTargetHashSupplier: String?,
+    private val buildToolRevisionSupplier: Revision?,
     private val useAndroidX: Boolean) {
 
     private var sdkInitResult: Boolean? = null
@@ -42,12 +41,10 @@ class SdkFullLoadingStrategy(
     @Synchronized
     private fun init(): Boolean {
         if (sdkInitResult != null) return sdkInitResult!!
-        val platformHash = checkNotNull(platformTargetHashSupplier.get()) {
+        val platformHash = checkNotNull(platformTargetHashSupplier) {
             "Extension not initialized yet, couldn't access compileSdkVersion."}
-        val buildToolRevision = checkNotNull(buildToolRevisionSupplier.get()) {
+        val buildToolRevision = checkNotNull(buildToolRevisionSupplier) {
             "Extension not initialized yet, couldn't access buildToolsVersion."}
-
-        val sdkHandler = sdkHandlerSupplier.get()
 
         val result = sdkHandler.initTarget(platformHash, buildToolRevision)
         if (result == null) {
@@ -98,6 +95,6 @@ class SdkFullLoadingStrategy(
     @Synchronized
     fun reset() {
         sdkInitResult = null
-        sdkHandlerSupplier.get().unload()
+        sdkHandler.unload()
     }
 }

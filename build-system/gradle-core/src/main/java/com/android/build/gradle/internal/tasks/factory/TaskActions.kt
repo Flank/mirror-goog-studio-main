@@ -46,7 +46,7 @@ abstract class TaskCreationAction<TaskT : Task> : TaskInformation<TaskT>, PreCon
         // default does nothing
     }
 
-    override fun handleProvider(taskProvider: TaskProvider<out TaskT>) {
+    override fun handleProvider(taskProvider: TaskProvider<TaskT>) {
         // default does nothing
     }
 }
@@ -75,7 +75,7 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
     override fun preConfigure(taskName: String) {
         // default does nothing
     }
-    override fun handleProvider(taskProvider: TaskProvider<out TaskT>) {
+    override fun handleProvider(taskProvider: TaskProvider<TaskT>) {
         // default does nothing
     }
 
@@ -122,5 +122,5 @@ interface PreConfigAction {
  * Once a TaskProvider is created this is called to process it.
  */
 interface TaskProviderCallback<TaskT: Task> {
-    fun handleProvider(taskProvider: TaskProvider<out TaskT>)
+    fun handleProvider(taskProvider: TaskProvider<TaskT>)
 }

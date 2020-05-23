@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class AndroidProjectStub extends BaseStub implements AndroidProject {
@@ -46,6 +47,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final Collection<NativeToolchain> myNativeToolchains;
     @NonNull private final Collection<SigningConfig> mySigningConfigs;
     @NonNull private final LintOptions myLintOptions;
+    @NonNull private final List<File> myLintRuleJars;
     @NonNull private final Collection<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
@@ -81,6 +83,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 Lists.newArrayList(new NativeToolchainStub()),
                 Lists.newArrayList(new SigningConfigStub()),
                 new LintOptionsStub(),
+                ImmutableList.of(),
                 Sets.newHashSet("unresolvedDependency"),
                 new JavaCompileOptionsStub(),
                 new AaptOptionsStub(),
@@ -116,6 +119,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull Collection<SigningConfig> signingConfigs,
             @NonNull LintOptions lintOptions,
+            @NonNull List<File> lintRuleJars,
             @NonNull Collection<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
             @NonNull AaptOptions aaptOptions,
@@ -148,6 +152,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myNativeToolchains = nativeToolchains;
         mySigningConfigs = signingConfigs;
         myLintOptions = lintOptions;
+        myLintRuleJars = lintRuleJars;
         myUnresolvedDependencies = unresolvedDependencies;
         myJavaCompileOptions = javaCompileOptions;
         myAaptOptions = aaptOptions;
@@ -371,6 +376,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     }
 
     @Override
+    @NonNull
+    public List<File> getLintRuleJars() {
+        return myLintRuleJars;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -400,6 +411,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getNativeToolchains(), stub.getNativeToolchains())
                 && Objects.equals(getSigningConfigs(), stub.getSigningConfigs())
                 && Objects.equals(getLintOptions(), stub.getLintOptions())
+                && Objects.equals(getLintRuleJars(), stub.getLintRuleJars())
                 && Objects.equals(getUnresolvedDependencies(), stub.getUnresolvedDependencies())
                 && Objects.equals(getJavaCompileOptions(), stub.getJavaCompileOptions())
                 && Objects.equals(getBuildFolder(), stub.getBuildFolder())
@@ -432,6 +444,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 getNativeToolchains(),
                 getSigningConfigs(),
                 getLintOptions(),
+                getLintRuleJars(),
                 getUnresolvedDependencies(),
                 getJavaCompileOptions(),
                 getBuildFolder(),

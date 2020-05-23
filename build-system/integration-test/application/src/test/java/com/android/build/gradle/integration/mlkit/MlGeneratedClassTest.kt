@@ -52,8 +52,7 @@ class MlGeneratedClassTest {
                 dependencies {
                     implementation 'androidx.appcompat:appcompat:1.1.0'
                     implementation 'org.apache.commons:commons-compress:1.18'
-                    implementation 'org.tensorflow:tensorflow-lite:1.12.0'
-                    implementation 'org.tensorflow:tensorflow-lite-support:0.0.0-nightly'
+                    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc0'
                 }
             """
         )
@@ -71,12 +70,16 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_IMAGE)
+                createProcessMethodReference(TENSOR_IMAGE),
+                createProcessMethodReference(TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
                     "getProbabilityAsCategoryList", LIST
+                ),
+                createOutputGetterMethodReference(
+                    "getProbabilityAsTensorBuffer", TENSOR_BUFFER
                 )
             )
         verifyModelClass("mobilenet_quant_metadata.tflite", modelMethods, outputsMethods)
@@ -89,13 +92,18 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(MODEL_SUB),
                 createNewInstanceWithOptionsMethodReference(MODEL_SUB),
-                createProcessMethodReference(TENSOR_IMAGE, MODEL_SUB, MODEL_OUTPUT_SUB)
+                createProcessMethodReference(TENSOR_IMAGE, MODEL_SUB, MODEL_OUTPUT_SUB),
+                createProcessMethodReference(TENSOR_BUFFER, MODEL_SUB, MODEL_OUTPUT_SUB)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
                     MODEL_OUTPUT_SUB,
                     "getProbabilityAsCategoryList", LIST
+                ),
+                createOutputGetterMethodReference(
+                    MODEL_OUTPUT_SUB,
+                    "getProbabilityAsTensorBuffer", TENSOR_BUFFER
                 )
             )
         verifyModelClass(
@@ -131,7 +139,8 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_IMAGE)
+                createProcessMethodReference(TENSOR_IMAGE),
+                createProcessMethodReference(TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -150,12 +159,16 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_IMAGE)
+                createProcessMethodReference(TENSOR_IMAGE),
+                createProcessMethodReference(TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
                     "getProbabilityAsCategoryList", LIST
+                ),
+                createOutputGetterMethodReference(
+                    "getProbabilityAsTensorBuffer", TENSOR_BUFFER
                 )
             )
         verifyModelClass("inception_quant_metadata.tflite", modelMethods, outputsMethods)
@@ -168,12 +181,16 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_IMAGE)
+                createProcessMethodReference(TENSOR_IMAGE),
+                createProcessMethodReference(TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
                     "getProbabilityAsCategoryList", LIST
+                ),
+                createOutputGetterMethodReference(
+                    "getProbabilityAsTensorBuffer", TENSOR_BUFFER
                 )
             )
         verifyModelClass("mnasnet_metadta.tflite", modelMethods, outputsMethods)
@@ -186,7 +203,8 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_IMAGE)
+                createProcessMethodReference(TENSOR_IMAGE),
+                createProcessMethodReference(TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -213,12 +231,16 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_IMAGE + TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_IMAGE + TENSOR_BUFFER),
+                createProcessMethodReference(TENSOR_BUFFER + TENSOR_BUFFER)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
                 createOutputGetterMethodReference(
                     "getStyledImageAsTensorImage", TENSOR_IMAGE
+                ),
+                createOutputGetterMethodReference(
+                    "getStyledImageAsTensorBuffer", TENSOR_BUFFER
                 )
             )
         verifyModelClass("style_transfer_quant_metadata.tflite", modelMethods, outputsMethods)

@@ -30,7 +30,6 @@ fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   val projectData = data.projectTemplateData
   if (!data.isNewModule && projectData.language == Language.Kotlin) {
     applyPlugin("kotlin-android")
-    applyPlugin("kotlin-android-extensions")
     if (!hasKotlinStdlib()) {
       // Make sure to add the extra variable before using it as injection within the dependency.
       setKotlinVersion(projectData.kotlinVersion)

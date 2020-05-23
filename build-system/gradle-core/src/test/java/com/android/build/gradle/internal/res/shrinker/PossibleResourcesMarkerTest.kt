@@ -22,7 +22,9 @@ import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableList.of
 import com.google.common.collect.ImmutableSet
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PossibleResourcesMarkerTest {

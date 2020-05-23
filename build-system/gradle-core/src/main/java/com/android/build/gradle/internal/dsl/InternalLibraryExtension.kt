@@ -31,12 +31,13 @@ interface InternalLibraryExtension :
         BuildType,
         DefaultConfig,
         ProductFlavor,
-        SigningConfig,
-        PrefabPackagingOptions>,
+        SigningConfig>,
         InternalCommonExtension<
                 LibraryBuildFeatures,
                 BuildType,
                 DefaultConfig,
                 ProductFlavor,
                 LibraryVariant<LibraryVariantProperties>,
-                LibraryVariantProperties>
+                LibraryVariantProperties> {
+    override var aidlPackageWhiteList: MutableCollection<String>
+}

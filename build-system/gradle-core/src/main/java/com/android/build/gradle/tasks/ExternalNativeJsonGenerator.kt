@@ -17,10 +17,10 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.registerWriteModelAfterJsonGeneration
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
@@ -89,12 +89,13 @@ import java.util.concurrent.Callable
 /**
  * Base class for generation of native JSON.
  */
-abstract class ExternalNativeJsonGenerator internal constructor(
+abstract class ExternalNativeJsonGeneratorBase internal constructor(
     @get:Internal protected val build: CxxBuildModel,
-    @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation") val variant: CxxVariantModel,
-    @get:Internal val abis: List<CxxAbiModel>,
-    @get:Internal val stats: GradleBuildVariant.Builder
-) {
+    @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
+    override val variant: CxxVariantModel,
+    @get:Internal override val abis: List<CxxAbiModel>,
+    @get:Internal override val stats: GradleBuildVariant.Builder
+) : ExternalNativeJsonGenerator {
     @Throws(IOException::class)
     private fun getDependentBuildFiles(json: File): List<File> {
         val result: MutableList<File> =
@@ -119,15 +120,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         return result
     }
 
-    @Throws(IOException::class, ProcessException::class)
-    fun build(
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ) {
-        buildAndPropagateException(false, execOperation, javaExecOperation)
-    }
-
-    fun build(
+    override fun build(
         forceJsonGeneration: Boolean,
         execOperation: (Action<in ExecSpec?>) -> ExecResult,
         javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
@@ -147,7 +140,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         }
     }
 
-    fun parallelBuild(
+    override fun parallelBuild(
         forceJsonGeneration: Boolean,
         execOperation: (Action<in ExecSpec?>) -> ExecResult,
         javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
@@ -234,7 +227,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         }
     }
 
-    fun buildForOneAbiName(
+    override fun buildForOneAbiName(
         forceJsonGeneration: Boolean,
         abiName: String,
         execOperation: (Action<in ExecSpec?>) -> ExecResult,
@@ -445,24 +438,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         execOperation: (Action<in ExecSpec?>) -> ExecResult
     ): String
 
-    /** @return the native build system that is used to generate the JSON.
-     */
-    @get:Input
-    abstract val nativeBuildSystem: NativeBuildSystem
-
-    /** @return a map of Abi to STL shared object (.so files) that should be copied.
-     */
-    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    abstract fun getStlSharedObjectFiles(): Map<Abi, File>
-
-    /** @return the variant name for this generator
-     */
-    @get:Input
-    val variantName: String
-        get() = variant.variantName
-
     @Throws(IOException::class)
-    fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {
+    override fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {
         IssueReporterLoggingEnvironment(variant.module.issueReporter()).use {
             val files = nativeBuildConfigurationsJsons
             infoln("streaming %s JSON files", files.size)
@@ -506,7 +483,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     // We don't need contents of the files in the generated JSON, just the path.
     @get:Input
-    val objFolder: String
+    override val objFolder: String
         get() = variant.objFolder.path
 
     // We don't need contents of the files in the generated JSON, just the path.
@@ -540,7 +517,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         get() = variant.cppFlagsList
 
     @get:OutputFiles
-    val nativeBuildConfigurationsJsons: List<File>
+    override val nativeBuildConfigurationsJsons: List<File>
         get() {
             val generatedJsonFiles: MutableList<File> =
                 ArrayList()
@@ -552,7 +529,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     // We don't need contents of the files in the generated JSON, just the path.
     @get:Input
-    val soFolder: String
+    override val soFolder: String
         get() = variant.soFolder.path
 
     // We don't need contents of the files in the generated JSON, just the path.

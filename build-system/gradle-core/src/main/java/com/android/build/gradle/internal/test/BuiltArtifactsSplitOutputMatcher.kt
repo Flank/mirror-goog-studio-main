@@ -27,7 +27,7 @@ import java.io.File
 object BuiltArtifactsSplitOutputMatcher {
 
     /**
-     * Determines and return the list of APKs to use based on given device density and abis.
+     * Determines and return the list of APKs to use based on given device abis.
      *
      * @param deviceConfigProvider the device configuration.
      * @param builtArtifacts the tested variant built artifacts.
@@ -69,7 +69,6 @@ object BuiltArtifactsSplitOutputMatcher {
         return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutput(
             adaptedBuiltArtifactType,
             variantAbiFilters,
-            deviceConfigProvider.density,
             deviceConfigProvider.abis
         )
     }

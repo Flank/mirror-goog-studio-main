@@ -247,12 +247,8 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         addResValue(ClassFieldImpl(type, name, value))
     }
 
-    override var proguardFiles: MutableList<File>
+    override val proguardFiles: MutableList<File>
         get() = super.proguardFiles
-        set(value) {
-            // Override to handle the proguardFiles = ['string'] case (see PluginDslTest.testProguardFiles_*)
-            setProguardFiles(value)
-        }
 
     override fun proguardFile(proguardFile: Any) {
         proguardFiles.add(dslServices.file(proguardFile))
@@ -300,12 +296,8 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         }
     }
 
-    override var consumerProguardFiles: MutableList<File>
+    override val consumerProguardFiles: MutableList<File>
         get() = super.consumerProguardFiles
-        set(value) {
-            // Override to handle the consumerProguardFiles = ['string'] case.
-            setConsumerProguardFiles(value)
-        }
 
     override fun consumerProguardFile(proguardFile: Any) {
         consumerProguardFiles.add(dslServices.file(proguardFile))
@@ -494,6 +486,12 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
 
     override fun shaders(action: Shaders.() -> Unit) {
         action.invoke(shaders)
+    }
+
+    override val aarMetadata: AarMetadata = dslServices.newInstance(AarMetadata::class.java)
+
+    override fun aarMetadata(action: com.android.build.api.dsl.AarMetadata.() -> Unit) {
+        action.invoke(aarMetadata)
     }
 
     /**

@@ -26,7 +26,7 @@ import java.nio.file.Path;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-/** Record resource usages from AndroidManifest.xml in raw XML format. */
+/** Records resource usages from AndroidManifest.xml in raw XML format. */
 public final class XmlAndroidManifestUsageRecorder implements ResourceUsageRecorder {
 
     private final Path manifest;

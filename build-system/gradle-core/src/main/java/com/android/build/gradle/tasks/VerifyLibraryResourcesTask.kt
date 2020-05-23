@@ -19,7 +19,9 @@ package com.android.build.gradle.tasks
 import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
@@ -58,9 +60,9 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -93,12 +95,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     @get:Internal
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
-
-
     /** A file collection of the directories containing the compiled dependencies resource files. */
     @get:Incremental
     @get:InputFiles
@@ -119,6 +115,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     @get:Internal
     abstract val mergeBlameFolder: DirectoryProperty
 
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
+
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
@@ -134,7 +133,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         val parameter = Params(
             projectName = projectName,
             owner = path,
-            androidJar = androidJar.get(),
+            androidJar = androidJarInput.getAndroidJar().get(),
             aapt2ServiceKey = aapt2ServiceKey,
             aapt2WorkersBuildServiceKey = aapt2WorkersBuildServiceKey,
             errorFormatMode = errorFormatMode,
@@ -237,9 +236,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                 task.manifestFiles
             )
-
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
-
             task.mergeBlameFolder.setDisallowChanges(creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
             task.manifestMergeBlameFile = creationConfig.artifacts.get(
@@ -265,6 +261,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
             task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }

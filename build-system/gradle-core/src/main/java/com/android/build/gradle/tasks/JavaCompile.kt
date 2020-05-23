@@ -72,7 +72,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
     override val type: Class<JavaCompile>
         get() = JavaCompile::class.java
 
-    override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
+    override fun handleProvider(taskProvider: TaskProvider<JavaCompile>) {
         super.handleProvider(taskProvider)
 
         componentProperties.taskContainer.javacTask = taskProvider

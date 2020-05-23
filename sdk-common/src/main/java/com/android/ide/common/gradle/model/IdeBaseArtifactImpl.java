@@ -104,14 +104,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                         dependencies -> new IdeDependenciesImpl(dependencies, modelCache),
                         null);
 
-        if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
-            myDependencyGraphs =
-                    modelCache.computeIfAbsent(
-                            artifact.getDependencyGraphs(),
-                            graphs -> new IdeDependencyGraphs(graphs, modelCache));
-        } else {
-            myDependencyGraphs = null;
-        }
+        myDependencyGraphs = null;
 
         myIdeSetupTaskNames = ImmutableSet.copyOf(getIdeSetupTaskNames(artifact));
         myGeneratedSourceFolders = new LinkedHashSet<File>(getGeneratedSourceFolders(artifact));
@@ -122,7 +115,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myAdditionalClassFolders =
                 IdeModel.copyNewProperty(
                         artifact::getAdditionalClassesFolders, Collections.emptySet());
-        myLevel2Dependencies = dependenciesFactory.create(artifact, modelVersion);
+        myLevel2Dependencies = dependenciesFactory.create(artifact);
         hashCode = calculateHashCode();
     }
 

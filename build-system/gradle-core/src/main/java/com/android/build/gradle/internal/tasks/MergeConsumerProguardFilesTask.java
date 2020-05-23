@@ -99,7 +99,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
         @Override
         public void handleProvider(
-                @NonNull TaskProvider<? extends MergeConsumerProguardFilesTask> taskProvider) {
+                @NonNull TaskProvider<MergeConsumerProguardFilesTask> taskProvider) {
             super.handleProvider(taskProvider);
 
             creationConfig

@@ -51,7 +51,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>,
     stats: GradleBuildVariant.Builder
-) : ExternalNativeJsonGenerator(build, variant, abis, stats) {
+) : ExternalNativeJsonGeneratorBase(build, variant, abis, stats) {
     @JvmField
     protected val cmake: CxxCmakeModuleModel
 

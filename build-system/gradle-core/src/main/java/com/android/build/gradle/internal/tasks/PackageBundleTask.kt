@@ -337,7 +337,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             get() = PackageBundleTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PackageBundleTask>
+            taskProvider: TaskProvider<PackageBundleTask>
         ) {
             super.handleProvider(taskProvider)
 

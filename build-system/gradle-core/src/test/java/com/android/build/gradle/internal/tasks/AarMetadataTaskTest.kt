@@ -16,18 +16,23 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
+import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
+import com.android.build.gradle.internal.fixtures.DirectWorkQueue
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.Action
 import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import java.io.File
+import java.util.Properties
 
 /**
  * Unit tests for [AarMetadataTask].
@@ -37,47 +42,66 @@ class AarMetadataTaskTest {
     @get: Rule
     val temporaryFolder = TemporaryFolder()
 
-    private lateinit var workQueue: WorkQueue
+    @Mock
+    lateinit var workerExecutor: WorkerExecutor
+
+    private lateinit var task: AarMetadataTask
     private lateinit var outputFile: File
 
     @Before
     fun setUp() {
-
+        MockitoAnnotations.initMocks(this)
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        workQueue = object: WorkQueue {
-            override fun <T : WorkParameters?> submit(
-                workActionClass: Class<out WorkAction<T>>?,
-                parameterAction: Action<in T>?
-            ) {
-                val workParameters =
-                    project.objects.newInstance(AarMetadataWorkParameters::class.java)
-                @Suppress("UNCHECKED_CAST")
-                parameterAction?.execute(workParameters as T)
-                workActionClass?.let { project.objects.newInstance(it, workParameters).execute() }
-            }
-
-            override fun await() {}
-        }
-
+        val taskProvider = project.tasks.register("aarMetadataTask", AarMetadataTask::class.java)
+        task = taskProvider.get()
+        val workQueue = DirectWorkQueue(AarMetadataWorkParameters::class.java)
+        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
+        task.workerExecutorProperty.set(workerExecutor)
         outputFile = temporaryFolder.newFile("AarMetadata.xml")
     }
 
     @Test
     fun testBasic() {
-        AarMetadataTaskDelegate(
-            workQueue,
-            outputFile,
-            AarMetadataTask.aarVersion,
-            AarMetadataTask.aarMetadataVersion
-        ).run()
+        task.output.set(outputFile)
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.taskAction()
 
-        assertThat(outputFile).exists()
-        assertThat(outputFile.readText()).isEqualTo(
-            """
-                |<aar-metadata
-                |    aarVersion="1.0"
-                |    aarMetadataVersion="1.0" />
-                |""".trimMargin()
+        checkAarMetadataFile(
+            outputFile,
+            AarMetadataTask.AAR_FORMAT_VERSION,
+            AarMetadataTask.AAR_METADATA_VERSION
         )
+    }
+
+    @Test
+    fun testMinCompileSdkVersion() {
+        task.output.set(outputFile)
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.minCompileSdk.set(28)
+        task.taskAction()
+
+        checkAarMetadataFile(
+            outputFile,
+            AarMetadataTask.AAR_FORMAT_VERSION,
+            AarMetadataTask.AAR_METADATA_VERSION,
+            minCompileSdk = "28"
+        )
+    }
+
+    private fun checkAarMetadataFile(
+        file: File,
+        aarFormatVersion: String,
+        aarMetadataVersion: String,
+        minCompileSdk: String? = null
+    ) {
+        assertThat(file).exists()
+        val properties = Properties()
+        file.inputStream().use { properties.load(it) }
+        assertThat(properties.getProperty(AAR_FORMAT_VERSION_PROPERTY)).isEqualTo(aarFormatVersion)
+        assertThat(properties.getProperty(AAR_METADATA_VERSION_PROPERTY))
+            .isEqualTo(aarMetadataVersion)
+        assertThat(properties.getProperty(MIN_COMPILE_SDK_PROPERTY)).isEqualTo(minCompileSdk)
     }
 }

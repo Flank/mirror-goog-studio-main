@@ -167,7 +167,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         override val type = DexFileDependenciesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DexFileDependenciesTask>
+            taskProvider: TaskProvider<DexFileDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

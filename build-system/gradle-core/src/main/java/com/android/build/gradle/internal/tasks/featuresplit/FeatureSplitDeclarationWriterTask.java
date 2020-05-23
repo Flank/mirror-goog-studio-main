@@ -77,7 +77,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
 
         @Override
         public void handleProvider(
-                @NonNull TaskProvider<? extends FeatureSplitDeclarationWriterTask> taskProvider) {
+                @NonNull TaskProvider<FeatureSplitDeclarationWriterTask> taskProvider) {
             super.handleProvider(taskProvider);
 
             creationConfig

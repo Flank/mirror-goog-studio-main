@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.metho
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterType
-import com.android.build.gradle.internal.tasks.mlkit.codegen.getOutputParameterTypeName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.MethodSpec
@@ -30,17 +30,30 @@ import javax.lang.model.element.Modifier
  */
 class DefaultGetMethodInjector : MethodInjector() {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
-        val returnType = getOutputParameterType(tensorInfo)
-        val methodSpec = MethodSpec.methodBuilder(
+        val defaultType = ClassNames.TENSOR_BUFFER
+        val advancedType = getOutputParameterType(tensorInfo)
+        val methodSpecBuilder = MethodSpec.methodBuilder(
             MlNames.formatGetterName(
-                tensorInfo.identifierName, getOutputParameterTypeName(tensorInfo)
+                tensorInfo.identifierName, defaultType.simpleName()
             )
         )
             .addModifiers(Modifier.PUBLIC)
-            .returns(returnType)
+            .returns(defaultType)
             .addAnnotation(ClassNames.NON_NULL)
-            .addStatement("return \$L", tensorInfo.identifierName)
-            .build()
-        classBuilder.addMethod(methodSpec)
+        if (advancedType == ClassNames.TENSOR_IMAGE) {
+            methodSpecBuilder.addStatement(
+                "return \$L.process(\$L).getTensorBuffer()",
+                getProcessorName(tensorInfo),
+                tensorInfo.identifierName
+            )
+        } else {
+            methodSpecBuilder.addStatement(
+                "return \$L.process(\$L)",
+                getProcessorName(tensorInfo),
+                tensorInfo.identifierName
+            )
+        }
+
+        classBuilder.addMethod(methodSpecBuilder.build())
     }
 }

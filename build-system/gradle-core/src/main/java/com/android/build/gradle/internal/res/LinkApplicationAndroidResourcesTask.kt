@@ -26,12 +26,12 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
@@ -77,7 +77,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -237,10 +236,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var isLibrary: Boolean = false
         private set
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
 
     @get:Input
     var useFinalIds: Boolean = true
@@ -252,6 +249,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:Nested
     abstract val variantOutputs : ListProperty<VariantOutputImpl>
+
+    // aarMetadataCheck doesn't affect the task output, but it's marked as an input so that this
+    // task depends on CheckAarMetadataTask.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val aarMetadataCheck: ConfigurableFileCollection
 
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
@@ -394,7 +397,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         protected open fun preconditionsCheck(creationConfig: BaseCreationConfig) {}
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
@@ -516,8 +519,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.projectBaseName = baseName!!
             task.isLibrary = isLibrary
 
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
-
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
@@ -530,10 +531,17 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.aapt2DaemonBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
 
             task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
 
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
+
+            task.aarMetadataCheck.from(
+                creationConfig.artifacts.get(InternalArtifactType.AAR_METADATA_CHECK)
+            )
         }
     }
 
@@ -563,7 +571,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -639,7 +647,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     ) {
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -891,8 +899,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val variantName: String = task.name
         val packageId: Int? = task.resOffset.orNull
         val incrementalFolder: File = task.incrementalFolder!!
-        val androidJarPath: String =
-            task.androidJar.get().absolutePath
+        val androidJarPath: String = task.androidJarInput.getAndroidJar().get().absolutePath
         val inputResourcesDir: File? = task.inputResourcesDir.orNull?.asFile
         val mergeBlameFolder: File = task.mergeBlameLogFolder.get().asFile
         val isLibrary: Boolean = task.isLibrary

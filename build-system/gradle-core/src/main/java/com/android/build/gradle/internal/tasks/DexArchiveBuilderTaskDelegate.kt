@@ -45,6 +45,7 @@ import com.android.ide.common.process.ProcessOutput
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
+import com.google.common.collect.Lists
 import com.google.common.hash.Hashing
 import com.google.common.io.Closer
 import org.gradle.work.ChangeType
@@ -101,11 +102,11 @@ class DexArchiveBuilderTaskDelegate(
     private val desugarClasspathChangedClasses: Set<FileChange> = emptySet(),
 
     /** Whether incremental desugaring V2 is enabled. */
-    incrementalDexingV2: Boolean,
+    incrementalDexingTaskV2: Boolean,
 
     /**
      * Directory containing dependency graph(s) for desugaring, not `null` iff
-     * incrementalDexingV2 is enabled.
+     * incrementalDexingTaskV2 is enabled.
      */
     private val desugarGraphDir: File?,
 
@@ -119,10 +120,13 @@ class DexArchiveBuilderTaskDelegate(
     private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool(),
     private var messageReceiver: MessageReceiver
 ) {
+    private val outputMapping = OutputMapping(isIncremental)
+
     //(b/141854812) Temporarily disable incremental support when core library desugaring enabled in release build
     private val isIncremental =
         isIncremental && projectOutputKeepRules == null && subProjectOutputKeepRules == null
                 && externalLibsOutputKeepRules == null && mixedScopeOutputKeepRules == null
+                && outputMapping.canProcessIncrementally
 
     private val changedFiles =
         with(
@@ -146,7 +150,7 @@ class DexArchiveBuilderTaskDelegate(
     // Whether impacted files are computed lazily in the workers instead of being computed up front
     // before the workers are launched.
     private val isImpactedFilesComputedLazily: Boolean =
-        dexParams.withDesugaring && dexer == DexerTool.D8 && incrementalDexingV2
+        dexParams.withDesugaring && dexer == DexerTool.D8 && incrementalDexingTaskV2
 
     // desugarIncrementalHelper is not null iff
     // !isImpactedFilesComputedLazily && dexParams.withDesugaring
@@ -165,10 +169,8 @@ class DexArchiveBuilderTaskDelegate(
             executor
         ).takeIf { !isImpactedFilesComputedLazily && dexParams.withDesugaring }
 
-    private var inputJarHashesValues: MutableMap<File, String> = getCurrentJarInputHashes()
-
     init {
-        check(incrementalDexingV2 xor (desugarGraphDir == null))
+        check(incrementalDexingTaskV2 xor (desugarGraphDir == null))
     }
 
     /**
@@ -289,69 +291,6 @@ class DexArchiveBuilderTaskDelegate(
         }
     }
 
-    /**
-     * We are using file hashes to determine the output location for input jars. If the file
-     * containing mapping from absolute paths to hashes exists, we will load it, and re-use its
-     * content for all unchanged files. For changed jar files, we will recompute the hash, and
-     * deleted files will have their entries removed from the map.
-     */
-    private fun getCurrentJarInputHashes(): MutableMap<File, String> {
-        val (fileHashes, isPreviousLoaded) = if (!inputJarHashesFile.exists() || !isIncremental) {
-            Pair(mutableMapOf(), false)
-        } else {
-            BufferedInputStream(inputJarHashesFile.inputStream()).use { input ->
-                try {
-                    ObjectInputStream(input).use {
-                        @Suppress("UNCHECKED_CAST")
-                        Pair(it.readObject() as MutableMap<File, String>, true)
-                    }
-                } catch (e: Exception) {
-                    loggerWrapper.warning(
-                        "Reading jar hashes from $inputJarHashesFile failed. Exception: ${e.message}"
-                    )
-                    Pair(mutableMapOf<File, String>(), false)
-                }
-            }
-        }
-
-        fun getFileHash(file: File): String = file.inputStream().buffered().use {
-            Hashing.sha256()
-                .hashBytes(it.readBytes())
-                .toString()
-        }
-
-        if (isPreviousLoaded) {
-            // Update hashes of changed files.
-            listOf(
-                projectChangedClasses,
-                subProjectChangedClasses,
-                externalLibChangedClasses,
-                mixedScopeChangedClasses
-            ).forEach { changes ->
-                changes.asSequence().filter { it.file.extension == SdkConstants.EXT_JAR }.forEach {
-                    if (it.changeType == ChangeType.REMOVED) {
-                        fileHashes.remove(it.file)
-                    } else {
-                        fileHashes[it.file] = getFileHash(it.file)
-                    }
-                }
-            }
-        } else {
-            listOf(projectClasses, subProjectClasses, externalLibClasses, mixedScopeClasses)
-                .forEach { files ->
-                    files.asSequence().filter { it.extension == SdkConstants.EXT_JAR }
-                        .forEach { fileHashes[it] = getFileHash(it) }
-                }
-        }
-
-        FileUtils.deleteIfExists(inputJarHashesFile)
-        FileUtils.mkdirs(inputJarHashesFile.parentFile)
-        ObjectOutputStream(inputJarHashesFile.outputStream().buffered()).use {
-            it.writeObject(fileHashes)
-        }
-        return fileHashes
-    }
-
     private fun processClassFromInput(
         inputFiles: Set<File>,
         inputFileChanges: Set<FileChange>,
@@ -367,7 +306,7 @@ class DexArchiveBuilderTaskDelegate(
             outputKeepRules?.let { FileUtils.cleanOutputDir(it) }
             desugarGraphDir?.let { FileUtils.cleanOutputDir(it) }
         } else {
-            removeChangedJarOutputs(inputFiles, inputFileChanges, outputDir)
+            removeChangedJarOutputs(inputFileChanges, outputDir)
             deletePreviousOutputsFromDirs(inputFileChanges, outputDir)
         }
 
@@ -426,31 +365,12 @@ class DexArchiveBuilderTaskDelegate(
         }
     }
 
-    /**
-     * In order to remove stale outputs, we find the set of unchanged jar files. For the unchanged
-     * jars, we find the output jar locations. Any other output jar is removed.
-     */
-    private fun removeChangedJarOutputs(
-        inputClasses: Set<File>,
-        changes: Set<FileChange>,
-        output: File
-    ) {
-        if (changes.isEmpty()) return
-
-        val changedFiles = changes.map { it.file }.toSet()
-        val unchangedOutputs = mutableSetOf<File>()
-        inputClasses.asSequence()
-            .filter { it.extension == SdkConstants.EXT_JAR && it !in changedFiles }
-            .forEach { file ->
-                unchangedOutputs.add(getDexOutputForJar(file, output, null))
-                (0 until numberOfBuckets).forEach {
-                    unchangedOutputs.add(getDexOutputForJar(file, output, it))
-                }
+    private fun removeChangedJarOutputs(changes: Set<FileChange>, output: File) {
+        changes.filter { it.file.extension == SdkConstants.EXT_JAR }.forEach {
+            outputMapping.getPreviousDexOutputsForJar(it.file, output).forEach {
+                FileUtils.deleteIfExists(it)
             }
-        val outputFiles = output.listFiles() as? Array<File> ?: return
-
-        outputFiles.filter { it.extension == SdkConstants.EXT_JAR && it !in unchangedOutputs }
-            .forEach { FileUtils.deleteIfExists(it) }
+        }
     }
 
     private fun convertJarToDexArchive(
@@ -530,7 +450,7 @@ class DexArchiveBuilderTaskDelegate(
                     }
                 }
                 is JarBucketGroup -> {
-                    getDexOutputForJar(inputs.jarFile, outputDir, bucketId)
+                    outputMapping.getDexOutputForJar(inputs.jarFile, outputDir, bucketId)
                         .also { FileUtils.mkdirs(it.parentFile) }
                 }
             }
@@ -645,23 +565,8 @@ class DexArchiveBuilderTaskDelegate(
         return androidJarClasspath.map { it.toPath() }
     }
 
-    /**
-     * Computes the output path without using the jar absolute path. This method will use the
-     * hash of the file content to determine the final output path, and this makes sure the task is
-     * relocatable.
-     */
-    private fun getDexOutputForJar(input: File, outputDir: File, bucketId: Int?): File {
-        val hash = inputJarHashesValues.getValue(input)
-
-        return if (bucketId != null) {
-            outputDir.resolve("${hash}_$bucketId.jar")
-        } else {
-            outputDir.resolve("$hash.jar")
-        }
-    }
-
     private fun getKeepRulesOutputForJar(input: File, outputDir: File, bucketId: Int): File {
-        val hash = inputJarHashesValues.getValue(input)
+        val hash = outputMapping.getCurrentHash(input)
         return outputDir.resolve("${hash}_$bucketId")
     }
 
@@ -685,6 +590,130 @@ class DexArchiveBuilderTaskDelegate(
                 )
             }
         }
+    }
+
+    /**
+     * We are using file hashes to determine the output location for input jars. If the file
+     * containing mapping from absolute paths to hashes exists, we will load it, and re-use its
+     * content for all unchanged files. For changed jar files, we will recompute the hash.
+     *
+     * The mapping also specifies if this run can be incremental, see [canProcessIncrementally].
+     * This is possible only if the list of files previously recorded is the same as the current
+     * list of input files (from all input scopes). E.g. in case the file is removed, mapping
+     * will report non-incremental run, but this is ok as most of the incremental builds are
+     * changing the content of the jars, not their path. Also, this avoids bugs like b/154712997.
+     */
+    private inner class OutputMapping(isAbleToRunIncrementally: Boolean) {
+        private val currentFileHashes: Map<File, String>
+        private val previousFileHashes: Map<File, String>
+
+        val canProcessIncrementally: Boolean
+
+        init {
+            val (fileHashes, isPreviousLoaded) = if (!inputJarHashesFile.exists() || !isAbleToRunIncrementally) {
+                Pair(mutableMapOf(), false)
+            } else {
+                BufferedInputStream(inputJarHashesFile.inputStream()).use { input ->
+                    try {
+                        ObjectInputStream(input).use {
+                            @Suppress("UNCHECKED_CAST")
+                            val previousState = it.readObject() as MutableMap<File, String>
+                            if (ifPreviousStateHasAllInputFiles(previousState)) {
+                                Pair(previousState, true)
+                            } else {
+                                Pair(mutableMapOf(), false)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        loggerWrapper.warning(
+                            "Reading jar hashes from $inputJarHashesFile failed. Exception: ${e.message}"
+                        )
+                        Pair(mutableMapOf<File, String>(), false)
+                    }
+                }
+            }
+            previousFileHashes = fileHashes.toMap()
+
+            fun getFileHash(file: File): String = file.inputStream().buffered().use {
+                Hashing.sha256()
+                    .hashBytes(it.readBytes())
+                    .toString()
+            }
+
+            if (isPreviousLoaded) {
+                // Update hashes of changed files.
+                sequenceOf(
+                    projectChangedClasses,
+                    subProjectChangedClasses,
+                    externalLibChangedClasses,
+                    mixedScopeChangedClasses
+                ).flatten().filter { it.file.extension == SdkConstants.EXT_JAR }.forEach {
+                    check(it.changeType != ChangeType.REMOVED) {
+                        "Reported ${it.file.canonicalPath} as removed. Output mapping should be non-incremental."
+                    }
+                    fileHashes[it.file] = getFileHash(it.file)
+                }
+            } else {
+                getAllFilesToProcess().forEach { fileHashes[it] = getFileHash(it) }
+            }
+            FileUtils.deleteIfExists(inputJarHashesFile)
+            FileUtils.mkdirs(inputJarHashesFile.parentFile)
+            ObjectOutputStream(inputJarHashesFile.outputStream().buffered()).use {
+                it.writeObject(fileHashes)
+            }
+
+            currentFileHashes = fileHashes
+            canProcessIncrementally = isPreviousLoaded
+        }
+
+        fun getCurrentHash(file: File) = currentFileHashes.getValue(file)
+
+        /**
+         * Computes the output path without using the jar absolute path. This method will use the
+         * hash of the file content to determine the final output path, and this makes sure the task is
+         * relocatable.
+         */
+        fun getDexOutputForJar(input: File, outputDir: File, bucketId: Int?): File {
+            val hash = getCurrentHash(input)
+            return computeOutputPath(outputDir, hash, bucketId)
+        }
+
+        /**
+         * Get the output path for a jar in the previous run
+         */
+        fun getPreviousDexOutputsForJar(input: File, outputDir: File): List<File> {
+            val hash = previousFileHashes.getValue(input)
+
+            return Lists.newArrayListWithCapacity<File>(numberOfBuckets + 1).also {
+                it.add(computeOutputPath(outputDir, hash, null))
+                (0 until numberOfBuckets).forEach { bucketId ->
+                    it.add(computeOutputPath(outputDir, hash, bucketId))
+                }
+            }
+        }
+
+        /**
+         * Check if the previous mapping contains exactly all files currently being processed. If
+         * not, return false.
+         */
+        private fun ifPreviousStateHasAllInputFiles(previousMapping: Map<File, String>): Boolean {
+            val allFilesToProcess = getAllFilesToProcess()
+            return previousMapping.size == allFilesToProcess.count() && allFilesToProcess.all { it in previousMapping.keys }
+        }
+
+        private fun getAllFilesToProcess() = sequenceOf(
+            projectClasses,
+            subProjectClasses,
+            externalLibClasses,
+            mixedScopeClasses
+        ).flatten().filter { it.extension == SdkConstants.EXT_JAR }
+
+        private fun computeOutputPath(outputDir: File, hash: String, bucketId: Int?): File =
+            if (bucketId != null) {
+                outputDir.resolve("${hash}_$bucketId.jar")
+            } else {
+                outputDir.resolve("$hash.jar")
+            }
     }
 }
 

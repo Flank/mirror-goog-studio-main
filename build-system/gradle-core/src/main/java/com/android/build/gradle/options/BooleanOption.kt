@@ -17,7 +17,11 @@
 package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.options.Version.*
+import com.android.build.gradle.options.Version.VERSION_3_5
+import com.android.build.gradle.options.Version.VERSION_3_6
+import com.android.build.gradle.options.Version.VERSION_4_0
+import com.android.build.gradle.options.Version.VERSION_4_1
+import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 
 enum class BooleanOption(
@@ -156,8 +160,11 @@ enum class BooleanOption(
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
-    /** Incremental dexing with desugaring using D8's new API for desugaring graph computation. */
-    ENABLE_INCREMENTAL_DEXING_V2("android.enableIncrementalDexingV2", false, FeatureStage.Experimental),
+    /** Incremental dexing task using D8's new API for desugaring graph computation. */
+    ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", false, FeatureStage.Experimental),
+
+    /** Incremental dexing transform. */
+    ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", false, FeatureStage.Experimental),
 
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES

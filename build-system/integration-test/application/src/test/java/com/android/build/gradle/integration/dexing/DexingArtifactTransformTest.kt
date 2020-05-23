@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.internal.tasks.DexingExternalLibArtifactTransform
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -286,6 +287,61 @@ class DexingArtifactTransformTest {
                 "debug/out"
             ).listFiles()
         ).isNotEmpty()
+    }
+
+    /** Regression test for b/154712997. */
+    @Test
+    fun testIncrementalBuildsWithArtifactTransformsDisabledAndClasspathSensitivity() {
+        // Generate 2 identical libraries.
+        project.testDir.resolve("mavenRepo").also {
+            it.mkdirs()
+            MavenRepoGenerator(
+                listOf(
+                    MavenRepoGenerator.Library(
+                        "com.example:lib:1.0",
+                        TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/MyClass"))
+                    ),
+                    MavenRepoGenerator.Library(
+                        "com.example:lib:2.0",
+                        TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/MyClass"))
+                    )
+                )
+            ).generate(it.toPath())
+        }
+        project.buildFile.appendText(
+                    """
+
+repositories {
+    maven { url 'mavenRepo' }
+}
+dependencies {
+    implementation 'com.example:lib:1.0'
+}
+        """.trimIndent()
+        )
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
+            .run("assembleDebug")
+
+        // Modify external dependencies so dexing task actually needs to run.
+        project.buildFile.readText().let {
+            val newBuildFile = it.replace("com.example:lib:1.0", "com.example:lib:2.0") + """
+
+dependencies {
+    implementation 'com.android.support:support-core-utils:$SUPPORT_LIB_VERSION'
+}
+            """.trimIndent()
+            project.buildFile.writeText(newBuildFile)
+        }
+
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
+            .run("assembleDebug")
+        project.getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThatApk(it).containsClass("Landroid/support/v4/app/NavUtils;")
+        }
     }
 
     @Test

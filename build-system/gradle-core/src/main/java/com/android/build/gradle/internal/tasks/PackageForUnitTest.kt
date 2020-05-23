@@ -134,7 +134,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         override val type = PackageForUnitTest::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PackageForUnitTest>
+            taskProvider: TaskProvider<PackageForUnitTest>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

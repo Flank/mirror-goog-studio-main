@@ -89,7 +89,7 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
             get() = DataBindingMergeDependencyArtifactsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>
+            taskProvider: TaskProvider<DataBindingMergeDependencyArtifactsTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

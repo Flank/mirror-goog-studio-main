@@ -98,7 +98,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
             get() = ExportConsumerProguardFilesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ExportConsumerProguardFilesTask>
+            taskProvider: TaskProvider<ExportConsumerProguardFilesTask>
         ) {
             super.handleProvider(taskProvider)
 

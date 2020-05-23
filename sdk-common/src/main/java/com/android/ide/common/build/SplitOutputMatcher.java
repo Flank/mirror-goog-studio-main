@@ -22,7 +22,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.resources.Density;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -38,9 +37,8 @@ import java.util.stream.Collectors;
  */
 public class SplitOutputMatcher {
 
-
     /**
-     * Determines and return the list of APKs to use based on given device density and abis.
+     * Determines and return the list of APKs to use based on given device abis.
      *
      * @param deviceConfigProvider the device configuration.
      * @param outputs the tested variant outpts.
@@ -50,7 +48,7 @@ public class SplitOutputMatcher {
      * @return the list of APK files to install.
      */
     @NonNull
-    public static List<File> computeBestOutput(
+    public static List<File> computeBestOutputs(
             @NonNull DeviceConfigProvider deviceConfigProvider,
             @NonNull Collection<OutputFile> outputs,
             @Nullable Collection<String> variantAbiFilters) {
@@ -62,7 +60,6 @@ public class SplitOutputMatcher {
                 SplitOutputMatcher.computeBestOutput(
                         outputs,
                         variantAbiFilters,
-                        deviceConfigProvider.getDensity(),
                         deviceConfigProvider.getAbis());
         for (OutputFile outputFile : outputFiles) {
             apkFiles.add(outputFile.getOutputFile());
@@ -72,7 +69,7 @@ public class SplitOutputMatcher {
     }
 
     /**
-     * Determines and return the list of APKs to use based on given device density and abis.
+     * Determines and return the list of APKs to use based on given device abis.
      *
      * <p>This uses the same logic as the store, using two passes: First, find all the compatible
      * outputs. Then take the one with the highest versionCode.
@@ -81,7 +78,6 @@ public class SplitOutputMatcher {
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
      *     of the outputs, if there is a single output with no abi filters. If the list is null,
      *     then the variant does not restrict ABI packaging.
-     * @param deviceDensity the density of the device.
      * @param deviceAbis a list of ABIs supported by the device.
      * @return the list of APKs to install or null if none are compatible.
      */
@@ -89,28 +85,14 @@ public class SplitOutputMatcher {
     public static <T extends VariantOutput> List<T> computeBestOutput(
             @NonNull Collection<? extends T> outputs,
             @Nullable Collection<String> variantAbiFilters,
-            int deviceDensity,
             @NonNull List<String> deviceAbis) {
-        Density densityEnum = Density.getEnum(deviceDensity);
-
-        String densityValue;
-        if (densityEnum == null) {
-            densityValue = null;
-        } else {
-            densityValue = densityEnum.getResourceValue();
-        }
 
         // gather all compatible matches.
         List<T> matches = Lists.newArrayList();
 
         // find a matching output.
         for (T variantOutput : outputs) {
-            String densityFilter = getFilter(variantOutput, OutputFile.DENSITY);
             String abiFilter = getFilter(variantOutput, OutputFile.ABI);
-
-            if (densityFilter != null && !densityFilter.equals(densityValue)) {
-                continue;
-            }
 
             if (abiFilter != null && !deviceAbis.contains(abiFilter)) {
                 continue;

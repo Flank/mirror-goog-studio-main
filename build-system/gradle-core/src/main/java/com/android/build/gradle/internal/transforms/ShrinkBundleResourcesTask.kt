@@ -221,7 +221,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             ResourcesGathererFromRTxt(rSource, ""),
             mappingFileSrc.orNull?.asFile?.let { ProguardMappingsRecorder(it.toPath()) },
             listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
-            RawResourcesGraphBuilder(listOf(resourceDir.get().asFile.toPath())),
+            RawResourcesGraphBuilder(resourceDir.get().asFile.toPath()),
             LoggerAndFileDebugReporter(logger, reportFile),
             ApkFormat.PROTO
         )
@@ -243,7 +243,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             get() = ShrinkBundleResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
+            taskProvider: TaskProvider<ShrinkBundleResourcesTask>
         ) {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

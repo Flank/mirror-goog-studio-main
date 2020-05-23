@@ -38,6 +38,15 @@ public class ApkDiffer {
         // currently present in the overlay is added to the list of file diffs.
         DiffFunction compare =
                 (oldFile, newFile) -> {
+                    Optional<FileDiff> normalDiff = standardDiff(oldFile, newFile);
+
+                    // If there's a real diff, prefer to return that.
+                    if (normalDiff.isPresent()) {
+                        return normalDiff;
+                    }
+
+                    // If newFile == null, standardDiff would have returned a diff. We can assume
+                    // newFile is not null from this point forward.
                     boolean inOverlay =
                             cacheEntry.getOverlayFiles().contains(newFile.getQualifiedPath());
                     boolean isResource = newFile.getName().startsWith("res");
@@ -46,7 +55,8 @@ public class ApkDiffer {
                                 new FileDiff(
                                         null, newFile, FileDiff.Status.RESOURCE_NOT_IN_OVERLAY));
                     }
-                    return standardDiff(oldFile, newFile);
+
+                    return Optional.empty();
                 };
 
         return diff(cacheEntry.getApks(), newApks, compare);

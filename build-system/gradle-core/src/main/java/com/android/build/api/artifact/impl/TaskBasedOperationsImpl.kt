@@ -16,7 +16,7 @@
 
 package com.android.build.api.artifact.impl
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.variant.BuiltArtifact
@@ -51,9 +51,9 @@ class TaskBasedOperationsImpl<TaskT: Task>(
         type: ArtifactTypeT,
         at: (TaskT) -> FileSystemLocationProperty<Directory>
     ): TaskBasedOperations<TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single =
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single =
         TaskBasedOperationsWithInputImpl(operations = operations,
             taskProvider = taskProvider,
             inputArtifactType = type,
@@ -63,9 +63,9 @@ class TaskBasedOperationsImpl<TaskT: Task>(
         type: ArtifactTypeT,
         at: (TaskT) -> FileSystemLocationProperty<Directory>
     ): ArtifactTransformationRequestImpl<*, TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single {
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single {
         throw InvalidUserCodeException("You must call toRead() before calling andWrite() method")
     }
 
@@ -74,9 +74,9 @@ class TaskBasedOperationsImpl<TaskT: Task>(
         at: (TaskT) -> FileSystemLocationProperty<Directory>,
         atLocation: String
     ): ArtifactTransformationRequestImpl<*, TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single {
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single {
         throw InvalidUserCodeException("You must call toRead() before calling andWrite() method")
     }
 }
@@ -86,15 +86,15 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
     private val taskProvider: TaskProvider<TaskT>,
     private val inputArtifactType: ArtifactTypeT,
     private val inputLocation: (TaskT) -> FileSystemLocationProperty<Directory>
-): TaskBasedOperations<TaskT> where ArtifactTypeT: ArtifactType<Directory>, ArtifactTypeT: ArtifactType.Single
+): TaskBasedOperations<TaskT> where ArtifactTypeT: Artifact<Directory>, ArtifactTypeT: Artifact.Single
 {
     override fun <ArtifactTypeT> toRead(
         type: ArtifactTypeT,
         at: (TaskT) -> FileSystemLocationProperty<Directory>
     ): TaskBasedOperations<TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single {
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single {
         throw InvalidUserCodeException("You cannot call toRead() twice.")
     }
 
@@ -102,9 +102,9 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
         type: ArtifactTypeT,
         at: (TaskT) -> FileSystemLocationProperty<Directory>
     ): ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single {
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single {
         // register the task as the provider of this artifact type
         operations.setInitialProvider(taskProvider, at).on(type)
 
@@ -116,9 +116,9 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
         at: (TaskT) -> FileSystemLocationProperty<Directory>,
         atLocation: String
     ): ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single {
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single {
         // register the task as the provider of this artifact type
         operations.setInitialProvider(taskProvider, at).atLocation(atLocation).on(type)
 
@@ -128,9 +128,9 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
     private fun <ArtifactTypeT> initializeTransform(
         type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>
     ): ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT>
-            where ArtifactTypeT : ArtifactType<Directory>,
-                  ArtifactTypeT : ArtifactType.ContainsMany,
-                  ArtifactTypeT : ArtifactType.Single {
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Single {
 
         val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
         val inputProvider = operations.get(inputArtifactType)
@@ -168,18 +168,17 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
     }
 }
 
-// TODO : make ArtifactTransformationRequest parameterized on TaskT to avoid casting.
 class ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT: Task>(
     private val builtArtifactsReference: AtomicReference<BuiltArtifactsImpl>,
     private val inputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
     private val outputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
-    private val outputArtifactType: ArtifactType<Directory>
-) : Serializable, ArtifactTransformationRequest
-        where ArtifactTypeT: ArtifactType<Directory>,
-              ArtifactTypeT: ArtifactType.Single {
+    private val outputArtifactType: Artifact<Directory>
+) : Serializable, ArtifactTransformationRequest<TaskT>
+        where ArtifactTypeT: Artifact<Directory>,
+              ArtifactTypeT: Artifact.Single {
 
     override fun <ParamT> submit(
-        task: Task,
+        task: TaskT,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
         parameterType : Class<out ParamT>,
@@ -188,7 +187,7 @@ class ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT: Task>(
 
         val mapOfBuiltArtifactsToParameters = mutableMapOf<BuiltArtifact, File>()
         val sourceBuiltArtifacts =
-            BuiltArtifactsLoaderImpl().load(inputLocation(task as TaskT).get())
+            BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
 
         if (sourceBuiltArtifacts == null) {
             builtArtifactsReference.set(
@@ -317,7 +316,6 @@ method with a concrete WorkActionAdapter implementation.""")
                 ?: throw RuntimeException("No provided artifacts.")
 
         sourceBuiltArtifacts.elements.forEach { builtArtifact ->
-            @Suppress("UNCHECKED_CAST")
             workQueue.submit(concreteAction
                     as Class<out WorkActionAdapter<ParamT, ConcreteParametersT>>) {
                     parameters: ConcreteParametersT ->
@@ -370,10 +368,10 @@ method with a concrete WorkActionAdapter implementation.""")
     }
 
     override fun submit(
-        task: Task,
+        task: TaskT,
         transformer: (input: BuiltArtifact) -> File) {
 
-        val sourceBuiltArtifacts = BuiltArtifactsLoaderImpl().load(inputLocation(task as TaskT).get())
+        val sourceBuiltArtifacts = BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
             ?: throw RuntimeException("No provided artifacts.")
 
         builtArtifactsReference.set(BuiltArtifactsImpl(

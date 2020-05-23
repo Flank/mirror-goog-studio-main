@@ -75,7 +75,7 @@ interface LibraryBuildFeatures : BuildFeatures {
      *     `android.defaults.buildfeatures.prefabPublishing=true`
      * in the `gradle.properties` file at the root project of your build.
      *
-     * More information about this feature at: TBD
+     * More information about this feature at: TODO(http://b/156405121)
      */
     var prefabPublishing: Boolean?
 }

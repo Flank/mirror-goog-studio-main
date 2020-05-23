@@ -93,7 +93,7 @@ class TaskConfigurationActionsTest {
                 actionRegistrar.add(Stages.MAIN_PRE_CONFIG)
             }
 
-            override fun handleProvider(taskProvider: TaskProvider<out Task>) {
+            override fun handleProvider(taskProvider: TaskProvider<Task>) {
                 actionRegistrar.add(Stages.MAIN_HANDLE_PROVIDER)
             }
 
@@ -116,7 +116,7 @@ class TaskConfigurationActionsTest {
         }
 
         val providerHandler = object: TaskProviderCallback<Task> {
-            override fun handleProvider(taskProvider: TaskProvider<out Task>) {
+            override fun handleProvider(taskProvider: TaskProvider<Task>) {
                 actionRegistrar.add(Stages.HANDLE_PROVIDER)
             }
         }

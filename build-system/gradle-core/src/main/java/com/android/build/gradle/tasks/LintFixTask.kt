@@ -29,7 +29,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-open class LintFixTask : LintBaseTask() {
+abstract class LintFixTask : LintBaseTask() {
 
     private var variantInputMap: Map<String, LintBaseTask.VariantInputs>? = null
     private var allInputs: ConfigurableFileCollection? = null

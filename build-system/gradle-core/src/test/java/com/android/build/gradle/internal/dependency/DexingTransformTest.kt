@@ -27,10 +27,10 @@ import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
-import com.android.build.gradle.internal.transforms.testdata.Toy
-import com.android.build.gradle.internal.transforms.testdata.InterfaceWithDefaultMethod
 import com.android.build.gradle.internal.transforms.testdata.ClassUsingInterfaceWithDefaultMethod
 import com.android.build.gradle.internal.transforms.testdata.DummyStandAlone
+import com.android.build.gradle.internal.transforms.testdata.InterfaceWithDefaultMethod
+import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.testutils.TestClassesGenerator
@@ -64,11 +64,11 @@ import kotlin.test.assertNotEquals
 
 /** Tests for dexing artifact transform. */
 @RunWith(Parameterized::class)
-class DexingTransformTest(private val incrementalDexingV2: Boolean) {
+class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "incrementalDexingV2_{0}")
+        @Parameterized.Parameters(name = "incrementalDexingTransform_{0}")
         @JvmStatic
         fun parameters() = listOf(true, false)
     }
@@ -83,7 +83,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
         val dexingTransform = TestDexingTransform(
             FakeGradleProvider(FakeGradleRegularFile(input)),
             parameters = TestDexingTransform.TestParameters(
-                incrementalDexingV2 = incrementalDexingV2
+                incrementalDexingTransform = incrementalDexingTransform
             )
         )
         val outputs = FakeTransformOutputs(tmp)
@@ -100,7 +100,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             TestDexingTransform(
                 FakeGradleProvider(FakeGradleDirectory(input)),
                 parameters = TestDexingTransform.TestParameters(
-                    incrementalDexingV2 = incrementalDexingV2
+                    incrementalDexingTransform = incrementalDexingTransform
                 )
             )
         val outputs = FakeTransformOutputs(tmp)
@@ -109,7 +109,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
         dexingTransform.transform(outputs)
 
         val dexFiles = FileUtils.getAllFiles(outputs.outputDirectory)
-        if (incrementalDexingV2) {
+        if (incrementalDexingTransform) {
             assertThat(dexFiles).containsExactly(outputs.outputDirectory.resolve("test/A.dex"))
         } else {
             assertThat(dexFiles).containsExactly(outputs.outputDirectory.resolve("classes.dex"))
@@ -142,7 +142,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             TestDexingTransform(
                 FakeGradleProvider(FakeGradleRegularFile(input)),
                 parameters = TestDexingTransform.TestParameters(
-                    incrementalDexingV2 = incrementalDexingV2
+                    incrementalDexingTransform = incrementalDexingTransform
                 )
             )
         val outputs = FakeTransformOutputs(tmp)
@@ -165,14 +165,14 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             classpath = listOf(),
             parameters = TestDexingTransform.TestParameters(
                 desugaring = true,
-                incrementalDexingV2 = incrementalDexingV2
+                incrementalDexingTransform = incrementalDexingTransform
             )
         )
         val outputs = FakeTransformOutputs(tmp)
         dexingTransform.transform(outputs)
 
         val dexFiles = FileUtils.getAllFiles(outputs.outputDirectory)
-        if (incrementalDexingV2) {
+        if (incrementalDexingTransform) {
             assertThat(dexFiles).hasSize(classes.size)
         } else {
             assertThat(dexFiles).containsExactly(outputs.outputDirectory.resolve("classes.dex"))
@@ -200,7 +200,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             classpath = listOf(),
             parameters = TestDexingTransform.TestParameters(
                 desugaring = true,
-                incrementalDexingV2 = incrementalDexingV2
+                incrementalDexingTransform = incrementalDexingTransform
             )
         )
         val outputs = FakeTransformOutputs(tmp)
@@ -217,8 +217,8 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
 
     @Test
     fun testIncrementalDexingWithDesugaring() {
-        // Incremental desugaring takes effect only when incrementalDexingV2 == true
-        Assume.assumeTrue(incrementalDexingV2)
+        // Incremental desugaring takes effect only when incrementalDexingTransform == true
+        Assume.assumeTrue(incrementalDexingTransform)
 
         val input = tmp.newFolder("classes")
         val outputs = FakeTransformOutputs(tmp)
@@ -235,7 +235,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             classpath = listOf(),
             parameters = TestDexingTransform.TestParameters(
                 desugaring = true,
-                incrementalDexingV2 = incrementalDexingV2
+                incrementalDexingTransform = incrementalDexingTransform
             ),
             inputChanges = FakeInputChanges(incremental = false, inputChanges = emptyList())
         )
@@ -279,7 +279,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             classpath = listOf(),
             parameters = TestDexingTransform.TestParameters(
                 desugaring = true,
-                incrementalDexingV2 = incrementalDexingV2
+                incrementalDexingTransform = incrementalDexingTransform
             ),
             inputChanges = FakeInputChanges(
                 incremental = true, inputChanges = listOf(
@@ -339,7 +339,7 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             bootClasspath: List<File> = listOf(),
             desugaring: Boolean = false,
             errorFormat: SyncOptions.ErrorFormatMode = SyncOptions.ErrorFormatMode.MACHINE_PARSABLE,
-            incrementalDexingV2: Boolean = BooleanOption.ENABLE_INCREMENTAL_DEXING_V2.defaultValue
+            incrementalDexingTransform: Boolean = BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM.defaultValue
         ) : Parameters {
             override var projectName = FakeGradleProperty(":test")
             override var debuggable = FakeGradleProperty(debuggable)
@@ -348,8 +348,8 @@ class DexingTransformTest(private val incrementalDexingV2: Boolean) {
             override val errorFormat = FakeGradleProperty(errorFormat)
             override val enableDesugaring = FakeGradleProperty(desugaring)
             override val libConfiguration: Property<String> = FakeGradleProperty()
-            override val incrementalDexingV2: Property<Boolean> =
-                FakeGradleProperty(incrementalDexingV2)
+            override val incrementalDexingTransform: Property<Boolean> =
+                FakeGradleProperty(incrementalDexingTransform)
         }
 
         override fun getParameters(): Parameters {

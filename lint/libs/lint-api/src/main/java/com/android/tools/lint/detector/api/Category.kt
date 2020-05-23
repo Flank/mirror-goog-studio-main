@@ -149,6 +149,10 @@ constructor(
         @JvmField
         val USABILITY = create("Usability", 70)
 
+        /** Issues related to developer productivity. */
+        @JvmField
+        val PRODUCTIVITY = create("Productivity", 65)
+
         /** Issues related to accessibility  */
         @JvmField
         val A11Y = create("Accessibility", 60)

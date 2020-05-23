@@ -108,8 +108,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends JacocoTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<JacocoTask> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig
                     .getArtifacts()

@@ -38,7 +38,6 @@ import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.pub
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
@@ -53,7 +52,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.ArtifactTypes;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
@@ -77,6 +76,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -103,6 +103,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.CheckAarMetadataTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.CompressAssetsTask;
@@ -129,7 +130,6 @@ import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask;
 import com.android.build.gradle.internal.tasks.OptimizeResourcesTask;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
-import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.ProguardTask;
@@ -174,7 +174,7 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
+import com.android.build.gradle.tasks.ExternalNativeJsonGeneratorBase;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateTestConfig;
@@ -280,6 +280,9 @@ public abstract class TaskManager<
             AndroidXDependencySubstitution.getAndroidXMappings()
                     .get("com.android.support:multidex-instrumentation");
 
+    // name of the task that triggers compilation of the custom lint Checks
+    private static final String COMPILE_LINT_CHECKS_TASK = "compileLintChecks";
+
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
     public static final String ANDROID_GROUP = "Android";
@@ -322,7 +325,7 @@ public abstract class TaskManager<
     @NonNull protected final Recorder recorder;
     @NonNull private final Logger logger;
     @NonNull protected final TaskFactory taskFactory;
-    @NonNull private final ImmutableList<VariantPropertiesT> variantPropertiesList;
+    @NonNull protected final ImmutableList<VariantPropertiesT> variantPropertiesList;
     @NonNull private final ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList;
     @NonNull private final ImmutableList<ComponentPropertiesImpl> allPropertiesList;
 
@@ -384,11 +387,15 @@ public abstract class TaskManager<
      */
     public void createTasks() {
         // this is call before all the variants are created since they are all going to depend
-        // on the global LINT_JAR and LINT_PUBLISH_JAR task output
+        // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        taskFactory.register(new PrepareLintJar.CreationAction(globalScope));
         taskFactory.register(new PrepareLintJarForPublish.CreationAction(globalScope));
+
+        // create a lifecycle task to build the lintChecks dependencies
+        taskFactory.register(
+                COMPILE_LINT_CHECKS_TASK,
+                task -> task.dependsOn(globalScope.getLocalCustomLintChecks()));
 
         // Create top level test tasks.
         createTopLevelTestTasks();
@@ -459,7 +466,11 @@ public abstract class TaskManager<
         if (variantProperties.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
             final ConfigurableFileCollection fileCollection =
                     project.files(
-                            globalScope.getSdkComponents().getRenderScriptSupportJarProvider());
+                            globalScope
+                                    .getSdkComponents()
+                                    .flatMap(
+                                            SdkComponentsBuildService
+                                                    ::getRenderScriptSupportJarProvider));
             project.getDependencies()
                     .add(variantDependencies.getCompileClasspath().getName(), fileCollection);
             if (variantType.isApk() && !variantType.isForTesting()) {
@@ -510,7 +521,9 @@ public abstract class TaskManager<
                             project.files(
                                     globalScope
                                             .getSdkComponents()
-                                            .getRenderScriptSupportJarProvider()));
+                                            .flatMap(
+                                                    SdkComponentsBuildService
+                                                            ::getRenderScriptSupportJarProvider)));
         }
 
         if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
@@ -667,13 +680,6 @@ public abstract class TaskManager<
                 task ->
                         new LintFixTask.GlobalCreationAction(globalScope, variantPropertiesList)
                                 .configure(task));
-
-        // publish the local lint.jar to all the variants. This is not for the task output itself
-        // but for the artifact publishing.
-        for (VariantPropertiesT variant : variantPropertiesList) {
-            variant.getArtifacts()
-                    .copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getGlobalArtifacts());
-        }
     }
 
     private void configureKotlinPluginTasksForComposeIfNecessary() {
@@ -787,7 +793,9 @@ public abstract class TaskManager<
                                         () ->
                                                 globalScope
                                                         .getSdkComponents()
-                                                        .getAndroidJarProvider()
+                                                        .flatMap(
+                                                                SdkComponentsBuildService
+                                                                        ::getAndroidJarProvider)
                                                         .getOrNull()));
 
         // Adding this task to help the IDE find the mockable JAR.
@@ -1146,12 +1154,14 @@ public abstract class TaskManager<
         if (componentProperties.getBuildFeatures().getBuildConfig()) {
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask = taskFactory.register(
                     new GenerateBuildConfig.CreationAction(componentProperties));
-
-            if (!componentProperties
+            boolean isBuildConfigBytecodeEnabled =
+                    componentProperties
                             .getServices()
                             .getProjectOptions()
-                            .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
-                    && componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
+                            .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE);
+
+            if (!isBuildConfigBytecodeEnabled
+                    || !componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
                 TaskFactoryUtils.dependsOn(
                         componentProperties.getTaskContainer().getSourceGenTask(),
                         generateBuildConfigTask);
@@ -1201,6 +1211,9 @@ public abstract class TaskManager<
             @NonNull ComponentPropertiesImpl componentProperties,
             @Nullable SingleArtifactType<Directory> packageOutputType) {
         final GlobalScope globalScope = componentProperties.getGlobalScope();
+
+        // Check AAR metadata files
+        taskFactory.register(new CheckAarMetadataTask.CreationAction(componentProperties));
 
         // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(
@@ -1590,7 +1603,7 @@ public abstract class TaskManager<
                 .setExternalNativeJsonGenerator(
                         project.provider(
                                 () ->
-                                        ExternalNativeJsonGenerator.create(
+                                        ExternalNativeJsonGeneratorBase.create(
                                                 module, componentProperties)));
     }
 
@@ -2053,7 +2066,11 @@ public abstract class TaskManager<
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 androidTestProperties,
                                 new ConnectedDeviceProvider(
-                                        globalScope.getSdkComponents().getAdbExecutableProvider(),
+                                        globalScope
+                                                .getSdkComponents()
+                                                .flatMap(
+                                                        SdkComponentsBuildService
+                                                                ::getAdbExecutableProvider),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(logger)),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type
@@ -2655,7 +2672,7 @@ public abstract class TaskManager<
         // republish APK to the external world.
         creationConfig
                 .getArtifacts()
-                .republish(InternalArtifactType.APK.INSTANCE, ArtifactTypes.APK.INSTANCE);
+                .republish(InternalArtifactType.APK.INSTANCE, ArtifactType.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
@@ -2870,7 +2887,7 @@ public abstract class TaskManager<
         // republish Bundle to the external world.
         componentProperties
                 .getArtifacts()
-                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactTypes.BUNDLE.INSTANCE);
+                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactType.BUNDLE.INSTANCE);
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(
@@ -3084,8 +3101,10 @@ public abstract class TaskManager<
                         taskFactory.register(
                                 componentProperties.computeTaskName("generate", "Sources"),
                                 task -> {
-                                    task.dependsOn(PrepareLintJar.NAME);
-                                    task.dependsOn(PrepareLintJarForPublish.NAME);
+                                    task.dependsOn(COMPILE_LINT_CHECKS_TASK);
+                                    if (componentProperties.getVariantType().isAar()) {
+                                        task.dependsOn(PrepareLintJarForPublish.NAME);
+                                    }
                                     task.dependsOn(variantData.getExtraGeneratedResFolders());
                                 }));
         // and resGenTask
@@ -3145,8 +3164,7 @@ public abstract class TaskManager<
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends TaskT> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<TaskT> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
         }

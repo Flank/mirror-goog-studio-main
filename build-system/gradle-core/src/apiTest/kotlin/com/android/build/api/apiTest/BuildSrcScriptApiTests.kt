@@ -40,7 +40,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
                     """
-                import com.android.build.api.artifact.ArtifactTypes
+                import com.android.build.api.artifact.ArtifactType
                 import org.gradle.api.Plugin
                 import org.gradle.api.Project
                 import java.io.File
@@ -66,10 +66,10 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
                             artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
-                                .on(ArtifactTypes.MERGED_MANIFEST)
+                                .on(ArtifactType.MERGED_MANIFEST)
 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.apkFolder.set(artifacts.get(ArtifactType.APK))
                                 it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }
@@ -113,7 +113,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
                     """ 
-                import com.android.build.api.artifact.ArtifactTypes
+                import com.android.build.api.artifact.ArtifactType
                 import org.gradle.api.Plugin
                 import org.gradle.api.Project
                 import java.io.File
@@ -139,10 +139,10 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
                             artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
-                                .on(ArtifactTypes.MERGED_MANIFEST)
+                                .on(ArtifactType.MERGED_MANIFEST)
 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.apkFolder.set(artifacts.get(ArtifactType.APK))
                                 it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }
@@ -186,7 +186,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
                     """ 
-                import com.android.build.api.artifact.ArtifactTypes
+                import com.android.build.api.artifact.ArtifactType
                 import org.gradle.api.Plugin
                 import org.gradle.api.Project
                 import java.io.File
@@ -214,10 +214,10 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                             artifacts.transform(manifestUpdater,
                                 ManifestTransformerTask::mergedManifest,
                                 ManifestTransformerTask::updatedManifest)
-                                .on(ArtifactTypes.MERGED_MANIFEST)
+                                .on(ArtifactType.MERGED_MANIFEST)
                 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.apkFolder.set(artifacts.get(ArtifactType.APK))
                                 it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }
@@ -266,21 +266,21 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
 
             addBuildSrc() {
                 testingElements.addCopyApksTask(this)
-                addSource("src/main/kotlin/AcmeArtifactTypes.kt",
+                addSource("src/main/kotlin/AcmeArtifactType.kt",
                     """
                     import org.gradle.api.file.Directory
                     import org.gradle.api.file.FileSystemLocation
 
                     import com.android.build.api.artifact.ArtifactKind
-                    import com.android.build.api.artifact.ArtifactType
-                    import com.android.build.api.artifact.ArtifactType.Replaceable
-                    import com.android.build.api.artifact.ArtifactType.ContainsMany
+                    import com.android.build.api.artifact.Artifact
+                    import com.android.build.api.artifact.Artifact.Replaceable
+                    import com.android.build.api.artifact.Artifact.ContainsMany
 
-                    sealed class AcmeArtifactTypes<T : FileSystemLocation>(
+                    sealed class AcmeArtifactType<T : FileSystemLocation>(
                         kind: ArtifactKind<T>
-                    ) : ArtifactType<T>(kind) {
+                    ) : Artifact<T>(kind) {
 
-                        object ACME_APK: AcmeArtifactTypes<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
+                        object ACME_APK: AcmeArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
                     }
                     """.trimIndent())
                 addSource(
@@ -291,7 +291,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 import org.gradle.api.Project
                 import java.io.File
                 import com.android.build.api.dsl.CommonExtension
-                import com.android.build.api.artifact.ArtifactTypes
+                import com.android.build.api.artifact.ArtifactType
 
                 abstract class ExamplePlugin: Plugin<Project> {
 
@@ -304,8 +304,8 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                             val copyApksProvider = project.tasks.register("copy${'$'}{name}Apks", CopyApksTask::class.java)
 
                             val transformationRequest = artifacts.use(copyApksProvider)
-                                .toRead(type = ArtifactTypes.APK, at = CopyApksTask::apkFolder)
-                                .andWrite(type = AcmeArtifactTypes.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
+                                .toRead(type = ArtifactType.APK, at = CopyApksTask::apkFolder)
+                                .andWrite(type = AcmeArtifactType.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
 
                             copyApksProvider.configure {
                                 it.transformationRequest.set(transformationRequest)

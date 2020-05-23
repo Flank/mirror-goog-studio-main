@@ -44,7 +44,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
 
                 onVariantProperties {
                     project.tasks.register(it.getName() + "DisplayApks", DisplayApksTask.class) {
-                        it.apkFolder.set(artifacts.get(ArtifactTypes.APK.INSTANCE))
+                        it.apkFolder.set(artifacts.get(ArtifactType.APK.INSTANCE))
                         it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                     }
                 }
@@ -75,7 +75,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             ${testingElements.getGitVersionTask()}
             ${testingElements.getManifestProducerTask()}
 
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
     
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
@@ -98,7 +98,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     }
                     it.artifacts.replace(manifestProducer,
                             { it.outputManifest })
-                    .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
+                    .on(ArtifactType.MERGED_MANIFEST.INSTANCE)
                 }
             }
             """.trimIndent()
@@ -137,7 +137,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             ${testingElements.getGitVersionTask()}
             ${testingElements.getManifestTransformerTask()}
 
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
@@ -158,7 +158,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     it.artifacts.transform(manifestUpdater,
                             { it.mergedManifest },
                             { it.updatedManifest })
-                    .on(ArtifactTypes.MERGED_MANIFEST.INSTANCE)
+                    .on(ArtifactType.MERGED_MANIFEST.INSTANCE)
                 }
             }
             """.trimIndent()
@@ -200,17 +200,17 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
-            import com.android.build.api.artifact.ArtifactTypes 
+            import com.android.build.api.artifact.ArtifactType 
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
 
             import com.android.build.api.artifact.ArtifactKind
-            import com.android.build.api.artifact.ArtifactType
-            import com.android.build.api.artifact.ArtifactType.Replaceable
-            import com.android.build.api.artifact.ArtifactType.ContainsMany
+            import com.android.build.api.artifact.Artifact
+            import com.android.build.api.artifact.Artifact.Replaceable
+            import com.android.build.api.artifact.Artifact.ContainsMany
             import com.android.build.api.artifact.ArtifactTransformationRequest
 
-            class ACME_APK extends ArtifactType<Directory> implements Replaceable, ContainsMany {
+            class ACME_APK extends Artifact<Directory> implements Replaceable, ContainsMany {
                     ACME_APK() {
                         super(ArtifactKind.DIRECTORY.INSTANCE)
                     }
@@ -230,7 +230,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
 
                     ArtifactTransformationRequest request =
                         it.artifacts.use(copyApksProvider)
-                        .toRead(ArtifactTypes.APK.INSTANCE, { it.getApkFolder() })
+                        .toRead(ArtifactType.APK.INSTANCE, { it.getApkFolder() })
                         .andWrite(acme_apk_instance, { it.getOutFolder()}, "${outFolderForApk.absolutePath}")
 
                     copyApksProvider.configure {

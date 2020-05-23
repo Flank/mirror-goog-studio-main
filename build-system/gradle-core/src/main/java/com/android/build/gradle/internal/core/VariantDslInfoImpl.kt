@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.core
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.impl.ResValue
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -121,6 +120,7 @@ open class VariantDslInfoImpl internal constructor(
     private val mergedExternalNativeBuildOptions =
         MergedExternalNativeBuildOptions()
     private val mergedJavaCompileOptions = MergedJavaCompileOptions(dslServices)
+    private val mergedAarMetadata = MergedAarMetadata()
 
     init {
         mergeOptions()
@@ -955,6 +955,11 @@ open class VariantDslInfoImpl internal constructor(
             { externalNativeBuildOptions },
             { externalNativeBuildOptions }
         )
+        computeMergedOptions(
+            mergedAarMetadata,
+            { aarMetadata },
+            { aarMetadata }
+        )
     }
 
     override val ndkConfig: MergedNdkConfig
@@ -962,6 +967,9 @@ open class VariantDslInfoImpl internal constructor(
 
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
         get() = mergedExternalNativeBuildOptions
+
+    override val aarMetadata: MergedAarMetadata
+        get() = mergedAarMetadata
 
     /**
      * Returns the ABI filters associated with the artifact, or null if there are no filters.

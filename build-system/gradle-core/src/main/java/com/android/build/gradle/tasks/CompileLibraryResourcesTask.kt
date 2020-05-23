@@ -223,7 +223,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             get() = CompileLibraryResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out CompileLibraryResourcesTask>
+            taskProvider: TaskProvider<CompileLibraryResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 

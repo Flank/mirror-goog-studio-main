@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
@@ -38,12 +39,11 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -77,10 +77,8 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputFile abstract val staticLibApk: RegularFileProperty
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var androidJar: Provider<File>
-        private set
+    @get:Nested
+    abstract val androidJarInput: AndroidJarInput
 
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
@@ -95,7 +93,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         imports.addAll(sharedLibraryDependencies.files)
 
         val request = AaptPackageConfig(
-                androidJarPath = androidJar.get().absolutePath,
+                androidJarPath = androidJarInput.getAndroidJar().get().absolutePath,
                 manifestFile = manifestFile.get().asFile,
                 options = AaptOptions(),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.get().stream()
@@ -131,7 +129,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             get() = LinkLibraryAndroidResourcesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
+            taskProvider: TaskProvider<LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
@@ -180,13 +178,13 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-
-            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
-
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 creationConfig.services.projectOptions
             )
             task.aapt2DaemonBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }

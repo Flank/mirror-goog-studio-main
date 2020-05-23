@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.FileNames
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
@@ -191,7 +191,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out TaskT>
+            taskProvider: TaskProvider<TaskT>
         ) {
             super.handleProvider(taskProvider)
 
@@ -201,7 +201,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 .withName(FileNames.OBFUSCATION_MAPPING_FILE.fileName)
                 .on(APK_MAPPING)
 
-            creationConfig.artifacts.republish(APK_MAPPING, ArtifactTypes.OBFUSCATION_MAPPING_FILE)
+            creationConfig.artifacts.republish(APK_MAPPING, ArtifactType.OBFUSCATION_MAPPING_FILE)
         }
 
         override fun configure(

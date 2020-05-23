@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactTypes;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
@@ -34,7 +34,6 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.logging.Logger;
@@ -78,7 +77,7 @@ public class InstallVariantTaskTest {
         BuiltArtifacts builtArtifacts =
                 new BuiltArtifactsImpl(
                         BuiltArtifacts.METADATA_FILE_VERSION,
-                        ArtifactTypes.APK.INSTANCE,
+                        ArtifactType.APK.INSTANCE,
                         "com.android.test",
                         "debug",
                         ImmutableList.of(
@@ -110,7 +109,6 @@ public class InstallVariantTaskTest {
 
         verify(deviceConnector, atLeastOnce()).getName();
         verify(deviceConnector, atLeastOnce()).getApiLevel();
-        verify(deviceConnector, atLeastOnce()).getDensity();
         verify(deviceConnector, atLeastOnce()).getAbis();
         verify(deviceConnector, atLeastOnce()).getDeviceConfig();
         verify(deviceConnector).installPackage(eq(mainOutputFileApk), any(), anyInt(), any());

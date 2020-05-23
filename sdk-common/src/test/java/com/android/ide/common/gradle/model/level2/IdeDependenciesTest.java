@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
@@ -41,8 +40,7 @@ public class IdeDependenciesTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeDependencies graphs =
-                myDependenciesFactory.create(new BaseArtifactStub(), GradleVersion.parse("2.3.0"));
+        IdeDependencies graphs = myDependenciesFactory.create(new BaseArtifactStub());
         byte[] bytes = Serialization.serialize(graphs);
         Object o = Serialization.deserialize(bytes);
         assertEquals(graphs, o);

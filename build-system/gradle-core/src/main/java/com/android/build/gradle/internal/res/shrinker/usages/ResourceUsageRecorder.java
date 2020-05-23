@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.shrinker.usages;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel;
 import java.io.IOException;
 
@@ -26,5 +27,5 @@ import java.io.IOException;
 public interface ResourceUsageRecorder {
 
     /** Records resource usages. */
-    void recordUsages(ResourceShrinkerModel model) throws IOException;
+    void recordUsages(@NonNull ResourceShrinkerModel model) throws IOException;
 }

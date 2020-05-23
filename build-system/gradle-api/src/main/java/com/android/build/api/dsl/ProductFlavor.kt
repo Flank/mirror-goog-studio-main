@@ -172,5 +172,5 @@ interface ProductFlavor : Named, BaseFlavor {
      * If instead you are trying to resolve an issue in which **a library dependency includes a
      * flavor dimension that your app does not**, use [missingDimensionStrategy].
      */
-    var matchingFallbacks: MutableList<String>
+    val matchingFallbacks: MutableList<String>
 }

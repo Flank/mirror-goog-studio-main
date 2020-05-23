@@ -83,6 +83,11 @@ public final class SdkConstants {
      */
     public static final String GRADLE_DISTRIBUTION_URL_PROPERTY = "distributionUrl"; //$NON-NLS-1$
 
+    /** Properties in aar-metadata.properties file */
+    public static final String AAR_FORMAT_VERSION_PROPERTY = "aarFormatVersion";
+    public static final String AAR_METADATA_VERSION_PROPERTY = "aarMetadataVersion";
+    public static final String MIN_COMPILE_SDK_PROPERTY = "minCompileSdk";
+
     /**
      * The encoding we strive to use for all files we write.
      *
@@ -854,6 +859,30 @@ public final class SdkConstants {
             AndroidxName.of("android.support.constraint.", "TableConstraintLayout");
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_GUIDELINE =
             AndroidxName.of("android.support.constraint.", "Guideline");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_MOCK_VIEW =
+            AndroidxName.of("android.support.constraint.utils.", "MockView");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_IMAGE_FILTER_VIEW =
+            AndroidxName.of("android.support.constraint.utils.", "ImageFilterView");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_IMAGE_FILTER_BUTTON =
+            AndroidxName.of("android.support.constraint.utils.", "ImageFilterButton");
+
+    // Flow Alignment values.
+    public static class FlowAlignment {
+        public static final String NONE = "none"; //$NON-NLS-1$
+        public static final String START = "start"; //$NON-NLS-1$
+        public static final String END = "end"; //$NON-NLS-1$
+        public static final String TOP = "top"; //$NON-NLS-1$
+        public static final String BOTTOM = "bottom"; //$NON-NLS-1$
+        public static final String CENTER = "center"; //$NON-NLS-1$
+        public static final String BASELINE = "baseline"; //$NON-NLS-1$
+    }
+
+    // Flow Style values.
+    public static class FlowStyle {
+        public static final String SPREAD = "spread"; //$NON-NLS-1$
+        public static final String SPREAD_INSIDE = "spread_inside"; //$NON-NLS-1$
+        public static final String PACKED = "packed"; //$NON-NLS-1$
+    }
 
     public static final String CONSTRAINT_LAYOUT_LIB_GROUP_ID = "com.android.support.constraint";
     public static final String CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID = "constraint-layout";
@@ -2727,7 +2756,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.5-milestone-1";
+    public static final String GRADLE_MINIMUM_VERSION = "6.5-milestone-2";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

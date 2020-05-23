@@ -79,6 +79,11 @@ public class ManifestMerger2 {
     private static final String SPLIT_IN_DYNAMIC_FEATURE =
             "https://d.android.com/r/studio-ui/dynamic-delivery/dynamic-feature-manifest";
 
+    private static final List<String> WHITELISTED_NON_UNIQUE_PACKAGE_NAMES =
+            ImmutableList.of(
+                    "androidx.test" // TODO(b/151171905)
+                    );
+
     @NonNull
     private final File mManifestFile;
 
@@ -1251,13 +1256,25 @@ public class ManifestMerger2 {
                             LoadedManifestInfo info = e.getValue().stream().findFirst().get();
                             // Report only once per error, since the error message contain the path
                             // to all manifests with the repeated package name.
+
                             mergingReportBuilder.addMessage(
                                     info.getXmlDocument().getSourceFile(),
-                                    strictUniquePackageNameCheck
-                                            ? MergingReport.Record.Severity.ERROR
-                                            : MergingReport.Record.Severity.WARNING,
+                                    getNonUniquePackageSeverity(
+                                            e.getKey(), strictUniquePackageNameCheck),
                                     repeatedPackageErrors);
                         });
+    }
+
+    /** Returns the correct logging severity for a clashing package name. */
+    private static MergingReport.Record.Severity getNonUniquePackageSeverity(
+            String packageName, boolean strictMode) {
+        // If we've whitelisted a library package only report in info.
+        if (WHITELISTED_NON_UNIQUE_PACKAGE_NAMES.contains(packageName))
+            return MergingReport.Record.Severity.INFO;
+
+        return strictMode
+                ? MergingReport.Record.Severity.ERROR
+                : MergingReport.Record.Severity.WARNING;
     }
 
     /**

@@ -68,7 +68,7 @@ abstract class CheckManifest : NonIncrementalTask() {
             get() = CheckManifest::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out CheckManifest>
+            taskProvider: TaskProvider<CheckManifest>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.checkManifestTask = taskProvider

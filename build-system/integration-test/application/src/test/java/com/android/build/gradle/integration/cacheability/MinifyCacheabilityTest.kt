@@ -33,9 +33,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 /**
- * Tests cacheability of tasks.
- *
- * See https://guides.gradle.org/using-build-cache/ for information on the Gradle build cache.
+ * Similar to [CacheabilityTest], but targeting builds with `minifyEnabled=true` to verify a
+ * different set of tasks.
  */
 @RunWith(FilterableParameterized::class)
 class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
@@ -62,6 +61,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":preBuild"
         ),
         FROM_CACHE to setOf(
+            ":checkMinifiedAarMetadata",
             ":checkMinifiedDuplicateClasses",
             ":compileMinifiedJavaWithJavac",
             ":compressMinifiedAssets",

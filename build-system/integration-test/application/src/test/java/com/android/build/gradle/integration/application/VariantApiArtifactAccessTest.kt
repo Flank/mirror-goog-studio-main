@@ -35,7 +35,7 @@ class VariantApiArtifactAccessTest {
 
     val app = MinimalSubProject.app("com.example.test")
         .appendToBuild("""
-import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.ArtifactType
 
 abstract class CustomTask extends DefaultTask {
 
@@ -65,7 +65,7 @@ android {
         TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class)
         customTaskProvider.configure {
             task ->
-                task.getApkLocation().set(artifacts.get(ArtifactTypes.APK.INSTANCE))
+                task.getApkLocation().set(artifacts.get(ArtifactType.APK.INSTANCE))
                 Provider<Directory> outputDir = getProject().getLayout().getBuildDirectory()
                 task.getOutputFile().set(outputDir.file(name + "/out.txt"))
         }
@@ -84,7 +84,7 @@ android {
 
     /**
      * Test that exercise the [artifacts.get()] API to wire a [Task] that will consume the
-     * ArtifactTypes.APK and list the files into an output text file.
+     * ArtifactType.APK and list the files into an output text file.
      */
     @Test
     fun listApk() {

@@ -195,7 +195,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             get() = GenerateLibraryRFileTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateLibraryRFileTask>
+            taskProvider: TaskProvider<GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processAndroidResTask = taskProvider
@@ -292,7 +292,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         override val type: Class<GenerateLibraryRFileTask> = GenerateLibraryRFileTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateLibraryRFileTask>
+            taskProvider: TaskProvider<GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

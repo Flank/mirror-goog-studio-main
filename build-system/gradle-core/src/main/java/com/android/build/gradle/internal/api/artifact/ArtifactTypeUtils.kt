@@ -17,48 +17,48 @@
 @file:JvmName("ArtifactTypeUtils")
 package com.android.build.gradle.internal.api.artifact
 
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactType
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.gradle.internal.scope.AnchorOutputType
+import com.android.build.gradle.internal.scope.BuildArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import java.lang.RuntimeException
 import kotlin.reflect.KClass
 
 /**
- * Utility class for [ArtifactType]
+ * Utility class for [Artifact]
  */
 
-private val publicArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
-        ArtifactTypes::class.sealedSubclasses.associateBy {
+private val publicArtifactMap : Map<String, KClass<out Artifact<*>>> =
+        ArtifactType::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
 
-private val sourceArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+private val sourceArtifactMap : Map<String, KClass<out Artifact<*>>> =
         SourceArtifactType::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
-private val buildArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+private val buildArtifactMap : Map<String, KClass<out Artifact<*>>> =
         BuildArtifactType::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
-private val internalArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+private val internalArtifactMap : Map<String, KClass<out Artifact<*>>> =
         InternalArtifactType::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
-private val anchorArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
+private val anchorArtifactMap : Map<String, KClass<out Artifact<*>>> =
         AnchorOutputType::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
 
 /**
- * Return the enum of [ArtifactType] base on the name.
+ * Return the enum of [Artifact] base on the name.
  *
  * The typical implementation of valueOf in an enum class cannot be used because there are
- * multiple implementations of [ArtifactType].  For this to work, the name of all
- * [ArtifactType] must be unique across all implementations.
+ * multiple implementations of [Artifact].  For this to work, the name of all
+ * [Artifact] must be unique across all implementations.
  */
-fun String.toArtifactType() : ArtifactType<*> =
+fun String.toArtifactType() : Artifact<*> =
     publicArtifactMap[this]?.objectInstance ?:
             sourceArtifactMap[this]?.objectInstance ?:
             buildArtifactMap[this]?.objectInstance  ?:

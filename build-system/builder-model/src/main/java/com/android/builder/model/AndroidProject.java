@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Entry point for the model of the Android Projects. This models a single module, whether the
@@ -445,4 +446,8 @@ public interface AndroidProject {
      */
     @NonNull
     Collection<VariantBuildInformation> getVariantsBuildInformation();
+
+    /** Returns the lint jars that this module uses to run extra lint checks */
+    @NonNull
+    List<File> getLintRuleJars();
 }

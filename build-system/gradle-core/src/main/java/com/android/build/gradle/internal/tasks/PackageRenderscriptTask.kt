@@ -52,7 +52,7 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
             get() = PackageRenderscriptTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PackageRenderscriptTask>
+            taskProvider: TaskProvider<PackageRenderscriptTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

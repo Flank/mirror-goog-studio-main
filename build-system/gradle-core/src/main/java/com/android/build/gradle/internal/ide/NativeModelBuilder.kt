@@ -19,7 +19,8 @@ package com.android.build.gradle.internal.ide
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
@@ -130,7 +131,7 @@ class NativeModelBuilder(
         val abis = generator.abis.map { it.abi.tag }
         val buildFolders = generator.nativeBuildConfigurationsJsons.map { it.parentFile }
         builder.addVariantInfo(
-            generator.variantName,
+            generator.variant.variantName,
             abis,
             (abis zip buildFolders).toMap()
         )
@@ -147,7 +148,7 @@ class NativeModelBuilder(
         val builder = NativeAndroidProjectBuilder(project.name, abiName)
         var built = 0
         generators
-            .filter { generator -> generator.variantName == variantName }
+            .filter { generator -> generator.variant.variantName == variantName }
             .onEach { generator ->
                 generator.buildForOneAbiName(
                     ideRefreshExternalNativeModel,
@@ -160,7 +161,7 @@ class NativeModelBuilder(
                 try {
                     generator.forEachNativeBuildConfiguration { jsonReader ->
                         try {
-                            builder.addJson(jsonReader, generator.variantName)
+                            builder.addJson(jsonReader, generator.variant.variantName)
                         } catch (e: IOException) {
                             throw RuntimeException("Failed to read native JSON data", e)
                         }
@@ -181,7 +182,7 @@ class NativeModelBuilder(
         val builder = NativeAndroidProjectBuilder(project.name)
         generators.onEach { generator ->
             buildInexpensiveNativeAndroidProjectInformation(builder, generator)
-            val stats = ProcessProfileWriter.getOrCreateVariant(project.path, generator.variantName)
+            val stats = ProcessProfileWriter.getOrCreateVariant(project.path, generator.variant.variantName)
             val config = GradleBuildVariant.NativeBuildConfigInfo.newBuilder()
 
             if (stats.nativeBuildConfigCount == 0) {
@@ -191,7 +192,7 @@ class NativeModelBuilder(
             try {
                 generator.forEachNativeBuildConfiguration { jsonReader ->
                     try {
-                        builder.addJson(jsonReader, generator.variantName, config)
+                        builder.addJson(jsonReader, generator.variant.variantName, config)
                     } catch (e: IOException) {
                         throw RuntimeException("Failed to read native JSON data", e)
                     }
@@ -252,5 +253,4 @@ class NativeModelBuilder(
             }
         }
     }
-
 }

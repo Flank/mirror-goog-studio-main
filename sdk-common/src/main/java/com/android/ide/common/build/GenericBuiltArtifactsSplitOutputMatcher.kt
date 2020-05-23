@@ -16,7 +16,6 @@
 package com.android.ide.common.build
 
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.resources.Density
 import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
@@ -26,7 +25,7 @@ import java.util.Collections
 object GenericBuiltArtifactsSplitOutputMatcher {
 
     /**
-     * Determines and return the list of APKs to use based on given device density and abis.
+     * Determines and return the list of APKs to use based on given device abis.
      *
      * @param deviceConfigProvider the device configuration.
      * @param builtArtifacts the tested variant built artifacts.
@@ -35,7 +34,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
      * empty, then the variant does not restrict ABI packaging.
      * @return the list of APK files to install.
      */
-    fun computeBestOutput(
+    fun computeBestOutputs(
         deviceConfigProvider: DeviceConfigProvider,
         builtArtifacts: GenericBuiltArtifacts,
         variantAbiFilters: Collection<String?>?
@@ -44,13 +43,12 @@ object GenericBuiltArtifactsSplitOutputMatcher {
         return computeBestOutput(
             builtArtifacts,
             variantAbiFilters,
-            deviceConfigProvider.density,
             deviceConfigProvider.abis
         )
     }
 
     /**
-     * Determines and return the list of APKs to use based on given device density and abis.
+     * Determines and return the list of APKs to use based on given device abis.
      *
      *
      * This uses the same logic as the store, using two passes: First, find all the compatible
@@ -60,23 +58,21 @@ object GenericBuiltArtifactsSplitOutputMatcher {
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
      * of the outputs, if there is a single output with no abi filters. If the list is null,
      * then the variant does not restrict ABI packaging.
-     * @param deviceDensity the density of the device.
      * @param deviceAbis a list of ABIs supported by the device.
      * @return the list of APKs to install or null if none are compatible.
      */
     fun computeBestOutput(
         outputs: GenericBuiltArtifacts,
         variantAbiFilters: Collection<String?>?,
-        deviceDensity: Int,
         deviceAbis: List<String?>
     ): List<File> =
-        computeBestArtifact(outputs.elements, variantAbiFilters, deviceDensity, deviceAbis)?.let {
+        computeBestArtifact(outputs.elements, variantAbiFilters, deviceAbis)?.let {
             ImmutableList.of(File(it.outputFile))
         } ?: ImmutableList.of<File>()
 
 
     /**
-     * Determines and return the list of APKs to use based on given device density and abis.
+     * Determines and return the list of APKs to use based on given device abis.
      *
      *
      * This uses the same logic as the store, using two passes: First, find all the compatible
@@ -86,31 +82,21 @@ object GenericBuiltArtifactsSplitOutputMatcher {
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
      * of the outputs, if there is a single output with no abi filters. If the list is null,
      * then the variant does not restrict ABI packaging.
-     * @param deviceDensity the density of the device.
      * @param deviceAbis a list of ABIs supported by the device.
      * @return the list of APKs to install or null if none are compatible.
      */
     fun computeBestArtifact(
         outputs: Collection<GenericBuiltArtifact>,
         variantAbiFilters: Collection<String?>?,
-        deviceDensity: Int,
         deviceAbis: List<String?>
     ): GenericBuiltArtifact? {
-        val densityEnum = Density.getEnum(deviceDensity)
-        val densityValue: String?
-        densityValue = densityEnum?.resourceValue
         // gather all compatible matches.
         val matches: MutableList<GenericBuiltArtifact> =
             Lists.newArrayList()
         // find a matching output.
         for (builtArtifact in outputs) {
-            val densityFilter =
-                getFilter(builtArtifact, "DENSITY")
             val abiFilter =
                 getFilter(builtArtifact, "ABI")
-            if (densityFilter != null && densityFilter != densityValue) {
-                continue
-            }
             if (abiFilter != null && !deviceAbis.contains(abiFilter)) {
                 continue
             }

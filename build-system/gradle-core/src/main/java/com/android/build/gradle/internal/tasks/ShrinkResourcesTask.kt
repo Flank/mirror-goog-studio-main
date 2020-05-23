@@ -119,7 +119,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     abstract val variantOutputs: ListProperty<VariantOutputImpl>
 
     @get:Internal
-    abstract val artifactTransformationRequest: Property<ArtifactTransformationRequest>
+    abstract val artifactTransformationRequest: Property<ArtifactTransformationRequest<ShrinkResourcesTask>>
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -188,10 +188,10 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                         || contentTypes.contains(ExtendedContentType.DEX))
             }
 
-        private lateinit var artifactTransformationRequest: ArtifactTransformationRequest
+        private lateinit var artifactTransformationRequest: ArtifactTransformationRequest<ShrinkResourcesTask>
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ShrinkResourcesTask>
+            taskProvider: TaskProvider<ShrinkResourcesTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -394,7 +394,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 ResourcesGathererFromRTxt(parameters.rSourceVariant.get().asFile, ""),
                 ProguardMappingsRecorder(parameters.mappingFile.get().asFile.toPath()),
                 listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
-                RawResourcesGraphBuilder(listOf(parameters.resourceDir.get().asFile.toPath())),
+                RawResourcesGraphBuilder(parameters.resourceDir.get().asFile.toPath()),
                 reporter,
                 ApkFormat.BINARY
             )

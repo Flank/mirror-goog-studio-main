@@ -5,6 +5,22 @@ below are backwards compatible.
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Artifact implements java.io.Serializable
+com.android.build.api.artifact.Artifact$Appendable implements com.android.build.api.artifact.Artifact$Multiple
+com.android.build.api.artifact.Artifact$Companion
+com.android.build.api.artifact.Artifact$Companion.<init>: com.android.build.api.artifact.Artifact$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.artifact.Artifact$ContainsMany
+com.android.build.api.artifact.Artifact$Multiple
+com.android.build.api.artifact.Artifact$Multiple.name: java.lang.String ()
+com.android.build.api.artifact.Artifact$Replaceable implements com.android.build.api.artifact.Artifact$Single
+com.android.build.api.artifact.Artifact$Single
+com.android.build.api.artifact.Artifact$Single.name: java.lang.String ()
+com.android.build.api.artifact.Artifact$Transformable
+com.android.build.api.artifact.Artifact.<init>: com.android.build.api.artifact.Artifact<T> (com.android.build.api.artifact.ArtifactKind<T>)
+com.android.build.api.artifact.Artifact.getFileSystemLocationName: java.lang.String ()
+com.android.build.api.artifact.Artifact.getFolderName: java.lang.String ()
+com.android.build.api.artifact.Artifact.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
+com.android.build.api.artifact.Artifact.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactKind implements java.io.Serializable
 com.android.build.api.artifact.ArtifactKind$DIRECTORY extends com.android.build.api.artifact.ArtifactKind
 com.android.build.api.artifact.ArtifactKind$DIRECTORY.dataType: kotlin.reflect.KClass<org.gradle.api.file.Directory> ()
@@ -13,31 +29,15 @@ com.android.build.api.artifact.ArtifactKind$FILE.dataType: kotlin.reflect.KClass
 com.android.build.api.artifact.ArtifactKind.<init>: com.android.build.api.artifact.ArtifactKind<T> (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> ()
 com.android.build.api.artifact.ArtifactTransformationRequest
-com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (org.gradle.api.Task, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
-com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (org.gradle.api.Task, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
-com.android.build.api.artifact.ArtifactType implements java.io.Serializable
-com.android.build.api.artifact.ArtifactType$Appendable implements com.android.build.api.artifact.ArtifactType$Multiple
-com.android.build.api.artifact.ArtifactType$Companion
-com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.artifact.ArtifactType$ContainsMany
-com.android.build.api.artifact.ArtifactType$Multiple
-com.android.build.api.artifact.ArtifactType$Multiple.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactType$Replaceable implements com.android.build.api.artifact.ArtifactType$Single
-com.android.build.api.artifact.ArtifactType$Single
-com.android.build.api.artifact.ArtifactType$Single.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind<T>)
+com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (TaskT, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
+com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (TaskT, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
+com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact
+com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
+com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Transformable
+com.android.build.api.artifact.ArtifactType$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
+com.android.build.api.artifact.ArtifactType$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single
+com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
-com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
-com.android.build.api.artifact.ArtifactType.getKind: com.android.build.api.artifact.ArtifactKind<T> ()
-com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
-com.android.build.api.artifact.ArtifactTypes extends com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.ArtifactTypes$APK extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single, com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$ContainsMany
-com.android.build.api.artifact.ArtifactTypes$BUNDLE extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single, com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single, com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$Transformable
-com.android.build.api.artifact.ArtifactTypes$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Single
-com.android.build.api.artifact.ArtifactTypes.<init>: com.android.build.api.artifact.ArtifactTypes<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.artifact.ArtifactTypes.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.Artifacts
 com.android.build.api.artifact.Artifacts.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Artifacts.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
@@ -47,17 +47,13 @@ com.android.build.api.artifact.Artifacts.replace: com.android.build.api.artifact
 com.android.build.api.artifact.Artifacts.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Artifacts.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
 com.android.build.api.artifact.Artifacts.use: com.android.build.api.artifact.TaskBasedOperations<TASK> (org.gradle.api.tasks.TaskProvider<TASK>)
-com.android.build.api.artifact.BuildArtifactType extends com.android.build.api.artifact.ArtifactType
-com.android.build.api.artifact.BuildArtifactType$JAVAC_CLASSES extends com.android.build.api.artifact.BuildArtifactType
-com.android.build.api.artifact.BuildArtifactType$JAVA_COMPILE_CLASSPATH extends com.android.build.api.artifact.BuildArtifactType
-com.android.build.api.artifact.BuildArtifactType.<init>: com.android.build.api.artifact.BuildArtifactType (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.MultipleTransformRequest
 com.android.build.api.artifact.MultipleTransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.ReplaceRequest
 com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TaskBasedOperations
-com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
-com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>, java.lang.String)
+com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
+com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>, java.lang.String)
 com.android.build.api.artifact.TaskBasedOperations.toRead: com.android.build.api.artifact.TaskBasedOperations<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
@@ -121,11 +117,12 @@ com.android.build.api.dsl.AaptOptions.getNamespaced: boolean ()
 com.android.build.api.dsl.AaptOptions.getNoCompress: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.AaptOptions.noCompress: void (java.lang.String)
 com.android.build.api.dsl.AaptOptions.noCompress: void (java.lang.String[])
-com.android.build.api.dsl.AaptOptions.setAdditionalParameters: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.AaptOptions.setFailOnMissingConfigEntry: void (boolean)
 com.android.build.api.dsl.AaptOptions.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AaptOptions.setNamespaced: void (boolean)
-com.android.build.api.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.AarMetadata
+com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
+com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.SplitOptions
 com.android.build.api.dsl.AbiSplit.isUniversalApk: boolean ()
 com.android.build.api.dsl.AbiSplit.setUniversalApk: void (boolean)
@@ -185,8 +182,6 @@ com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProviders: 
 com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.List<org.gradle.process.CommandLineArgumentProvider>)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationBaseFlavor.getApplicationId: java.lang.String ()
@@ -223,8 +218,6 @@ com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java
 com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.ApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.ApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ApplicationProductFlavor.setDefault: void (boolean)
@@ -263,7 +256,6 @@ com.android.build.api.dsl.BaseFlavor.setRenderscriptNdkModeEnabled: void (java.l
 com.android.build.api.dsl.BaseFlavor.setRenderscriptSupportModeBlasEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setRenderscriptSupportModeEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setRenderscriptTargetApi: void (java.lang.Integer)
-com.android.build.api.dsl.BaseFlavor.setResourceConfigurations: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.BaseFlavor.setTestApplicationId: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.setTestFunctionalTest: void (java.lang.Boolean)
 com.android.build.api.dsl.BaseFlavor.setTestHandleProfiling: void (java.lang.Boolean)
@@ -296,7 +288,6 @@ com.android.build.api.dsl.BuildType.isPseudoLocalesEnabled: boolean ()
 com.android.build.api.dsl.BuildType.isRenderscriptDebuggable: boolean ()
 com.android.build.api.dsl.BuildType.isTestCoverageEnabled: boolean ()
 com.android.build.api.dsl.BuildType.setJniDebuggable: void (boolean)
-com.android.build.api.dsl.BuildType.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.BuildType.setMinifyEnabled: void (boolean)
 com.android.build.api.dsl.BuildType.setPseudoLocalesEnabled: void (boolean)
 com.android.build.api.dsl.BuildType.setRenderscriptDebuggable: void (boolean)
@@ -383,7 +374,6 @@ com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.A
 com.android.build.api.dsl.CommonExtension.setBuildToolsVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension.setFlavorDimensions: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.CommonExtension.setNdkPath: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setResourcePrefix: void (java.lang.String)
@@ -423,7 +413,6 @@ com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Spli
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
-com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DependenciesInfo
 com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
@@ -510,17 +499,18 @@ com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
-com.android.build.api.dsl.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
 com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.LibraryProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.LibraryProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.LibraryVariantDimension.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
 com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFiles: java.lang.Object (java.lang.Object[])
+com.android.build.api.dsl.LibraryVariantDimension.getAarMetadata: com.android.build.api.dsl.AarMetadata ()
 com.android.build.api.dsl.LibraryVariantDimension.getConsumerProguardFiles: java.util.List<java.io.File> ()
 com.android.build.api.dsl.LibraryVariantDimension.getMultiDexEnabled: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryVariantDimension.getSigningConfig: SigningConfigT ()
-com.android.build.api.dsl.LibraryVariantDimension.setConsumerProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.api.dsl.LibraryVariantDimension.setMultiDexEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryVariantDimension.setSigningConfig: void (SigningConfigT)
 com.android.build.api.dsl.LintOptions
@@ -539,13 +529,12 @@ com.android.build.api.dsl.LintOptions.error: void (java.lang.String[])
 com.android.build.api.dsl.LintOptions.fatal: void (java.lang.String)
 com.android.build.api.dsl.LintOptions.fatal: void (java.lang.String[])
 com.android.build.api.dsl.LintOptions.getBaselineFile: java.io.File ()
-com.android.build.api.dsl.LintOptions.getCheck: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.LintOptions.getCheckOnly: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.LintOptions.getDisable: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.LintOptions.getEnable: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.LintOptions.getHtmlOutput: java.io.File ()
 com.android.build.api.dsl.LintOptions.getHtmlReport: boolean ()
 com.android.build.api.dsl.LintOptions.getLintConfig: java.io.File ()
-com.android.build.api.dsl.LintOptions.getSeverityOverrides: java.util.Map<java.lang.String, java.lang.Integer> ()
 com.android.build.api.dsl.LintOptions.getTextOutput: java.io.File ()
 com.android.build.api.dsl.LintOptions.getTextReport: boolean ()
 com.android.build.api.dsl.LintOptions.getXmlOutput: java.io.File ()
@@ -571,14 +560,11 @@ com.android.build.api.dsl.LintOptions.isWarningsAsErrors: boolean ()
 com.android.build.api.dsl.LintOptions.setAbortOnError: void (boolean)
 com.android.build.api.dsl.LintOptions.setAbsolutePaths: void (boolean)
 com.android.build.api.dsl.LintOptions.setBaselineFile: void (java.io.File)
-com.android.build.api.dsl.LintOptions.setCheck: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.LintOptions.setCheckAllWarnings: void (boolean)
 com.android.build.api.dsl.LintOptions.setCheckDependencies: void (boolean)
 com.android.build.api.dsl.LintOptions.setCheckGeneratedSources: void (boolean)
 com.android.build.api.dsl.LintOptions.setCheckReleaseBuilds: void (boolean)
 com.android.build.api.dsl.LintOptions.setCheckTestSources: void (boolean)
-com.android.build.api.dsl.LintOptions.setDisable: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.LintOptions.setEnable: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.LintOptions.setExplainIssues: void (boolean)
 com.android.build.api.dsl.LintOptions.setHtmlOutput: void (java.io.File)
 com.android.build.api.dsl.LintOptions.setHtmlReport: void (boolean)
@@ -631,11 +617,17 @@ com.android.build.api.dsl.PackagingOptions.setDoNotStrip: void (java.util.Set<ja
 com.android.build.api.dsl.PackagingOptions.setExcludes: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
+com.android.build.api.dsl.PrefabPackagingOptions
+com.android.build.api.dsl.PrefabPackagingOptions.getHeaders: java.lang.String ()
+com.android.build.api.dsl.PrefabPackagingOptions.getLibraryName: java.lang.String ()
+com.android.build.api.dsl.PrefabPackagingOptions.getName: java.lang.String ()
+com.android.build.api.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
+com.android.build.api.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
+com.android.build.api.dsl.PrefabPackagingOptions.setName: void (java.lang.String)
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.ProductFlavor.getDimension: java.lang.String ()
 com.android.build.api.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ProductFlavor.setDimension: void (java.lang.String)
-com.android.build.api.dsl.ProductFlavor.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.SdkComponents
 com.android.build.api.dsl.SdkComponents.getAdb: org.gradle.api.provider.Provider<org.gradle.api.file.RegularFile> ()
 com.android.build.api.dsl.SdkComponents.getNdkDirectory: org.gradle.api.provider.Provider<org.gradle.api.file.Directory> ()
@@ -736,8 +728,6 @@ com.android.build.api.dsl.VariantDimension.proguardFiles: java.lang.Object (java
 com.android.build.api.dsl.VariantDimension.resValue: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepFile: void (java.io.File)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepProguard: void (java.io.File)
-com.android.build.api.dsl.VariantDimension.setProguardFiles: void (java.util.List<java.io.File>)
-com.android.build.api.dsl.VariantDimension.setTestProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.api.dsl.VariantDimension.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Shaders, kotlin.Unit>)
 com.android.build.api.dsl.VariantDimension.testProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.VariantDimension.testProguardFiles: java.lang.Object (java.lang.Object[])
@@ -745,7 +735,6 @@ com.android.build.api.dsl.VectorDrawables
 com.android.build.api.dsl.VectorDrawables.generatedDensities: void (java.lang.String[])
 com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
-com.android.build.api.dsl.VectorDrawables.setGeneratedDensities: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.AaptOptions
@@ -790,7 +779,7 @@ com.android.build.api.variant.BuiltArtifacts$Companion
 com.android.build.api.variant.BuiltArtifacts$TransformParams implements org.gradle.workers.WorkParameters, java.io.Serializable
 com.android.build.api.variant.BuiltArtifacts$TransformParams.getOutput: java.io.File ()
 com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
-com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
+com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.Artifact<?> ()
 com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
 com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)

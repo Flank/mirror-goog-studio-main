@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -53,20 +54,19 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
     // No outputs -- this task must always run in order to properly prepare the KotlinCompile Task
 
     @get:Internal
-    lateinit var taskToConfigure: TaskProvider<Task>
-        private set
+    abstract val taskNameToConfigure: Property<String>
 
     // Input: Configuration to the kotlin compiler extension.
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    abstract val kotlinCompilerExtension: Property<Configuration>
+    abstract val kotlinCompilerExtension: ConfigurableFileCollection
 
     override fun doTaskAction() {
-        val task = taskToConfigure.get() as KotlinCompile
+        val task = project.tasks.getByName(taskNameToConfigure.get()) as KotlinCompile
         task.kotlinOptions.useIR = true
         task.kotlinOptions.freeCompilerArgs +=
             listOf(
-                "-Xplugin=${kotlinCompilerExtension.get().files.first().absolutePath}",
+                "-Xplugin=${kotlinCompilerExtension.files.first().absolutePath}",
                 "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
                 "-P",
                 "plugin:androidx.compose.plugins.idea:enabled=true"
@@ -89,8 +89,8 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.taskToConfigure = taskToConfigure
-            task.kotlinCompilerExtension.set(kotlinExtension)
+            task.taskNameToConfigure.set(taskToConfigure.name)
+            task.kotlinCompilerExtension.from(kotlinExtension)
         }
     }
 

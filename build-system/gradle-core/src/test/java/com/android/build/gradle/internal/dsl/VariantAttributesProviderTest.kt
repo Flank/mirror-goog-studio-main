@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.createProjectServices
@@ -57,7 +58,7 @@ class VariantAttributesProviderTest {
         val projectServices = createProjectServices(
             issueReporter = FakeSyncIssueReporter(throwOnError = true)
         )
-        DslServicesImpl(projectServices, DslVariableFactory(projectServices.issueReporter))
+        DslServicesImpl(projectServices, DslVariableFactory(projectServices.issueReporter), FakeGradleProvider(null))
     }
 
 
@@ -76,11 +77,11 @@ class VariantAttributesProviderTest {
     fun before() {
         val projectServices = createProjectServices()
         defaultConfig = DefaultConfig("main",
-            DslServicesImpl(projectServices, DslVariableFactory(projectServices.issueReporter))
+            DslServicesImpl(projectServices, DslVariableFactory(projectServices.issueReporter), FakeGradleProvider(null))
         )
         val projectServices1 = createProjectServices()
         buildType = BuildType("debug",
-            DslServicesImpl(projectServices1, DslVariableFactory(projectServices1.issueReporter))
+            DslServicesImpl(projectServices1, DslVariableFactory(projectServices1.issueReporter), FakeGradleProvider(null))
         )
         `when`(manifestSupplier.`package`).thenReturn(PACKAGE_NAME)
         manifestFile = TestResources.getFile(this.javaClass,"AndroidManifest.xml")

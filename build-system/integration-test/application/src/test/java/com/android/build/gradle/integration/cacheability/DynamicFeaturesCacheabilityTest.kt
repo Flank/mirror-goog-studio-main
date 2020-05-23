@@ -28,15 +28,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 
 /**
- * Tests cacheability of tasks.
- *
- * See https://guides.gradle.org/using-build-cache/ for information on the Gradle build cache.
+ * Similar to [CacheabilityTest], but targeting projects using dynamic features to verify a
+ * different set of tasks.
  */
-@RunWith(JUnit4::class)
 class DynamicFeaturesCacheabilityTest {
 
     companion object {
@@ -72,6 +68,7 @@ class DynamicFeaturesCacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":app:bundleDebugClasses",
+                    ":app:checkDebugAarMetadata",
                     ":app:checkDebugDuplicateClasses",
                     ":app:checkDebugLibraries",
                     ":app:compileDebugJavaWithJavac",
@@ -98,6 +95,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:signingConfigWriterDebug",
                     ":app:validateSigningDebug",
 
+                    ":feature1:checkDebugAarMetadata",
                     ":feature1:checkDebugDuplicateClasses",
                     ":feature1:compileDebugJavaWithJavac",
                     ":feature1:compressDebugAssets",
@@ -111,7 +109,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeDebugAssets",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:mergeDebugJniLibFolders",
-                    ":feature1:mergeDebugNativeLibs",
                     ":feature1:mergeDebugShaders",
                     ":feature1:mergeExtDexDebug",
                     ":feature1:mergeLibDexDebug",
@@ -122,6 +119,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:processDebugManifestForPackage",
                     ":feature1:processManifestDebugForFeature",
 
+                    ":feature2:checkDebugAarMetadata",
                     ":feature2:checkDebugDuplicateClasses",
                     ":feature2:compileDebugJavaWithJavac",
                     ":feature2:compressDebugAssets",
@@ -135,7 +133,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeDebugAssets",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:mergeDebugJniLibFolders",
-                    ":feature2:mergeDebugNativeLibs",
                     ":feature2:mergeDebugShaders",
                     ":feature2:mergeExtDexDebug",
                     ":feature2:mergeLibDexDebug",
@@ -181,6 +178,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:compileDebugAidl",
                     ":feature1:compileDebugRenderscript",
                     ":feature1:compileDebugShaders",
+                    ":feature1:mergeDebugNativeLibs",
                     ":feature1:processDebugJavaRes",
                     ":feature1:stripDebugDebugSymbols",
 
@@ -188,6 +186,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:compileDebugAidl",
                     ":feature2:compileDebugRenderscript",
                     ":feature2:compileDebugShaders",
+                    ":feature2:mergeDebugNativeLibs",
                     ":feature2:processDebugJavaRes",
                     ":feature2:stripDebugDebugSymbols"
                 ),

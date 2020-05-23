@@ -29,8 +29,8 @@ import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.get
-import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.has
+import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
+import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -550,11 +550,11 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
-    fun getBuildConfigType() : BuildConfigType {
+    fun getBuildConfigType(): BuildConfigType {
         return if (taskContainer.generateBuildConfigTask == null || !buildFeatures.buildConfig) {
-              BuildConfigType.NONE
+            BuildConfigType.NONE
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
-                && (this as VariantCreationConfig).buildConfigFields.get().none()
+            && variantDslInfo.getBuildConfigFields().none()
         ) {
             BuildConfigType.JAR
         } else {

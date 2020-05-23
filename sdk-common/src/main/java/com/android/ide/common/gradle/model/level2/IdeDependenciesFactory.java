@@ -24,17 +24,11 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
-import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.repository.GradleVersion;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /** Creates {@link IdeDependencies} from {@link BaseArtifact}. */
 public class IdeDependenciesFactory {
@@ -72,32 +66,10 @@ public class IdeDependenciesFactory {
      * Create {@link IdeDependencies} from {@link BaseArtifact}.
      *
      * @param artifact Instance of {@link BaseArtifact} returned from Android plugin.
-     * @param modelVersion Version of Android plugin.
      * @return New instance of {@link IdeDependencies}.
      */
-    public IdeDependencies create(
-            @NonNull BaseArtifact artifact, @Nullable GradleVersion modelVersion) {
-        // Create a fresh model cache for this class, since current instance is based on dependencyGraphs or dependencies, which
-        // ha1ve been copied in the constructor of IdeBaseArtifact.
-        ModelCache modelCache = new ModelCache();
-        if (modelVersion != null
-                && modelVersion.getMajor() >= 3
-                && !artifact.getDependencyGraphs().getCompileDependencies().isEmpty()) {
-            return createFromDependencyGraphs(artifact.getDependencyGraphs());
-        }
+    public IdeDependencies create(@NonNull BaseArtifact artifact) {
         return createFromDependencies(artifact.getDependencies());
-    }
-
-    /** Call this method on level 4 DependencyGraphs. */
-    @VisibleForTesting
-    @NonNull
-    public IdeDependencies createFromDependencyGraphs(@NonNull DependencyGraphs graphs) {
-        return createInstance(
-                graphs.getCompileDependencies()
-                        .stream()
-                        .map(GraphItem::getArtifactAddress)
-                        .collect(Collectors.toList()),
-                Collections.emptyList());
     }
 
     /** Call this method on level 1 Dependencies model. */

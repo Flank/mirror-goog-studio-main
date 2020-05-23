@@ -61,12 +61,11 @@ public class IdeVariantImplTest {
         Variant original = new VariantStub();
         IdeVariantImpl copy =
                 new IdeVariantImpl(original, myModelCache, myDependenciesFactory, myGradleVersion);
-        assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVariantImpl.class).verify();
+        createEqualsVerifier(IdeVariantImpl.class, "hashCode").verify();
     }
 }

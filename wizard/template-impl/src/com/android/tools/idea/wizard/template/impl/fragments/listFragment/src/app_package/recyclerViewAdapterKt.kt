@@ -37,8 +37,6 @@ ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 import ${kotlinEscapedPackageName}.dummy.DummyContent.DummyItem
 
-import kotlinx.android.synthetic.main.${fragment_layout}.view.*
-
 /**
  * [RecyclerView.Adapter] that can display a [DummyItem].
  * TODO: Replace the implementation with code for your data type.
@@ -61,9 +59,9 @@ class ${adapterClassName}(
 
     override fun getItemCount(): Int = values.size
 
-    inner class ViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
-        val idView: TextView = view.item_number
-        val contentView: TextView = view.content
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val idView: TextView = view.findViewById(R.id.item_number)
+        val contentView: TextView = view.findViewById(R.id.content)
 
         override fun toString(): String {
             return super.toString() + " '" + contentView.text + "'"

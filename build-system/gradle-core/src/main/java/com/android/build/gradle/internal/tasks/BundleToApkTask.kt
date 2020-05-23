@@ -123,7 +123,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             get() = BundleToApkTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleToApkTask>
+            taskProvider: TaskProvider<BundleToApkTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

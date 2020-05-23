@@ -66,7 +66,7 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
         override val name = componentProperties.computeTaskName("check", "DuplicateClasses")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out CheckDuplicateClassesTask>
+            taskProvider: TaskProvider<CheckDuplicateClassesTask>
         ) {
             super.handleProvider(taskProvider)
 

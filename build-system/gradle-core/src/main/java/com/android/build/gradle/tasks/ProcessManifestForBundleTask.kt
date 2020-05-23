@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.component.BaseCreationConfig
@@ -83,7 +82,7 @@ abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
         override val type: Class<ProcessManifestForBundleTask>
             get() = ProcessManifestForBundleTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessManifestForBundleTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessManifestForBundleTask>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,

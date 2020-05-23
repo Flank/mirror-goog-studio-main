@@ -31,7 +31,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.util.Properties
-import java.util.function.Supplier
 
 class SdkDirectLoadingStrategyTest {
 
@@ -317,10 +316,11 @@ class SdkDirectLoadingStrategyTest {
         buildTools: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION): SdkDirectLoadingStrategy {
         return SdkDirectLoadingStrategy(
             SdkLocationSourceSet(testFolder.root, Properties(), Properties(), Properties()),
-            Supplier { platformHash },
-            Supplier { Revision.parseRevision(buildTools) },
+            platformHash,
+            Revision.parseRevision(buildTools),
             true,
-            FakeSyncIssueReporter())
+            FakeSyncIssueReporter()
+        )
     }
 
     // Configures the SDK Test directory and return the root of the SDK dir.

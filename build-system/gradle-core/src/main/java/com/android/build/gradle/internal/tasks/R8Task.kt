@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.MultipleArtifactType
@@ -184,7 +183,7 @@ abstract class R8Task: ProguardConfigurableTask() {
         private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out R8Task>
+            taskProvider: TaskProvider<R8Task>
         ) {
             super.handleProvider(taskProvider)
 

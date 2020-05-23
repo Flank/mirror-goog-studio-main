@@ -93,11 +93,11 @@ class TestingElements(val language: ScriptingLanguage) {
             import org.gradle.workers.WorkParameters
             import org.gradle.workers.WorkerExecutor
             import org.gradle.workers.WorkAction
-            import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.artifact.ArtifactKind
             import com.android.build.api.artifact.ArtifactType
-            import com.android.build.api.artifact.ArtifactType.Replaceable
-            import com.android.build.api.artifact.ArtifactType.ContainsMany
+            import com.android.build.api.artifact.ArtifactKind
+            import com.android.build.api.artifact.Artifact
+            import com.android.build.api.artifact.Artifact.Replaceable
+            import com.android.build.api.artifact.Artifact.ContainsMany
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
 
@@ -202,16 +202,16 @@ class TestingElements(val language: ScriptingLanguage) {
                 @TaskAction
                 fun taskAction() {
 
-                    val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
-                    val error = firstProcess.errorStream.readBytes().decodeToString()
-                    if (error.isNotBlank()) {
-                        System.err.println("Git error : ${'$'}error")
-                    }
-                    var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
-                    if (gitVersion.isEmpty()) {
-                        gitVersion="12"
-                    }
-                    gitVersionOutputFile.get().asFile.writeText(gitVersion)
+                    // this would be the code to get the tip of tree version, 
+                    // val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
+                    // val error = firstProcess.errorStream.readBytes().decodeToString()
+                    // if (error.isNotBlank()) {
+                    //      System.err.println("Git error : ${'$'}error")
+                    // }
+                    // var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
+
+                    // but here, we are just hardcoding : 
+                    gitVersionOutputFile.get().asFile.writeText("1234")
                 }
             }
             """
@@ -414,7 +414,7 @@ fun getManifestProducerTask() =
                     val apk = File(builtArtifacts.elements.single().outputFile).toPath()
                     apkAnalyzer.resXml(apk, "/AndroidManifest.xml")
                     val manifest = byteArrayOutputStream.toString()
-                    println(if (manifest.contains("android:versionCode=\"12\"")) "SUCCESS" else "FAILED")
+                    println(if (manifest.contains("android:versionCode=\"1234\"")) "SUCCESS" else "FAILED")
                 }
             }
             """
@@ -450,7 +450,7 @@ fun getManifestProducerTask() =
             """
                 ScriptingLanguage.Groovy ->
             // language=groovy
-            """
+                    """
             import org.gradle.api.DefaultTask
             import org.gradle.api.file.Directory
             import org.gradle.api.file.DirectoryProperty
@@ -460,11 +460,10 @@ fun getManifestProducerTask() =
             import java.io.PrintStream
 
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
+            import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.variant.BuiltArtifacts
             import org.gradle.api.provider.Property
-            import org.gradle.api.tasks.Internal
-            import java.io.File
+            import org.gradle.api.tasks.Internal 
 
             abstract class DisplayApksTask extends DefaultTask {
 
@@ -482,7 +481,7 @@ fun getManifestProducerTask() =
                         throw new RuntimeException("Cannot load APKs")
                     }
                     artifacts.elements.forEach {
-                        println("Got an APK at ${ '$' }{it.outputFile}")
+                        println("Got an APK at ${'$'}{it.outputFile}")
                     }
                 }
             }
@@ -502,17 +501,11 @@ fun getManifestProducerTask() =
             import org.gradle.api.tasks.InputFiles
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
-            import java.io.ByteArrayOutputStream
-            import java.io.PrintStream
-
-            import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactTypes
-            import com.android.build.api.variant.BuiltArtifact
-            import com.android.build.api.variant.BuiltArtifacts
-            import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.variant.BuiltArtifact
+import com.android.build.api.artifact.ArtifactTransformationRequest
             import org.gradle.api.tasks.Internal
-            import java.io.File
-            import java.nio.file.Files
+
+import java.nio.file.Files
 
             interface WorkItemParameters extends WorkParameters, Serializable {
                 RegularFileProperty getInputApkFile()
@@ -551,7 +544,7 @@ fun getManifestProducerTask() =
                 abstract DirectoryProperty getOutFolder()
 
                 @Internal
-                abstract Property<ArtifactTransformationRequest> getTransformationRequest()
+                abstract Property<ArtifactTransformationRequest<CopyApksTask>> getTransformationRequest()
 
                 @TaskAction
                 void taskAction() {
@@ -597,7 +590,7 @@ fun getManifestProducerTask() =
                 abstract val outFolder: DirectoryProperty
 
                 @get:Internal
-                abstract val transformationRequest: Property<ArtifactTransformationRequest>
+                abstract val transformationRequest: Property<ArtifactTransformationRequest<CopyApksTask>>
 
                 @TaskAction
                 fun taskAction() {

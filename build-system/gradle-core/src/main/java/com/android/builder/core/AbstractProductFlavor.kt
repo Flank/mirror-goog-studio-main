@@ -227,7 +227,7 @@ abstract class AbstractProductFlavor(
 
     override var wearAppUnbundled: Boolean? = null
 
-    override var resourceConfigurations: MutableSet<String> = Sets.newHashSet()
+    override val resourceConfigurations: MutableSet<String> = Sets.newHashSet()
 
     /**
      * Adds a res config filter (for instance 'hdpi')

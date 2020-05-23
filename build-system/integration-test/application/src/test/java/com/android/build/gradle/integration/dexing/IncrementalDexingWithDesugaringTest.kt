@@ -52,22 +52,24 @@ import java.io.File
 @RunWith(FilterableParameterized::class)
 class IncrementalDexingWithDesugaringTest(
     private val scenario: Scenario,
-    private val withIncrementalDexingV2: Boolean
+    private val withIncrementalDexingTaskV2: Boolean,
+    private val withIncrementalDexingTransform: Boolean
 ) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "scenario_{0}_incrementalDexingV2_{1}")
+        @Parameterized.Parameters(
+            name = "scenario_{0}_incrementalDexingTaskV2_{1}_withIncrementalDexingTransform_{2}")
         @JvmStatic
         fun parameters() = listOf(
-            arrayOf(APP, true),
-            arrayOf(APP, false),
-            arrayOf(ANDROID_LIB, true),
-            arrayOf(ANDROID_LIB, false),
-            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true),
-            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, false),
-            arrayOf(JAVA_LIB, true),
-            arrayOf(JAVA_LIB, false)
+            arrayOf(APP, true, true),
+            arrayOf(APP, false, false),
+            arrayOf(ANDROID_LIB, true, true),
+            arrayOf(ANDROID_LIB, false, false),
+            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true, true),
+            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, false, false),
+            arrayOf(JAVA_LIB, true, true),
+            arrayOf(JAVA_LIB, false, false)
         )
     }
 
@@ -251,7 +253,7 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB -> {
                     {
-                        if (withIncrementalDexingV2) {
+                        if (withIncrementalDexingTransform) {
                             RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
                                 .resolve("debug/$it.class")
                         } else {
@@ -262,7 +264,7 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
                     {
-                        if (withIncrementalDexingV2) {
+                        if (withIncrementalDexingTransform) {
                             RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
                                 .resolve("debug/classes.jar")
                         } else {
@@ -292,7 +294,7 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB -> {
                     {
-                        if (withIncrementalDexingV2) {
+                        if (withIncrementalDexingTransform) {
                             findDexTransformOutputDir(subproject.buildDir).resolve("debug/$it.dex")
                         } else {
                             findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
@@ -335,7 +337,8 @@ class IncrementalDexingWithDesugaringTest(
                 )
             })
         ).useCustomExecutor {
-            it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2, withIncrementalDexingV2)
+            it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
+            it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
         }
     }
 
@@ -350,7 +353,8 @@ class IncrementalDexingWithDesugaringTest(
     private fun findDexTransformOutputDir(buildDir: File): File {
         // Run a full build so that dex outputs are generated, then we will try to locate them.
         project.executor()
-            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2, withIncrementalDexingV2)
+            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
+            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
             .run("clean", ":app:mergeDexDebug")
 
         val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
@@ -405,13 +409,13 @@ class IncrementalDexingWithDesugaringTest(
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAlonePublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -420,7 +424,7 @@ class IncrementalDexingWithDesugaringTest(
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
                         dummyStandAloneDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -487,13 +491,13 @@ class IncrementalDexingWithDesugaringTest(
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAlonePublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -501,13 +505,13 @@ class IncrementalDexingWithDesugaringTest(
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAloneDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
                                     UNCHANGED
                                 } else {
                                     CHANGED

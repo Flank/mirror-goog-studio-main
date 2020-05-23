@@ -22,7 +22,6 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.BaseCreationConfig
-import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -405,7 +404,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         }
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ProcessTestManifest>
+            taskProvider: TaskProvider<ProcessTestManifest>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider

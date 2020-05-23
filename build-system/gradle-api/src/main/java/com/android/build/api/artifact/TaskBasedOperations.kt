@@ -39,12 +39,11 @@ interface TaskBasedOperations<TaskT: Task> {
      * Construct a new operation request where the [TaskT] expects to read the provided
      * [ArtifactTypeT] built artifacts from the location specified by the [at] parameter.
      *
-     *
      * @param type the artifact type the [TaskT] is interested in.
      * @param at the location at which the [TaskT] will be reading the built artifacts from.
      */
     fun <ArtifactTypeT> toRead(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): TaskBasedOperations<TaskT>
-            where ArtifactTypeT: ArtifactType<Directory>, ArtifactTypeT: ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+            where ArtifactTypeT: Artifact<Directory>, ArtifactTypeT: Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
 
     /**
      * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
@@ -53,8 +52,8 @@ interface TaskBasedOperations<TaskT: Task> {
      * @param type the artifact type the [TaskT] is producing
      * @param at the location it produces these artifacts in.
      */
-    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): ArtifactTransformationRequest
-        where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): ArtifactTransformationRequest<TaskT>
+        where ArtifactTypeT : Artifact<Directory>, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
 
     /**
      * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
@@ -65,13 +64,13 @@ interface TaskBasedOperations<TaskT: Task> {
      * @param atLocation the file system location to put these artifacts.
      */
     // TODO : consider moving both andWrite to a separate interface to support atLocation, withName...
-    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>, atLocation: String): ArtifactTransformationRequest
-            where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>, atLocation: String): ArtifactTransformationRequest<TaskT>
+            where ArtifactTypeT : Artifact<Directory>, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
 }
 
 /**
  * Denotes a completed transformation request where a [Task] will be transforming an incoming
- * [ArtifactType] into an outgoing [ArtifactType].
+ * [Artifact] into an outgoing [Artifact].
  *
  * The implementation will take care of reading the source built artifacts from the input location
  * provided through the [TaskBasedOperations.toRead] method.
@@ -85,7 +84,7 @@ interface TaskBasedOperations<TaskT: Task> {
  * metadata format and consumers will be unlocked.
  */
 @Incubating
-interface ArtifactTransformationRequest {
+interface ArtifactTransformationRequest<TaskT: Task> {
 
     /**
      * Submit a `org.gradle.workers` style of [WorkAction] to process each input [BuiltArtifact]
@@ -98,7 +97,7 @@ interface ArtifactTransformationRequest {
      * [BuiltArtifact]
      */
     fun <ParamT> submit(
-        task: Task,
+        task: TaskT,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
         parameterType: Class<out ParamT>,
@@ -110,6 +109,11 @@ interface ArtifactTransformationRequest {
 
     /**
      * Submit a lambda to process synchronously each input [BuiltArtifact]
+     *
+     * @param task the task instance requesting the item processing.
+     * @param transformer a lambda function that takes an input [BuiltArtifact] and produces a
+     * File for that input. The File will be used as the transformed version of the passed
+     * [BuiltArtifact]
      */
-    fun submit(task: Task, transformer: (input: BuiltArtifact) -> File)
+    fun submit(task: TaskT, transformer: (input: BuiltArtifact) -> File)
 }

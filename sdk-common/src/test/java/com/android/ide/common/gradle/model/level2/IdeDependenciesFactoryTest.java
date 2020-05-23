@@ -27,13 +27,7 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
 import com.android.ide.common.gradle.model.stubs.DependenciesStub;
-import com.android.ide.common.gradle.model.stubs.DependencyGraphsStub;
-import com.android.ide.common.gradle.model.stubs.GlobalLibraryMapStub;
-import com.android.ide.common.gradle.model.stubs.GradleStubBuilderUtil;
-import com.android.ide.common.gradle.model.stubs.GraphItemStub;
 import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
-import com.android.ide.common.repository.GradleVersion;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,52 +43,6 @@ public class IdeDependenciesFactoryTest {
     @Before
     public void setUp() throws Exception {
         myDependenciesFactory = new IdeDependenciesFactory();
-    }
-
-    @Test
-    public void createFromDependencyGraph() {
-        GraphItemStub javaGraphItem = new GraphItemStub("javaLibrary", Collections.emptyList(), "");
-        GraphItemStub androidGraphItem =
-                new GraphItemStub("androidLibrary", Collections.emptyList(), "");
-        GraphItemStub moduleGraphItem = new GraphItemStub("module", Collections.emptyList(), "");
-
-        Library level2AndroidLibrary = GradleStubBuilderUtil.l2AndroidLibrary("androidLibrary");
-        Library level2JavaLibrary = GradleStubBuilderUtil.l2JavaLibrary("javaLibrary");
-        Library level2ModuleLibrary = GradleStubBuilderUtil.l2ModuleLibrary("module");
-
-        DependencyGraphsStub dependencyGraphsStub =
-                new DependencyGraphsStub(
-                        Arrays.asList(javaGraphItem, androidGraphItem, moduleGraphItem),
-                        Collections.emptyList(),
-                        Collections.emptyList(),
-                        Collections.emptyList());
-
-        myDependenciesFactory.setUpGlobalLibraryMap(
-                singletonList(
-                        new GlobalLibraryMapStub(
-                                ImmutableMap.of(
-                                        "javaLibrary", level2JavaLibrary,
-                                        "androidLibrary", level2AndroidLibrary,
-                                        "moduleLibrary", level2ModuleLibrary))));
-        IdeDependencies level2Dependencies =
-                myDependenciesFactory.createFromDependencyGraphs(dependencyGraphsStub);
-
-        assertThat(level2Dependencies.getAndroidLibraries()).hasSize(1);
-        assertThat(level2Dependencies.getAndroidLibraries().iterator().next().getArtifactAddress())
-                .isEqualTo("androidLibrary");
-
-        assertThat(level2Dependencies.getJavaLibraries()).hasSize(1);
-        assertThat(level2Dependencies.getJavaLibraries().iterator().next().getArtifactAddress())
-                .isEqualTo("javaLibrary");
-
-        assertThat(level2Dependencies.getModuleDependencies()).hasSize(1);
-        assertThat(
-                        level2Dependencies
-                                .getModuleDependencies()
-                                .iterator()
-                                .next()
-                                .getArtifactAddress())
-                .isEqualTo("module");
     }
 
     @Test
@@ -181,8 +129,7 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
-        IdeDependencies level2Dependencies =
-                myDependenciesFactory.create(baseArtifactStub, GradleVersion.parse("2.3.0"));
+        IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
 
         assertThat(level2Dependencies.getAndroidLibraries()).hasSize(0);
 
@@ -229,8 +176,7 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
-        IdeDependencies level2Dependencies =
-                myDependenciesFactory.create(baseArtifactStub, GradleVersion.parse("2.3.0"));
+        IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
 
         assertThat(
                         level2Dependencies

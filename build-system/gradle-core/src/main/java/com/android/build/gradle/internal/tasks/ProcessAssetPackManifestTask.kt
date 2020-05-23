@@ -79,7 +79,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         override val name = computeTaskName("process", "AssetPackManifests")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ProcessAssetPackManifestTask>
+            taskProvider: TaskProvider<ProcessAssetPackManifestTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

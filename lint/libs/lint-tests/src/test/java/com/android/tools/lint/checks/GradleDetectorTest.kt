@@ -40,6 +40,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRING_TARGET_SD
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
+import com.android.tools.lint.checks.GradleDetector.Companion.KTX_EXTENSION_AVAILABLE
 import com.android.tools.lint.checks.GradleDetector.Companion.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
 import com.android.tools.lint.checks.GradleDetector.Companion.NOT_INTERPOLATED
@@ -3202,6 +3203,55 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expectFixDiffs(fixDiff)
     }
 
+    fun testKtxExtensions() {
+        lint().files(
+            gradle(
+                """
+                    plugins {
+                        id 'com.android.application'
+                        id 'kotlin-android'
+                    }
+                    dependencies {
+                        implementation "androidx.core:core:1.2.0"
+                        implementation "androidx.core:core:999.2.0" // No KTX extensions for this version.
+                        implementation "androidx.core:fake-artifact:1.2.0" // No KTX extensions for this artifact.
+                    }
+                """
+            ).indented()
+        )
+            .issues(KTX_EXTENSION_AVAILABLE)
+            .run()
+            .expect("""
+                build.gradle:6: Information: Add suffix -ktx to enable the Kotlin extensions for this library [KtxExtensionAvailable]
+                    implementation "androidx.core:core:1.2.0"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 0 warnings
+            """)
+            .expectFixDiffs("""
+                Fix for build.gradle line 6: Replace with KTX dependency:
+                @@ -6 +6
+                -     implementation "androidx.core:core:1.2.0"
+                +     implementation "androidx.core:core-ktx:1.2.0"
+            """.trimIndent())
+
+        // Expect clean when the project does not depend on Kotlin.
+        lint().files(
+            gradle(
+                """
+                    plugins {
+                        id 'com.android.application'
+                    }
+                    dependencies {
+                        implementation "androidx.core:core:1.2.0"
+                    }
+                """
+            ).indented()
+        )
+            .issues(KTX_EXTENSION_AVAILABLE)
+            .run()
+            .expectClean()
+    }
+
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
     // -------------------------------------------------------------------------------------------
@@ -3318,6 +3368,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                   <com.android.tools.build/>
                   <com.google.android.gms/>
                   <com.google.android.support/>
+                  <androidx.core/>
                 </metadata>
             """.trimIndent()
             )
@@ -3381,6 +3432,16 @@ class GradleDetectorTest : AbstractCheckTest() {
                 <com.android.support.test>
                   <runner versions="0.3,0.5"/>
                 </com.android.support.test>
+            """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/androidx/core/group-index.xml",
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <androidx.core>
+                  <core-ktx versions="1.2.0"/>
+                  <core versions="1.2.0"/>
+                </androidx.core>
             """.trimIndent()
             )
 

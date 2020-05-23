@@ -17,7 +17,6 @@
 package com.android.ide.common.build
 
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.resources.Density
 import com.google.common.collect.Sets
 import junit.framework.TestCase
 import org.junit.Test
@@ -34,16 +33,14 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     /** Helper to run InstallHelper.computeMatchingOutput with variable ABI list.  */
     private fun computeBestOutput(
         outputs: List<GenericBuiltArtifact>,
-        deviceDensity: Int,
         vararg deviceAbis: String
     ): List<File> {
         val deviceConfigProvider = Mockito.mock(
             DeviceConfigProvider::class.java
         )
-        Mockito.`when`(deviceConfigProvider.density).thenReturn(deviceDensity)
         Mockito.`when`(deviceConfigProvider.abis)
             .thenReturn(Arrays.asList(*deviceAbis))
-        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutput(
+        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutputs(
             deviceConfigProvider,
             wrap(outputs),
             null /* variantAbiFilters */
@@ -53,16 +50,14 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     private fun computeBestOutput(
         outputs: List<GenericBuiltArtifact>,
         deviceAbis: Set<String>,
-        deviceDensity: Int,
         vararg variantAbiFilters: String
     ): List<File> {
         val deviceConfigProvider = Mockito.mock(
             DeviceConfigProvider::class.java
         )
-        Mockito.`when`(deviceConfigProvider.density).thenReturn(deviceDensity)
         Mockito.`when`(deviceConfigProvider.abis)
             .thenReturn(ArrayList(deviceAbis))
-        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutput(
+        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutputs(
             deviceConfigProvider,
             wrap(outputs),
             listOf(*variantAbiFilters)
@@ -85,67 +80,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val list: MutableList<GenericBuiltArtifact> =
             ArrayList()
         list.add(getUniversalOutput(1).also { match = it })
-        val result = computeBestOutput(list, 160, "foo")
-        TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(File(match.outputFile), result[0])
-    }
-
-    @Test
-    fun testDensityOnlyWithMatch() {
-        var match: GenericBuiltArtifact
-        val list: MutableList<GenericBuiltArtifact> =
-            ArrayList()
-        list.add(getUniversalOutput(1))
-        list.add(getDensityOutput(160, 2).also { match = it })
-        list.add(getDensityOutput(320, 3))
-        val result = computeBestOutput(list, 160, "foo")
-        TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(File(match.outputFile), result[0])
-    }
-
-    @Test
-    fun testDensityOnlyWithUniversalMatch() {
-        var match: GenericBuiltArtifact
-        val list: MutableList<GenericBuiltArtifact> =
-            ArrayList()
-        list.add(getUniversalOutput(3).also { match = it })
-        list.add(getDensityOutput(320, 2))
-        list.add(getDensityOutput(480, 1))
-        val result = computeBestOutput(list, 160, "foo")
-        TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(File(match.outputFile), result[0])
-    }
-
-    @Test
-    fun testDensityOnlyWithNoMatch() {
-        val list: MutableList<GenericBuiltArtifact> =
-            ArrayList()
-        list.add(getDensityOutput(320, 1))
-        list.add(getDensityOutput(480, 2))
-        val result = computeBestOutput(list, 160, "foo")
-        TestCase.assertEquals(0, result.size)
-    }
-
-    @Test
-    fun testDensityOnlyWithCustomDeviceDensity() {
-        var match: GenericBuiltArtifact
-        val list: MutableList<GenericBuiltArtifact> = ArrayList()
-        list.add(getUniversalOutput(1).also { match = it })
-        list.add(getDensityOutput(320, 2))
-        list.add(getDensityOutput(480, 3))
-        val result = computeBestOutput(list, 1, "foo")
-        TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(File(match.outputFile), result[0])
-    }
-
-    @Test
-    fun testDensityWithAnydpi() {
-        var match: GenericBuiltArtifact
-        val list: MutableList<GenericBuiltArtifact> = ArrayList()
-        list.add(getUniversalOutput(1).also { match = it })
-        list.add(getDensityOutput(320, 2))
-        list.add(getDensityOutput(0xFFFE, 3))
-        val result = computeBestOutput(list, 400, "foo")
+        val result = computeBestOutput(list, "foo")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -157,7 +92,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getUniversalOutput(1))
         list.add(getAbiOutput("foo", 2).also { match = it })
         list.add(getAbiOutput("bar", 3))
-        val result = computeBestOutput(list, 160, "foo")
+        val result = computeBestOutput(list, "foo")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -172,7 +107,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getAbiOutput("bar", 3).also { match = it })
         // bar is preferred over foo
         val result =
-            computeBestOutput(list, 160, "bar", "foo")
+            computeBestOutput(list, "bar", "foo")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -188,7 +123,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getAbiOutput("bar2"))
         // bar is preferred over foo
         val result =
-            computeBestOutput(list, 160, "bar", "foo")
+            computeBestOutput(list, "bar", "foo")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -204,7 +139,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getAbiOutput("foo", 1))
         // bar is preferred over foo
         val result =
-            computeBestOutput(list, 160, "bar", "foo")
+            computeBestOutput(list, "bar", "foo")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -219,7 +154,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getAbiOutput("bar", 3).also { match = it })
         // bar is preferred over foo
         val result =
-            computeBestOutput(list, 160, "foo", "bar")
+            computeBestOutput(list, "foo", "bar")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -231,7 +166,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getUniversalOutput(1).also { match = it })
         list.add(getAbiOutput("foo", 2))
         list.add(getAbiOutput("bar", 3))
-        val result = computeBestOutput(list, 160, "zzz")
+        val result = computeBestOutput(list, "zzz")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -241,7 +176,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val list: MutableList<GenericBuiltArtifact> = ArrayList()
         list.add(getAbiOutput("foo", 1))
         list.add(getAbiOutput("bar", 2))
-        val result = computeBestOutput(list, 160, "zzz")
+        val result = computeBestOutput(list, "zzz")
         TestCase.assertEquals(0, result.size)
     }
 
@@ -250,10 +185,10 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         var match: GenericBuiltArtifact
         val list: MutableList<GenericBuiltArtifact> = ArrayList()
         list.add(getUniversalOutput(1))
-        list.add(getOutput(160, "zzz", 2))
-        list.add(getOutput(160, "foo", 4).also { match = it })
-        list.add(getOutput(320, "foo", 3))
-        val result = computeBestOutput(list, 160, "foo")
+        list.add(getOutput("zzz", 2))
+        list.add(getOutput("foo", 4).also { match = it })
+        list.add(getOutput("foo", 3))
+        val result = computeBestOutput(list, "foo")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -263,10 +198,10 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         var match: GenericBuiltArtifact
         val list: MutableList<GenericBuiltArtifact> = ArrayList()
         list.add(getUniversalOutput(4).also { match = it })
-        list.add(getOutput(320, "zzz", 3))
-        list.add(getOutput(160, "bar", 2))
-        list.add(getOutput(320, "foo", 1))
-        val result = computeBestOutput(list, 160, "zzz")
+        list.add(getOutput("zzz", 3))
+        list.add(getOutput("bar", 2))
+        list.add(getOutput("foo", 1))
+        val result = computeBestOutput(list, "zzz")
         TestCase.assertEquals(1, result.size)
         TestCase.assertEquals(File(match.outputFile), result[0])
     }
@@ -274,11 +209,13 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     @Test
     fun testMultiFilterWithNoMatch() {
         val list: MutableList<GenericBuiltArtifact> = ArrayList()
-        list.add(getOutput(320, "zzz", 1))
-        list.add(getOutput(160, "bar", 2))
-        list.add(getOutput(320, "foo", 3))
-        val result = computeBestOutput(list, 160, "zzz")
-        TestCase.assertEquals(0, result.size)
+        var match: GenericBuiltArtifact
+        list.add(getOutput("zzz", 1).also { match = it })
+        list.add(getOutput("bar", 2))
+        list.add(getOutput("foo", 3))
+        val result = computeBestOutput(list, "zzz")
+        TestCase.assertEquals(1, result.size)
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -290,7 +227,6 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val result = computeBestOutput(
             list,
             Sets.newHashSet("bar", "foo"),
-            160,
             "foo",
             "zzz"
         )
@@ -305,28 +241,9 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val result = computeBestOutput(
             list,
             Sets.newHashSet("bar", "foo"),
-            160,
             "zzz"
         )
         TestCase.assertEquals(0, result.size)
-    }
-
-    @Test
-    fun testDensitySplitPlugVariantLevelAbiFilter() {
-        val list: MutableList<GenericBuiltArtifact> =
-            ArrayList()
-        list.add(getUniversalOutput(1))
-        list.add(getDensityOutput(240, 2))
-        list.add(getDensityOutput(320, 3))
-        list.add(getDensityOutput(480, 4))
-        val result = computeBestOutput(
-            list,
-            Sets.newHashSet("bar", "foo"),
-            320,
-            "foo",
-            "zzz"
-        )
-        TestCase.assertEquals(1, result.size)
     }
 
     private fun getUniversalOutput(versionCode: Int): GenericBuiltArtifact {
@@ -334,20 +251,6 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
             outputType = "UNIVERSAL",
             outputFile = File("null").absolutePath,
             versionCode = versionCode
-        )
-    }
-
-    private fun getDensityOutput(
-        densityFilter: Int,
-        versionCode: Int
-    ): GenericBuiltArtifact {
-        val densityEnum = Density.getEnum(densityFilter)
-        return GenericBuiltArtifact(
-            outputType = "ONE_OF_MANY",
-            outputFile = File(densityEnum!!.resourceValue).absolutePath,
-            versionCode = versionCode,
-            filters = listOf(
-                GenericFilterConfiguration("DENSITY", densityEnum.resourceValue))
         )
     }
 
@@ -377,17 +280,14 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     }
 
     private fun getOutput(
-        densityFilter: Int,
         abiFilter: String,
         versionCode: Int
     ): GenericBuiltArtifact {
-        val densityEnum = Density.getEnum(densityFilter)!!.resourceValue
         return GenericBuiltArtifact(
             outputType = "ONE_OF_MANY",
-            outputFile = File(densityEnum + abiFilter).absolutePath,
+            outputFile = File(abiFilter).absolutePath,
             versionCode = versionCode,
             filters = listOf(
-                GenericFilterConfiguration("DENSITY", densityEnum),
                 GenericFilterConfiguration("ABI", abiFilter))
         )
     }

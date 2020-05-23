@@ -37,8 +37,8 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
-import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.LibraryDependencySourcesTransform
+import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
@@ -90,29 +90,17 @@ class DependencyConfigurator(
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) {
 
-    fun configureGeneralTransforms(): DependencyConfigurator {
-        val dependencies: DependencyHandler = project.dependencies
-
-        // USE_ANDROID_X indicates that the developers want to be in the AndroidX world, whereas
-        // ENABLE_JETIFIER indicates that they want to have automatic tool support for converting
-        // not-yet-migrated dependencies. Developers may want to use AndroidX but disable Jetifier
-        // for purposes such as debugging. However, disabling AndroidX and enabling Jetifier is not
-        // allowed.
-        check(
-            !(!globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
-                    && globalScope.projectOptions[BooleanOption.ENABLE_JETIFIER])
-        ) {
-            ("AndroidX must be enabled when Jetifier is enabled. To resolve, set "
-                    + BooleanOption.USE_ANDROID_X.propertyName
-                    + "=true in your gradle.properties file.")
-        }
+    fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
         if (globalScope.projectOptions[BooleanOption.ENABLE_JETIFIER]) {
             replaceOldSupportLibraries(project)
         }
-        /*
-         * Register transforms.
-         */
+        return this
+    }
+
+    fun configureGeneralTransforms(): DependencyConfigurator {
+        val dependencies: DependencyHandler = project.dependencies
+
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         // Arguments passed to an ArtifactTransform must not be null
@@ -654,7 +642,7 @@ class DependencyConfigurator(
                     project.files(globalScope.bootClasspath),
                     getDesugarLibConfig(globalScope.project),
                     SyncOptions.getErrorFormatMode(globalScope.projectOptions),
-                    globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
+                    globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
                 )
             }
         }

@@ -134,7 +134,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
         override val type: Class<BundleReportDependenciesTask> = BundleReportDependenciesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleReportDependenciesTask>
+            taskProvider: TaskProvider<BundleReportDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

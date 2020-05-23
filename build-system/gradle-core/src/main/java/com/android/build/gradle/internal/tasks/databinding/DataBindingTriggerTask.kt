@@ -82,7 +82,7 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
         override val type: Class<DataBindingTriggerTask> = DataBindingTriggerTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingTriggerTask>
+            taskProvider: TaskProvider<DataBindingTriggerTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

@@ -26,7 +26,7 @@ data class ThemeData(
 /**
  * Information about project themes.
  */
-data class ThemesData(private val appName: String? = "App",
+data class ThemesData(val appName: String,
   val main: ThemeData = ThemeData("Theme.$appName", false),
   val overlay: ThemeData = ThemeData("ThemeOverlay.$appName", false),
   val noActionBar: ThemeData = ThemeData("Theme.$appName.NoActionBar", false),

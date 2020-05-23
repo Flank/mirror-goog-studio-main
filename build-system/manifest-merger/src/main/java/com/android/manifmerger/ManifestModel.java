@@ -492,7 +492,9 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                                         "documenter",
                                         "configurator",
                                         "incidentReportApprover",
-                                        "appPredictor"))),
+                                        "appPredictor",
+                                        "companion",
+                                        "retailDemo"))),
 
         /**
          * Permission-tree (contained in manifest).

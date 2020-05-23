@@ -66,17 +66,19 @@ message QueryParameters {
   // Fields 1 to 100 reserved to future metadata passed on the request.
 
   oneof query {
-    ProcessMetadataParameters process_metadata = 101;
+    ProcessMetadataParameters process_metadata_request = 101;
     TraceEventsParameters trace_events_request = 102;
     SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
     CountersParameters counters_request = 105;
   }
 
-  // Returns metadata information for a set of processes.
+  // Returns metadata information for a process of the provided id.
+  // If process_id is not set (or is set to 0), returns metadata
+  // for all processes found in the trace.
   // See ResultProcessMetadata for the data returned from this.
   message ProcessMetadataParameters {
-    repeated int64 process_id = 1;
+    int64 process_id = 1;
   }
 
   // Returns all the trace events for all threads part of the process_id
@@ -113,7 +115,7 @@ message QueryResult {
   // Can be set to none if the received query was invalid. In this case,
   // check the error field.
   oneof result {
-    ProcessMetadataResult process_metadata = 101;
+    ProcessMetadataResult process_metadata_result = 101;
     TraceEventsResult trace_events_result = 102;
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;

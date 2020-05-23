@@ -18,12 +18,13 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -44,6 +45,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -90,7 +92,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         return if (FileUtils.getAllFiles(inputDir.get().asFile).isEmpty) {
             null
         } else {
-            stripToolFinderProvider.get().stripExecutables.toSortedMap()
+            sdkBuildService.get().stripExecutableFinderProvider.get().stripExecutables.toSortedMap()
         }
     }
 
@@ -101,7 +103,8 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputFiles: Property<FileTree>
 
-    private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
+    @get:Internal
+    abstract val sdkBuildService: Property<SdkComponentsBuildService>
 
     override val incremental: Boolean
         get() = true
@@ -113,7 +116,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
                 inputDir.get().asFile,
                 outputDir.get().asFile,
                 excludePatterns,
-                stripToolFinderProvider,
+                sdkBuildService.get().stripExecutableFinderProvider,
                 GradleProcessExecutor(execOperations::exec),
                 null
             ).run()
@@ -127,7 +130,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
                 inputDir.get().asFile,
                 outputDir.get().asFile,
                 excludePatterns,
-                stripToolFinderProvider,
+                sdkBuildService.get().stripExecutableFinderProvider,
                 GradleProcessExecutor(execOperations::exec),
                 changedInputs
             ).run()
@@ -147,7 +150,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             get() = StripDebugSymbolsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out StripDebugSymbolsTask>
+            taskProvider: TaskProvider<StripDebugSymbolsTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -165,8 +168,9 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.excludePatterns =
                 creationConfig.globalScope.extension.packagingOptions.doNotStrip.sorted()
-            task.stripToolFinderProvider =
-                creationConfig.globalScope.sdkComponents.stripExecutableFinderProvider
+            task.sdkBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
             task.inputFiles.setDisallowChanges(
                 creationConfig.globalScope.project.provider {
                     creationConfig.globalScope.project.layout.files(task.inputDir).asFileTree

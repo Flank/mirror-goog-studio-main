@@ -14,7 +14,13 @@ import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.tensorflow.lite.DataType;
+import org.tensorflow.lite.support.common.ops.CastOp;
+import org.tensorflow.lite.support.common.ops.NormalizeOp;
+import org.tensorflow.lite.support.common.ops.QuantizeOp;
+import org.tensorflow.lite.support.image.ImageProcessor;
 import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.image.ops.ResizeOp;
 import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.support.model.Model;
 
@@ -32,6 +38,41 @@ public class ModelTest {
                 TensorImage.fromBitmap(
                         BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
         MobilenetQuantMetadata.Outputs outputs = model.process(tensorImage);
+        List<Category> probabilities = outputs.getProbabilityAsCategoryList();
+
+        float prob = 0;
+        String result = "";
+        for (Category category : probabilities) {
+            if (category.getScore() > prob) {
+                prob = category.getScore();
+                result = category.getLabel();
+            }
+        }
+        assertEquals("Top1 label in image classification model is wrong.", "daisy", result);
+    }
+
+    @Test
+    public void verifyImageClassificationModelWithFallbackApi() throws IOException {
+        // Context of the app under test.
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        ImageProcessor imageProcessor =
+                new ImageProcessor.Builder()
+                        .add(new ResizeOp(224, 224, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
+                        .add(new NormalizeOp(new float[] {127.5f}, new float[] {127.5f}))
+                        .add(new QuantizeOp(128f, 0.0078125f))
+                        .add(new CastOp(DataType.UINT8))
+                        .build();
+
+        Model.Options options = new Model.Options.Builder().setDevice(Model.Device.CPU).build();
+        MobilenetQuantMetadata model = MobilenetQuantMetadata.newInstance(appContext, options);
+        TensorImage tensorImage =
+                TensorImage.fromBitmap(
+                        BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
+        MobilenetQuantMetadata.Outputs outputs =
+                model.process(imageProcessor.process(tensorImage).getTensorBuffer());
+        // TODO(jackqdyulei): verify getProbabilityAsTensorBuffer once we have versioned
+        // MetadataExtractor, in which we can get label list easily.
         List<Category> probabilities = outputs.getProbabilityAsCategoryList();
 
         float prob = 0;

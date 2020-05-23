@@ -37,7 +37,6 @@ import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.model.CodeShrinker
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
-import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -200,7 +199,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             get() = PerModuleBundleTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PerModuleBundleTask>
+            taskProvider: TaskProvider<PerModuleBundleTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

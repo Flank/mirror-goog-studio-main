@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 383;
+    public static final int INITIAL_CAPACITY = 384;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -155,6 +155,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GradleDetector.GRADLE_PLUGIN_COMPATIBILITY);
         issues.add(GradleDetector.HIGH_APP_VERSION_CODE);
         issues.add(GradleDetector.IDE_SUPPORT);
+        issues.add(GradleDetector.KTX_EXTENSION_AVAILABLE);
         issues.add(GradleDetector.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8);
         issues.add(GradleDetector.MIN_SDK_TOO_LOW);
         issues.add(GradleDetector.NOT_INTERPOLATED);
@@ -390,7 +391,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(UnsafeBroadcastReceiverDetector.BROADCAST_SMS);
         issues.add(UnsafeNativeCodeDetector.LOAD);
         issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
-        issues.add(UnusedNavigationDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE_IDS);
         issues.add(UseCompoundDrawableDetector.ISSUE);

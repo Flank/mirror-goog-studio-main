@@ -224,7 +224,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         override val type: Class<GenerateApkDataTask> = GenerateApkDataTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateApkDataTask>
+            taskProvider: TaskProvider<GenerateApkDataTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.microApkTask = taskProvider

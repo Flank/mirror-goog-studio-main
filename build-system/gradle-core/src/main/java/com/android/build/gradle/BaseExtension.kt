@@ -361,7 +361,7 @@ abstract class BaseExtension protected constructor(
      */
     val sdkDirectory: File
         get() {
-            return globalScope.sdkComponents.sdkDirectoryProvider.get().asFile
+            return dslServices.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile
         }
 
     /**
@@ -375,7 +375,7 @@ abstract class BaseExtension protected constructor(
     val ndkDirectory: File
         get() {
         // do not call this method from within the plugin code as it forces part of SDK initialization.
-            return globalScope.sdkComponents.ndkDirectoryProvider.get().asFile
+            return dslServices.sdkComponents.flatMap { it.ndkDirectoryProvider }.get().asFile
     }
 
     // do not call this method from within the plugin code as it forces SDK initialization.
@@ -393,7 +393,7 @@ abstract class BaseExtension protected constructor(
      */
     val adbExecutable: File
         get() {
-            return globalScope.sdkComponents.adbExecutableProvider.get().asFile
+            return dslServices.sdkComponents.flatMap { it.adbExecutableProvider }.get().asFile
         }
 
     /** This property is deprecated. Instead, use [adbExecutable]. */

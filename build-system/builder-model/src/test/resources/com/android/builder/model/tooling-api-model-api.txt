@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-101f4d3dfffd84ffae38e11254a3865242166407693161f1c84bba79d8a65bd5
+6a6af94fc4d37ca743804862f7e750c013a76fa09c0f2a4321247f7dca8b88a3
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -86,6 +86,7 @@ com.android.builder.model.AndroidProject.getFrameworkSources: java.util.Collecti
 com.android.builder.model.AndroidProject.getGroupId: java.lang.String ()
 com.android.builder.model.AndroidProject.getJavaCompileOptions: com.android.builder.model.JavaCompileOptions ()
 com.android.builder.model.AndroidProject.getLintOptions: com.android.builder.model.LintOptions ()
+com.android.builder.model.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
 com.android.builder.model.AndroidProject.getModelVersion: java.lang.String ()
 com.android.builder.model.AndroidProject.getName: java.lang.String ()
 com.android.builder.model.AndroidProject.getNativeToolchains: java.util.Collection<com.android.builder.model.NativeToolchain> ()
@@ -332,13 +333,6 @@ com.android.builder.model.PackagingOptions.getDoNotStrip: java.util.Set<java.lan
 com.android.builder.model.PackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
 com.android.builder.model.PackagingOptions.getMerges: java.util.Set<java.lang.String> ()
 com.android.builder.model.PackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
-com.android.builder.model.PrefabPackagingOptions
-com.android.builder.model.PrefabPackagingOptions.getHeaders: java.lang.String ()
-com.android.builder.model.PrefabPackagingOptions.getLibraryName: java.lang.String ()
-com.android.builder.model.PrefabPackagingOptions.getName: java.lang.String ()
-com.android.builder.model.PrefabPackagingOptions.setHeaders: void (java.lang.String)
-com.android.builder.model.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
-com.android.builder.model.PrefabPackagingOptions.setName: void (java.lang.String)
 com.android.builder.model.ProductFlavor implements com.android.builder.model.BaseConfig, com.android.builder.model.DimensionAware
 com.android.builder.model.ProductFlavor.getApplicationId: java.lang.String ()
 com.android.builder.model.ProductFlavor.getMaxSdkVersion: java.lang.Integer ()

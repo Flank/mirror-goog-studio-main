@@ -68,7 +68,7 @@ interface VariantDimension {
      * @return a non-null collection of files.
      * @see .getTestProguardFiles
      */
-    var proguardFiles: MutableList<File>
+    val proguardFiles: MutableList<File>
 
     /**
      * Adds a new ProGuard configuration file.
@@ -111,7 +111,7 @@ interface VariantDimension {
      *
      * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    var testProguardFiles: MutableList<File>
+    val testProguardFiles: MutableList<File>
 
     /**
      * Adds a proguard rule file to be used when processing test code.

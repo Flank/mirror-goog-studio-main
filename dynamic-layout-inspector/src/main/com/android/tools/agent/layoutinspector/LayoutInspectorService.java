@@ -168,7 +168,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onStopLayoutInspectorCommand() {
         stopCapturing();
-        mDetectRootChange.stop();
+        mDetectRootChange.cancel(true);
         mDetectRootChange = null;
     }
 
@@ -212,8 +212,9 @@ public class LayoutInspectorService {
         }
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     @NonNull
-    public static List<View> getRootViews() {
+    public List<View> getRootViews() {
         try {
             List<View> views = WindowInspector.getGlobalWindowViews();
             List<View> result = new ArrayList<>();

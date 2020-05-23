@@ -26,13 +26,6 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.example.test">
 
-    <uses-sdk
-            android:minSdkVersion="21"
-            android:targetSdkVersion="24" />
-
-    <activity
-            android:name="com.example.ActivityOne" />
-
 </manifest>
 
 @lib1
@@ -40,10 +33,6 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.lib1" >
-
-<uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="24" />
 
 </manifest>
 
@@ -53,10 +42,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.lib1" >
 
-<uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="24" />
-
 </manifest>
 
 @result
@@ -65,12 +50,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.test" >
 
-<uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="24" />
-
-<activity
-        android:name="com.example.ActivityOne" />
+    <application />
 
 </manifest>
 

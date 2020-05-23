@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
@@ -25,7 +25,6 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
@@ -49,7 +48,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /**
- * Task that consumes [ArtifactTypes.MERGED_MANIFEST] single merged manifest and create several
+ * Task that consumes [ArtifactType.MERGED_MANIFEST] single merged manifest and create several
  * versions that are each suitable for all [VariantOutputImpl] for this variant.
  */
 @CacheableTask
@@ -163,7 +162,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
         override val type: Class<ProcessMultiApkApplicationManifest>
             get() = ProcessMultiApkApplicationManifest::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessMultiApkApplicationManifest>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessMultiApkApplicationManifest>) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
             creationConfig.artifacts.setInitialProvider(
@@ -192,7 +191,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
             creationConfig
                 .artifacts
                 .setTaskInputToFinalProduct(
-                    ArtifactTypes.MERGED_MANIFEST,
+                    ArtifactType.MERGED_MANIFEST,
                     task.mainMergedManifest
                 )
 

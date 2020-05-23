@@ -29,6 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.dsl.PrefabPackagingOptions;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -38,6 +39,7 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -58,6 +60,8 @@ import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
+import com.android.build.gradle.internal.tasks.PrefabModuleTaskData;
+import com.android.build.gradle.internal.tasks.PrefabPackageTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
@@ -66,19 +70,15 @@ import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
-import com.android.build.gradle.tasks.PrefabModuleTaskData;
-import com.android.build.gradle.tasks.PrefabPackageTask;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.android.builder.model.PrefabPackagingOptions;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -455,7 +455,7 @@ public class LibraryTaskManager
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends MergeResources> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<MergeResources> taskProvider) {
             variantProperties
                     .getArtifacts()
                     .setInitialProvider(taskProvider, MergeResources::getPublicFile)
@@ -609,5 +609,20 @@ public class LibraryTaskManager
 
         TaskFactoryUtils.dependsOn(
                 variantProperties.getTaskContainer().getAssembleTask(), verifyLibraryResources);
+    }
+
+    @Override
+    protected void configureGlobalLintTask() {
+        super.configureGlobalLintTask();
+
+        // publish the local lint.jar to all the variants.
+        // This takes the global jar (output of PrepareLintJar) and publishes to each variants
+        // as we don't have variant-free publishing at the moment.
+        for (LibraryVariantPropertiesImpl variant : variantPropertiesList) {
+            variant.getArtifacts()
+                    .copy(
+                            InternalArtifactType.LINT_PUBLISH_JAR.INSTANCE,
+                            globalScope.getGlobalArtifacts());
+        }
     }
 }

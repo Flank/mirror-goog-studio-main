@@ -185,7 +185,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
         override val type: Class<D8MainDexListTask> = D8MainDexListTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out D8MainDexListTask>
+            taskProvider: TaskProvider<D8MainDexListTask>
         ) {
             super.handleProvider(taskProvider)
             val request = creationConfig.artifacts.setInitialProvider(

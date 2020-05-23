@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.builder.model.PrefabPackagingOptions
+import com.android.build.api.dsl.PrefabPackagingOptions
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -24,12 +24,6 @@ open class PrefabPackagingOptions @Inject constructor(override var name: String)
     PrefabPackagingOptions, Serializable {
 
     override var headers: String? = null
-    open fun headers(headers: String) {
-        this.headers = headers
-    }
 
     override var libraryName: String? = null
-    open fun libraryName(libraryName: String) {
-        this.libraryName = libraryName
-    }
 }

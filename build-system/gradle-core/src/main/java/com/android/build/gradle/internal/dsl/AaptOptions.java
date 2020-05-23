@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.google.common.collect.Iterables;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -39,13 +39,13 @@ public class AaptOptions implements com.android.build.api.dsl.AaptOptions {
     @Nullable
     private String ignoreAssetsPattern;
 
-    private List<String> noCompressList = Collections.emptyList();
+    private final List<String> noCompressList = new ArrayList<>();
 
     @Nullable private Boolean cruncherEnabled;
 
     private boolean failOnMissingConfigEntry = false;
 
-    private List<String> additionalParameters = Collections.emptyList();
+    private final List<String> additionalParameters = new ArrayList<>();
 
     private int cruncherProcesses = 0;
 
@@ -81,11 +81,6 @@ public class AaptOptions implements com.android.build.api.dsl.AaptOptions {
         setNoCompress(Iterables.toArray(noCompress, String.class));
     }
 
-    @Override
-    public void setNoCompress(@NonNull Collection<String> noCompress) {
-        setNoCompress(Iterables.toArray(noCompress, String.class));
-    }
-
     public void setNoCompress(String... noCompress) {
         for (String p : noCompress) {
             if (p.equals("\"\"")) {
@@ -94,8 +89,8 @@ public class AaptOptions implements com.android.build.api.dsl.AaptOptions {
                         + "characters. Please use '' instead.");
             }
         }
-
-        noCompressList = Arrays.asList(noCompress);
+        noCompressList.clear();
+        Collections.addAll(noCompressList, noCompress);
     }
 
     @NonNull
@@ -170,27 +165,27 @@ public class AaptOptions implements com.android.build.api.dsl.AaptOptions {
 
     @Override
     public void noCompress(@NonNull String noCompress) {
-        noCompressList = Collections.singletonList(noCompress);
+        noCompressList.add(noCompress);
     }
 
     @Override
     public void noCompress(@NonNull String... noCompress) {
-        noCompressList = Arrays.asList(noCompress);
+        Collections.addAll(noCompressList, noCompress);
     }
 
     @Override
     public void additionalParameters(@NonNull String param) {
-        additionalParameters = Collections.singletonList(param);
+        additionalParameters.add(param);
     }
 
     @Override
     public void additionalParameters(@NonNull String... params) {
-        additionalParameters = Arrays.asList(params);
+        Collections.addAll(additionalParameters, params);
     }
 
-    @Override
     public void setAdditionalParameters(@NonNull List<String> parameters) {
-        additionalParameters = parameters;
+        additionalParameters.clear();
+        additionalParameters.addAll(parameters);
     }
 
     @Override

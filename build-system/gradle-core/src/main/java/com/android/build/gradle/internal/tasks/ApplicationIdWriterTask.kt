@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -57,7 +56,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             get() = ApplicationIdWriterTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out ApplicationIdWriterTask>
+            taskProvider: TaskProvider<ApplicationIdWriterTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

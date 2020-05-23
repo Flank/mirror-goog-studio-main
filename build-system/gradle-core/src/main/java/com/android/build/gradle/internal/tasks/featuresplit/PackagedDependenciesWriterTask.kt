@@ -119,7 +119,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             get() = PackagedDependenciesWriterTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out PackagedDependenciesWriterTask>
+            taskProvider: TaskProvider<PackagedDependenciesWriterTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

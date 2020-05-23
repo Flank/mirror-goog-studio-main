@@ -148,7 +148,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     abstract val dxDexParams: DxDexParameterInputs
 
     @get:Input
-    abstract val incrementalDexingV2: Property<Boolean>
+    abstract val incrementalDexingTaskV2: Property<Boolean>
 
     @get:LocalState
     @get:Optional
@@ -269,8 +269,8 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexParams.desugarClasspath
             ),
 
-            incrementalDexingV2 = incrementalDexingV2.get(),
-            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { incrementalDexingV2.get() },
+            incrementalDexingTaskV2 = incrementalDexingTaskV2.get(),
+            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { incrementalDexingTaskV2.get() },
 
             projectVariant = projectVariant.get(),
             inputJarHashesFile = inputJarHashesFile.get().asFile,
@@ -446,7 +446,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
         override val type: Class<DexArchiveBuilderTask> = DexArchiveBuilderTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DexArchiveBuilderTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<DexArchiveBuilderTask>) {
             super.handleProvider(taskProvider)
 
             creationConfig.artifacts.setInitialProvider(
@@ -514,9 +514,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.subProjectClasses.from(subProjectsClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
 
-            task.incrementalDexingV2.setDisallowChanges(
+            task.incrementalDexingTaskV2.setDisallowChanges(
                 creationConfig.globalScope.project.provider {
-                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
+                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2)
                 })
 
             val minSdkVersion = creationConfig
@@ -571,8 +571,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             if (libraryDesugaring) {
-                task.dexParams.coreLibDesugarConfig
-                    .set(getDesugarLibConfig(creationConfig.globalScope.project))
+                task.dexParams.coreLibDesugarConfig.set(getDesugarLibConfig(task.project))
             }
 
             if (dexExternalLibsInArtifactTransform) {
@@ -597,11 +596,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     this.bootClasspath.from(task.dexParams.desugarBootclasspath)
                     this.desugaringClasspath.from(desugaringClasspathForArtifactTransforms)
                     this.enableDesugaring.set(task.dexParams.withDesugaring)
-                    if (task.dexParams.coreLibDesugarConfig.isPresent) {
-                        this.libConfiguration.set(task.dexParams.coreLibDesugarConfig)
-                    }
+                    this.libConfiguration.set(task.dexParams.coreLibDesugarConfig)
                     this.errorFormat.set(task.dexParams.errorFormatMode)
-                    this.incrementalDexingV2.set(task.incrementalDexingV2)
+                    // External libraries do not require incremental support
+                    this.incrementalDexingTransform.set(false)
                 }
 
                 // Until Gradle provides a better way to run artifact transforms for arbitrary

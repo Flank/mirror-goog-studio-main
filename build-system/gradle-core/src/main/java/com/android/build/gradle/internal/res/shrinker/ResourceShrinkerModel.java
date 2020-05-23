@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.shrinker;
 
+import com.android.aapt.Resources.ResourceTable;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ObfuscatedClasses;
@@ -23,9 +24,15 @@ import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.w3c.dom.Node;
@@ -43,6 +50,8 @@ public class ResourceShrinkerModel {
     private ObfuscatedClasses obfuscatedClasses = ObfuscatedClasses.NO_OBFUSCATION;
 
     private final Set<String> strings = Sets.newHashSetWithExpectedSize(300);
+
+    private final Map<String, ResourceTable> resourceTableCache = Maps.newHashMap();
 
     private boolean foundGetIdentifier = false;
     private boolean foundWebContent = false;
@@ -79,6 +88,22 @@ public class ResourceShrinkerModel {
             @NonNull String name,
             @Nullable String value) {
         return usageModel.addResource(type, name, value);
+    }
+
+    /** Adds a new gathered resource to model. */
+    @NonNull
+    public Resource addResource(
+            @NonNull ResourceType type,
+            @NonNull String packageName,
+            @NonNull String name,
+            int value) {
+        return usageModel.addResource(type, name, value);
+    }
+
+
+    @Nullable
+    public Resource getResourceByValue(int resourceId) {
+        return usageModel.getResource(resourceId);
     }
 
     /** Adds string constant found in code to strings pool. */
@@ -143,6 +168,21 @@ public class ResourceShrinkerModel {
         new PossibleResourcesMarker(debugReporter, usageModel, strings, foundWebContent)
                 .markPossibleResourcesReachable();
     }
+
+    /**
+     * Reads resource table from specified path and stores it in cache to be able to reuse it if
+     * the same resource table is requested by another unit.
+     */
+    public ResourceTable readResourceTable(Path resourceTablePath) {
+        return resourceTableCache.computeIfAbsent(resourceTablePath.toString(), (path) -> {
+            try {
+                return ResourceTable.parseFrom(Files.readAllBytes(resourceTablePath));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
 
     public class ResourceShrinkerUsageModel extends ResourceUsageModel {
         public File file;

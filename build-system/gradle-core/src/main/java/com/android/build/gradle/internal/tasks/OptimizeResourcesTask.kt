@@ -106,7 +106,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         override val type: Class<OptimizeResourcesTask>
             get() = OptimizeResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out OptimizeResourcesTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<OptimizeResourcesTask>) {
             super.handleProvider(taskProvider)
             // OPTIMIZED_PROCESSED_RES will be republished as PROCESSED_RES on task completion.
             creationConfig.artifacts.setInitialProvider(

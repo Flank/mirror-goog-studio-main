@@ -125,7 +125,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
         override val type = LibraryJniLibsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out LibraryJniLibsTask>
+            taskProvider: TaskProvider<LibraryJniLibsTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

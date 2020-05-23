@@ -18,12 +18,10 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.DesugarTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -32,7 +30,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -94,7 +91,7 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
             get() = DataBindingExportFeatureInfoTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingExportFeatureInfoTask>
+            taskProvider: TaskProvider<DataBindingExportFeatureInfoTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

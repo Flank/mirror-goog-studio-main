@@ -152,8 +152,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends JavaPreCompileTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<JavaPreCompileTask> taskProvider) {
             super.handleProvider(taskProvider);
             creationConfig
                     .getArtifacts()

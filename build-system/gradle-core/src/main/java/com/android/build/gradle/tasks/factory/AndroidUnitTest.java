@@ -29,6 +29,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -39,6 +40,7 @@ import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.concurrent.Callable;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
@@ -219,23 +221,31 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             return creationConfig
                     .getServices()
                     .fileCollection(
-                            BootClasspathBuilder.INSTANCE
-                                    .computeAdditionalAndRequestedOptionalLibraries(
-                                            globalScope.getProject(),
-                                            globalScope
-                                                    .getSdkComponents()
-                                                    .getAdditionalLibrariesProvider()
-                                                    .get(),
-                                            globalScope
-                                                    .getSdkComponents()
-                                                    .getOptionalLibrariesProvider()
-                                                    .get(),
-                                            false,
-                                            ImmutableList.copyOf(
-                                                    globalScope
-                                                            .getExtension()
-                                                            .getLibraryRequests()),
-                                            creationConfig.getServices().getIssueReporter()));
+                            (Callable)
+                                    () ->
+                                            BootClasspathBuilder.INSTANCE
+                                                    .computeAdditionalAndRequestedOptionalLibraries(
+                                                            globalScope.getProject(),
+                                                            globalScope
+                                                                    .getSdkComponents()
+                                                                    .flatMap(
+                                                                            SdkComponentsBuildService
+                                                                                    ::getAdditionalLibrariesProvider)
+                                                                    .get(),
+                                                            globalScope
+                                                                    .getSdkComponents()
+                                                                    .flatMap(
+                                                                            SdkComponentsBuildService
+                                                                                    ::getOptionalLibrariesProvider)
+                                                                    .get(),
+                                                            false,
+                                                            ImmutableList.copyOf(
+                                                                    globalScope
+                                                                            .getExtension()
+                                                                            .getLibraryRequests()),
+                                                            creationConfig
+                                                                    .getServices()
+                                                                    .getIssueReporter()));
         }
     }
 }

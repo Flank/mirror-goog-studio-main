@@ -101,7 +101,7 @@ fun tryCreateCxxModuleModel(
      * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
      * in Android Studio
      */
-    val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
+    val ndkHandler = global.sdkComponents.get().ndkHandler
     val ndkInstall = CachingEnvironment(cxxFolder).use {
         ndkHandler.getNdkPlatform(downloadOkay = true)
     }
@@ -144,8 +144,8 @@ fun tryCreateCxxModuleModel(
                             cmakeLocator.findCmakePath(
                                 global.extension.externalNativeBuild.cmake.version,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
-                                global.sdkComponents.getSdkDirectory(),
-                                Consumer { global.sdkComponents.installCmake(it) })!!
+                                global.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile,
+                                Consumer { global.sdkComponents.get().installCmake(it) })!!
                         }
                         override val cmakeExe by lazy {
                             join(cmakeFolder, "bin", "cmake$exe")

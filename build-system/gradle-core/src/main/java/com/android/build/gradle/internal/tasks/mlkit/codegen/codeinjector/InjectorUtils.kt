@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.method
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.ImageGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.CategoryListGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.NoMetadataGetMethodInjector
 import com.android.tools.mlkit.TensorInfo
 
 fun getFieldInjector(): FieldInjector {
@@ -49,7 +50,8 @@ fun getGetterMethodInjector(tensorInfo: TensorInfo): MethodInjector {
     return when {
         tensorInfo.isRGBImage -> ImageGetMethodInjector()
         tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> CategoryListGetMethodInjector()
-        else -> DefaultGetMethodInjector()
+        tensorInfo.isMetadataExisted -> DefaultGetMethodInjector()
+        else -> NoMetadataGetMethodInjector()
     }
 }
 

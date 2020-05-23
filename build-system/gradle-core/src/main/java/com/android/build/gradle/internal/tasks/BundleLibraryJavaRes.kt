@@ -113,7 +113,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         override val type: Class<BundleLibraryJavaRes> = BundleLibraryJavaRes::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleLibraryJavaRes>
+            taskProvider: TaskProvider<BundleLibraryJavaRes>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

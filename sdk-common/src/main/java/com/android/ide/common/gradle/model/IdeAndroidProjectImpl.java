@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
@@ -39,7 +38,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -50,7 +52,7 @@ import org.jetbrains.annotations.NotNull;
 public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 9L;
+    private static final long serialVersionUID = 10L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
@@ -58,7 +60,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final Collection<BuildTypeContainer> myBuildTypes;
     @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
-    @NonNull private final Collection<Variant> myVariants;
+    @NonNull private final Collection<IdeVariant> myVariants;
     @NonNull private final Collection<String> myVariantNames;
     @Nullable private final String myDefaultVariant;
     @NonNull private final Collection<String> myFlavorDimensions;
@@ -67,6 +69,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final Collection<NativeToolchain> myNativeToolchains;
     @NonNull private final Collection<SigningConfig> mySigningConfigs;
     @NonNull private final IdeLintOptions myLintOptions;
+    @Nullable private final List<File> myLintRuleJars;
     @NonNull private final Set<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
@@ -125,8 +128,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         Collection<SyncIssue> syncIssuesCopy =
                 new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssue::new));
 
-        Collection<Variant> variantsCopy =
-                new ArrayList<>(
+        Collection<IdeVariant> variantsCopy =
+                new ArrayList<IdeVariant>(
                         IdeModel.copy(
                                 (variants == null) ? project.getVariants() : variants,
                                 modelCache,
@@ -214,6 +217,10 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             groupId = project.getGroupId();
         }
 
+        List<File> lintRuleJarsCopy =
+                IdeModel.copyNewProperty(
+                        () -> ImmutableList.copyOf(project.getLintRuleJars()), null);
+
         // AndroidProject#isBaseSplit is always non null.
         //noinspection ConstantConditions
         boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
@@ -243,6 +250,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 nativeToolchainsCopy,
                 signingConfigsCopy,
                 lintOptionsCopy,
+                lintRuleJarsCopy,
                 unresolvedDependenciesCopy,
                 javaCompileOptionsCopy,
                 aaptOptionsCopy,
@@ -281,6 +289,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myNativeToolchains = Collections.emptyList();
         mySigningConfigs = Collections.emptyList();
         myLintOptions = new IdeLintOptions();
+        myLintRuleJars = Collections.emptyList();
         myUnresolvedDependencies = Collections.emptySet();
         myJavaCompileOptions = new IdeJavaCompileOptions();
         myAaptOptions = new IdeAaptOptions();
@@ -310,7 +319,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull Collection<BuildTypeContainer> buildTypes,
             @NonNull Collection<ProductFlavorContainer> productFlavors,
             @NonNull Collection<SyncIssue> syncIssues,
-            @NonNull Collection<Variant> variants,
+            @NonNull Collection<IdeVariant> variants,
             @NonNull Collection<String> variantNames,
             @Nullable String defaultVariant,
             @NonNull Collection<String> flavorDimensions,
@@ -319,6 +328,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull Collection<SigningConfig> signingConfigs,
             @NonNull IdeLintOptions lintOptions,
+            @Nullable List<File> lintRuleJars,
             @NonNull Set<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
             @NonNull AaptOptions aaptOptions,
@@ -352,6 +362,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myNativeToolchains = nativeToolchains;
         mySigningConfigs = signingConfigs;
         myLintOptions = lintOptions;
+        myLintRuleJars = lintRuleJars;
         myUnresolvedDependencies = unresolvedDependencies;
         myJavaCompileOptions = javaCompileOptions;
         myAaptOptions = aaptOptions;
@@ -386,7 +397,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     }
 
     @NonNull
-    private static ImmutableList<String> computeVariantNames(Collection<Variant> variants) {
+    private static ImmutableList<String> computeVariantNames(Collection<IdeVariant> variants) {
         return variants.stream().map(Variant::getName).collect(ImmutableList.toImmutableList());
     }
 
@@ -484,7 +495,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     @NonNull
-    public Collection<Variant> getVariants() {
+    public Collection<IdeVariant> getVariants() {
         return ImmutableList.copyOf(myVariants);
     }
 
@@ -642,6 +653,41 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         return myVariantBuildInformation;
     }
 
+    @Nullable
+    @Override
+    public List<File> getLintRuleJars() {
+        return myLintRuleJars;
+    }
+
+    @Nullable private transient Map<String, Object> clientProperties;
+
+    @Nullable
+    @Override
+    public Object putClientProperty(@NonNull String key, @Nullable Object value) {
+        if (value == null) {
+            if (clientProperties != null) {
+                clientProperties.remove(key);
+            }
+        } else {
+            if (clientProperties == null) {
+                clientProperties = new HashMap<>();
+            }
+            clientProperties.put(key, value);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    @Override
+    public Object getClientProperty(@NonNull String key) {
+        if (clientProperties == null) {
+            return null;
+        } else {
+            return clientProperties.get(key);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -673,6 +719,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 && Objects.equals(myNativeToolchains, project.myNativeToolchains)
                 && Objects.equals(mySigningConfigs, project.mySigningConfigs)
                 && Objects.equals(myLintOptions, project.myLintOptions)
+                && Objects.equals(myLintRuleJars, project.myLintRuleJars)
                 && Objects.equals(myUnresolvedDependencies, project.myUnresolvedDependencies)
                 && Objects.equals(myJavaCompileOptions, project.myJavaCompileOptions)
                 && Objects.equals(myAaptOptions, project.myAaptOptions)
@@ -711,6 +758,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 myNativeToolchains,
                 mySigningConfigs,
                 myLintOptions,
+                myLintRuleJars,
                 myUnresolvedDependencies,
                 myJavaCompileOptions,
                 myBuildFolder,

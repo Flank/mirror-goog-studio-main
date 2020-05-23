@@ -43,7 +43,9 @@ import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import java.io.File
+import java.nio.file.Paths
 import com.android.builder.model.level2.Library as LibraryL2
 
 /**
@@ -92,6 +94,11 @@ class LmFactory : LmModuleLoader {
      * of lazy lookup.
      */
     fun create(project: IdeAndroidProject, dir: File, deep: Boolean = true): LmModule {
+        val cached = project.getClientProperty(CACHE_KEY) as? LmModule
+        if (cached != null) {
+            return cached
+        }
+
         val gradleVersion = getGradleVersion(project)
 
         return if (deep) {
@@ -105,6 +112,7 @@ class LmFactory : LmModuleLoader {
                 gradleVersion = gradleVersion,
                 buildFolder = project.buildFolder,
                 lintOptions = getLintOptions(project),
+                lintRuleJars = project.getLintRuleJarsForAnyAgpVersion(),
                 buildFeatures = getBuildFeatures(project, gradleVersion),
                 resourcePrefix = project.resourcePrefix,
                 dynamicFeatures = project.dynamicFeatures,
@@ -128,8 +136,27 @@ class LmFactory : LmModuleLoader {
                 dir = dir,
                 gradleVersion = gradleVersion
             )
+        }.also { module ->
+            project.putClientProperty(CACHE_KEY, module)
         }
     }
+
+    /**
+     * Returns the list of Lint Rule file, no matter what the AGP version is.
+     */
+    private fun IdeAndroidProject.getLintRuleJarsForAnyAgpVersion() = lintRuleJars ?: listOf(
+        FileUtils.join(buildFolder, "intermediates", "lint", "lint.jar"),
+        FileUtils.join(buildFolder, "intermediates", "lint_jar", "lint.jar"),
+        FileUtils.join(
+            buildFolder,
+            "intermediates",
+            "lint_jar",
+            "global",
+            "prepareLintJar",
+            "lint.jar"
+        )
+    )
+
 
     private fun getDependencies(
         graph: DependencyGraphs,
@@ -907,6 +934,7 @@ class LmFactory : LmModuleLoader {
             get() = project.compileTarget
         override val oldProject: IdeAndroidProject?
             get() = project
+        override val lintRuleJars: List<File> = project.getLintRuleJarsForAnyAgpVersion()
 
         override fun neverShrinking(): Boolean {
             return isNeverShrinking(project)
@@ -1042,6 +1070,8 @@ class LmFactory : LmModuleLoader {
     }
 
     companion object {
+        private const val CACHE_KEY = "lint-model"
+
         /**
          * Returns the [LmModuleType] for the given type ID. Type ids must be one of the values defined by
          * AndroidProjectTypes.PROJECT_TYPE_*.

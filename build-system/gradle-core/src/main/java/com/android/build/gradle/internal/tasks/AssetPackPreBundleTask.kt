@@ -92,7 +92,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
         override val name = computeTaskName("assetPack", "PreBundleTask")
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out AssetPackPreBundleTask>
+            taskProvider: TaskProvider<AssetPackPreBundleTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

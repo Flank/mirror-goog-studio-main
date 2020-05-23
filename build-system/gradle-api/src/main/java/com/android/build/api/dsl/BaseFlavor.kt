@@ -151,7 +151,7 @@ interface BaseFlavor : VariantDimension {
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    var resourceConfigurations: MutableSet<String>
+    val resourceConfigurations: MutableSet<String>
 
     /** Options to configure the build-time support for `vector` drawables. */
     val vectorDrawables: VectorDrawables

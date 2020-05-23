@@ -35,7 +35,7 @@ class MergeGeneratedProguardFilesCreationAction(
         get() = MergeFileTask::class.java
 
     override fun handleProvider(
-        taskProvider: TaskProvider<out MergeFileTask>
+        taskProvider: TaskProvider<MergeFileTask>
     ) {
         super.handleProvider(taskProvider)
         creationConfig.artifacts.setInitialProvider(

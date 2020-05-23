@@ -56,6 +56,13 @@ interface LmModule {
     /** Lint customization options */
     val lintOptions: LmLintOptions
 
+    /**
+     * The lint jars that this module uses to run extra lint checks.
+     *
+     * The files may, or may not exist
+     */
+    val lintRuleJars: List<File>
+
     /** Build features in effect */
     val buildFeatures: LmBuildFeatures
 
@@ -152,6 +159,7 @@ class DefaultLmModule(
     override val gradleVersion: GradleVersion?,
     override val buildFolder: File,
     override val lintOptions: LmLintOptions,
+    override val lintRuleJars: List<File>,
     override val buildFeatures: LmBuildFeatures,
     override val resourcePrefix: String?,
     override val dynamicFeatures: Collection<String>,

@@ -22,7 +22,8 @@ fun mainActivityKt(
   activityClass: String,
   defaultPreview: String,
   greeting: String,
-  packageName: String
+  packageName: String,
+  themeName: String
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
@@ -32,13 +33,13 @@ import androidx.compose.Composable
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Text
 import androidx.ui.tooling.preview.Preview
-import ${escapeKotlinIdentifier(packageName)}.ui.AppTheme
+import ${escapeKotlinIdentifier(packageName)}.ui.${themeName}
 
 class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppTheme {
+            ${themeName} {
                 ${greeting}("Android")
             }
         }
@@ -53,7 +54,7 @@ fun ${greeting}(name: String) {
 @Preview(showBackground = true)
 @Composable
 fun ${defaultPreview}() {
-    AppTheme {
+    ${themeName} {
         ${greeting}("Android")
     }
 }

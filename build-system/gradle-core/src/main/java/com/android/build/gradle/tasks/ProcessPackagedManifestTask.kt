@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -65,7 +64,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
     abstract val mergedManifests: DirectoryProperty
 
     @get:Internal
-    abstract val transformationRequest: Property<ArtifactTransformationRequest>
+    abstract val transformationRequest: Property<ArtifactTransformationRequest<ProcessPackagedManifestTask>>
 
     // Use a property to hold the [WorkerExecutor] so unit tests can reset it if necessary.
     @get:Internal
@@ -125,9 +124,9 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
         override val type: Class<ProcessPackagedManifestTask>
             get() = ProcessPackagedManifestTask::class.java
 
-        private lateinit var transformationRequest: ArtifactTransformationRequest
+        private lateinit var transformationRequest: ArtifactTransformationRequest<ProcessPackagedManifestTask>
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessPackagedManifestTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<ProcessPackagedManifestTask>) {
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.artifacts.use(taskProvider)
                 .toRead(

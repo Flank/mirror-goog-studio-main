@@ -77,7 +77,7 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
             get() = DataBindingExportFeatureApplicationIdsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>
+            taskProvider: TaskProvider<DataBindingExportFeatureApplicationIdsTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
@@ -94,6 +95,7 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.ProjectSyncIssues;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
@@ -250,7 +252,16 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     private Object buildProjectSyncIssuesModel() {
         syncIssueReporter.lockHandler();
-        return new DefaultProjectSyncIssues(ImmutableSet.copyOf(syncIssueReporter.getSyncIssues()));
+
+        ImmutableSet.Builder<SyncIssue> allIssues = ImmutableSet.builder();
+        allIssues.addAll(syncIssueReporter.getSyncIssues());
+        allIssues.addAll(
+                BuildServicesKt.getBuildService(
+                                globalScope.getProject().getGradle().getSharedServices(),
+                                SyncIssueReporterImpl.GlobalSyncIssueService.class)
+                        .get()
+                        .getAllIssuesAndClear());
+        return new DefaultProjectSyncIssues(allIssues.build());
     }
 
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
@@ -274,7 +285,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
-        if (globalScope.getSdkComponents().getSdkSetupCorrectly().get()) {
+        if (globalScope.getSdkComponents().get().getSdkSetupCorrectly().get()) {
             bootClasspath =
                     globalScope.getFilteredBootClasspath().get().stream()
                             .map(it -> it.getAsFile().getAbsolutePath())
@@ -394,6 +405,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 ImmutableList.of(),
                 extension.getCompileOptions(),
                 lintOptions,
+                ImmutableList.copyOf(globalScope.getLocalCustomLintChecks().getFiles()),
                 project.getBuildDir(),
                 extension.getResourcePrefix(),
                 ImmutableList.of(),

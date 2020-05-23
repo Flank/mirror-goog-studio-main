@@ -19,7 +19,8 @@ package com.android.tools.idea.wizard.template.impl.activities.composeActivity.s
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun themeKt(
-  packageName: String
+  packageName: String,
+  themeName: String
 ) = """
 package ${escapeKotlinIdentifier(packageName)}.ui
 
@@ -51,7 +52,7 @@ private val LightColorPalette = lightColorPalette(
 )
 
 @Composable
-fun AppTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() () -> Unit) {
+fun ${themeName}(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() () -> Unit) {
     val colors = if (darkTheme) {
         DarkColorPalette
     } else {

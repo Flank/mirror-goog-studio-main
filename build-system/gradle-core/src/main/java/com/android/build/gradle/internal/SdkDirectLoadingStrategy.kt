@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList
 import java.io.File
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Supplier
 
 /**
  * This loads the SDK and BuildTools specified inside the {@code options} directly, without
@@ -46,8 +45,8 @@ import java.util.function.Supplier
  */
 class SdkDirectLoadingStrategy(
     private val sdkLocationSourceSet: SdkLocationSourceSet,
-    private val platformTargetHashSupplier: Supplier<String?>,
-    private val buildToolRevisionSupplier: Supplier<Revision?>,
+    private val platformTargetHashSupplier: String?,
+    private val buildToolRevisionSupplier: Revision?,
     private val useAndroidX: Boolean,
     private val issueReporter: IssueReporter) {
 
@@ -73,42 +72,69 @@ class SdkDirectLoadingStrategy(
         internal val platformTools: PlatformToolsComponents,
         internal val supportTools: SupportToolsComponents,
         internal val buildToolInfo: BuildToolInfo,
-        internal val platform: PlatformComponents)
+        internal val platform: PlatformComponents
+    )
 
     @Synchronized
     private fun init(): DirectLoadComponents? {
-        val targetHash = checkNotNull(platformTargetHashSupplier.get()) {
+        val targetHash = checkNotNull(platformTargetHashSupplier) {
             "Extension not initialized yet, couldn't access compileSdkVersion."}
         val buildToolRevision = checkBuildToolsRevision(
-            checkNotNull(buildToolRevisionSupplier.get()) {
+            checkNotNull(buildToolRevisionSupplier) {
                 "Extension not initialized yet, couldn't access buildToolsVersion."})
 
         return loadSdkComponents(targetHash, buildToolRevision)
     }
 
     private fun loadSdkComponents(targetHash: String, buildToolRevision: Revision): DirectLoadComponents? {
-        val sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet, issueReporter)
+        val sdkLocation =
+            SdkLocator.getSdkLocation(
+                sdkLocationSourceSet,
+                issueReporter
+            )
         if (sdkLocation.type == SdkType.MISSING) {
             return null
         }
 
         val sdkDirectory = sdkLocation.directory!!
 
-        val platformTools = PlatformToolsComponents.build(sdkDirectory)
-        val supportTools = SupportToolsComponents.build(sdkDirectory, targetHash)
+        val platformTools =
+            PlatformToolsComponents.build(
+                sdkDirectory
+            )
+        val supportTools =
+            SupportToolsComponents.build(
+                sdkDirectory,
+                targetHash
+            )
 
         val buildTools = buildToolsCache.getOrPut(buildToolRevision) {
-            Optional.ofNullable(buildBuildTools(sdkDirectory, buildToolRevision))
+            Optional.ofNullable(
+                buildBuildTools(
+                    sdkDirectory,
+                    buildToolRevision
+                )
+            )
         }.orElse(null)
         val platform = platformCache.getOrPut(targetHash) {
-            Optional.ofNullable(PlatformComponents.build(sdkDirectory, targetHash))
+            Optional.ofNullable(
+                PlatformComponents.build(
+                    sdkDirectory,
+                    targetHash
+                )
+            )
         }.orElse(null)
 
         if (platformTools == null || supportTools == null || buildTools == null || platform == null) {
             return null
         }
 
-        return DirectLoadComponents(platformTools, supportTools, buildTools, platform)
+        return DirectLoadComponents(
+            platformTools,
+            supportTools,
+            buildTools,
+            platform
+        )
     }
 
     private fun checkBuildToolsRevision(revision: Revision): Revision {
@@ -190,7 +216,8 @@ private class PlatformToolsComponents(
                 return null
             }
             return PlatformToolsComponents(
-                sdkDirectory.resolve(SdkConstants.FD_PLATFORM_TOOLS).resolve(SdkConstants.FN_ADB))
+                sdkDirectory.resolve(SdkConstants.FD_PLATFORM_TOOLS).resolve(SdkConstants.FN_ADB)
+            )
         }
     }
 }
@@ -211,7 +238,8 @@ private class SupportToolsComponents(
             }
             return SupportToolsComponents(
                 sdkDirectory.resolve(SdkConstants.FD_TOOLS).resolve(SdkConstants.FD_SUPPORT)
-                    .resolve(SdkConstants.FN_ANNOTATIONS_JAR))
+                    .resolve(SdkConstants.FN_ANNOTATIONS_JAR)
+            )
         }
     }
 }
@@ -249,7 +277,8 @@ private class PlatformComponents(
             val platformId = DetailsTypes.getPlatformPath(platformVersion)
             val platformBase = sdkDirectory.resolve(platformId.replace(';', '/'))
             val platformXml = platformBase.resolve("package.xml")
-            val platformPackage = parsePackage(platformXml)
+            val platformPackage =
+                parsePackage(platformXml)
             if (platformPackage == null || !platformId.equals(platformPackage.path)) {
                 return null
             }
@@ -262,8 +291,13 @@ private class PlatformComponents(
                 platformBase.resolve(SdkConstants.FN_FRAMEWORK_LIBRARY),
                 // See PlatformTarget.java, getBootClasspath is always a list with only the android.jar.
                 ImmutableList.of(platformBase.resolve(SdkConstants.FN_FRAMEWORK_LIBRARY)),
-                parseAdditionalLibraries(platformPackage),
-                parseOptionalLibraries(platformPackage))
+                parseAdditionalLibraries(
+                    platformPackage
+                ),
+                parseOptionalLibraries(
+                    platformPackage
+                )
+            )
         }
     }
 }

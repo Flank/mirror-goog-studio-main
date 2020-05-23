@@ -114,6 +114,17 @@ interface RecipeExecutor {
   fun getClasspathDependencyVarName(mavenCoordinate: String, valueIfNotFound: String): String
 
   /**
+   * Looks for the given dependency coordinate and returns the version variable name on it.
+   * For example if the module has a dependency of 'androidx.appcompat:appcompat:$appcompat_version'
+   * this function returns 'appcompat_version'.
+   * If the dependency has no variable, or the variable can't be determined, it returns the specified default value.
+   *
+   * @param mavenCoordinate coordinate of the dependency to be added in Maven format (e.g androidx.appcompat:appcompat).
+   * @param valueIfNotFound value to return if the dependency has no variable, or the variable can't be determined.
+   */
+  fun getDependencyVarName(mavenCoordinate: String, valueIfNotFound: String): String
+
+  /**
    * Adds a module dependency to global settings.gradle[.kts] file.
    */
   fun addIncludeToSettings(moduleName: String)

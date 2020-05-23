@@ -70,11 +70,6 @@ public class DensitySplitOptions extends SplitOptions
     }
 
     @Override
-    public void setCompatibleScreens(@NonNull Set<String> compatibleScreens) {
-        this.compatibleScreens = Sets.newHashSet(compatibleScreens);
-    }
-
-    @Override
     public void compatibleScreens(@NonNull String... sizes) {
         if (compatibleScreens == null) {
             compatibleScreens = Sets.newHashSet(sizes);

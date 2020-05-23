@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,7 @@ import java.util.stream.Collectors;
  * a singleton {@link com.android.builder.sdk.SdkLoader}.
  */
 public class SdkHandler {
-    @NonNull
-    private final ILogger logger;
+    private static final ILogger logger = LoggerWrapper.getLogger(SdkHandler.class);
 
     @NonNull private final IssueReporter issueReporter;
 
@@ -61,10 +60,8 @@ public class SdkHandler {
 
     public SdkHandler(
             @NonNull SdkLocationSourceSet sdkLocationSourceSet,
-            @NonNull ILogger logger,
             @NonNull IssueReporter issueReporter) {
         this.sdkLocationSourceSet = sdkLocationSourceSet;
-        this.logger = logger;
         this.issueReporter = issueReporter;
     }
 

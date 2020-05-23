@@ -86,7 +86,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             get() = BundleAar::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleAar>
+            taskProvider: TaskProvider<BundleAar>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.bundleLibraryTask = taskProvider
@@ -202,11 +202,11 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 prependToCopyPath(SdkConstants.FD_ASSETS))
             if (creationConfig.services.projectOptions[BooleanOption.ENABLE_AAR_METADATA]) {
                 task.from(
-                    creationConfig.artifacts.get(InternalArtifactType.AAR_METADATA)
+                    artifacts.get(InternalArtifactType.AAR_METADATA)
                 ) {
                     it.rename(
-                        AarMetadataTask.aarMetadataFileName,
-                        AarMetadataTask.aarMetadataEntryPath
+                        AarMetadataTask.AAR_METADATA_FILE_NAME,
+                        AarMetadataTask.AAR_METADATA_ENTRY_PATH
                     )
                 }
             }

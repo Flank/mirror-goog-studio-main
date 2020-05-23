@@ -49,7 +49,7 @@ public class IdeJavaArtifactTest {
     @Test
     public void serialization() throws Exception {
         IdeJavaArtifact javaArtifact =
-                new IdeJavaArtifact(
+                new IdeJavaArtifactImpl(
                         new JavaArtifactStub(),
                         myModelCache,
                         myDependenciesFactory,
@@ -63,14 +63,15 @@ public class IdeJavaArtifactTest {
     public void constructor() throws Throwable {
         JavaArtifact original = new JavaArtifactStub();
         IdeJavaArtifact copy =
-                new IdeJavaArtifact(original, myModelCache, myDependenciesFactory, myGradleVersion);
+                new IdeJavaArtifactImpl(
+                        original, myModelCache, myDependenciesFactory, myGradleVersion);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeJavaArtifact.class)
+        createEqualsVerifier(IdeJavaArtifactImpl.class)
                 .withRedefinedSuperclass()
                 .withIgnoredFields("hashCode")
                 .verify();

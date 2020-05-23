@@ -53,6 +53,10 @@ open class VariantApiBaseTest(
                 ?: KotlinVersion.CURRENT.toString()
         }
 
+        val generalRepos= listOf(
+            "google()",
+            "mavenCentral()")
+
         /**
          * List of custom repositories where all projects dependencies can be satisfied.
          */
@@ -103,25 +107,23 @@ open class VariantApiBaseTest(
             override fun configureBuildFile(repositories: List<String>) =
 """
 buildscript {
-    ${addRepositories(repositories).prependIndent("    ")}
+${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
         classpath(kotlin("gradle-plugin", version = "$kotlinVersion"))
     }
 }
-
-allprojects {
-    ${addRepositories(repositories).prependIndent("    ")}
-}
-
 """
 
-            override fun configureBuildSrcBuildFile(repositories: List<String>) =
+            // we should not have to add the gobalRepos below but because of
+            // https://github.com/gradle/gradle/issues/1055
+            override fun configureBuildSrcBuildFile(globalRepos: List<String>, localRepos: List<String>) =
 """
 plugins {
     kotlin("jvm") version "$kotlinVersion"
 }
-${addRepositories(repositories)}
+${addRepositories(localRepos)}
+${addGlobalRepositories(globalRepos)}
 
 dependencies {
     implementation("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
@@ -139,27 +141,48 @@ ${repositories.joinToString(
 }
 """
 
+            override fun configureInitScript(repositories: List<String>): String =
+                """
+allprojects {
+    buildscript {
+    ${addRepositories(repositories).prependIndent("        ")}
+    }
+    ${addRepositories(repositories).prependIndent("    ")}
+}
+"""
+
+            override fun makeScriptFileName(root: String): String {
+                return "$root.kts"
+            }
         },
         Groovy("build.gradle", "settings.gradle") {
             override fun configureBuildFile(repositories: List<String>) =
 """
 buildscript {
-${addRepositories(repositories).prependIndent("    ")}
+${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
     }
 }
+"""
+
+            override fun configureBuildSrcBuildFile(globalRepos: List<String>, localRepos: List<String>) =
+"""
+"""
+
+            override fun configureInitScript(localRepos: List<String>): String =
+"""
 allprojects {
-${addRepositories(repositories).prependIndent("    ")}
+    buildscript {
+${addRepositories(localRepos).prependIndent("        ")}
+    }
+${addRepositories(localRepos).prependIndent("    ")}
 }
-${addRepositories(repositories)}
 """
 
-            override fun configureBuildSrcBuildFile(repositories: List<String>) =
-"""
-${addRepositories(repositories)}
-"""
-
+            override fun makeScriptFileName(root: String): String {
+                return root;
+            }
 
             private fun addRepositories(repositories: List<String>) =
 """
@@ -172,6 +195,13 @@ ${repositories.joinToString(
 }
 """
         };
+
+        protected fun addGlobalRepositories(repositories: List<String>) =
+            repositories.joinToString(
+                separator = "\n    ",
+                prefix = "repositories {\n    ",
+                postfix = "\n}"
+            )
 
         /**
          * Configure a module build file for the [scriptingLanguage].
@@ -187,10 +217,24 @@ ${repositories.joinToString(
         /**
          * Configure the buildSrc/ build file for the [scriptingLanguage]
          *
-         * @param repositories the list of repositories where project dependencies will be obtained
+         * @param globalRepos the list of global repositories where project dependencies will be
+         * obtained from.
+         * @param localRepos the list of repositories where project dependencies will be obtained
          * from
          */
-        abstract fun configureBuildSrcBuildFile(repositories: List<String>): String
+        abstract fun configureBuildSrcBuildFile(globalRepos: List<String>, localRepos: List<String>): String
+
+        /**
+         * Configure the init script file for the [scriptingLanguage]
+         *
+         * @param globalRepos the list of global repositories where project dependencies will be
+         * downloaded from.
+         * @param repositories the list of local repositories where project dependencies will be
+         * obtained from
+         */
+        abstract fun configureInitScript(repositories: List<String>): String
+
+        abstract fun makeScriptFileName(root: String): String
     }
 
     @Rule
@@ -202,6 +246,9 @@ ${repositories.joinToString(
     } else {
         TemporaryFolder()
     }
+
+    @Rule
+    @JvmField val privateTestProjectDir = TemporaryFolder()
 
     @Rule
     @JvmField val testBuildDir = TemporaryFolder()
@@ -257,7 +304,7 @@ ${repositories.joinToString(
         }
         internal open fun addBuildFile(folder: File) {
             File(folder, scriptingLanguage.buildFileName).apply {
-                writeText(scriptingLanguage.configureBuildFile(mavenRepos) + (buildFile ?: ""))
+                writeText(scriptingLanguage.configureBuildFile(generalRepos) + (buildFile ?: ""))
             }
         }
     }
@@ -306,7 +353,7 @@ ${repositories.joinToString(
             object: GivenBuilder(scriptingLanguage) {
                 override fun addBuildFile(folder: File) {
                     File(folder, scriptingLanguage.buildFileName).apply {
-                        writeText(scriptingLanguage.configureBuildSrcBuildFile(mavenRepos).trimIndent() + "\n" + (buildFile ?: ""))
+                        writeText(scriptingLanguage.configureBuildSrcBuildFile(generalRepos, mavenRepos).trimIndent() + "\n" + (buildFile ?: ""))
                     }
                 }
             }.also {
@@ -345,7 +392,7 @@ ${repositories.joinToString(
 
         override fun addBuildFile(folder: File) {
             File(folder, scriptingLanguage.buildFileName).apply {
-                writeText(scriptingLanguage.configureBuildFile(mavenRepos) + (buildFile ?: ""))
+                writeText(scriptingLanguage.configureBuildFile(generalRepos) + (buildFile ?: ""))
             }
         }
     }
@@ -373,10 +420,20 @@ ${repositories.joinToString(
         if (given.tasksToInvoke.isEmpty()) {
             given.tasksToInvoke.add("assembleDebug")
         }
+
+        // create the init script.
+        val initScript = privateTestProjectDir.newFile(scriptingLanguage.makeScriptFileName("init.gradle")).also {
+            it.writeText(scriptingLanguage.configureInitScript(mavenRepos))
+        }
+
         val gradleRunner = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withPluginClasspath()
-            .withArguments("-Dandroid.enableJvmResourceCompiler=true", *given.tasksToInvoke.toTypedArray())
+            .withArguments(
+                "-Dorg.gradle.jvmargs=-Xmx2G",
+                "-Dandroid.enableJvmResourceCompiler=true",
+               "--init-script", "${initScript.absolutePath}",
+                *given.tasksToInvoke.toTypedArray(),
+                "--stacktrace")
             .forwardOutput()
 
         // if running within Intellij, we must set the Gradle Distribution when invoking the

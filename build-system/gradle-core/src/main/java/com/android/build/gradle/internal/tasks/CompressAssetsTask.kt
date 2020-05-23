@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -106,7 +104,7 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
             get() = CompressAssetsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out CompressAssetsTask>
+            taskProvider: TaskProvider<CompressAssetsTask>
         ) {
             super.handleProvider(taskProvider)
 

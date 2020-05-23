@@ -23,8 +23,9 @@ class FakeGradleProvider<T>(private val v: (()-> T)?): Provider<T> {
 
     constructor(v: T): this({v})
 
-    override fun <S : Any?> flatMap(p0: Transformer<out Provider<out S>, in T>): Provider<S> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <S : Any?> flatMap(transformer: Transformer<out Provider<out S>, in T>): Provider<S> {
+        @Suppress("UNCHECKED_CAST")
+        return transformer.transform(v!!.invoke()) as Provider<S>
     }
 
     override fun isPresent() = v != null

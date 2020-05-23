@@ -141,7 +141,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             get() = GenerateNamespacedLibraryRFilesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out GenerateNamespacedLibraryRFilesTask>
+            taskProvider: TaskProvider<GenerateNamespacedLibraryRFilesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(

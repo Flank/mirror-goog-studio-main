@@ -16,11 +16,11 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.artifact.ArtifactTypes
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.SdkComponents
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.ProjectFactory
@@ -44,12 +44,12 @@ class BaseAppModuleExtensionTest {
     @Suppress("UNCHECKED_CAST")
     @Before
     fun setUp() {
-        val sdkComponents = Mockito.mock(SdkComponents::class.java)
+        val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
         `when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
         `when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
         `when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
 
-        val dslServices = createDslServices(sdkComponents = sdkComponents)
+        val dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponents))
 
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
@@ -94,17 +94,17 @@ class BaseAppModuleExtensionTest {
     fun testOnVariantsProperties() {
         appExtension.onVariantProperties
             .withName("foo", Action {
-                it.artifacts.get(ArtifactTypes.APK) })
+                it.artifacts.get(ArtifactType.APK) })
         appExtension.onVariantProperties
             .withFlavor("f1" to "dim1", Action {
-                it.artifacts.get(ArtifactTypes.APK) }
+                it.artifacts.get(ArtifactType.APK) }
             )
 
         appExtension.onVariantProperties
             .withType(ApplicationVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1", Action {
-                it.artifacts.get(ArtifactTypes.APK)
+                it.artifacts.get(ArtifactType.APK)
             })
 
         appExtension.onVariantProperties
@@ -112,7 +112,7 @@ class BaseAppModuleExtensionTest {
             .withBuildType("debug")
             .withFlavor("f1" to "dim1")
             .withFlavor("f2" to "dim2", Action {
-                it.artifacts.get(ArtifactTypes.APK)
+                it.artifacts.get(ArtifactType.APK)
             })
     }
 }

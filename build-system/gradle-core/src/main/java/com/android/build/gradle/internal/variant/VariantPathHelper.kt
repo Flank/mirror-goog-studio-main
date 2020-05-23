@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.options.StringOption
@@ -154,8 +154,8 @@ class VariantPathHelper(
         return FileUtils.join(intermediatesDir, "incremental", name)
     }
 
-    fun getIntermediateDir(taskOutputType: ArtifactType<Directory>): File {
-        return intermediate(taskOutputType.name().toLowerCase(Locale.US))
+    fun getIntermediateDir(taskOutput: Artifact<Directory>): File {
+        return intermediate(taskOutput.name().toLowerCase(Locale.US))
     }
 
     private fun getGeneratedResourcesDir(name: String): File {

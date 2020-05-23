@@ -64,7 +64,6 @@ android {
 
 import javax.inject.Inject
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.BuiltArtifactsLoader
