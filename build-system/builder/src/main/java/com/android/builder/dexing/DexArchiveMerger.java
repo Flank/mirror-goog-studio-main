@@ -6,7 +6,7 @@ import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.tools.r8.CompilationMode;
 import java.nio.file.Path;
-import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -37,9 +37,10 @@ public interface DexArchiveMerger {
     }
 
     /**
-     * Merges the specified dex archive to final dex file(s). Full paths to the dex archives must be
-     * specified, and the merged dex files are written to the specified directory. Dexing type
-     * specifies how files will be merged:
+     * Merges the specified dex archive entries into one or more dex files under the specified
+     * directory.
+     *
+     * <p>Dexing type specifies how files will be merged:
      *
      * <ul>
      *   <li>if it is {@link DexingType#MONO_DEX}, a single dex file is written, named classes.dex
@@ -49,14 +50,18 @@ public interface DexArchiveMerger {
      *   <li>if it is {@link DexingType#NATIVE_MULTIDEX}, there can be 1 or more dex files.
      * </ul>
      *
-     * @param inputs paths to the dex archives that should be merged
+     * @param dexArchiveEntries the dex archive entries to merge
+     * @param dexRootsForDx the dex roots (directories or jars) containing the dex archive entries
+     *     to merge. It is currently used only by the DX tool as we do not support merging a subset
+     *     of dex archive entries inside the dex roots when DX is used.
      * @param outputDir directory where merged dex file(s) will be written, must exist
      * @param mainDexClasses file containing list of classes to be merged in the main dex file. It
      *     is {@code null} for native and mono dex, and must be non-null for legacy dex.
      * @param dexingType specifies how to merge dex files
      */
     void mergeDexArchives(
-            @NonNull Iterator<Path> inputs,
+            @NonNull List<DexArchiveEntry> dexArchiveEntries,
+            @NonNull List<Path> dexRootsForDx,
             @NonNull Path outputDir,
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)

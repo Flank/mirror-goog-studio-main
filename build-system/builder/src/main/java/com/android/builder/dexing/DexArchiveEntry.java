@@ -22,7 +22,8 @@ import com.google.common.base.Preconditions;
 
 /**
  * A single DEX file in a dex archive. It is uniquely identified with {@link #relativePathInArchive}
- * within a single {@link DexArchive}.
+ * within a single {@link DexArchive}. It also contains the DEX file's content ({@link
+ * #dexFileContent}).
  */
 public final class DexArchiveEntry {
 

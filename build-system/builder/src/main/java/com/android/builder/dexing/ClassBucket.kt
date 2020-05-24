@@ -59,7 +59,9 @@ class ClassBucket(val bucketGroup: ClassBucketGroup, val bucketNumber: Int) :
             "Unexpected rootPath: $rootPath"
         }
         check(!File(relativePath).isAbsolute) { "Unexpected absolute path: $relativePath" }
-        check(isClassFile(relativePath)) { "Unexpected non-class file: $relativePath" }
+        check(ClassFileInput.CLASS_MATCHER.test(relativePath)) {
+            "Unexpected non-class file: $relativePath"
+        }
 
         return if (bucketGroup is JarBucketGroup) {
             abs(relativePath.hashCode()) % bucketGroup.numOfBuckets == bucketNumber

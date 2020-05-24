@@ -28,12 +28,12 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.ClassFileEntry
+import com.android.builder.dexing.ClassFileInput
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DependencyGraphUpdater
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.MutableDependencyGraph
-import com.android.builder.dexing.isClassFile
 import com.android.builder.dexing.isJarFile
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.builder.files.SerializableFileChanges
@@ -194,7 +194,7 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
 
         // Remove stale dex outputs (not including those that will be overwritten)
         inputChanges.removedFiles.forEach {
-            if (isClassFile(it.file.path)) {
+            if (ClassFileInput.CLASS_MATCHER.test(it.file.path)) {
                 val staleOutputFile =
                     dexOutputDir.resolve(ClassFileEntry.withDexExtension(it.normalizedPath))
                 FileUtils.deleteRecursivelyIfExists(staleOutputFile)
