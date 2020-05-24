@@ -56,7 +56,9 @@ if [[ -d "${dist_dir}" ]]; then
   mkdir "${dist_dir}"/testlogs
 
   # aggregate test results into a single XML
-  ("${script_dir}"/utils/aggregate_xmls.py --testlogs_dir="${testlogs_dir}" --output_file="${dist_dir}"/testlogs/aggregated_results.xml)
+  #("${script_dir}"/utils/aggregate_xmls.py --testlogs_dir="${testlogs_dir}" --output_file="${dist_dir}"/testlogs/aggregated_results.xml)
+  # Temporary to investigate results in go/flakes; only copy XMLs to the testlogs dir to be uploaded
+  (cd "${testlogs_dir}";find . -type f -name '*.xml' -exec cp --parents \{\} "${dist_dir}"/testlogs/ \;)
 fi
 
 # See https://docs.bazel.build/versions/master/guide.html#what-exit-code-will-i-get
