@@ -69,6 +69,9 @@ class TreeBuildingCanvas : public SkCanvas {
  public:
   static void ParsePicture(const char* skp, size_t len,
                            ::layoutinspector::proto::InspectorView* root) {
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    std::cerr << "###start" << std::endl;
+#endif
     std::unique_ptr<SkStreamAsset> stream =
         SkMemoryStream::MakeDirect(skp, len);
     sk_sp<SkPicture> picture(SkPicture::MakeFromStream(stream.get()));
@@ -80,6 +83,9 @@ class TreeBuildingCanvas : public SkCanvas {
     picture->playback(&canvas);
 
     picture->unref();
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    std::cerr << "###end" << std::endl;
+#endif
   }
 
   ~TreeBuildingCanvas() override;
@@ -95,6 +101,8 @@ class TreeBuildingCanvas : public SkCanvas {
   void fixTranslation(const SkMatrix& matrix, View& view) const;
 
   void didSetMatrix(const SkMatrix& matrix) override;
+
+  void didTranslate(SkScalar dx, SkScalar dy) override;
 
   void willSave() override;
 
@@ -185,6 +193,9 @@ class TreeBuildingCanvas : public SkCanvas {
 
   void onClipRect(const SkRect& rect, SkClipOp op,
                   ClipEdgeStyle edgeStyle) override;
+
+  void onClipRRect(const SkRRect& rrect, SkClipOp op,
+                   ClipEdgeStyle edgeStyle) override;
 
  private:
   void exitView(bool hasData);

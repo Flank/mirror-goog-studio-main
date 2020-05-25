@@ -20,6 +20,7 @@
 
 #include "SkImage.h"
 #include "SkNoDrawCanvas.h"
+#include "SkRRect.h"
 
 TreeBuildingCanvas::~TreeBuildingCanvas() {
   if (!views.empty()) {
@@ -32,7 +33,20 @@ TreeBuildingCanvas::~TreeBuildingCanvas() {
 
 void TreeBuildingCanvas::onClipRect(const SkRect& rect, SkClipOp op,
                                     ClipEdgeStyle edgeStyle) {
-  SkCanvas::onClipRect(rect, op, edgeStyle);
+  views.back().canvas->clipRect(rect, op, edgeStyle);
+  inHeader = false;
+}
+
+void TreeBuildingCanvas::onClipRRect(const SkRRect& rrect, SkClipOp op,
+                                     ClipEdgeStyle edgeStyle) {
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "cliprrect" << std::endl << "input: ";
+  rrect.dump();
+  std::cerr << "total: ";
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
+  views.back().canvas->clipRRect(rrect, op, edgeStyle);
   inHeader = false;
 }
 
@@ -52,6 +66,18 @@ void TreeBuildingCanvas::didConcat(const SkMatrix& matrix) {
     fixTranslation(matrix, secondFromTop);
   }
   topView.didConcat = true;
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "didConcat:" << std::endl;
+  std::cerr << "input: ";
+  matrix.dump();
+  std::cerr << "total: ";
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
+}
+
+void TreeBuildingCanvas::didTranslate(SkScalar dx, SkScalar dy) {
+  this->didConcat(SkMatrix::MakeTrans(dx, dy));
 }
 
 void TreeBuildingCanvas::fixTranslation(const SkMatrix& matrix,
@@ -71,18 +97,35 @@ void TreeBuildingCanvas::didSetMatrix(const SkMatrix& matrix) {
   View& topView = views.back();
   newMatrix.preTranslate(-topView.offsetX, -topView.offsetY);
   topView.canvas->setMatrix(newMatrix);
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "didSetMatrix " << std::endl << "input: " << std::flush;
+  matrix.dump();
+  std::cerr << std::endl << "total: ";
+  topView.canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
   View& secondFromTop = *(views.rbegin() + 1);
   secondFromTop.canvas->setMatrix(newMatrix);
 }
 
 void TreeBuildingCanvas::willSave() {
   views.back().canvas->save();
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "willSave:";
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
   View& secondFromTop = *(views.rbegin() + 1);
   secondFromTop.canvas->save();
 }
 
 void TreeBuildingCanvas::willRestore() {
   views.back().canvas->restore();
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "willRestore:";
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
   View& secondFromTop = *(views.rbegin() + 1);
   secondFromTop.canvas->restore();
 }
@@ -112,6 +155,11 @@ void TreeBuildingCanvas::onFlush() { views.back().canvas->flush(); }
 void TreeBuildingCanvas::onDrawShadowRec(const SkPath& path,
                                          const SkDrawShadowRec& rec) {
   nonHeaderCommand();
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "drawShadow:";
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
   views.back().canvas->private_draw_shadow_rec(path, rec);
 }
 
@@ -128,6 +176,13 @@ void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
                                          const SkPaint* paint,
                                          SrcRectConstraint constraint) {
   nonHeaderCommand();
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "drawImageRect";
+  std::cerr.flush();
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr.flush();
+#endif
+
   views.back().canvas->drawImageRect(image, *src, dst, paint, constraint);
 }
 
@@ -279,6 +334,10 @@ void TreeBuildingCanvas::onDrawPicture(const SkPicture* picture,
 void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
                                           SkData* value) {
   // TODO(b/154023953) Remove the check for name,  merge the images in Studio.
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "annotation: " << key << std::endl;
+#endif
+
   if (!strstr(key, "RenderNode") || strstr(key, "name=''")) {
     return;
   }
@@ -346,7 +405,9 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
 
 void TreeBuildingCanvas::exitView(bool hasData) {
   View& topView = views.back();
-
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "exitView" << std::endl;
+#endif
   if (hasData && topView.didDraw) {
     std::string type;
     if (topView.label) {
@@ -360,7 +421,6 @@ void TreeBuildingCanvas::exitView(bool hasData) {
                SkScalarRoundToInt(topView.offsetY), topView.width,
                topView.height, std::move(topView.image), last);
   }
-
   views.pop_back();
 }
 
@@ -377,21 +437,24 @@ void TreeBuildingCanvas::addView(const SkRect& rect) {
         existing.offsetY;
   }
 
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "addView" << std::endl;
+#endif
   views.emplace_back(rect.width(), rect.height(), prevLeft, prevTop);
 
   if (views.size() > 1) {
     View& existing = *(views.rbegin() + 1);
-    std::stack<const SkMatrix*> intermediate;
+    std::stack<SkMatrix> intermediate;
     while (true) {
-      intermediate.emplace(&existing.canvas->getTotalMatrix());
+      intermediate.emplace(existing.canvas->getTotalMatrix());
       if (existing.canvas->getSaveCount() == 1) {
         break;
       }
       existing.canvas->restore();
     }
     while (true) {
-      views.back().canvas->setMatrix(*intermediate.top());
-      existing.canvas->setMatrix(*intermediate.top());
+      views.back().canvas->setMatrix(intermediate.top());
+      existing.canvas->setMatrix(intermediate.top());
       intermediate.pop();
       if (intermediate.empty()) {
         break;
@@ -424,22 +487,34 @@ void TreeBuildingCanvas::createRealCanvas() {
                        width * sizeof(int32_t));
   auto newCanvas = new SkCanvas(bitmap);
 
-  std::stack<const SkMatrix*> intermediate;
+  std::stack<SkMatrix> intermediate;
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "creating new canvas: ";
+  currentCanvas.getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
   while (true) {
-    intermediate.emplace(&currentCanvas.getTotalMatrix());
+    const SkMatrix& matrix = currentCanvas.getTotalMatrix();
+    intermediate.emplace(matrix);
+
     if (currentCanvas.getSaveCount() == 1) {
       break;
     }
     currentCanvas.restore();
   }
   while (true) {
-    newCanvas->setMatrix(*intermediate.top());
+    newCanvas->setMatrix(intermediate.top());
     intermediate.pop();
     if (intermediate.empty()) {
       break;
     }
     newCanvas->save();
   }
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "new is: ";
+  newCanvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
+#endif
 
   views.back().canvas.reset(newCanvas);
 }
