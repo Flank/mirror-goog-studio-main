@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.res.shrinker;
 
-public enum ApkFormat {
+public enum LinkedResourcesFormat {
     BINARY,
     PROTO,
 }

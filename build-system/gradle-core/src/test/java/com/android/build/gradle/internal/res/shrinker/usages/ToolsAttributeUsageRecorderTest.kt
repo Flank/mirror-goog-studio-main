@@ -54,12 +54,13 @@ class ToolsAttributeUsageRecorderTest {
             """.trimIndent()
         )
 
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         ToolsAttributeUsageRecorder(temporaryFolder.root.toPath()).recordUsages(model)
 
-        assertThat(model.usageModel.keepAttributes).containsExactly("layout/a,string/*", "layout/b")
-        assertThat(model.usageModel.discardAttributes).containsExactly("drawable/hello")
-        assertThat(model.usageModel.isSafeMode).isFalse()
+        assertThat(model.resourceStore.keepAttributes)
+            .containsExactly("layout/a", "string/*", "layout/b")
+        assertThat(model.resourceStore.discardAttributes).containsExactly("drawable/hello")
+        assertThat(model.resourceStore.isSafeMode).isFalse()
     }
 
     @Test
@@ -74,10 +75,10 @@ class ToolsAttributeUsageRecorderTest {
             """.trimIndent()
         )
 
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         ToolsAttributeUsageRecorder(temporaryFolder.root.toPath()).recordUsages(model)
 
-        assertThat(model.usageModel.keepAttributes).isEmpty()
+        assertThat(model.resourceStore.keepAttributes).isEmpty()
     }
 
     @Test
@@ -90,9 +91,9 @@ class ToolsAttributeUsageRecorderTest {
             """.trimIndent()
         )
 
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         ToolsAttributeUsageRecorder(temporaryFolder.root.toPath()).recordUsages(model)
 
-        assertThat(model.usageModel.keepAttributes).isEmpty()
+        assertThat(model.resourceStore.keepAttributes).isEmpty()
     }
 }

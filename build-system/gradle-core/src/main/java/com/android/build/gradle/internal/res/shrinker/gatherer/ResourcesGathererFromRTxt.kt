@@ -20,6 +20,7 @@ import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.android.ide.common.symbols.SymbolIo
 import com.android.resources.ResourceType.STYLEABLE
+import com.google.common.base.Preconditions
 import java.io.File
 import java.nio.file.Files
 
@@ -32,10 +33,16 @@ import java.nio.file.Files
  */
 class ResourcesGathererFromRTxt(
     private val rDir: File,
-    private val packageName: String
+    private val packageName: String? = null
 ) : ResourcesGatherer {
 
     override fun gatherResourceValues(model: ResourceShrinkerModel) {
+        Preconditions.checkState(
+            !model.resourceStore.supportMultipackages || packageName != null,
+            "Package name should be specified when gathering resources from R.txt files for " +
+                    "multi-module applications."
+        )
+
         Files.walk(rDir.toPath())
             .filter { it.endsWith(FN_RESOURCE_TEXT) }
             .forEach { gatherSingleRTxt(it.toFile(), model) }

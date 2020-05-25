@@ -44,7 +44,7 @@ class ProtoAndroidManifestUsageRecorderTest {
 
     @Test
     fun `test recording usages from proto AndroidManifest stored in compiled items`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(DRAWABLE, packageName, "icon", 0x7f010000)
         model.addResource(STRING, packageName, "app_name", 0x7f020000)
         model.addResource(STRING, packageName, "another_name", 0x7f020001)
@@ -82,10 +82,10 @@ class ProtoAndroidManifestUsageRecorderTest {
 
         ProtoAndroidManifestUsageRecorder(manifestPath).recordUsages(model)
 
-        assertTrue(model.getResourceByValue(0x7f010000)!!.isReachable)
-        assertTrue(model.getResourceByValue(0x7f020000)!!.isReachable)
-        assertFalse(model.getResourceByValue(0x7f020001)!!.isReachable)
-        assertTrue(model.getResourceByValue(0x7f020003)!!.isReachable)
-        assertTrue(model.getResourceByValue(0x7f080002)!!.isReachable)
+        assertTrue(model.resourceStore.getResource(0x7f010000)!!.isReachable)
+        assertTrue(model.resourceStore.getResource(0x7f020000)!!.isReachable)
+        assertFalse(model.resourceStore.getResource(0x7f020001)!!.isReachable)
+        assertTrue(model.resourceStore.getResource(0x7f020003)!!.isReachable)
+        assertTrue(model.resourceStore.getResource(0x7f080002)!!.isReachable)
     }
 }

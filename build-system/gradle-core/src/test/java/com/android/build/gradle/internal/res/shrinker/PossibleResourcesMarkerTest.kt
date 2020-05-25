@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.res.shrinker
 
 import com.android.build.gradle.internal.res.shrinker.PossibleResourcesMarker.NO_MATCH
 import com.android.build.gradle.internal.res.shrinker.PossibleResourcesMarker.convertFormatStringToRegexp
-import com.android.ide.common.resources.usage.ResourceUsageModel
+import com.android.ide.common.resources.usage.ResourceStore
+import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableList.of
 import com.google.common.collect.ImmutableSet
@@ -96,14 +97,14 @@ class PossibleResourcesMarkerTest {
         assertTrue(s.matches(convertFormatStringToRegexp(p).toRegex()))
     }
 
-    private fun createResourceModel(): ResourceUsageModel {
-        val model = ResourceUsageModel()
-        model.addResource(ResourceType.LAYOUT, "layout_my", 0x7f010000)
-        model.addResource(ResourceType.DRAWABLE, "my_draw_1_main", 0x7f020000)
-        model.addResource(ResourceType.DRAWABLE, "my_draw_2_main", 0x7f020001)
-        model.addResource(ResourceType.DRAWABLE, "my_draw_3_title", 0x7f020002)
-        model.addResource(ResourceType.DRAWABLE, "my_draw_", 0x7f020003)
-        model.addResource(ResourceType.DRAWABLE, "another_my_draw_2", 0x7f020004)
+    private fun createResourceModel(): ResourceStore {
+        val model = ResourceStore()
+        model.addResource(Resource(ResourceType.LAYOUT, "layout_my", 0x7f010000))
+        model.addResource(Resource(ResourceType.DRAWABLE, "my_draw_1_main", 0x7f020000))
+        model.addResource(Resource(ResourceType.DRAWABLE, "my_draw_2_main", 0x7f020001))
+        model.addResource(Resource(ResourceType.DRAWABLE, "my_draw_3_title", 0x7f020002))
+        model.addResource(Resource(ResourceType.DRAWABLE, "my_draw_", 0x7f020003))
+        model.addResource(Resource(ResourceType.DRAWABLE, "another_my_draw_2", 0x7f020004))
         return model
     }
 

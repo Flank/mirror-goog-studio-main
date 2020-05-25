@@ -20,13 +20,11 @@ import com.android.aapt.Resources.ResourceTable;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ObfuscatedClasses;
-import com.android.ide.common.resources.usage.ResourceUsageModel;
+import com.android.ide.common.resources.usage.ResourceStore;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -35,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.w3c.dom.Node;
 
 /**
  * Represents resource shrinker state that is shared between shrinker stages ResourcesGatherer,
@@ -46,7 +43,7 @@ public class ResourceShrinkerModel {
 
     private final ShrinkerDebugReporter debugReporter;
 
-    private final ResourceShrinkerUsageModel usageModel = new ResourceShrinkerUsageModel();
+    private final ResourceStore resourceStore;
     private ObfuscatedClasses obfuscatedClasses = ObfuscatedClasses.NO_OBFUSCATION;
 
     private final Set<String> strings = Sets.newHashSetWithExpectedSize(300);
@@ -56,8 +53,10 @@ public class ResourceShrinkerModel {
     private boolean foundGetIdentifier = false;
     private boolean foundWebContent = false;
 
-    public ResourceShrinkerModel(ShrinkerDebugReporter debugReporter) {
+    public ResourceShrinkerModel(
+            ShrinkerDebugReporter debugReporter, boolean supportMultipackages) {
         this.debugReporter = debugReporter;
+        resourceStore = new ResourceStore(supportMultipackages);
     }
 
     @NonNull
@@ -66,8 +65,8 @@ public class ResourceShrinkerModel {
     }
 
     @NonNull
-    public ResourceShrinkerUsageModel getUsageModel() {
-        return usageModel;
+    public ResourceStore getResourceStore() {
+        return resourceStore;
     }
 
     @NonNull
@@ -84,26 +83,26 @@ public class ResourceShrinkerModel {
     @NonNull
     public Resource addResource(
             @NonNull ResourceType type,
-            @NonNull String packageName,
+            @Nullable String packageName,
             @NonNull String name,
             @Nullable String value) {
-        return usageModel.addResource(type, name, value);
+        int intValue = -1;
+        try {
+            intValue = value != null ? Integer.decode(value) : -1;
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+        return addResource(type, packageName, name, intValue);
     }
 
     /** Adds a new gathered resource to model. */
     @NonNull
     public Resource addResource(
             @NonNull ResourceType type,
-            @NonNull String packageName,
+            @Nullable String packageName,
             @NonNull String name,
             int value) {
-        return usageModel.addResource(type, name, value);
-    }
-
-
-    @Nullable
-    public Resource getResourceByValue(int resourceId) {
-        return usageModel.getResource(resourceId);
+        return resourceStore.addResource(new Resource(packageName, type, name, value));
     }
 
     /** Adds string constant found in code to strings pool. */
@@ -138,7 +137,7 @@ public class ResourceShrinkerModel {
 
     /** Finds and returns unused resources */
     public List<Resource> findUnused() {
-        return usageModel.findUnused();
+        return resourceStore.findUnused();
     }
 
     /**
@@ -147,7 +146,7 @@ public class ResourceShrinkerModel {
      */
     public void keepPossiblyReferencedResources() {
         if (strings.isEmpty()
-                || !usageModel.isSafeMode()
+                || !resourceStore.isSafeMode()
                 || (!foundGetIdentifier && !foundWebContent)) {
             // No calls to android.content.res.Resources#getIdentifier; or user specifically asked
             // for us not to guess resources to keep
@@ -165,7 +164,7 @@ public class ResourceShrinkerModel {
                             .collect(Collectors.joining("\n"))
         );
 
-        new PossibleResourcesMarker(debugReporter, usageModel, strings, foundWebContent)
+        new PossibleResourcesMarker(debugReporter, resourceStore, strings, foundWebContent)
                 .markPossibleResourcesReachable();
     }
 
@@ -181,47 +180,5 @@ public class ResourceShrinkerModel {
                 throw new UncheckedIOException(e);
             }
         });
-    }
-
-
-    public class ResourceShrinkerUsageModel extends ResourceUsageModel {
-        public File file;
-
-        /**
-         * Whether we should ignore tools attribute resource references.
-         *
-         * <p>For example, for resource shrinking we want to ignore tools attributes, whereas for
-         * resource refactoring on the source code we do not.
-         *
-         * @return whether tools attributes should be ignored
-         */
-        @Override
-        protected boolean ignoreToolsAttributes() {
-            return true;
-        }
-
-        @NonNull
-        @Override
-        protected List<Resource> findRoots(@NonNull List<Resource> resources) {
-            List<Resource> roots = super.findRoots(resources);
-            debugReporter.debug(() -> "\nThe root reachable resources are:\n" + Joiner.on(",\n   ").join(roots));
-            return roots;
-        }
-
-        @Override
-        protected Resource declareResource(ResourceType type, String name, Node node) {
-            Resource resource = super.declareResource(type, name, node);
-            resource.addLocation(file);
-            return resource;
-        }
-
-        @Override
-        protected void referencedString(@NonNull String string) {
-            if (string.isEmpty() || string.length() > 80) {
-                return;
-            }
-            addStringConstant(string);
-            setFoundWebContent(true);
-        }
     }
 }

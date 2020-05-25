@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.res.shrinker.ApkFormat
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
 import com.android.build.gradle.internal.res.shrinker.gatherer.ProtoResourceTableGatherer
@@ -35,6 +34,8 @@ import javax.inject.Inject
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -64,12 +65,16 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val rawResourceDir: DirectoryProperty
 
+    @get:Input
+    abstract val packageName: Property<String>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ShrinkAppBundleResourcesAction::class.java) {
             it.originalBundle.set(originalBundle)
             it.shrunkBundle.set(shrunkBundle)
             it.rawResourcesDir.set(rawResourceDir)
             it.report.set(shrunkBundle.get().asFile.resolveSibling("resources.txt"))
+            it.packageName.set(packageName)
         }
     }
 
@@ -97,6 +102,8 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.rawResourceDir
             )
+
+            task.packageName.set(creationConfig.packageName)
         }
     }
 }
@@ -106,6 +113,7 @@ interface ResourceShrinkerParams : WorkParameters {
     val shrunkBundle: RegularFileProperty
     val rawResourcesDir: DirectoryProperty
     val report: RegularFileProperty
+    val packageName: Property<String>
 }
 
 private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
@@ -121,27 +129,36 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
             )
 
             ResourceShrinkerImpl(
-                ProtoResourceTableGatherer(fs.getPath(BASE_MODULE, "resources.pb")),
-                proguardMappings
-                    .takeIf { Files.isRegularFile(it) }
-                    ?.let { ProguardMappingsRecorder(it) },
-                listOf(
+                resourcesGatherers = listOf(
+                    ProtoResourceTableGatherer(fs.getPath(BASE_MODULE, "resources.pb"))
+                ),
+                obfuscationMappingsRecorder =
+                    proguardMappings
+                        .takeIf { Files.isRegularFile(it) }
+                        ?.let { ProguardMappingsRecorder(it) },
+                usageRecorders = listOf(
                     DexUsageRecorder(fs.getPath(BASE_MODULE, "dex")),
                     ProtoAndroidManifestUsageRecorder(
                         fs.getPath(BASE_MODULE, "manifest", "AndroidManifest.xml")
                     ),
                     ToolsAttributeUsageRecorder(rawResourcesDirFile.toPath())
                 ),
-                ProtoResourcesGraphBuilder(
-                    fs.getPath(BASE_MODULE, "res"),
-                    fs.getPath(BASE_MODULE, "resources.pb")
+                graphBuilders = listOf(
+                    ProtoResourcesGraphBuilder(
+                        fs.getPath(BASE_MODULE, "res"),
+                        fs.getPath(BASE_MODULE, "resources.pb")
+                    )
                 ),
-                LoggerAndFileDebugReporter(logger, reportFile),
-                ApkFormat.PROTO
+                debugReporter = LoggerAndFileDebugReporter(logger, reportFile),
+                supportMultipackages = true
             ).use { shrinker ->
                 shrinker.analyze()
 
-                shrinker.rewriteResourceZip(originalBundleFile, shrunkBundleFile, BASE_MODULE)
+                shrinker.rewriteResourcesInBundleFormat(
+                    originalBundleFile,
+                    shrunkBundleFile,
+                    mapOf(BASE_MODULE to parameters.packageName.get())
+                )
 
                 // Dump some stats
                 if (shrinker.unusedResourceCount > 0) {

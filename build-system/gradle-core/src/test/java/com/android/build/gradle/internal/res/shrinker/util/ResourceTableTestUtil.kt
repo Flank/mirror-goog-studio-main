@@ -107,7 +107,7 @@ internal fun stringEntry(
     id: Int,
     name: String,
     value: String? = null,
-    refId: Int? = null,
+    refId: Long? = null,
     refName: String? = null
 ): Entry =
     Entry.newBuilder()
@@ -116,7 +116,7 @@ internal fun stringEntry(
         .addConfigValue(
             Resources.ConfigValue.newBuilder()
                 .setValue(
-                    Resources.Value.newBuilder().setItem(createItem(value, refId, refName))
+                    Resources.Value.newBuilder().setItem(createItem(value, refId?.toInt(), refName))
                 )
         )
         .build()

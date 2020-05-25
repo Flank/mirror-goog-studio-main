@@ -22,8 +22,11 @@ import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel;
+import com.android.ide.common.resources.usage.ResourceStore;
+import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.resources.ResourceFolderType;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +50,11 @@ public class RawResourcesGraphBuilder implements ResourcesGraphBuilder {
 
     @Override
     public void buildGraph(@NonNull ResourceShrinkerModel model) throws IOException {
+        Preconditions.checkState(!model.getResourceStore().getSupportMultipackages(),
+                "Resources graph builder that inspects resources in a raw format is incompatible " +
+                        "with multi-module applications.");
+        ResourceUsageModel usageModel = new ResourceUsageModelForShrinker(model);
+
         ImmutableList<Path> subDirs =
                 Files.list(resourceDir)
                         .filter(path -> Files.isDirectory(path))
@@ -55,13 +63,13 @@ public class RawResourcesGraphBuilder implements ResourcesGraphBuilder {
             ResourceFolderType folderType =
                     ResourceFolderType.getFolderType(subDir.getFileName().toString());
             if (folderType != null) {
-                recordResources(model, folderType, subDir);
+                recordResources(usageModel, folderType, subDir);
             }
         }
     }
 
     private void recordResources(
-            ResourceShrinkerModel model, ResourceFolderType folderType, Path folder)
+            ResourceUsageModel usageModel, ResourceFolderType folderType, Path folder)
             throws IOException {
         ImmutableList<Path> resourceFiles =
                 Files.list(folder)
@@ -71,22 +79,40 @@ public class RawResourcesGraphBuilder implements ResourcesGraphBuilder {
             File file = resourceFile.toFile();
             String path = resourceFile.toString();
 
-            model.getUsageModel().file = file;
             try {
                 boolean isXml = endsWithIgnoreCase(path, DOT_XML);
                 if (isXml) {
                     String xml =
                             new String(Files.readAllBytes(resourceFile), StandardCharsets.UTF_8);
                     Document document = XmlUtils.parseDocument(xml, true);
-                    model.getUsageModel().visitXmlDocument(file, folderType, document);
+                    usageModel.visitXmlDocument(file, folderType, document);
                 } else {
-                    model.getUsageModel().visitBinaryResource(folderType, file);
+                    usageModel.visitBinaryResource(folderType, file);
                 }
             } catch (SAXException e) {
                 throw new IOException(e);
-            } finally {
-                model.getUsageModel().file = null;
             }
+        }
+    }
+
+    public static class ResourceUsageModelForShrinker extends ResourceUsageModel {
+        private final ResourceShrinkerModel model;
+
+        public ResourceUsageModelForShrinker(ResourceShrinkerModel model) {
+            mResourceStore = model.getResourceStore();
+            this.model = model;
+        }
+
+        @Override
+        protected boolean ignoreToolsAttributes() {
+            return true;
+        }
+
+        @Override
+        protected void referencedString(@NonNull String string) {
+            super.referencedString(string);
+            this.model.addStringConstant(string);
+            this.model.setFoundWebContent(true);
         }
     }
 }

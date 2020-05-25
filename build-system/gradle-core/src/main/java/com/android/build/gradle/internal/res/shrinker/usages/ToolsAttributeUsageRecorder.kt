@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.shrinker.usages
 
+import com.android.SdkConstants.VALUE_STRICT
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.google.common.collect.ImmutableMap.copyOf
 import java.nio.file.Files
@@ -47,9 +48,12 @@ class ToolsAttributeUsageRecorder(val rawResourcesPath: Path) : ResourceUsageRec
     private fun processRawXml(path: Path, model: ResourceShrinkerModel) {
         processResourceToolsAttributes(path).forEach { key, value ->
             when (key) {
-                "keep" -> model.usageModel.recordKeepToolAttribute(value)
-                "discard" -> model.usageModel.recordDiscardToolAttribute(value)
-                "shrinkMode" -> model.usageModel.recordShrinkModeAttribute(value)
+                "keep" -> model.resourceStore.recordKeepToolAttribute(value)
+                "discard" -> model.resourceStore.recordDiscardToolAttribute(value)
+                "shrinkMode" ->
+                    if (value == VALUE_STRICT) {
+                        model.resourceStore.isSafeMode = false
+                    }
             }
         }
     }

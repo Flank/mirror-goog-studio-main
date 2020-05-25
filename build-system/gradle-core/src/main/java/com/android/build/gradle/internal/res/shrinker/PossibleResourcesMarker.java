@@ -20,10 +20,12 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.Character.isDigit;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.resources.usage.ResourceStore;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import com.google.common.primitives.Ints;
 import java.util.Set;
@@ -74,22 +76,23 @@ public class PossibleResourcesMarker {
     static final String NO_MATCH = "-nomatch-";
 
     private final ShrinkerDebugReporter debugReporter;
-    private final ResourceUsageModel usageModel;
+    private final ResourceStore resourceStore;
     private final Set<String> strings;
     private final boolean foundWebContent;
 
     public PossibleResourcesMarker(ShrinkerDebugReporter debugReporter,
-                                   ResourceUsageModel usageModel, Set<String> strings,
+                                   ResourceStore resourceStore,
+                                   Set<String> strings,
                                    boolean foundWebContent) {
         this.debugReporter = debugReporter;
-        this.usageModel = usageModel;
+        this.resourceStore = resourceStore;
         this.strings = strings;
         this.foundWebContent = foundWebContent;
     }
 
     public void markPossibleResourcesReachable() {
         Set<String> names =
-                usageModel.getResources().stream()
+                resourceStore.getResources().stream()
                         .map(resource -> resource.name)
                         .collect(toImmutableSet());
 
@@ -146,9 +149,9 @@ public class PossibleResourcesMarker {
     private Stream<Resource> possibleWebResources(
             Set<String> names, String string) {
         // Look for android_res/ URL strings.
-        Resource resource = usageModel.getResourceFromFilePath(string);
-        if (resource != null) {
-            return Stream.of(resource);
+        ImmutableList<Resource> resources = resourceStore.getResourcesFromWebUrl(string);
+        if (!resources.isEmpty()) {
+            return resources.stream();
         }
 
         int start = Math.max(string.lastIndexOf('/'), 0);
@@ -156,9 +159,9 @@ public class PossibleResourcesMarker {
         String name = string.substring(start, dot != -1 ? dot : string.length());
 
         if (names.contains(name)) {
-            return usageModel.getResourceMaps().stream()
+            return resourceStore.getResourceMaps().stream()
                     .filter(map -> map.containsKey(name))
-                    .map(map -> map.get(name));
+                    .flatMap(map -> map.get(name).stream());
         }
         return Stream.empty();
     }
@@ -166,7 +169,7 @@ public class PossibleResourcesMarker {
     private Stream<Resource> possiblePrefixMatch(String string) {
         // Check for a simple prefix match, e.g. as in
         // getResources().getIdentifier("ic_video_codec_" + codecName, "drawable", ...)
-        return usageModel.getResources().stream()
+        return resourceStore.getResources().stream()
                 .filter(resource -> resource.name.startsWith(string));
     }
 
@@ -176,7 +179,7 @@ public class PossibleResourcesMarker {
         //   int res = getContext().getResources().getIdentifier(name, "drawable", ...)
         try {
             Pattern pattern = Pattern.compile(convertFormatStringToRegexp(string));
-            return usageModel.getResources().stream()
+            return resourceStore.getResources().stream()
                     .filter(resource -> pattern.matcher(resource.name).matches());
         } catch (PatternSyntaxException ignored) {
             return Stream.empty();
@@ -197,15 +200,13 @@ public class PossibleResourcesMarker {
             int colon = string.indexOf(':');
             String typeName = string.substring(colon + 1, slash);
             ResourceType type = ResourceType.fromClassName(typeName);
-            Resource resource = null;
-            if (type != null) {
-                resource = usageModel.getResource(type, name);
-            }
-            return resource != null ? Stream.of(resource) : Stream.empty();
+            return type != null
+                    ? resourceStore.getResources(type, name).stream()
+                    : Stream.empty();
         }
-        return usageModel.getResourceMaps().stream()
+        return resourceStore.getResourceMaps().stream()
                 .filter(map -> map.containsKey(name))
-                .map(map -> map.get(name));
+                .flatMap(map -> map.get(name).stream());
     }
 
     private Stream<Resource> possibleIntResource(String string) {
@@ -220,7 +221,7 @@ public class PossibleResourcesMarker {
         Integer id = Ints.tryParse(withoutSlash);
         Resource resource = null;
         if (id != null) {
-            resource = usageModel.getResource(id);
+            resource = resourceStore.getResource(id);
         }
         return resource != null ? Stream.of(resource) : Stream.empty();
     }

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.res.shrinker
 import com.android.SdkConstants.DOT_9PNG
 import com.android.SdkConstants.DOT_PNG
 import com.android.SdkConstants.DOT_XML
-import com.android.apksig.internal.util.ByteStreams
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_9PNG
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_9PNG_CRC
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_BINARY_XML
@@ -32,12 +31,12 @@ import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGatherer
 import com.android.build.gradle.internal.res.shrinker.graph.ResourcesGraphBuilder
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ObfuscationMappingsRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.ResourceUsageRecorder
-import com.android.ide.common.resources.usage.ResourceUsageModel
+import com.android.ide.common.resources.usage.ResourceStore
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
-import com.google.common.base.Preconditions
+import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import java.io.BufferedOutputStream
 import java.io.File
@@ -66,28 +65,28 @@ import java.util.zip.ZipFile
  * </ul>
  */
 class ResourceShrinkerImpl(
-    private val resourcesGatherer: ResourcesGatherer,
+    private val resourcesGatherers: List<ResourcesGatherer>,
     private val obfuscationMappingsRecorder: ObfuscationMappingsRecorder?,
     private val usageRecorders: List<ResourceUsageRecorder>,
-    private val graphBuilder: ResourcesGraphBuilder,
+    private val graphBuilders: List<ResourcesGraphBuilder>,
     private val debugReporter: ShrinkerDebugReporter,
-    private val apkFormat: ApkFormat
+    val supportMultipackages: Boolean
 ) : ResourceShrinker {
-    val model: ResourceShrinkerModel = ResourceShrinkerModel(debugReporter)
+    val model = ResourceShrinkerModel(debugReporter, supportMultipackages)
     private lateinit var unused: List<Resource>
 
     override fun analyze() {
-        resourcesGatherer.gatherResourceValues(model)
+        resourcesGatherers.forEach { it.gatherResourceValues(model) }
         obfuscationMappingsRecorder?.recordObfuscationMappings(model)
         usageRecorders.forEach { it.recordUsages(model) }
-        graphBuilder.buildGraph(model)
+        graphBuilders.forEach { it.buildGraph(model) }
 
-        model.usageModel.processToolsAttributes()
+        model.resourceStore.processToolsAttributes()
         model.keepPossiblyReferencedResources()
 
-        debugReporter.debug { model.usageModel.dumpResourceModel() }
+        debugReporter.debug { model.resourceStore.dumpResourceModel() }
 
-        unused = model.usageModel.findUnused()
+        unused = model.resourceStore.findUnused()
     }
 
     override fun close() {
@@ -98,11 +97,27 @@ class ResourceShrinkerImpl(
         return unused.size
     }
 
-    override fun rewriteResourcesInApkFormat(source: File, dest: File) {
-        rewriteResourceZip(source, dest, "")
+    override fun rewriteResourcesInApkFormat(
+        source: File,
+        dest: File,
+        format: LinkedResourcesFormat
+    ) {
+        rewriteResourceZip(source, dest, ApkArchiveFormat(model.resourceStore, format))
     }
 
-    fun rewriteResourceZip(source: File, dest: File, modulePrefix: String) {
+    override fun rewriteResourcesInBundleFormat(
+        source: File,
+        dest: File,
+        moduleToPackageName: Map<String, String>
+    ) {
+        rewriteResourceZip(
+            source,
+            dest,
+            BundleArchiveFormat(model.resourceStore, moduleToPackageName)
+        )
+    }
+
+    private fun rewriteResourceZip(source: File, dest: File, format: ArchiveFormat) {
         if (dest.exists() && !dest.delete()) {
             throw IOException("Could not delete $dest")
         }
@@ -114,8 +129,8 @@ class ResourceShrinkerImpl(
                 zos.setLevel(9)
 
                 zip.entries().asSequence().forEach {
-                    if (shouldBeReplacedWithDummy(it, modulePrefix)) {
-                        replaceWithDummyEntry(zos, it)
+                    if (format.shouldEntryBeReplacedWithDummyContent(it)) {
+                        replaceWithDummyEntry(zos, it, format.resourcesFormat)
                     } else {
                         copyToOutput(zip.getInputStream(it), zos, it)
                     }
@@ -138,33 +153,21 @@ class ResourceShrinkerImpl(
         }
     }
 
-    private fun shouldBeReplacedWithDummy(entry: ZipEntry, modulePrefix: String): Boolean {
-        val resPath = when  {
-            modulePrefix.isEmpty() -> "res/"
-            else -> "$modulePrefix/res/"
-        }
-        if (entry.isDirectory || !entry.name.startsWith(resPath)) {
-            return false
-        }
-        val (folderName, fileName) = entry.name.substring(resPath.length).split("/", limit = 2)
-        val resource = model.usageModel.getResourceByJarPath(folderName, fileName)
-        Preconditions.checkNotNull(
-            resource,
-            "Resource for entry '" + entry.name + "' was not gathered."
-        )
-        return !resource!!.isReachable
-    }
-
     /** Replaces the given entry with a minimal valid file of that type.  */
-    private fun replaceWithDummyEntry(zos: JarOutputStream, entry: ZipEntry) {
+    private fun replaceWithDummyEntry(
+        zos: JarOutputStream,
+        entry: ZipEntry,
+        format: LinkedResourcesFormat
+    ) {
         // Create a new entry so that the compressed len is recomputed.
         val name = entry.name
         val (bytes, crc) = when {
+            // DOT_9PNG (.9.png) must be always before DOT_PNG (.png)
             name.endsWith(DOT_9PNG) -> TINY_9PNG to TINY_9PNG_CRC
             name.endsWith(DOT_PNG) -> TINY_PNG to TINY_PNG_CRC
-            name.endsWith(DOT_XML) && apkFormat == ApkFormat.BINARY ->
+            name.endsWith(DOT_XML) && format == LinkedResourcesFormat.BINARY ->
                 TINY_BINARY_XML to TINY_BINARY_XML_CRC
-            name.endsWith(DOT_XML) && apkFormat == ApkFormat.PROTO ->
+            name.endsWith(DOT_XML) && format == LinkedResourcesFormat.PROTO ->
                 TINY_PROTO_XML to TINY_PROTO_XML_CRC
             else -> ByteArray(0) to 0L
         }
@@ -207,12 +210,53 @@ class ResourceShrinkerImpl(
     }
 }
 
-private fun ResourceUsageModel.getResourceByJarPath(folder: String, name: String): Resource? {
+private interface ArchiveFormat {
+    val resourcesFormat: LinkedResourcesFormat
+    fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean
+}
+
+private class ApkArchiveFormat(
+    private val store: ResourceStore,
+    override val resourcesFormat: LinkedResourcesFormat
+) : ArchiveFormat {
+
+    override fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean {
+        if (entry.isDirectory || !entry.name.startsWith("res/")) {
+            return false
+        }
+        val (_, folder, name) = entry.name.split('/', limit = 3)
+        return store.getResourceByJarPath(folder, name, null)?.isReachable?.not() ?: false
+    }
+}
+
+private class BundleArchiveFormat(
+    private val store: ResourceStore,
+    private val moduleToPackageName: Map<String, String>
+) : ArchiveFormat {
+
+    override val resourcesFormat = LinkedResourcesFormat.PROTO
+
+    override fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean {
+        val module = entry.name.substringBefore('/')
+        val packageName = moduleToPackageName[module]
+        if (entry.isDirectory || packageName == null || !entry.name.startsWith("$module/res/")) {
+            return false
+        }
+        val (_, _, folder, name) = entry.name.split('/', limit = 4)
+        return store.getResourceByJarPath(folder, name, packageName)?.isReachable?.not() ?: false
+    }
+}
+
+private fun ResourceStore.getResourceByJarPath(
+    folder: String,
+    name: String,
+    packageName: String?
+): Resource? {
     val folderType = ResourceFolderType.getFolderType(folder) ?: return null
     val resourceName = name.substringBefore('.')
     return FolderTypeRelationship.getRelatedResourceTypes(folderType)
         .filterNot { it == ResourceType.ID }
-        .map { getResource(it, resourceName) }
+        .map { getResource(packageName, it, resourceName) }
         .filterNotNull()
         .firstOrNull()
 }

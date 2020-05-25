@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.res.shrinker;
 import com.android.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -52,12 +53,34 @@ public interface ResourceShrinker extends AutoCloseable {
 
     /**
      * Replaces entries in {@param source} zip archive that belong to unused resources with dummy
-     * content and produces a new {@param dest} zip archive.
+     * content and produces a new {@param dest} zip archive. Zip archive should contain resources
+     * in 'res/' folder like it is stored in APK.
      *
      * <p>For now, doesn't change resource table and applies to file-based resources like layouts,
      * menus and drawables, not value-based resources like strings and dimensions.
      *
      * <p>Should be called after {@code ResourceShrinker#analyze}.
      */
-    void rewriteResourcesInApkFormat(@NonNull File source, @NonNull File dest) throws IOException;
+    void rewriteResourcesInApkFormat(
+            @NonNull File source,
+            @NonNull File dest,
+            @NonNull LinkedResourcesFormat format
+    ) throws IOException;
+
+    /**
+     * Replaces entries in {@param source} zip archive that belong to unused resources with dummy
+     * content and produces a new {@param dest} zip archive. Zip archive represents App Bundle which
+     * may have multiple modules and each module has its own resource directory: '${module}/res/'.
+     * Package name for each bundle module should be passed as {@param moduleToPackageName}.
+     *
+     * <p>For now, doesn't change resource table and applies to file-based resources like layouts,
+     * menus and drawables, not value-based resources like strings and dimensions.
+     *
+     * <p>Should be called after {@code ResourceShrinker#analyze}.
+     */
+    void rewriteResourcesInBundleFormat(
+            @NonNull File source,
+            @NonNull File dest,
+            @NonNull Map<String, String> moduleToPackageName
+    ) throws IOException;
 }

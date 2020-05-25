@@ -85,7 +85,7 @@ private class DexFileAnalysisCallback(
     }
 
     override fun referencedInt(value: Int) {
-        val resource = model.usageModel.getResource(value)
+        val resource = model.resourceStore.getResource(value)
         if (ResourceUsageModel.markReachable(resource)) {
             model.debugReporter.debug {
                 "Marking $resource reachable: referenced from $path"
@@ -101,9 +101,8 @@ private class DexFileAnalysisCallback(
         if (isValidResourceType(realMethod.className)) {
             val typePart = realMethod.className.substringAfterLast('$')
             ResourceType.fromClassName(typePart)?.let { type ->
-                model.usageModel.getResource(type, realMethod.methodName)?.let {
-                    ResourceUsageModel.markReachable(it)
-                }
+                model.resourceStore.getResources(type, realMethod.methodName)
+                    .forEach { ResourceUsageModel.markReachable(it) }
             }
         }
     }

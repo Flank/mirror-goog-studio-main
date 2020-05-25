@@ -53,10 +53,15 @@ import org.junit.rules.TemporaryFolder
 
 class ProtoResourcesGraphBuilderTest {
     private val PACKAGE_NAME = "com.test"
+    private val DYNAMIC_FEATURE_PACKAGE_NAME = "com.test.feature"
     private val ANDROID_NS = "http://schemas.android.com/apk/res/android"
     companion object {
         fun ResourceShrinkerModel.referencesFor(resourceId: Int) =
-            getResourceByValue(resourceId)?.references?.map { it.name } ?: emptyList()
+            resourceStore.getResource(resourceId)?.references?.map { it.name } ?: emptyList()
+
+        fun ResourceShrinkerModel.referencesWithPackage(resourceId: Int) =
+            resourceStore.getResource(resourceId)
+                ?.references?.map { "${it.packageName}:${it.name}" } ?: emptyList()
     }
 
     @get:Rule
@@ -64,7 +69,7 @@ class ProtoResourcesGraphBuilderTest {
 
     @Test
     fun `find simple references between resources`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         (1..4).forEach { i ->
             model.addResource(STRING, PACKAGE_NAME, "string$i", i)
         }
@@ -89,8 +94,40 @@ class ProtoResourcesGraphBuilderTest {
     }
 
     @Test
+    fun `find simple references between resources in multi-modules project`() {
+        val model = ResourceShrinkerModel(NoDebugReporter, true)
+        (1..4).forEach { i ->
+            model.addResource(STRING, PACKAGE_NAME, "string$i", i)
+            model.addResource(STRING, DYNAMIC_FEATURE_PACKAGE_NAME, "string$i", 0x01000000 + i)
+        }
+
+        val table = createResourceTable {
+            it.addType(
+                0,
+                "string",
+                stringEntry(1, "string1", "Hello world"),
+                // reference by name (resource from both packages are counted as referenced)
+                stringEntry(2, "string2", refName = "string/string1"),
+                // reference to the same package
+                stringEntry(3, "string3", refId = 0x00000001),
+                // reference to another package
+                stringEntry(4, "string4", refId = 0x01000003)
+            )
+        }
+
+        ProtoResourcesGraphBuilder(temporaryFolder.root.toPath(), table.toPath())
+            .buildGraph(model)
+
+        assertThat(model.referencesWithPackage(1)).isEmpty()
+        assertThat(model.referencesWithPackage(2))
+            .containsExactly("com.test:string1", "com.test.feature:string1")
+        assertThat(model.referencesWithPackage(3)).containsExactly("com.test:string1")
+        assertThat(model.referencesWithPackage(4)).containsExactly("com.test.feature:string3")
+    }
+
+    @Test
     fun `find references from array`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(ResourceType.ARRAY, PACKAGE_NAME, "string-array", 0x10000)
         model.addResource(STRING, PACKAGE_NAME, "string1", 1)
         model.addResource(STRING, PACKAGE_NAME, "string2", 2)
@@ -119,7 +156,7 @@ class ProtoResourcesGraphBuilderTest {
 
     @Test
     fun `find references from plurals`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(ResourceType.PLURALS, PACKAGE_NAME, "my_plurals", 0x10000)
         model.addResource(STRING, PACKAGE_NAME, "string1", 1)
         model.addResource(STRING, PACKAGE_NAME, "string2", 2)
@@ -146,7 +183,7 @@ class ProtoResourcesGraphBuilderTest {
 
     @Test
     fun `find references from external file in compiled XML format, skip ID resources`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(STRING, PACKAGE_NAME, "string1", 1)
         model.addResource(STRING, PACKAGE_NAME, "string_bye", 2)
         model.addResource(ID, PACKAGE_NAME, "menu_item", 0x10001)
@@ -186,7 +223,7 @@ class ProtoResourcesGraphBuilderTest {
 
     @Test
     fun `find references from raw external files`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(DRAWABLE, PACKAGE_NAME, "drawable_1", 1)
         model.addResource(DRAWABLE, PACKAGE_NAME, "drawable_2", 2)
         model.addResource(RAW, PACKAGE_NAME, "html", 0x10001)
@@ -260,7 +297,7 @@ class ProtoResourcesGraphBuilderTest {
     }
 
     fun `find inlined android_res references inside XML resources`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(DRAWABLE, PACKAGE_NAME, "drawable_1", 1)
         model.addResource(DRAWABLE, PACKAGE_NAME, "drawable_2", 2)
         model.addResource(DRAWABLE, PACKAGE_NAME, "drawable_3", 3)
@@ -315,7 +352,7 @@ class ProtoResourcesGraphBuilderTest {
             }
 
             override fun close() = Unit
-        })
+        }, false)
         model.addResource(DRAWABLE, PACKAGE_NAME, "drawable_1", 1)
         model.addResource(RAW, PACKAGE_NAME, "css2", 0x10001)
         model.addResource(RAW, PACKAGE_NAME, "html", 0x10002)

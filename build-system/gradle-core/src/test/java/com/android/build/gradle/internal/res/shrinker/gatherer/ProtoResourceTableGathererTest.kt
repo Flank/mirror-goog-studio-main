@@ -40,7 +40,7 @@ class ProtoResourceTableGathererTest {
         private fun ResourceShrinkerModel.getResourceTypeAndName(
             id: Long
         ): Pair<ResourceType, String>? =
-            getResourceByValue(id.toInt())?.let { Pair(it.type, it.name) }
+            resourceStore.getResource(id.toInt())?.let { Pair(it.type, it.name) }
     }
 
     @get:Rule
@@ -95,7 +95,7 @@ class ProtoResourceTableGathererTest {
         val file = temporaryFolder.newFile("resources.pb")
         Files.write(file.toPath(), resourceTable.toByteArray())
 
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         ProtoResourceTableGatherer(file.toPath()).gatherResourceValues(model)
 
         assertThat(model.getResourceTypeAndName(0x7f010001))

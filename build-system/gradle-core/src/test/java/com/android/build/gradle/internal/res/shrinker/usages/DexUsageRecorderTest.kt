@@ -38,9 +38,9 @@ class DexUsageRecorderTest {
         val model = createModelWithResources()
         DexUsageRecorder(extractResourceAsDex("resourceShrinker/classes.dex")).recordUsages(model)
 
-        assertThat(model.usageModel.getResource(0x7f030000)?.isReachable).isTrue()
-        assertThat(model.usageModel.getResource(0x7f080001)?.isReachable).isFalse()
-        assertThat(model.usageModel.getResource(0x7f080000)?.isReachable).isTrue()
+        assertThat(model.resourceStore.getResource(0x7f030000)?.isReachable).isTrue()
+        assertThat(model.resourceStore.getResource(0x7f080001)?.isReachable).isFalse()
+        assertThat(model.resourceStore.getResource(0x7f080000)?.isReachable).isTrue()
         assertThat(model.isFoundGetIdentifier).isFalse()
         assertThat(model.isFoundWebContent).isFalse()
     }
@@ -72,7 +72,7 @@ class DexUsageRecorderTest {
     }
 
     private fun createModelWithResources(): ResourceShrinkerModel {
-        val model = ResourceShrinkerModel(NoDebugReporter)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
         model.addResource(ResourceType.LAYOUT, PACKAGE_NAME, "activity_main", "0x7f030000")
         model.addResource(ResourceType.ID, PACKAGE_NAME, "action_settings", "0x7f080000")
         model.addResource(ResourceType.ID, PACKAGE_NAME, "action_settings2", "0x7f080001")
