@@ -28,7 +28,6 @@ import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.MavenLibrary
 import com.android.tools.build.libraries.metadata.ModuleDependencies
 import com.google.protobuf.ByteString
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -42,6 +41,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -60,7 +60,8 @@ import javax.inject.Inject
 abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 
-    private lateinit var runtimeClasspath: Configuration
+    @get:Internal
+    abstract val runtimeClasspathName: Property<String>
 
     // Don't use @Classpath here as @Classpath ignores some of the contents whereas the output of
     // this task contains the hashes of the entire contents.
@@ -116,6 +117,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         val libraries = LinkedList<Library>()
         val libraryDependencies = LinkedList<LibraryDependencies>()
         val directDependenciesIndices: MutableSet<Int> = HashSet()
+        val runtimeClasspath = project.configurations.getByName(runtimeClasspathName.get())
         val artifacts = runtimeClasspath.incoming.artifactView { config ->
             config.componentFilter { id -> id !is ProjectComponentIdentifier }
         }.artifacts
@@ -232,7 +234,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             task: PerModuleReportDependenciesTask
         ) {
             super.configure(task)
-            task.runtimeClasspath = creationConfig.variantDependencies.runtimeClasspath
+            task.runtimeClasspathName.set(creationConfig.variantDependencies.runtimeClasspath.name)
             task.runtimeClasspathArtifacts = creationConfig.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,

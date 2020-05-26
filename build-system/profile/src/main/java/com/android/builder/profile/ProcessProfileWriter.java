@@ -262,7 +262,10 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
                         .setTimestamp(System.currentTimeMillis())
                         .build();
         if (stats != null) {
-            mBuild.addMemorySample(stats);
+            synchronized (mBuild) {
+                // make sure we are adding memory samples one by one
+                mBuild.addMemorySample(stats);
+            }
         }
         return stats;
     }
