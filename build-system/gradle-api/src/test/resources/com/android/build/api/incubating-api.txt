@@ -3,8 +3,6 @@ Incubating Android Gradle Plugin API.
 ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
-com.android.build.api.artifact.AppendRequest
-com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.Artifact implements java.io.Serializable
 com.android.build.api.artifact.Artifact$Appendable implements com.android.build.api.artifact.Artifact$Multiple
 com.android.build.api.artifact.Artifact$Companion
@@ -32,31 +30,23 @@ com.android.build.api.artifact.ArtifactTransformationRequest
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (TaskT, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (TaskT, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact
-com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
+com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
 com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Single
 com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.Artifacts
-com.android.build.api.artifact.Artifacts.append: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Artifacts.get: org.gradle.api.provider.Provider<FILE_TYPE> (ARTIFACT_TYPE)
-com.android.build.api.artifact.Artifacts.getAll: org.gradle.api.provider.Provider<java.util.List<FILE_TYPE>> (ARTIFACT_TYPE)
+com.android.build.api.artifact.Artifacts.get: org.gradle.api.provider.Provider<FileTypeT> (ArtifactTypeT)
+com.android.build.api.artifact.Artifacts.getAll: org.gradle.api.provider.Provider<java.util.List<FileTypeT>> (ArtifactTypeT)
 com.android.build.api.artifact.Artifacts.getBuiltArtifactsLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
-com.android.build.api.artifact.Artifacts.replace: com.android.build.api.artifact.ReplaceRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Artifacts.transform: com.android.build.api.artifact.TransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Artifacts.transformAll: com.android.build.api.artifact.MultipleTransformRequest<FILE_TYPE> (org.gradle.api.tasks.TaskProvider<TASK>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.provider.ListProperty<FILE_TYPE>>, kotlin.jvm.functions.Function1<? super TASK, ? extends org.gradle.api.file.FileSystemLocationProperty<FILE_TYPE>>)
-com.android.build.api.artifact.Artifacts.use: com.android.build.api.artifact.TaskBasedOperations<TASK> (org.gradle.api.tasks.TaskProvider<TASK>)
-com.android.build.api.artifact.MultipleTransformRequest
-com.android.build.api.artifact.MultipleTransformRequest.on: void (ARTIFACT_TYPE)
-com.android.build.api.artifact.ReplaceRequest
-com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
+com.android.build.api.artifact.Artifacts.use: com.android.build.api.artifact.TaskBasedOperations<TaskT> (org.gradle.api.tasks.TaskProvider<TaskT>)
 com.android.build.api.artifact.TaskBasedOperations
-com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
-com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>, java.lang.String)
-com.android.build.api.artifact.TaskBasedOperations.toRead: com.android.build.api.artifact.TaskBasedOperations<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
-com.android.build.api.artifact.TransformRequest
-com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
+com.android.build.api.artifact.TaskBasedOperations.toAppend: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
+com.android.build.api.artifact.TaskBasedOperations.toReplace: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
+com.android.build.api.artifact.TaskBasedOperations.toTransform: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
+com.android.build.api.artifact.TaskBasedOperations.toTransformAll: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.provider.ListProperty<FileTypeT>>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
+com.android.build.api.artifact.TaskBasedOperations.toTransformMany: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
 com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.component.AndroidTestProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)

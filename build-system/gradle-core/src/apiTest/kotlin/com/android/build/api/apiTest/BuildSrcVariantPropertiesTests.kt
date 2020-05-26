@@ -79,7 +79,8 @@ TestType.BuildSrc
                     "src/main/kotlin/CustomPlugin.kt",
                     // language=kotlin
                     """
-                    import com.android.build.api.artifact.ArtifactTypes
+                    import com.android.build.api.artifact.Artifacts
+                    import com.android.build.api.artifact.ArtifactType
                     import com.android.build.api.variant.VariantOutputConfiguration.OutputType
                     import com.android.build.gradle.AppPlugin
                     import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -135,7 +136,7 @@ TestType.BuildSrc
                             // does contain the version code and version name from the tasks added 
                             // above.
                             project.tasks.register("verifierFor${'$'}{name}", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(artifacts.get(ArtifactTypes.APK))
+                                it.apkFolder.set(artifacts.get(ArtifactType.APK))
                                 it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
                             }
                         }

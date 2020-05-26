@@ -71,6 +71,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
@@ -216,13 +217,19 @@ android.onVariantProperties {
     task.getVariantName().set(it.getName())
   }
 
-  it.artifacts.replace(outputTask) { it.getOutputDir() }.on(
-    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE)
+  it.artifacts.use(outputTask).toReplace(
+        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
+        { it.getOutputDir() }
+  )
 
   TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
-  ArtifactTransformationRequest replacementRequest = it.artifacts.use(consumerTask)
-    .toRead(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE) { it.getCompatibleManifests() }
-    .andWrite(InternalArtifactType.MERGED_MANIFESTS.INSTANCE) { it.getOutputDir() }
+  ArtifactTransformationRequest replacementRequest = ((ArtifactsImpl) it.artifacts).use(consumerTask)
+    .toTransformMany(
+        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE, 
+        { it.getCompatibleManifests() },
+        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
+        { it.getOutputDir() },
+        null)
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest

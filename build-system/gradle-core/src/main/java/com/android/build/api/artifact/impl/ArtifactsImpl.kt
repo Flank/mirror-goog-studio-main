@@ -16,14 +16,10 @@
 
 package com.android.build.api.artifact.impl
 
-import com.android.build.api.artifact.AppendRequest
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Artifacts
-import com.android.build.api.artifact.ReplaceRequest
-import com.android.build.api.artifact.TransformRequest
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.AnchorOutputType
@@ -35,8 +31,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -83,31 +77,8 @@ class ArtifactsImpl(
                   ARTIFACT_TYPE : Artifact.Multiple
             = getArtifactContainer(type).get()
 
-    override fun <TASK : Task, FILE_TYPE : FileSystemLocation> append(
-        taskProvider: TaskProvider<TASK>,
-        with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-    ): AppendRequestFacade<TASK, FILE_TYPE> = AppendRequestFacade(this, taskProvider, with)
-
-    override fun <TASK : Task, FILE_TYPE : FileSystemLocation> transform(
-        taskProvider: TaskProvider<TASK>,
-        from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
-        into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-    ): TransformRequestFacade<TASK, FILE_TYPE> = TransformRequestFacade(this, taskProvider, from, into)
-
-    override fun <TASK: Task, FILE_TYPE: FileSystemLocation> transformAll(
-        taskProvider: TaskProvider<TASK>,
-        from: (TASK)-> ListProperty<FILE_TYPE>,
-        into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-    ): MultipleTransformRequestFacade<TASK, FILE_TYPE> =
-        MultipleTransformRequestFacade(this, objects, taskProvider, from, into)
-
-    override fun <TASK : Task, FILE_TYPE : FileSystemLocation> replace(
-        taskProvider: TaskProvider<TASK>,
-        with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-    ): ReplaceRequestImpl<TASK, FILE_TYPE> = ReplaceRequestFacade(this, taskProvider, with)
-
     override fun <TASK : Task> use(taskProvider: TaskProvider<TASK>): TaskBasedOperationsImpl<TASK> {
-        return TaskBasedOperationsImpl(this, taskProvider)
+        return TaskBasedOperationsImpl(objects, this, taskProvider)
     }
 
     // End of public API implementation, start of private AGP services.
@@ -273,176 +244,6 @@ class ArtifactsImpl(
     fun getAllClasses(): FileCollection = allClasses
 }
 
-/**
- * Specialization of the [TransformRequest] public API with added services private to AGP.
- */
-abstract class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>(
-    private val artifactsImpl: ArtifactsImpl,
-    private val taskProvider: TaskProvider<TASK>,
-    private val from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
-    private val into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-) : TransformRequest<FILE_TYPE> {
-
-    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE : Artifact<FILE_TYPE>,
-                  ARTIFACT_TYPE : Artifact.Transformable,
-                  ARTIFACT_TYPE : Artifact.Single {
-
-        val artifactContainer = artifactsImpl.getArtifactContainer(type)
-        val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
-        taskProvider.configure {
-            from(it).set(currentProvider)
-            // since the task will now execute, resolve its output path.
-            into(it).set(
-                artifactsImpl.getOutputPath(type,
-                    taskProvider.name,
-                    type.getFileSystemLocationName()
-                )
-            )
-        }
-    }
-}
-
-/**
- * Facade implementation of [TransformRequest] that delegates calls to [TransformRequestImpl]
- */
-class TransformRequestFacade<TASK: Task, FILE_TYPE : FileSystemLocation>(
-    artifactsImpl: ArtifactsImpl,
-    taskProvider: TaskProvider<TASK>,
-    from: (TASK) -> FileSystemLocationProperty<FILE_TYPE>,
-    into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-) : TransformRequestImpl<TASK, FILE_TYPE>(artifactsImpl, taskProvider, from, into), TransformRequest<FILE_TYPE> {
-    override fun <ARTIFACT_TYPE : ArtifactType<FILE_TYPE>> on(type: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE : Artifact.Transformable,
-                  ARTIFACT_TYPE : Artifact.Single
-            = super.on(type)
-
-
-}
-
-/**
- * Specialization of the [ReplaceRequest] public API with added services private to AGP.
- */
-abstract class ReplaceRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
-    private val artifactsImpl: ArtifactsImpl,
-    private val taskProvider: TaskProvider<TASK>,
-    private val with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-): ReplaceRequest<FILE_TYPE> {
-
-    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE : Artifact<FILE_TYPE>,
-                  ARTIFACT_TYPE : Artifact.Replaceable {
-
-        val artifactContainer = artifactsImpl.getArtifactContainer(type)
-        taskProvider.configure {
-            with(it).set(artifactsImpl.getOutputPath(type, taskProvider.name))
-        }
-        artifactContainer.replace(taskProvider.flatMap { with(it) })
-    }
-}
-
-/**
- * Facade implementation of [ReplaceRequest] that delegates calls to [ReplaceRequestImpl]
- */
-class ReplaceRequestFacade<TASK: Task, FILE_TYPE: FileSystemLocation>(
-    artifactsImpl: ArtifactsImpl,
-    taskProvider: TaskProvider<TASK>,
-    with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-): ReplaceRequestImpl<TASK, FILE_TYPE>(artifactsImpl, taskProvider, with), ReplaceRequest<FILE_TYPE> {
-
-    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>, ARTIFACT_TYPE : Artifact.Replaceable
-            = super.on(type)
-
-}
-/**
- * Implementation of the [AppendRequest] public API.
- */
-abstract class AppendRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
-    private val artifactsImpl: ArtifactsImpl,
-    private val taskProvider: TaskProvider<TASK>,
-    private val with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-) : AppendRequest<FILE_TYPE> {
-    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE): AppendRequestImpl<TASK, FILE_TYPE>
-            where ARTIFACT_TYPE : Artifact<FILE_TYPE>,
-                  ARTIFACT_TYPE : Artifact.Appendable {
-
-        val artifactContainer = artifactsImpl.getArtifactContainer(type)
-        taskProvider.configure {
-            with(it).set(artifactsImpl.getOutputPath(type, taskProvider.name))
-        }
-        // all producers of a multiple artifact type are added to the initial list (just like
-        // the AGP producers) since the transforms always operate on the complete list of added
-        // providers.
-        artifactContainer.addInitialProvider(taskProvider.flatMap { with(it) })
-        return this
-    }
-}
-
-/**
- * Facade implementation of [AppendRequest] that delegates calls to [AppendRequestImpl]
- */
-class AppendRequestFacade<TASK: Task, FILE_TYPE: FileSystemLocation>(
-    artifactsImpl: ArtifactsImpl,
-    taskProvider: TaskProvider<TASK>,
-    with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-): AppendRequestImpl<TASK, FILE_TYPE>(artifactsImpl, taskProvider, with), AppendRequest<FILE_TYPE> {
-
-    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE): AppendRequest<FILE_TYPE>
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE : Artifact.Appendable
-            = super.on(type)
-}
-
-abstract class MultipleTransformRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
-    private val artifactsImpl: ArtifactsImpl,
-    private val objects: ObjectFactory,
-    private val taskProvider: TaskProvider<TASK>,
-    private val from: (TASK) -> ListProperty<FILE_TYPE>,
-    private val into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-):
-        MultipleTransformRequest<FILE_TYPE> {
-
-    var fileName: String? = null
-
-    fun withName(name: String): MultipleTransformRequestImpl<TASK, FILE_TYPE> {
-        fileName = name
-        return this
-    }
-
-    fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE : Artifact<FILE_TYPE>,
-                  ARTIFACT_TYPE : Artifact.Transformable,
-                  ARTIFACT_TYPE : Artifact.Multiple {
-        val artifactContainer = artifactsImpl.getArtifactContainer(type)
-        val newList = objects.listProperty(type.kind.dataType().java)
-        val currentProviders= artifactContainer.transform(taskProvider.flatMap { newList })
-        taskProvider.configure {
-            newList.add(into(it))
-            into(it).set(artifactsImpl.getOutputPath(type, taskProvider.name))
-            from(it).set(currentProviders)
-        }
-    }
-}
-
-/**
- * Facade implementation of [MultipleTransformRequest] that delegates calls to [MultipleTransformRequestImpl]
- */
-class MultipleTransformRequestFacade<TASK: Task, FILE_TYPE: FileSystemLocation>(
-    artifactsImpl: ArtifactsImpl,
-    objects: ObjectFactory,
-    taskProvider: TaskProvider<TASK>,
-    from: (TASK) -> ListProperty<FILE_TYPE>,
-    into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
-): MultipleTransformRequestImpl<TASK, FILE_TYPE>(artifactsImpl, objects, taskProvider, from, into),
-    MultipleTransformRequest<FILE_TYPE> {
-
-    override fun <ARTIFACT_TYPE> on(type: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
-                  ARTIFACT_TYPE : Artifact.Transformable,
-                  ARTIFACT_TYPE : Artifact.Multiple
-        = super.on(type)
-}
 
 internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
     private val artifactsImpl: ArtifactsImpl,

@@ -182,9 +182,9 @@ fun registerDataBindingOutputs(
             .withName("out")
             .on(DATA_BINDING_ARTIFACT)
     } else {
-        artifacts
-            .replace(taskProvider) { dataBindingArtifactDir }
-            .on(DATA_BINDING_ARTIFACT)
+        artifacts.use(taskProvider).toReplace(
+            DATA_BINDING_ARTIFACT,
+            { dataBindingArtifactDir })
     }
     if (isExportDataBindingClassList) {
         if (firstRegistration) {
@@ -192,9 +192,9 @@ fun registerDataBindingOutputs(
                 .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         } else {
-            artifacts
-                .replace(taskProvider) { dataBindingExportClassListFile }
-                .on(DATA_BINDING_EXPORT_CLASS_LIST)
+            artifacts.use(taskProvider).toReplace(
+                DATA_BINDING_EXPORT_CLASS_LIST,
+                { dataBindingExportClassListFile })
         }
     }
 }
