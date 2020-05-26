@@ -87,7 +87,6 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -546,10 +545,6 @@ public class LibraryTaskManager
         LibraryExtension extension = (LibraryExtension) globalScope.getExtension();
         List<PrefabModuleTaskData> modules = Lists.newArrayList();
         for (PrefabPackagingOptions options : extension.getPrefab()) {
-            String name = options.getName();
-            if (name == null) {
-                throw new InvalidUserDataException("prefab modules must specify a name");
-            }
             File headers = null;
             if (options.getHeaders() != null) {
                 headers =
@@ -558,7 +553,7 @@ public class LibraryTaskManager
                                 .dir(options.getHeaders())
                                 .getAsFile();
             }
-            modules.add(new PrefabModuleTaskData(name, headers, options.getLibraryName()));
+            modules.add(new PrefabModuleTaskData(options.getName(), headers, options.getLibraryName()));
         }
 
         if (!modules.isEmpty()) {
