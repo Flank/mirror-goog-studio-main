@@ -144,6 +144,25 @@ class MlGeneratedClassTest {
 
     @Test
     @Throws(IOException::class, InterruptedException::class)
+    fun testMobileNetModelClassWithV2Metadata() {
+        val modelMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
+            )
+        val outputsMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createOutputGetterMethodReference(
+                    "getProbabilityAsTensorBuffer", TENSOR_BUFFER
+                )
+            )
+        verifyModelClass("mobilenet_quant_metadata_v2.tflite", modelMethods, outputsMethods)
+    }
+
+    @Test
+    @Throws(IOException::class, InterruptedException::class)
     fun testDeepLabModelClass() {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(

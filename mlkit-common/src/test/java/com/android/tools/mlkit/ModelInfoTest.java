@@ -143,6 +143,14 @@ public class ModelInfoTest {
         testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata.tflite");
     }
 
+    @Test
+    public void testIsMetadataVersionTooHigh() {
+        assertFalse(ModelInfo.isMetadataVersionTooHigh(""));
+        assertFalse(ModelInfo.isMetadataVersionTooHigh("0.0.0"));
+        assertFalse(ModelInfo.isMetadataVersionTooHigh("1.0.0"));
+        assertTrue(ModelInfo.isMetadataVersionTooHigh("1.0.1"));
+    }
+
     private static void testModelInfoSerialization(String modelPath)
             throws TfliteModelException, IOException {
         ModelInfo originalModelInfo =
