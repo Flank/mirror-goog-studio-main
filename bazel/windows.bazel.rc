@@ -1,8 +1,9 @@
 import %workspace%/tools/base/bazel/common.bazel.rc
 
+# TODO(b/157486775) update perfgate machines to 2019 byob image
 # Enables the use of native symlinks in worker sandboxes,
 # required for dynamic scheduling.
-startup --windows_enable_symlinks
+# startup --windows_enable_symlinks
 
 build:remote --config=remote_common
 build:remote --jobs=150
