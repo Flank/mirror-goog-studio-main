@@ -237,14 +237,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return targetApi;
     }
 
-    /** Desired output format. */
-    protected IncrementalPackagerBuilder.ApkFormat apkFormat;
-
-    @Input
-    public String getApkFormat() {
-        return apkFormat.name();
-    }
-
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
      */
@@ -429,7 +421,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             IncrementalChangesUtils.getChangesInSerializableForm(
                                     changes, getJniFolders()));
             parameter.getManifestType().set(manifestType);
-            parameter.getApkFormat().set(apkFormat);
             parameter.getSigningConfig().set(signingConfig.convertToParams());
 
             if (getAppMetadata().isEmpty()) {
@@ -554,9 +545,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public abstract Property<Artifact<Directory>> getManifestType();
-
-        @NonNull
-        public abstract Property<IncrementalPackagerBuilder.ApkFormat> getApkFormat();
 
         @Optional
         @NonNull
@@ -695,8 +683,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         : null;
 
         try (IncrementalPackager packager =
-                new IncrementalPackagerBuilder(
-                                params.getApkFormat().get(), params.getPackagerMode().get())
+                new IncrementalPackagerBuilder(params.getPackagerMode().get())
                         .withOutputFile(outputFile)
                         .withSigning(
                                 params.getSigningConfig().get().resolve(),
@@ -1056,13 +1043,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     globalScope.getExtension().getSplits().getDensity().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
-
-            packageAndroidArtifact.apkFormat =
-                    projectOptions.get(BooleanOption.DEPLOYMENT_USES_DIRECTORY)
-                            ? IncrementalPackagerBuilder.ApkFormat.DIRECTORY
-                            : projectOptions.get(BooleanOption.DEPLOYMENT_PROVIDES_LIST_OF_CHANGES)
-                                    ? IncrementalPackagerBuilder.ApkFormat.FILE_WITH_LIST_OF_CHANGES
-                                    : IncrementalPackagerBuilder.ApkFormat.FILE;
 
             packageAndroidArtifact.targetApi =
                     projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);

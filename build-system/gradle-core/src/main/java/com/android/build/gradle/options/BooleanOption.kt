@@ -107,8 +107,6 @@ enum class BooleanOption(
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation", false, FeatureStage.Experimental),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
-    DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false, FeatureStage.Experimental),
-    DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false, FeatureStage.Experimental),
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
     NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),

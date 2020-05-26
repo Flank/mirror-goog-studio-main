@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
-import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
 import com.android.build.gradle.internal.signing.SigningConfigData;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
@@ -66,41 +64,6 @@ import java.util.function.Predicate;
 public class IncrementalPackagerBuilder {
     private static int NO_V1_SDK = 24;
 
-
-    /** Enums for all the supported output format. */
-    public enum ApkFormat {
-        /** Usual APK format. */
-        FILE {
-            @Override
-            ApkCreatorFactory factory(boolean debuggableBuild) {
-                return ApkCreatorFactories.fromProjectProperties(debuggableBuild);
-            }
-        },
-
-        FILE_WITH_LIST_OF_CHANGES {
-            @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
-            @Override
-            ApkCreatorFactory factory(boolean debuggableBuild) {
-                ApkCreatorFactory apk = ApkCreatorFactories.fromProjectProperties(debuggableBuild);
-                return creationData ->
-                        new CapturingChangesApkCreator(creationData, apk.make(creationData));
-            }
-        },
-
-        /** Directory with a structure mimicking the APK format. */
-        DIRECTORY {
-            @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
-            @Override
-            ApkCreatorFactory factory(boolean debuggableBuild) {
-                return creationData ->
-                        new CapturingChangesApkCreator(
-                                creationData, new FolderBasedApkCreator(creationData));
-            }
-        };
-
-        abstract ApkCreatorFactory factory(boolean debuggableBuild);
-    }
-
     /**
      * Type of build that invokes the instance of IncrementalPackagerBuilder
      *
@@ -116,10 +79,6 @@ public class IncrementalPackagerBuilder {
     @NonNull
     private ApkCreatorFactory.CreationData.Builder creationDataBuilder =
             ApkCreatorFactory.CreationData.builder();
-
-
-    /** Desired format of the output. */
-    @NonNull private ApkFormat apkFormat;
 
     /**
      * How should native libraries be packaged. If not defined, it can be inferred if {@link
@@ -176,16 +135,10 @@ public class IncrementalPackagerBuilder {
     @NonNull private Map<RelativeFile, FileStatus> changedNativeLibs = new HashMap<>();
 
     /** Creates a new builder. */
-    public IncrementalPackagerBuilder(@NonNull ApkFormat apkFormat, @NonNull BuildType buildType) {
+    public IncrementalPackagerBuilder(@NonNull BuildType buildType) {
         abiFilters = new HashSet<>();
-        this.apkFormat = apkFormat;
         this.buildType = buildType;
         creationDataBuilder.setIncremental(buildType == BuildType.INCREMENTAL);
-    }
-
-    /** Creates a new builder. */
-    public IncrementalPackagerBuilder(@NonNull ApkFormat apkFormat) {
-        this(apkFormat, BuildType.UNKNOWN);
     }
 
     /**
@@ -602,8 +555,7 @@ public class IncrementalPackagerBuilder {
             return new IncrementalPackager(
                     creationDataBuilder.build(),
                     intermediateDir,
-                    apkFormat.factory(debuggableBuild),
-                    ApkFormat.FILE.name().equals(apkFormat.name()),
+                    ApkCreatorFactories.fromProjectProperties(debuggableBuild),
                     abiFilters,
                     jniDebuggableBuild,
                     debuggableBuild,

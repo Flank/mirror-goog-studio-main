@@ -169,7 +169,6 @@ public class IncrementalPackager implements Closeable {
      * @param creationData APK creation data
      * @param intermediateDir a directory where to store intermediate files
      * @param factory the factory used to create APK creators
-     * @param apkFormatIsFile is ApkFormat FILE?
      * @param acceptedAbis the set of accepted ABIs; if empty then all ABIs are accepted
      * @param jniDebugMode is JNI debug mode enabled?
      * @param debuggableBuild is this a debuggable build?
@@ -185,7 +184,6 @@ public class IncrementalPackager implements Closeable {
             @NonNull ApkCreatorFactory.CreationData creationData,
             @NonNull File intermediateDir,
             @NonNull ApkCreatorFactory factory,
-            boolean apkFormatIsFile,
             @NonNull Set<String> acceptedAbis,
             boolean jniDebugMode,
             boolean debuggableBuild,
@@ -206,11 +204,7 @@ public class IncrementalPackager implements Closeable {
         mApkCreatorFactory = factory;
         mIsDebuggableBuild = debuggableBuild;
         mClosed = false;
-        if (!apkFormatIsFile) {
-            mApkCreatorType = ApkCreatorType.APK_Z_FILE_CREATOR;
-        } else {
-            mApkCreatorType = apkCreatorType;
-        }
+        mApkCreatorType = apkCreatorType;
         mChangedDexFiles = changedDexFiles;
         mChangedJavaResources = changedJavaResources;
         mChangedAssets = changedAssets;
