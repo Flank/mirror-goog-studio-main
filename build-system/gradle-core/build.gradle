@@ -125,7 +125,7 @@ dependencies {
         transitive = false
     }
     implementation libs.flatbuffers
-    implementation libs.tensorflow_lite_support
+    implementation libs.tensorflow_lite_metadata
 }
 
 protobuf {
