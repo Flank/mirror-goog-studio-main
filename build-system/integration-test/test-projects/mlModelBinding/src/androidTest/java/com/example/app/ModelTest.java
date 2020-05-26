@@ -39,6 +39,7 @@ public class ModelTest {
                         BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
         MobilenetQuantMetadata.Outputs outputs = model.process(tensorImage);
         List<Category> probabilities = outputs.getProbabilityAsCategoryList();
+        model.close();
 
         float prob = 0;
         String result = "";
@@ -74,6 +75,7 @@ public class ModelTest {
         // TODO(jackqdyulei): verify getProbabilityAsTensorBuffer once we have versioned
         // MetadataExtractor, in which we can get label list easily.
         List<Category> probabilities = outputs.getProbabilityAsCategoryList();
+        model.close();
 
         float prob = 0;
         String result = "";
@@ -99,6 +101,7 @@ public class ModelTest {
                         BitmapFactory.decodeResource(appContext.getResources(), R.drawable.flower));
         StylePredictQuantMetadata.Outputs predictOutputs = stylePredictQuantized256.process(flower);
         assertNotNull(predictOutputs.getStyleBottleneckAsTensorBuffer().getBuffer());
+        stylePredictQuantized256.close();
 
         // Pass in image and style array to get styled image
         StyleTransferQuantMetadata styleTransferQuantized384 =
@@ -109,6 +112,7 @@ public class ModelTest {
         StyleTransferQuantMetadata.Outputs transferOutputs =
                 styleTransferQuantized384.process(
                         tower, predictOutputs.getStyleBottleneckAsTensorBuffer());
+        styleTransferQuantized384.close();
 
         Bitmap bitmap = transferOutputs.getStyledImageAsTensorImage().getBitmap();
         assertNotNull(bitmap);

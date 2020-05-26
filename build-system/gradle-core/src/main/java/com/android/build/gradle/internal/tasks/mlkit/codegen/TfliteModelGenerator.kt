@@ -68,6 +68,7 @@ class TfliteModelGenerator(
         buildConstructor(classBuilder)
         buildStaticNewInstanceMethods(classBuilder)
         buildProcessMethod(classBuilder)
+        buildCloseMethod(classBuilder)
         // RGB image is the only advanced input, so we can check it like this.
         if( modelInfo.inputs.any { it.isRGBImage }) {
             buildProcessMethod(classBuilder, isGeneric = true)
@@ -179,6 +180,13 @@ class TfliteModelGenerator(
             localOutputs
         )
         methodBuilder.addStatement("return \$L", localOutputs)
+        classBuilder.addMethod(methodBuilder.build())
+    }
+
+    private fun buildCloseMethod(classBuilder: TypeSpec.Builder) {
+        val methodBuilder = MethodSpec.methodBuilder("close")
+            .addModifiers(Modifier.PUBLIC)
+            .addStatement("\$L.close()", FIELD_MODEL)
         classBuilder.addMethod(methodBuilder.build())
     }
 
