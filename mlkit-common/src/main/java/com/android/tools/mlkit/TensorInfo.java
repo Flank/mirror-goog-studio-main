@@ -33,6 +33,7 @@ import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 import org.tensorflow.lite.support.metadata.schema.NormalizationOptions;
 import org.tensorflow.lite.support.metadata.schema.ProcessUnit;
 import org.tensorflow.lite.support.metadata.schema.ProcessUnitOptions;
+import org.tensorflow.lite.support.metadata.schema.Stats;
 import org.tensorflow.lite.support.metadata.schema.TensorMetadata;
 
 /**
@@ -491,6 +492,16 @@ public class TensorInfo {
         ModelMetadata metadata = extractor.getModelMetaData();
         if (metadata == null) {
             builder.setMetadataExisted(false);
+        } else if (ModelInfo.isMetadataVersionTooHigh(extractor.getMinParserVersion())) {
+            builder.setMetadataExisted(true);
+
+            // Get name and normalization data to generate compatible APIs
+            TensorMetadata tensorMetadata =
+                    source == Source.INPUT
+                            ? metadata.subgraphMetadata(0).inputTensorMetadata(index)
+                            : metadata.subgraphMetadata(0).outputTensorMetadata(index);
+            builder.setName(Strings.nullToEmpty(tensorMetadata.name()));
+            builder.setNormalizationParams(extractNormalizationParams(tensorMetadata));
         } else {
             builder.setMetadataExisted(true);
 
@@ -539,25 +550,7 @@ public class TensorInfo {
                         properties.indexAsByteBuffer().asIntBuffer()));
             }
 
-            NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
-            FloatBuffer mean =
-                    normalizationOptions != null
-                            ? normalizationOptions.meanAsByteBuffer().asFloatBuffer()
-                            : toFloatBuffer(0);
-            FloatBuffer std =
-                    normalizationOptions != null
-                            ? normalizationOptions.stdAsByteBuffer().asFloatBuffer()
-                            : toFloatBuffer(1);
-            FloatBuffer min =
-                    tensorMetadata.stats() != null
-                            ? tensorMetadata.stats().minAsByteBuffer().asFloatBuffer()
-                            : toFloatBuffer(Float.MIN_VALUE);
-            FloatBuffer max =
-                    tensorMetadata.stats() != null
-                            ? tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()
-                            : toFloatBuffer(Float.MAX_VALUE);
-            builder.setNormalizationParams(
-                    new MetadataExtractor.NormalizationParams(mean, std, min, max));
+            builder.setNormalizationParams(extractNormalizationParams(tensorMetadata));
         }
 
         return builder.build();
@@ -596,6 +589,31 @@ public class TensorInfo {
         }
 
         return null;
+    }
+
+    private static MetadataExtractor.NormalizationParams extractNormalizationParams(
+            TensorMetadata tensorMetadata) {
+        NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
+        FloatBuffer mean =
+                normalizationOptions != null && normalizationOptions.meanAsByteBuffer() != null
+                        ? normalizationOptions.meanAsByteBuffer().asFloatBuffer()
+                        : toFloatBuffer(0);
+        FloatBuffer std =
+                normalizationOptions != null && normalizationOptions.stdAsByteBuffer() != null
+                        ? normalizationOptions.stdAsByteBuffer().asFloatBuffer()
+                        : toFloatBuffer(1);
+
+        Stats stats = tensorMetadata.stats();
+        FloatBuffer min =
+                stats != null && stats.minAsByteBuffer() != null
+                        ? tensorMetadata.stats().minAsByteBuffer().asFloatBuffer()
+                        : toFloatBuffer(Float.MIN_VALUE);
+        FloatBuffer max =
+                stats != null && stats.maxAsByteBuffer() != null
+                        ? tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()
+                        : toFloatBuffer(Float.MAX_VALUE);
+
+        return new MetadataExtractor.NormalizationParams(mean, std, min, max);
     }
 
     public static class ImageProperties {

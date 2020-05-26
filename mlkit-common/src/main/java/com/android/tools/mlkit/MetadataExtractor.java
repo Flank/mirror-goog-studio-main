@@ -21,6 +21,7 @@ import static com.android.tools.mlkit.DataInputOutputUtils.writeFloatArray;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Strings;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -88,6 +89,19 @@ public class MetadataExtractor {
     public byte getOutputTensorType(int outputIndex) {
         Tensor tensor = getOutputTensor(outputIndex);
         return tensor.type();
+    }
+
+    /**
+     * Gets minimum parser version from model metadata. It means in order to support this model,
+     * parser need to be no lower than the targeted version.
+     */
+    public String getMinParserVersion() {
+        ModelMetadata modelMetadata = getModelMetaData();
+        if (modelMetadata == null) {
+            return "";
+        } else {
+            return Strings.nullToEmpty(modelMetadata.minParserVersion());
+        }
     }
 
     /** Gets the input tensor with {@code inputIndex}. */
