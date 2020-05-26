@@ -201,7 +201,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.flatbuffers_flatbuffers-java",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.11.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1883,10 +1883,13 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "org.tensorflow_tensorflow-lite-support",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic:jar",
+    name = "org.tensorflow_tensorflow-lite-metadata",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1:jar",
     visibility = ["//visibility:public"],
-    exports = [],
+    exports = [
+        ":com.google.flatbuffers_flatbuffers-java",
+        ":org.checkerframework_checker-qual",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

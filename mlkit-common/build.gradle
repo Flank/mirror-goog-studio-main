@@ -3,7 +3,7 @@ apply plugin: 'jacoco-tools-base'
 
 dependencies {
     implementation libs.flatbuffers
-    implementation libs.tensorflow_lite_support
+    implementation libs.tensorflow_lite_metadata
     compile project(':base:common')
 
     testCompile project(':base:testutils')

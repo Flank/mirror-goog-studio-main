@@ -100,7 +100,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/base/zipflinger",
         "//tools/data-binding:tools.compilerCommon",
-        "//tools/base/third_party:org.tensorflow_tensorflow-lite-support",  # For mlkit-common
+        "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",  # For mlkit-common
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",  # For mlkit-common
     ],
 )

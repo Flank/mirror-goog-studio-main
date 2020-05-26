@@ -10,19 +10,19 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
       <library name="flatbuffers-java" type="repository">
-        <properties maven-id="com.google.flatbuffers:flatbuffers-java:1.11.1" />
+        <properties maven-id="com.google.flatbuffers:flatbuffers-java:1.12.0" />
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/com/google/flatbuffers/flatbuffers-java/1.11.1/flatbuffers-java-1.11.1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/com/google/flatbuffers/flatbuffers-java/1.12.0/flatbuffers-java-1.12.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="tensorflow-lite-support" type="repository">
-        <properties maven-id="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata-monolithic" />
+      <library name="tensorflow-lite-metadata" type="repository">
+        <properties maven-id="org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1" />
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic/tensorflow-lite-support-0.0.0-experimental-metadata-monolithic.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1/tensorflow-lite-metadata-0.1.0-rc1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
