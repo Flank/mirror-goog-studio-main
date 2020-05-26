@@ -21,23 +21,23 @@ import org.gradle.api.Incubating
 @Incubating
 interface PackagingOptions {
     /** The list of excluded paths.*/
-    var excludes: MutableSet<String>
+    val excludes: MutableSet<String>
 
     /**
      * The list of patterns where the first occurrence is packaged in the APK. First pick patterns
      * do get packaged in the APK, but only the first occurrence found gets packaged.
      */
-    var pickFirsts: MutableSet<String>
+    val pickFirsts: MutableSet<String>
 
     /** The list of patterns where all occurrences are concatenated and packaged in the APK. */
-    var merges: MutableSet<String>
+    val merges: MutableSet<String>
 
     /**
      * The list of patterns for native library that should not be stripped of debug symbols.
      *
      * Example: `packagingOptions.doNotStrip "*`/`armeabi-v7a/libhello-jni.so"`
      */
-    var doNotStrip: MutableSet<String>
+    val doNotStrip: MutableSet<String>
 
     /**
      * Adds an excluded pattern.

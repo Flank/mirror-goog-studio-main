@@ -603,10 +603,6 @@ com.android.build.api.dsl.PackagingOptions.getMerges: java.util.Set<java.lang.St
 com.android.build.api.dsl.PackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.PackagingOptions.merge: void (java.lang.String)
 com.android.build.api.dsl.PackagingOptions.pickFirst: void (java.lang.String)
-com.android.build.api.dsl.PackagingOptions.setDoNotStrip: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.PackagingOptions.setExcludes: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.PrefabPackagingOptions
 com.android.build.api.dsl.PrefabPackagingOptions.getHeaders: java.lang.String ()
 com.android.build.api.dsl.PrefabPackagingOptions.getLibraryName: java.lang.String ()
