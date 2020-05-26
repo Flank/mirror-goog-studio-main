@@ -220,6 +220,7 @@ private fun CxxCmakeModuleModel.toData() =
 internal data class CxxVariantModelData(
     override val buildSystemArgumentList: List<String> = listOf(),
     override val buildTargetSet: Set<String> = setOf(),
+    override val implicitBuildTargetSet: Set<String> = setOf(),
     override val cFlagsList: List<String> = listOf(),
     override val cmakeSettingsConfiguration: String = "",
     override val cppFlagsList: List<String> = listOf(),
@@ -237,6 +238,7 @@ private fun CxxVariantModel.toData() =
     CxxVariantModelData(
         buildSystemArgumentList = buildSystemArgumentList,
         buildTargetSet = buildTargetSet,
+        implicitBuildTargetSet = implicitBuildTargetSet,
         cFlagsList = cFlagsList,
         cmakeSettingsConfiguration = cmakeSettingsConfiguration,
         cppFlagsList = cppFlagsList,
