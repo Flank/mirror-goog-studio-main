@@ -212,9 +212,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                     }
                 }
                 else -> {
-                    creationConfig.artifacts.append(
-                        taskProvider, R8Task::outputDex
-                    ).on(MultipleArtifactType.DEX)
+                    creationConfig.artifacts.use(taskProvider)
+                        .toAppend(MultipleArtifactType.DEX, R8Task::outputDex)
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
                         creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)

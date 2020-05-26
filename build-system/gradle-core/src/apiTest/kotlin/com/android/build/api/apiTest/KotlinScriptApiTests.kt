@@ -128,8 +128,9 @@ expected result : "Got an APK...." message.
                             File(project.buildDir, "intermediates/${'$'}{name}/ManifestProducer/output")
                         )
                     }
-                    artifacts.replace(manifestProducer, ManifestProducerTask::outputManifest)
-                        .on(ArtifactType.MERGED_MANIFEST)
+                    artifacts.use(manifestProducer).toReplace(
+                        ArtifactType.MERGED_MANIFEST,
+                        ManifestProducerTask::outputManifest)
                 }
             }
                 """.trimIndent()
@@ -180,10 +181,10 @@ expected result : "Got an APK...." message.
                     val manifestUpdater = tasks.register<ManifestTransformerTask>("${'$'}{name}ManifestUpdater") {
                         gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                     }
-                    artifacts.transform(manifestUpdater,
-                            ManifestTransformerTask::mergedManifest,
-                            ManifestTransformerTask::updatedManifest)
-                    .on(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)
+                    artifacts.use(manifestUpdater).toTransform(
+                        com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST,
+                        ManifestTransformerTask::mergedManifest,
+                        ManifestTransformerTask::updatedManifest)
                 }
             }
             """.trimIndent()
@@ -249,12 +250,14 @@ expected result : "Got an APK...." message.
                 onVariantProperties {
                     val copyApksProvider = tasks.register<CopyApksTask>("copy${'$'}{name}Apks")
 
-                    val transformationRequest = artifacts.use(copyApksProvider)
-                        .toRead(type = ArtifactType.APK, at = CopyApksTask::apkFolder)
-                        .andWrite(type = AcmeArtifactType.ACME_APK, at = CopyApksTask::outFolder, atLocation = "${outFolderForApk.absolutePath}")
+                    val transformationRequest = artifacts.use(copyApksProvider).toTransformMany(
+                            ArtifactType.APK,
+                            CopyApksTask::apkFolder,
+                            CopyApksTask::outFolder)
 
                     copyApksProvider.configure {
                         this.transformationRequest.set(transformationRequest)
+                        this.outFolder.set(File("${outFolderForApk.absolutePath}"))
                     }
                 }
             }
@@ -478,10 +481,10 @@ expected result : "Got the Bundle ...." message.
                 val finalBundle = project.tasks.register<ConsumeBundleFileTask>("${'$'}{name}ConsumeBundleFile") {
                     finalBundle.set(artifacts.get(ArtifactType.BUNDLE))
                 }
-                artifacts.transform(updateBundle,
-                        UpdateBundleFileTask::initialBundleFile,
-                        UpdateBundleFileTask::updatedBundleFile)
-                .on(ArtifactType.BUNDLE)
+                artifacts.use(updateBundle).toTransform(
+                    ArtifactType.BUNDLE,
+                    UpdateBundleFileTask::initialBundleFile,
+                    UpdateBundleFileTask::updatedBundleFile)
             }
         }
     """.trimIndent()

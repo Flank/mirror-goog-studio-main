@@ -96,9 +96,9 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                                 new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
                             )
                     }
-                    it.artifacts.replace(manifestProducer,
-                            { it.outputManifest })
-                    .on(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                    it.artifacts.use(manifestProducer).toReplace(
+                        ArtifactType.MERGED_MANIFEST.INSTANCE,
+                        { it.outputManifest })
                 }
             }
             """.trimIndent()
@@ -155,10 +155,10 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
                     }
-                    it.artifacts.transform(manifestUpdater,
-                            { it.mergedManifest },
-                            { it.updatedManifest })
-                    .on(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                    it.artifacts.use(manifestUpdater).toTransform(
+                        ArtifactType.MERGED_MANIFEST.INSTANCE,
+                        { it.mergedManifest },
+                        { it.updatedManifest })
                 }
             }
             """.trimIndent()
@@ -214,7 +214,6 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     ACME_APK() {
                         super(ArtifactKind.DIRECTORY.INSTANCE)
                     }
-
             }
 
             ACME_APK acme_apk_instance = new ACME_APK()
@@ -229,12 +228,14 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
 
                     ArtifactTransformationRequest request =
-                        it.artifacts.use(copyApksProvider)
-                        .toRead(ArtifactType.APK.INSTANCE, { it.getApkFolder() })
-                        .andWrite(acme_apk_instance, { it.getOutFolder()}, "${outFolderForApk.absolutePath}")
+                        it.artifacts.use(copyApksProvider).toTransformMany(
+                            ArtifactType.APK.INSTANCE,
+                            { it.getApkFolder() },
+                            { it.getOutFolder()})
 
                     copyApksProvider.configure {
                         it.transformationRequest.set(request)
+                        it.getOutFolder().set(new File("${outFolderForApk.absolutePath}"))
                     }
                 }
             }

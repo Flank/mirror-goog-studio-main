@@ -73,16 +73,20 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             creationConfig.taskContainer.packageAndroidTask = taskProvider
             transformationRequest = (if (useResourceShrinker)
                  creationConfig.artifacts.use(taskProvider)
-                    .toRead(InternalArtifactType.SHRUNK_PROCESSED_RES,
-                        PackageAndroidArtifact::getResourceFiles)
+                     .toTransformMany(
+                         InternalArtifactType.SHRUNK_PROCESSED_RES,
+                         PackageAndroidArtifact::getResourceFiles,
+                         InternalArtifactType.APK,
+                         PackageApplication::getOutputDirectory,
+                         outputDirectory.absolutePath)
+
             else
                 creationConfig.artifacts.use(taskProvider)
-                    .toRead(InternalArtifactType.PROCESSED_RES,
-                        PackageAndroidArtifact::getResourceFiles))
-                .andWrite(
-                    InternalArtifactType.APK,
-                    PackageApplication::getOutputDirectory,
-                    outputDirectory.absolutePath)
+                    .toTransformMany(InternalArtifactType.PROCESSED_RES,
+                        PackageAndroidArtifact::getResourceFiles,
+                        InternalArtifactType.APK,
+                        PackageApplication::getOutputDirectory,
+                        outputDirectory.absolutePath))
 
             // in case configure is called before handleProvider, we need to save the request.
             transformationRequest?.let {

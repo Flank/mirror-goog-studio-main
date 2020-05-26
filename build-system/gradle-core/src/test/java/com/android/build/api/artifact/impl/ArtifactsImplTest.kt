@@ -282,9 +282,10 @@ class ArtifactsImplTest {
         val transformerProvider = project.tasks.register("transformer", TransformTask::class.java) {
             transformerInitialized.set(true)
         }
-        artifacts.transform(transformerProvider,
+        artifacts.use(transformerProvider).toTransform(
+            TEST_TRANSFORMABLE_FILE,
             TransformTask::inputFile,
-            TransformTask::outputFile).on(TEST_TRANSFORMABLE_FILE)
+            TransformTask::outputFile)
 
         Truth.assertThat(transformerInitialized.get()).isFalse()
 
@@ -326,9 +327,10 @@ class ArtifactsImplTest {
         val transformerProvider = project.tasks.register("transformer", TransformTask::class.java) {
             transformerInitialized.set(true)
         }
-        artifacts.transform(transformerProvider,
+        artifacts.use(transformerProvider).toTransform(
+            TEST_TRANSFORMABLE_DIRECTORY,
             TransformTask::inputFolder,
-            TransformTask::outputFolder).on(TEST_TRANSFORMABLE_DIRECTORY)
+            TransformTask::outputFolder)
 
         Truth.assertThat(transformerInitialized.get()).isFalse()
 
@@ -370,9 +372,10 @@ class ArtifactsImplTest {
         val transformerOneProvider = project.tasks.register("transformerOne", TransformTask::class.java) {
             transformerOneInitialized.set(true)
         }
-        artifacts.transform(transformerOneProvider,
+        artifacts.use(transformerOneProvider).toTransform(
+            TEST_TRANSFORMABLE_FILE,
             TransformTask::inputFile,
-            TransformTask::outputFile).on(TEST_TRANSFORMABLE_FILE)
+            TransformTask::outputFile)
 
         Truth.assertThat(transformerOneInitialized.get()).isFalse()
 
@@ -381,9 +384,10 @@ class ArtifactsImplTest {
         val transformerTwoProvider = project.tasks.register("transformerTwo", TransformTask::class.java) {
             transformerTwoInitialized.set(true)
         }
-        artifacts.transform(transformerTwoProvider,
+        artifacts.use(transformerTwoProvider).toTransform(
+            TEST_TRANSFORMABLE_FILE,
             TransformTask::inputFile,
-            TransformTask::outputFile).on(TEST_TRANSFORMABLE_FILE)
+            TransformTask::outputFile)
 
         Truth.assertThat(transformerTwoInitialized.get()).isFalse()
 
@@ -441,9 +445,10 @@ class ArtifactsImplTest {
         val transformerOneProvider = project.tasks.register("transformerOne", TransformTask::class.java) {
             transformerOneInitialized.set(true)
         }
-        artifacts.transform(transformerOneProvider,
+        artifacts.use(transformerOneProvider).toTransform(
+            TEST_TRANSFORMABLE_DIRECTORY,
             TransformTask::inputFolder,
-            TransformTask::outputFolder).on(TEST_TRANSFORMABLE_DIRECTORY)
+            TransformTask::outputFolder)
 
         Truth.assertThat(transformerOneInitialized.get()).isFalse()
 
@@ -452,9 +457,10 @@ class ArtifactsImplTest {
         val transformerTwoProvider = project.tasks.register("transformerTwo", TransformTask::class.java) {
             transformerTwoInitialized.set(true)
         }
-        artifacts.transform(transformerTwoProvider,
+        artifacts.use(transformerTwoProvider).toTransform(
+            TEST_TRANSFORMABLE_DIRECTORY,
             TransformTask::inputFolder,
-            TransformTask::outputFolder).on(TEST_TRANSFORMABLE_DIRECTORY)
+            TransformTask::outputFolder)
 
         Truth.assertThat(transformerTwoInitialized.get()).isFalse()
 
@@ -509,8 +515,9 @@ class ArtifactsImplTest {
         val replaceTaskProvider = project.tasks.register("replaceTask", ReplaceTask::class.java) {
             replaceTaskInitialized.set(true)
         }
-        artifacts.replace(replaceTaskProvider,
-            ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
+        artifacts.use(replaceTaskProvider).toReplace(
+            TEST_REPLACABLE_FILE,
+            ReplaceTask::outputFile)
 
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
 
@@ -554,8 +561,9 @@ class ArtifactsImplTest {
         val replaceTaskProvider = project.tasks.register("replaceTask", ReplaceTask::class.java) {
             replaceTaskInitialized.set(true)
         }
-        artifacts.replace(replaceTaskProvider,
-            ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
+        artifacts.use(replaceTaskProvider).toReplace(
+            TEST_REPLACABLE_DIRECTORY,
+            ReplaceTask::outputFolder)
 
         Truth.assertThat(replaceTaskInitialized.get()).isFalse()
 
@@ -599,8 +607,9 @@ class ArtifactsImplTest {
         val replaceTaskOneProvider = project.tasks.register("replaceTaskOne", ReplaceTask::class.java) {
             replaceTaskOneInitialized.set(true)
         }
-        artifacts.replace(replaceTaskOneProvider,
-            ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
+        artifacts.use(replaceTaskOneProvider).toReplace(
+            TEST_REPLACABLE_FILE,
+            ReplaceTask::outputFile)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
 
@@ -608,7 +617,9 @@ class ArtifactsImplTest {
         val replaceTaskTwoProvider = project.tasks.register("replaceTaskTwo", ReplaceTask::class.java) {
             replaceTaskTwoInitialized.set(true)
         }
-        artifacts.replace(replaceTaskTwoProvider, ReplaceTask::outputFile).on(TEST_REPLACABLE_FILE)
+        artifacts.use(replaceTaskTwoProvider).toReplace(
+            TEST_REPLACABLE_FILE,
+            ReplaceTask::outputFile)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskTwoInitialized.get()).isFalse()
@@ -655,8 +666,9 @@ class ArtifactsImplTest {
         val replaceTaskOneProvider = project.tasks.register("replaceTaskOne", ReplaceTask::class.java) {
             replaceTaskOneInitialized.set(true)
         }
-        artifacts.replace(replaceTaskOneProvider,
-            ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
+        artifacts.use(replaceTaskOneProvider).toReplace(
+            TEST_REPLACABLE_DIRECTORY,
+            ReplaceTask::outputFolder)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
 
@@ -664,7 +676,9 @@ class ArtifactsImplTest {
         val replaceTaskTwoProvider = project.tasks.register("replaceTaskTwo", ReplaceTask::class.java) {
             replaceTaskTwoInitialized.set(true)
         }
-        artifacts.replace(replaceTaskTwoProvider, ReplaceTask::outputFolder).on(TEST_REPLACABLE_DIRECTORY)
+        artifacts.use(replaceTaskTwoProvider).toReplace(
+            TEST_REPLACABLE_DIRECTORY,
+            ReplaceTask::outputFolder)
 
         Truth.assertThat(replaceTaskOneInitialized.get()).isFalse()
         Truth.assertThat(replaceTaskTwoInitialized.get()).isFalse()
@@ -711,8 +725,9 @@ class ArtifactsImplTest {
         val appendTaskProvider = project.tasks.register("appendTask", AppendTask::class.java) {
             appendTaskInitialized.set(true)
         }
-        artifacts.append(appendTaskProvider, AppendTask::outputFile)
-            .on(TestArtifactType.TEST_APPENDABLE_FILES)
+        artifacts.use(appendTaskProvider).toAppend(
+            TestArtifactType.TEST_APPENDABLE_FILES,
+            AppendTask::outputFile)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
@@ -758,8 +773,9 @@ class ArtifactsImplTest {
 
         for (i in 0..2) {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
-            artifacts.append(appendTaskProvider, AppendTask::outputFile)
-                .on(TestArtifactType.TEST_APPENDABLE_FILES)
+            artifacts.use(appendTaskProvider).toAppend(
+                TestArtifactType.TEST_APPENDABLE_FILES,
+                AppendTask::outputFile)
         }
 
         // now registers AGP provider.
@@ -794,8 +810,9 @@ class ArtifactsImplTest {
         val appendTaskProvider = project.tasks.register("appendTask", AppendTask::class.java) {
             appendTaskInitialized.set(true)
         }
-        artifacts.append(appendTaskProvider, AppendTask::outputDirectory)
-            .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+        artifacts.use(appendTaskProvider).toAppend(
+            TestArtifactType.TEST_APPENDABLE_DIRECTORIES,
+            AppendTask::outputDirectory)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
@@ -841,8 +858,9 @@ class ArtifactsImplTest {
 
         for (i in 0..2) {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
-            artifacts.append(appendTaskProvider, AppendTask::outputDirectory)
-                .on(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+            artifacts.use(appendTaskProvider).toAppend(
+                TestArtifactType.TEST_APPENDABLE_DIRECTORIES,
+                AppendTask::outputDirectory)
         }
 
         // now registers AGP provider.
@@ -894,8 +912,9 @@ class ArtifactsImplTest {
         }
 
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        artifacts.use(transformTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_FILES,
+            TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
 
         val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
@@ -931,12 +950,14 @@ class ArtifactsImplTest {
         }
 
         val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformOneTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        artifacts.use(transformOneTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_FILES,
+            TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
 
         val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformTwoTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        artifacts.use(transformTwoTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_FILES,
+            TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
 
         val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
@@ -983,10 +1004,10 @@ class ArtifactsImplTest {
         }
 
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformTask,
+        artifacts.use(transformTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES,
             TransformMultipleTask::inputDirectories,
             TransformMultipleTask::outputDirectory)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
 
         val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
@@ -1022,12 +1043,14 @@ class ArtifactsImplTest {
         }
 
         val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformOneTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        artifacts.use(transformOneTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES,
+            TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
 
         val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformTwoTask, TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        artifacts.use(transformTwoTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES,
+            TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
 
         val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
@@ -1075,13 +1098,16 @@ class ArtifactsImplTest {
         }
 
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
-        artifacts.transformAll(transformTask, TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        artifacts.use(transformTask).toTransformAll(
+            TestArtifactType.TEST_TRANSFORMABLE_FILES,
+            TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
 
         // now add a new producer, after the transfomrAll is called. Yet the transform should get
         // this appended producer anyhow.
         val lateProducer = project.tasks.register("lateProducer", ProducerTask::class.java)
-        artifacts.append(lateProducer, ProducerTask::outputFile).on(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        artifacts.use(lateProducer).toAppend(
+            TestArtifactType.TEST_TRANSFORMABLE_FILES,
+            ProducerTask::outputFile)
 
         val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
