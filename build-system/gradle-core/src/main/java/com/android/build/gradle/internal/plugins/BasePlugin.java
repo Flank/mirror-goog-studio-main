@@ -115,6 +115,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.repositories.FlatDirectoryArtifactRepository;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
@@ -547,6 +548,20 @@ public abstract class BasePlugin<
                             + "tools/java-8-support-message.html\n";
             dslServices.getIssueReporter().reportWarning(IssueReporter.Type.GENERIC, warningMsg);
         }
+
+        project.getRepositories()
+                .forEach(
+                        it -> {
+                            if (it instanceof FlatDirectoryArtifactRepository) {
+                                String warningMsg =
+                                        String.format(
+                                                "Using %s should be avoided because it doesn't support any meta-data formats.",
+                                                it.getName());
+                                dslServices
+                                        .getIssueReporter()
+                                        .reportWarning(IssueReporter.Type.GENERIC, warningMsg);
+                            }
+                        });
 
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.

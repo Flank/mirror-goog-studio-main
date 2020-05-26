@@ -34,6 +34,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
@@ -213,5 +214,21 @@ public class BasicTest {
                                 .getExecutionState()
                                 .toString())
                 .isEqualTo("SKIPPED");
+    }
+
+    @Test
+    public void testFlatDirWarning() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "repositories { flatDir { dirs \"libs\" } }");
+        project.executor().run("clean", "assembleDebug");
+        ModelContainer<AndroidProject> onlyModel =
+                project.model().ignoreSyncIssues(SyncIssue.SEVERITY_WARNING).fetchAndroidProjects();
+        assertThat(
+                        onlyModel.getOnlyModelSyncIssues().stream()
+                                .map(syncIssue -> syncIssue.getMessage())
+                                .filter(syncIssues -> syncIssues.contains("flatDir"))
+                                .collect(Collectors.toList())
+                                .size())
+                .isEqualTo(1);
     }
 }
