@@ -40,13 +40,17 @@ enum class Category {
  * Determines to which form factor the template belongs. Templates with particular form factor may only be rendered in the
  * project of corresponding [Category].
  */
-enum class FormFactor {
-  Mobile,
-  Wear,
-  Tv,
-  Automotive,
-  Things,
-  Generic
+enum class FormFactor(val displayName: String) {
+  Mobile("Phone and Tablet"),
+  Wear("Wear OS"),
+  Tv("Android TV"),
+  Automotive("Automotive"),
+  Things("Android Things"),
+  Generic("Generic");
+
+  override fun toString(): String {
+    return displayName
+  }
 }
 
 enum class TemplateConstraint {
