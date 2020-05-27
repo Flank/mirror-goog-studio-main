@@ -16,10 +16,14 @@
 
 #include <grpc++/grpc++.h>
 
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
 #include "trace_processor_service.h"
 
 using grpc::ServerBuilder;
 using profiler::perfetto::TraceProcessorServiceImpl;
+
+ABSL_FLAG(uint16_t, port, 20204, "Port to open the gRPC server");
 
 void RunServer() {
   ServerBuilder builder;
@@ -28,12 +32,12 @@ void RunServer() {
   TraceProcessorServiceImpl service;
   builder.RegisterService(&service);
 
+  auto port_flag = absl::GetFlag(FLAGS_port);
+  // Bind to to loopback only, as we will only communicate with localhost.
+  std::string server_address("127.0.0.1:" + std::to_string(port_flag));
+
   // BuildAndStart() will modify this with the picked port.
   int port = 0;
-  // Bind to to loopback only, as we will only communicate with localhost.
-  // TODO: Add flag to configure port.
-  std::string server_address("127.0.0.1:20204");
-
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials(),
                            &port);
   std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
@@ -50,6 +54,7 @@ void RunServer() {
 
 int main(int argc, char** argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  absl::ParseCommandLine(argc, argv);
 
   RunServer();
   return 0;
