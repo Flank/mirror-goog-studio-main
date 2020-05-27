@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.generators
 
 import com.android.build.api.variant.BuildConfigField
 import com.squareup.javawriter.JavaWriter
-import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
