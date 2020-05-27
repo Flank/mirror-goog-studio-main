@@ -36,8 +36,8 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelVariant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.function.Predicate;
@@ -266,7 +266,7 @@ public class VectorDetector extends ResourceXmlDetector {
             return false;
         }
 
-        LmVariant variant = project.getBuildVariant();
+        LintModelVariant variant = project.getBuildVariant();
         return variant != null && variant.getUseSupportLibraryVectorDrawables();
     }
 
@@ -283,7 +283,7 @@ public class VectorDetector extends ResourceXmlDetector {
                             apiThreshold);
             context.report(ISSUE, element, context.getLocation(element), message);
         } else if ("group".equals(tag)) {
-            LmModule model = context.getMainProject().getBuildModule();
+            LintModelModule model = context.getMainProject().getBuildModule();
             if (model != null
                     && model.getGradleVersion() != null
                     && model.getGradleVersion().getMajor() == 1

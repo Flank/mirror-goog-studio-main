@@ -40,7 +40,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
-import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LintModelModule;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
@@ -89,7 +89,7 @@ public class ResourcePrefixDetector extends Detector implements BinaryResourceSc
 
     @Nullable
     private static String computeResourcePrefix(@NonNull Project project) {
-        LmModule model = project.getBuildModule();
+        LintModelModule model = project.getBuildModule();
         if (model != null) {
             return model.getResourcePrefix();
         } else {

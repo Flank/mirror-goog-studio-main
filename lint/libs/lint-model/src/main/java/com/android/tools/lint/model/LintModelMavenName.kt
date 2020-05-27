@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.model
 
-interface LmMavenName : Comparable<LmMavenName> {
+interface LintModelMavenName : Comparable<LintModelMavenName> {
     val groupId: String
     val artifactId: String
     val version: String
@@ -26,7 +26,7 @@ interface LmMavenName : Comparable<LmMavenName> {
     operator fun component2(): String = artifactId
     operator fun component3(): String = version
 
-    override fun compareTo(other: LmMavenName): Int {
+    override fun compareTo(other: LintModelMavenName): Int {
         val group = groupId.compareTo(other.groupId)
         if (group != 0) {
             return group
@@ -41,11 +41,11 @@ interface LmMavenName : Comparable<LmMavenName> {
 
     companion object {
         // Reverse operation from toString
-        fun parse(string: String): LmMavenName? {
+        fun parse(string: String): LintModelMavenName? {
             val index1 = string.indexOf(':')
             val index2 = string.indexOf(':', index1 + 1)
             return if (index2 != -1) {
-                DefaultLmMavenName(
+                DefaultLintModelMavenName(
                     string.substring(0, index1),
                     string.substring(index1 + 1, index2),
                     string.substring(index2 + 1)
@@ -55,17 +55,17 @@ interface LmMavenName : Comparable<LmMavenName> {
             }
         }
 
-        val NONE = DefaultLmMavenName("", "")
+        val NONE = DefaultLintModelMavenName("", "")
 
         @Suppress("SpellCheckingInspection")
         const val LOCAL_AARS = "__local_aars__"
     }
 }
 
-data class DefaultLmMavenName(
+data class DefaultLintModelMavenName(
     override val groupId: String,
     override val artifactId: String,
     override val version: String = ""
-) : LmMavenName {
+) : LintModelMavenName {
     override fun toString(): String = "$groupId:$artifactId:$version"
 }

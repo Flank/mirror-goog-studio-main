@@ -16,15 +16,24 @@
 
 package com.android.tools.lint.model
 
-/**
- * Represents the type of artifact produced by a module
- */
-enum class LmModuleType {
-    APP,
-    LIBRARY,
-    TEST,
-    INSTANT_APP,
-    FEATURE,
-    DYNAMIC_FEATURE,
-    JAVA_LIBRARY
+enum class LintModelSeverity {
+    FATAL,
+    ERROR,
+    WARNING,
+    INFORMATIONAL,
+    IGNORE,
+    DEFAULT_ENABLED;
+
+    companion object {
+        @JvmStatic
+        fun fromName(name: String): LintModelSeverity? {
+            for (severity in values()) {
+                if (severity.name.equals(name, ignoreCase = true)) {
+                    return severity
+                }
+            }
+
+            return null
+        }
+    }
 }

@@ -26,20 +26,17 @@ variants directly.
 Concept mapping:
 
 ```
-AndroidProject         -> LmModule
-ProjectType            -> LmModuleType
-Variant                -> LmVariant
-DependencyGraphs       -> LmDependencies
-GraphIten              -> LmDependency
-GlobalLibraryMap       -> LmLibraryResolver
-MavenCoordinates       -> LmMavenName
+AndroidProject         -> LintModelModule
+ProjectType            -> LintModelModuleType
+Variant                -> LintModelVariant
+DependencyGraphs       -> LintModelDependencies
+GraphIten              -> LintModelDependency
+GlobalLibraryMap       -> LintModelLibraryResolver
+MavenCoordinates       -> LintModelMavenName
 ```
 
 TODO
 ----
-* Hook persistence up to AGP.
-* Add DependencyGraph separation. Unit test should have their
-   own graph.
 * Create a project model which references the various lint
       models; handles the checkDependencies stuff, and includes
       whole project metadata like global lint rules, target
@@ -49,14 +46,14 @@ TODO
 * Add a plugin for Gradle (depending on older versions, such
       as 3.6) which can spit out the XML model. That way you
       can point to it from a separate lint task (4.1).
-* getTestSourceProviders() in LmVariant needs to not combine
+* getTestSourceProviders() in LintModelVariant needs to not combine
   instrumentation and unit tests, as described in the javadoc.
 * LintCliClient#addBootClassPath should use the bootclasspath
   from the lint model
 * Replace the Project.dependsOn implementations and the various
   findLibrary lookups to make sure they're correct in terms
   of AndroidX handling; see AndroidxNameUtils.getCoordinateMapping(c)
-* LmModuleProject has this question which is good:
+* LintModelModuleProject has this question which is good:
     // TODO: Why direct here and all in test libraries? And shouldn't
     // this be tied to checkDependencies somehow? If we're creating
     // project from the android libraries then I'll get the libraries there
@@ -66,5 +63,5 @@ TODO
   method
 * Lazily construct File instances from Strings
 * Look more deeply into *project* dependencies and how we model those
-* Use switch statement in LmSerialization to more quickly multiplex
+* Use switch statement in LintModelSerialization to more quickly multiplex
 * Get rid of late-binding for Gradle model!

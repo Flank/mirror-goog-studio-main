@@ -18,8 +18,8 @@ package com.android.tools.lint.model
 
 import java.io.File
 
-interface LmArtifact {
-    val dependencies: LmDependencies
+interface LintModelArtifact {
+    val dependencies: LintModelDependencies
     val classOutputs: List<File>
 
     /**
@@ -29,38 +29,38 @@ interface LmArtifact {
      * Convenience method for accessing the compile dependencies and then looking up
      * the library there, since this is a very common operation.
      */
-    fun findCompileDependency(mavenName: String): LmLibrary? =
+    fun findCompileDependency(mavenName: String): LintModelLibrary? =
         dependencies.compileDependencies.findLibrary(mavenName, direct = false)
 }
 
-interface LmJavaArtifact : LmArtifact
+interface LintModelJavaArtifact : LintModelArtifact
 
-interface LmAndroidArtifact : LmArtifact {
+interface LintModelAndroidArtifact : LintModelArtifact {
     val applicationId: String
     val generatedResourceFolders: Collection<File>
     val generatedSourceFolders: Collection<File>
 }
 
-open class DefaultLmArtifact(
-    override val dependencies: LmDependencies,
+open class DefaultLintModelArtifact(
+    override val dependencies: LintModelDependencies,
     override val classOutputs: List<File>
-) : LmArtifact
+) : LintModelArtifact
 
-class DefaultLmJavaArtifact(
+class DefaultLintModelJavaArtifact(
     classFolders: List<File>,
-    dependencies: LmDependencies
-) : DefaultLmArtifact(
+    dependencies: LintModelDependencies
+) : DefaultLintModelArtifact(
     dependencies = dependencies,
     classOutputs = classFolders
-), LmJavaArtifact
+), LintModelJavaArtifact
 
-class DefaultLmAndroidArtifact(
+class DefaultLintModelAndroidArtifact(
     override val applicationId: String,
     override val generatedResourceFolders: Collection<File>,
     override val generatedSourceFolders: Collection<File>,
     classOutputs: List<File>,
-    dependencies: LmDependencies
-) : DefaultLmArtifact(
+    dependencies: LintModelDependencies
+) : DefaultLintModelArtifact(
     dependencies = dependencies,
     classOutputs = classOutputs
-), LmAndroidArtifact
+), LintModelAndroidArtifact

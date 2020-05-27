@@ -15,20 +15,20 @@
  */
 package com.android.tools.lint.gradle
 
-import com.android.tools.lint.detector.api.LmModuleAndroidLibraryProject
-import com.android.tools.lint.detector.api.LmModuleJavaLibraryProject
-import com.android.tools.lint.detector.api.LmModuleLibraryProject
-import com.android.tools.lint.detector.api.LmModuleProject
+import com.android.tools.lint.detector.api.LintModelModuleAndroidLibraryProject
+import com.android.tools.lint.detector.api.LintModelModuleJavaLibraryProject
+import com.android.tools.lint.detector.api.LintModelModuleLibraryProject
+import com.android.tools.lint.detector.api.LintModelModuleProject
 import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.model.DefaultLmMavenName
-import com.android.tools.lint.model.LmAndroidLibrary
-import com.android.tools.lint.model.LmDependency
-import com.android.tools.lint.model.LmFactory
-import com.android.tools.lint.model.LmJavaLibrary
-import com.android.tools.lint.model.LmMavenName
-import com.android.tools.lint.model.LmModule
-import com.android.tools.lint.model.LmModuleLoaderProvider
-import com.android.tools.lint.model.LmVariant
+import com.android.tools.lint.model.DefaultLintModelMavenName
+import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.LintModelDependency
+import com.android.tools.lint.model.LintModelFactory
+import com.android.tools.lint.model.LintModelJavaLibrary
+import com.android.tools.lint.model.LintModelMavenName
+import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelModuleLoaderProvider
+import com.android.tools.lint.model.LintModelVariant
 import com.intellij.pom.java.LanguageLevel
 import org.gradle.api.artifacts.ExternalDependency
 import org.gradle.api.artifacts.FileCollectionDependency
@@ -44,18 +44,18 @@ import org.gradle.api.Project as GradleProject
  * libraries, looking up tooling models for each project, etc.
  */
 class ProjectSearch {
-    private val libraryProjects = mutableMapOf<LmAndroidLibrary, Project>()
-    private val libraryProjectsByCoordinate = mutableMapOf<LmMavenName, LmModuleLibraryProject>()
+    private val libraryProjects = mutableMapOf<LintModelAndroidLibrary, Project>()
+    private val libraryProjectsByCoordinate = mutableMapOf<LintModelMavenName, LintModelModuleLibraryProject>()
     private val namedProjects = mutableMapOf<String, Project>()
-    private val javaLibraryProjects = mutableMapOf<LmJavaLibrary, Project>()
-    private val javaLibraryProjectsByCoordinate = mutableMapOf<LmMavenName, LmModuleLibraryProject>()
+    private val javaLibraryProjects = mutableMapOf<LintModelJavaLibrary, Project>()
+    private val javaLibraryProjectsByCoordinate = mutableMapOf<LintModelMavenName, LintModelModuleLibraryProject>()
     private val appProjects = mutableMapOf<GradleProject, Project>()
-    private val gradleProjects = mutableMapOf<GradleProject, LmModule>()
+    private val gradleProjects = mutableMapOf<GradleProject, LintModelModule>()
 
     private fun getBuildModule(
         lintClient: LintGradleClient,
         gradleProject: GradleProject
-    ): LmModule? {
+    ): LintModelModule? {
         return gradleProjects[gradleProject] ?: run {
             val newModel = createLintBuildModel(lintClient, gradleProject)
             if (newModel != null) {
@@ -170,7 +170,7 @@ class ProjectSearch {
                 //    dependencies { compile name: 'guava-18.0' }
                 val group = dependency.getGroup() ?: continue
                 val version = dependency.getVersion() ?: continue
-                val coordinates = DefaultLmMavenName(group, name, version)
+                val coordinates = DefaultLintModelMavenName(group, name, version)
                 val javaLib = javaLibraryProjectsByCoordinate[coordinates]
                     ?: continue // Create wrapper? Unfortunately we don't have the actual .jar file
                 javaLib.isExternalLibrary = true
@@ -185,7 +185,7 @@ class ProjectSearch {
 
     private fun getProject(
         client: LintGradleClient,
-        variant: LmVariant,
+        variant: LintModelVariant,
         gradleProject: GradleProject
     ): Project {
         val cached = appProjects[gradleProject]
@@ -194,7 +194,7 @@ class ProjectSearch {
         }
         val dir = gradleProject.projectDir
         val manifest = client.mergedManifest
-        val lintProject = LmModuleProject(client, dir, dir, variant, manifest)
+        val lintProject = LintModelModuleProject(client, dir, dir, variant, manifest)
         appProjects[gradleProject] = lintProject
         lintProject.gradleProject = true
 
@@ -203,7 +203,7 @@ class ProjectSearch {
         val dependencies = variant.mainArtifact.dependencies.compileDependencies
         for (item in dependencies.roots) {
             val library = item.findLibrary() ?: continue // local project dependency: handled below
-            if (library is LmAndroidLibrary) {
+            if (library is LintModelAndroidLibrary) {
                 lintProject.addDirectLibrary(getLibrary(client, item, library, gradleProject, variant))
             }
         }
@@ -235,7 +235,7 @@ class ProjectSearch {
         }
         for (libraryItem in dependencies.roots) {
             val library = libraryItem.findLibrary()
-            if (library is LmJavaLibrary) {
+            if (library is LintModelJavaLibrary) {
                 val projectName = library.projectPath
                 if (projectName != null) {
                     if (processedProjects != null && processedProjects.contains(projectName)) {
@@ -277,10 +277,10 @@ class ProjectSearch {
 
     private fun getLibrary(
         client: LintGradleClient,
-        libraryItem: LmDependency,
-        library: LmAndroidLibrary,
+        libraryItem: LintModelDependency,
+        library: LintModelAndroidLibrary,
         gradleProject: GradleProject,
-        variant: LmVariant
+        variant: LintModelVariant
     ): Project {
         var cached = libraryProjects[library]
         if (cached != null) {
@@ -300,7 +300,7 @@ class ProjectSearch {
             }
         }
         val dir = library.folder
-        val project = LmModuleAndroidLibraryProject(client, dir, dir, libraryItem, library)
+        val project = LintModelModuleAndroidLibraryProject(client, dir, dir, libraryItem, library)
         project.setMavenCoordinates(coordinates)
         if (library.projectPath == null) {
             project.isExternalLibrary = true
@@ -309,7 +309,7 @@ class ProjectSearch {
         libraryProjectsByCoordinate[coordinates] = project
         for (dependentItem in libraryItem.dependencies) {
             val dependent = dependentItem.findLibrary() ?: continue
-            if (dependent is LmAndroidLibrary) {
+            if (dependent is LintModelAndroidLibrary) {
                 project.addDirectLibrary(
                     getLibrary(client, dependentItem, dependent, gradleProject, variant)
                 )
@@ -322,8 +322,8 @@ class ProjectSearch {
 
     private fun getLibrary(
         client: LintGradleClient,
-        libraryItem: LmDependency,
-        library: LmJavaLibrary
+        libraryItem: LintModelDependency,
+        library: LintModelJavaLibrary
     ): Project {
         var cached = javaLibraryProjects[library]
         if (cached != null) {
@@ -335,7 +335,7 @@ class ProjectSearch {
             return cached
         }
         val dir = library.jarFiles.first()
-        val project = LmModuleJavaLibraryProject(client, dir, dir, libraryItem, library)
+        val project = LintModelModuleJavaLibraryProject(client, dir, dir, libraryItem, library)
         project.setMavenCoordinates(coordinates)
         project.isExternalLibrary = true
         javaLibraryProjects[library] = project
@@ -343,7 +343,7 @@ class ProjectSearch {
         for (dependentItem in libraryItem.dependencies) {
             val dependent = dependentItem.findLibrary() ?: continue
             // just a sanity check; Java libraries cannot depend on Android libraries
-            if (dependent is LmJavaLibrary) {
+            if (dependent is LintModelJavaLibrary) {
                 project.addDirectLibrary(
                     getLibrary(client, dependentItem, dependent)
                 )
@@ -355,11 +355,11 @@ class ProjectSearch {
     private fun createLintBuildModel(
         client: LintGradleClient,
         gradleProject: GradleProject
-    ): LmModule? {
+    ): LintModelModule? {
         val pluginContainer = gradleProject.plugins
         for (p in pluginContainer) {
-            val provider = p as? LmModuleLoaderProvider ?: continue
-            val factory = LmFactory()
+            val provider = p as? LintModelModuleLoaderProvider ?: continue
+            val factory = LintModelFactory()
             // This should not be necessary, but here until AGP includes all the folders
             // necessary via the builder-model (or better yet, via XML serialization)
             factory.kotlinSourceFolderLookup = { variantName ->

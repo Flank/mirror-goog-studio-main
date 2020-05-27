@@ -54,10 +54,10 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
-import com.android.tools.lint.model.LmDependency
-import com.android.tools.lint.model.LmLibrary
-import com.android.tools.lint.model.LmMavenName
-import com.android.tools.lint.model.LmModuleType
+import com.android.tools.lint.model.LintModelDependency
+import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelMavenName
+import com.android.tools.lint.model.LintModelModuleType
 import com.android.utils.appendCapitalized
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.Joiner
@@ -146,7 +146,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val safeReplacement: GradleVersion?,
         val dependency: GradleCoordinate,
         val isResolved: Boolean,
-        val cookie: Any)
+        val cookie: Any
+    )
 
     /**
      * Stores information for a check of the Android gradle plugin dependency version
@@ -512,7 +513,8 @@ open class GradleDetector : Detector(), GradleScanner {
                 "You no longer need a `dev` mode to enable multi-dexing during development, and this can break API version checks"
             )
         } else if (parent == "dataBinding" && ((property == "enabled" || property == "isEnabled")) ||
-                (parent == "buildFeatures" && property == "dataBinding")) {
+            (parent == "buildFeatures" && property == "dataBinding")
+        ) {
             // Note: "enabled" is used by build.gradle and "isEnabled" is used by build.gradle.kts
             if (value == SdkConstants.VALUE_TRUE) {
                 if (mAppliedKotlinAndroidPlugin && !mAppliedKotlinKaptPlugin) {
@@ -1301,7 +1303,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
-    private fun LmMavenName.isSupportLibArtifact() =
+    private fun LintModelMavenName.isSupportLibArtifact() =
         isSupportLibraryDependentOnCompileSdk(groupId, artifactId)
 
     /**
@@ -1309,7 +1311,7 @@ open class GradleDetector : Detector(), GradleScanner {
      * starts with "androidx." but there is an special case for the navigation artifact which does
      * start with "androidx." but links to non-androidx classes
      */
-    private fun LmMavenName.isAndroidxArtifact() =
+    private fun LintModelMavenName.isAndroidxArtifact() =
         groupId.startsWith(ANDROIDX_PKG_PREFIX) && groupId != "androidx.navigation"
 
     private fun checkConsistentSupportLibraries(
@@ -1319,8 +1321,8 @@ open class GradleDetector : Detector(), GradleScanner {
         checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID, null)
 
         val androidLibraries = getAllLibraries(context.project)
-        var usesOldSupportLib: LmMavenName? = null
-        var usesAndroidX: LmMavenName? = null
+        var usesOldSupportLib: LintModelMavenName? = null
+        var usesAndroidX: LintModelMavenName? = null
         for (library in androidLibraries) {
             val coordinates = library.resolvedCoordinates
             if (usesOldSupportLib == null && coordinates.isSupportLibArtifact()) {
@@ -1446,7 +1448,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
-    private fun getAllLibraries(project: Project): List<LmLibrary> {
+    private fun getAllLibraries(project: Project): List<LintModelLibrary> {
         return project.buildVariant?.mainArtifact?.dependencies?.getAll() ?: emptyList()
     }
 
@@ -1460,7 +1462,7 @@ open class GradleDetector : Detector(), GradleScanner {
         // (b/22709708)
 
         val project = context.mainProject
-        val versionToCoordinate = ArrayListMultimap.create<String, LmMavenName>()
+        val versionToCoordinate = ArrayListMultimap.create<String, LintModelMavenName>()
         val allLibraries = getAllLibraries(project)
         for (library in allLibraries) {
             val coordinates = library.resolvedCoordinates
@@ -1928,13 +1930,13 @@ open class GradleDetector : Detector(), GradleScanner {
                 artifactId != "support-annotations")
     }
 
-    private fun findFirst(coordinates: Collection<LmMavenName>): LmMavenName {
+    private fun findFirst(coordinates: Collection<LintModelMavenName>): LintModelMavenName {
         return Collections.min(coordinates) { o1, o2 -> o1.toString().compareTo(o2.toString()) }
     }
 
     private fun getBlacklistedDependencyMessage(
         context: Context,
-        path: List<LmDependency>
+        path: List<LintModelDependency>
     ): String? {
         if (context.mainProject.minSdkVersion.apiLevel >= 23 && !usesLegacyHttpLibrary(context.mainProject)) {
             return null
@@ -2575,11 +2577,13 @@ open class GradleDetector : Detector(), GradleScanner {
 
         /** The Gradle plugin ID for Android applications */
         const val APP_PLUGIN_ID = "com.android.application"
+
         /** The Gradle plugin ID for Android libraries */
         const val LIB_PLUGIN_ID = "com.android.library"
 
         /** Previous plugin id for applications */
         const val OLD_APP_PLUGIN_ID = "android"
+
         /** Previous plugin id for libraries */
         const val OLD_LIB_PLUGIN_ID = "android-library"
 
@@ -2815,15 +2819,15 @@ open class GradleDetector : Detector(), GradleScanner {
             return when {
                 configuration.startsWith("test") || configuration.startsWith("androidTest") -> false
                 else -> when (project.type) {
-                    LmModuleType.APP ->
+                    LintModelModuleType.APP ->
                         // Applications can only generally be consumed if there are dynamic features
                         // (Ignoring the test-only project for this purpose)
                         project.hasDynamicFeatures()
-                    LmModuleType.LIBRARY -> true
-                    LmModuleType.JAVA_LIBRARY -> true
-                    LmModuleType.FEATURE, LmModuleType.DYNAMIC_FEATURE -> true
-                    LmModuleType.TEST -> false
-                    LmModuleType.INSTANT_APP -> false
+                    LintModelModuleType.LIBRARY -> true
+                    LintModelModuleType.JAVA_LIBRARY -> true
+                    LintModelModuleType.FEATURE, LintModelModuleType.DYNAMIC_FEATURE -> true
+                    LintModelModuleType.TEST -> false
+                    LintModelModuleType.INSTANT_APP -> false
                 }
             }
         }

@@ -31,7 +31,7 @@ import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.gradle.api.LintExecutionRequest
 import com.android.tools.lint.gradle.api.VariantInputs
-import com.android.tools.lint.model.LmLintOptions
+import com.android.tools.lint.model.LintModelLintOptions
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
@@ -74,7 +74,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
         }
     }
 
-    private val lintOptions: LmLintOptions? get() = descriptor.lintOptions
+    private val lintOptions: LintModelLintOptions? get() = descriptor.lintOptions
     private val sdkHome: File? get() = descriptor.sdkHome
     private val isFatalOnly: Boolean get() = descriptor.isFatalOnly
     private val reportsDir: File? get() = descriptor.reportsDir
@@ -530,7 +530,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
     }
 
     private fun syncOptions(
-        options: LmLintOptions?,
+        options: LintModelLintOptions?,
         client: LintGradleClient,
         flags: LintCliFlags,
         variantName: String?,

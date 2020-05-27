@@ -19,7 +19,7 @@ package com.android.tools.lint.model
 import java.io.File
 
 /** A library */
-interface LmLibrary : Comparable<LmLibrary> {
+interface LintModelLibrary : Comparable<LintModelLibrary> {
     /** List of jar files in the library. Never empty. */
     val jarFiles: List<File>
 
@@ -27,7 +27,7 @@ interface LmLibrary : Comparable<LmLibrary> {
     val projectPath: String?
 
     /** The actual resolved Maven coordinates of this library */
-    val resolvedCoordinates: LmMavenName
+    val resolvedCoordinates: LintModelMavenName
 
     /**
      * Whether this library is provided ("compileOnly" in Gradle), meaning that it
@@ -50,12 +50,12 @@ interface LmLibrary : Comparable<LmLibrary> {
      */
     val artifactAddress: String
 
-    override fun compareTo(other: LmLibrary): Int {
+    override fun compareTo(other: LintModelLibrary): Int {
         return resolvedCoordinates.compareTo(other.resolvedCoordinates)
     }
 }
 
-interface LmAndroidLibrary : LmLibrary {
+interface LintModelAndroidLibrary : LintModelLibrary {
     val manifest: File
     val folder: File
     val resFolder: File
@@ -67,21 +67,21 @@ interface LmAndroidLibrary : LmLibrary {
     val proguardRules: File
 }
 
-interface LmJavaLibrary : LmLibrary
+interface LintModelJavaLibrary : LintModelLibrary
 
 // Default implementations
 
-open class DefaultLmLibrary(
+open class DefaultLintModelLibrary(
     override val artifactAddress: String,
     override val jarFiles: List<File>,
     override val projectPath: String?,
-    override val resolvedCoordinates: LmMavenName,
+    override val resolvedCoordinates: LintModelMavenName,
     override val provided: Boolean,
     override val skipped: Boolean
-) : LmLibrary {
+) : LintModelLibrary {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        return resolvedCoordinates == (other as? LmAndroidLibrary)?.resolvedCoordinates
+        return resolvedCoordinates == (other as? LintModelAndroidLibrary)?.resolvedCoordinates
     }
 
     override fun hashCode(): Int {
@@ -89,7 +89,7 @@ open class DefaultLmLibrary(
     }
 }
 
-class DefaultLmAndroidLibrary(
+class DefaultLintModelAndroidLibrary(
     jarFiles: List<File>,
     artifactAddress: String,
     override val manifest: File,
@@ -104,32 +104,32 @@ class DefaultLmAndroidLibrary(
     project: String?,
     provided: Boolean,
     skipped: Boolean,
-    resolvedCoordinates: LmMavenName
-) : DefaultLmLibrary(
+    resolvedCoordinates: LintModelMavenName
+) : DefaultLintModelLibrary(
     artifactAddress = artifactAddress,
     jarFiles = jarFiles,
     projectPath = project,
     resolvedCoordinates = resolvedCoordinates,
     provided = provided,
     skipped = skipped
-), LmAndroidLibrary {
+), LintModelAndroidLibrary {
     override fun toString(): String = "AndroidLibrary(${projectPath ?: resolvedCoordinates})"
 }
 
-class DefaultLmJavaLibrary(
+class DefaultLintModelJavaLibrary(
     artifactAddress: String,
     jarFiles: List<File>,
     project: String?,
-    resolvedCoordinates: LmMavenName,
+    resolvedCoordinates: LintModelMavenName,
     provided: Boolean,
     skipped: Boolean
-) : DefaultLmLibrary(
+) : DefaultLintModelLibrary(
     artifactAddress = artifactAddress,
     jarFiles = jarFiles,
     projectPath = project,
     resolvedCoordinates = resolvedCoordinates,
     provided = provided,
     skipped = skipped
-), LmJavaLibrary {
+), LintModelJavaLibrary {
     override fun toString(): String = "JavaLibrary(${projectPath ?: resolvedCoordinates})"
 }

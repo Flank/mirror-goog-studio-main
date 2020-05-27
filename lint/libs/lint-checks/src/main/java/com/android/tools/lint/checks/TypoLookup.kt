@@ -240,6 +240,7 @@ class TypoLookup private constructor(
         private const val FILE_HEADER = "Typo database used by Android lint\u0000"
         private const val BINARY_FORMAT_VERSION = 2
         private const val DEBUG_FORCE_REGENERATE_BINARY = false
+
         /** Default size to reserve for each API entry when creating byte buffer to build up data  */
         private const val BYTES_PER_ENTRY = 28
 

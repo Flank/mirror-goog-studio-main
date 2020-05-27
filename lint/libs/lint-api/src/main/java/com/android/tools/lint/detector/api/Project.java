@@ -65,13 +65,13 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
-import com.android.tools.lint.model.LmAndroidLibrary;
-import com.android.tools.lint.model.LmLibrary;
-import com.android.tools.lint.model.LmMavenName;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmModuleType;
-import com.android.tools.lint.model.LmNamespacingMode;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelAndroidLibrary;
+import com.android.tools.lint.model.LintModelLibrary;
+import com.android.tools.lint.model.LintModelMavenName;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelModuleType;
+import com.android.tools.lint.model.LintModelNamespacingMode;
+import com.android.tools.lint.model.LintModelVariant;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
@@ -207,8 +207,8 @@ public class Project {
      * @return the project model, or null
      */
     @Nullable
-    public LmModule getBuildModule() {
-        LmVariant variant = getBuildVariant();
+    public LintModelModule getBuildModule() {
+        LintModelVariant variant = getBuildVariant();
         if (variant != null) {
             return variant.getModule();
         }
@@ -225,7 +225,7 @@ public class Project {
      * @return the selected variant, or null
      */
     @Nullable
-    public LmVariant getBuildVariant() {
+    public LintModelVariant getBuildVariant() {
         return null;
     }
 
@@ -234,7 +234,7 @@ public class Project {
      *
      * @return the library model, or null
      */
-    public LmAndroidLibrary getBuildLibraryModel() {
+    public LintModelAndroidLibrary getBuildLibraryModel() {
         return null;
     }
 
@@ -252,7 +252,7 @@ public class Project {
     }
 
     public boolean isCoreLibraryDesugaringEnabled() {
-        LmModule buildModel = getBuildModule();
+        LintModelModule buildModel = getBuildModule();
         return buildModel != null
                 && buildModel.getBuildFeatures().getCoreLibraryDesugaringEnabled();
     }
@@ -275,7 +275,7 @@ public class Project {
      */
     @Nullable
     public GradleVersion getGradleModelVersion() {
-        LmModule gradleProjectModel = getBuildModule();
+        LintModelModule gradleProjectModel = getBuildModule();
         if (gradleProjectModel != null) {
             return gradleProjectModel.getGradleVersion();
         } else {
@@ -415,12 +415,12 @@ public class Project {
 
     /** Gets the namespacing mode used for this project */
     @NonNull
-    private LmNamespacingMode getNamespacingMode() {
-        LmModule model = getBuildModule();
+    private LintModelNamespacingMode getNamespacingMode() {
+        LintModelModule model = getBuildModule();
         if (model != null) {
             return model.getBuildFeatures().getNamespacingMode();
         } else {
-            return LmNamespacingMode.DISABLED;
+            return LintModelNamespacingMode.DISABLED;
         }
     }
 
@@ -431,7 +431,7 @@ public class Project {
     public ResourceNamespace getResourceNamespace() {
         if (namespace == null) {
             String packageName = getPackage();
-            if (packageName == null || getNamespacingMode() == LmNamespacingMode.DISABLED) {
+            if (packageName == null || getNamespacingMode() == LintModelNamespacingMode.DISABLED) {
                 namespace = ResourceNamespace.RES_AUTO;
             } else {
                 namespace = ResourceNamespace.fromPackageName(packageName);
@@ -778,7 +778,7 @@ public class Project {
      */
     @Nullable
     public String getApplicationId() {
-        LmVariant variant = getBuildVariant();
+        LintModelVariant variant = getBuildVariant();
         if (variant != null) {
             return variant.getMainArtifact().getApplicationId();
         }
@@ -992,7 +992,7 @@ public class Project {
         return externalLibrary;
     }
 
-    protected LmMavenName mavenCoordinates = null;
+    protected LintModelMavenName mavenCoordinates = null;
 
     /**
      * Returns the Maven coordinate of this project, if known.
@@ -1000,9 +1000,9 @@ public class Project {
      * @return the maven coordinate, or null
      */
     @Nullable
-    public LmMavenName getMavenCoordinate() {
+    public LintModelMavenName getMavenCoordinate() {
         if (mavenCoordinates == null) {
-            LmModule model = getBuildModule();
+            LintModelModule model = getBuildModule();
             if (model != null) {
                 mavenCoordinates = model.getMavenName();
             }
@@ -1095,7 +1095,7 @@ public class Project {
     @NonNull
     @Deprecated
     public final ProjectType getProjectType() {
-        LmModuleType type = getType();
+        LintModelModuleType type = getType();
         switch (type) {
             case APP:
                 //noinspection DuplicateBranchesInSwitch
@@ -1117,15 +1117,15 @@ public class Project {
 
     /** The type of artifact produced by this Android project. */
     @NonNull
-    public LmModuleType getType() {
-        LmModule buildModule = getBuildModule();
+    public LintModelModuleType getType() {
+        LintModelModule buildModule = getBuildModule();
         if (buildModule != null) {
             return buildModule.getType();
         }
         if (isLibrary()) {
-            return LmModuleType.LIBRARY;
+            return LintModelModuleType.LIBRARY;
         } else {
-            return LmModuleType.APP;
+            return LintModelModuleType.APP;
         }
     }
 
@@ -1652,7 +1652,7 @@ public class Project {
             //     }
             // }
             // ...then we should only enforce hdpi densities, not all these others!
-            LmVariant variant = getBuildVariant();
+            LintModelVariant variant = getBuildVariant();
             if (variant != null) {
                 Set<String> relevantDensities = Sets.newHashSet();
                 for (String densityName : variant.getResourceConfigurations()) {
@@ -1706,21 +1706,21 @@ public class Project {
     @NonNull
     public ResourceVisibilityLookup getResourceVisibility() {
         if (resourceVisibility == null) {
-            LmVariant variant = getBuildVariant();
+            LintModelVariant variant = getBuildVariant();
             if (variant != null) {
-                Collection<LmLibrary> libraries =
+                Collection<LintModelLibrary> libraries =
                         variant.getMainArtifact().getDependencies().getAll();
                 List<ResourceVisibilityLookup> list = new ArrayList<>(libraries.size());
-                for (LmLibrary library : libraries) {
-                    if (library instanceof LmAndroidLibrary) {
-                        LmAndroidLibrary l = (LmAndroidLibrary) library;
+                for (LintModelLibrary library : libraries) {
+                    if (library instanceof LintModelAndroidLibrary) {
+                        LintModelAndroidLibrary l = (LintModelAndroidLibrary) library;
                         ResourceVisibilityLookup lookup = createLibraryVisibilityLookup(l);
                         list.add(lookup);
                     }
                 }
                 resourceVisibility = ResourceVisibilityLookup.create(list);
             } else if (getBuildLibraryModel() != null) {
-                LmAndroidLibrary library = getBuildLibraryModel();
+                LintModelAndroidLibrary library = getBuildLibraryModel();
                 resourceVisibility = createLibraryVisibilityLookup(library);
             } else {
                 resourceVisibility = ResourceVisibilityLookup.NONE;
@@ -1732,10 +1732,10 @@ public class Project {
 
     @NonNull
     private ResourceVisibilityLookup createLibraryVisibilityLookup(
-            LmAndroidLibrary androidLibrary) {
+            LintModelAndroidLibrary androidLibrary) {
         File publicResources = androidLibrary.getPublicResources();
         File symbolFile = androidLibrary.getSymbolFile();
-        LmMavenName c = androidLibrary.getResolvedCoordinates();
+        LintModelMavenName c = androidLibrary.getResolvedCoordinates();
         String key = c.getGroupId() + ":" + c.getArtifactId() + ":" + c.getVersion();
         return ResourceVisibilityLookup.create(publicResources, symbolFile, key);
     }

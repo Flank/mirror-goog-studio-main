@@ -20,7 +20,7 @@ import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.computeKotlinArgumentMapping
 import com.android.tools.lint.detector.api.isKotlin
-import com.android.tools.lint.model.LmDependencies
+import com.android.tools.lint.model.LintModelDependencies
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.openapi.vfs.VfsUtilCore
@@ -63,7 +63,7 @@ open class DefaultJavaEvaluator(
     // cache of package name to package-info.class.
     private val packageInfoCache = mutableMapOf<String, PsiPackage>()
 
-    override val dependencies: LmDependencies?
+    override val dependencies: LintModelDependencies?
         get() {
             if (myLintProject != null && myLintProject.isAndroidProject) {
                 val variant = myLintProject.buildVariant

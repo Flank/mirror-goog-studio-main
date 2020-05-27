@@ -304,9 +304,11 @@ class RestrictionsDetector : ResourceXmlDetector() {
         // Copied from Google Play store's AppRestrictionBuilder
         @VisibleForTesting
         const val MAX_NESTING_DEPTH = 20
+
         // Copied from Google Play store's AppRestrictionBuilder
         @VisibleForTesting
         const val MAX_NUMBER_OF_NESTED_RESTRICTIONS = 1000
+
         /** Validation of `<restrictions>` XML elements */
         @JvmField
         val ISSUE = Issue.create(

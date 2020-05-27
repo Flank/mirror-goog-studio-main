@@ -332,7 +332,8 @@ abstract class DataFlowAnalyzer(
         val name = call.methodName
         if ((name == "also" || name == "apply") &&
             // See libraries/stdlib/jvm/build/stdlib-declarations.json
-            containingClass?.qualifiedName == "kotlin.StandardKt__StandardKt") {
+            containingClass?.qualifiedName == "kotlin.StandardKt__StandardKt"
+        ) {
             return true
         }
 

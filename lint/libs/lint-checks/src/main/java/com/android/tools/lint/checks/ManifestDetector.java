@@ -75,12 +75,10 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
-import com.android.tools.lint.model.LmDependencies;
-import com.android.tools.lint.model.LmDependencyGraph;
-import com.android.tools.lint.model.LmLibrary;
-import com.android.tools.lint.model.LmMavenName;
-import com.android.tools.lint.model.LmSourceProvider;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelLibrary;
+import com.android.tools.lint.model.LintModelMavenName;
+import com.android.tools.lint.model.LintModelSourceProvider;
+import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.StringHelper;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
@@ -649,7 +647,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
         Project project = context.getProject();
         Attr attribute = element.getAttributeNodeNS(ANDROID_URI, attributeName);
         if (attribute != null && context.isEnabled(GRADLE_OVERRIDES)) {
-            LmVariant variant = project.getBuildVariant();
+            LintModelVariant variant = project.getBuildVariant();
             if (variant != null) {
                 String gradleValue = null;
                 if (ATTR_MIN_SDK_VERSION.equals(attributeName)) {
@@ -801,8 +799,8 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     return;
                 }
                 // Ensure that the play-services-wearable version dependency is >= 8.2.0
-                LmVariant variant = context.getMainProject().getBuildVariant();
-                if (variant != null&& hasWearableGmsDependency(variant)) {
+                LintModelVariant variant = context.getMainProject().getBuildVariant();
+                if (variant != null && hasWearableGmsDependency(variant)) {
                     context.report(
                             WEARABLE_BIND_LISTENER,
                             bindListenerAttr,
@@ -1180,13 +1178,14 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
     // Method to check if the app has a gms wearable dependency that
     // matches the specific criteria i.e >= MIN_WEARABLE_GMS_VERSION
-    private static boolean hasWearableGmsDependency(@NonNull LmVariant variant) {
-        LmLibrary library = variant.getMainArtifact().findCompileDependency(PLAY_SERVICES_WEARABLE);
+    private static boolean hasWearableGmsDependency(@NonNull LintModelVariant variant) {
+        LintModelLibrary library =
+                variant.getMainArtifact().findCompileDependency(PLAY_SERVICES_WEARABLE);
         if (library == null) {
             return false;
         }
 
-        LmMavenName mc = library.getResolvedCoordinates();
+        LintModelMavenName mc = library.getResolvedCoordinates();
         GradleCoordinate gc = GradleCoordinate.parseVersionOnly(mc.getVersion());
         return COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0;
     }
@@ -1283,9 +1282,9 @@ public class ManifestDetector extends Detector implements XmlScanner {
     @SuppressWarnings("FileComparisons")
     private static boolean isDebugOrTestManifest(
             @NonNull XmlContext context, @NonNull File manifestFile) {
-        LmVariant variant = context.getProject().getBuildVariant();
+        LintModelVariant variant = context.getProject().getBuildVariant();
         if (variant != null) {
-            for (LmSourceProvider provider : variant.getSourceProviders()) {
+            for (LintModelSourceProvider provider : variant.getSourceProviders()) {
                 if (provider.isDebugOnly() || provider.isTest()) {
                     if (manifestFile.equals(provider.getManifestFile())) {
                         return true;

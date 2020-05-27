@@ -16,7 +16,7 @@
 package com.android.tools.lint.gradle
 
 import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.model.LmMavenName
+import com.android.tools.lint.model.LintModelMavenName
 import com.android.utils.XmlUtils
 import java.io.File
 import java.io.IOException
@@ -44,7 +44,7 @@ open class LintGradleProject(
         externalLibrary = external
     }
 
-    fun setMavenCoordinates(mc: LmMavenName) {
+    fun setMavenCoordinates(mc: LintModelMavenName) {
         mavenCoordinates = mc
     }
 

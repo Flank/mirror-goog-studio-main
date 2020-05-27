@@ -100,6 +100,7 @@ interface GradleScanner : FileScanner {
         unnamedArguments: List<String>,
         cookie: Any
     )
+
     /**
      * Should be true if this scanner will handle visiting the Gradle file
      * on its own. In that case override {@link #visitBuildScript} to process the file.

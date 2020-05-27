@@ -22,10 +22,10 @@ import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
-import com.android.tools.lint.model.LmSerialization.LmSerializationAdapter
-import com.android.tools.lint.model.LmSerialization.TargetFile
-import com.android.tools.lint.model.LmSerialization.readDependencies
-import com.android.tools.lint.model.LmSerialization.writeModule
+import com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter
+import com.android.tools.lint.model.LintModelSerialization.TargetFile
+import com.android.tools.lint.model.LintModelSerialization.readDependencies
+import com.android.tools.lint.model.LintModelSerialization.writeModule
 import com.android.utils.XmlUtils
 import com.google.common.base.Charsets
 import org.kxml2.io.KXmlParser
@@ -51,7 +51,7 @@ import java.io.Writer
 // so avoiding it temporarily to unblock integrating by writing boring manual encoding
 // and decoding code here
 
-object LmSerialization : LmModuleLoader {
+object LintModelSerialization : LintModelModuleLoader {
     enum class TargetFile {
         MODULE,
         VARIANT,
@@ -59,9 +59,9 @@ object LmSerialization : LmModuleLoader {
         LIBRARY_TABLE,
     }
 
-    interface LmSerializationAdapter {
+    interface LintModelSerializationAdapter {
         /** Any path mapping to directory variables */
-        val pathVariables: LmPathVariables
+        val pathVariables: LintModelPathVariables
 
         /**
          * The file we're reading/writing from if known (only used for error message display)
@@ -142,11 +142,11 @@ object LmSerialization : LmModuleLoader {
         }
     }
 
-    /** Default implementation of [LmSerializationAdapter] which uses files */
-    class LmSerializationFileAdapter(
+    /** Default implementation of [LintModelSerializationAdapter] which uses files */
+    class LintModelSerializationFileAdapter(
         private val moduleFile: File,
-        override val pathVariables: LmPathVariables = emptyList()
-    ) : LmSerializationAdapter {
+        override val pathVariables: LintModelPathVariables = emptyList()
+    ) : LintModelSerializationAdapter {
         override val root: File = moduleFile.parentFile
 
         override fun file(target: TargetFile, variantName: String, artifactName: String): File {
@@ -183,22 +183,22 @@ object LmSerialization : LmModuleLoader {
         }
     }
 
-    override fun getModule(file: File): LmModule = readModule(file)
+    override fun getModule(file: File): LintModelModule = readModule(file)
 
     /** Reads in the dependencies. If an (optional) library resolver is provided, merge
      * in any libraries found into that resolver such that it can be used to resolve
      * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LmDependencies#getLibraryResolver].
+     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
      */
     fun readDependencies(
         xmlFile: File,
-        resolver: DefaultLmLibraryResolver? = null,
+        resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null,
-        pathVariables: LmPathVariables = emptyList()
-    ): LmDependencies {
-        return LmDependenciesReader(
-            adapter = LmSerializationFileAdapter(xmlFile, pathVariables),
+        pathVariables: LintModelPathVariables = emptyList()
+    ): LintModelDependencies {
+        return LintModelDependenciesReader(
+            adapter = LintModelSerializationFileAdapter(xmlFile, pathVariables),
             libraryResolver = resolver,
             variantName = variantName ?: "",
             artifactName = artifactName ?: "",
@@ -209,17 +209,17 @@ object LmSerialization : LmModuleLoader {
     /** Reads in the library definitions. If an (optional) library resolver is provided, merge
      * in any libraries found into that resolver such that it can be used to resolve
      * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LmDependencies#getLibraryResolver].
+     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
      */
     fun readLibraries(
         xmlFile: File,
-        resolver: DefaultLmLibraryResolver? = null,
+        resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null,
-        pathVariables: LmPathVariables = emptyList()
-    ): LmLibraryResolver {
-        return LmLibrariesReader(
-            adapter = LmSerializationFileAdapter(xmlFile, pathVariables),
+        pathVariables: LintModelPathVariables = emptyList()
+    ): LintModelLibraryResolver {
+        return LintModelLibrariesReader(
+            adapter = LintModelSerializationFileAdapter(xmlFile, pathVariables),
             libraryResolver = resolver,
             variantName = variantName ?: "",
             artifactName = artifactName ?: "",
@@ -236,10 +236,10 @@ object LmSerialization : LmModuleLoader {
         xmlFile: File,
         variantNames: List<String>? = null,
         readDependencies: Boolean = true,
-        pathVariables: LmPathVariables = emptyList()
-    ): LmModule {
+        pathVariables: LintModelPathVariables = emptyList()
+    ): LintModelModule {
         return readModule(
-            adapter = LmSerializationFileAdapter(xmlFile, pathVariables),
+            adapter = LintModelSerializationFileAdapter(xmlFile, pathVariables),
             variantNames = variantNames,
             readDependencies = readDependencies
         )
@@ -251,11 +251,11 @@ object LmSerialization : LmModuleLoader {
      * the specified ones.
      */
     fun readModule(
-        adapter: LmSerializationAdapter,
+        adapter: LintModelSerializationAdapter,
         variantNames: List<String>? = null,
         readDependencies: Boolean = true
-    ): LmModule {
-        return LmModuleReader(adapter).readModule(variantNames, readDependencies)
+    ): LintModelModule {
+        return LintModelModuleReader(adapter).readModule(variantNames, readDependencies)
     }
 
     /**
@@ -264,17 +264,17 @@ object LmSerialization : LmModuleLoader {
      * If an (optional) library resolver is provided, merge
      * in any libraries found into that resolver such that it can be used to resolve
      * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LmDependencies#getLibraryResolver].
+     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
      *
      * The optional variant name indicates which variant this is intended to be used with.
      */
     fun readDependencies(
-        reader: LmSerializationAdapter,
-        resolver: DefaultLmLibraryResolver? = null,
+        reader: LintModelSerializationAdapter,
+        resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null
-    ): LmDependencies {
-        return LmDependenciesReader(
+    ): LintModelDependencies {
+        return LintModelDependenciesReader(
             reader,
             resolver,
             variantName ?: "",
@@ -287,17 +287,17 @@ object LmSerialization : LmModuleLoader {
      * If an (optional) library resolver is provided, merge
      * in any libraries found into that resolver such that it can be used to resolve
      * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LmDependencies#getLibraryResolver].
+     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
      *
      * The optional variant name indicates which variant this is intended to be used with.
      */
     fun readLibraries(
-        reader: LmSerializationAdapter,
-        resolver: DefaultLmLibraryResolver? = null,
+        reader: LintModelSerializationAdapter,
+        resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null
-    ): LmLibraryResolver {
-        return LmLibrariesReader(
+    ): LintModelLibraryResolver {
+        return LintModelLibrariesReader(
             reader,
             resolver,
             variantName ?: "",
@@ -315,13 +315,13 @@ object LmSerialization : LmModuleLoader {
      * Writes a lint [module] to the given [destination]
      */
     fun writeModule(
-        module: LmModule,
-        destination: LmSerializationAdapter,
-        writeVariants: List<LmVariant>? = module.variants,
+        module: LintModelModule,
+        destination: LintModelSerializationAdapter,
+        writeVariants: List<LintModelVariant>? = module.variants,
         writeDependencies: Boolean = true,
         createdBy: String? = null
     ) {
-        val writer = LmModuleWriter(destination)
+        val writer = LintModelModuleWriter(destination)
         writer.writeModule(module, writeVariants, writeDependencies, createdBy)
     }
 
@@ -329,26 +329,31 @@ object LmSerialization : LmModuleLoader {
      * Writes a lint [variant] to the given [writer]
      */
     fun writeVariant(
-        variant: LmVariant,
-        writer: LmSerializationAdapter,
+        variant: LintModelVariant,
+        writer: LintModelSerializationAdapter,
         writeDependencies: Boolean = true,
         createdBy: String? = null
     ) {
-        LmVariantWriter(writer, variant.name).writeVariant(variant, writeDependencies, createdBy)
+        LintModelVariantWriter(writer, variant.name).writeVariant(
+            variant,
+            writeDependencies,
+            createdBy
+        )
     }
 
     /**
      * Writes a lint [dependencies] model to the given [destination] file
      */
     fun writeDependencies(
-        dependencies: LmDependencies,
+        dependencies: LintModelDependencies,
         destination: File,
         variantName: String = "",
         artifactName: String = "",
-        pathVariables: LmPathVariables = emptyList()
+        pathVariables: LintModelPathVariables = emptyList()
     ) {
-        val adapter = LmSerializationFileAdapter(destination, pathVariables)
-        val writer = LmDependenciesWriter(adapter, variantName, artifactName, destination.toWriter())
+        val adapter = LintModelSerializationFileAdapter(destination, pathVariables)
+        val writer =
+            LintModelDependenciesWriter(adapter, variantName, artifactName, destination.toWriter())
         writer.writeDependencies(dependencies)
     }
 
@@ -356,39 +361,42 @@ object LmSerialization : LmModuleLoader {
      * Writes a lint [dependencies] model to the given [writer]
      */
     fun writeDependencies(
-        dependencies: LmDependencies,
-        writer: LmSerializationAdapter,
+        dependencies: LintModelDependencies,
+        writer: LintModelSerializationAdapter,
         variantName: String = "",
         artifactName: String = ""
     ) {
-        LmDependenciesWriter(writer, variantName, artifactName).writeDependencies(dependencies)
+        LintModelDependenciesWriter(writer, variantName, artifactName).writeDependencies(
+            dependencies
+        )
     }
 
     /**
-     * Writes a lint [LmLibraryResolver] library table to the given [destination]
+     * Writes a lint [LintModelLibraryResolver] library table to the given [destination]
      */
     fun writeLibraries(
-        libraryResolver: LmLibraryResolver,
+        libraryResolver: LintModelLibraryResolver,
         destination: File,
         variantName: String = "",
         artifactName: String = "",
-        pathVariables: LmPathVariables = emptyList()
+        pathVariables: LintModelPathVariables = emptyList()
     ) {
-        val adapter = LmSerializationFileAdapter(destination, pathVariables)
-        val writer = LmLibrariesWriter(adapter, variantName, artifactName, destination.toWriter())
+        val adapter = LintModelSerializationFileAdapter(destination, pathVariables)
+        val writer =
+            LintModelLibrariesWriter(adapter, variantName, artifactName, destination.toWriter())
         writer.writeLibraries(libraryResolver)
     }
 
     /**
-     * Writes a lint [LmLibraryResolver] library table to the given [writer]
+     * Writes a lint [LintModelLibraryResolver] library table to the given [writer]
      */
     fun writeLibraries(
-        libraryResolver: LmLibraryResolver,
-        writer: LmSerializationAdapter,
+        libraryResolver: LintModelLibraryResolver,
+        writer: LintModelSerializationAdapter,
         variantName: String = "",
         artifactName: String = ""
     ) {
-        LmLibrariesWriter(writer, variantName, artifactName).writeLibraries(libraryResolver)
+        LintModelLibrariesWriter(writer, variantName, artifactName).writeLibraries(libraryResolver)
     }
 
     /**
@@ -404,16 +412,16 @@ object LmSerialization : LmModuleLoader {
      * for example, use LintClient.getClientDisplayRevision()) via the [createdBy] string.
      */
     fun writeModule(
-        module: LmModule,
+        module: LintModelModule,
         destination: File,
-        writeVariants: List<LmVariant>? = module.variants,
+        writeVariants: List<LintModelVariant>? = module.variants,
         writeDependencies: Boolean = true,
-        pathVariables: LmPathVariables = emptyList(),
+        pathVariables: LintModelPathVariables = emptyList(),
         createdBy: String? = null
     ) {
         writeModule(
             module,
-            LmSerializationFileAdapter(destination, pathVariables),
+            LintModelSerializationFileAdapter(destination, pathVariables),
             writeVariants,
             writeDependencies,
             createdBy
@@ -426,15 +434,15 @@ object LmSerialization : LmModuleLoader {
      * LintClient.getClientDisplayRevision()).
      */
     fun writeVariant(
-        variant: LmVariant,
+        variant: LintModelVariant,
         destination: File,
         writeDependencies: Boolean = true,
-        pathVariables: LmPathVariables = emptyList(),
+        pathVariables: LintModelPathVariables = emptyList(),
         createdBy: String? = null
     ) {
         writeVariant(
             variant,
-            LmSerializationFileAdapter(destination, pathVariables),
+            LintModelSerializationFileAdapter(destination, pathVariables),
             writeDependencies,
             createdBy
         )
@@ -471,8 +479,8 @@ private fun File.toWriter(): Writer {
     return BufferedWriter(OutputStreamWriter(FileOutputStream(this), Charsets.UTF_8))
 }
 
-private open class LmWriter(
-    protected val adapter: LmSerializationAdapter,
+private open class LintModelWriter(
+    protected val adapter: LintModelSerializationAdapter,
     protected val printer: PrintWriter
 ) {
     protected var root: File? = adapter.root
@@ -538,7 +546,7 @@ private open class LmWriter(
     }
 
     protected fun writeSourceProviders(
-        sourceProviders: List<LmSourceProvider>,
+        sourceProviders: List<LintModelSourceProvider>,
         tag: String,
         indent: Int
     ) {
@@ -556,7 +564,7 @@ private open class LmWriter(
     }
 
     protected fun writeSourceProvider(
-        sourceProvider: LmSourceProvider,
+        sourceProvider: LintModelSourceProvider,
         indent: Int,
         tag: String = "sourceProvider"
     ) {
@@ -580,15 +588,15 @@ private open class LmWriter(
     }
 }
 
-private class LmModuleWriter(
-    adapter: LmSerializationAdapter
-) : LmWriter(
+private class LintModelModuleWriter(
+    adapter: LintModelSerializationAdapter
+) : LintModelWriter(
     adapter,
     PrintWriter(adapter.getWriter(TargetFile.MODULE))
 ) {
     fun writeModule(
-        module: LmModule,
-        writeVariants: List<LmVariant>? = module.variants,
+        module: LintModelModule,
+        writeVariants: List<LintModelVariant>? = module.variants,
         writeDependencies: Boolean,
         createdBy: String? = null
     ) {
@@ -626,7 +634,7 @@ private class LmModuleWriter(
             for (variant in writeVariants) {
                 writeVariantReference(variant, indent + 1)
 
-                LmSerialization.writeVariant(
+                LintModelSerialization.writeVariant(
                     variant, adapter, writeDependencies, createdBy
                 )
             }
@@ -637,7 +645,7 @@ private class LmModuleWriter(
     }
 
     private fun writeVariantReference(
-        variant: LmVariant,
+        variant: LintModelVariant,
         indent: Int
     ) {
         indent(indent)
@@ -647,7 +655,7 @@ private class LmModuleWriter(
     }
 
     private fun writeBuildFeatures(
-        buildFeatures: LmBuildFeatures,
+        buildFeatures: LintModelBuildFeatures,
         indent: Int
     ) {
         indent(indent)
@@ -658,14 +666,14 @@ private class LmModuleWriter(
         if (buildFeatures.viewBinding) {
             printer.printAttribute("viewBinding", VALUE_TRUE, indent)
         }
-        if (buildFeatures.namespacingMode != LmNamespacingMode.DISABLED) {
+        if (buildFeatures.namespacingMode != LintModelNamespacingMode.DISABLED) {
             printer.printAttribute("namespacing", buildFeatures.namespacingMode.name, indent)
         }
         printer.println("/>")
     }
 
     private fun writeLintOptions(
-        lintOptions: LmLintOptions,
+        lintOptions: LintModelLintOptions,
         indent: Int
     ) {
         indent(indent)
@@ -749,7 +757,7 @@ private class LmModuleWriter(
     }
 
     private fun writeSeverityOverrides(
-        severityOverrides: Map<String, LmSeverity>?,
+        severityOverrides: Map<String, LintModelSeverity>?,
         indent: Int
     ): Boolean {
         severityOverrides ?: return false
@@ -771,16 +779,16 @@ private class LmModuleWriter(
     }
 }
 
-private class LmVariantWriter(
-    adapter: LmSerializationAdapter,
+private class LintModelVariantWriter(
+    adapter: LintModelSerializationAdapter,
     private val variantName: String,
     writer: Writer = adapter.getWriter(TargetFile.VARIANT, variantName)
-) : LmWriter(
+) : LintModelWriter(
     adapter,
     PrintWriter(writer)
 ) {
     fun writeVariant(
-        variant: LmVariant,
+        variant: LintModelVariant,
         writeDependencies: Boolean = true,
         createdBy: String? = null
     ) {
@@ -847,7 +855,7 @@ private class LmVariantWriter(
         printer.println("</manifestPlaceholders>")
     }
 
-    private fun writeResValues(resValues: Map<String, LmResourceField>, indent: Int) {
+    private fun writeResValues(resValues: Map<String, LintModelResourceField>, indent: Int) {
         if (resValues.isEmpty()) {
             return
         }
@@ -867,7 +875,7 @@ private class LmVariantWriter(
     }
 
     private fun writeArtifact(
-        artifact: LmArtifact,
+        artifact: LintModelArtifact,
         tag: String,
         indent: Int,
         writeDependencies: Boolean
@@ -877,7 +885,7 @@ private class LmVariantWriter(
         printer.print(tag)
 
         printer.printFiles("classOutputs", artifact.classOutputs, indent)
-        if (artifact is LmAndroidArtifact) {
+        if (artifact is LintModelAndroidArtifact) {
             printer.printAttribute("applicationId", artifact.applicationId, indent)
             printer.printFiles("generatedSourceFolders", artifact.generatedSourceFolders, indent)
             printer.printFiles(
@@ -894,10 +902,10 @@ private class LmVariantWriter(
         printer.println(">")
 
         if (writeDependencies) {
-            val dependencyWriter = LmDependenciesWriter(adapter, variantName, tag)
+            val dependencyWriter = LintModelDependenciesWriter(adapter, variantName, tag)
             dependencyWriter.writeDependencies(artifact.dependencies)
 
-            val libraryWriter = LmLibrariesWriter(adapter, variantName, tag)
+            val libraryWriter = LintModelLibrariesWriter(adapter, variantName, tag)
             libraryWriter.writeLibraries(
                 artifact.dependencies.getLibraryResolver(),
                 artifact.dependencies
@@ -906,18 +914,18 @@ private class LmVariantWriter(
     }
 }
 
-typealias LmPathVariables = List<Pair<String, File>>
+typealias LintModelPathVariables = List<Pair<String, File>>
 
-private class LmDependenciesWriter(
-    adapter: LmSerializationAdapter,
+private class LintModelDependenciesWriter(
+    adapter: LintModelSerializationAdapter,
     variantName: String,
     artifactName: String,
     writer: Writer = adapter.getWriter(TargetFile.DEPENDENCIES, variantName, artifactName)
-) : LmWriter(
+) : LintModelWriter(
     adapter,
     PrintWriter(writer)
 ) {
-    fun writeDependencies(dependencies: LmDependencies) {
+    fun writeDependencies(dependencies: LintModelDependencies) {
         val indent = 0
         indent(indent)
         printer.println("<dependencies>")
@@ -930,8 +938,9 @@ private class LmDependenciesWriter(
         printer.close()
     }
 
-    private fun writeDependencyGraph(tag: String, graph: LmDependencyGraph, indent: Int) {
-        val graphItems = LinkedHashMap<String, LmDependency>() // LinkedHashMap: preserve order
+    private fun writeDependencyGraph(tag: String, graph: LintModelDependencyGraph, indent: Int) {
+        val graphItems =
+            LinkedHashMap<String, LintModelDependency>() // LinkedHashMap: preserve order
         if (graph.roots.isEmpty()) {
             return
         }
@@ -954,7 +963,10 @@ private class LmDependenciesWriter(
         printer.println(">")
     }
 
-    private fun addDependencies(item: LmDependency, map: MutableMap<String, LmDependency>) {
+    private fun addDependencies(
+        item: LintModelDependency,
+        map: MutableMap<String, LintModelDependency>
+    ) {
         if (map.containsKey(item.artifactAddress)) {
             return
         }
@@ -966,7 +978,7 @@ private class LmDependenciesWriter(
         }
     }
 
-    private fun writeDependency(library: LmDependency, indent: Int) {
+    private fun writeDependency(library: LintModelDependency, indent: Int) {
         indent(indent)
         printer.print("<dependency")
         printer.printName(library.artifactAddress, indent)
@@ -985,12 +997,12 @@ private class LmDependenciesWriter(
     }
 }
 
-private class LmLibrariesWriter(
-    adapter: LmSerializationAdapter,
+private class LintModelLibrariesWriter(
+    adapter: LintModelSerializationAdapter,
     variantName: String,
     artifactName: String,
     writer: Writer = adapter.getWriter(TargetFile.LIBRARY_TABLE, variantName, artifactName)
-) : LmWriter(
+) : LintModelWriter(
     adapter,
     PrintWriter(writer)
 ) {
@@ -1000,8 +1012,8 @@ private class LmLibrariesWriter(
      * those referenced by the specific dependencies instance.
      */
     fun writeLibraries(
-        resolver: LmLibraryResolver,
-        filter: LmDependencies? = null
+        resolver: LintModelLibraryResolver,
+        filter: LintModelDependencies? = null
     ) {
         val indent = 0
         indent(indent)
@@ -1022,7 +1034,7 @@ private class LmLibrariesWriter(
         printer.close()
     }
 
-    private fun writeLibrary(library: LmLibrary, indent: Int) {
+    private fun writeLibrary(library: LintModelLibrary, indent: Int) {
         indent(indent)
         printer.print("<library")
         printer.printName(library.artifactAddress, indent)
@@ -1035,7 +1047,7 @@ private class LmLibrariesWriter(
         if (library.skipped) {
             printer.printAttribute("skipped", VALUE_TRUE, indent)
         }
-        if (library is LmAndroidLibrary) {
+        if (library is LintModelAndroidLibrary) {
             printer.printFile("folder", library.folder, indent)
             printer.printFile("manifest", library.manifest, indent, library.folder)
             printer.printFile("resFolder", library.resFolder, indent, library.folder)
@@ -1055,8 +1067,8 @@ private class LmLibrariesWriter(
     }
 }
 
-private abstract class LmReader(
-    protected val adapter: LmSerializationAdapter,
+private abstract class LintModelReader(
+    protected val adapter: LintModelSerializationAdapter,
     reader: Reader
 ) {
     protected abstract val path: String
@@ -1072,8 +1084,8 @@ private abstract class LmReader(
         return AndroidVersion(this)
     }
 
-    protected fun String.toMavenCoordinate(): LmMavenName? {
-        return LmMavenName.parse(this)
+    protected fun String.toMavenCoordinate(): LintModelMavenName? {
+        return LintModelMavenName.parse(this)
     }
 
     protected fun getLocation(): String {
@@ -1152,7 +1164,7 @@ private abstract class LmReader(
         } ?: emptyList()
     }
 
-    protected fun readSourceProvider(tag: String = "sourceProvider"): LmSourceProvider {
+    protected fun readSourceProvider(tag: String = "sourceProvider"): LintModelSourceProvider {
         expectTag(tag)
         val manifestFile = getRequiredFile("manifest")
         val javaDirectories = getFiles("javaDirectories")
@@ -1163,7 +1175,7 @@ private abstract class LmReader(
         val debugOnly = getOptionalBoolean("debugOnly", false)
         finishTag(tag)
 
-        return DefaultLmSourceProvider(
+        return DefaultLintModelSourceProvider(
             manifestFile = manifestFile,
             javaDirectories = javaDirectories,
             resDirectories = resDirectories,
@@ -1174,10 +1186,10 @@ private abstract class LmReader(
         )
     }
 
-    protected fun readSourceProviders(tag: String): List<LmSourceProvider> {
+    protected fun readSourceProviders(tag: String): List<LintModelSourceProvider> {
         expectTag(tag)
 
-        val sourceProviders = mutableListOf<LmSourceProvider>()
+        val sourceProviders = mutableListOf<LintModelSourceProvider>()
 
         while (parser.next() != END_DOCUMENT) {
             val eventType = parser.eventType
@@ -1196,35 +1208,35 @@ private abstract class LmReader(
     }
 }
 
-private class LmModuleReader(
-    adapter: LmSerializationAdapter
-) : LmReader(adapter, adapter.getReader(TargetFile.MODULE)) {
+private class LintModelModuleReader(
+    adapter: LintModelSerializationAdapter
+) : LintModelReader(adapter, adapter.getReader(TargetFile.MODULE)) {
     override val path: String
         get() = adapter.file(TargetFile.MODULE)?.path ?: "<unknown>"
 
-    private fun readBuildFeatures(): LmBuildFeatures {
+    private fun readBuildFeatures(): LintModelBuildFeatures {
         expectTag("buildFeatures")
         val coreLibraryDesugaringEnabled = getOptionalBoolean("coreLibraryDesugaring", false)
         val viewBinding = getOptionalBoolean("viewBinding", false)
         val namespacingMode =
-            getOptionalAttribute("nameSpacingMode")?.let { LmNamespacingMode.valueOf(it) }
-                ?: LmNamespacingMode.DISABLED
+            getOptionalAttribute("nameSpacingMode")?.let { LintModelNamespacingMode.valueOf(it) }
+                ?: LintModelNamespacingMode.DISABLED
 
         finishTag("buildFeatures")
-        return DefaultLmBuildFeatures(
+        return DefaultLintModelBuildFeatures(
             viewBinding = viewBinding,
             coreLibraryDesugaringEnabled = coreLibraryDesugaringEnabled,
             namespacingMode = namespacingMode
         )
     }
 
-    private fun readLintOptions(): LmLintOptions {
+    private fun readLintOptions(): LintModelLintOptions {
         expectTag("lintOptions")
         val isCheckTestSources = getOptionalBoolean("checkTestSources", false)
         val lintConfig = getOptionalFile("lintConfig")
         val isCheckDependencies = getOptionalBoolean("checkDependencies", false)
         val baselineFile = getOptionalFile("baselineFile")
-        var severityOverrides: Map<String, LmSeverity>? = null
+        var severityOverrides: Map<String, LintModelSeverity>? = null
         val enable = getStrings("enable").let {
             if (it.isNotEmpty()) it.toSet() else emptySet()
         }
@@ -1266,7 +1278,7 @@ private class LmModuleReader(
             }
         }
 
-        return DefaultLmLintOptions(
+        return DefaultLintModelLintOptions(
             checkTestSources = isCheckTestSources,
             lintConfig = lintConfig,
             checkDependencies = isCheckDependencies,
@@ -1296,10 +1308,10 @@ private class LmModuleReader(
         )
     }
 
-    private fun readSeverities(): Map<String, LmSeverity> {
+    private fun readSeverities(): Map<String, LintModelSeverity> {
         expectTag("severities")
 
-        val map = mutableMapOf<String, LmSeverity>()
+        val map = mutableMapOf<String, LintModelSeverity>()
         while (parser.next() != END_DOCUMENT) {
             val eventType = parser.eventType
             if (eventType == START_TAG) {
@@ -1307,7 +1319,7 @@ private class LmModuleReader(
                     "severity" -> {
                         val id = getRequiredAttribute("id")
                         val severityString = getRequiredAttribute("severity")
-                        val severity = LmSeverity.fromName(severityString)
+                        val severity = LintModelSeverity.fromName(severityString)
                             ?: error("Unexpected severity $severityString for id $id at ${getLocation()}")
                         map[id] = severity
                         finishTag("severity")
@@ -1326,16 +1338,16 @@ private class LmModuleReader(
     fun readModule(
         variantNames: List<String>? = null,
         readDependencies: Boolean
-    ): LmModule {
+    ): LintModelModule {
         try {
             parser.nextTag()
             expectTag("lint-module")
             val dir = getRequiredFile("dir")
             root = dir
             val name = getName()
-            val type = LmModuleType.valueOf(getRequiredAttribute("type"))
+            val type = LintModelModuleType.valueOf(getRequiredAttribute("type"))
             val mavenString = getOptionalAttribute("maven")?.let {
-                LmMavenName.parse(it)
+                LintModelMavenName.parse(it)
             }
             val gradleVersion = getOptionalAttribute("gradle")?.let { (GradleVersion.tryParse(it)) }
 
@@ -1346,10 +1358,10 @@ private class LmModuleReader(
             val javaSourceLevel = getRequiredAttribute("javaSourceLevel")
             val compileTarget = getRequiredAttribute("compileTarget")
             val neverShrinking = getOptionalBoolean("neverShrinking", false)
-            val variants = mutableListOf<LmVariant>()
+            val variants = mutableListOf<LintModelVariant>()
             val lintRuleJars = getFiles("lintRuleJars")
-            var lintOptions: LmLintOptions? = null
-            var buildFeatures: LmBuildFeatures? = null
+            var lintOptions: LintModelLintOptions? = null
+            var buildFeatures: LintModelBuildFeatures? = null
 
             loop@ while (parser.next() != END_DOCUMENT) {
                 val eventType = parser.eventType
@@ -1368,8 +1380,8 @@ private class LmModuleReader(
                 missingData()
             }
 
-            val module = DefaultLmModule(
-                loader = LmSerialization,
+            val module = DefaultLintModelModule(
+                loader = LintModelSerialization,
                 dir = dir,
                 modulePath = name,
                 type = type,
@@ -1420,15 +1432,15 @@ private class LmModuleReader(
     }
 
     private fun readVariantReference(
-        module: LmModule,
+        module: LintModelModule,
         variantNames: List<String>?,
         readDependencies: Boolean
-    ): LmVariant? {
+    ): LintModelVariant? {
         expectTag("variant")
         val variantName = getName()
         finishTag("variant")
         return if (variantNames == null || variantNames.contains(variantName)) {
-            val reader = LmVariantReader(adapter, variantName)
+            val reader = LintModelVariantReader(adapter, variantName)
             reader.readVariant(module, readDependencies)
         } else {
             null
@@ -1436,20 +1448,20 @@ private class LmModuleReader(
     }
 }
 
-private class LmVariantReader(
-    adapter: LmSerializationAdapter,
+private class LintModelVariantReader(
+    adapter: LintModelSerializationAdapter,
     private val variantName: String,
     reader: Reader = adapter.getReader(TargetFile.VARIANT, variantName)
-) : LmReader(adapter, reader) {
+) : LintModelReader(adapter, reader) {
     override val path: String
         get() = adapter.file(TargetFile.VARIANT, variantName)?.path ?: "<unknown>"
-    private val libraryResolverMap = mutableMapOf<String, LmLibrary>()
-    private val libraryResolver = DefaultLmLibraryResolver(libraryResolverMap)
+    private val libraryResolverMap = mutableMapOf<String, LintModelLibrary>()
+    private val libraryResolver = DefaultLintModelLibraryResolver(libraryResolverMap)
 
-    private fun readResValues(): Map<String, LmResourceField> {
+    private fun readResValues(): Map<String, LintModelResourceField> {
         expectTag("resValues")
 
-        val resValues: MutableMap<String, LmResourceField> = mutableMapOf()
+        val resValues: MutableMap<String, LintModelResourceField> = mutableMapOf()
 
         while (parser.next() != END_DOCUMENT) {
             val eventType = parser.eventType
@@ -1470,14 +1482,14 @@ private class LmVariantReader(
         return resValues
     }
 
-    private fun readResValue(): LmResourceField {
+    private fun readResValue(): LintModelResourceField {
         expectTag("resValue")
         val type = getRequiredAttribute("type")
         val name = getName()
         val value = getRequiredAttribute("value")
 
         finishTag("resValue")
-        return DefaultLmResourceField(type = type, name = name, value = value)
+        return DefaultLintModelResourceField(type = type, name = name, value = value)
     }
 
     private fun readManifestPlaceholders(): Map<String, String> {
@@ -1506,27 +1518,30 @@ private class LmVariantReader(
         return placeholders
     }
 
-    private fun readAndroidArtifact(tag: String, readDependencies: Boolean): LmAndroidArtifact {
+    private fun readAndroidArtifact(
+        tag: String,
+        readDependencies: Boolean
+    ): LintModelAndroidArtifact {
         return readArtifact(
             tag,
             android = true,
             readDependencies = readDependencies
-        ) as LmAndroidArtifact
+        ) as LintModelAndroidArtifact
     }
 
-    private fun readJavaArtifact(tag: String, readDependencies: Boolean): LmJavaArtifact {
+    private fun readJavaArtifact(tag: String, readDependencies: Boolean): LintModelJavaArtifact {
         return readArtifact(
             tag,
             android = false,
             readDependencies = readDependencies
-        ) as LmJavaArtifact
+        ) as LintModelJavaArtifact
     }
 
     private fun readArtifact(
         tag: String,
         android: Boolean,
         readDependencies: Boolean
-    ): LmArtifact {
+    ): LintModelArtifact {
         expectTag(tag)
 
         val classOutputs = getFiles("classOutputs")
@@ -1545,10 +1560,10 @@ private class LmVariantReader(
         }
         finishTag(tag)
 
-        val resolver: DefaultLmLibraryResolver
-        val dependencies: LmDependencies
+        val resolver: DefaultLintModelLibraryResolver
+        val dependencies: LintModelDependencies
         if (readDependencies) {
-            resolver = LmLibrariesReader(
+            resolver = LintModelLibrariesReader(
                 adapter, variantName = variantName, artifactName = tag
             ).readLibraries()
 
@@ -1557,13 +1572,13 @@ private class LmVariantReader(
                 artifactName = tag, resolver = resolver
             )
         } else {
-            resolver = DefaultLmLibraryResolver(emptyMap())
-            val empty = DefaultLmDependencyGraph(emptyList(), resolver)
-            dependencies = DefaultLmDependencies(empty, empty, resolver)
+            resolver = DefaultLintModelLibraryResolver(emptyMap())
+            val empty = DefaultLintModelDependencyGraph(emptyList(), resolver)
+            dependencies = DefaultLintModelDependencies(empty, empty, resolver)
         }
 
         return if (android) {
-            DefaultLmAndroidArtifact(
+            DefaultLintModelAndroidArtifact(
                 applicationId = applicationId,
                 generatedResourceFolders = generatedResourceFolders,
                 generatedSourceFolders = generatedSourceFolders,
@@ -1571,14 +1586,14 @@ private class LmVariantReader(
                 dependencies = dependencies
             )
         } else {
-            DefaultLmJavaArtifact(
+            DefaultLintModelJavaArtifact(
                 classFolders = classOutputs,
                 dependencies = dependencies
             )
         }
     }
 
-    fun readVariant(module: LmModule, readDependencies: Boolean = true): LmVariant {
+    fun readVariant(module: LintModelModule, readDependencies: Boolean = true): LintModelVariant {
         try {
             parser.nextTag()
             expectTag("variant")
@@ -1586,9 +1601,9 @@ private class LmVariantReader(
             val name = getName()
             val useSupportLibraryVectorDrawables =
                 getOptionalBoolean("useSupportLibraryVectorDrawables", false)
-            var mainArtifact: LmAndroidArtifact? = null
-            var testArtifact: LmJavaArtifact? = null
-            var androidTestArtifact: LmAndroidArtifact? = null
+            var mainArtifact: LintModelAndroidArtifact? = null
+            var testArtifact: LintModelJavaArtifact? = null
+            var androidTestArtifact: LintModelAndroidArtifact? = null
             val oldVariant: com.android.builder.model.Variant? = null
 
             val packageName = getOptionalAttribute("package")
@@ -1599,10 +1614,10 @@ private class LmVariantReader(
             val proguardFiles = getFiles("proguardFiles")
             val consumerProguardFiles = getFiles("consumerProguardFiles")
             val resourceConfigurations = getStrings("resourceConfigurations")
-            var resValues: Map<String, LmResourceField> = emptyMap()
+            var resValues: Map<String, LintModelResourceField> = emptyMap()
             var manifestPlaceholders: Map<String, String> = emptyMap()
-            var sourceProviders: List<LmSourceProvider> = emptyList()
-            var testSourceProviders: List<LmSourceProvider> = emptyList()
+            var sourceProviders: List<LintModelSourceProvider> = emptyList()
+            var testSourceProviders: List<LintModelSourceProvider> = emptyList()
 
             expectTag("variant")
 
@@ -1633,7 +1648,7 @@ private class LmVariantReader(
                 missingData()
             }
 
-            return DefaultLmVariant(
+            return DefaultLintModelVariant(
                 module = module,
                 name = name,
                 useSupportLibraryVectorDrawables = useSupportLibraryVectorDrawables,
@@ -1662,27 +1677,28 @@ private class LmVariantReader(
 }
 
 // per variant: <variant.xml>, <libraries.xml>, <dependencies.xml>
-private class LmDependenciesReader(
-    adapter: LmSerializationAdapter,
-    libraryResolver: DefaultLmLibraryResolver? = null,
+private class LintModelDependenciesReader(
+    adapter: LintModelSerializationAdapter,
+    libraryResolver: DefaultLintModelLibraryResolver? = null,
     private val variantName: String,
     private val artifactName: String,
     reader: Reader = adapter.getReader(TargetFile.DEPENDENCIES, variantName, artifactName)
-) : LmReader(adapter, reader) {
-    private val libraryResolverMap: MutableMap<String, LmLibrary> =
-        libraryResolver?.libraryMap as? MutableMap<String, LmLibrary> ?: mutableMapOf()
-    private val libraryResolver = libraryResolver ?: DefaultLmLibraryResolver(libraryResolverMap)
+) : LintModelReader(adapter, reader) {
+    private val libraryResolverMap: MutableMap<String, LintModelLibrary> =
+        libraryResolver?.libraryMap as? MutableMap<String, LintModelLibrary> ?: mutableMapOf()
+    private val libraryResolver =
+        libraryResolver ?: DefaultLintModelLibraryResolver(libraryResolverMap)
 
     override val path: String
         get() = adapter.file(TargetFile.DEPENDENCIES, variantName, artifactName)?.path
             ?: "<unknown>"
 
     @Suppress("MoveVariableDeclarationIntoWhen")
-    fun readDependencies(): LmDependencies {
+    fun readDependencies(): LintModelDependencies {
         parser.nextTag()
         expectTag("dependencies")
-        var compileDependencies: LmDependencyGraph? = null
-        var packageDependencies: LmDependencyGraph? = null
+        var compileDependencies: LintModelDependencyGraph? = null
+        var packageDependencies: LintModelDependencyGraph? = null
         while (parser.next() != END_DOCUMENT) {
             val eventType = parser.eventType
             if (eventType == START_TAG) {
@@ -1700,25 +1716,25 @@ private class LmDependenciesReader(
 
         // If omitted from the XML, the dependencies are empty
         if (compileDependencies == null) {
-            compileDependencies = DefaultLmDependencyGraph(emptyList(), libraryResolver)
+            compileDependencies = DefaultLintModelDependencyGraph(emptyList(), libraryResolver)
         }
 
         if (packageDependencies == null) {
-            packageDependencies = DefaultLmDependencyGraph(emptyList(), libraryResolver)
+            packageDependencies = DefaultLintModelDependencyGraph(emptyList(), libraryResolver)
         }
 
-        return DefaultLmDependencies(
+        return DefaultLintModelDependencies(
             compileDependencies = compileDependencies,
             packageDependencies = packageDependencies,
             libraryResolver = libraryResolver
         )
     }
 
-    private fun readDependencyGraph(tag: String): LmDependencyGraph {
+    private fun readDependencyGraph(tag: String): LintModelDependencyGraph {
         expectTag(tag)
 
         val rootList = getRequiredAttribute("roots").split(",")
-        val allNodes = mutableMapOf<String, LazyLmDependency>()
+        val allNodes = mutableMapOf<String, LazyLintModelDependency>()
 
         while (parser.next() != END_DOCUMENT) {
             val eventType = parser.eventType
@@ -1752,13 +1768,13 @@ private class LmDependenciesReader(
             }
         }
 
-        return DefaultLmDependencyGraph(
+        return DefaultLintModelDependencyGraph(
             roots = roots,
             libraryResolver = libraryResolver
         )
     }
 
-    private fun readGraphItem(): LazyLmDependency {
+    private fun readGraphItem(): LazyLintModelDependency {
         expectTag("dependency")
 
         val artifactAddress = getName()
@@ -1775,7 +1791,7 @@ private class LmDependenciesReader(
         val dependencyIds = getOptionalAttribute("dependencies") ?: ""
 
         finishTag("dependency")
-        return LazyLmDependency(
+        return LazyLintModelDependency(
             artifactName = artifactName,
             artifactAddress = artifactAddress,
             requestedCoordinates = requestedCoordinates,
@@ -1786,22 +1802,23 @@ private class LmDependenciesReader(
 }
 
 // per variant: <variant.xml>, <libraries.xml>, <dependencies.xml>
-private class LmLibrariesReader(
-    adapter: LmSerializationAdapter,
-    libraryResolver: DefaultLmLibraryResolver? = null,
+private class LintModelLibrariesReader(
+    adapter: LintModelSerializationAdapter,
+    libraryResolver: DefaultLintModelLibraryResolver? = null,
     private val variantName: String,
     private val artifactName: String,
     reader: Reader = adapter.getReader(TargetFile.LIBRARY_TABLE, variantName, artifactName)
-) : LmReader(adapter, reader) {
-    private val libraryResolverMap: MutableMap<String, LmLibrary> =
-        libraryResolver?.libraryMap as? MutableMap<String, LmLibrary> ?: mutableMapOf()
-    private val libraryResolver = libraryResolver ?: DefaultLmLibraryResolver(libraryResolverMap)
+) : LintModelReader(adapter, reader) {
+    private val libraryResolverMap: MutableMap<String, LintModelLibrary> =
+        libraryResolver?.libraryMap as? MutableMap<String, LintModelLibrary> ?: mutableMapOf()
+    private val libraryResolver =
+        libraryResolver ?: DefaultLintModelLibraryResolver(libraryResolverMap)
 
     override val path: String
         get() = adapter.file(TargetFile.DEPENDENCIES, variantName, artifactName)?.path
             ?: "<unknown>"
 
-    fun readLibraries(): DefaultLmLibraryResolver {
+    fun readLibraries(): DefaultLintModelLibraryResolver {
         parser.nextTag()
         expectTag("libraries")
 
@@ -1824,7 +1841,7 @@ private class LmLibrariesReader(
         return libraryResolver
     }
 
-    private fun readLibrary(): LmLibrary {
+    private fun readLibrary(): LintModelLibrary {
         expectTag("library")
         var android = false
 
@@ -1863,7 +1880,7 @@ private class LmLibrariesReader(
         finishTag("library")
 
         if (android) {
-            return DefaultLmAndroidLibrary(
+            return DefaultLintModelAndroidLibrary(
                 artifactAddress = artifactAddress,
                 jarFiles = jars,
                 manifest = manifestFile!!,
@@ -1881,7 +1898,7 @@ private class LmLibrariesReader(
                 resolvedCoordinates = resolved!!
             )
         } else {
-            return DefaultLmJavaLibrary(
+            return DefaultLintModelJavaLibrary(
                 artifactAddress = artifactAddress,
                 jarFiles = jars,
                 project = project,
@@ -1894,23 +1911,23 @@ private class LmLibrariesReader(
 }
 
 /**
- * Implementation of [LmDependency] with a mutable child list such that we
+ * Implementation of [LintModelDependency] with a mutable child list such that we
  * can initialize the [dependencies] child list after all nodes have been
  * read in (since some of the dependency id's can refer to elements that have
  * not been read in yet.)
  */
-private class LazyLmDependency(
+private class LazyLintModelDependency(
     artifactName: String,
     artifactAddress: String,
     requestedCoordinates: String?,
-    libraryResolver: LmLibraryResolver,
+    libraryResolver: LintModelLibraryResolver,
     val dependencyIds: String
-) : DefaultLmDependency(
+) : DefaultLintModelDependency(
     artifactName = artifactName,
     artifactAddress = artifactAddress,
     requestedCoordinates = requestedCoordinates,
     dependencies = emptyList(),
     libraryResolver = libraryResolver
 ) {
-    override var dependencies: MutableList<LmDependency> = mutableListOf()
+    override var dependencies: MutableList<LintModelDependency> = mutableListOf()
 }

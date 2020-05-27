@@ -52,9 +52,9 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LmLibrary;
-import com.android.tools.lint.model.LmMavenName;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelLibrary;
+import com.android.tools.lint.model.LintModelMavenName;
+import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.intellij.openapi.util.text.StringUtil;
@@ -208,16 +208,17 @@ public class FontDetector extends ResourceXmlDetector {
 
     private static void checkSupportLibraryVersion(
             @NonNull XmlContext context, @NonNull Element element) {
-        LmVariant variant = context.getMainProject().getBuildVariant();
+        LintModelVariant variant = context.getMainProject().getBuildVariant();
         if (variant == null) {
             return;
         }
-        LmLibrary library = variant.getMainArtifact().findCompileDependency(APPCOMPAT_LIB_ARTIFACT);
+        LintModelLibrary library =
+                variant.getMainArtifact().findCompileDependency(APPCOMPAT_LIB_ARTIFACT);
         if (library == null) {
             return;
         }
 
-        LmMavenName rc = library.getResolvedCoordinates();
+        LintModelMavenName rc = library.getResolvedCoordinates();
         GradleCoordinate version =
                 new GradleCoordinate(
                         SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, rc.getVersion());

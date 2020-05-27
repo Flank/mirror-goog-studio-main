@@ -20,22 +20,22 @@ import com.android.builder.model.AndroidProject
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeAndroidProjectImpl
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory
-import com.android.tools.lint.model.LmDependency
-import com.android.tools.lint.model.LmFactory
-import com.android.tools.lint.model.LmModule
-import com.android.tools.lint.model.LmModuleLoader
+import com.android.tools.lint.model.LintModelDependency
+import com.android.tools.lint.model.LintModelFactory
+import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelModuleLoader
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 class LintModuleLoader(
     private val plugin: BasePlugin<*, *>,
     private val registry: ToolingModelBuilderRegistry
-) : LmModuleLoader {
-    override fun getModule(library: LmDependency): LmModule? {
+) : LintModelModuleLoader {
+    override fun getModule(library: LintModelDependency): LintModelModule? {
         return null
     }
 
-    override fun getModule(path: String, factory: LmFactory?): LmModule? {
+    override fun getModule(path: String, factory: LintModelFactory?): LintModelModule? {
         val pluginProject = plugin.project
         val project = if (pluginProject.path == path)
             pluginProject
@@ -46,10 +46,10 @@ class LintModuleLoader(
 
     private fun createLintBuildModel(
         gradleProject: Project,
-        defaultFactory: LmFactory?
-    ): LmModule? {
+        defaultFactory: LintModelFactory?
+    ): LintModelModule? {
         val project = createAndroidProject(gradleProject)
-        val factory = defaultFactory ?: LmFactory()
+        val factory = defaultFactory ?: LintModelFactory()
         return factory.create(project, gradleProject.rootDir)
     }
 

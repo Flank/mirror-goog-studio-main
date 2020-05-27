@@ -39,7 +39,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelVariant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -332,7 +332,7 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
     private static String resolvePlaceHolder(
             @NonNull XmlContext context, @NonNull String hostname) {
         assert hostname.startsWith(SdkConstants.MANIFEST_PLACEHOLDER_PREFIX);
-        LmVariant variant = context.getProject().getBuildVariant();
+        LintModelVariant variant = context.getProject().getBuildVariant();
         if (variant != null) {
             Map<String, String> placeHolders = variant.getManifestPlaceholders();
             String name =

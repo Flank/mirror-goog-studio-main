@@ -237,8 +237,10 @@ internal class UElementVisitor constructor(
             val uastParser = context.uastParser
 
             val uFile = uastParser.parse(context) ?: run {
-                context.client.log(Severity.WARNING, null,
-                    "Lint could not build AST for ${context.file}; ignoring file")
+                context.client.log(
+                    Severity.WARNING, null,
+                    "Lint could not build AST for ${context.file}; ignoring file"
+                )
                 return
             }
 

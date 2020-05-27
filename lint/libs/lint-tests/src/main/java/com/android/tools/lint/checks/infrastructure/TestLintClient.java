@@ -76,18 +76,18 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LmModuleProject;
+import com.android.tools.lint.detector.api.LintModelModuleProject;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.tools.lint.model.LmFactory;
-import com.android.tools.lint.model.LmLibrary;
-import com.android.tools.lint.model.LmMavenName;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmSourceProvider;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelFactory;
+import com.android.tools.lint.model.LintModelLibrary;
+import com.android.tools.lint.model.LintModelMavenName;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelSourceProvider;
+import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
@@ -400,7 +400,7 @@ public class TestLintClient extends LintCliClient {
         Project project = new TestProject(this, dir, referenceDir, description, mocker);
 
         // Try to use the real lint model project instead, if possible
-        LmVariant buildVariant = project.getBuildVariant();
+        LintModelVariant buildVariant = project.getBuildVariant();
         if (buildVariant != null && !task.useTestProject) {
             // Make sure the test folders exist; this prevents the common mistake where you
             // add a gradle() test model but leave the source files in the old src/ and res/
@@ -414,7 +414,7 @@ public class TestLintClient extends LintCliClient {
                                 + "Alternatively, set useTestProjectImplementation(true) on the "
                                 + "lint task.");
             }
-            project = new LmModuleProject(this, dir, referenceDir, buildVariant, null);
+            project = new LintModelModuleProject(this, dir, referenceDir, buildVariant, null);
         }
 
         registerProject(dir, project);
@@ -1305,11 +1305,11 @@ public class TestLintClient extends LintCliClient {
         public Boolean dependsOn(@NonNull String artifact) {
             artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
 
-            LmVariant variant = getBuildVariant();
+            LintModelVariant variant = getBuildVariant();
             if (mocker != null && variant != null) {
                 // Simulate what the Gradle integration does
                 // TODO: Do this more effectively; we have direct library lookup
-                for (LmLibrary lib : variant.getMainArtifact().getDependencies().getAll()) {
+                for (LintModelLibrary lib : variant.getMainArtifact().getDependencies().getAll()) {
                     if (libraryMatches(artifact, lib)) {
                         return true;
                     }
@@ -1319,8 +1319,8 @@ public class TestLintClient extends LintCliClient {
             return super.dependsOn(artifact);
         }
 
-        private static boolean libraryMatches(@NonNull String artifact, LmLibrary lib) {
-            LmMavenName coordinates = lib.getResolvedCoordinates();
+        private static boolean libraryMatches(@NonNull String artifact, LintModelLibrary lib) {
+            LintModelMavenName coordinates = lib.getResolvedCoordinates();
             String c = coordinates.getGroupId() + ':' + coordinates.getArtifactId();
             c = AndroidxNameUtils.getCoordinateMapping(c);
             return artifact.equals(c);
@@ -1366,15 +1366,16 @@ public class TestLintClient extends LintCliClient {
 
         @Nullable
         @Override
-        public LmVariant getBuildVariant() {
+        public LintModelVariant getBuildVariant() {
             if (cachedLintVariant != null) {
                 return cachedLintVariant;
             }
             if (mocker != null) {
-                LmModule module =
-                        new LmFactory().create(mocker.getProject(), mocker.getProjectDir(), true);
+                LintModelModule module =
+                        new LintModelFactory()
+                                .create(mocker.getProject(), mocker.getProjectDir(), true);
                 cachedLintVariant = null;
-                for (LmVariant variant : module.getVariants()) {
+                for (LintModelVariant variant : module.getVariants()) {
                     if (variant.getOldVariant() == mocker.getVariant()) {
                         cachedLintVariant = variant;
                         break;
@@ -1388,13 +1389,13 @@ public class TestLintClient extends LintCliClient {
             return cachedLintVariant;
         }
 
-        @Nullable private LmVariant cachedLintVariant = null;
+        @Nullable private LintModelVariant cachedLintVariant = null;
 
-        private List<LmSourceProvider> mProviders;
+        private List<LintModelSourceProvider> mProviders;
 
-        private List<LmSourceProvider> getSourceProviders() {
+        private List<LintModelSourceProvider> getSourceProviders() {
             if (mProviders == null) {
-                LmVariant variant = getBuildVariant();
+                LintModelVariant variant = getBuildVariant();
                 if (variant == null) {
                     mProviders = Collections.emptyList();
                 } else {
@@ -1411,7 +1412,7 @@ public class TestLintClient extends LintCliClient {
             if (manifestFiles == null) {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
-                    for (LmSourceProvider provider : getSourceProviders()) {
+                    for (LintModelSourceProvider provider : getSourceProviders()) {
                         File manifestFile = provider.getManifestFile();
                         if (manifestFile.exists()) { // model returns path whether or not it exists
                             if (manifestFiles == null) {
@@ -1436,7 +1437,7 @@ public class TestLintClient extends LintCliClient {
             if (resourceFolders == null) {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
-                    for (LmSourceProvider provider : getSourceProviders()) {
+                    for (LintModelSourceProvider provider : getSourceProviders()) {
                         Collection<File> list = provider.getResDirectories();
                         for (File file : list) {
                             if (file.exists()) { // model returns path whether or not it exists
@@ -1463,7 +1464,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     List<File> list = Lists.newArrayList();
-                    for (LmSourceProvider provider : getSourceProviders()) {
+                    for (LintModelSourceProvider provider : getSourceProviders()) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
                         for (File srcDir : srcDirs) {
@@ -1528,11 +1529,11 @@ public class TestLintClient extends LintCliClient {
         @Override
         public List<File> getTestSourceFolders() {
             if (testSourceFolders == null) {
-                LmVariant variant = getBuildVariant();
+                LintModelVariant variant = getBuildVariant();
                 if (mocker != null && variant != null) {
                     testSourceFolders = Lists.newArrayList();
 
-                    for (LmSourceProvider provider : variant.getTestSourceProviders()) {
+                    for (LintModelSourceProvider provider : variant.getTestSourceProviders()) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
                         for (File srcDir : srcDirs) {
