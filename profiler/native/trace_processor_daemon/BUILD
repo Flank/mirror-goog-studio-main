@@ -12,6 +12,7 @@ cc_binary(
         ":trace_processor_service_impl",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/time",
     ],
 )
 
