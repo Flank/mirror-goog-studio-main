@@ -27,6 +27,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KClass
 
 /**
  * Services for the DSL objects.
@@ -56,7 +57,7 @@ interface DslServices: BaseServices {
 
     fun <T> provider(type: Class<T>, value: T?): Provider<T>
 
-    fun <T> newVar(initialValue: T): ReadWriteProperty<Any?, T>
-
     fun file(file: Any): File
+
+    fun <T: Any> newDecoratedInstance(dslClass: Class<T>, vararg args: Any) : T
 }

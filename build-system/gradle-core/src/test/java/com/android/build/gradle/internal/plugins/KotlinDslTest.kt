@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
@@ -65,15 +66,15 @@ class KotlinDslTest {
     @Test
     fun testDslLocking() {
         plugin.createAndroidTasks()
-        val exception = assertFailsWith(EvalIssueException::class) {
+        val exception = assertFailsWith(AgpDslLockedException::class) {
             android.compileSdk = 28
         }
         assertThat(exception).hasMessageThat().isEqualTo(
             """
-                It is too late to set property '_compileSdkVersion' to 'android-28'. (It has value 'android-${TestConstants.COMPILE_SDK_VERSION}')
-                The DSL is now locked as the variants have been created.
-                Either move this call earlier, or use the variant API to customize individual variants.
-                """.trimIndent()
+                It is too late to set compileSdkVersion
+                It has already been read to configure this project.
+                Consider either moving this call to be during evaluation,
+                or using the variant API.""".trimIndent()
         )
     }
 

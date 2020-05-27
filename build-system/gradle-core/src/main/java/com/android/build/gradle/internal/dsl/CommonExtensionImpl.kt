@@ -68,7 +68,7 @@ abstract class CommonExtensionImpl<
         dslServices.newInstance(
             SdkComponentsImpl::class.java,
             dslServices,
-            dslServices.provider(String::class.java, _compileSdkVersion),
+            dslServices.provider(String::class.java, compileSdkVersion),
             dslServices.provider(Revision::class.java, buildToolsRevision),
             dslServices.provider(String::class.java, ndkVersion),
             dslServices.provider(String::class.java, ndkPath)
@@ -122,16 +122,16 @@ abstract class CommonExtensionImpl<
         action.invoke(compileOptions)
     }
 
-    private var _compileSdkVersion: String? by dslServices.newVar(null)
+    protected abstract var compileSdkVersion: String?
 
     override var compileSdk: Int?
         get() {
-            if (_compileSdkVersion == null) {
+            if (compileSdkVersion == null) {
                 return null
             }
-            if (_compileSdkVersion!!.startsWith("android-")) {
+            if (compileSdkVersion!!.startsWith("android-")) {
                 return try {
-                    Integer.valueOf(_compileSdkVersion!!.substring(8))
+                    Integer.valueOf(compileSdkVersion!!.substring(8))
                 } catch (e: Exception) {
                     null
                 }
@@ -139,17 +139,17 @@ abstract class CommonExtensionImpl<
             return null
         }
         set(value) {
-            _compileSdkVersion = if (value == null) null
+            compileSdkVersion = if (value == null) null
             else "android-$value"
         }
     override var compileSdkPreview: String?
-        get() = _compileSdkVersion
+        get() = compileSdkVersion
         set(value) {
-            _compileSdkVersion = value
+            compileSdkVersion = value
         }
 
     override fun compileSdkAddon(vendor: String, name: String, version: Int) {
-        _compileSdkVersion = "$vendor:$name:$version"
+        compileSdkVersion = "$vendor:$name:$version"
     }
 
     override val composeOptions: ComposeOptionsImpl =

@@ -59,7 +59,7 @@ com.android.build.gradle.AssetPackPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.AssetPackPluginKt
 com.android.build.gradle.AssetPackPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.AssetPackPluginKt.getVERSION_CHECK_PLUGIN_ID: java.util.Map<java.lang.String, java.lang.String> ()
-com.android.build.gradle.BaseExtension implements com.android.build.gradle.AndroidConfig
+com.android.build.gradle.BaseExtension implements com.android.build.gradle.AndroidConfig, com.android.build.gradle.internal.dsl.Lockable
 com.android.build.gradle.BaseExtension.aaptOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AaptOptions>)
 com.android.build.gradle.BaseExtension.adbOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AdbOptions>)
 com.android.build.gradle.BaseExtension.addVariant: void (com.android.build.gradle.api.BaseVariant)
@@ -252,6 +252,7 @@ com.android.build.gradle.LibraryExtension.getViewBinding: com.android.build.grad
 com.android.build.gradle.LibraryExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.lintOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LintOptions, kotlin.Unit>)
+com.android.build.gradle.LibraryExtension.lock: void ()
 com.android.build.gradle.LibraryExtension.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PackagingOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.LibraryExtension.release: void (org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.BuildType, kotlin.Unit>)
@@ -382,6 +383,7 @@ com.android.build.gradle.TestExtension.getViewBinding: com.android.build.gradle.
 com.android.build.gradle.TestExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.gradle.TestExtension.lintOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LintOptions, kotlin.Unit>)
+com.android.build.gradle.TestExtension.lock: void ()
 com.android.build.gradle.TestExtension.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PackagingOptions, kotlin.Unit>)
 com.android.build.gradle.TestExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.TestExtension.release: void (org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.BuildType, kotlin.Unit>)
@@ -664,6 +666,8 @@ com.android.build.gradle.internal.dsl.AdbOptions.setInstallOptions: void (java.l
 com.android.build.gradle.internal.dsl.AdbOptions.setInstallOptions: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.AdbOptions.setTimeOutInMs: void (int)
 com.android.build.gradle.internal.dsl.AdbOptions.timeOutInMs: void (int)
+com.android.build.gradle.internal.dsl.AgpDslLockedException extends java.lang.RuntimeException
+com.android.build.gradle.internal.dsl.AgpDslLockedException.<init>: com.android.build.gradle.internal.dsl.AgpDslLockedException (java.lang.String)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions implements com.android.build.gradle.api.AnnotationProcessorOptions, com.android.build.api.dsl.AnnotationProcessorOptions
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.<init>: com.android.build.gradle.internal.dsl.AnnotationProcessorOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions._initWith: void (com.android.build.gradle.api.AnnotationProcessorOptions)
@@ -763,6 +767,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getViewBinding: com
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.lintOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LintOptions, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.lock: void ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PackagingOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.release: void (org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.BuildType, kotlin.Unit>)
@@ -1194,6 +1199,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getViewBinding: co
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JacocoOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.lintOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LintOptions, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.lock: void ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PackagingOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.release: void (org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>, kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.BuildType, kotlin.Unit>)
@@ -1296,7 +1302,7 @@ com.android.build.gradle.internal.dsl.InternalApplicationExtension.getAssetPacks
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
-com.android.build.gradle.internal.dsl.InternalCommonExtension implements com.android.build.api.dsl.CommonExtension
+com.android.build.gradle.internal.dsl.InternalCommonExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.gradle.internal.dsl.Lockable
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getAdbOptions: com.android.build.gradle.internal.dsl.AdbOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
@@ -1411,6 +1417,8 @@ com.android.build.gradle.internal.dsl.LintOptions.textOutput: void (java.io.File
 com.android.build.gradle.internal.dsl.LintOptions.textOutput: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.warning: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.Lockable
+com.android.build.gradle.internal.dsl.Lockable.lock: void ()
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice implements com.android.build.api.dsl.ManagedVirtualDevice
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.<init>: com.android.build.gradle.internal.dsl.ManagedVirtualDevice (java.lang.String)
 com.android.build.gradle.internal.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()

@@ -18,7 +18,6 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
@@ -69,10 +68,9 @@ fun createProjectServices(
 @JvmOverloads
 fun createDslServices(
     projectServices: ProjectServices = createProjectServices(),
-    dslVariableFactory: DslVariableFactory = DslVariableFactory(projectServices.issueReporter),
     sdkComponents: Provider<SdkComponentsBuildService> = FakeGradleProvider(null)
 ): DslServices {
-    return DslServicesImpl(projectServices, dslVariableFactory, sdkComponents)
+    return DslServicesImpl(projectServices, sdkComponents)
 }
 
 @JvmOverloads

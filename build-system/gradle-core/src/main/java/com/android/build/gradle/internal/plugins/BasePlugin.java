@@ -57,7 +57,6 @@ import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.build.gradle.internal.dsl.DslVariableFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
@@ -426,7 +425,6 @@ public abstract class BasePlugin<
         dslServices =
                 new DslServicesImpl(
                         projectServices,
-                        new DslVariableFactory(syncIssueReporter),
                         sdkComponentsBuildService);
 
         MessageReceiverImpl messageReceiver =
@@ -681,7 +679,6 @@ public abstract class BasePlugin<
         hasCreatedTasks = true;
 
         extension.disableWrite();
-        dslServices.getVariableFactory().disableWrite();
 
         GradleBuildProject.Builder projectBuilder =
                 configuratorService.getProjectBuilder(project.getPath());

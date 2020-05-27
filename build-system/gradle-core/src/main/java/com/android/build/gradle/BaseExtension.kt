@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DexOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.build.gradle.internal.dsl.Lockable
 import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -102,7 +103,7 @@ abstract class BaseExtension protected constructor(
     private val sourceSetManager: SourceSetManager,
     private val extraModelInfo: ExtraModelInfo,
     private val isBaseModule: Boolean
-) : AndroidConfig {
+) : AndroidConfig, Lockable {
 
     private val _transforms: MutableList<Transform> = mutableListOf()
     /** Secondary dependencies for the custom transform. */
@@ -149,6 +150,7 @@ abstract class BaseExtension protected constructor(
      */
     fun disableWrite() {
         isWritable = false
+        lock()
     }
 
     protected fun checkWritability() {

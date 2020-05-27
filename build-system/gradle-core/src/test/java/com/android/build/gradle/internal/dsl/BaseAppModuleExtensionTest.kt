@@ -16,26 +16,23 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.ApplicationVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.decorator.DslDecorator
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.ProjectFactory
+import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager
 import com.android.builder.core.VariantTypeImpl
-import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.junit.Before
-import org.junit.Test
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 
 /**
  * Tests for [BaseAppModuleExtension]
@@ -59,10 +56,9 @@ class BaseAppModuleExtensionTest {
             )
         )
 
-        val extension = ApplicationExtensionImpl(
-            dslServices = dslServices,
-            dslContainers = variantInputModel
-        )
+        val extension = DslDecorator().decorate(ApplicationExtensionImpl::class)
+            .getDeclaredConstructor(DslServices::class.java, DslContainerProvider::class.java)
+            .newInstance(dslServices, variantInputModel)
 
         appExtension = BaseAppModuleExtension(
             dslServices,
