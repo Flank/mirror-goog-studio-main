@@ -19,7 +19,6 @@ package com.android.ddmlib.internal.jdwp;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import java.io.EOFException;
 import java.io.IOException;
@@ -83,7 +82,7 @@ public class JdwpProxyClient implements JdwpSocketHandler {
       shutdown();
       throw new EOFException("Client Disconnected");
     }
-    Log.v("JdwpProxyClient", "CLIENT READ (" + hashCode() + "): " + new String(mBuffer, 0, Math.min(100, count)));
+        JdwpLoggingUtils.log("CLIENT", "READ", mBuffer, count);
     String data = new String(mBuffer, 0, count);
     String body = data.length() > 4 ? data.substring(4) : "";
 
@@ -130,7 +129,7 @@ public class JdwpProxyClient implements JdwpSocketHandler {
   }
 
   public void write(byte[] data, int length) throws IOException, TimeoutException {
-    Log.v("JdwpProxyClient", "CLIENT WRITE (" + hashCode() + "): " + new String(data, 0, Math.min(100, length)));
+        JdwpLoggingUtils.log("CLIENT", "WRITE", mBuffer, length);
     AdbHelper.write(mClientImplSocket, data, length, DdmPreferences.getTimeOut());
   }
 
