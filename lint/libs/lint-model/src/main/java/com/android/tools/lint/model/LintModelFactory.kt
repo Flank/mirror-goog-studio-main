@@ -52,10 +52,10 @@ import com.android.builder.model.level2.Library as LibraryL2
 /**
  * Converter from the builder model library to lint's own model.
  */
-class LmFactory : LmModuleLoader {
+class LintModelFactory : LintModelModuleLoader {
     init {
         // We're just copying by value so make sure our constants match
-        assert(LmMavenName.LOCAL_AARS == IdeMavenCoordinates.LOCAL_AARS)
+        assert(LintModelMavenName.LOCAL_AARS == IdeMavenCoordinates.LOCAL_AARS)
     }
 
     /**
@@ -64,10 +64,10 @@ class LmFactory : LmModuleLoader {
      * recursively include dependencies), since libraries are repeated quite a lot,
      * including across variants
      */
-    private val libraryMap = LinkedHashMap<Library, LmLibrary>()
+    private val libraryMap = LinkedHashMap<Library, LintModelLibrary>()
 
-    private val libraryResolverMap = mutableMapOf<String, LmLibrary>()
-    private val libraryResolver = DefaultLmLibraryResolver(libraryResolverMap)
+    private val libraryResolverMap = mutableMapOf<String, LintModelLibrary>()
+    private val libraryResolver = DefaultLintModelLibraryResolver(libraryResolverMap)
 
     /**
      * Kotlin source folders to merge in for the main source set. This should <b>not</b>
@@ -77,10 +77,10 @@ class LmFactory : LmModuleLoader {
     var kotlinSourceFolderLookup: ((variantName: String) -> List<File>)? = null
 
     /**
-     * Factory from an XML file to a [LmModule].
-     * The file was previously saved by [LmSerialization.writeModule].
+     * Factory from an XML file to a [LintModelModule].
+     * The file was previously saved by [LintModelSerialization.writeModule].
      */
-    fun create(xmlFile: File): LmModule = LmSerialization.readModule(xmlFile)
+    fun create(xmlFile: File): LintModelModule = LintModelSerialization.readModule(xmlFile)
 
     /**
      * Converter from the builder model library to lint's own model.
@@ -94,8 +94,8 @@ class LmFactory : LmModuleLoader {
      * to be used anyway there's no benefit in the additional overhead
      * of lazy lookup.
      */
-    fun create(project: IdeAndroidProject, dir: File, deep: Boolean = true): LmModule {
-        val cached = project.getClientProperty(CACHE_KEY) as? LmModule
+    fun create(project: IdeAndroidProject, dir: File, deep: Boolean = true): LintModelModule {
+        val cached = project.getClientProperty(CACHE_KEY) as? LintModelModule
         if (cached != null) {
             return cached
         }
@@ -103,8 +103,8 @@ class LmFactory : LmModuleLoader {
         val gradleVersion = getGradleVersion(project)
 
         return if (deep) {
-            val variantList = mutableListOf<LmVariant>()
-            val module = DefaultLmModule(
+            val variantList = mutableListOf<LintModelVariant>()
+            val module = DefaultLintModelModule(
                 loader = this,
                 dir = dir,
                 modulePath = project.name,
@@ -131,7 +131,7 @@ class LmFactory : LmModuleLoader {
 
             module
         } else {
-            LazyLmModule(
+            LazyLintModelModule(
                 loader = this,
                 project = project,
                 dir = dir,
@@ -158,11 +158,10 @@ class LmFactory : LmModuleLoader {
         )
     )
 
-
     private fun getDependencies(
         graph: DependencyGraphs,
         globalLibraryMap: GlobalLibraryMap
-    ): LmDependencies {
+    ): LintModelDependencies {
         val provided = graph.providedLibraries.toSet()
         val skipped = graph.skippedLibraries.toSet()
 
@@ -189,18 +188,22 @@ class LmFactory : LmModuleLoader {
             libraryResolver = libraryResolver
         )
 
-        return DefaultLmDependencies(
+        return DefaultLintModelDependencies(
             compileDependencies = compileDependencies,
             packageDependencies = packageDependencies,
             libraryResolver = libraryResolver
         )
     }
 
-    private fun getLibrary(library: LibraryL2, provided: Boolean, skipped: Boolean): LmLibrary {
+    private fun getLibrary(
+        library: LibraryL2,
+        provided: Boolean,
+        skipped: Boolean
+    ): LintModelLibrary {
         return when (library.type) {
             LibraryL2.LIBRARY_ANDROID -> {
                 // TODO: Construct file objects lazily!
-                DefaultLmAndroidLibrary(
+                DefaultLintModelAndroidLibrary(
                     artifactAddress = library.artifactAddress,
                     manifest = File(library.manifest),
                     // TODO - expose compile jar vs impl jar?
@@ -220,7 +223,7 @@ class LmFactory : LmModuleLoader {
                 )
             }
             LibraryL2.LIBRARY_JAVA -> {
-                DefaultLmJavaLibrary(
+                DefaultLintModelJavaLibrary(
                     artifactAddress = library.artifactAddress,
                     // TODO - expose compile jar vs impl jar?
                     jarFiles = (library.localJars + library.jarFile).map { File(it) },
@@ -242,17 +245,17 @@ class LmFactory : LmModuleLoader {
     private fun getDependencies(
         items: List<GraphItem>,
         graph: DependencyGraphs,
-        libraryResolver: LmLibraryResolver
-    ): LmDependencyGraph {
+        libraryResolver: LintModelLibraryResolver
+    ): LintModelDependencyGraph {
         val list = getGraphItems(items, graph, libraryResolver)
-        return DefaultLmDependencyGraph(roots = list, libraryResolver = libraryResolver)
+        return DefaultLintModelDependencyGraph(roots = list, libraryResolver = libraryResolver)
     }
 
     private fun getGraphItems(
         items: List<GraphItem>,
         graph: DependencyGraphs,
-        libraryResolver: LmLibraryResolver
-    ): List<LmDependency> {
+        libraryResolver: LintModelLibraryResolver
+    ): List<LintModelDependency> {
         return when {
             items.isEmpty() -> emptyList()
             else -> items.map {
@@ -264,9 +267,9 @@ class LmFactory : LmModuleLoader {
     private fun getGraphItem(
         graphItem: GraphItem,
         graph: DependencyGraphs,
-        libraryResolver: LmLibraryResolver
-    ): LmDependency {
-        return DefaultLmDependency(
+        libraryResolver: LintModelLibraryResolver
+    ): LintModelDependency {
+        return DefaultLintModelDependency(
             artifactName = getArtifactName(graphItem),
             artifactAddress = graphItem.artifactAddress,
             requestedCoordinates = graphItem.requestedCoordinates,
@@ -299,14 +302,14 @@ class LmFactory : LmModuleLoader {
     private fun getGraphItem(
         library: Library,
         skipProvided: Boolean
-    ): LmDependency {
+    ): LintModelDependency {
         val artifactAddress = getArtifactAddress(library.resolvedCoordinates)
 
         libraryResolverMap[artifactAddress] ?: run {
             libraryResolverMap[artifactAddress] = getLibrary(library)
         }
 
-        return DefaultLmDependency(
+        return DefaultLintModelDependency(
             artifactName = getArtifactName(artifactAddress),
             artifactAddress = artifactAddress,
             requestedCoordinates = library.requestedCoordinates?.toString(),
@@ -326,7 +329,7 @@ class LmFactory : LmModuleLoader {
     private fun getGraphItems(
         items: List<Library>,
         skipProvided: Boolean
-    ): List<LmDependency> {
+    ): List<LintModelDependency> {
         return if (items.isEmpty()) {
             emptyList()
         } else {
@@ -341,9 +344,9 @@ class LmFactory : LmModuleLoader {
 
     private fun getDependencies(
         artifact: IdeBaseArtifact
-    ): LmDependencies {
-        val compileItems = ArrayList<LmDependency>()
-        val packagedItems = ArrayList<LmDependency>()
+    ): LintModelDependencies {
+        val compileItems = ArrayList<LintModelDependency>()
+        val packagedItems = ArrayList<LintModelDependency>()
         val dependencies = artifact.dependencies
         for (dependency in dependencies.libraries) {
             if (dependency.isValid()) {
@@ -366,23 +369,23 @@ class LmFactory : LmModuleLoader {
         // for (module in dependencies.javaModules) {
         // }
 
-        val compileDependencies = DefaultLmDependencyGraph(compileItems, libraryResolver)
-        val packageDependencies = DefaultLmDependencyGraph(packagedItems, libraryResolver)
+        val compileDependencies = DefaultLintModelDependencyGraph(compileItems, libraryResolver)
+        val packageDependencies = DefaultLintModelDependencyGraph(packagedItems, libraryResolver)
 
-        return DefaultLmDependencies(
+        return DefaultLintModelDependencies(
             compileDependencies = compileDependencies,
             packageDependencies = packageDependencies,
             libraryResolver = libraryResolver
         )
     }
 
-    private fun getLibrary(library: JavaLibrary): LmLibrary {
+    private fun getLibrary(library: JavaLibrary): LintModelLibrary {
         libraryMap[library]?.let { return it }
-        val dependencies = ArrayList<LmLibrary>()
+        val dependencies = ArrayList<LintModelLibrary>()
         for (javaLibrary in library.dependencies) {
             dependencies.add(getLibrary(javaLibrary))
         }
-        val new = DefaultLmJavaLibrary(
+        val new = DefaultLintModelJavaLibrary(
             artifactAddress = getArtifactAddress(library.resolvedCoordinates),
             project = library.project,
             jarFiles = listOf(library.jarFile),
@@ -399,7 +402,7 @@ class LmFactory : LmModuleLoader {
         return resolvedCoordinates != null
     }
 
-    private fun getLibrary(library: Library): LmLibrary {
+    private fun getLibrary(library: Library): LintModelLibrary {
         libraryMap[library]?.let { return it }
         return when (library) {
             is AndroidLibrary -> getLibrary(library)
@@ -408,11 +411,11 @@ class LmFactory : LmModuleLoader {
         }
     }
 
-    private fun getLibrary(library: AndroidLibrary): LmLibrary {
+    private fun getLibrary(library: AndroidLibrary): LintModelLibrary {
         libraryMap[library]?.let { return it }
 
         @Suppress("DEPRECATION")
-        val new = DefaultLmAndroidLibrary(
+        val new = DefaultLintModelAndroidLibrary(
             manifest = library.manifest,
             jarFiles = library.localJars + library.jarFile,
             folder = library.folder, // Needed for workaround for b/66166521
@@ -465,8 +468,8 @@ class LmFactory : LmModuleLoader {
 
     private fun getArtifact(
         artifact: IdeAndroidArtifact
-    ): LmAndroidArtifact {
-        return DefaultLmAndroidArtifact(
+    ): LintModelAndroidArtifact {
+        return DefaultLintModelAndroidArtifact(
             applicationId = artifact.applicationId,
             dependencies = getDependencies(artifact),
             generatedSourceFolders = artifact.generatedSourceFolders,
@@ -477,8 +480,8 @@ class LmFactory : LmModuleLoader {
 
     private fun getArtifact(
         artifact: IdeJavaArtifact
-    ): LmJavaArtifact {
-        return DefaultLmJavaArtifact(
+    ): LintModelJavaArtifact {
+        return DefaultLintModelJavaArtifact(
             dependencies = getDependencies(artifact),
             classFolders = artifact.getClassFolders()
         )
@@ -501,12 +504,12 @@ class LmFactory : LmModuleLoader {
     }
 
     private fun getVariant(
-        module: LmModule,
+        module: LintModelModule,
         project: IdeAndroidProject,
         variant: IdeVariant
-    ): LmVariant {
+    ): LintModelVariant {
         val buildType = getBuildType(project, variant)
-        return DefaultLmVariant(
+        return DefaultLintModelVariant(
             module = module,
             name = variant.name,
             useSupportLibraryVectorDrawables = useSupportLibraryVectorDrawables(variant),
@@ -551,14 +554,14 @@ class LmFactory : LmModuleLoader {
         return variant.mergedFlavor.resourceConfigurations
     }
 
-    private fun getAndroidTestArtifact(variant: IdeVariant): LmAndroidArtifact? {
+    private fun getAndroidTestArtifact(variant: IdeVariant): LintModelAndroidArtifact? {
         val artifact = variant.extraAndroidArtifacts.firstOrNull {
             it.name == AndroidProject.ARTIFACT_ANDROID_TEST
         } ?: return null
         return getArtifact(artifact)
     }
 
-    private fun getTestArtifact(variant: IdeVariant): LmJavaArtifact? {
+    private fun getTestArtifact(variant: IdeVariant): LintModelJavaArtifact? {
         val artifact = variant.extraJavaArtifacts.firstOrNull {
             it.name == AndroidProject.ARTIFACT_UNIT_TEST
         } ?: return null
@@ -568,13 +571,13 @@ class LmFactory : LmModuleLoader {
     private fun computeSourceProviders(
         project: IdeAndroidProject,
         variant: Variant
-    ): List<LmSourceProvider> {
-        val providers = mutableListOf<LmSourceProvider>()
+    ): List<LintModelSourceProvider> {
+        val providers = mutableListOf<LintModelSourceProvider>()
 
         // Instead of just
         //  providers.add(getSourceProvider(project.defaultConfig.sourceProvider))
         // we need to merge in any Kotlin source folders for now
-        var mainProvider: LmSourceProvider? = null
+        var mainProvider: LintModelSourceProvider? = null
         val kotlinSourceFolders = kotlinSourceFolderLookup?.invoke(variant.name)
             ?: emptyList()
         if (kotlinSourceFolders.isNotEmpty()) {
@@ -583,7 +586,7 @@ class LmFactory : LmModuleLoader {
                 val extra = kotlinSourceFolders.toMutableList()
                 extra.removeAll(provider.javaDirectories)
                 if (extra.isNotEmpty()) {
-                    mainProvider = DefaultLmSourceProvider(
+                    mainProvider = DefaultLintModelSourceProvider(
                         manifestFile = provider.manifestFile,
                         javaDirectories = provider.javaDirectories + extra,
                         resDirectories = provider.resDirectories,
@@ -663,8 +666,8 @@ class LmFactory : LmModuleLoader {
     private fun computeTestSourceProviders(
         project: IdeAndroidProject,
         variant: Variant
-    ): List<LmSourceProvider> {
-        val providers = mutableListOf<LmSourceProvider>()
+    ): List<LintModelSourceProvider> {
+        val providers = mutableListOf<LintModelSourceProvider>()
 
         for (extra in project.defaultConfig.extraSourceProviders) {
             if (extra.isTest()) {
@@ -724,9 +727,9 @@ class LmFactory : LmModuleLoader {
     private fun getSourceProvider(
         providerContainer: SourceProviderContainer,
         debugOnly: Boolean = false
-    ): LmSourceProvider {
+    ): LintModelSourceProvider {
         val provider = providerContainer.sourceProvider
-        return DefaultLmSourceProvider(
+        return DefaultLintModelSourceProvider(
             manifestFile = provider.manifestFile,
             javaDirectories = provider.javaDirectories,
             resDirectories = provider.resDirectories,
@@ -742,8 +745,8 @@ class LmFactory : LmModuleLoader {
         unitTestOnly: Boolean = false,
         instrumentationTestOnly: Boolean = false,
         debugOnly: Boolean = false
-    ): LmSourceProvider {
-        return DefaultLmSourceProvider(
+    ): LintModelSourceProvider {
+        return DefaultLintModelSourceProvider(
             manifestFile = provider.manifestFile,
             javaDirectories = provider.javaDirectories,
             resDirectories = provider.resDirectories,
@@ -754,8 +757,8 @@ class LmFactory : LmModuleLoader {
         )
     }
 
-    private fun ClassField.toResourceField(): LmResourceField {
-        return DefaultLmResourceField(
+    private fun ClassField.toResourceField(): LintModelResourceField {
+        return DefaultLintModelResourceField(
             type = type,
             name = name,
             value = value
@@ -765,7 +768,7 @@ class LmFactory : LmModuleLoader {
     private fun getResValues(
         mergedFlavor: ProductFlavor,
         buildType: BuildType
-    ): Map<String, LmResourceField> {
+    ): Map<String, LintModelResourceField> {
         return if (mergedFlavor.resValues.isEmpty()) {
             if (buildType.resValues.isEmpty()) {
                 emptyMap()
@@ -775,7 +778,7 @@ class LmFactory : LmModuleLoader {
         } else if (buildType.resValues.isEmpty()) {
             mergedFlavor.resValues.mapValues { it.value.toResourceField() }
         } else {
-            val map = mutableMapOf<String, LmResourceField>()
+            val map = mutableMapOf<String, LintModelResourceField>()
             mergedFlavor.resValues.forEach { map[it.key] = it.value.toResourceField() }
             buildType.resValues.forEach { map[it.key] = it.value.toResourceField() }
             map
@@ -785,8 +788,8 @@ class LmFactory : LmModuleLoader {
     private fun getBuildFeatures(
         project: IdeAndroidProject,
         gradleVersion: GradleVersion?
-    ): LmBuildFeatures {
-        return DefaultLmBuildFeatures(
+    ): LintModelBuildFeatures {
+        return DefaultLintModelBuildFeatures(
             viewBinding = usesViewBinding(project, gradleVersion),
             coreLibraryDesugaringEnabled = project.javaCompileOptions.isCoreLibraryDesugaringEnabled,
             namespacingMode = getNamespacingMode(project)
@@ -821,25 +824,25 @@ class LmFactory : LmModuleLoader {
         return GradleVersion.tryParse(project.modelVersion)
     }
 
-    private fun getNamespacingMode(project: IdeAndroidProject): LmNamespacingMode {
+    private fun getNamespacingMode(project: IdeAndroidProject): LintModelNamespacingMode {
         return when (project.aaptOptions.namespacing) {
-            AaptOptions.Namespacing.DISABLED -> LmNamespacingMode.DISABLED
-            AaptOptions.Namespacing.REQUIRED -> LmNamespacingMode.REQUIRED
+            AaptOptions.Namespacing.DISABLED -> LintModelNamespacingMode.DISABLED
+            AaptOptions.Namespacing.REQUIRED -> LintModelNamespacingMode.REQUIRED
         }
     }
 
-    private fun getMavenName(androidProject: IdeAndroidProject): LmMavenName? {
+    private fun getMavenName(androidProject: IdeAndroidProject): LintModelMavenName? {
         val groupId = androidProject.groupId ?: return null
-        return DefaultLmMavenName(groupId, androidProject.name, "")
+        return DefaultLintModelMavenName(groupId, androidProject.name, "")
     }
 
-    private fun getMavenName(c: MavenCoordinates): LmMavenName {
+    private fun getMavenName(c: MavenCoordinates): LintModelMavenName {
         @Suppress("USELESS_ELVIS") // See https://issuetracker.google.com/37124607
         val groupId = c.groupId ?: ""
-        return DefaultLmMavenName(groupId, c.artifactId, c.version)
+        return DefaultLintModelMavenName(groupId, c.artifactId, c.version)
     }
 
-    private fun getMavenName(artifactAddress: String): LmMavenName {
+    private fun getMavenName(artifactAddress: String): LintModelMavenName {
         val artifactIndex = artifactAddress.indexOf(':')
         val versionIndex = artifactAddress.indexOf(':', artifactIndex + 1)
         val versionEnd = artifactAddress.indexOf(':', versionIndex + 1).let {
@@ -848,26 +851,26 @@ class LmFactory : LmModuleLoader {
         val group = artifactAddress.substring(0, artifactIndex)
         val artifact = artifactAddress.substring(artifactIndex + 1, versionIndex)
         val version = artifactAddress.substring(versionIndex + 1, versionEnd)
-        return DefaultLmMavenName(group, artifact, version)
+        return DefaultLintModelMavenName(group, artifact, version)
     }
 
     private fun getArtifactAddress(c: MavenCoordinates): String {
         return "${c.groupId}:${c.artifactId}:${c.version}"
     }
 
-    private fun getLintOptions(project: IdeAndroidProject): LmLintOptions =
+    private fun getLintOptions(project: IdeAndroidProject): LintModelLintOptions =
         getLintOptions(project.lintOptions)
 
-    private fun getLintOptions(options: IdeLintOptions): LmLintOptions {
+    private fun getLintOptions(options: IdeLintOptions): LintModelLintOptions {
         val severityOverrides = options.severityOverrides?.let { source ->
-            val map = LinkedHashMap<String, LmSeverity>()
+            val map = LinkedHashMap<String, LintModelSeverity>()
             for ((id, severityInt) in source.entries) {
                 map[id] = getSeverity(severityInt)
             }
             map
         }
 
-        return DefaultLmLintOptions(
+        return DefaultLintModelLintOptions(
             // Not all DSL LintOptions; only some are actually accessed from outside
             // the Gradle/CLI configuration currently
             baselineFile = options.baselineFile,
@@ -904,22 +907,22 @@ class LmFactory : LmModuleLoader {
     }
 
     /**
-     * An [LmModule] which holds on to the underlying builder-model and lazily constructs
+     * An [LintModelModule] which holds on to the underlying builder-model and lazily constructs
      * parts of the model less likely to be needed (such as all the variants). This is particularly
      * useful when lint is running on a subset of checks on the fly in the editor in the IDE
      * for example.
      */
-    inner class LazyLmModule(
-        override val loader: LmModuleLoader,
+    inner class LazyLintModelModule(
+        override val loader: LintModelModuleLoader,
         private val project: IdeAndroidProject,
         override val dir: File,
         override val gradleVersion: GradleVersion?
-    ) : LmModule {
+    ) : LintModelModule {
         override val modulePath: String
             get() = project.name
-        override val type: LmModuleType
+        override val type: LintModelModuleType
             get() = getModuleType(project.projectType)
-        override val mavenName: LmMavenName?
+        override val mavenName: LintModelMavenName?
             get() = getMavenName(project)
         override val buildFolder: File
             get() = project.buildFolder
@@ -943,17 +946,17 @@ class LmFactory : LmModuleLoader {
 
         // Lazy properties
 
-        private var _lintOptions: LmLintOptions? = null
-        override val lintOptions: LmLintOptions
+        private var _lintOptions: LintModelLintOptions? = null
+        override val lintOptions: LintModelLintOptions
             get() = _lintOptions ?: getLintOptions(project).also { _lintOptions = it }
 
-        private var _buildFeatures: LmBuildFeatures? = null
-        override val buildFeatures: LmBuildFeatures
+        private var _buildFeatures: LintModelBuildFeatures? = null
+        override val buildFeatures: LintModelBuildFeatures
             get() = _buildFeatures
                 ?: getBuildFeatures(project, gradleVersion).also { _buildFeatures = it }
 
-        private var _variants: List<LmVariant>? = null
-        override val variants: List<LmVariant>
+        private var _variants: List<LintModelVariant>? = null
+        override val variants: List<LintModelVariant>
             // Lazily initialize the _variants property, reusing any already
             // looked up variants from the [variantMap] and also populating that map
             // for latest retrieval
@@ -962,7 +965,7 @@ class LmFactory : LmModuleLoader {
                     // (Not just using findVariant since that searches linearly
                     // through variant list to match by name)
                     variantMap[variant.name]
-                        ?: LazyLmVariant(this, project, variant, libraryResolver).also {
+                        ?: LazyLintModelVariant(this, project, variant, libraryResolver).also {
                             variantMap[it.name] = it
                         }
                 }.also {
@@ -970,28 +973,28 @@ class LmFactory : LmModuleLoader {
                 }
 
         /** Map from variant name to variant */
-        private val variantMap = mutableMapOf<String, LmVariant>()
+        private val variantMap = mutableMapOf<String, LintModelVariant>()
 
-        override fun findVariant(name: String): LmVariant? = variantMap[name] ?: run {
+        override fun findVariant(name: String): LintModelVariant? = variantMap[name] ?: run {
             val buildVariant = project.variants.firstOrNull { it.name == name }
             buildVariant?.let {
-                LazyLmVariant(this, project, it, libraryResolver)
+                LazyLintModelVariant(this, project, it, libraryResolver)
             }?.also {
                 variantMap[name] = it
             }
         }
 
-        override fun defaultVariant(): LmVariant? {
+        override fun defaultVariant(): LintModelVariant? {
             return project.variants.firstOrNull()?.let { findVariant(it.name) }
         }
     }
 
-    inner class LazyLmVariant(
-        override val module: LmModule,
+    inner class LazyLintModelVariant(
+        override val module: LintModelModule,
         private val project: IdeAndroidProject,
         private val variant: IdeVariant,
-        override val libraryResolver: LmLibraryResolver
-    ) : LmVariant {
+        override val libraryResolver: LintModelLibraryResolver
+    ) : LintModelVariant {
         private val buildType = getBuildType(project, variant)
 
         override val name: String
@@ -1015,22 +1018,22 @@ class LmFactory : LmModuleLoader {
 
         // Lazy properties
 
-        private var _sourceProviders: List<LmSourceProvider>? = null
-        override val sourceProviders: List<LmSourceProvider>
+        private var _sourceProviders: List<LintModelSourceProvider>? = null
+        override val sourceProviders: List<LintModelSourceProvider>
             get() = _sourceProviders ?: computeSourceProviders(
                 project,
                 variant
             ).also { _sourceProviders = it }
 
-        private var _testSourceProviders: List<LmSourceProvider>? = null
-        override val testSourceProviders: List<LmSourceProvider>
+        private var _testSourceProviders: List<LintModelSourceProvider>? = null
+        override val testSourceProviders: List<LintModelSourceProvider>
             get() = _testSourceProviders ?: computeTestSourceProviders(
                 project,
                 variant
             ).also { _testSourceProviders = it }
 
-        private var _resValues: Map<String, LmResourceField>? = null
-        override val resValues: Map<String, LmResourceField>
+        private var _resValues: Map<String, LintModelResourceField>? = null
+        override val resValues: Map<String, LintModelResourceField>
             get() = _resValues
                 ?: getResValues(variant.mergedFlavor, buildType).also { _resValues = it }
 
@@ -1041,17 +1044,17 @@ class LmFactory : LmModuleLoader {
                     _manifestPlaceholders = it
                 }
 
-        private var _mainArtifact: LmAndroidArtifact? = null
-        override val mainArtifact: LmAndroidArtifact
+        private var _mainArtifact: LintModelAndroidArtifact? = null
+        override val mainArtifact: LintModelAndroidArtifact
             get() = _mainArtifact
                 ?: getArtifact(variant.mainArtifact).also { _mainArtifact = it }
 
-        private var _testArtifact: LmJavaArtifact? = null
-        override val testArtifact: LmJavaArtifact?
+        private var _testArtifact: LintModelJavaArtifact? = null
+        override val testArtifact: LintModelJavaArtifact?
             get() = _testArtifact ?: getTestArtifact(variant).also { _testArtifact = it }
 
-        private var _androidTestArtifact: LmAndroidArtifact? = null
-        override val androidTestArtifact: LmAndroidArtifact?
+        private var _androidTestArtifact: LintModelAndroidArtifact? = null
+        override val androidTestArtifact: LintModelAndroidArtifact?
             get() = _androidTestArtifact
                 ?: getAndroidTestArtifact(variant).also { _androidTestArtifact = it }
 
@@ -1074,47 +1077,47 @@ class LmFactory : LmModuleLoader {
         private const val CACHE_KEY = "lint-model"
 
         /**
-         * Returns the [LmModuleType] for the given type ID. Type ids must be one of the values defined by
+         * Returns the [LintModelModuleType] for the given type ID. Type ids must be one of the values defined by
          * AndroidProjectTypes.PROJECT_TYPE_*.
          */
         @JvmStatic
-        fun getModuleType(typeId: Int): LmModuleType {
+        fun getModuleType(typeId: Int): LintModelModuleType {
             return when (typeId) {
-                AndroidProjectTypes.PROJECT_TYPE_APP -> LmModuleType.APP
-                AndroidProjectTypes.PROJECT_TYPE_LIBRARY -> LmModuleType.LIBRARY
-                AndroidProjectTypes.PROJECT_TYPE_TEST -> LmModuleType.TEST
-                AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP -> LmModuleType.INSTANT_APP
-                AndroidProjectTypes.PROJECT_TYPE_FEATURE -> LmModuleType.FEATURE
-                AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE -> LmModuleType.DYNAMIC_FEATURE
+                AndroidProjectTypes.PROJECT_TYPE_APP -> LintModelModuleType.APP
+                AndroidProjectTypes.PROJECT_TYPE_LIBRARY -> LintModelModuleType.LIBRARY
+                AndroidProjectTypes.PROJECT_TYPE_TEST -> LintModelModuleType.TEST
+                AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP -> LintModelModuleType.INSTANT_APP
+                AndroidProjectTypes.PROJECT_TYPE_FEATURE -> LintModelModuleType.FEATURE
+                AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE -> LintModelModuleType.DYNAMIC_FEATURE
                 // 999: Special value defined in GradleModelMocker#PROJECT_TYPE_JAVA_LIBRARY
-                999 -> LmModuleType.JAVA_LIBRARY
+                999 -> LintModelModuleType.JAVA_LIBRARY
                 else -> throw IllegalArgumentException("The value $typeId is not a valid project type ID")
             }
         }
 
-        private fun getSeverity(severity: Int): LmSeverity =
+        private fun getSeverity(severity: Int): LintModelSeverity =
             when (severity) {
-                LintOptions.SEVERITY_FATAL -> LmSeverity.FATAL
-                LintOptions.SEVERITY_ERROR -> LmSeverity.ERROR
-                LintOptions.SEVERITY_WARNING -> LmSeverity.WARNING
-                LintOptions.SEVERITY_INFORMATIONAL -> LmSeverity.INFORMATIONAL
-                LintOptions.SEVERITY_IGNORE -> LmSeverity.IGNORE
-                LintOptions.SEVERITY_DEFAULT_ENABLED -> LmSeverity.WARNING
-                else -> LmSeverity.IGNORE
+                LintOptions.SEVERITY_FATAL -> LintModelSeverity.FATAL
+                LintOptions.SEVERITY_ERROR -> LintModelSeverity.ERROR
+                LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
+                LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
+                LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
+                LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.WARNING
+                else -> LintModelSeverity.IGNORE
             }
 
         @Suppress("unused") // Used from the lint-gradle module in AGP
         @JvmStatic
-        fun getLintOptions(options: LintOptions): LmLintOptions {
+        fun getLintOptions(options: LintOptions): LintModelLintOptions {
             val severityOverrides = options.severityOverrides?.let { source ->
-                val map = LinkedHashMap<String, LmSeverity>()
+                val map = LinkedHashMap<String, LintModelSeverity>()
                 for ((id, severityInt) in source.entries) {
                     map[id] = getSeverity(severityInt)
                 }
                 map
             }
 
-            return DefaultLmLintOptions(
+            return DefaultLintModelLintOptions(
                 // Not all DSL LintOptions; only some are actually accessed from outside
                 // the Gradle/CLI configuration currently
                 baselineFile = options.baselineFile,

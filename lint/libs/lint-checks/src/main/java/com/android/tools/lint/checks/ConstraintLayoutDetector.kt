@@ -77,7 +77,8 @@ class ConstraintLayoutDetector : LayoutDetector() {
             if (library != null) {
                 val rc = library.resolvedCoordinates
                 if (CONSTRAINT_LAYOUT_LIB_GROUP_ID == rc.groupId &&
-                    CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId) {
+                    CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId
+                ) {
                     if (latestAvailable == null) {
                         latestAvailable = getLatestVersion(context)
                     }
@@ -120,7 +121,7 @@ class ConstraintLayoutDetector : LayoutDetector() {
                     val attribute = attributes.item(i)
                     val name = attribute.localName ?: continue
                     val value = attribute.nodeValue
-                    if (name.contains("constraint_referenced_ids")){
+                    if (name.contains("constraint_referenced_ids")) {
                         flowList.addAll(value.split(","))
                     }
                 }
@@ -172,7 +173,8 @@ class ConstraintLayoutDetector : LayoutDetector() {
                     }
                 }
                 if (!name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) ||
-                    name.endsWith("_creator")) {
+                    name.endsWith("_creator")
+                ) {
                     continue
                 }
                 if (ATTR_LAYOUT_WIDTH == name && VALUE_MATCH_PARENT == attribute.nodeValue ||
@@ -190,8 +192,8 @@ class ConstraintLayoutDetector : LayoutDetector() {
                     name.endsWith("toTopOf") ||
                     name.endsWith("toBottomOf") ||
                     name.endsWith("toCenterY") ||
-                    name.endsWith("toBaselineOf"))
-                {
+                    name.endsWith("toBaselineOf")
+                ) {
                     isConstrainedVertically = true
                     if (isConstrainedHorizontally) {
                         break

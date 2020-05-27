@@ -178,7 +178,6 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
             0 errors, 2 warnings
         """.trimIndent()
         )
-
     }
 
     val rClass = //language=JAVA

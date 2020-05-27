@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.model
 
-interface LmResourceField {
+interface LintModelResourceField {
     val type: String
     val name: String
     val value: String
@@ -26,11 +26,11 @@ interface LmResourceField {
     operator fun component3(): String = value
 }
 
-data class DefaultLmResourceField(
+data class DefaultLintModelResourceField(
     override val type: String,
     override val name: String,
     override val value: String
-) : LmResourceField {
+) : LintModelResourceField {
     override fun toString(): String {
         return "$name:$type=$value"
     }

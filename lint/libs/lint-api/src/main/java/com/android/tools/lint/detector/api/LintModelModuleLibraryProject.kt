@@ -21,21 +21,21 @@ import com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
-import com.android.tools.lint.model.LmAndroidLibrary
-import com.android.tools.lint.model.LmDependency
-import com.android.tools.lint.model.LmJavaLibrary
-import com.android.tools.lint.model.LmMavenName
+import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.LintModelDependency
+import com.android.tools.lint.model.LintModelJavaLibrary
+import com.android.tools.lint.model.LintModelMavenName
 import com.android.utils.XmlUtils
 import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 
 /** Lint project wrapping a library */
-open class LmModuleLibraryProject(
+open class LintModelModuleLibraryProject(
     client: LintClient,
     dir: File,
     referenceDir: File,
-    val dependency: LmDependency
+    val dependency: LintModelDependency
 ) : Project(client, dir, referenceDir) {
 
     init {
@@ -49,7 +49,7 @@ open class LmModuleLibraryProject(
         externalLibrary = external
     }
 
-    fun setMavenCoordinates(mc: LmMavenName) {
+    fun setMavenCoordinates(mc: LintModelMavenName) {
         mavenCoordinates = mc
     }
 
@@ -83,13 +83,13 @@ open class LmModuleLibraryProject(
 }
 
 /** Lint project wrapping a Java library (jar) */
-open class LmModuleJavaLibraryProject(
+open class LintModelModuleJavaLibraryProject(
     client: LintClient,
     dir: File,
     referenceDir: File,
-    dependency: LmDependency,
-    private val javaLibrary: LmJavaLibrary
-) : LmModuleLibraryProject(client, dir, referenceDir, dependency) {
+    dependency: LintModelDependency,
+    private val javaLibrary: LintModelJavaLibrary
+) : LintModelModuleLibraryProject(client, dir, referenceDir, dependency) {
 
     override fun getJavaLibraries(includeProvided: Boolean): List<File> {
         if (!includeProvided && javaLibrary.provided) {
@@ -104,13 +104,13 @@ open class LmModuleJavaLibraryProject(
 }
 
 /** Lint project wrapping an Android library (AAR) */
-open class LmModuleAndroidLibraryProject(
+open class LintModelModuleAndroidLibraryProject(
     client: LintClient,
     dir: File,
     referenceDir: File,
-    dependency: LmDependency,
-    private val androidLibrary: LmAndroidLibrary
-) : LmModuleLibraryProject(client, dir, referenceDir, dependency) {
+    dependency: LintModelDependency,
+    private val androidLibrary: LintModelAndroidLibrary
+) : LintModelModuleLibraryProject(client, dir, referenceDir, dependency) {
     init {
         androidLibrary.manifest.let { manifest ->
             if (manifest.exists()) {
@@ -125,7 +125,7 @@ open class LmModuleAndroidLibraryProject(
         }
     }
 
-    override fun getBuildLibraryModel(): LmAndroidLibrary = androidLibrary
+    override fun getBuildLibraryModel(): LintModelAndroidLibrary = androidLibrary
 
     override fun getManifestFiles(): List<File> {
         if (manifestFiles == null) {
@@ -191,7 +191,7 @@ open class LmModuleAndroidLibraryProject(
         }
     }
 
-    fun LmDependency.hasDependency(name: String): Boolean {
+    fun LintModelDependency.hasDependency(name: String): Boolean {
         if (artifactName == name) {
             return true
         }

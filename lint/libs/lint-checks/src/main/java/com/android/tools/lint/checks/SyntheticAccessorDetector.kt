@@ -89,6 +89,7 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             Severity.WARNING,
             IMPLEMENTATION
         )
+
         @Suppress("ObjectPropertyName") // underscore prefix required by testing infra
         val _ALIAS_2 = Issue.create(
             "PrivateMemberAccessBetweenOuterAndInnerClass",

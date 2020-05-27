@@ -41,15 +41,15 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.detector.api.LmModuleProject;
+import com.android.tools.lint.detector.api.LintModelModuleProject;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmSerialization;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelSerialization;
+import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
@@ -182,7 +182,7 @@ public class Main {
 
         Ref<LanguageLevel> javaLanguageLevel = new Ref<>(null);
         Ref<LanguageVersionSettings> kotlinLanguageLevel = new Ref<>(null);
-        List<LmModule> modules = new ArrayList<>();
+        List<LintModelModule> modules = new ArrayList<>();
         String variantName = null;
 
         // When running lint from the command line, warn if the project is a Gradle project
@@ -1018,8 +1018,8 @@ public class Main {
                         exit(ERRNO_INVALID_ARGS);
                     }
                     try {
-                        LmSerialization reader = LmSerialization.INSTANCE;
-                        LmModule module =
+                        LintModelSerialization reader = LintModelSerialization.INSTANCE;
+                        LintModelModule module =
                                 reader.readModule(
                                         input,
                                         Collections.emptyList(),
@@ -1165,9 +1165,9 @@ public class Main {
                 exit(ERRNO_INVALID_ARGS);
             }
             List<Project> projects = new ArrayList<>();
-            for (LmModule module : modules) {
+            for (LintModelModule module : modules) {
                 File dir = module.getDir();
-                LmVariant variant = null;
+                LintModelVariant variant = null;
                 if (variantName != null) {
                     variant = module.findVariant(variantName);
                     if (variant == null) {
@@ -1181,7 +1181,8 @@ public class Main {
                 if (variant == null) {
                     variant = module.defaultVariant();
                 }
-                LmModuleProject project = new LmModuleProject(client, dir, dir, variant, null);
+                LintModelModuleProject project =
+                        new LintModelModuleProject(client, dir, dir, variant, null);
                 client.registerProject(project.getDir(), project);
                 projects.add(project);
             }

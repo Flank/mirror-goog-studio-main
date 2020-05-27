@@ -16,16 +16,16 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.tasks.LintBaseTask.LINT_CLASS_PATH
-import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.repository.Revision
-import com.android.tools.lint.model.LmFactory
-import com.android.tools.lint.model.LmLintOptions
 import com.android.tools.lint.gradle.api.LintExecutionRequest
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner
 import com.android.tools.lint.gradle.api.VariantInputs
+import com.android.tools.lint.model.LintModelFactory
+import com.android.tools.lint.model.LintModelLintOptions
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -92,8 +92,8 @@ open class LintStandaloneTask : DefaultTask() {
             ): List<File> = emptyList()
             override val project: Project = this@LintStandaloneTask.project
             override val reportsDir: File? = this@LintStandaloneTask.reportDir
-            override val lintOptions: LmLintOptions? = this@LintStandaloneTask.lintOptions?.let {
-                LmFactory.getLintOptions(it)
+            override val lintOptions: LintModelLintOptions? = this@LintStandaloneTask.lintOptions?.let {
+                LintModelFactory.getLintOptions(it)
             }
             override val gradlePluginVersion: String = ANDROID_GRADLE_PLUGIN_VERSION
             override val isFatalOnly: Boolean = this@LintStandaloneTask.fatalOnly

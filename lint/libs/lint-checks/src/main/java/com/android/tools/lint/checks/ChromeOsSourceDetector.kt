@@ -113,7 +113,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
             explanation = """
                 The `Activity` should not be locked to a portrait orientation so that users
                 can take advantage of the multi-window environments and larger landscape-first screens
-                that Android runs on such as Chrome OS. To fix the issue, consider calling 
+                that Android runs on such as Chrome OS. To fix the issue, consider calling
                 `setRequestedOrientation` with the `ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR` or
                 `ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED` options or removing the call
                 all together.

@@ -49,8 +49,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmModuleType;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelModuleType;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.intellij.psi.PsiClass;
@@ -106,7 +106,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
      */
     private static boolean isInstantApp(@NonNull Context context) {
         Project mainProject = context.getMainProject();
-        LmModule model = mainProject.getBuildModule();
+        LintModelModule model = mainProject.getBuildModule();
         if (model == null) {
             return false;
         }
@@ -128,7 +128,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
 
     /** Checks whether the given project is an instant app module */
     private static boolean isInstantApp(@NonNull Project project) {
-        return project.getType() == LmModuleType.INSTANT_APP;
+        return project.getType() == LintModelModuleType.INSTANT_APP;
     }
 
     @Override

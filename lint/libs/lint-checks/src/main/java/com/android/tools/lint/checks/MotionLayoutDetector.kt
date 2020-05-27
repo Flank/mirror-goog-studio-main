@@ -43,6 +43,7 @@ class MotionLayoutDetector : ResourceXmlDetector() {
 
     private var referencesRecorded = false
     private val resourceModel: ResourceUsageModel by lazy(LazyThreadSafetyMode.NONE) { ResourceUsageModel() }
+
     @Suppress("RemoveExplicitTypeArguments") // Compiler was unable to infer the type of the expr
     private val references: MutableMap<Resource, Location>
             by lazy<MutableMap<Resource, Location>>(LazyThreadSafetyMode.NONE) { mutableMapOf() }

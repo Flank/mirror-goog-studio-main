@@ -37,6 +37,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.gradle.api.VariantInputs
+import com.android.tools.lint.model.LintModelSeverity
 import com.android.utils.XmlUtils
 import com.google.common.io.Files
 import org.gradle.api.GradleException
@@ -44,7 +45,6 @@ import org.w3c.dom.Document
 import java.io.File
 import java.io.File.separator
 import java.io.IOException
-import com.android.tools.lint.model.LmSeverity as LintModelSeverity
 import org.gradle.api.Project as GradleProject
 
 class LintGradleClient(

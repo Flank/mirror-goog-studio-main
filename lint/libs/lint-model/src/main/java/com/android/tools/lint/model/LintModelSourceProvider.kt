@@ -18,7 +18,7 @@ package com.android.tools.lint.model
 
 import java.io.File
 
-interface LmSourceProvider {
+interface LintModelSourceProvider {
     val manifestFile: File
     val javaDirectories: Collection<File>
     val resDirectories: Collection<File>
@@ -37,7 +37,7 @@ interface LmSourceProvider {
     fun isDebugOnly(): Boolean
 }
 
-class DefaultLmSourceProvider(
+class DefaultLintModelSourceProvider(
     override val manifestFile: File,
     override val javaDirectories: Collection<File>,
     override val resDirectories: Collection<File>,
@@ -45,7 +45,7 @@ class DefaultLmSourceProvider(
     private val debugOnly: Boolean,
     private val unitTestOnly: Boolean,
     private val instrumentationTestOnly: Boolean
-) : LmSourceProvider {
+) : LintModelSourceProvider {
     override fun isUnitTest(): Boolean = unitTestOnly
     override fun isInstrumentationTest(): Boolean = instrumentationTestOnly
     override fun isDebugOnly(): Boolean = debugOnly

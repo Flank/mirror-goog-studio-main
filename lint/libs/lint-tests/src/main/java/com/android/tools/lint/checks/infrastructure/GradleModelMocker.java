@@ -71,7 +71,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.model.LmFactory;
+import com.android.tools.lint.model.LintModelFactory;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -126,7 +126,7 @@ import org.mockito.stubbing.OngoingStubbing;
 public class GradleModelMocker {
     /**
      * Extension to {@link AndroidProjectTypes} for non-Android project types, consumed in {@link
-     * LmFactory}
+     * LintModelFactory}
      */
     public static final int PROJECT_TYPE_JAVA_LIBRARY = 999;
 

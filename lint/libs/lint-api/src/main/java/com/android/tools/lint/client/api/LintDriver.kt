@@ -235,19 +235,25 @@ class LintDriver
     var allowSuppress = false
 
     private var parserErrors: Boolean = false
+
     /** Whether we should run all normal checks on test sources  */
     var checkTestSources: Boolean = false
+
     /**
      * Whether we should run any checks (including tests marked with [Scope.TEST_SOURCES]
      * on test sources
      */
     var ignoreTestSources: Boolean = false
+
     /** Whether we should include generated sources in the analysis  */
     var checkGeneratedSources: Boolean = false
+
     /** Whether we're only analyzing fatal-severity issues  */
     var fatalOnlyMode: Boolean = false
+
     /** Baseline to apply to the analysis */
     var baseline: LintBaseline? = null
+
     /** Whether dependent projects should be checked */
     var checkDependencies = true
 
@@ -261,31 +267,43 @@ class LintDriver
 
     /** Count of files the driver has encountered (intended for analytics) */
     var fileCount = 0
+
     /** Count of modules the driver has encountered (intended for analytics) */
     var moduleCount = 0
+
     /** Number of Java sources to encountered in source or test folders */
     var javaFileCount = 0
+
     /** Number of Kotlin sources to encountered in source or test folders */
     var kotlinFileCount = 0
+
     /** Number of resource files (XML or bitmaps) encountered in res folders */
     var resourceFileCount = 0
+
     /** Number of source files encountered in test folders */
     var testSourceCount = 0
 
     /** Time to initialize the lint project */
     var initializeTimeMs = 0L
+
     /** Time to register custom detectors */
     var registerCustomDetectorsTimeMs = 0L
+
     /** Time to compute the applicable detectors */
     var computeDetectorsTimeMs = 0L
+
     /** Time to run the first round of checks */
     var checkProjectTimeMs = 0L
+
     /** Time to run any extra phases */
     var extraPhasesTimeMs = 0L
+
     /** Time to report baseline issues */
     var reportBaselineIssuesTimeMs = 0L
+
     /** Time to dispose projects */
     var disposeProjectsTimeMs = 0L
+
     /** Time to generate reports */
     var reportGenerationTimeMs = 0L
 
@@ -1190,8 +1208,10 @@ class LintDriver
                         val uastParser = client.getUastParser(currentProject)
                         context.uastParser = uastParser
 
-                        uastParser.prepare(listOf(context),
-                            project.javaLanguageLevel, project.kotlinLanguageLevel)
+                        uastParser.prepare(
+                            listOf(context),
+                            project.javaLanguageLevel, project.kotlinLanguageLevel
+                        )
                         val uFile = uastParser.parse(context)
                         if (uFile != null) {
                             context.setJavaFile(uFile.psi) // needed for getLocation

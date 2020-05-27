@@ -34,7 +34,8 @@ class PrivateApiParser {
             if (className.contains("${"$$"}Lambda")) return@forEachLine
             val restriction = parse(items[2])
             if (restriction == Restriction.WHITE ||
-                restriction == Restriction.UNKNOWN)
+                restriction == Restriction.UNKNOWN
+            )
                 return@forEachLine
 
             val clazz = classes.getOrPut(className) { addClass(className) }

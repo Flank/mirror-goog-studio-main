@@ -101,7 +101,7 @@ import java.io.File
  * }
 </pre> *
  */
-interface LmLintOptions {
+interface LintModelLintOptions {
     /**
      * Returns the set of issue id's to suppress. Callers are allowed to modify this collection.
      * To suppress a given issue, add the lint issue id to the returned set.
@@ -250,10 +250,10 @@ interface LmLintOptions {
      *
      * severity to use, which must be "fatal", "error", "warning", or "ignore".
      */
-    val severityOverrides: Map<String, LmSeverity>?
+    val severityOverrides: Map<String, LintModelSeverity>?
 }
 
-class DefaultLmLintOptions(
+class DefaultLintModelLintOptions(
     override val disable: Set<String>,
     override val enable: Set<String>,
     override val check: Set<String>?,
@@ -279,5 +279,5 @@ class DefaultLmLintOptions(
     override val checkReleaseBuilds: Boolean,
     override val checkDependencies: Boolean,
     override val baselineFile: File?,
-    override val severityOverrides: Map<String, LmSeverity>?
-) : LmLintOptions
+    override val severityOverrides: Map<String, LintModelSeverity>?
+) : LintModelLintOptions

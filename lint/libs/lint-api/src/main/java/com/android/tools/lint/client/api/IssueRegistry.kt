@@ -291,6 +291,7 @@ protected constructor() {
 
     @Volatile
     private var categories: List<Category>?
+
     @Volatile
     private var idToIssue: Map<String, Issue>?
     private var scopeIssues: MutableMap<EnumSet<Scope>, List<Issue>>
@@ -322,6 +323,7 @@ protected constructor() {
     companion object {
         @Volatile
         private var cachedCategories: List<Category>? = null
+
         @Volatile
         private var cachedIdToIssue: Map<String, Issue>? = null
         private var cachedScopeIssues: MutableMap<EnumSet<Scope>, List<Issue>> = Maps.newHashMap()
@@ -330,6 +332,7 @@ protected constructor() {
             Detector::class.java,
             EnumSet.noneOf(Scope::class.java)
         )
+
         /**
          * Issue reported by lint (not a specific detector) when it cannot even
          * parse an XML file prior to analysis

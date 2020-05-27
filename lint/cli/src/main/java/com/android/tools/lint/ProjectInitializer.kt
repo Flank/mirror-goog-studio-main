@@ -41,8 +41,8 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.model.LmSerialization
-import com.android.tools.lint.model.LmVariant
+import com.android.tools.lint.model.LintModelSerialization
+import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import com.android.utils.usLocaleCapitalize
@@ -511,7 +511,7 @@ private class ProjectInitializer(
         modules[name] = module
 
         val model = if (moduleElement.hasAttribute(ATTR_MODEL)) {
-            LmSerialization.readModule(getFile(moduleElement, dir, ATTR_MODEL, false))
+            LintModelSerialization.readModule(getFile(moduleElement, dir, ATTR_MODEL, false))
         } else {
             null
         }
@@ -1025,7 +1025,7 @@ constructor(
     private var android: Boolean
 ) : Project(client, dir, dir) {
 
-    var variant: LmVariant? = null
+    var variant: LintModelVariant? = null
 
     init {
         setName(name)
@@ -1158,5 +1158,5 @@ constructor(
         return resourceVisibility ?: super.getResourceVisibility()
     }
 
-    override fun getBuildVariant(): LmVariant? = variant
+    override fun getBuildVariant(): LintModelVariant? = variant
 }

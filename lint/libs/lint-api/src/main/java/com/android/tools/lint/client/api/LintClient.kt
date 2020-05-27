@@ -56,9 +56,8 @@ import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.endsWith
 import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
-import com.android.tools.lint.model.LmAndroidLibrary
-import com.android.tools.lint.model.LmLibrary
-import com.android.tools.lint.model.LmModule
+import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.LintModelLibrary
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
@@ -1053,7 +1052,8 @@ abstract class LintClient {
         // handling.)
         val version = project.gradleModelVersion ?: return Desugaring.DEFAULT
         return getGradleDesugaring(
-            version, getLanguageLevel(project, JDK_1_7), project.isCoreLibraryDesugaringEnabled)
+            version, getLanguageLevel(project, JDK_1_7), project.isCoreLibraryDesugaringEnabled
+        )
     }
 
     /**
@@ -1243,26 +1243,26 @@ abstract class LintClient {
 
     /**
      * Recursively add all lint jars found recursively from the given collection of
-     * [LmAndroidLibrary] instances into the given [lintJars] list
+     * [LintModelAndroidLibrary] instances into the given [lintJars] list
      */
     private fun addLintJarsFromDependencies(
         lintJars: MutableList<File>,
-        libraries: Collection<LmLibrary>
+        libraries: Collection<LintModelLibrary>
     ) {
         for (library in libraries) {
-            if (library is LmAndroidLibrary) {
+            if (library is LintModelAndroidLibrary) {
                 addLintJarsFromDependency(lintJars, library)
             }
         }
     }
 
     /**
-     * Recursively add all lint jars found from the given [LmAndroidLibrary] **or its dependencies**
+     * Recursively add all lint jars found from the given [LintModelAndroidLibrary] **or its dependencies**
      * into the given [lintJars] list
      */
     private fun addLintJarsFromDependency(
         lintJars: MutableList<File>,
-        library: LmAndroidLibrary
+        library: LintModelAndroidLibrary
     ) {
         val lintJar = library.lintJar
         if (lintJar.exists()) {
@@ -1656,7 +1656,7 @@ abstract class LintClient {
         for (project in projects) {
             val variant = project.buildVariant ?: continue
             for (library in variant.mainArtifact.dependencies.getAll()) {
-                if (library is LmAndroidLibrary) {
+                if (library is LintModelAndroidLibrary) {
                     // As of 1.2 this is available in the model:
                     //  https://android-review.googlesource.com/#/c/137750/
                     // Switch over to this when it's in more common usage
@@ -1715,7 +1715,8 @@ abstract class LintClient {
         val basePathToCompare = if (caseSensitive) basePath else basePath.toLowerCase(l)
         val filePathToCompare = if (caseSensitive) filePath else filePath.toLowerCase(l)
         if (basePathToCompare == (if (!filePathToCompare.isEmpty() &&
-                filePathToCompare[filePathToCompare.length - 1] == separatorChar)
+                filePathToCompare[filePathToCompare.length - 1] == separatorChar
+            )
                 filePathToCompare
             else
                 filePathToCompare + separatorChar)

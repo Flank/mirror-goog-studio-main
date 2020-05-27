@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.model.LmDependency
+import com.android.tools.lint.model.LintModelDependency
 import java.util.ArrayDeque
 
 /**
@@ -26,7 +26,7 @@ import java.util.ArrayDeque
  */
 class BlacklistedDeps(val project: Project) {
 
-    private var map: MutableMap<String, List<LmDependency>>? = null
+    private var map: MutableMap<String, List<LintModelDependency>>? = null
 
     init {
         // TODO: Should skip provided
@@ -40,7 +40,7 @@ class BlacklistedDeps(val project: Project) {
      * or null if this dependency is not blacklisted. If [remove] is true, the
      * dependency is removed from the map after this.
      */
-    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LmDependency>? {
+    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LintModelDependency>? {
         val map = this.map ?: return null
         val coordinate = "$groupId:$artifactId"
         val path = map[coordinate] ?: return null
@@ -55,28 +55,28 @@ class BlacklistedDeps(val project: Project) {
      * blacklisted dependency. Each list is a list from the root dependency
      * to the blacklisted dependency.
      */
-    fun getBlacklistedDependencies(): List<List<LmDependency>> {
+    fun getBlacklistedDependencies(): List<List<LintModelDependency>> {
         val map = this.map ?: return emptyList()
         return map.values.toMutableList().sortedBy { it[0].artifactName }
     }
 
     private fun visitLibraries(
-        stack: ArrayDeque<LmDependency>,
-        libraries: List<LmDependency>
+        stack: ArrayDeque<LintModelDependency>,
+        libraries: List<LintModelDependency>
     ) {
         for (library in libraries) {
             visitLibrary(stack, library)
         }
     }
 
-    private fun visitLibrary(stack: ArrayDeque<LmDependency>, library: LmDependency) {
+    private fun visitLibrary(stack: ArrayDeque<LintModelDependency>, library: LintModelDependency) {
         stack.addLast(library)
         checkLibrary(stack, library)
         visitLibraries(stack, library.dependencies)
         stack.removeLast()
     }
 
-    private fun checkLibrary(stack: ArrayDeque<LmDependency>, library: LmDependency) {
+    private fun checkLibrary(stack: ArrayDeque<LintModelDependency>, library: LintModelDependency) {
         if (isBlacklistedDependency(library.artifactName)) {
             if (map == null) {
                 map = HashMap()

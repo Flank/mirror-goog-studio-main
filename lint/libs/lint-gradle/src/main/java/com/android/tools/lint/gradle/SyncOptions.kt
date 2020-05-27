@@ -24,7 +24,7 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.detector.api.Category.Companion.getCategory
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.model.LmLintOptions
+import com.android.tools.lint.model.LintModelLintOptions
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.BufferedWriter
@@ -34,12 +34,12 @@ import java.io.FileWriter
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.Writer
-import com.android.tools.lint.model.LmSeverity as ModelSeverity
+import com.android.tools.lint.model.LintModelSeverity as ModelSeverity
 
 // Operations related to syncing LintOptions to lint's internal state
 
 fun syncTo(
-    options: LmLintOptions,
+    options: LintModelLintOptions,
     client: LintCliClient,
     flags: LintCliFlags,
     variantName: String?,

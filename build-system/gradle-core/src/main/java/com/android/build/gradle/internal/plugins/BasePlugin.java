@@ -92,8 +92,8 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.tools.lint.model.LmModuleLoader;
-import com.android.tools.lint.model.LmModuleLoaderProvider;
+import com.android.tools.lint.model.LintModelModuleLoader;
+import com.android.tools.lint.model.LintModelModuleLoaderProvider;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -128,7 +128,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class BasePlugin<
                 VariantT extends VariantImpl<VariantPropertiesT>,
                 VariantPropertiesT extends VariantPropertiesImpl>
-        implements Plugin<Project>, LmModuleLoaderProvider {
+        implements Plugin<Project>, LintModelModuleLoaderProvider {
 
     private BaseExtension extension;
 
@@ -145,7 +145,7 @@ public abstract class BasePlugin<
     private VariantFactory<VariantT, VariantPropertiesT> variantFactory;
 
     @NonNull private final ToolingModelBuilderRegistry registry;
-    @NonNull private final LmModuleLoader lintModuleLoader;
+    @NonNull private final LintModelModuleLoader lintModuleLoader;
     @NonNull private final SoftwareComponentFactory componentFactory;
 
     private LoggerWrapper loggerWrapper;
@@ -735,10 +735,10 @@ public abstract class BasePlugin<
         throw new StopExecutionException(message);
     }
 
-    /** Returns a module loader for lint (this method implements {@link LmModuleLoader}) */
+    /** Returns a module loader for lint (this method implements {@link LintModelModuleLoader}) */
     @NonNull
     @Override
-    public LmModuleLoader getModuleLoader() {
+    public LintModelModuleLoader getModuleLoader() {
         return lintModuleLoader;
     }
 
