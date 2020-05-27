@@ -74,7 +74,8 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.UNEXPECTED_DOMAIN,
         LintDetectorDetector.USE_KOTLIN,
         LintDetectorDetector.USE_UAST,
-        ShortNameCacheDetector.ISSUE
+        ShortNameCacheDetector.ISSUE,
+        HtmlPaneDetector.ISSUE
     )
 
     // TODO other checks:
