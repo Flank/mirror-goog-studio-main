@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.instantexecution
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
@@ -51,7 +52,7 @@ class BasicInstantExecutionTest {
 
     @Before
     fun setUp() {
-        project.testDir.resolve(".instant-execution-state").deleteRecursively()
+        project.testDir.resolve(".gradle/configuration-cache").deleteRecursively()
 
         // Disable lint because of http://b/146208910
         listOf("app", "lib").forEach {
@@ -69,7 +70,7 @@ class BasicInstantExecutionTest {
     @Test
     fun testUpToDate() {
         executor().run("assemble")
-        assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()
+        assertThat(project.testDir.resolve(".gradle/configuration-cache")).isDirectory()
         val result = executor().run("assemble")
         Truth.assertThat(result.didWorkTasks).isEmpty()
     }
@@ -88,7 +89,7 @@ class BasicInstantExecutionTest {
             .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .run("assemble")
 
-        assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()
+        assertThat(project.testDir.resolve(".gradle/configuration-cache")).isDirectory()
         executor().run("clean")
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
@@ -109,8 +110,7 @@ class BasicInstantExecutionTest {
 
     private fun executor(): GradleTaskExecutor =
         project.executor()
-            .withConfigurationCaching(true)
-            .withLoggingLevel(LoggingLevel.LIFECYCLE)
             // until b/154742527 is fixed we need to disable this
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false")
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .withLoggingLevel(LoggingLevel.LIFECYCLE)
 }

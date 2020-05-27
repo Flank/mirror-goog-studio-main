@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.databinding
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
@@ -39,7 +40,5 @@ class DataBindingInstantExecutionTest {
     }
 
     private fun executor(): GradleTaskExecutor =
-        project.executor()
-            .withArgument("-Dorg.gradle.unsafe.instant-execution=true")
-            .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false")
+        project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
 }
