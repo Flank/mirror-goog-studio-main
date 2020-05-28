@@ -45,6 +45,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
+import kotlin.test.fail
 
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
@@ -133,6 +134,42 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
 
         // Assemble again
         project.execute("assemble")
+    }
+
+    @Test
+    fun `check that duplicate runtimeFiles does not cause a build failure`() {
+        // https://issuetracker.google.com/158317988
+        project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
+        project.buildFile.resolveSibling("bar.cpp").writeText("void bar() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.4.1)
+
+            add_library(foo SHARED foo.cpp)
+            add_library(bar SHARED bar.cpp)
+
+            find_library(log-lib log)
+
+            target_link_libraries(foo ${'$'}{log-lib})
+            target_link_libraries(bar foo)
+            """.trimIndent())
+
+        // The bug being tested was caused by the bad ordering between handling runtimeFiles and
+        // performing the build. The JSON model was being generated from a clean build directory the
+        // libraries would not be present when the CMake response was handled and we would skip any
+        // linkLibraries that had not been built yet.
+        //
+        // If the build directory *wasn't* cleaned before regenerating the JSON model the libraries
+        // would be included in runtimeFiles and the install task could fail when trying to install
+        // a file to itself.
+        //
+        // To recreate those conditions, build the project twice, purging only the .cxx directory
+        // between runs.
+        project.execute("assembleDebug")
+        project.testDir.resolve(".cxx").deleteRecursively()
+        assertThat(project.buildDir.resolve("intermediates/cmake/debug/obj/armeabi-v7a/libfoo.so")).isFile()
+        project.execute("assembleDebug")
     }
 
     // See b/131857476
