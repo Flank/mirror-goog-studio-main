@@ -42,7 +42,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
 
   val composeVersionVarName = getDependencyVarName("androidx.ui:ui-framework", "compose_version")
-  setExtVar(composeVersionVarName, "0.1.0-dev12")
+  setExtVar(composeVersionVarName, "0.1.0-dev13")
 
   addDependency(mavenCoordinate = "androidx.ui:ui-layout:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.ui:ui-material:\${$composeVersionVarName}")
