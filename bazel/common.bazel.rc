@@ -131,6 +131,8 @@ build:dynamic --strategy=Javac=dynamic
 build:dynamic --dynamic_local_strategy=Javac=worker
 build:dynamic --strategy=kotlinc=dynamic
 build:dynamic --dynamic_local_strategy=kotlinc=worker
+build:dynamic --strategy=formc=dynamic
+build:dynamic --dynamic_local_strategy=formc=worker
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
 # so there is no need to keep workers alive after the build.
 build:dynamic --worker_quit_after_build

@@ -142,18 +142,26 @@ def _iml_module_jar_impl(
         # Forms
         if form_srcs:
             forms += relative_paths(ctx, form_srcs, roots)
-            args, option_files = create_java_compiler_args_srcs(
+            option_flags, option_files = create_java_compiler_args_srcs(
                 ctx,
                 [form.path for form in form_srcs] + [k + "=" + v.path for k, v in form_deps] + [f.path for f in formc_input_jars],
                 java_jar,
                 transitive_runtime_jars.to_list(),
             )
+            args = ctx.actions.args()
+            args.add_all(option_flags)
+
+            # To support persistent workers, arguments must come from a param file..
+            args.use_param_file("@%s", use_always = True)
+            args.set_param_file_format("multiline")
+
             ctx.actions.run(
                 inputs = [v for _, v in form_deps] + form_srcs + formc_input_jars + option_files + transitive_runtime_jars.to_list(),
                 outputs = [java_jar],
                 mnemonic = "formc",
-                arguments = args,
+                arguments = [args],
                 executable = ctx.executable._formc,
+                execution_requirements = {"supports-workers": "1"},
             )
 
         jars += [java_jar]
