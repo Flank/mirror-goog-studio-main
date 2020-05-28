@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef OVERLAY_ID_PUSH_H_
-#define OVERLAY_ID_PUSH_H_
+#ifndef BINARY_EXTRACT_H_
+#define BINARY_EXTRACT_H_
 
-#include "tools/base/deploy/installer/command.h"
-#include "tools/base/deploy/installer/workspace.h"
+#include <string>
+#include <vector>
 
 namespace deploy {
+bool ExtractBinaries(const std::string& target_dir,
+                     const std::vector<std::string>& files_to_extract);
 
-class OverlayIdPushCommand : public Command {
- public:
-  OverlayIdPushCommand(Workspace& workspace) : Command(workspace) {}
-  virtual ~OverlayIdPushCommand() {}
-  virtual void ParseParameters(int argc, char** argv);
-  virtual void Run(proto::InstallerResponse* response);
-
- private:
-  proto::OverlayIdPush request_;
-  const std::string kInstallServer = "install_server";
-};
-
+bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
+                      const std::string& dst_path);
 }  // namespace deploy
 
-#endif  // OVERLAY_ID_PUSH_H_
+#endif  // BINARY_EXTRACT_H_
