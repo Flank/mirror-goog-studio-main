@@ -17,7 +17,6 @@
 package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
@@ -57,6 +56,7 @@ import java.util.concurrent.TimeUnit;
  * through {@link #getClientData()}.
  */
 public class ClientImpl extends JdwpAgent implements Client {
+    private final Object mChanModificationLock = new Object();
     private SocketChannel mChan;
 
     // debugger we're associated with, if any
@@ -509,8 +509,10 @@ public class ClientImpl extends JdwpAgent implements Client {
 
     /** Registers the client with a Selector. */
     public void register(Selector sel) throws IOException {
-        if (mChan != null) {
-            mChan.register(sel, SelectionKey.OP_READ, this);
+        synchronized (mChanModificationLock) {
+            if (mChan != null) {
+                mChan.register(sel, SelectionKey.OP_READ, this);
+            }
         }
     }
 
@@ -528,13 +530,20 @@ public class ClientImpl extends JdwpAgent implements Client {
      * <p>On failure, closes the socket and returns false.
      */
     public boolean sendHandshake() {
+        // Fix to avoid a race condition on mChan. This should be better synchronized
+        // but just capturing the channel here, avoids a NPE.
+        SocketChannel chan = mChan;
+        if (chan == null) {
+            Log.v("ddms", "Not sending handshake -- client is closed");
+            return false;
+        }
         ByteBuffer tempBuffer = ByteBuffer.allocate(JdwpHandshake.HANDSHAKE_LEN);
         try {
             // assume write buffer can hold 14 bytes
             JdwpHandshake.putHandshake(tempBuffer);
             int expectedLen = tempBuffer.position();
             tempBuffer.flip();
-            if (mChan.write(tempBuffer) != expectedLen) {
+            if (chan.write(tempBuffer) != expectedLen) {
                 throw new IOException("partial handshake write");
             }
         } catch (IOException ioe) {
@@ -592,9 +601,14 @@ public class ClientImpl extends JdwpAgent implements Client {
      * the buffer. If the buffer is at capacity, expand it.
      */
     public void read() throws IOException, BufferOverflowException {
-
+        // Fix to avoid a race condition on mChan. This should be better synchronized
+        // but just capturing the channel here, avoids a NPE.
+        SocketChannel chan = mChan;
+        if (chan == null) {
+            Log.v("ddms", "Not reading packet -- client is closed");
+            return;
+        }
         int count;
-
         if (mReadBuffer.position() == mReadBuffer.capacity()) {
             if (mReadBuffer.capacity() * 2 > MAX_BUF_SIZE) {
                 Log.e("ddms", "Exceeded MAX_BUF_SIZE!");
@@ -611,7 +625,7 @@ public class ClientImpl extends JdwpAgent implements Client {
             mReadBuffer = newBuffer;
         }
 
-        count = mChan.read(mReadBuffer);
+        count = chan.read(mReadBuffer);
         if (count < 0) throw new IOException("read failed");
 
         if (Log.Config.LOGV) Log.v("ddms", "Read " + count + " bytes from " + this);
@@ -777,9 +791,11 @@ public class ClientImpl extends JdwpAgent implements Client {
 
         clear();
         try {
-            if (mChan != null) {
-                mChan.close();
-                mChan = null;
+            synchronized (mChanModificationLock) {
+                if (mChan != null) {
+                    mChan.close();
+                    mChan = null;
+                }
             }
 
             if (mDebugger != null) {
