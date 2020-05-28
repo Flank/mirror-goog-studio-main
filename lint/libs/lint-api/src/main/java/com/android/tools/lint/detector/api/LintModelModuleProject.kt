@@ -24,12 +24,12 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
-import com.android.tools.lint.model.LmLibrary
-import com.android.tools.lint.model.LmMavenName
-import com.android.tools.lint.model.LmModule
-import com.android.tools.lint.model.LmModuleType
-import com.android.tools.lint.model.LmSourceProvider
-import com.android.tools.lint.model.LmVariant
+import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelMavenName
+import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelModuleType
+import com.android.tools.lint.model.LintModelSourceProvider
+import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils
 import com.google.common.collect.Lists
 import java.io.File
@@ -37,17 +37,17 @@ import java.io.IOException
 import java.util.ArrayList
 
 /**
- * Lint project for a project backed by a [LmModule] (which could be an app, a library,
+ * Lint project for a project backed by a [LintModelModule] (which could be an app, a library,
  * dynamic feature, etc.
  */
-open class LmModuleProject(
+open class LintModelModuleProject(
     client: LintClient,
     dir: File,
     referenceDir: File,
-    private val variant: LmVariant,
+    private val variant: LintModelVariant,
     mergedManifest: File?
 ) : Project(client, dir, referenceDir) {
-    private val model: LmModule get() = variant.module
+    private val model: LintModelModule get() = variant.module
 
     init {
         gradleProject = true
@@ -62,7 +62,7 @@ open class LmModuleProject(
         externalLibrary = external
     }
 
-    fun setMavenCoordinates(mc: LmMavenName) {
+    fun setMavenCoordinates(mc: LintModelMavenName) {
         mavenCoordinates = mc
     }
 
@@ -86,19 +86,20 @@ open class LmModuleProject(
         // Deliberately not calling super; that code is for ADT compatibility
     }
 
-    private val sourceProviders: List<LmSourceProvider>
+    private val sourceProviders: List<LintModelSourceProvider>
         get() = variant.sourceProviders
 
-    private val testSourceProviders: List<LmSourceProvider>
+    private val testSourceProviders: List<LintModelSourceProvider>
         get() = variant.testSourceProviders
 
-    override fun getBuildModule(): LmModule = variant.module
-    override fun getBuildVariant(): LmVariant? = variant
-    override fun isLibrary(): Boolean = model.type === LmModuleType.LIBRARY ||
-            model.type === LmModuleType.JAVA_LIBRARY
-    override fun isAndroidProject(): Boolean = type != LmModuleType.JAVA_LIBRARY
+    override fun getBuildModule(): LintModelModule = variant.module
+    override fun getBuildVariant(): LintModelVariant? = variant
+    override fun isLibrary(): Boolean = model.type === LintModelModuleType.LIBRARY ||
+            model.type === LintModelModuleType.JAVA_LIBRARY
+
+    override fun isAndroidProject(): Boolean = type != LintModelModuleType.JAVA_LIBRARY
     override fun hasDynamicFeatures(): Boolean =
-        model.type === LmModuleType.APP && model.dynamicFeatures.isNotEmpty()
+        model.type === LintModelModuleType.APP && model.dynamicFeatures.isNotEmpty()
 
     override fun getManifestFiles(): List<File> {
         if (manifestFiles == null) {
@@ -350,7 +351,7 @@ open class LmModuleProject(
  * Adds all the jar files from this library into the given list, skipping provided
  * libraries if requested
  */
-fun LmLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
+fun LintModelLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
     if (skipped) {
         return
     }

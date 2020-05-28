@@ -46,8 +46,8 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -106,7 +106,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     @Override
     public void beforeCheckRootProject(@NonNull Context context) {
-        LmVariant variant = context.getProject().getBuildVariant();
+        LintModelVariant variant = context.getProject().getBuildVariant();
         if (variant == null) {
             mSkipChecks = true;
             return;
@@ -217,7 +217,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
             Location location = context.getNameLocation(attribute);
             Project project = context.getProject();
             String path = "build.gradle";
-            LmModule model = project.getBuildModule();
+            LintModelModule model = project.getBuildModule();
             if (model != null) {
                 path = model.getModulePath() + File.separator + path;
             }

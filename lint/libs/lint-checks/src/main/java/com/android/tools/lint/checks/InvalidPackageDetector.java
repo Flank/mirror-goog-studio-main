@@ -28,7 +28,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.helpers.DefaultJavaEvaluator;
-import com.android.tools.lint.model.LmMavenName;
+import com.android.tools.lint.model.LintModelMavenName;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
@@ -263,9 +263,9 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
 
             Project project = context.getProject();
             DefaultJavaEvaluator evaluator = new DefaultJavaEvaluator(null, project);
-            LmMavenName library = evaluator.getLibrary(jarFile);
+            LintModelMavenName library = evaluator.getLibrary(jarFile);
             String libraryString;
-            if (library != null && !LmMavenName.LOCAL_AARS.equals(library.getGroupId())) {
+            if (library != null && !LintModelMavenName.LOCAL_AARS.equals(library.getGroupId())) {
                 libraryString = library.getGroupId() + ':' + library.getArtifactId();
             } else {
                 libraryString = "library";

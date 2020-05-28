@@ -16,14 +16,22 @@
 
 package com.android.tools.lint.model
 
-interface LmBuildFeatures {
-    val viewBinding: Boolean
-    val coreLibraryDesugaringEnabled: Boolean
-    val namespacingMode: LmNamespacingMode
+interface LintModelResourceField {
+    val type: String
+    val name: String
+    val value: String
+
+    operator fun component1(): String = type
+    operator fun component2(): String = name
+    operator fun component3(): String = value
 }
 
-class DefaultLmBuildFeatures(
-    override val viewBinding: Boolean,
-    override val coreLibraryDesugaringEnabled: Boolean,
-    override val namespacingMode: LmNamespacingMode
-) : LmBuildFeatures
+data class DefaultLintModelResourceField(
+    override val type: String,
+    override val name: String,
+    override val value: String
+) : LintModelResourceField {
+    override fun toString(): String {
+        return "$name:$type=$value"
+    }
+}

@@ -63,10 +63,10 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
-import com.android.tools.lint.model.LmModule;
-import com.android.tools.lint.model.LmResourceField;
-import com.android.tools.lint.model.LmSourceProvider;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelResourceField;
+import com.android.tools.lint.model.LintModelSourceProvider;
+import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -187,7 +187,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     private void addDynamicResources(@NonNull Context context) {
         Project project = context.getProject();
-        LmVariant variant = project.getBuildVariant();
+        LintModelVariant variant = project.getBuildVariant();
         if (variant != null) {
             recordManifestPlaceHolderUsages(variant.getManifestPlaceholders());
             addDynamicResources(project, variant.getResValues());
@@ -202,12 +202,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     }
 
     private void addDynamicResources(
-            @NonNull Project project, @NonNull Map<String, LmResourceField> resValues) {
+            @NonNull Project project, @NonNull Map<String, LintModelResourceField> resValues) {
         Set<String> keys = resValues.keySet();
         if (!keys.isEmpty()) {
             Location location = Lint.guessGradleLocation(project);
             for (String name : keys) {
-                LmResourceField field = resValues.get(name);
+                LintModelResourceField field = resValues.get(name);
                 ResourceType type = ResourceType.fromClassName(field.getType());
                 if (type == null) {
                     // Highly unlikely. This would happen if in the future we add
@@ -225,7 +225,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Override
     public void beforeCheckEachProject(@NonNull Context context) {
         projectUsesViewBinding = false;
-        LmModule model = context.getProject().getBuildModule();
+        LintModelModule model = context.getProject().getBuildModule();
         if (model != null) {
             projectUsesViewBinding = model.getBuildFeatures().getViewBinding();
         }
@@ -251,7 +251,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             // used by some other source set.
             // In Gradle etc we don't need to do this (and in large projects it's expensive)
             if (sIncludeInactiveReferences && !project.isLibrary() && LintClient.isStudio()) {
-                LmVariant variant = project.getBuildVariant();
+                LintModelVariant variant = project.getBuildVariant();
                 if (variant != null) {
                     addInactiveReferences(variant);
                 }
@@ -464,9 +464,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         }
     }
 
-    private void addInactiveReferences(@NonNull LmVariant active) {
-        LmModule module = active.getModule();
-        for (LmSourceProvider provider : module.getInactiveSourceProviders(active)) {
+    private void addInactiveReferences(@NonNull LintModelVariant active) {
+        LintModelModule module = active.getModule();
+        for (LintModelSourceProvider provider : module.getInactiveSourceProviders(active)) {
             for (File res : provider.getResDirectories()) {
                 // Scan resource directory
                 if (res.isDirectory()) {

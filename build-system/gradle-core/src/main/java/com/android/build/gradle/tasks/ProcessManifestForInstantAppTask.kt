@@ -134,11 +134,9 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
         override fun handleProvider(taskProvider: TaskProvider<ProcessManifestForInstantAppTask>) {
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.artifacts.use(taskProvider)
-                .toRead(
+                .toTransformMany(
                     InternalArtifactType.MERGED_MANIFESTS,
-                    ProcessManifestForInstantAppTask::mergedManifests
-                )
-                .andWrite(
+                    ProcessManifestForInstantAppTask::mergedManifests,
                     InternalArtifactType.INSTANT_APP_MANIFEST,
                     ProcessManifestForInstantAppTask::instantAppManifests
                 )

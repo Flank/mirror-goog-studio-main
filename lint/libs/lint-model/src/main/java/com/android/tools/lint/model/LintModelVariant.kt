@@ -19,15 +19,15 @@ package com.android.tools.lint.model
 import com.android.sdklib.AndroidVersion
 import java.io.File
 
-interface LmVariant {
+interface LintModelVariant {
     /** Module containing this variant */
-    val module: LmModule
+    val module: LintModelModule
 
     val name: String
     val useSupportLibraryVectorDrawables: Boolean
-    val mainArtifact: LmAndroidArtifact
-    val testArtifact: LmJavaArtifact?
-    val androidTestArtifact: LmAndroidArtifact?
+    val mainArtifact: LintModelAndroidArtifact
+    val testArtifact: LintModelJavaArtifact?
+    val androidTestArtifact: LintModelAndroidArtifact?
 
     // For temporary backwards compatibility
     val oldVariant: com.android.builder.model.Variant?
@@ -36,34 +36,34 @@ interface LmVariant {
     val `package`: String?
     val minSdkVersion: AndroidVersion?
     val targetSdkVersion: AndroidVersion?
-    val resValues: Map<String, LmResourceField>
+    val resValues: Map<String, LintModelResourceField>
     val manifestPlaceholders: Map<String, String>
     val resourceConfigurations: Collection<String>
     val proguardFiles: Collection<File>
     val consumerProguardFiles: Collection<File>
 
-    val sourceProviders: List<LmSourceProvider>
-    val testSourceProviders: List<LmSourceProvider>
+    val sourceProviders: List<LintModelSourceProvider>
+    val testSourceProviders: List<LintModelSourceProvider>
 
     val debuggable: Boolean
     val shrinkable: Boolean
 
     /**
-     * Lookup from artifact address in a [LmDependencyGraph] to a [LmLibrary].
+     * Lookup from artifact address in a [LintModelDependencyGraph] to a [LintModelLibrary].
      * The libraries are shared across modules and variants, only the dependency graphs
      * pointing to the libraries by address are per artifact.
      */
-    val libraryResolver: LmLibraryResolver
+    val libraryResolver: LintModelLibraryResolver
 }
 
-class DefaultLmVariant(
-    override val module: LmModule,
+class DefaultLintModelVariant(
+    override val module: LintModelModule,
 
     override val name: String,
     override val useSupportLibraryVectorDrawables: Boolean,
-    override val mainArtifact: LmAndroidArtifact,
-    override val testArtifact: LmJavaArtifact?,
-    override val androidTestArtifact: LmAndroidArtifact?,
+    override val mainArtifact: LintModelAndroidArtifact,
+    override val testArtifact: LintModelJavaArtifact?,
+    override val androidTestArtifact: LintModelAndroidArtifact?,
     override val `package`: String?,
     override val minSdkVersion: AndroidVersion?,
     override val targetSdkVersion: AndroidVersion?,
@@ -73,7 +73,7 @@ class DefaultLmVariant(
      * this map merges all the values from the mergedFlavor (which includes the defaultConfig)
      * as well as the buildType.
      */
-    override val resValues: Map<String, LmResourceField>,
+    override val resValues: Map<String, LintModelResourceField>,
     /**
      * Manifest placeholders declared in the DSL. Note that unlike the builder-model,
      * this map merges all the values from the mergedFlavor (which includes the defaultConfig)
@@ -85,15 +85,15 @@ class DefaultLmVariant(
     override val proguardFiles: Collection<File>,
     override val consumerProguardFiles: Collection<File>,
 
-    override val sourceProviders: List<LmSourceProvider>,
-    override val testSourceProviders: List<LmSourceProvider>,
+    override val sourceProviders: List<LintModelSourceProvider>,
+    override val testSourceProviders: List<LintModelSourceProvider>,
 
     override val debuggable: Boolean,
     override val shrinkable: Boolean,
-    override val libraryResolver: LmLibraryResolver,
+    override val libraryResolver: LintModelLibraryResolver,
 
     // For temporary backwards compatibility
     override val oldVariant: com.android.builder.model.Variant?
-) : LmVariant {
+) : LintModelVariant {
     override fun toString(): String = name
 }

@@ -42,7 +42,7 @@ sealed class ArtifactType<T : FileSystemLocation>(
      * APK directory where final APK files will be located.
      */
     @Incubating
-    object APK: ArtifactType<Directory>(DIRECTORY), Single, Replaceable, ContainsMany
+    object APK: ArtifactType<Directory>(DIRECTORY), Single, Transformable, Replaceable, ContainsMany
 
     /**
      * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.

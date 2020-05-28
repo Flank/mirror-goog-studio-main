@@ -17,7 +17,7 @@
 package com.android.tools.lint.gradle.api
 
 import com.android.repository.Revision
-import com.android.tools.lint.model.LmLintOptions
+import com.android.tools.lint.model.LintModelLintOptions
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import java.io.File
@@ -27,7 +27,7 @@ abstract class LintExecutionRequest {
 
     abstract val gradlePluginVersion: String
 
-    abstract val lintOptions: LmLintOptions?
+    abstract val lintOptions: LintModelLintOptions?
 
     open val isFatalOnly: Boolean
         get() = false

@@ -16,20 +16,24 @@
 
 package com.android.tools.lint.model
 
-enum class LmNamespacingMode {
-    /**
-     * Resources are not namespaced.
-     *
-     * They are merged at the application level, as was the behavior with AAPT1
-     */
-    DISABLED,
+enum class LintModelSeverity {
+    FATAL,
+    ERROR,
+    WARNING,
+    INFORMATIONAL,
+    IGNORE,
+    DEFAULT_ENABLED;
 
-    /**
-     * Resources must be namespaced.
-     *
-     * Each library is compiled in to an AAPT2 static library with its own namespace.
-     *
-     * Projects using this *cannot* consume non-namespaced dependencies.
-     */
-    REQUIRED
+    companion object {
+        @JvmStatic
+        fun fromName(name: String): LintModelSeverity? {
+            for (severity in values()) {
+                if (severity.name.equals(name, ignoreCase = true)) {
+                    return severity
+                }
+            }
+
+            return null
+        }
+    }
 }

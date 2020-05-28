@@ -81,17 +81,23 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     /** The names of resources, for each resource type, defined in the base folder */
     private val baseNames: MutableMap<ResourceType, MutableSet<String>> =
         Maps.newEnumMap(ResourceType::class.java)
+
     /** The names of resources, for each resource type, defined in a non-base folder */
     private val nonBaseNames: MutableMap<ResourceType, MutableSet<String>> =
         Maps.newEnumMap(ResourceType::class.java)
+
     /** For missing strings, a map from the string name to the set of locales where it's missing */
     private var missingMap: MutableMap<String, Set<String>>? = null
+
     /** In incremental mode, a cache for the set of locales in the module */
     private var locales: Set<String>? = null
+
     /** In batch mode, the in-progress view of the set of locales we've come across in pass 1 */
     private var pendingLocales: MutableSet<String>? = null
+
     /** In batch mode, the set of strings we've come across marked as translatable=false */
     private var nonTranslatable: MutableSet<String>? = null
+
     /** In batch mode, the translations: a map from each string name to the set of locales */
     private var translations: MutableMap<String, MutableSet<String>>? = null
 

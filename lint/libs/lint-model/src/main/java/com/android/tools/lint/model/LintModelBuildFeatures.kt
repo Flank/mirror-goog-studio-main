@@ -16,24 +16,14 @@
 
 package com.android.tools.lint.model
 
-enum class LmSeverity {
-    FATAL,
-    ERROR,
-    WARNING,
-    INFORMATIONAL,
-    IGNORE,
-    DEFAULT_ENABLED;
-
-    companion object {
-        @JvmStatic
-        fun fromName(name: String): LmSeverity? {
-            for (severity in values()) {
-                if (severity.name.equals(name, ignoreCase = true)) {
-                    return severity
-                }
-            }
-
-            return null
-        }
-    }
+interface LintModelBuildFeatures {
+    val viewBinding: Boolean
+    val coreLibraryDesugaringEnabled: Boolean
+    val namespacingMode: LintModelNamespacingMode
 }
+
+class DefaultLintModelBuildFeatures(
+    override val viewBinding: Boolean,
+    override val coreLibraryDesugaringEnabled: Boolean,
+    override val namespacingMode: LintModelNamespacingMode
+) : LintModelBuildFeatures

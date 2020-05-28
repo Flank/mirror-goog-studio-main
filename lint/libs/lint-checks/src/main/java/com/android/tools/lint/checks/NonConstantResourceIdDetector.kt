@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -31,12 +30,9 @@ import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UExpressionList
-import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.java.JavaUSwitchExpression
-import org.jetbrains.uast.resolveToUElement
-import org.jetbrains.uast.sourcePsiElement
 
 /**
  * Warns against using non-constant resource IDs in Java switch statement blocks and annotations.

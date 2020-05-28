@@ -24,7 +24,6 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestResultChecker
-import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
 import com.google.common.truth.Truth.assertThat
 import org.junit.ClassRule

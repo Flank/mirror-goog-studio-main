@@ -26,16 +26,22 @@ import java.util.EnumSet
 enum class Desugaring {
     /** Lambdas */
     LAMBDAS,
+
     /** Method references */
     METHOD_REFERENCES,
+
     /** Type annotations and repeated annotations */
     TYPE_ANNOTATIONS,
+
     /** Default and static interface methods */
     INTERFACE_METHODS,
+
     /** Try-with-resource statements */
     TRY_WITH_RESOURCES,
+
     /** Inlining Objects.requireNonNull */
     OBJECTS_REQUIRE_NON_NULL,
+
     /** Rewriting Long.compare to lcmp */
     LONG_COMPARE,
 

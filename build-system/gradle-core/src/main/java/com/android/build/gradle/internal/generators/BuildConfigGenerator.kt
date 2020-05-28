@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.generators;
 
 import com.android.build.api.variant.BuildConfigField
-import com.android.builder.compiling.BuildConfigCreator
+import com.android.builder.compiling.GeneratedCodeFileCreator
 import com.google.common.base.Charsets
 import com.google.common.io.Closer
 import com.squareup.javawriter.JavaWriter
@@ -32,7 +32,7 @@ import javax.lang.model.element.Modifier
  * Class able to generate a BuildConfig class in an Android project. The BuildConfig class contains
  * constants related to the build target.
  */
-class BuildConfigGenerator(buildConfigData: BuildConfigData) : BuildConfigCreator {
+class BuildConfigGenerator(buildConfigData: BuildConfigData) : GeneratedCodeFileCreator {
     private val genFolder: String = buildConfigData.outputPath.toString()
     private val buildConfigPackageName: String = buildConfigData.buildConfigPackageName
     private val fields: Map<String, BuildConfigField<out Serializable>> = buildConfigData.buildConfigFields
@@ -44,7 +44,7 @@ class BuildConfigGenerator(buildConfigData: BuildConfigData) : BuildConfigCreato
             buildConfigPackageName.replace('.', File.separatorChar)
         )
 
-    override val buildConfigFile = File(folderPath, BUILD_CONFIG_NAME)
+    override val generatedFilePath = File(folderPath, BUILD_CONFIG_NAME)
 
     /** Generates the BuildConfig class.  */
     @Throws(IOException::class)
@@ -54,7 +54,7 @@ class BuildConfigGenerator(buildConfigData: BuildConfigData) : BuildConfigCreato
         }
         Closer.create().use { closer ->
             val fos =
-                closer.register(FileOutputStream(buildConfigFile))
+                closer.register(FileOutputStream(generatedFilePath))
             val out = closer.register(
                 OutputStreamWriter(fos, Charsets.UTF_8)
             )

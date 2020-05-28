@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.gradlecompat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.google.common.base.Throwables;
@@ -43,7 +44,10 @@ public class GradleVersionCheckTest {
 
 
         try {
-            project.executor().withFailOnWarning(false).run("help");
+            project.executor()
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
+                    .withFailOnWarning(false)
+                    .run("help");
         } catch (Exception e) {
             assertThat(Throwables.getRootCause(e).getMessage())
                     .contains(

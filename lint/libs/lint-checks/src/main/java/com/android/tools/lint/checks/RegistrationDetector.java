@@ -41,7 +41,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
-import com.android.tools.lint.model.LmModule;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
 import java.util.Arrays;
@@ -198,7 +197,6 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
                         "The `<%1$s> %2$s` is not registered in the manifest", tag, className);
         context.report(ISSUE, node, location, message);
     }
-
 
     private static String getTag(@NonNull JavaEvaluator evaluator, @NonNull UClass cls) {
         String tag = null;

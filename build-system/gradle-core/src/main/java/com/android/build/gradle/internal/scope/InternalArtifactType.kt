@@ -287,6 +287,8 @@ InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object AAPT_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
     // the merger of a module's AAPT_PROGUARD_FILE and those of its feature(s)
     object MERGED_AAPT_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Jar file containing a compiled manifest.class file.
+    object COMPILE_MANIFEST_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // directory containing an empty class annotated with a data binding annotation (it could be any
     // data binding annotation), so that the Java compiler still invokes data binding in the case

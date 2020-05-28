@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -95,6 +96,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     private boolean sdkInLocalProperties = false;
     private boolean localAndroidSdkHome = false;
     private boolean failOnWarning = true;
+    private ConfigurationCaching configurationCaching = ConfigurationCaching.OFF;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -204,6 +206,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
+    public final T withConfigurationCaching(ConfigurationCaching configurationCaching) {
+        this.configurationCaching = configurationCaching;
+        return (T) this;
+    }
+
     protected final List<String> getArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
         arguments.addAll(this.arguments);
@@ -221,6 +228,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
         if (failOnWarning) {
             arguments.add("--warning-mode=fail");
+        }
+
+        if (configurationCaching != ConfigurationCaching.NONE) {
+            arguments.add(
+                    "--configuration-cache=" + configurationCaching.name().toLowerCase(Locale.US));
         }
 
         if (!sdkInLocalProperties) {
@@ -357,6 +369,13 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     protected interface RunAction<LauncherT, ResultT> {
         void run(@NonNull LauncherT launcher, @NonNull ResultHandler<ResultT> resultHandler);
+    }
+
+    public enum ConfigurationCaching {
+        ON,
+        OFF,
+        WARN,
+        NONE,
     }
 
     @Nullable

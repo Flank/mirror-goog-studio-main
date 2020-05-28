@@ -200,7 +200,8 @@ open class DefaultUastParser(
         if (containingFile != null && !containingFile.isEquivalentTo(context.psiFile) &&
             containingFile.name == context.psiFile?.name &&
             // createJavaFileStub$fakeFile$1
-            containingFile.javaClass.simpleName.contains("fakeFile")) {
+            containingFile.javaClass.simpleName.contains("fakeFile")
+        ) {
             // Consider these equal
         } else if (containingFile != null && containingFile != context.psiFile) {
             // Reporting an error in a different file.

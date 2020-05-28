@@ -67,8 +67,8 @@ class TfliteModelGenerator(
         buildFields(classBuilder)
         buildConstructor(classBuilder)
         buildStaticNewInstanceMethods(classBuilder)
-        buildGetAssociatedFileMethod(classBuilder)
         buildProcessMethod(classBuilder)
+        buildCloseMethod(classBuilder)
         // RGB image is the only advanced input, so we can check it like this.
         if( modelInfo.inputs.any { it.isRGBImage }) {
             buildProcessMethod(classBuilder, isGeneric = true)
@@ -98,30 +98,6 @@ class TfliteModelGenerator(
         classBuilder.addField(model)
     }
 
-    private fun buildGetAssociatedFileMethod(classBuilder: TypeSpec.Builder) {
-        val methodBuilder = MethodSpec.methodBuilder("getAssociatedFile")
-            .addParameter(ClassNames.CONTEXT, "context")
-            .addParameter(String::class.java, "fileName")
-            .addModifiers(Modifier.PRIVATE)
-            .addException(IOException::class.java)
-            .returns(InputStream::class.java)
-        methodBuilder
-            .addStatement(
-                "\$T inputStream = context.getAssets().open(\$S)",
-                InputStream::class.java,
-                localModelPath
-            )
-            .addStatement(
-                "\$T zipFile = new \$T(new \$T(\$T.toByteArray(inputStream)))",
-                ClassNames.ZIP_FILE,
-                ClassNames.ZIP_FILE,
-                ClassNames.SEEKABLE_IN_MEMORY_BYTE_CHANNEL,
-                ClassNames.IO_UTILS
-            )
-            .addStatement("return zipFile.getRawInputStream(zipFile.getEntry(fileName))")
-        classBuilder.addMethod(methodBuilder.build())
-    }
-
     private fun buildInnerClass(classBuilder: TypeSpec.Builder) {
         getOutputsClassInjector().inject(classBuilder, modelInfo.outputs)
     }
@@ -143,6 +119,11 @@ class TfliteModelGenerator(
                 FIELD_MODEL,
                 ClassNames.MODEL,
                 localModelPath
+            )
+            .addStatement(
+                "\$T extractor = new \$T(model.getData())",
+                ClassNames.METADATA_EXTRACTOR,
+                ClassNames.METADATA_EXTRACTOR
             )
 
         // Init preprocessor
@@ -199,6 +180,13 @@ class TfliteModelGenerator(
             localOutputs
         )
         methodBuilder.addStatement("return \$L", localOutputs)
+        classBuilder.addMethod(methodBuilder.build())
+    }
+
+    private fun buildCloseMethod(classBuilder: TypeSpec.Builder) {
+        val methodBuilder = MethodSpec.methodBuilder("close")
+            .addModifiers(Modifier.PUBLIC)
+            .addStatement("\$L.close()", FIELD_MODEL)
         classBuilder.addMethod(methodBuilder.build())
     }
 

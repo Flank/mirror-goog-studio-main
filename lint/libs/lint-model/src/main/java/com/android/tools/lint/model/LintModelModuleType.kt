@@ -16,22 +16,15 @@
 
 package com.android.tools.lint.model
 
-interface LmResourceField {
-    val type: String
-    val name: String
-    val value: String
-
-    operator fun component1(): String = type
-    operator fun component2(): String = name
-    operator fun component3(): String = value
-}
-
-data class DefaultLmResourceField(
-    override val type: String,
-    override val name: String,
-    override val value: String
-) : LmResourceField {
-    override fun toString(): String {
-        return "$name:$type=$value"
-    }
+/**
+ * Represents the type of artifact produced by a module
+ */
+enum class LintModelModuleType {
+    APP,
+    LIBRARY,
+    TEST,
+    INSTANT_APP,
+    FEATURE,
+    DYNAMIC_FEATURE,
+    JAVA_LIBRARY
 }

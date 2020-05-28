@@ -34,7 +34,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LmVariant;
+import com.android.tools.lint.model.LintModelVariant;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
@@ -247,7 +247,7 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     @Nullable
     private static Boolean getReleaseMode(@NonNull Context context) {
         Project project = context.getMainProject();
-        LmVariant variant = project.getBuildVariant();
+        LintModelVariant variant = project.getBuildVariant();
         if (variant != null) {
             return !variant.getDebuggable();
         }

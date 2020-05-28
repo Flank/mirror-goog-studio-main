@@ -11,8 +11,8 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.11.1:jar",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1:jar",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-io[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
@@ -29,6 +29,6 @@ coverage_java_library(
     deps = [
         "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",
-        "//tools/base/third_party:org.tensorflow_tensorflow-lite-support",
+        "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",
     ],
 )

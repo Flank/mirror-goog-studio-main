@@ -18,8 +18,8 @@ package com.android.tools.lint.model
 
 import com.android.tools.lint.checks.infrastructure.GradleModelMocker
 import com.android.tools.lint.checks.infrastructure.GradleModelMockerTest
-import com.android.tools.lint.model.LmSerialization.LmSerializationFileAdapter
-import com.android.tools.lint.model.LmSerialization.TargetFile
+import com.android.tools.lint.model.LintModelSerialization.LintModelSerializationFileAdapter
+import com.android.tools.lint.model.LintModelSerialization.TargetFile
 import com.android.utils.XmlUtils
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
@@ -39,7 +39,7 @@ import java.io.StringReader
 import java.io.StringWriter
 import java.io.Writer
 
-class LmSerializationTest {
+class LintModelSerializationTest {
     @get:Rule
     var temporaryFolder = TemporaryFolder()
 
@@ -1045,7 +1045,7 @@ class LmSerializationTest {
         val pathVariables: MutableList<Pair<String, File>> = mutableListOf()
         pathVariables.add(Pair("SDK", folder1))
         pathVariables.add(Pair("GRADLE", folder2))
-        val adapter = LmSerializationFileAdapter(moduleFile, pathVariables)
+        val adapter = LintModelSerializationFileAdapter(moduleFile, pathVariables)
 
         assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
         assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
@@ -1066,7 +1066,7 @@ class LmSerializationTest {
     ) {
         try {
             val reader = StringReader(xml)
-            LmSerialization.readModule(LmSerializationStringAdapter(reader = { _, _, _ -> reader }))
+            LintModelSerialization.readModule(LintModelSerializationStringAdapter(reader = { _, _, _ -> reader }))
             if (expectedErrors != null) {
                 fail("Expected failure, got valid module instead")
             }
@@ -1091,7 +1091,7 @@ class LmSerializationTest {
         fun String.cleanup() = replace(path, "＄ROOT").trim()
 
         // Test lint model stuff
-        val module = LmFactory().create(project, dir)
+        val module = LintModelFactory().create(project, dir)
         val xml = writeModule(module)
 
         // Make sure all the generated XML is valid
@@ -1116,7 +1116,7 @@ class LmSerializationTest {
         }
 
         val newModule =
-            LmSerialization.readModule(LmSerializationStringAdapter(reader = { target, variantName, artifact ->
+            LintModelSerialization.readModule(LintModelSerializationStringAdapter(reader = { target, variantName, artifact ->
                 val contents = xml[getMapKey(target, variantName, artifact)]!!
                 StringReader(contents)
             }))
@@ -1162,11 +1162,11 @@ class LmSerializationTest {
         return key.toString()
     }
 
-    private fun writeModule(module: LmModule): Map<String, String> {
+    private fun writeModule(module: LintModelModule): Map<String, String> {
         val map = mutableMapOf<String, StringWriter>()
-        LmSerialization.writeModule(
+        LintModelSerialization.writeModule(
             module,
-            LmSerializationStringAdapter(writer = { target, variantName, artifactName ->
+            LintModelSerializationStringAdapter(writer = { target, variantName, artifactName ->
                 val key = getMapKey(target, variantName, artifactName)
                 map[key] ?: StringWriter().also { map[key] = it }
             })
@@ -1176,20 +1176,20 @@ class LmSerializationTest {
         }
     }
 
-    private fun writeVariant(variant: LmVariant): String {
+    private fun writeVariant(variant: LintModelVariant): String {
         val writer = StringWriter()
-        LmSerialization.writeVariant(variant, LmSerializationStringAdapter(writer = { _, _, _ ->
+        LintModelSerialization.writeVariant(variant, LintModelSerializationStringAdapter(writer = { _, _, _ ->
             writer
         }))
         return writer.toString()
     }
 
-    private class LmSerializationStringAdapter(
+    private class LintModelSerializationStringAdapter(
         override val root: File? = null,
         private val reader: (TargetFile, String, String) -> Reader = { _, _, _ -> StringReader("<error>") },
         private val writer: (TargetFile, String, String) -> Writer = { _, _, _ -> StringWriter() },
-        override val pathVariables: LmPathVariables = emptyList()
-    ) : LmSerialization.LmSerializationAdapter {
+        override val pathVariables: LintModelPathVariables = emptyList()
+    ) : LintModelSerialization.LintModelSerializationAdapter {
         override fun file(target: TargetFile, variantName: String, artifactName: String): File {
             return if (variantName.isNotEmpty())
                 File("variant-$variantName.xml")

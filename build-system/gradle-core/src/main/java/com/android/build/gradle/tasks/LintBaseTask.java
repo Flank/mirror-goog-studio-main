@@ -51,7 +51,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.errors.DefaultIssueReporter;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
-import com.android.tools.lint.model.LmFactory;
+import com.android.tools.lint.model.LintModelFactory;
 import com.android.utils.Pair;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -145,9 +145,9 @@ public abstract class LintBaseTask extends DefaultTask {
 
         @Nullable
         @Override
-        public com.android.tools.lint.model.LmLintOptions getLintOptions() {
+        public com.android.tools.lint.model.LintModelLintOptions getLintOptions() {
             if (lintOptions != null) {
-                return LmFactory.getLintOptions(lintOptions);
+                return LintModelFactory.getLintOptions(lintOptions);
             } else {
                 return null;
             }

@@ -43,7 +43,7 @@ import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LmModuleProject;
+import com.android.tools.lint.detector.api.LintModelModuleProject;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
@@ -445,9 +445,9 @@ public class TestLintTask {
 
     /**
      * Lint will try to use real production implementations of the lint infrastructure, such as
-     * {@link LmModuleProject}. However, in a few (narrow) cases, we don't want to do this because
-     * we want to simulate certain failure scenario. This flag gives tests a chance to opt back to
-     * the previous test-specific project implementation.
+     * {@link LintModelModuleProject}. However, in a few (narrow) cases, we don't want to do this
+     * because we want to simulate certain failure scenario. This flag gives tests a chance to opt
+     * back to the previous test-specific project implementation.
      *
      * @param useTestProject whether to use the older test implementation for projects
      * @return this, for constructor chaining

@@ -16,104 +16,277 @@
 
 package com.android.build.api.artifact
 
-import com.android.build.api.variant.BuiltArtifact
-import com.android.build.api.variant.BuiltArtifacts
 import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
-import java.io.File
-import java.io.Serializable
-import java.util.function.Supplier
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 
-/**
- * Operations that requires a [org.gradle.api.tasks.TaskProvider] of [TaskT] to be performed.
- */
 @Incubating
-interface TaskBasedOperations<TaskT: Task> {
+interface TaskBasedOperations<TaskT : Task> {
 
     /**
-     * Construct a new operation request where the [TaskT] expects to read the provided
-     * [ArtifactTypeT] built artifacts from the location specified by the [at] parameter.
+     * Initiates an append request to a [Artifact.Multiple] artifact type.
      *
-     * @param type the artifact type the [TaskT] is interested in.
-     * @param at the location at which the [TaskT] will be reading the built artifacts from.
+     * @param type the [Artifact] of [FileTypeT] identifying the artifact to append to.
+     * @param with the method reference to get the [FileSystemLocationProperty] to retrieve the
+     * produced [FileTypeT] when needed.
+     *
+     * The artifact type must be [Artifact.Multiple] and [Artifact.Appendable]
+     *
+     * Let's take a [Task] with a [org.gradle.api.file.RegularFile] output :
+     * <pre>
+     *     abstract class MyTask: DefaultTask() {
+     *          @get:OutputFile abstract val outputFile: RegularFileProperty
+     *
+     *          @TaskAction fun taskAction() {
+     *              ... outputFile.get().asFile.write( ... ) ...
+     *          }
+     *     }
+     * </pre>
+     *
+     * and an ArtifactType defined as follows :
+     *
+     * <pre>
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *          object MULTIPLE_FILE_ARTIFACT:
+     *                  ArtifactType<RegularFile>(FILE), Multiple, Appendable
+     *     }
+     * </pre>
+     *
+     * you can then register the above task as a Provider of [org.gradle.api.file.RegularFile] for
+     * that artifact type.
+     *
+     * <pre>
+     *     val taskProvider= projects.tasks.register(MyTask::class.java, "appendTask")
+     *     artifacts.use(taskProvider).toAppend(
+     *          ArtifactType.MULTIPLE_FILE_ARTIFACT
+     *          MyTask::outputFile)
+     * </pre>
      */
-    fun <ArtifactTypeT> toRead(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): TaskBasedOperations<TaskT>
-            where ArtifactTypeT: Artifact<Directory>, ArtifactTypeT: Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
+    fun <FileTypeT : FileSystemLocation, ArtifactTypeT> toAppend(
+        type: ArtifactTypeT,
+        with: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    ) where ArtifactTypeT : Artifact<FileTypeT>,
+            ArtifactTypeT : Artifact.Appendable
 
     /**
-     * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
-     * of type [ArtifactTypeT] at the location identified by [at].
+     * Initiates a replacement request to a single [Artifact.Replaceable] artifact type.
      *
-     * @param type the artifact type the [TaskT] is producing
-     * @param at the location it produces these artifacts in.
+     * @param type  the [Artifact] of [FileTypeT] identifying the artifact to replace.
+     * @param with the method reference to obtain the [Provider] for the produced [FileTypeT]
+     *
+     * The artifact type must be [Artifact.Replaceable]
+     *
+     * A replacement request does not care about the existing producer as it replaces it. Therefore
+     * the existing producer will not execute.
+     * Please note that when such replace requests are made, the TASK will replace initial AGP
+     * providers.
+     *
+     * You cannot replace [Artifact.Multiple] artifact type, therefore you must instead combine
+     * it using the [TaskBasedOperations.toTransformAll] API.
+     *
+     * Let's take a [Task] with a [org.gradle.api.file.RegularFile] output :
+     *
+     * <pre>
+     *     abstract class MyTask: DefaultTask() {
+     *          @get:OutputFile abstract val outputFile: RegularFileProperty
+     *
+     *          @TaskAction fun taskAction() {
+     *              ... write outputFile ...
+     *          }
+     *     }
+     * </pre>
+     *
+     * and an ArtifactType defined as follows :
+     *
+     * <pre>
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *          object SINGLE_FILE_ARTIFACT:
+     *                  ArtifactType<RegularFile>(FILE), Replaceable
+     *     }
+     * </pre>
+     *
+     * you can register a transform to the collection of [org.gradle.api.file.RegularFile]
+     *
+     * <pre>
+     *     val taskProvider= projects.tasks.register(MyTask::class.java, "replaceTask")
+     *     artifacts.use(taskProvider).toReplace(
+     *          ArtifactType.SINGLE_FILE_ARTIFACT
+     *          MyTask::outputFile)
+     * </pre>
      */
-    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): ArtifactTransformationRequest<TaskT>
-        where ArtifactTypeT : Artifact<Directory>, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
+    fun <FileTypeT : FileSystemLocation, ArtifactTypeT> toReplace(
+        type: ArtifactTypeT,
+        with: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    ) where ArtifactTypeT : Artifact<FileTypeT>,
+            ArtifactTypeT : Artifact.Replaceable
 
     /**
-     * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
-     * of type [ArtifactTypeT] at the location identified by [at].
+     * Initiates a transform request to a single [Artifact.Transformable] artifact type.
      *
-     * @param type the artifact type the [TaskT] is producing
-     * @param at the task's Property to produce these artifacts in.
-     * @param atLocation the file system location to put these artifacts.
+     * @param type  the [Artifact] of [FileTypeT] identifying the artifact to transform.
+     * @param from the method reference to get a [Property] of [FileTypeT] to set the transform input
+     * @param into the method reference to get the [Property] of [FileTypeT] to retrieve the
+     * produced [FileTypeT] when needed.
+     *
+     * The artifact type must be [Artifact.Single] and [Artifact.Transformable]
+     *
+     * Let's take a [Task] transforming an input [org.gradle.api.file.RegularFile] into an
+     * output :
+     * <pre>
+     *     abstract class MyTask: DefaultTask() {
+     *          @get:InputFile abstract val inputFile: RegularFileProperty
+     *          @get:OutputFile abstract val outputFile: RegularFileProperty
+     *
+     *          @TaskAction fun taskAction() {
+     *              ... read inputFile and write outputFile ...
+     *          }
+     *     }
+     * </pre>
+     *
+     * and an ArtifactType defined as follows :
+     *
+     * <pre>
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *          object SINGLE_FILE_ARTIFACT:
+     *                  ArtifactType<RegularFile>(FILE), Single, Transformable
+     *     }
+     * </pre>
+     *
+     * you can register a transform to the collection of [org.gradle.api.file.RegularFile]
+     *
+     * <pre>
+     *     val taskProvider= projects.tasks.register(MyTask::class.java, "transformTask")
+     *     artifacts.use(taskProvider).toTransform(
+     *          ArtifactType.SINGLE_FILE_ARTIFACT
+     *          MyTask::inputFile,
+     *          MyTask::outputFile)
+     * </pre>
      */
-    // TODO : consider moving both andWrite to a separate interface to support atLocation, withName...
-    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>, atLocation: String): ArtifactTransformationRequest<TaskT>
-            where ArtifactTypeT : Artifact<Directory>, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT: Artifact.Single
-}
-
-/**
- * Denotes a completed transformation request where a [Task] will be transforming an incoming
- * [Artifact] into an outgoing [Artifact].
- *
- * The implementation will take care of reading the source built artifacts from the input location
- * provided through the [TaskBasedOperations.toRead] method.
- *
- * The [Task] can then use one of the [submit] methods to provide a Gradle's `org.gradle.workers`
- * style of [WorkAction] to process each input [BuiltArtifact].
- * Alternatively, the [Task] can use the simpler synchronous lambda to process each input
- * [BuiltArtifact]
- *
- * Once the [Task] execution finishes, the output directory will be written using the expected
- * metadata format and consumers will be unlocked.
- */
-@Incubating
-interface ArtifactTransformationRequest<TaskT: Task> {
+    fun <FileTypeT : FileSystemLocation, ArtifactTypeT> toTransform(
+        type: ArtifactTypeT,
+        from: (TaskT) -> FileSystemLocationProperty<FileTypeT>,
+        into: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    )
+            where ArtifactTypeT : Artifact<FileTypeT>,
+                  ArtifactTypeT : Artifact.Single,
+                  ArtifactTypeT : Artifact.Transformable
 
     /**
-     * Submit a `org.gradle.workers` style of [WorkAction] to process each input [BuiltArtifact]
+     * Initiates a transform request to a multiple [Artifact.Transformable] artifact type.
      *
-     * @param task : the Task initiating the [WorkQueue] requests.
-     * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.
-     * @param actionType the type of the [WorkAction] subclass that process that input [BuiltArtifact]
-     * @param parameterType the type of parameters expected by the [WorkAction]
-     * @param parameterConfigurator the lambda to configure instances of [parameterType] for each
-     * [BuiltArtifact]
+     * @param type  the [Artifact] of [FileTypeT] identifying the artifact to transform.
+     * @param from the method reference to get a [ListProperty] to set all the transform inputs
+     * @param into the method reference to get the [Property] to retrieve the produced [FileTypeT]
+     * when needed.
+     *
+     * The artifact type must be [Artifact.Multiple] and [Artifact.Transformable]
+     *
+     * The implementation of the task must combine all the inputs returned [from] the method
+     * reference and store [into] a single output.
+     * Chained transforms will get a list of a single output from the upstream transforms.
+     *
+     * If some [append] calls are made on the same artifact type, the first transform will always
+     * get the complete list of artifacts irrespective of the timing of the calls.
+     *
+     * Let's take a [Task] to transform a list of [org.gradle.api.file.RegularFile] as inputs into
+     * a single output :
+     * <pre>
+     *     abstract class MyTask: DefaultTask() {
+     *          @get:InputFiles abstract val inputFiles: ListProperty<RegularFile>
+     *          @get:OutputFile abstract val outputFile: RegularFileProperty
+     *
+     *          @TaskAction fun taskAction() {
+     *              ... read all inputFiles and write outputFile ...
+     *          }
+     *     }
+     * </pre>
+     *
+     * and an ArtifactType defined as follows :
+     *
+     * <pre>
+     *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *          object MULTIPLE_FILE_ARTIFACT:
+     *                  ArtifactType<RegularFile>(FILE), Multiple, Transformable
+     *     }
+     * </pre>
+     *
+     * you then register the task as follows :
+     *
+     * <pre>
+     *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
+     *     artifacts.use(taskProvider).toTransformAll(
+     *          ArtifactType.MULTIPLE_FILE_ARTIFACT
+     *          MyTask::inputFiles,
+     *          MyTask::outputFile)
+     * </pre>
      */
-    fun <ParamT> submit(
-        task: TaskT,
-        workQueue: WorkQueue,
-        actionType: Class<out WorkAction<ParamT>>,
-        parameterType: Class<out ParamT>,
-        parameterConfigurator: (
-            builtArtifact: BuiltArtifact,
-            outputLocation: Directory,
-            parameters: ParamT) -> File): Supplier<BuiltArtifacts>
-    where ParamT : WorkParameters, ParamT: Serializable
+    fun <FileTypeT : FileSystemLocation, ArtifactTypeT> toTransformAll(
+        type: ArtifactTypeT,
+        from: (TaskT) -> ListProperty<FileTypeT>,
+        into: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    )
+            where ArtifactTypeT : Artifact<FileTypeT>,
+                  ArtifactTypeT : Artifact.Multiple,
+                  ArtifactTypeT : Artifact.Transformable
 
     /**
-     * Submit a lambda to process synchronously each input [BuiltArtifact]
+     * Initiates a transform request to a single [Artifact.Transformable] artifact type that can
+     * contains more than one artifact.
      *
-     * @param task the task instance requesting the item processing.
-     * @param transformer a lambda function that takes an input [BuiltArtifact] and produces a
-     * File for that input. The File will be used as the transformed version of the passed
-     * [BuiltArtifact]
+     * @param type  the [Artifact] of [Directory] identifying the artifact to transform.
+     * @param from the method reference to get a [DirectoryProperty] to set current provider.
+     * @param into the method reference to get the [DirectoryProperty] to retrieve the produced
+     * [Directory] when needed.
+     *
+     * The artifact type must be [Artifact.Single] and [Artifact.Transformable]
+     * and [Artifact.ContainsMany]
+     *
+     * The implementation of the task must combine all the inputs returned [from] the method
+     * reference and store [into] a single output.
+     * Chained transforms will get a list of a single output from the upstream transforms.
+     *
+     * If some [append] calls are made on the same artifact type, the first transform will always
+     * get the complete list of artifacts irrespective of the timing of the calls.
+     *
+     * Let's take a [Task] to transform a list of [org.gradle.api.file.RegularFile] as inputs into
+     * a single output :
+     * <pre>
+     *     abstract class MyTask: DefaultTask() {
+     *          @get:InputFiles abstract val inputFolder: DirectoryProperty
+     *          @get:OutputFile abstract val outputFolder: DirectoryProperty
+     *          @Internal abstract Property<ArtifactTransformationRequest<MyTask>> getTransformationRequest()
+     *
+     *          @TaskAction fun taskAction() {
+     *             transformationRequest.get().submit(
+     *                  ... submit a work item for each input file ...
+     *             )
+     *          }
+     *     }
+     * </pre>
+     **
+     * you then register the task as follows :
+     *
+     * <pre>
+     *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
+     *     artifacts.use(taskProvider).toTransformAll(
+     *          ArtifactType.APK,
+     *          MyTask::inputFolder,
+     *          MyTask::outputFolder)
+     * </pre>
      */
-    fun submit(task: TaskT, transformer: (input: BuiltArtifact) -> File)
+    fun <ArtifactTypeT> toTransformMany(
+        type: ArtifactTypeT,
+        from: (TaskT) -> DirectoryProperty,
+        into: (TaskT) -> DirectoryProperty
+    ): ArtifactTransformationRequest<TaskT>
+            where ArtifactTypeT : Artifact<Directory>,
+                  ArtifactTypeT : Artifact.Single,
+                  ArtifactTypeT : Artifact.ContainsMany,
+                  ArtifactTypeT : Artifact.Transformable
 }

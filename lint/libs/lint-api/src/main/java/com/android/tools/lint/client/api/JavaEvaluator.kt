@@ -19,10 +19,10 @@ package com.android.tools.lint.client.api
 import com.android.SdkConstants.CONSTRUCTOR_NAME
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.model.DefaultLmMavenName
-import com.android.tools.lint.model.LmDependencies
-import com.android.tools.lint.model.LmLibrary
-import com.android.tools.lint.model.LmMavenName
+import com.android.tools.lint.model.DefaultLintModelMavenName
+import com.android.tools.lint.model.LintModelDependencies
+import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelMavenName
 import com.google.common.collect.Maps
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
@@ -83,14 +83,14 @@ const val TYPE_CHARACTER_WRAPPER = "java.lang.Character"
 
 abstract // Some of these methods may be overridden by LintClients
 class JavaEvaluator {
-    abstract val dependencies: LmDependencies?
+    abstract val dependencies: LintModelDependencies?
 
     private var relevantAnnotations: Set<String>? = null
 
     /**
      * Cache for [.getLibrary]
      */
-    private var jarToGroup: MutableMap<String, LmMavenName>? = null
+    private var jarToGroup: MutableMap<String, LintModelMavenName>? = null
 
     abstract fun extendsClass(
         cls: PsiClass?,
@@ -802,7 +802,7 @@ class JavaEvaluator {
      * Return the Gradle group id for the given element, **if** applicable. For example, for
      * a method in the appcompat library, this would return "com.android.support".
      */
-    open fun getLibrary(element: PsiElement): LmMavenName? {
+    open fun getLibrary(element: PsiElement): LintModelMavenName? {
         if (element !is PsiCompiledElement) {
             return getProject(element)?.mavenCoordinate
         }
@@ -813,7 +813,7 @@ class JavaEvaluator {
      * Return the Gradle group id for the given element, **if** applicable. For example, for
      * a method in the appcompat library, this would return "com.android.support".
      */
-    open fun getLibrary(element: UElement): LmMavenName? {
+    open fun getLibrary(element: UElement): LintModelMavenName? {
         if (element !is PsiCompiledElement) {
             val psi = element.sourcePsi
             return if (psi != null) {
@@ -827,20 +827,20 @@ class JavaEvaluator {
 
     /** Disambiguate between UElement and PsiElement since a UMethod is both  */
     @Suppress("unused")
-    open fun getLibrary(element: UMethod): LmMavenName? {
+    open fun getLibrary(element: UMethod): LintModelMavenName? {
         return getLibrary(element as PsiElement)
     }
 
-    fun getLibrary(file: File): LmMavenName? {
+    fun getLibrary(file: File): LintModelMavenName? {
         return getLibrary(file.path)
     }
 
-    private fun getLibrary(jarFile: String?): LmMavenName? {
+    private fun getLibrary(jarFile: String?): LintModelMavenName? {
         if (jarFile != null) {
             if (jarToGroup == null) {
                 jarToGroup = Maps.newHashMap()
             }
-            var coordinates: LmMavenName? = jarToGroup!![jarFile]
+            var coordinates: LintModelMavenName? = jarToGroup!![jarFile]
             if (coordinates == null) {
                 val library = findOwnerLibrary(jarFile.replace('/', File.separatorChar))
                 if (library != null) {
@@ -868,7 +868,7 @@ class JavaEvaluator {
                                         val artifactId = jarFile.substring(i, j)
                                         val versionEnd = jarFile.indexOf(c, j + 1)
                                         val version = if (versionEnd != -1) jarFile.substring(j + 1, versionEnd) else ""
-                                        coordinates = DefaultLmMavenName(
+                                        coordinates = DefaultLintModelMavenName(
                                                 groupId,
                                                 artifactId,
                                                 version
@@ -883,17 +883,17 @@ class JavaEvaluator {
                     }
                 }
                 if (coordinates == null) {
-                    coordinates = LmMavenName.NONE
+                    coordinates = LintModelMavenName.NONE
                 }
                 jarToGroup!![jarFile] = coordinates
             }
-            return if (coordinates === LmMavenName.NONE) null else coordinates
+            return if (coordinates === LintModelMavenName.NONE) null else coordinates
         }
 
         return null
     }
 
-    open fun findOwnerLibrary(jarFile: String): LmLibrary? {
+    open fun findOwnerLibrary(jarFile: String): LintModelLibrary? {
         val dependencies = dependencies
         if (dependencies != null) {
             val match = findOwnerLibrary(dependencies.getAll(), jarFile)
@@ -931,9 +931,9 @@ class JavaEvaluator {
     }
 
     private fun findOwnerLibrary(
-        dependencies: Collection<LmLibrary>,
+        dependencies: Collection<LintModelLibrary>,
         jarFile: String
-    ): LmLibrary? {
+    ): LintModelLibrary? {
         for (library in dependencies) {
             for (jar in library.jarFiles) {
                 if (jarFile == jar.path) {
@@ -946,10 +946,10 @@ class JavaEvaluator {
     }
 
     private fun findOwnerLibrary(
-        dependencies: Collection<LmLibrary>,
+        dependencies: Collection<LintModelLibrary>,
         pathPrefix: String,
         pathSuffix: String
-    ): LmLibrary? {
+    ): LintModelLibrary? {
         for (library in dependencies) {
             for (jar in library.jarFiles) {
                 val path = jar.path

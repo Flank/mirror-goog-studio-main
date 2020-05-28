@@ -578,8 +578,10 @@ abstract class Detector {
         allPackageAnnotations: List<UAnnotation>
     ) {
         // Backwards compatibility
-        visitAnnotationUsage(context, usage, type, annotation, qualifiedName, method,
-            annotations, allMemberAnnotations, allClassAnnotations, allPackageAnnotations)
+        visitAnnotationUsage(
+            context, usage, type, annotation, qualifiedName, method,
+            annotations, allMemberAnnotations, allClassAnnotations, allPackageAnnotations
+        )
     }
 
     open fun applicableAnnotations(): List<String>? = null

@@ -51,8 +51,15 @@ class MlGeneratedClassTest {
             """
                 dependencies {
                     implementation 'androidx.appcompat:appcompat:1.1.0'
-                    implementation 'org.apache.commons:commons-compress:1.18'
-                    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc0'
+                    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc1'
+                    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1'
+                }
+
+                android {
+                    compileOptions {
+                        sourceCompatibility 1.8
+                        targetCompatibility 1.8
+                    }
                 }
             """
         )
@@ -71,7 +78,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE),
-                createProcessMethodReference(TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -93,7 +101,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(MODEL_SUB),
                 createNewInstanceWithOptionsMethodReference(MODEL_SUB),
                 createProcessMethodReference(TENSOR_IMAGE, MODEL_SUB, MODEL_OUTPUT_SUB),
-                createProcessMethodReference(TENSOR_BUFFER, MODEL_SUB, MODEL_OUTPUT_SUB)
+                createProcessMethodReference(TENSOR_BUFFER, MODEL_SUB, MODEL_OUTPUT_SUB),
+                createCloseMethodReference(MODEL_SUB)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -121,7 +130,8 @@ class MlGeneratedClassTest {
             ImmutableSet.of(
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
-                createProcessMethodReference(TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -140,7 +150,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE),
-                createProcessMethodReference(TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -160,7 +171,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE),
-                createProcessMethodReference(TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -182,7 +194,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE),
-                createProcessMethodReference(TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -204,7 +217,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE),
-                createProcessMethodReference(TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -232,7 +246,8 @@ class MlGeneratedClassTest {
                 createNewInstanceMethodReference(),
                 createNewInstanceWithOptionsMethodReference(MODEL),
                 createProcessMethodReference(TENSOR_IMAGE + TENSOR_BUFFER),
-                createProcessMethodReference(TENSOR_BUFFER + TENSOR_BUFFER)
+                createProcessMethodReference(TENSOR_BUFFER + TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -343,6 +358,18 @@ class MlGeneratedClassTest {
                 "process",
                 ParamUtil.parseParamString(params),
                 returnType,
+                0,
+                null,
+                null
+            )
+        }
+
+        private fun createCloseMethodReference(definingClass: String): MethodReference {
+            return ImmutableMethod(
+                definingClass,
+                "close",
+                null,
+                "V",
                 0,
                 null,
                 null

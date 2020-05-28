@@ -17,29 +17,29 @@
 package com.android.tools.lint.model
 
 /**
- * The dependencies for an [LmArtifact]
+ * The dependencies for an [LintModelArtifact]
  */
-interface LmDependencies {
+interface LintModelDependencies {
     /**
      * The compile dependency graph
      */
-    val compileDependencies: LmDependencyGraph
+    val compileDependencies: LintModelDependencyGraph
 
     /**
      * The package dependency graph. This only includes the libraries which are
      * packaged; e.g. it will not include provided (compileOnly) libraries.
      */
-    val packageDependencies: LmDependencyGraph
+    val packageDependencies: LintModelDependencyGraph
 
     /**
      * All the transitive compile dependencies. This is just a convenience method for calling
-     * [compileDependencies] and from there [LmDependencyGraph.getAllLibraries]
+     * [compileDependencies] and from there [LintModelDependencyGraph.getAllLibraries]
      */
-    fun getAll(): List<LmLibrary> = compileDependencies.getAllLibraries()
+    fun getAll(): List<LintModelLibrary> = compileDependencies.getAllLibraries()
 
-    /** Looks up the library provider to use to resolve artifact addresses in [LmDependency]
-     * nodes into full [LmLibrary] */
-    fun getLibraryResolver(): LmLibraryResolver
+    /** Looks up the library provider to use to resolve artifact addresses in [LintModelDependency]
+     * nodes into full [LintModelLibrary] */
+    fun getLibraryResolver(): LintModelLibraryResolver
 }
 
 /**
@@ -49,8 +49,8 @@ interface LmDependencies {
  * and modifiers that are specific to this particular usage of the artifact rather than
  * artifact properties.
  */
-interface LmDependencyGraph {
-    val roots: List<LmDependency>
+interface LintModelDependencyGraph {
+    val roots: List<LintModelDependency>
 
     /**
      * Find the library with the given [mavenName] (group id and artifact id). If [direct] is false,
@@ -62,13 +62,13 @@ interface LmDependencyGraph {
      * C, we will only look at A, B and C once, and in particular we won't search C both
      * from A and from B.
      */
-    fun findLibrary(mavenName: String, direct: Boolean = true): LmLibrary?
+    fun findLibrary(mavenName: String, direct: Boolean = true): LintModelLibrary?
 
     /** Returns all the (transitively) included graph items */
-    fun getAllGraphItems(): List<LmDependency>
+    fun getAllGraphItems(): List<LintModelDependency>
 
     /** Returns all the (transitively) included libraries */
-    fun getAllLibraries(): List<LmLibrary>
+    fun getAllLibraries(): List<LintModelLibrary>
 }
 
 /**
@@ -78,11 +78,11 @@ interface LmDependencyGraph {
  * information (transitive dependencies) as well as the usage of this particular dependency
  * in this node of the graph (ie what are its modifiers: what version was originally requested.)
  *
- * To get the full [LmLibrary] definition on item in the dependency graph, call
- * [LmLibraryResolver.getLibrary] with the [artifactAddress] from this [LmDependency],
+ * To get the full [LintModelLibrary] definition on item in the dependency graph, call
+ * [LintModelLibraryResolver.getLibrary] with the [artifactAddress] from this [LintModelDependency],
  * which you can do with the convenience method [findLibrary].
  */
-interface LmDependency {
+interface LintModelDependency {
     /**
      * The simple name of a library: this is like the [artifactAddress] but does not
      * include version information or classifiers; for a Maven library it is the
@@ -109,10 +109,10 @@ interface LmDependency {
     /**
      * The direct dependencies of this dependency graph node.
      */
-    val dependencies: List<LmDependency>
+    val dependencies: List<LintModelDependency>
 
     /** Find the library corresponding to this item */
-    fun findLibrary(): LmLibrary?
+    fun findLibrary(): LintModelLibrary?
 
     /** Returns the artifact id portion of the [artifactName], *if* it is a maven library. */
     fun getArtifactId(): String {
@@ -124,7 +124,7 @@ interface LmDependency {
  * A lookup mechanism from artifact address to library. This is a global registry
  * of libraries, shared between projects and variants.
  */
-interface LmLibraryResolver {
+interface LintModelLibraryResolver {
     /**
      * Returns all libraries known to the resolver.
      *
@@ -132,24 +132,24 @@ interface LmLibraryResolver {
      * we depend on a certain library; this list contains knowledge about
      * libraries from separate variants and modules. The correct way to see
      * if a variant or module depends on a library is via
-     * [LmDependencyGraph] and the lookup methods there.
+     * [LintModelDependencyGraph] and the lookup methods there.
      *
      * This method is primarily here to support model persistence operations.
      */
-    fun getAllLibraries(): Collection<LmLibrary>
+    fun getAllLibraries(): Collection<LintModelLibrary>
 
     /** Get the library corresponding to the given artifact address, if any */
-    fun getLibrary(artifactAddress: String): LmLibrary?
+    fun getLibrary(artifactAddress: String): LintModelLibrary?
 }
 
 // Default implementations
 
-class DefaultLmDependencyGraph(
-    override val roots: List<LmDependency>,
-    private val libraryResolver: LmLibraryResolver
-) : LmDependencyGraph {
+class DefaultLintModelDependencyGraph(
+    override val roots: List<LintModelDependency>,
+    private val libraryResolver: LintModelLibraryResolver
+) : LintModelDependencyGraph {
     /** All libraries that we depend on, keyed by maven name (groupId:artifactId) */
-    private val transitiveDependencies = mutableMapOf<String, LmDependency>()
+    private val transitiveDependencies = mutableMapOf<String, LintModelDependency>()
 
     init {
         for (item in roots) {
@@ -157,7 +157,7 @@ class DefaultLmDependencyGraph(
         }
     }
 
-    private fun register(item: LmDependency) {
+    private fun register(item: LintModelDependency) {
         if (transitiveDependencies.containsKey(item.artifactName)) {
             return
         }
@@ -169,7 +169,7 @@ class DefaultLmDependencyGraph(
         }
     }
 
-    override fun findLibrary(mavenName: String, direct: Boolean): LmLibrary? {
+    override fun findLibrary(mavenName: String, direct: Boolean): LintModelLibrary? {
         val artifactAddress = if (direct) {
             roots.firstOrNull { it.artifactName == mavenName }?.artifactAddress
         } else {
@@ -183,16 +183,16 @@ class DefaultLmDependencyGraph(
     }
 
     // Cache for [getAllLibraries]
-    private var allLibraries: List<LmLibrary>? = null
-    private var allItems: List<LmDependency>? = null
+    private var allLibraries: List<LintModelLibrary>? = null
+    private var allItems: List<LintModelDependency>? = null
 
-    override fun getAllGraphItems(): List<LmDependency> {
+    override fun getAllGraphItems(): List<LintModelDependency> {
         return allItems
             ?: transitiveDependencies.values.toList()
                 .also { allItems = it }
     }
 
-    override fun getAllLibraries(): List<LmLibrary> {
+    override fun getAllLibraries(): List<LintModelLibrary> {
         return allLibraries
             ?: getAllGraphItems().mapNotNull { libraryResolver.getLibrary(it.artifactAddress) }
                 .toList()
@@ -205,39 +205,40 @@ class DefaultLmDependencyGraph(
     }
 }
 
-open class DefaultLmDependency(
+open class DefaultLintModelDependency(
     override val artifactName: String,
     override val artifactAddress: String,
     override val requestedCoordinates: String?,
-    override val dependencies: List<LmDependency>,
-    private val libraryResolver: LmLibraryResolver
-) : LmDependency {
-    override fun findLibrary(): LmLibrary? = libraryResolver.getLibrary(artifactAddress)
+    override val dependencies: List<LintModelDependency>,
+    private val libraryResolver: LintModelLibraryResolver
+) : LintModelDependency {
+    override fun findLibrary(): LintModelLibrary? = libraryResolver.getLibrary(artifactAddress)
 
     // For debugging purposes only; should not be used for other purposes such as persistence
     override fun toString(): String =
         "$artifactAddress${if (dependencies.isNotEmpty()) dependencies.toString() else ""}"
 }
 
-class DefaultLmDependencies(
-    override val compileDependencies: LmDependencyGraph,
-    override val packageDependencies: LmDependencyGraph,
-    private val libraryResolver: LmLibraryResolver
-) : LmDependencies {
-    override fun getLibraryResolver(): LmLibraryResolver = libraryResolver
+class DefaultLintModelDependencies(
+    override val compileDependencies: LintModelDependencyGraph,
+    override val packageDependencies: LintModelDependencyGraph,
+    private val libraryResolver: LintModelLibraryResolver
+) : LintModelDependencies {
+    override fun getLibraryResolver(): LintModelLibraryResolver = libraryResolver
 
     // For debugging purposes only; should not be used for other purposes such as persistence
     override fun toString(): String =
         "compile=$compileDependencies, package=$packageDependencies"
 }
 
-class DefaultLmLibraryResolver(
-    val libraryMap: Map<String, LmLibrary>
-) : LmLibraryResolver {
+class DefaultLintModelLibraryResolver(
+    val libraryMap: Map<String, LintModelLibrary>
+) : LintModelLibraryResolver {
 
-    override fun getAllLibraries(): Collection<LmLibrary> {
+    override fun getAllLibraries(): Collection<LintModelLibrary> {
         return libraryMap.values.toList()
     }
 
-    override fun getLibrary(artifactAddress: String): LmLibrary? = libraryMap[artifactAddress]
+    override fun getLibrary(artifactAddress: String): LintModelLibrary? =
+        libraryMap[artifactAddress]
 }

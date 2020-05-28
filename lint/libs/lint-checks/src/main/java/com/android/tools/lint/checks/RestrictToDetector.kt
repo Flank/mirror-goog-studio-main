@@ -378,7 +378,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (methodGroup != null &&
-                (thisGroup == null || !sameLibraryGroupPrefix(thisGroup, methodGroup))) {
+                (thisGroup == null || !sameLibraryGroupPrefix(thisGroup, methodGroup))
+            ) {
                 val expectedPrefix = methodGroup.substring(0, methodGroup.lastIndexOf('.'))
                 val where =
                     "from within the same library group prefix (referenced groupId=`$methodGroup` with prefix $expectedPrefix${if (thisGroup != null) " from groupId=`$thisGroup`" else ""})"
@@ -603,12 +604,16 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
         private const val RESTRICT_TO_LIBRARY_GROUP = 1 shl 0
+
         /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
         private const val RESTRICT_TO_LIBRARY = 1 shl 1
+
         /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
         private const val RESTRICT_TO_LIBRARY_GROUP_PREFIX = 1 shl 2
+
         /** `RestrictTo(RestrictTo.Scope.TESTS`  */
         private const val RESTRICT_TO_TESTS = 1 shl 3
+
         /** `RestrictTo(RestrictTo.Scope.SUBCLASSES`  */
         private const val RESTRICT_TO_SUBCLASSES = 1 shl 4
         private const val RESTRICT_TO_ALL = 1 shl 5

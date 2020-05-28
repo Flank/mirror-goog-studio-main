@@ -601,8 +601,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                     }
                 }
                 if (argument is KotlinStringTemplateUPolyadicExpression &&
-                        argument.operands.size == 1 &&
-                            location.source === argument.operands[0]) {
+                    argument.operands.size == 1 &&
+                    location.source === argument.operands[0]
+                ) {
                     context.getRangeLocation(argument.operands[0], index - start, string.length)
                 } else {
                     context.getRangeLocation(argument, index - start, string.length)

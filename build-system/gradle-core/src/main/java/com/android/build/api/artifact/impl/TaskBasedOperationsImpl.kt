@@ -19,129 +19,152 @@ package com.android.build.api.artifact.impl
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.TaskBasedOperations
-import com.android.build.api.variant.BuiltArtifact
-import com.android.build.api.variant.BuiltArtifacts
-import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.workeractions.WorkActionAdapter
-import com.android.ide.common.workers.GradlePluginMBeans
-import org.gradle.api.InvalidUserCodeException
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
-import java.io.File
-import java.io.Serializable
-import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicReference
-import java.util.function.Supplier
 
 class TaskBasedOperationsImpl<TaskT: Task>(
-    val operations: ArtifactsImpl,
-    val taskProvider: TaskProvider<TaskT>
-) : TaskBasedOperations<TaskT> {
+    private val objects: ObjectFactory,
+    private val artifacts: ArtifactsImpl,
+    private val taskProvider: TaskProvider<TaskT>
+): TaskBasedOperations<TaskT> {
 
-    override fun <ArtifactTypeT> toRead(
+    override fun <FileTypeT : FileSystemLocation, ArtifactTypeT : Artifact<FileTypeT>> toAppend(
         type: ArtifactTypeT,
-        at: (TaskT) -> FileSystemLocationProperty<Directory>
-    ): TaskBasedOperations<TaskT>
-            where ArtifactTypeT : Artifact<Directory>,
-                  ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single =
-        TaskBasedOperationsWithInputImpl(operations = operations,
-            taskProvider = taskProvider,
-            inputArtifactType = type,
-            inputLocation = at)
-
-    override fun <ArtifactTypeT> andWrite(
-        type: ArtifactTypeT,
-        at: (TaskT) -> FileSystemLocationProperty<Directory>
-    ): ArtifactTransformationRequestImpl<*, TaskT>
-            where ArtifactTypeT : Artifact<Directory>,
-                  ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single {
-        throw InvalidUserCodeException("You must call toRead() before calling andWrite() method")
+        with: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    ) where ArtifactTypeT : Artifact.Appendable {
+        val artifactContainer = artifacts.getArtifactContainer(type)
+        taskProvider.configure {
+            with(it).set(artifacts.getOutputPath(type, taskProvider.name))
+        }
+        // all producers of a multiple artifact type are added to the initial list (just like
+        // the AGP producers) since the transforms always operate on the complete list of added
+        // providers.
+        artifactContainer.addInitialProvider(taskProvider.flatMap { with(it) })
     }
 
-    override fun <ArtifactTypeT> andWrite(
+    override fun <FileTypeT : FileSystemLocation, ArtifactTypeT : Artifact<FileTypeT>> toReplace(
         type: ArtifactTypeT,
-        at: (TaskT) -> FileSystemLocationProperty<Directory>,
-        atLocation: String
-    ): ArtifactTransformationRequestImpl<*, TaskT>
-            where ArtifactTypeT : Artifact<Directory>,
-                  ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single {
-        throw InvalidUserCodeException("You must call toRead() before calling andWrite() method")
-    }
-}
-
-class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
-    private val operations: ArtifactsImpl,
-    private val taskProvider: TaskProvider<TaskT>,
-    private val inputArtifactType: ArtifactTypeT,
-    private val inputLocation: (TaskT) -> FileSystemLocationProperty<Directory>
-): TaskBasedOperations<TaskT> where ArtifactTypeT: Artifact<Directory>, ArtifactTypeT: Artifact.Single
-{
-    override fun <ArtifactTypeT> toRead(
-        type: ArtifactTypeT,
-        at: (TaskT) -> FileSystemLocationProperty<Directory>
-    ): TaskBasedOperations<TaskT>
-            where ArtifactTypeT : Artifact<Directory>,
-                  ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single {
-        throw InvalidUserCodeException("You cannot call toRead() twice.")
+        with: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    ) where ArtifactTypeT : Artifact.Replaceable {
+        val artifactContainer = artifacts.getArtifactContainer(type)
+        taskProvider.configure {
+            with(it).set(artifacts.getOutputPath(type, taskProvider.name))
+        }
+        artifactContainer.replace(taskProvider.flatMap { with(it) })
     }
 
-    override fun <ArtifactTypeT> andWrite(
+    override fun <FileTypeT : FileSystemLocation, ArtifactTypeT : Artifact<FileTypeT>> toTransform(
         type: ArtifactTypeT,
-        at: (TaskT) -> FileSystemLocationProperty<Directory>
-    ): ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT>
-            where ArtifactTypeT : Artifact<Directory>,
-                  ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single {
-        // register the task as the provider of this artifact type
-        operations.setInitialProvider(taskProvider, at).on(type)
-
-        return initializeTransform(type, at)
+        from: (TaskT) -> FileSystemLocationProperty<FileTypeT>,
+        into: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    ) where ArtifactTypeT : Artifact.Single, ArtifactTypeT : Artifact.Transformable {
+        val artifactContainer = artifacts.getArtifactContainer(type)
+        val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
+        taskProvider.configure {
+            from(it).set(currentProvider)
+            // since the task will now execute, resolve its output path.
+            into(it).set(
+                artifacts.getOutputPath(type,
+                    taskProvider.name,
+                    type.getFileSystemLocationName()
+                )
+            )
+        }
     }
 
-    override fun <ArtifactTypeT> andWrite(
-        type: ArtifactTypeT,
-        at: (TaskT) -> FileSystemLocationProperty<Directory>,
-        atLocation: String
-    ): ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT>
-            where ArtifactTypeT : Artifact<Directory>,
-                  ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single {
-        // register the task as the provider of this artifact type
-        operations.setInitialProvider(taskProvider, at).atLocation(atLocation).on(type)
 
-        return initializeTransform(type, at)
+    override fun <FileTypeT : FileSystemLocation, ArtifactTypeT> toTransformAll(
+        type: ArtifactTypeT,
+        from: (TaskT) -> ListProperty<FileTypeT>,
+        into: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+    ) where ArtifactTypeT : Artifact<FileTypeT>,
+            ArtifactTypeT : Artifact.Multiple,
+            ArtifactTypeT : Artifact.Transformable {
+        val artifactContainer = artifacts.getArtifactContainer(type)
+        val newList = objects.listProperty(type.kind.dataType().java)
+        val currentProviders= artifactContainer.transform(taskProvider.flatMap { newList })
+        taskProvider.configure {
+            newList.add(into(it))
+            into(it).set(artifacts.getOutputPath(type, taskProvider.name))
+            from(it).set(currentProviders)
+        }
     }
 
-    private fun <ArtifactTypeT> initializeTransform(
-        type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>
-    ): ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT>
+    override fun <ArtifactTypeT : Artifact<Directory>> toTransformMany(
+        type: ArtifactTypeT,
+        from: (TaskT) -> DirectoryProperty,
+        into: (TaskT) -> DirectoryProperty
+    ): ArtifactTransformationRequest<TaskT> where ArtifactTypeT : Artifact.Single, ArtifactTypeT : Artifact.ContainsMany, ArtifactTypeT : Artifact.Transformable {
+
+        val artifactContainer = artifacts.getArtifactContainer(type)
+        val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
+        val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
+
+        initializeInput(taskProvider, from, into, currentProvider, builtArtifactsReference)
+
+        return ArtifactTransformationRequestImpl(
+            builtArtifactsReference,
+            inputLocation = from,
+            outputArtifactType = type,
+            outputLocation = into
+        )
+    }
+
+    fun <ArtifactTypeT, ArtifactTypeU> toTransformMany(
+        sourceType: ArtifactTypeT,
+        from: (TaskT) -> DirectoryProperty,
+        targetType: ArtifactTypeU,
+        into: (TaskT) -> DirectoryProperty,
+        atLocation: String? = null
+    ): ArtifactTransformationRequest<TaskT>
+            where
+            ArtifactTypeT : Artifact<Directory>,
+            ArtifactTypeT : Artifact.Single,
+            ArtifactTypeT : Artifact.ContainsMany,
+            ArtifactTypeU : Artifact<Directory>,
+            ArtifactTypeU : Artifact.Single,
+            ArtifactTypeU : Artifact.ContainsMany {
+        val initialProvider = artifacts.setInitialProvider(taskProvider, into)
+        if (atLocation != null) {
+            initialProvider.atLocation(atLocation)
+        }
+        initialProvider.on(targetType)
+
+        return initializeTransform(sourceType, targetType, from, into)
+    }
+
+    private fun <ArtifactTypeT, ArtifactTypeU> initializeTransform(
+        sourceType: ArtifactTypeT,
+        targetType: ArtifactTypeU,
+        inputLocation: (TaskT) -> DirectoryProperty,
+        outputLocation: (TaskT) -> DirectoryProperty
+    ): ArtifactTransformationRequestImpl<ArtifactTypeU, TaskT>
             where ArtifactTypeT : Artifact<Directory>,
                   ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeT : Artifact.Single {
+                  ArtifactTypeT : Artifact.Single,
+                  ArtifactTypeU : Artifact<Directory>,
+                  ArtifactTypeU : Artifact.Single,
+                  ArtifactTypeU : Artifact.ContainsMany {
 
         val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
-        val inputProvider = operations.get(inputArtifactType)
+        val inputProvider = artifacts.get(sourceType)
 
-        initializeInput(taskProvider, inputLocation, at, inputProvider, builtArtifactsReference)
+        initializeInput(taskProvider, inputLocation, outputLocation, inputProvider, builtArtifactsReference)
 
         return ArtifactTransformationRequestImpl(
             builtArtifactsReference,
             inputLocation = inputLocation,
-            outputArtifactType = type,
-            outputLocation = at
+            outputArtifactType = targetType,
+            outputLocation = outputLocation
         )
     }
 
@@ -165,221 +188,5 @@ class TaskBasedOperationsWithInputImpl<ArtifactTypeT, TaskT: Task>(
                 }
             }
         }
-    }
-}
-
-class ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT: Task>(
-    private val builtArtifactsReference: AtomicReference<BuiltArtifactsImpl>,
-    private val inputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
-    private val outputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
-    private val outputArtifactType: Artifact<Directory>
-) : Serializable, ArtifactTransformationRequest<TaskT>
-        where ArtifactTypeT: Artifact<Directory>,
-              ArtifactTypeT: Artifact.Single {
-
-    override fun <ParamT> submit(
-        task: TaskT,
-        workQueue: WorkQueue,
-        actionType: Class<out WorkAction<ParamT>>,
-        parameterType : Class<out ParamT>,
-        parameterConfigurator: (builtArtifact: BuiltArtifact, outputLocation: Directory, parameters: ParamT) -> File): Supplier<BuiltArtifacts>
-        where ParamT : WorkParameters, ParamT: Serializable {
-
-        val mapOfBuiltArtifactsToParameters = mutableMapOf<BuiltArtifact, File>()
-        val sourceBuiltArtifacts =
-            BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
-
-        if (sourceBuiltArtifacts == null) {
-            builtArtifactsReference.set(
-                BuiltArtifactsImpl(
-                    artifactType = outputArtifactType,
-                    applicationId = "unknown",
-                    variantName = "unknown",
-                    elements = listOf()))
-            return Supplier { builtArtifactsReference.get() }
-        }
-
-        sourceBuiltArtifacts.elements.forEach {builtArtifact ->
-            workQueue.submit(actionType) {
-                mapOfBuiltArtifactsToParameters[builtArtifact] =
-                    parameterConfigurator(
-                        builtArtifact,
-                        outputLocation(task).get(),
-                        it)
-            }
-        }
-
-        builtArtifactsReference.set(
-            BuiltArtifactsImpl(
-                artifactType = outputArtifactType,
-                applicationId = sourceBuiltArtifacts.applicationId,
-                variantName = sourceBuiltArtifacts.variantName,
-                elements = sourceBuiltArtifacts.elements
-                    .map {
-                        val output = mapOfBuiltArtifactsToParameters[it]
-                            ?: throw RuntimeException("Unknown BuiltArtifact $it, file a bug")
-                        it.newOutput(output.toPath())
-                    }
-            )
-        )
-        return Supplier {
-            // since the user code wants to have access to the new BuiltArtifacts, await on the
-            // WorkQueue so we are sure the output files are all present.
-            workQueue.await()
-            builtArtifactsReference.get()
-        }
-    }
-
-    internal fun wrapUp(task: TaskT) {
-        // save the metadata file in the output location upon completion of all the workers.
-        builtArtifactsReference.get().save(outputLocation(task).get())
-    }
-
-    /**
-     * AGP Private API similar to [submit] that will include all profiling information related to
-     * workers.
-     *
-     * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.
-     * @param actionType the type of the [WorkAction] subclass that process that input [BuiltArtifact]
-     * @param parameterType the type of parameters expected by the [WorkAction]
-     * @param parameterConfigurator the lambda to configure instances of [parameterType] for each
-     * [BuiltArtifact]
-     */
-    fun <ParamT> submitWithProfiler(
-        task: TaskT,
-        objects: ObjectFactory,
-        workQueue: WorkQueue,
-        actionType: Class<out WorkAction<ParamT>>,
-        parameterType : Class<out ParamT>,
-        parameterConfigurator: (
-            builtArtifact: BuiltArtifactImpl,
-            outputLocation: Directory,
-            parameters: ParamT) -> File
-    ): Supplier<BuiltArtifactsImpl> where ParamT : WorkParameters, ParamT: Serializable {
-
-        if (actionType.classLoader != WorkActionAdapter::class.java.classLoader) {
-            throw RuntimeException("""${actionType.name} class was loaded in a different
-classloader from the AGP plugin, therefore you must use the submitWithProfiler
-method with a concrete WorkActionAdapter implementation.""")
-        }
-        @Suppress("UNCHECKED_CAST")
-        return submitWithProfiler(
-            task = task,
-            objects = objects,
-            workQueue = workQueue,
-            concreteAction = WorkActionAdapter::class.java
-                    as Class<WorkActionAdapter<ParamT, WorkActionAdapter.AdaptedWorkParameters<ParamT>>>,
-            actionType = actionType,
-            parameterType = parameterType,
-            parameterConfigurator = parameterConfigurator
-        )
-    }
-
-    /**
-     * AGP Private API similar to [submit] that will include all profiling information related to
-     * workers.
-     *
-     * This version should be used when [actionType] or [parameterType] are not loaded in the same
-     * classloader as this class. In such a case, a concrete class is required so Gradle can
-     * serialize and de-serialize using the concrete class [ClassLoader] rather than this class
-     * [ClassLoader]
-     *
-     * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.
-     * @param concreteAction Concrete implementation of [WorkActionAdapter] loaded in the [Task]'s
-     * [ClassLoader]
-     * @param actionType the type of the [WorkAction] subclass that process that input [BuiltArtifact]
-     * @param parameterType the type of parameters expected by the [WorkAction]
-     * @param parameterConfigurator the lambda to configure instances of [parameterType] for each
-     * [BuiltArtifact]
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun <ParamT, ConcreteParametersT> submitWithProfiler(
-        objects: ObjectFactory,
-        task: TaskT,
-        workQueue: WorkQueue,
-        concreteAction: Class<WorkActionAdapter<ParamT, ConcreteParametersT>>,
-        actionType: Class<out WorkAction<ParamT>>,
-        parameterType : Class<out ParamT>,
-        parameterConfigurator: (
-            builtArtifact: BuiltArtifactImpl,
-            outputLocation: Directory,
-            parameters: ParamT) -> File
-    ): Supplier<BuiltArtifactsImpl>
-            where ParamT : WorkParameters,
-                  ParamT: Serializable,
-                  ConcreteParametersT: WorkActionAdapter.AdaptedWorkParameters<ParamT>,
-                  ConcreteParametersT: Serializable {
-
-        val parametersList = mutableMapOf<BuiltArtifact, File>()
-        val sourceBuiltArtifacts =
-            BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
-                ?: throw RuntimeException("No provided artifacts.")
-
-        sourceBuiltArtifacts.elements.forEach { builtArtifact ->
-            workQueue.submit(concreteAction
-                    as Class<out WorkActionAdapter<ParamT, ConcreteParametersT>>) {
-                    parameters: ConcreteParametersT ->
-
-                if (workQueue is ProfilerEnabledWorkQueue) {
-                    // if the AGP extensions are present, record the worker creation and
-                    // provide enough context to the WorkerActionAdapter to be able to send the
-                    // necessary events.
-                    val workerKey = "${workQueue.projectName}${workQueue.taskName}${builtArtifact.hashCode()}"
-                    parameters.projectName = workQueue.projectName
-                    parameters.tastName = workQueue.taskName
-                    parameters.workerKey = workerKey
-
-                    GradlePluginMBeans.getProfileMBean(workQueue.projectName)
-                        ?.workerAdded(workQueue.taskName, workerKey)
-                }
-                // create the real action parameter object
-                val targetActionParameters = objects.newInstance(parameterType)
-                parameters.adaptedParameters = targetActionParameters
-
-                // get the proposed output file from the configuration lambda.
-                val outputFile = parameterConfigurator(
-                    builtArtifact,
-                    outputLocation(task).get(),
-                    targetActionParameters)
-
-                // save the output file which we will use to create the BuiltArtifact instances.
-                parametersList[builtArtifact] = outputFile
-                parameters.adaptedAction = actionType.name
-            }
-        }
-
-        builtArtifactsReference.set(
-            BuiltArtifactsImpl(
-                artifactType = outputArtifactType,
-                applicationId = sourceBuiltArtifacts.applicationId,
-                variantName = sourceBuiltArtifacts.variantName,
-                elements = sourceBuiltArtifacts.elements.map { builtArtifact ->
-                    builtArtifact.newOutput(parametersList[builtArtifact]?.toPath()
-                        ?: throw RuntimeException("Cannot find BuiltArtifact")
-                    )
-                }))
-
-        return Supplier {
-            // since the user code wants to have access to the new BuiltArtifacts, await on the
-            // WorkQueue so we are sure the output files are all present.
-            workQueue.await()
-            builtArtifactsReference.get()
-        }
-    }
-
-    override fun submit(
-        task: TaskT,
-        transformer: (input: BuiltArtifact) -> File) {
-
-        val sourceBuiltArtifacts = BuiltArtifactsLoaderImpl().load(inputLocation(task).get())
-            ?: throw RuntimeException("No provided artifacts.")
-
-        builtArtifactsReference.set(BuiltArtifactsImpl(
-            applicationId = sourceBuiltArtifacts.applicationId,
-            variantName = sourceBuiltArtifacts.variantName,
-            artifactType = outputArtifactType,
-            elements = sourceBuiltArtifacts.elements.map {
-                it.newOutput(transformer(it).toPath())
-            }))
     }
 }

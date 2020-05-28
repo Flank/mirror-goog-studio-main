@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.model
+package com.android.build.gradle.internal.generators
 
-/**
- * Represents the type of artifact produced by a module
- */
-enum class LmModuleType {
-    APP,
-    LIBRARY,
-    TEST,
-    INSTANT_APP,
-    FEATURE,
-    DYNAMIC_FEATURE,
-    JAVA_LIBRARY
-}
+import java.io.File
+
+data class ManifestClassData(
+    val manifestFile: File,
+    val manifestPackage : String,
+    val outputFilePath: File
+)
+

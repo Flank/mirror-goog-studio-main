@@ -118,7 +118,8 @@ class IteratorDetector : Detector(), SourceCodeScanner {
                 // Look for acceptable uses: passing to the workaround functions
                 val pp = node.uastParent?.uastParent
                 if (pp is UQualifiedReferenceExpression &&
-                    (pp.selector as? UCallExpression)?.methodName == "characteristics") {
+                    (pp.selector as? UCallExpression)?.methodName == "characteristics"
+                ) {
                     return
                 }
 
