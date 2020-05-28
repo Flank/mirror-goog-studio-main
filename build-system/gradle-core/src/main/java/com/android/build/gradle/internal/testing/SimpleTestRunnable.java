@@ -325,7 +325,7 @@ public class SimpleTestRunnable implements Runnable {
 
         executeShellCommand(
                 "content query --uri content://media/external/file"
-                        + " --projection _data --where \"_data LIKE '%Android'\"",
+                        + " --projection _data --where \"_data LIKE '%/Android'\"",
                 receiver);
 
         receiver.flush();
