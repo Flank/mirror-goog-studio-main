@@ -279,10 +279,13 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                 }
 
                 for (runtimeFile in library.runtimeFiles) {
-                    Files.copy(
-                        runtimeFile,
+                    val dest =
                         FileUtils.join(generator.get().variant.objFolder, abi.tag, runtimeFile.name)
-                    )
+                    // Dependencies within the same project will also show up as runtimeFiles, and
+                    // will have the same source and destination. Can skip those.
+                    if (!FileUtils.isSameFile(runtimeFile, dest)) {
+                        Files.copy(runtimeFile, dest)
+                    }
                 }
             }
         }
