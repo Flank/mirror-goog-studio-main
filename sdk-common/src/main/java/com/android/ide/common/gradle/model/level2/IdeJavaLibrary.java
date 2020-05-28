@@ -18,16 +18,13 @@ package com.android.ide.common.gradle.model.level2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_JAVA. */
-public final class IdeJavaLibrary implements Library, Serializable {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
-
+public final class IdeJavaLibrary implements Library {
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myArtifactFile;
     private final int myType;
@@ -44,7 +41,8 @@ public final class IdeJavaLibrary implements Library, Serializable {
         myHashCode = 0;
     }
 
-    IdeJavaLibrary(@NonNull String artifactAddress, @NonNull File artifactFile) {
+    @VisibleForTesting
+    public IdeJavaLibrary(@NonNull String artifactAddress, @NonNull File artifactFile) {
         myType = LIBRARY_JAVA;
         myArtifactAddress = artifactAddress;
         myArtifactFile = artifactFile;

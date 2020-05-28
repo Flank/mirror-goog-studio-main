@@ -23,7 +23,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import com.android.annotations.NonNull;
@@ -35,9 +34,7 @@ import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
 import com.android.ide.common.gradle.model.stubs.SyncIssueStub;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
-import com.android.testutils.Serialization;
 import com.google.common.collect.ImmutableList;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
@@ -53,27 +50,6 @@ public class IdeAndroidProjectImplTest {
     public void setUp() throws Exception {
         myModelCache = new ModelCache();
         myDependenciesFactory = new IdeDependenciesFactory();
-    }
-
-    @Test
-    public void serializable() {
-        assertThat(IdeAndroidProjectImpl.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
-    public void serialization() throws Exception {
-        IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.create(
-                        new AndroidProjectStub("2.4.0"),
-                        myModelCache,
-                        myDependenciesFactory,
-                        null,
-                        Collections.emptyList());
-        assertEquals("2.4.0", androidProject.getParsedModelVersion().toString());
-        byte[] bytes = Serialization.serialize(androidProject);
-        Object o = Serialization.deserialize(bytes);
-        assertEquals(androidProject, o);
-        assertEquals("2.4.0", ((IdeAndroidProject) o).getParsedModelVersion().toString());
     }
 
     @Test

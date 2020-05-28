@@ -15,9 +15,11 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.assertEqualsOrSimilar;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.expectUnsupportedOperationException;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -27,8 +29,6 @@ import com.android.builder.model.InstantRun;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
-import com.android.testutils.Serialization;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
@@ -46,24 +46,6 @@ public class IdeAndroidArtifactImplTest {
         myModelCache = new ModelCache();
         myGradleVersion = GradleVersion.parse("3.2");
         myDependenciesFactory = new IdeDependenciesFactory();
-    }
-
-    @Test
-    public void serializable() {
-        assertThat(IdeAndroidArtifactImpl.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
-    public void serialization() throws Exception {
-        IdeAndroidArtifact artifact =
-                new IdeAndroidArtifactImpl(
-                        new AndroidArtifactStub(),
-                        myModelCache,
-                        myDependenciesFactory,
-                        myGradleVersion);
-        byte[] bytes = Serialization.serialize(artifact);
-        Object o = Serialization.deserialize(bytes);
-        assertEquals(artifact, o);
     }
 
     @Test

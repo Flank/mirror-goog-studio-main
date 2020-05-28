@@ -15,9 +15,6 @@
  */
 package com.android.ide.common.gradle.model.level2;
 
-import static com.android.builder.model.level2.Library.LIBRARY_ANDROID;
-import static com.android.builder.model.level2.Library.LIBRARY_JAVA;
-import static com.android.builder.model.level2.Library.LIBRARY_MODULE;
 import static com.android.ide.common.gradle.model.IdeLibraries.computeAddress;
 import static com.android.ide.common.gradle.model.IdeLibraries.isLocalAarModule;
 import static com.android.utils.FileUtils.join;
@@ -30,6 +27,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.level2.Library;
 import com.android.utils.ImmutableCollectors;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.function.Supplier;
@@ -37,46 +35,6 @@ import java.util.stream.Collectors;
 
 /** Creates instance of {@link Library}. */
 public class IdeLibraryFactory {
-    /**
-     * @param library Instance of level 2 library returned by android plugin.
-     * @return Deep copy of {@link Library} based on library type.
-     */
-    @NonNull
-    public Library create(@NonNull Library library) {
-        if (library.getType() == LIBRARY_ANDROID) {
-            File folder = library.getFolder();
-            return new IdeAndroidLibrary(
-                    library.getArtifactAddress(),
-                    library.getFolder(),
-                    getFullPath(folder, library.getManifest()),
-                    getFullPath(folder, library.getJarFile()),
-                    getFullPath(
-                            folder,
-                            checkNotNull(
-                                    defaultValueIfNotPresent(
-                                            library::getCompileJarFile, library.getJarFile()))),
-                    getFullPath(folder, library.getResFolder()),
-                    library.getResStaticLibrary(),
-                    getFullPath(folder, library.getAssetsFolder()),
-                    getLocalJars(library, folder),
-                    getFullPath(folder, library.getJniFolder()),
-                    getFullPath(folder, library.getAidlFolder()),
-                    getFullPath(folder, library.getRenderscriptFolder()),
-                    getFullPath(folder, library.getProguardRules()),
-                    getFullPath(folder, library.getLintJar()),
-                    getFullPath(folder, library.getExternalAnnotations()),
-                    getFullPath(folder, library.getPublicResources()),
-                    library.getArtifact(),
-                    library.getSymbolFile());
-        }
-        if (library.getType() == LIBRARY_JAVA) {
-            return new IdeJavaLibrary(library.getArtifactAddress(), library.getArtifact());
-        }
-        if (library.getType() == LIBRARY_MODULE) {
-            return new IdeModuleLibrary(library, library.getArtifactAddress());
-        }
-        throw new UnsupportedOperationException("Unknown library type " + library.getType());
-    }
 
     @NonNull
     private static ImmutableList<String> getLocalJars(
@@ -93,8 +51,9 @@ public class IdeLibraryFactory {
      *     path to build directory for all modules.
      * @return Instance of {@link Library} based on dependency type.
      */
+    @VisibleForTesting
     @NonNull
-    Library create(
+    public Library create(
             @NonNull AndroidLibrary androidLibrary, @NonNull BuildFolderPaths moduleBuildDirs) {
         // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
         // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
@@ -162,8 +121,9 @@ public class IdeLibraryFactory {
      * @param javaLibrary Instance of {@link JavaLibrary} returned by android plugin.
      * @return Instance of {@link Library} based on dependency type.
      */
+    @VisibleForTesting
     @NonNull
-    Library create(@NonNull JavaLibrary javaLibrary) {
+    public Library create(@NonNull JavaLibrary javaLibrary) {
         String project = getProject(javaLibrary);
         if (project != null) {
             // Java modules don't have variant.
