@@ -56,7 +56,7 @@ class AgpVersionCheckerTest {
             assertThat(it).contains(
                 """
    > Using multiple versions of the Android Gradle plugin in the same build is not allowed.
-     - Project `${project.getSubproject("androidLib1").testDir.canonicalPath}` is using version `4.1.0-dev` 
+     - Project `${project.getSubproject("androidLib1").testDir.canonicalPath}` is using version `${Version.ANDROID_GRADLE_PLUGIN_VERSION}` 
      - Project `${project.getSubproject("androidLib2").testDir.canonicalPath}` is using version `3.5.0`
         """.trimIndent()
             )
