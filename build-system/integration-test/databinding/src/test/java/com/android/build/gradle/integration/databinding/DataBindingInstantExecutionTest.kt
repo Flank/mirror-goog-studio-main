@@ -19,7 +19,8 @@ package com.android.build.gradle.integration.databinding
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.options.BooleanOption
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -30,15 +31,30 @@ class DataBindingInstantExecutionTest {
         .fromTestProject("databinding")
         .create()
 
+    @Before
+    fun setUp() {
+        project.testDir.resolve(".gradle/configuration-cache").deleteRecursively()
+
+        // Disable lint because of http://b/146208910
+        project.buildFile.appendText("""
+
+            android {
+                lintOptions {
+                    checkReleaseBuilds false
+                }
+            }
+        """.trimIndent())
+    }
+
     @Test
-    fun testProjectInstanceAccessAtTaskExecution() {
-        val result = executor().run("assembleDebug")
-        result.stdout.use {
-            ScannerSubject.assertThat(it)
-                .doesNotContain("invocation of 'Task.project' at execution time is unsupported")
-        }
+    fun testCleanBuild() {
+        executor().run("assemble")
+        executor().run("clean")
+        executor().run("assemble")
     }
 
     private fun executor(): GradleTaskExecutor =
-        project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+        project.executor()
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 }
