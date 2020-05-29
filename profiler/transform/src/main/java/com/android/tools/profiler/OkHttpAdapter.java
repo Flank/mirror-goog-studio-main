@@ -31,7 +31,7 @@ final class OkHttpAdapter extends ClassVisitor implements Opcodes {
             "com/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper";
 
     OkHttpAdapter(ClassVisitor classVisitor) {
-        super(ASM5, classVisitor);
+        super(ASM7, classVisitor);
     }
 
     @Override
@@ -44,7 +44,7 @@ final class OkHttpAdapter extends ClassVisitor implements Opcodes {
     private static final class MethodAdapter extends MethodVisitor implements Opcodes {
 
         public MethodAdapter(MethodVisitor mv) {
-            super(ASM5, mv);
+            super(ASM7, mv);
         }
 
         /**
