@@ -15,26 +15,26 @@
  */
 package com.android.ide.common.gradle.model.stubs.level2
 
-import com.android.builder.model.level2.Library
 import com.android.ide.common.gradle.model.level2.IdeDependencies
+import com.android.ide.common.gradle.model.level2.IdeLibrary
 import java.io.File
 
 class IdeDependenciesStub(
-  private val androidLibraries : Collection<Library>,
-  private val javaLibraries : Collection<Library>,
-  private val moduleDependencies : Collection<Library>,
+  private val androidLibraries : Collection<IdeLibrary>,
+  private val javaLibraries : Collection<IdeLibrary>,
+  private val moduleDependencies : Collection<IdeLibrary>,
   private val runtimeOnlyClasses : Collection<File>
 ) : IdeDependencies {
-  override fun getAndroidLibraries(): Collection<Library> = androidLibraries
-  override fun getJavaLibraries(): Collection<Library> = javaLibraries
-  override fun getModuleDependencies(): Collection<Library> = moduleDependencies
+  override fun getAndroidLibraries(): Collection<IdeLibrary> = androidLibraries
+  override fun getJavaLibraries(): Collection<IdeLibrary> = javaLibraries
+  override fun getModuleDependencies(): Collection<IdeLibrary> = moduleDependencies
   override fun getRuntimeOnlyClasses(): Collection<File> = runtimeOnlyClasses
 }
 
 class IdeDependenciesStubBuilder(
-  var androidLibraries : Collection<Library> = emptyList(),
-  var javaLibraries : Collection<Library> = emptyList(),
-  var moduleDependencies : Collection<Library> = emptyList(),
+  var androidLibraries : Collection<IdeLibrary> = emptyList(),
+  var javaLibraries : Collection<IdeLibrary> = emptyList(),
+  var moduleDependencies : Collection<IdeLibrary> = emptyList(),
   var runtimeOnlyClasses : Collection<File> = emptyList()
 ) {
   fun build() = IdeDependenciesStub(

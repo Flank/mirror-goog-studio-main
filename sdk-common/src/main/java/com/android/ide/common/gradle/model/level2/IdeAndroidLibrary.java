@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_ANDROID. */
-public final class IdeAndroidLibrary implements Library {
+public final class IdeAndroidLibrary implements IdeLibrary {
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myFolder;
     @NonNull private final String myManifest;

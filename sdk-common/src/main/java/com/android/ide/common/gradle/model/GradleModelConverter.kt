@@ -28,7 +28,7 @@ import com.android.builder.model.ClassField
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SourceProvider
-import com.android.builder.model.level2.Library
+import com.android.ide.common.gradle.model.level2.IdeLibrary
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.ide.common.util.toPathStrings
@@ -44,8 +44,11 @@ import com.android.projectmodel.ConfigPath
 import com.android.projectmodel.ConfigTable
 import com.android.projectmodel.ConfigTableSchema
 import com.android.projectmodel.DynamicResourceValue
+import com.android.projectmodel.ExternalLibrary
+import com.android.projectmodel.Library
 import com.android.projectmodel.ManifestAttributes
 import com.android.projectmodel.NamespacingType
+import com.android.projectmodel.ProjectLibrary
 import com.android.projectmodel.ProjectType
 import com.android.projectmodel.RecursiveResourceFolder
 import com.android.projectmodel.SourceSet
@@ -125,9 +128,9 @@ class GradleModelConverter(
         }
 
     /**
-     * Converts the given [Library] into a [com.android.projectmodel.Library]. Returns null if the given library is badly formed.
+     * Converts the given [IdeLibrary] into a [Library]. Returns null if the given library is badly formed.
      */
-    fun convert(library: Library): com.android.projectmodel.Library? =
+    fun convert(library: IdeLibrary): Library? =
         compute(library) {
             convertLibrary(library)
         }
@@ -562,13 +565,13 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Ma
 }
 
 /**
- * Converts a builder-model [Library] into a [com.android.projectmodel.Library]. Returns null
+ * Converts a builder-model [IdeLibrary] into a [Library]. Returns null
  * if the input is invalid.
  */
-fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Library? =
+fun convertLibrary(builderModelLibrary: IdeLibrary): Library? =
     with(builderModelLibrary) {
         when (type) {
-            com.android.builder.model.level2.Library.LIBRARY_ANDROID -> com.android.projectmodel.ExternalLibrary(
+            IdeLibrary.LIBRARY_ANDROID -> ExternalLibrary(
                 address = artifactAddress,
                 location = artifact.toPathString(),
                 manifestFile = PathString(manifest),
@@ -578,15 +581,15 @@ fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Libra
                 symbolFile = PathString(symbolFile),
                 resApkFile = resStaticLibrary?.let(::PathString)
             )
-            com.android.builder.model.level2.Library.LIBRARY_JAVA -> com.android.projectmodel.ExternalLibrary(
+            IdeLibrary.LIBRARY_JAVA -> ExternalLibrary(
                 address = artifactAddress,
                 classJars = listOf(artifact.toPathString())
             )
-            com.android.builder.model.level2.Library.LIBRARY_MODULE -> {
+            IdeLibrary.LIBRARY_MODULE -> {
                 val path = projectPath
                 if (path == null)
                     null
-                else com.android.projectmodel.ProjectLibrary(
+                else ProjectLibrary(
                     address = artifactAddress,
                     projectName = path,
                     variant = variant ?: ""

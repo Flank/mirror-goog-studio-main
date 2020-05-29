@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 
 /** Creates instance of {@link Library}. */
 public class IdeLibraryFactory {
-
     @NonNull
     private static ImmutableList<String> getLocalJars(
             @NonNull Library library, @NonNull File libraryFolderPath) {
@@ -53,7 +52,7 @@ public class IdeLibraryFactory {
      */
     @VisibleForTesting
     @NonNull
-    public Library create(
+    public IdeLibrary create(
             @NonNull AndroidLibrary androidLibrary, @NonNull BuildFolderPaths moduleBuildDirs) {
         // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
         // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
@@ -123,7 +122,7 @@ public class IdeLibraryFactory {
      */
     @VisibleForTesting
     @NonNull
-    public Library create(@NonNull JavaLibrary javaLibrary) {
+    public IdeLibrary create(@NonNull JavaLibrary javaLibrary) {
         String project = getProject(javaLibrary);
         if (project != null) {
             // Java modules don't have variant.
@@ -147,7 +146,7 @@ public class IdeLibraryFactory {
      * @return An instance of {@link Library} of type LIBRARY_MODULE.
      */
     @NonNull
-    static Library create(
+    static IdeLibrary create(
             @NonNull String projectPath,
             @NonNull String artifactAddress,
             @Nullable String buildId) {

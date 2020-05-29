@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.level2;
 import com.android.annotations.NonNull;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.builder.model.level2.Library;
 import java.io.File;
 import java.util.Collection;
 
@@ -33,7 +32,7 @@ public interface IdeDependencies {
      * @return the list of libraries of type LIBRARY_ANDROID.
      */
     @NonNull
-    Collection<Library> getAndroidLibraries();
+    Collection<IdeLibrary> getAndroidLibraries();
 
     /**
      * Returns the Java library dependencies, both direct and transitive dependencies.
@@ -41,7 +40,7 @@ public interface IdeDependencies {
      * @return the list of libraries of type LIBRARY_JAVA.
      */
     @NonNull
-    Collection<Library> getJavaLibraries();
+    Collection<IdeLibrary> getJavaLibraries();
 
     /**
      * Returns the Module dependencies.
@@ -49,7 +48,7 @@ public interface IdeDependencies {
      * @return the list of libraries of type LIBRARY_MODULE.
      */
     @NonNull
-    Collection<Library> getModuleDependencies();
+    Collection<IdeLibrary> getModuleDependencies();
 
     /**
      * Returns the list of runtime only classes.

@@ -26,7 +26,6 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -38,11 +37,13 @@ import java.util.Set;
 
 /** Creates {@link IdeDependencies} from {@link BaseArtifact}. */
 public class IdeDependenciesFactory {
-    // Map from unique artifact address to level2 library instance. The library instances are supposed to be shared by all artifacts.
+    // Map from unique artifact address to level2 library instance. The library instances are
+    // supposed to be shared by all artifacts.
     // When creating IdeLevel2Dependencies, check if current library is available in this map,
     // if it's available, don't create new one, simple add reference to it.
-    // If it's not available, create new instance and save to this map, so it can be reused the next time when the same library is added.
-    @NonNull private final Map<String, Library> myLibrariesById = new HashMap<>();
+    // If it's not available, create new instance and save to this map, so it can be reused the next
+    // time when the same library is added.
+    @NonNull private final Map<String, IdeLibrary> myLibrariesById = new HashMap<>();
 
     @NonNull private final IdeLibraryFactory myLibraryFactory = new IdeLibraryFactory();
     @NonNull private final BuildFolderPaths myBuildFolderPaths = new BuildFolderPaths();
@@ -169,12 +170,12 @@ public class IdeDependenciesFactory {
     private IdeDependencies createInstance(
             @NonNull Collection<String> artifactAddresses,
             @NonNull Collection<File> runtimeOnlyJars) {
-        ImmutableList.Builder<Library> androidLibraries = ImmutableList.builder();
-        ImmutableList.Builder<Library> javaLibraries = ImmutableList.builder();
-        ImmutableList.Builder<Library> moduleDependencies = ImmutableList.builder();
+        ImmutableList.Builder<IdeLibrary> androidLibraries = ImmutableList.builder();
+        ImmutableList.Builder<IdeLibrary> javaLibraries = ImmutableList.builder();
+        ImmutableList.Builder<IdeLibrary> moduleDependencies = ImmutableList.builder();
 
         for (String address : artifactAddresses) {
-            Library library = myLibrariesById.get(address);
+            IdeLibrary library = myLibrariesById.get(address);
             assert library != null;
             switch (library.getType()) {
                 case LIBRARY_ANDROID:

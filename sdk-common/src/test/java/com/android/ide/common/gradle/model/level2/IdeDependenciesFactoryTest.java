@@ -24,7 +24,6 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
 import com.android.ide.common.gradle.model.stubs.DependenciesStub;
 import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
@@ -135,19 +134,15 @@ public class IdeDependenciesFactoryTest {
 
         assertThat(level2Dependencies.getJavaLibraries()).hasSize(2);
         assertThat(
-                        level2Dependencies
-                                .getJavaLibraries()
-                                .stream()
-                                .map(Library::getArtifactAddress)
+                        level2Dependencies.getJavaLibraries().stream()
+                                .map(IdeLibrary::getArtifactAddress)
                                 .collect(Collectors.toList()))
                 .containsExactly("com:java:A@jar", "com:java:B@jar");
 
         assertThat(level2Dependencies.getModuleDependencies()).hasSize(2);
         assertThat(
-                        level2Dependencies
-                                .getModuleDependencies()
-                                .stream()
-                                .map(Library::getArtifactAddress)
+                        level2Dependencies.getModuleDependencies().stream()
+                                .map(IdeLibrary::getArtifactAddress)
                                 .collect(Collectors.toList()))
                 .containsExactly("/root/project1@@:", "/root/project2@@:");
     }
@@ -179,10 +174,8 @@ public class IdeDependenciesFactoryTest {
         IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
 
         assertThat(
-                        level2Dependencies
-                                .getJavaLibraries()
-                                .stream()
-                                .map(Library::getArtifactAddress)
+                        level2Dependencies.getJavaLibraries().stream()
+                                .map(IdeLibrary::getArtifactAddress)
                                 .collect(Collectors.toList()))
                 .containsExactly(
                         "com:java:D@jar", "com:java:B@jar", "com:java:C@jar", "com:java:A@jar")

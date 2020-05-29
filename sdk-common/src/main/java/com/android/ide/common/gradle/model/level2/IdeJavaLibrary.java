@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_JAVA. */
-public final class IdeJavaLibrary implements Library {
+public final class IdeJavaLibrary implements IdeLibrary {
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myArtifactFile;
     private final int myType;
