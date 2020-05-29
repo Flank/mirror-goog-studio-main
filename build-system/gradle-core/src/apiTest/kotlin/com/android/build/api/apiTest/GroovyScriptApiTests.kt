@@ -96,9 +96,9 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                                 new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
                             )
                     }
-                    it.artifacts.use(manifestProducer).toReplace(
-                        ArtifactType.MERGED_MANIFEST.INSTANCE,
-                        { it.outputManifest })
+                    it.artifacts.use(manifestProducer)
+                        .wiredWith({ it.outputManifest })
+                        .toCreate(ArtifactType.MERGED_MANIFEST.INSTANCE)
                 }
             }
             """.trimIndent()
@@ -155,10 +155,13 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
                     }
-                    it.artifacts.use(manifestUpdater).toTransform(
-                        ArtifactType.MERGED_MANIFEST.INSTANCE,
-                        { it.mergedManifest },
-                        { it.updatedManifest })
+                    System.out.println("JEDO is here : " + it.getName())
+                    it.artifacts.use(manifestUpdater)
+                        .wiredWithFiles(
+                            { it.mergedManifest },
+                            { it.updatedManifest })
+                        .toTransform(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                    System.out.println("JEDO was here : " + it.getName()) 
                 }
             }
             """.trimIndent()
@@ -228,10 +231,11 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
 
                     ArtifactTransformationRequest request =
-                        it.artifacts.use(copyApksProvider).toTransformMany(
-                            ArtifactType.APK.INSTANCE,
-                            { it.getApkFolder() },
-                            { it.getOutFolder()})
+                        it.artifacts.use(copyApksProvider)
+                            .wiredWithDirectories(
+                                { it.getApkFolder() },
+                                { it.getOutFolder()})
+                            .toTransformMany(ArtifactType.APK.INSTANCE)
 
                     copyApksProvider.configure {
                         it.transformationRequest.set(request)

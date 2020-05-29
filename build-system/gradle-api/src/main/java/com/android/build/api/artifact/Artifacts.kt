@@ -66,13 +66,14 @@ interface Artifacts {
     fun <FileTypeT: FileSystemLocation, ArtifactTypeT> getAll(type: ArtifactTypeT): Provider<List<FileTypeT>>
             where ArtifactTypeT : ArtifactType<FileTypeT>, ArtifactTypeT : Artifact.Multiple
 
-
     /**
      * Access [Task] based operations.
      *
      * @param taskProvider the [TaskProvider] for the [TaskT] that will be producing and or
      * consuming artifact types.
-     * @return a [TaskBasedOperations] using the passed [TaskProvider] for all its operations
+     * @return a [TaskBasedOperation] using the passed [TaskProvider] for all its operations
      */
-    fun <TaskT: Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperations<TaskT>
+    fun <TaskT: Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperation<TaskT>
+
+
 }

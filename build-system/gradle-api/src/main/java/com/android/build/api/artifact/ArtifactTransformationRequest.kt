@@ -28,6 +28,72 @@ import java.io.File
 import java.io.Serializable
 import java.util.function.Supplier
 
+/**
+ * When a [Directory] contains more than one artifact (consider [ArtifactType.APK] with multiple
+ * APKs for each density for example), this object will abstract having to deal with
+ * [BuiltArtifacts] and manually load and write the metadata files.
+ *
+ * Instead, users can focus on writing transformation code that transform one file at at time into
+ * a newer version. It will also provide the ability to use Gradle's [WorkQueue] to multi-thread
+ * the transformations.
+ *
+ * Here is an example of a [Task] copying (unchanged) the APK files from one location to another.
+ *
+ * <pre>
+ * // parameter interface to pass to work items.
+ * interface WorkItemParameters: WorkParameters, Serializable {
+ *    val inputApkFile: RegularFileProperty
+ *    val outputApkFile: RegularFileProperty
+ * }
+ * </pre>
+ *
+ *
+ * <pre>
+ * // work item that copy one file at a time.
+ * abstract class WorkItem @Inject constructor(
+ *      private val workItemParameters: WorkItemParameters
+ * ): WorkAction<WorkItemParameters> {
+ *
+ *    override fun execute() {
+ *      workItemParameters.inputApkFile.asFile.get().copyTo(
+ *      workItemParameters.outputApkFile.get().asFile)
+ *    }
+ * }
+ * </pre>
+ *
+ * And the task that wires things together :
+ *
+ * <pre>
+ * abstract class CopyApksTask @Inject constructor(private val workers: WorkerExecutor): DefaultTask() {
+ *
+ * @get:InputFiles
+ * abstract val apkFolder: DirectoryProperty
+ *
+ * @get:OutputDirectory
+ * abstract val outFolder: DirectoryProperty
+ *
+ * @get:Internal
+ * abstract val transformationRequest: Property<ArtifactTransformationRequest<CopyApksTask>>
+ *
+ * @TaskAction
+ * fun taskAction() {
+ *  transformationRequest.get().submit(
+ *     this,
+ *     workers.noIsolation(),
+ *     WorkItem::class.java,
+ *     WorkItemParameters::class.java) {
+ *     builtArtifact: BuiltArtifact,
+ *     outputLocation: Directory,
+ *     param: WorkItemParameters ->
+ *       val inputFile = File(builtArtifact.outputFile)
+ *       param.inputApkFile.set(inputFile)
+ *       param.outputApkFile.set(File(outputLocation.asFile, inputFile.name))
+ *       param.outputApkFile.get().asFile
+ *     }
+ *   }
+ * }
+ * </pre>]
+ */
 @Incubating
 interface ArtifactTransformationRequest<TaskT: Task> {
 
