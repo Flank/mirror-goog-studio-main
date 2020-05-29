@@ -30,6 +30,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UIfExpression
+import org.jetbrains.uast.ULabeledExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UPolyadicExpression
@@ -39,6 +40,7 @@ import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
 import org.jetbrains.uast.java.JavaUIfExpression
@@ -229,6 +231,21 @@ abstract class DataFlowAnalyzer(
         }
 
         super.afterVisitSwitchClauseExpression(node)
+    }
+
+    override fun afterVisitYieldExpression(node: UYieldExpression) {
+        val element: UElement? = node.expression
+        if (element != null && instances.contains(element)) {
+            instances.add(node)
+        }
+        super.afterVisitYieldExpression(node)
+    }
+
+    override fun afterVisitLabeledExpression(node: ULabeledExpression) {
+        if (instances.contains(node.expression)) {
+            instances.add(node)
+        }
+        super.afterVisitLabeledExpression(node)
     }
 
     override fun afterVisitIfExpression(node: UIfExpression) {
