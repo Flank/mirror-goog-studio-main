@@ -40,13 +40,22 @@ com.android.build.api.artifact.Artifacts
 com.android.build.api.artifact.Artifacts.get: org.gradle.api.provider.Provider<FileTypeT> (ArtifactTypeT)
 com.android.build.api.artifact.Artifacts.getAll: org.gradle.api.provider.Provider<java.util.List<FileTypeT>> (ArtifactTypeT)
 com.android.build.api.artifact.Artifacts.getBuiltArtifactsLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
-com.android.build.api.artifact.Artifacts.use: com.android.build.api.artifact.TaskBasedOperations<TaskT> (org.gradle.api.tasks.TaskProvider<TaskT>)
-com.android.build.api.artifact.TaskBasedOperations
-com.android.build.api.artifact.TaskBasedOperations.toAppend: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
-com.android.build.api.artifact.TaskBasedOperations.toReplace: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
-com.android.build.api.artifact.TaskBasedOperations.toTransform: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
-com.android.build.api.artifact.TaskBasedOperations.toTransformAll: void (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.provider.ListProperty<FileTypeT>>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
-com.android.build.api.artifact.TaskBasedOperations.toTransformMany: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
+com.android.build.api.artifact.Artifacts.use: com.android.build.api.artifact.TaskBasedOperation<TaskT> (org.gradle.api.tasks.TaskProvider<TaskT>)
+com.android.build.api.artifact.CombiningOperationRequest
+com.android.build.api.artifact.CombiningOperationRequest.toTransform: void (ArtifactTypeT)
+com.android.build.api.artifact.InAndOutDirectoryOperationRequest
+com.android.build.api.artifact.InAndOutDirectoryOperationRequest.toTransform: void (ArtifactTypeT)
+com.android.build.api.artifact.InAndOutDirectoryOperationRequest.toTransformMany: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT)
+com.android.build.api.artifact.InAndOutFileOperationRequest
+com.android.build.api.artifact.InAndOutFileOperationRequest.toTransform: void (ArtifactTypeT)
+com.android.build.api.artifact.OutOperationRequest
+com.android.build.api.artifact.OutOperationRequest.toAppendTo: void (ArtifactTypeT)
+com.android.build.api.artifact.OutOperationRequest.toCreate: void (ArtifactTypeT)
+com.android.build.api.artifact.TaskBasedOperation
+com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.api.artifact.CombiningOperationRequest<FileTypeT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.provider.ListProperty<FileTypeT>>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
+com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.api.artifact.OutOperationRequest<FileTypeT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
+com.android.build.api.artifact.TaskBasedOperation.wiredWithDirectories: com.android.build.api.artifact.InAndOutDirectoryOperationRequest<TaskT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
+com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.build.api.artifact.InAndOutFileOperationRequest (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>)
 com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.component.AndroidTestProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)

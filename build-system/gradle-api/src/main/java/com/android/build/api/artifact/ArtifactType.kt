@@ -55,5 +55,4 @@ sealed class ArtifactType<T : FileSystemLocation>(
 
     @Incubating
     object BUNDLE: ArtifactType<RegularFile>(FILE), Single, Transformable
-
 }

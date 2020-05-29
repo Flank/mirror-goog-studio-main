@@ -65,9 +65,9 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                 project.tasks.register(name + "ManifestProducer", ManifestProducerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            artifacts.use(manifestProducer).toReplace(
-                                    ArtifactType.MERGED_MANIFEST,
-                                    ManifestProducerTask::outputManifest)
+                            artifacts.use(manifestProducer)
+                                .wiredWith(ManifestProducerTask::outputManifest)
+                                .toCreate(ArtifactType.MERGED_MANIFEST)
 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
                                 it.apkFolder.set(artifacts.get(ArtifactType.APK))
@@ -139,9 +139,9 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                 project.tasks.register(name + "ManifestProducer", ManifestProducerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            artifacts.use(manifestProducer).toReplace(
-                                ArtifactType.MERGED_MANIFEST,
-                                ManifestProducerTask::outputManifest)
+                            artifacts.use(manifestProducer)
+                                .wiredWith(ManifestProducerTask::outputManifest)
+                                .toCreate(ArtifactType.MERGED_MANIFEST)
 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
                                 it.apkFolder.set(artifacts.get(ArtifactType.APK))
@@ -213,10 +213,11 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                                 project.tasks.register(name + "ManifestUpdater", ManifestTransformerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            artifacts.use(manifestUpdater).toTransform(
-                                ArtifactType.MERGED_MANIFEST,
-                                ManifestTransformerTask::mergedManifest,
-                                ManifestTransformerTask::updatedManifest)
+                            artifacts.use(manifestUpdater)
+                                .wiredWithFiles(
+                                    ManifestTransformerTask::mergedManifest,
+                                    ManifestTransformerTask::updatedManifest)
+                                .toTransform(ArtifactType.MERGED_MANIFEST)
                 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
                                 it.apkFolder.set(artifacts.get(ArtifactType.APK))
@@ -306,11 +307,10 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                             val copyApksProvider = project.tasks.register("copy${'$'}{name}Apks", CopyApksTask::class.java)
 
                             val transformationRequest = artifacts.use(copyApksProvider)
-                                .toTransformMany(
-                                    ArtifactType.APK,
+                                .wiredWithDirectories(
                                     CopyApksTask::apkFolder,
-                                    CopyApksTask::outFolder
-                                )
+                                    CopyApksTask::outFolder)
+                                .toTransformMany(ArtifactType.APK)
 
                             copyApksProvider.configure {
                                 it.transformationRequest.set(transformationRequest)
