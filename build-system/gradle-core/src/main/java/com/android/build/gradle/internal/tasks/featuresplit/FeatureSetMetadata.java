@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
@@ -32,6 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -67,7 +70,10 @@ public class FeatureSetMetadata {
     }
 
     public void addFeatureSplit(
-            int minSdkVersion, @NonNull String modulePath, @NonNull String featureName) {
+            int minSdkVersion,
+            @NonNull String modulePath,
+            @NonNull String featureName,
+            @NonNull String packageName) {
 
         int id;
         if (minSdkVersion < AndroidVersion.VersionCodes.O) {
@@ -88,7 +94,7 @@ public class FeatureSetMetadata {
             id = BASE_ID + 1 + featureSplits.size();
         }
 
-        featureSplits.add(new FeatureInfo(modulePath, featureName, id));
+        featureSplits.add(new FeatureInfo(modulePath, featureName, id, packageName));
     }
 
     @Nullable
@@ -109,6 +115,13 @@ public class FeatureSetMetadata {
                         .filter(metadata -> metadata.modulePath.equals(modulePath))
                         .findFirst();
         return featureInfo.isPresent() ? featureInfo.get().featureName : null;
+    }
+
+    @NonNull
+    public Map<String, String> getFeatureNameToPackageNameMap() {
+        return featureSplits
+                .stream()
+                .collect(toImmutableMap(info -> info.featureName, info -> info.packageName));
     }
 
     public void save(@NonNull File outputFile) throws IOException {
@@ -143,11 +156,13 @@ public class FeatureSetMetadata {
         final String modulePath;
         final String featureName;
         final int resOffset;
+        final String packageName;
 
-        FeatureInfo(String modulePath, String featureName, int resOffset) {
+        FeatureInfo(String modulePath, String featureName, int resOffset, String packageName) {
             this.modulePath = modulePath;
             this.featureName = featureName;
             this.resOffset = resOffset;
+            this.packageName = packageName;
         }
     }
 }

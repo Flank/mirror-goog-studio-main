@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_9PNG
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PNG
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_XML
 import com.android.build.gradle.options.BooleanOption
@@ -36,6 +37,9 @@ import org.junit.Test
 class ShrinkBundleResourcesTest {
     @get:Rule
     var project = builder().fromTestProject("shrink").create()
+
+    @get:Rule
+    var projectWithDfms = builder().fromTestProject("shrinkDynamicFeatureModules").create()
 
     @Test
     fun `shrink resources in single module bundles`() {
@@ -155,6 +159,50 @@ class ShrinkBundleResourcesTest {
             "base/res/layout/unused1.xml",
             "base/res/layout/unused2.xml"
         )
+    }
+
+    @Test
+    fun `shrink resources in bundles with dynamic feature module`() {
+        projectWithDfms.executor()
+            .with(OptionalBooleanOption.ENABLE_R8, true)
+            .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
+            .run("signReleaseBundle")
+
+        // Check that unused resources are replaced in shrunk bundle.
+        val originalBundle = projectWithDfms.getSubproject("base").getOriginalBundle()
+        val shrunkBundle = projectWithDfms.getSubproject("base").getShrunkBundle()
+        assertThat(diffFiles(originalBundle, shrunkBundle)).containsExactly(
+            "feature/res/drawable/feat_unused.png",
+            "feature/res/drawable/discard_from_feature_1.xml",
+            "feature/res/layout/feat_unused_layout.xml",
+            "feature/res/raw/feat_keep.xml",
+            "feature/res/raw/webpage.html",
+            "base/res/drawable/discard_from_feature_2.xml",
+            "base/res/drawable/force_remove.xml",
+            "base/res/drawable/unused5.9.png",
+            "base/res/drawable/unused9.xml",
+            "base/res/drawable/unused10.xml",
+            "base/res/drawable/unused11.xml",
+            "base/res/layout/unused1.xml",
+            "base/res/layout/unused2.xml",
+            "base/res/layout/unused13.xml",
+            "base/res/layout/unused14.xml",
+            "base/res/menu/unused12.xml",
+            "base/res/raw/keep.xml"
+        )
+
+        // Check that replaced files release bundle have proper dummy content.
+        val releaseBundle = projectWithDfms.getSubproject("base")
+            .getOutputFile("bundle", "release", "base-release.aab")
+
+        assertThat(releaseBundle) {
+            it.containsFileWithContent("feature/res/drawable/feat_unused.png", TINY_PNG)
+            it.containsFileWithContent("feature/res/layout/feat_unused_layout.xml", TINY_PROTO_XML)
+            it.containsFileWithContent("feature/res/raw/webpage.html", "")
+            it.containsFileWithContent("base/res/layout/unused1.xml", TINY_PROTO_XML)
+            it.containsFileWithContent("base/res/raw/keep.xml", TINY_PROTO_XML)
+            it.containsFileWithContent("base/res/drawable/unused5.9.png", TINY_9PNG)
+        }
     }
 
     private fun diffFiles(

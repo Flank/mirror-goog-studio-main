@@ -1,0 +1,9 @@
+<resources>
+
+    <!-- Feature application theme. -->
+    <style name="FeatureTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:background">@drawable/feat_drawable_1</item>
+        <item name="android:windowBackground">@drawable/feat_drawable_2</item>
+    </style>
+
+</resources>

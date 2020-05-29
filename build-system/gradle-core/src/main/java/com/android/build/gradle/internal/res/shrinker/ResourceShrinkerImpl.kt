@@ -108,12 +108,12 @@ class ResourceShrinkerImpl(
     override fun rewriteResourcesInBundleFormat(
         source: File,
         dest: File,
-        moduleToPackageName: Map<String, String>
+        moduleNameToPackageNameMap: Map<String, String>
     ) {
         rewriteResourceZip(
             source,
             dest,
-            BundleArchiveFormat(model.resourceStore, moduleToPackageName)
+            BundleArchiveFormat(model.resourceStore, moduleNameToPackageNameMap)
         )
     }
 
@@ -225,38 +225,39 @@ private class ApkArchiveFormat(
             return false
         }
         val (_, folder, name) = entry.name.split('/', limit = 3)
-        return store.getResourceByJarPath(folder, name, null)?.isReachable?.not() ?: false
+        return !store.isJarPathReachable(folder, name)
     }
 }
 
 private class BundleArchiveFormat(
     private val store: ResourceStore,
-    private val moduleToPackageName: Map<String, String>
+    private val moduleNameToPackageName: Map<String, String>
 ) : ArchiveFormat {
 
     override val resourcesFormat = LinkedResourcesFormat.PROTO
 
     override fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean {
         val module = entry.name.substringBefore('/')
-        val packageName = moduleToPackageName[module]
+        val packageName = moduleNameToPackageName[module]
         if (entry.isDirectory || packageName == null || !entry.name.startsWith("$module/res/")) {
             return false
         }
         val (_, _, folder, name) = entry.name.split('/', limit = 4)
-        return store.getResourceByJarPath(folder, name, packageName)?.isReachable?.not() ?: false
+        return !store.isJarPathReachable(folder, name)
     }
 }
 
-private fun ResourceStore.getResourceByJarPath(
+private fun ResourceStore.isJarPathReachable(
     folder: String,
-    name: String,
-    packageName: String?
-): Resource? {
-    val folderType = ResourceFolderType.getFolderType(folder) ?: return null
+    name: String
+): Boolean {
+    val folderType = ResourceFolderType.getFolderType(folder) ?: return true
     val resourceName = name.substringBefore('.')
+    // Bundle format has a restriction: in case the same resource is duplicated in multiple modules
+    // its content should be the same in all of them. This restriction means that we can't replace
+    // resource with dummy content if its duplicate is used in some module.
     return FolderTypeRelationship.getRelatedResourceTypes(folderType)
         .filterNot { it == ResourceType.ID }
-        .map { getResource(packageName, it, resourceName) }
-        .filterNotNull()
-        .firstOrNull()
+        .flatMap { getResources(it, resourceName) }
+        .any { it.isReachable }
 }

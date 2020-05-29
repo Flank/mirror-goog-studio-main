@@ -1,0 +1,16 @@
+apply plugin: 'com.android.dynamic-feature'
+
+android {
+
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion rootProject.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 26
+    }
+}
+
+dependencies {
+
+    implementation project(':base')
+}

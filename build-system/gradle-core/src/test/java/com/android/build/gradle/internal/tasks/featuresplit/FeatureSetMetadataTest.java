@@ -64,9 +64,9 @@ public class FeatureSetMetadataTest {
     public void testPersistence() throws IOException {
         FeatureSetMetadata featureSetMetadata =
                 new FeatureSetMetadata(FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O);
-        featureSetMetadata.addFeatureSplit(minSdkVersion, ":one", "one");
-        featureSetMetadata.addFeatureSplit(minSdkVersion, ":two", "two");
-        featureSetMetadata.addFeatureSplit(minSdkVersion, ":three", "three");
+        featureSetMetadata.addFeatureSplit(minSdkVersion, ":one", "one", "example.one");
+        featureSetMetadata.addFeatureSplit(minSdkVersion, ":two", "two", "example.two");
+        featureSetMetadata.addFeatureSplit(minSdkVersion, ":three", "three", "example.three");
         featureSetMetadata.save(
                 new File(temporaryFolder.getRoot(), FeatureSetMetadata.OUTPUT_FILE_NAME));
         File[] files = temporaryFolder.getRoot().listFiles();
@@ -107,6 +107,9 @@ public class FeatureSetMetadataTest {
         assertThat(loaded.getFeatureNameFor(":three"))
                 .named("getFeatureNameFor :three")
                 .isEqualTo("three");
+
+        assertThat(loaded.getFeatureNameToPackageNameMap()).containsExactly(
+                "one", "example.one", "two", "example.two", "three", "example.three");
 
     }
 }

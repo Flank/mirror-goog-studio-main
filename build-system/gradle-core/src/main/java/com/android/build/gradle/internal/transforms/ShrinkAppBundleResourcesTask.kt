@@ -28,22 +28,22 @@ import com.android.build.gradle.internal.res.shrinker.usages.ToolsAttributeUsage
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.utils.FileUtils
-import java.nio.file.Files
-import javax.inject.Inject
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import java.nio.file.Files
+import javax.inject.Inject
 
 /**
  * Task to shrink resources inside Android app bundle. Consumes a bundle built by bundletool
@@ -61,20 +61,22 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val originalBundle: RegularFileProperty
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val rawResourceDir: DirectoryProperty
-
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val basePackageName: Property<String>
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val featureSetMetadata: RegularFileProperty
 
     override fun doTaskAction() {
+        val modules = FeatureSetMetadata.load(featureSetMetadata.get().asFile)
+            .featureNameToPackageNameMap + ("base" to basePackageName.get())
+
         workerExecutor.noIsolation().submit(ShrinkAppBundleResourcesAction::class.java) {
             it.originalBundle.set(originalBundle)
             it.shrunkBundle.set(shrunkBundle)
-            it.rawResourcesDir.set(rawResourceDir)
             it.report.set(shrunkBundle.get().asFile.resolveSibling("resources.txt"))
-            it.packageName.set(packageName)
+            it.modules.set(modules)
         }
     }
 
@@ -98,12 +100,12 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
         override fun configure(task: ShrinkAppBundleResourcesTask) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_NOT_COMPILED_RES,
-                task.rawResourceDir
-            )
+            task.basePackageName.set(creationConfig.packageName)
 
-            task.packageName.set(creationConfig.packageName)
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.FEATURE_SET_METADATA,
+                task.featureSetMetadata
+            )
         }
     }
 }
@@ -111,9 +113,8 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 interface ResourceShrinkerParams : WorkParameters {
     val originalBundle: RegularFileProperty
     val shrunkBundle: RegularFileProperty
-    val rawResourcesDir: DirectoryProperty
     val report: RegularFileProperty
-    val packageName: Property<String>
+    val modules: MapProperty<String, String>
 }
 
 private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
@@ -121,6 +122,7 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
 
     override fun execute() {
         val logger = Logging.getLogger(LegacyShrinkBundleModuleResourcesTask::class.java)
+        val allModules = parameters.modules.get()
         FileUtils.createZipFilesystem(originalBundleFile.toPath()).use { fs ->
             val proguardMappings = fs.getPath(
                 "BUNDLE-METADATA",
@@ -128,27 +130,39 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
                 "proguard.map"
             )
 
+            val resourcesGatherers = allModules.map {
+                ProtoResourceTableGatherer(fs.getPath(it.key, "resources.pb"))
+            }
+
+            val obfuscationMappingsRecorder = proguardMappings
+                .takeIf { Files.isRegularFile(it) }
+                ?.let { ProguardMappingsRecorder(it) }
+
+            val usageRecorders = allModules.flatMap {
+                val dexPath = fs.getPath(it.key, "dex")
+                val rawResourcesPath = fs.getPath(it.key, "res", "raw")
+                val manifest = fs.getPath(it.key, "manifest", "AndroidManifest.xml")
+                listOf(
+                    DexUsageRecorder(dexPath)
+                        .takeIf { Files.isDirectory(dexPath) },
+                    ToolsAttributeUsageRecorder(fs.getPath(it.key, "res", "raw"))
+                        .takeIf { Files.isDirectory(rawResourcesPath) },
+                    ProtoAndroidManifestUsageRecorder(manifest)
+                )
+            }.filterNotNull()
+
+            val graphBuilders = allModules.map {
+                ProtoResourcesGraphBuilder(
+                    resourceRoot = fs.getPath(it.key, "res"),
+                    resourceTable = fs.getPath(it.key, "resources.pb")
+                )
+            }
+
             ResourceShrinkerImpl(
-                resourcesGatherers = listOf(
-                    ProtoResourceTableGatherer(fs.getPath(BASE_MODULE, "resources.pb"))
-                ),
-                obfuscationMappingsRecorder =
-                    proguardMappings
-                        .takeIf { Files.isRegularFile(it) }
-                        ?.let { ProguardMappingsRecorder(it) },
-                usageRecorders = listOf(
-                    DexUsageRecorder(fs.getPath(BASE_MODULE, "dex")),
-                    ProtoAndroidManifestUsageRecorder(
-                        fs.getPath(BASE_MODULE, "manifest", "AndroidManifest.xml")
-                    ),
-                    ToolsAttributeUsageRecorder(rawResourcesDirFile.toPath())
-                ),
-                graphBuilders = listOf(
-                    ProtoResourcesGraphBuilder(
-                        fs.getPath(BASE_MODULE, "res"),
-                        fs.getPath(BASE_MODULE, "resources.pb")
-                    )
-                ),
+                resourcesGatherers,
+                obfuscationMappingsRecorder,
+                usageRecorders,
+                graphBuilders,
                 debugReporter = LoggerAndFileDebugReporter(logger, reportFile),
                 supportMultipackages = true
             ).use { shrinker ->
@@ -157,7 +171,7 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
                 shrinker.rewriteResourcesInBundleFormat(
                     originalBundleFile,
                     shrunkBundleFile,
-                    mapOf(BASE_MODULE to parameters.packageName.get())
+                    allModules
                 )
 
                 // Dump some stats
@@ -176,12 +190,9 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
 
     private val originalBundleFile by lazy { parameters.originalBundle.get().asFile }
     private val shrunkBundleFile by lazy { parameters.shrunkBundle.get().asFile }
-    private val rawResourcesDirFile by lazy { parameters.rawResourcesDir.get().asFile }
     private val reportFile by lazy { parameters.report.get().asFile }
 
     companion object {
-        private val BASE_MODULE = "base"
-
         private fun toKbString(size: Long): String {
             return (size.toInt() / 1024).toString()
         }

@@ -170,6 +170,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/separateTestModuleWithMinifiedApp",
     "//tools/base/build-system/integration-test:test-projects/separateTestWithMinificationButNoObfuscation",
     "//tools/base/build-system/integration-test:test-projects/shrink",
+    "//tools/base/build-system/integration-test:test-projects/shrinkDynamicFeatureModules",
     "//tools/base/build-system/integration-test:test-projects/simpleCompositeBuild",
     "//tools/base/build-system/integration-test:test-projects/simpleManifestMergingTask",
     "//tools/base/build-system/integration-test:test-projects/simpleMicroApp",

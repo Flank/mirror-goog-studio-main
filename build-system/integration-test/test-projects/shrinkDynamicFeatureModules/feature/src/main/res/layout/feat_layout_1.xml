@@ -1,0 +1,5 @@
+<!-- referenced from FeatureActivity.changeLayout -->
+<merge>
+    <include layout="@layout/feat_layout_2" />
+    <include layout="@layout/used_from_feature_2" />
+</merge>

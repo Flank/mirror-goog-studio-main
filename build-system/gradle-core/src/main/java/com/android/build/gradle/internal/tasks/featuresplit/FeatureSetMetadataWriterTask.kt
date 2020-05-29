@@ -98,7 +98,11 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
 
             for (feature in features) {
                 featureMetadata.addFeatureSplit(
-                    params.minSdkVersion, feature.modulePath, featureNameMap[feature.modulePath]!!)
+                    params.minSdkVersion,
+                    feature.modulePath,
+                    featureNameMap[feature.modulePath]!!,
+                    feature.applicationId
+                )
             }
 
             // save the list.

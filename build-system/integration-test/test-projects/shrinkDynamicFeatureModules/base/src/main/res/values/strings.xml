@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Shrinking Test</string>
+    <string name="module_feature">Feature module</string>
+</resources>
