@@ -28,8 +28,8 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
 
     fun `test java detects constant resource ids in switch block`() {
         lint().files(
-            java(rClass),
-            java( // language=JAVA
+            rClass,
+            java(
                 """
                 package test.pkg;
 
@@ -63,14 +63,14 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                                         case R.id.text: someValue = 3; break;
                                              ~~~~~~~~~
             0 errors, 2 warnings
-            """.trimIndent()
+            """
         )
     }
 
     fun `test kotlin does not report resource id usages in when expressions`() {
         lint().files(
-            java(rClass),
-            kotlin( //language=kotlin
+            rClass,
+            kotlin(
                 """package test.pkg
 
                     class WhenTest {
@@ -93,8 +93,8 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
 
     fun `test java detects non constant resource ids in annotations`() {
         lint().files(
-            java(rClass),
-            java(// language=JAVA
+            rClass,
+            java(
                 """
                     package test.pkg;
                     public @interface TestAnnotation {
@@ -102,7 +102,7 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                     }
                 """
             ),
-            java(// language=JAVA
+            java(
                 """
                 package test.pkg;
 
@@ -136,21 +136,21 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                                 @TestAnnotation(resourceId = R.id.text)
                                                              ~~~~~~~~~
             0 errors, 2 warnings
-            """.trimIndent()
+            """
         )
     }
 
     fun `test kotlin detects non constant resource ids in annotations`() {
         lint().files(
-            java(rClass),
-            kotlin(//language=kotlin
+            rClass,
+            kotlin(
                 """
                     package test.pkg
 
                     annotation class TestAnnotation(val resourceId : Int)
                 """
             ),
-            LintDetectorTest.kotlin(//language=kotlin
+            kotlin(
                 """
                 package test.pkg
 
@@ -176,11 +176,11 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                                 @TestAnnotation(resourceId = R.id.text)
                                                              ~~~~~~~~~
             0 errors, 2 warnings
-        """.trimIndent()
+        """
         )
     }
 
-    val rClass = //language=JAVA
+    val rClass = java(
         """
         package test.pkg;
 
@@ -197,5 +197,7 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                     public static final int FontFamily_fontProviderFetchTimeout = 3;
                     public static final int FontFamily_fontProviderPackage = 4;
                     public static final int FontFamily_fontProviderQuery = 5;
-            }}"""
+            }
+        }"""
+    ).indented()
 }

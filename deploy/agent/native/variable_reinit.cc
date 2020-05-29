@@ -118,10 +118,22 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
             << " is not currently supported" << std::endl;
         *error_msg = msg.str();
         if (isPrimitive(state.type())) {
+          std::ostringstream msg;
+          msg << "Adding field primitive " << def.name() << "." << state.name()
+              << std::endl;
+          *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE;
         } else if (isArray(state.type())) {
+          std::ostringstream msg;
+          msg << "Adding field array " << def.name() << "." << state.name()
+              << std::endl;
+          *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_ARRAY;
         } else if (isObject(state.type())) {
+          std::ostringstream msg;
+          msg << "Adding field object " << def.name() << "." << state.name()
+              << std::endl;
+          *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_OBJECT;
         } else {
           return SwapResult::UNSUPPORTED_REINIT;  // should not be reachable.
@@ -132,23 +144,34 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
         // Object types are not suppoeted.
         if (isArray(state.type())) {
           std::ostringstream msg;
-          msg << "Adding static array " << state.name() << std::endl;
+          msg << "Adding static array " << def.name() << "." << state.name()
+              << std::endl;
           *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_STATIC_ARRAY;
         } else if (isObject(state.type())) {
           std::ostringstream msg;
-          msg << "Adding static object " << state.name() << std::endl;
+          msg << "Adding static object " << def.name() << "." << state.name()
+              << std::endl;
           *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_STATIC_OBJECT;
 
         } else if (isPrimitive(state.type())) {
+          if (!this->var_reinit) {
+            std::ostringstream msg;
+            msg << "Adding static primitive " << def.name() << "."
+                << state.name() << std::endl;
+            *error_msg = msg.str();
+            return SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE;
+          }
+
           // Primitives. Supported should they be compile time constants.
           if (state.state() != proto::ClassDef::FieldReInitState::CONSTANT) {
             std::ostringstream msg;
-            msg << "Adding variable " << state.name()
-                << " not known to be compile time constant" << std::endl;
+            msg << "Adding static primitive " << def.name() << "."
+                << state.name() << " not known to be compile time constant"
+                << std::endl;
             *error_msg = msg.str();
-            return SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE;
+            return SwapResult::UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT;
           }
         } else {
           *error_msg = "unknown error";

@@ -73,7 +73,8 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.TRIM_INDENT,
         LintDetectorDetector.UNEXPECTED_DOMAIN,
         LintDetectorDetector.USE_KOTLIN,
-        LintDetectorDetector.USE_UAST
+        LintDetectorDetector.USE_UAST,
+        HtmlPaneDetector.ISSUE
     )
 
     // TODO other checks:

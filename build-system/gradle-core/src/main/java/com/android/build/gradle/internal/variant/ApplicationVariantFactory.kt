@@ -269,9 +269,8 @@ class ApplicationVariantFactory(
             return
         }
         // check supportedAbis in Ndk configuration versus ABI splits.
-        val ndkConfigAbiFilters =
-            variantDslInfo.ndkConfig.abiFilters
-        if (ndkConfigAbiFilters == null || ndkConfigAbiFilters.isEmpty()) {
+        val ndkConfigAbiFilters = variantDslInfo.ndkConfig.abiFilters
+        if (ndkConfigAbiFilters.isEmpty()) {
             return
         }
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
@@ -289,7 +288,7 @@ class ApplicationVariantFactory(
     private fun restrictEnabledOutputs(
         variantDslInfo: VariantDslInfo, variantOutputs: VariantOutputList
     ) {
-        val supportedAbis: Set<String?>? = variantDslInfo.supportedAbis
+        val supportedAbis: Set<String> = variantDslInfo.supportedAbis
         val projectOptions = projectServices.projectOptions
         val buildTargetAbi =
             (if (projectOptions[BooleanOption.BUILD_ONLY_TARGET_ABI]
@@ -333,9 +332,8 @@ class ApplicationVariantFactory(
                         "Cannot build selected target ABI: %1\$s, "
                                 + if (splits.isEmpty()) "no suitable splits configured: %2\$s;" else "supported ABIs are: %2\$s",
                         buildTargetAbi,
-                        if (supportedAbis == null) Joiner.on(", ").join(
-                            splits
-                        ) else Joiner.on(", ").join(supportedAbis)
+                        if (supportedAbis.isEmpty()) Joiner.on(", ").join(splits)
+                        else Joiner.on(", ").join(supportedAbis)
                     )
                 )
             // do not disable anything, build all and let the apk install figure it out.

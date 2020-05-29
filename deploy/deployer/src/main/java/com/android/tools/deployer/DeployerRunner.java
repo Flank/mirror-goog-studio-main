@@ -126,6 +126,7 @@ public class DeployerRunner {
                         logger,
                         true,
                         true,
+                        true,
                         true);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {

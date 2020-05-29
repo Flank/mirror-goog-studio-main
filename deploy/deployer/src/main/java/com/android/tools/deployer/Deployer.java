@@ -52,6 +52,7 @@ public class Deployer {
     private final boolean useOptimisticSwap;
     private final boolean useOptimisticResourceSwap;
     private final boolean useStructuralRedefinition;
+    private final boolean useVariableReinitialization;
 
     public Deployer(
             AdbClient adb,
@@ -64,7 +65,8 @@ public class Deployer {
             ILogger logger,
             boolean useOptimisticSwap,
             boolean useOptimisticResourceSwap,
-            boolean useStructuralRedefinition) {
+            boolean useStructuralRedefinition,
+            boolean useVariableReinitialization) {
         this.adb = adb;
         this.deployCache = deployCache;
         this.dexDb = dexDb;
@@ -76,6 +78,7 @@ public class Deployer {
         this.useOptimisticSwap = useOptimisticSwap;
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
         this.useStructuralRedefinition = useStructuralRedefinition;
+        this.useVariableReinitialization = useVariableReinitialization;
     }
 
     enum Tasks {
@@ -322,7 +325,13 @@ public class Deployer {
         // Perform the swap.
         OptimisticApkSwapper swapper =
                 new OptimisticApkSwapper(
-                        installer, redefiners, argRestart, useStructuralRedefinition, adb, logger);
+                        installer,
+                        redefiners,
+                        argRestart,
+                        useStructuralRedefinition,
+                        useVariableReinitialization,
+                        adb,
+                        logger);
         Task<OptimisticApkSwapper.OverlayUpdate> overlayUpdate =
                 runner.create(
                         Tasks.COLLECT_SWAP_DATA,

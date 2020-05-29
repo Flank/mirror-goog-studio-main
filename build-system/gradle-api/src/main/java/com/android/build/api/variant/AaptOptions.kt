@@ -36,17 +36,6 @@ interface AaptOptions {
     val ignoreAssetsPatterns: ListProperty<String>
 
     /**
-     * The list of extensions of files that will not be stored compressed in the APK. Setting this
-     * to a list containing just an empty string, i.e., `noCompress.set(listOf(""))`,  will
-     * trivially disable compression for all files.
-     *
-     * See aapt's -0 flag via `aapt --help`.
-     *
-     * This property will be initialized using the corresponding DSL value.
-     */
-    val noCompress: ListProperty<String>
-
-    /**
      * The list of additional parameters to pass to aapt.
      *
      * This property will be initialized using the corresponding DSL value.

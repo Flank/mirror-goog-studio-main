@@ -5,9 +5,11 @@ import com.android.testutils.truth.FileSubject.assertThat
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -145,13 +147,15 @@ class AaptOptionsTest {
     @Test
     fun testTasksRunAfterAaptOptionsChanges_bundleDebug() {
         testTasksRunAfterAaptOptionsChanges(
-            "bundleDebug",
-            listOf(
+            assembleTask = "bundleDebug",
+            expectedTasksThatDidWorkOnANoCompressChange = listOf(
                 ":bundleDebugResources",
-                ":mergeDebugAssets",
                 ":mergeDebugJavaResource",
                 ":packageDebugBundle",
                 ":processDebugResources"
+            ),
+            expectedTasksThatDidWorkOnANoIgnoreAssetsChange = listOf(
+                ":mergeDebugAssets"
             )
         )
     }
@@ -159,32 +163,34 @@ class AaptOptionsTest {
     @Test
     fun testTasksRunAfterAaptOptionsChanges_assembleDebug() {
         testTasksRunAfterAaptOptionsChanges(
-            "assembleDebug",
-            listOf(
-                ":mergeDebugAssets",
+            assembleTask = "assembleDebug",
+            expectedTasksThatDidWorkOnANoCompressChange = listOf(
                 ":mergeDebugJavaResource",
                 ":packageDebug",
                 ":processDebugResources"
+            ),
+            expectedTasksThatDidWorkOnANoIgnoreAssetsChange = listOf(
+                ":mergeDebugAssets"
             )
         )
     }
 
     private fun testTasksRunAfterAaptOptionsChanges(
         assembleTask: String,
-        expectedDidWorkTasks: List<String>
+        expectedTasksThatDidWorkOnANoCompressChange: List<String>,
+        expectedTasksThatDidWorkOnANoIgnoreAssetsChange: List<String>
     ) {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
                 android {
                     aaptOptions {
-                        noCompress "foo"
-                        ignoreAssetsPattern ".foo"
+                        noCompress "noCompressDsl"
+                        ignoreAssetsPattern ".ignoreAssetsPatternDsl"
                     }
 
                     onVariantProperties {
-                        aaptOptions.noCompress.add("bar")
-                        aaptOptions.ignoreAssetsPatterns.add(".bar")
+                        aaptOptions.ignoreAssetsPatterns.add(".ignoreAssetsPatternApi")
                     }
                 }
                 """.trimIndent()
@@ -193,13 +199,21 @@ class AaptOptionsTest {
         project.executor().run("clean", assembleTask)
 
         // test that tasks run when aapt options changed via the DSL
-        TestFileUtils.searchAndReplace(project.buildFile, "foo", "baz")
-        val result1 = project.executor().run(assembleTask)
-        Truth.assertThat(result1.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
-
+        searchAndReplace(project.buildFile, "noCompressDsl", "noCompressDsl2")
+        project.executor().run(assembleTask).let { result ->
+            assertThat(result.didWorkTasks)
+                .containsAtLeastElementsIn(expectedTasksThatDidWorkOnANoCompressChange)
+        }
+        searchAndReplace(project.buildFile, "ignoreAssetsPatternDsl", "ignoreAssetsPatternDsl2")
+        project.executor().run(assembleTask).let { result ->
+            assertThat(result.didWorkTasks)
+                .containsAtLeastElementsIn(expectedTasksThatDidWorkOnANoIgnoreAssetsChange)
+        }
         // test that tasks run when aapt options changed via the variant API
-        TestFileUtils.searchAndReplace(project.buildFile, "bar", "qux")
-        val result2 = project.executor().run(assembleTask)
-        Truth.assertThat(result2.didWorkTasks).containsAtLeastElementsIn(expectedDidWorkTasks)
+        searchAndReplace(project.buildFile, "ignoreAssetsPatternApi", "ignoreAssetsPatternApi2")
+        project.executor().run(assembleTask).let { result ->
+            assertThat(result.didWorkTasks)
+                .containsAtLeastElementsIn(expectedTasksThatDidWorkOnANoIgnoreAssetsChange)
+        }
     }
 }

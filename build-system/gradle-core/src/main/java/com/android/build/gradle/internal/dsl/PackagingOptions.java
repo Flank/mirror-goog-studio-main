@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.tasks.Input;
@@ -197,26 +199,23 @@ public class PackagingOptions
         merge("/META-INF/services/**");
     }
 
-    // This is a bit embarrassing, but our DSL generator gets confused for some reason, if the constructor
-    // above is immediately followed by a property. DSL generation needs to be reworked anyway, so for now
-    // I'll just move the fields down here.
-
-    private Set<String> excludes = Sets.newHashSet();
-    private Set<String> pickFirsts = Sets.newHashSet();
-    private Set<String> merges = Sets.newHashSet();
-    private Set<String> doNotStrip = Sets.newHashSet();
+    private final Set<String> excludes = Sets.newHashSet();
+    private final Set<String> pickFirsts = Sets.newHashSet();
+    private final Set<String> merges = Sets.newHashSet();
+    private final Set<String> doNotStrip = Sets.newHashSet();
 
     /** Returns the list of excluded paths. */
     @Override
     @NonNull
     @Input
     public Set<String> getExcludes() {
-        return Sets.newHashSet(excludes);
+        return excludes;
     }
 
-    @Override
     public void setExcludes(@NonNull Set<String> excludes) {
-        this.excludes = Sets.newHashSet(excludes);
+        List<String> newExcludes = new ArrayList<>(excludes);
+        this.excludes.clear();
+        this.excludes.addAll(newExcludes);
     }
 
     @Override
@@ -228,7 +227,7 @@ public class PackagingOptions
     @NonNull
     @Input
     public Set<String> getPickFirsts() {
-        return Sets.newHashSet(pickFirsts);
+        return pickFirsts;
     }
 
     @Override
@@ -236,21 +235,23 @@ public class PackagingOptions
         pickFirsts.add(pattern);
     }
 
-    @Override
     public void setPickFirsts(@NonNull Set<String> pickFirsts) {
-        this.pickFirsts = Sets.newHashSet(pickFirsts);
+        List<String> newPickFirsts = new ArrayList<>(pickFirsts);
+        this.pickFirsts.clear();
+        this.pickFirsts.addAll(newPickFirsts);
     }
 
     @Override
     @NonNull
     @Input
     public Set<String> getMerges() {
-        return Sets.newHashSet(merges);
+        return merges;
     }
 
-    @Override
     public void setMerges(@NonNull Set<String> merges) {
-        this.merges = Sets.newHashSet(merges);
+        List<String> newMerges = new ArrayList<>(merges);
+        this.merges.clear();
+        this.merges.addAll(newMerges);
     }
 
     @Override
@@ -262,12 +263,13 @@ public class PackagingOptions
     @NonNull
     @Input
     public Set<String> getDoNotStrip() {
-        return Sets.newHashSet(doNotStrip);
+        return doNotStrip;
     }
 
-    @Override
     public void setDoNotStrip(@NonNull Set<String> doNotStrip) {
-        this.doNotStrip = Sets.newHashSet(doNotStrip);
+        List<String> newDoNotStrip = new ArrayList<>(doNotStrip);
+        this.doNotStrip.clear();
+        this.doNotStrip.addAll(newDoNotStrip);
     }
 
     @Override

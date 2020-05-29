@@ -702,7 +702,10 @@ public abstract class ResourceVisibilityLookup {
                 File dir = library.getPublicResources().getParentFile();
                 symbolFile = new File(dir, FN_RESOURCE_TEXT);
             }
-            if (!symbolFile.exists()) {
+            // getSymbolFile is marked @NonNull but b/157590682 shows that it can
+            // be null in some scenarios, possibly from loader older cached models
+            //noinspection ConstantConditions
+            if (symbolFile == null || !symbolFile.exists()) {
                 Multimap<String, ResourceType> empty = ImmutableListMultimap.of();
                 mCache.put(mapKey, empty);
                 return empty;

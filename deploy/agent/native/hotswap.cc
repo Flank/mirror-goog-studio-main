@@ -255,7 +255,8 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
         GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);
   }
 
-  VariableReinitializer var_reinit(jvmti_, jni_);
+  VariableReinitializer var_reinit(swap_request.variable_reinitialization(),
+                                   jvmti_, jni_);
 
   for (size_t i = 0; i < num_modified_classes; i++) {
     const proto::ClassDef& class_def = swap_request.modified_classes(i);

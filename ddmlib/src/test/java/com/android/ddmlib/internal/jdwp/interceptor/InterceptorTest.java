@@ -16,20 +16,36 @@
 
 package com.android.ddmlib.internal.jdwp.interceptor;
 
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.allocBuffer;
+
 import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import java.nio.ByteBuffer;
 
 public class InterceptorTest {
+    private static final byte REPLY_PACKET = (byte) 0x80;
+    private static final int REPLY_PACKET_OFFSET = 0x08;
+    private static final int CMD_OFFSET = 0x09;
+    private static final int CMD_SET_OFFSET = 0x0A;
 
-  public static JdwpPacket makePacket(int tag) {
-    ByteBuffer data = ByteBuffer.allocate(128);
+    public static JdwpPacket makePacket(int tag, boolean replyPacket, int payload) {
+        ByteBuffer data = allocBuffer(4);
     JdwpPacket packet = new JdwpPacket(data);
-    ChunkHandler.getChunkDataBuf(data);
-    data.putInt(1234); // Some version
-    ChunkHandler.finishChunkPacket(packet, tag, data.position());
+        ByteBuffer payloadBuffer = ChunkHandler.getChunkDataBuf(data);
+        payloadBuffer.putInt(payload); // payload
+        ChunkHandler.finishChunkPacket(packet, tag, payloadBuffer.position());
+        if (replyPacket) {
+            data.put(REPLY_PACKET_OFFSET, REPLY_PACKET);
+            data.put(CMD_OFFSET, (byte) 0);
+            data.put(CMD_SET_OFFSET, (byte) 0);
+            packet = JdwpPacket.findPacket(data);
+        }
     return packet;
   }
+
+    public static JdwpPacket makePacket(int tag) {
+        return makePacket(tag, false, 1);
+    }
 
   public static JdwpPacket makePacket(String tag) {
     return makePacket(ChunkHandler.type(tag));

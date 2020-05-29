@@ -23,7 +23,6 @@ import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.BadPacketException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
@@ -39,7 +38,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -129,8 +127,7 @@ public class JdwpClientManager implements JdwpSocketHandler {
             shutdown();
             throw new EOFException("Client disconnected");
         }
-        Log.v("JdwpClientManager", "DEVICE READ (" + length + "): " +
-                                   new String(mBuffer, 0, Math.min(100, length), StandardCharsets.UTF_8));
+        JdwpLoggingUtils.log("DEVICE", "READ", mBuffer, length);
         // First determine if we have a jdwp packet
         boolean isJdwpPacket = true;
         for (JdwpProxyClient client : mClients) {
@@ -151,7 +148,13 @@ public class JdwpClientManager implements JdwpSocketHandler {
                         packet.consume();
                     }
                     while ((packet = JdwpPacket.findPacket(buffer)) != null);
-                    if (sendBuffer.position() != 0) {
+                    // We didn't loop through the entire buffer this is probably not a jdwp packet
+                    // buffer.
+                    // This can happen when the debugger is loading symbols as some symbols can look
+                    // like a packet.
+                    if (buffer.position() != 0) {
+                        isJdwpPacket = false;
+                    } else if (sendBuffer.position() != 0) {
                         client.write(mSendBuffer, sendBuffer.position());
                     }
                 }
@@ -209,9 +212,7 @@ public class JdwpClientManager implements JdwpSocketHandler {
 
     @VisibleForTesting
     void writeRaw(ByteBuffer sendBuffer) throws IOException, TimeoutException {
-        Log.v("JdwpClientManager",
-              "DEVICE WRITE (" + sendBuffer.position() + "): " +
-              new String(sendBuffer.array(), 0, Math.min(100, sendBuffer.position()), StandardCharsets.UTF_8));
+        JdwpLoggingUtils.log("DEVICE", "WRITE", sendBuffer.array(), sendBuffer.position());
         AdbHelper.write(mAdbSocket, sendBuffer.array(), sendBuffer.position(), DdmPreferences.getTimeOut());
     }
 
