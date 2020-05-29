@@ -34,6 +34,20 @@ if [[ $lsb_release == "crostini" ]]; then
   echo $current_time > $crostini_timestamp_file
 
   # Generate a UUID for use as the bazel invocation id
+  readonly logs_collector_invocation_id="$(uuidgen)"
+
+  #Build  logs collector jar
+  "${script_dir}/../bazel" \
+    --max_idle_secs=60 \
+    build \
+    ${config_options} \
+    --invocation_id=${logs_collector_invocation_id} \
+    --define=meta_android_build_number=${build_number} \
+    --tool_tag=${script_name} \
+    -- \
+    //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar
+
+  # Generate a UUID for use as the bazel invocation id
   readonly build_invocation_id="$(uuidgen)"
 
   #Build the project for crostini, 2 jobs at a time to address OOM issues
@@ -47,7 +61,6 @@ if [[ $lsb_release == "crostini" ]]; then
     --build_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
     -- \
-    //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar
     //tools/adt/idea/android-uitests/...
 
   readonly test_invocation_id="$(uuidgen)"
