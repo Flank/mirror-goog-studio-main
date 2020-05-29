@@ -18,14 +18,35 @@ package com.android.build.gradle.internal.profile
 
 import com.android.tools.analytics.Environment
 import org.gradle.api.provider.ProviderFactory
+import java.util.concurrent.ConcurrentHashMap
 
 /** Gradle-specific implementation of the [Environment] for the analytics library. */
-class GradleAnalyticsEnvironment(private val providerFactory: ProviderFactory): Environment() {
+class GradleAnalyticsEnvironment(private val providerFactory: ProviderFactory) : Environment() {
+
+    private val systemProperties = ConcurrentHashMap<String, NullableString>()
+    private val envVariables = ConcurrentHashMap<String, NullableString>()
+
     override fun getVariable(name: String): String? {
-        return providerFactory.environmentVariable(name).forUseAtConfigurationTime().orNull
+        return envVariables.computeIfAbsent(name) {
+            NullableString(
+                providerFactory.environmentVariable(
+                    name
+                ).forUseAtConfigurationTime().orNull
+            )
+        }.value
+
     }
 
     override fun getSystemProperty(name: String): String? {
-        return providerFactory.systemProperty(name).forUseAtConfigurationTime().orNull
+        return systemProperties.computeIfAbsent(name) {
+            NullableString(
+                providerFactory.systemProperty(
+                    name
+                ).forUseAtConfigurationTime().orNull
+            )
+        }.value
     }
+
+    // ConcurrentHashMap does not allow null values, so wrap in in a data class
+    data class NullableString(val value: String?)
 }
