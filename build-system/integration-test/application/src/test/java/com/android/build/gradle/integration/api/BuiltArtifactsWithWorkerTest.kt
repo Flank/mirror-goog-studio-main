@@ -217,18 +217,19 @@ android.onVariantProperties {
     task.getVariantName().set(it.getName())
   }
 
-  it.artifacts.use(outputTask).toReplace(
-        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
-        { it.getOutputDir() }
-  )
+  it.artifacts.use(outputTask)
+        .wiredWith({ it.getOutputDir() })
+        .toCreate(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE)
 
   TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
   ArtifactTransformationRequest replacementRequest = ((ArtifactsImpl) it.artifacts).use(consumerTask)
+    .wiredWithDirectories(
+        { it.getCompatibleManifests() },
+        { it.getOutputDir() }
+    )
     .toTransformMany(
         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE, 
-        { it.getCompatibleManifests() },
         InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-        { it.getOutputDir() },
         null)
 
   consumerTask.configure { task ->
