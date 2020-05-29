@@ -70,14 +70,11 @@ class DeviceClientMonitorTask implements Runnable {
     boolean register(@NonNull DeviceImpl device) {
         SocketChannel socketChannel;
         try {
-            socketChannel = AdbSocketUtils.openAdbConnection();
+            socketChannel = AndroidDebugBridge.openConnection();
         } catch (IOException exception) {
             Log.e(
                     "DeviceClientMonitorTask",
-                    "Unable to open connection to: "
-                            + AndroidDebugBridge.getSocketAddress()
-                            + ", due to: "
-                            + exception);
+                    "Unable to open connection to ADB server: " + exception);
             return false;
         }
         if (socketChannel != null) {
