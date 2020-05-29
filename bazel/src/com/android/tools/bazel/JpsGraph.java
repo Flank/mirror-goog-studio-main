@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.intellij.util.graph.DFSTBuilder;
 import com.intellij.util.graph.Graph;
 import com.intellij.util.graph.GraphGenerator;
-import gnu.trove.TIntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -58,7 +58,7 @@ class JpsGraph {
         Graph<JpsModule> graph = createGraph(project, scope);
         DFSTBuilder<JpsModule> builder = new DFSTBuilder<>(graph);
         // Loops through the module in reverse topological order and build the transitive closure
-        TIntArrayList scCs = builder.getSCCs();
+        IntList scCs = builder.getSCCs();
         int k = 0;
         for (int i = 0; i < scCs.size(); i++) {
             int s = scCs.get(i);
