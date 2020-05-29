@@ -37,6 +37,7 @@ class TraceProcessorServiceImpl final
 
  private:
   std::unique_ptr<::perfetto::trace_processor::TraceProcessor> tp_;
+  long loaded_trace_id = 0;
 
   void LoadAllProcessMetadata(proto::ProcessMetadataResult* metadata);
 };

@@ -56,6 +56,7 @@ cc_test(
         "-Itools/base/profiler/native/trace_processor_daemon",
     ],
     data = [
+        "testdata/garbage.trace",
         "testdata/tank.trace",
         "testdata/unity.heapprofd",
     ],
