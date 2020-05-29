@@ -29,7 +29,7 @@ final class HttpURLAdapter extends ClassVisitor implements Opcodes {
     static final String WRAPPER_CLASS = "com/android/tools/profiler/support/network/httpurl/HttpURLWrapper";
 
     HttpURLAdapter(ClassVisitor classVisitor) {
-        super(ASM5, classVisitor);
+        super(ASM7, classVisitor);
     }
 
     @Override
@@ -43,7 +43,7 @@ final class HttpURLAdapter extends ClassVisitor implements Opcodes {
     private static final class MethodAdapter extends MethodVisitor implements Opcodes {
 
         public MethodAdapter(MethodVisitor mv) {
-            super(ASM5, mv);
+            super(ASM7, mv);
         }
 
         @Override
