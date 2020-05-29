@@ -65,6 +65,11 @@ message QueryBatchResponse {
 message QueryParameters {
   // Fields 1 to 100 reserved to future metadata passed on the request.
 
+  // Trace Identifier that represents which trace this query should be run against.
+  // When this field is 0, then execute against the last loaded trace for compatibility,
+  // might be required in the future.
+  int64 trace_id = 1;
+
   oneof query {
     ProcessMetadataParameters process_metadata_request = 101;
     TraceEventsParameters trace_events_request = 102;
@@ -110,7 +115,19 @@ message QueryParameters {
 
 message QueryResult {
   // Fields 1 to 100 reserved to metadata returned by the query.
-  string error = 1;
+
+  // If all queries were executed succefully.
+  // If this is false, the main reason for the failure and error
+  // messages can be found in the failure_reason and error fields.
+  bool ok = 1;
+
+  // If ok = false, this field contains the main reason on why the
+  // query failed.
+  QueryFailureReason failure_reason = 2;
+
+  // In case any query had an issue, this field might contains
+  // a string with more details on the reason of the failure.
+  string error = 3;
 
   // Can be set to none if the received query was invalid. In this case,
   // check the error field.
@@ -120,6 +137,15 @@ message QueryResult {
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
     CountersResult counters_result = 105;
+  }
+
+  enum QueryFailureReason {
+    // Proto good practices.
+    NONE = 0;
+    // Other/general failures. See the error message.
+    OTHER = 1;
+    // If this instance of TPD doesn't know about the trace specified.
+    TRACE_NOT_FOUND = 2;
   }
 
 }
