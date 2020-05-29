@@ -47,6 +47,7 @@ if [[ $lsb_release == "crostini" ]]; then
     --build_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
     -- \
+    //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar
     //tools/adt/idea/android-uitests/...
 
   readonly test_invocation_id="$(uuidgen)"
@@ -60,6 +61,7 @@ if [[ $lsb_release == "crostini" ]]; then
     --jobs=1 \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
+    --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
     --build_tag_filters=${target_filters} \
     --test_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
@@ -73,6 +75,16 @@ if [[ $lsb_release == "crostini" ]]; then
   fi
 
   readonly bazel_status_emu=0
+
+  readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
+  readonly bin_dir="$("${script_dir}"/../bazel info ${config_options} bazel-bin)"
+
+  # Generate the perfgate zip from the test bes
+  # Copy it as part of build artifacts under dist_dir
+  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+    -bes "${dist_dir}/bazel-${build_number}.bes" \
+    -perfzip "${dist_dir}/perfgate_data.zip"
+
 else #Executes normally on linux as before
   config_options="--config=remote"
 

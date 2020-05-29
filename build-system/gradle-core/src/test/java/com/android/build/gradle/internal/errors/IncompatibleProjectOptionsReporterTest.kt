@@ -19,6 +19,9 @@ package com.android.build.gradle.internal.errors
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.errors.IssueReporter
+import com.android.builder.errors.IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED
+import com.android.builder.model.SyncIssue.Companion.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -63,5 +66,7 @@ class IncompatibleProjectOptionsReporterTest {
                     " in your gradle.properties file."
         )
         assertThat(reporter.warnings).isEmpty()
+        assertThat(reporter.syncIssues).hasSize(1)
+        assertThat(reporter.syncIssues[0].type).isEqualTo(TYPE_ANDROID_X_PROPERTY_NOT_ENABLED)
     }
 }
