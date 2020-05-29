@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidatio
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.registerWriteModelAfterJsonGeneration
 import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
@@ -44,10 +45,10 @@ import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFi
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.soFolder
+import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.services.executeListenersOnceAfterJsonGeneration
 import com.android.build.gradle.internal.cxx.services.executeListenersOnceBeforeJsonGeneration
 import com.android.build.gradle.internal.cxx.services.issueReporter
-import com.android.build.gradle.internal.cxx.services.javaexec
 import com.android.build.gradle.internal.cxx.services.jsonGenerationInputDependencyFileCollection
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
@@ -60,7 +61,6 @@ import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
 import org.gradle.api.GradleException
@@ -79,7 +79,6 @@ import java.io.IOException
 import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.ArrayList
 import java.util.Objects
 import java.util.concurrent.Callable
 
@@ -90,9 +89,55 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
     @get:Internal protected val build: CxxBuildModel,
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     override val variant: CxxVariantModel,
-    @get:Internal override val abis: List<CxxAbiModel>,
-    @get:Internal override val stats: GradleBuildVariant.Builder
+    @get:Internal override val abis: List<CxxAbiModel>
 ) : ExternalNativeJsonGenerator {
+    // TODO(153964094) Move gradle task inputs and outputs [ExternalNativeBuildJsonTask]
+    //region Gradle task inputs and outputs
+    @get:Input
+    val nativeBuildSystem get() = variant.module.buildSystem
+
+    @get:OutputFiles
+    val nativeBuildConfigurationsJsons get() = abis.map { it.jsonFile }
+
+    @get:Input
+    val objFolder: String get() = variant.objFolder.path
+
+    @get:Input
+    val soFolder: String get() = variant.soFolder.path
+
+    @get:Input
+    val sdkFolder: String get() = variant.module.project.sdkFolder.path
+
+    @Input
+    @Optional
+    fun getcFlags(): List<String> = variant.cFlagsList
+
+    @get:Input
+    @get:Optional
+    val cppFlags: List<String> get() = variant.cppFlagsList
+
+    @get:Input
+    @get:Optional
+    val buildArguments: List<String> get() = variant.buildSystemArgumentList
+
+    @get:Input
+    val isDebuggable: Boolean get() = variant.isDebuggableEnabled
+
+    @get:Input
+    val ndkFolder: String get() = variant.module.ndkFolder.path
+
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:InputFile
+    val makefile: File get() = variant.module.makeFile
+
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    val jsonGenerationDependencyFiles: FileCollection
+        get() = variant.module.jsonGenerationInputDependencyFileCollection(abis)
+    //endregion
+
+    // TODO(153964094) Reconcile this with jsonGenerationDependencyFiles
+    // They do the same work but one is for single abi and one is for all abis.
     @Throws(IOException::class)
     private fun getDependentBuildFiles(json: File): List<File> {
         val result: MutableList<File> =
@@ -103,7 +148,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
 
         // Now check whether the JSON is out-of-date with respect to the build files it declares.
         val config =
-            AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, stats)
+            AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, variant.statsBuilder)
 
         // If anything in the prefab package changes, re-run. Note that this also depends on the
         // directories, so added/removed files will also trigger a re-run.
@@ -117,106 +162,114 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
         return result
     }
 
-    override fun build(forceJsonGeneration: Boolean) {
-        try {
-            infoln("building json with force flag %s", forceJsonGeneration)
-            buildAndPropagateException(forceJsonGeneration)
-        } catch (e: IOException) {
-            errorln("exception while building Json $%s", e.message!!)
-        } catch (e: GradleException) {
-            errorln("exception while building Json $%s", e.message!!)
-        } catch (e: ProcessException) {
-            errorln(
-                "executing external native build for %s %s",
-                nativeBuildSystem.tag, variant.module.makeFile
-            )
-        }
-    }
-
-    override fun parallelBuild(forceJsonGeneration: Boolean): List<Callable<Void?>> {
-        val buildSteps: MutableList<Callable<Void?>> =
-            ArrayList(abis.size)
+    override fun getMetadataGenerators(
+        forceGeneration: Boolean,
+        abiName: String?
+    ): List<Callable<Unit>> {
+        val buildSteps = mutableListOf<Callable<Unit>>()
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
         variant.prefabPackageDirectoryList
         variant.prefabClassPath
         for (abi in abis) {
+            if (abiName != null && abiName != abi.abi.tag) continue
             buildSteps.add(
                 Callable {
-                    buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi)
+                    IssueReporterLoggingEnvironment(abi.variant.module.issueReporter()).use {
+                        try {
+                            buildForOneConfiguration(forceGeneration, abi)
+                        } catch (e: IOException) {
+                            errorln("exception while building Json %s", e.message!!)
+                        } catch (e: GradleException) {
+                            errorln("exception while building Json %s", e.message!!)
+                        } catch (e: ProcessException) {
+                            errorln("executing external native build for %s %s",
+                                nativeBuildSystem.tag, variant.module.makeFile)
+                        }
+                    }
                 }
             )
         }
         return buildSteps
     }
 
-    private fun buildForOneConfigurationConvertExceptions(
-        forceJsonGeneration: Boolean,
-        abi: CxxAbiModel): Void? {
-        IssueReporterLoggingEnvironment(abi.variant.module.issueReporter()).use {
-            try {
-                buildForOneConfiguration(forceJsonGeneration, abi)
-            } catch (e: IOException) {
-                errorln("exception while building Json %s", e.message!!)
-            } catch (e: GradleException) {
-                errorln("exception while building Json %s", e.message!!)
-            } catch (e: ProcessException) {
-                errorln(
-                    "executing external native build for %s %s",
-                    nativeBuildSystem.tag, variant.module.makeFile
-                )
+    override fun addCurrentMetadata(builder: NativeAndroidProjectBuilder) {
+        val stats = ProcessProfileWriter.getOrCreateVariant(
+            variant.module.gradleModulePathName, variant.variantName
+        )
+        val config =
+            if (stats.nativeBuildConfigCount == 0) {
+                val config =
+                    NativeBuildConfigInfo.newBuilder()
+                stats.addNativeBuildConfig(config)
+                config
+            } else {
+                // Do not include stats if they were gathered during build.
+                null
             }
-            return null
+
+        // Two layers of catching and reporting IOException.
+        // The inner layer is caught when [addJson] throws. The purpose
+        // is to catch and continue while reporting the error.
+        // The outer layer is for when [forEachNativeBuildConfiguration]
+        // itself throws. Continuing isn't possible but the error should
+        // still be reported since [NativeModelBuilder] doesn't tolerate
+        // and continue on checked JVM exceptions.
+        try {
+            forEachNativeBuildConfiguration { jsonReader ->
+                try {
+                    if (config == null) {
+                        builder.addJson(jsonReader, variant.variantName)
+                    } else {
+                        builder.addJson(jsonReader, variant.variantName, config)
+                    }
+                } catch (e: IOException) {
+                    errorln("Failed to read native JSON data: $e")
+                }
+            }
+        } catch (e: IOException) {
+            errorln("Failed to read native JSON data: $e")
+        }
+    }
+
+    private fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {
+        IssueReporterLoggingEnvironment(variant.module.issueReporter()).use {
+            val files = nativeBuildConfigurationsJsons
+            infoln("streaming %s JSON files", files.size)
+            for (file in nativeBuildConfigurationsJsons) {
+                if (file.exists()) {
+                    infoln("string JSON file %s", file.absolutePath)
+                    try {
+                        JsonReader(FileReader(file))
+                            .use { reader -> callback(reader) }
+                    } catch (e: Throwable) {
+                        infoln(
+                            "Error parsing: %s",
+                            java.lang.String.join(
+                                "\r\n",
+                                Files.readAllLines(file.toPath())
+                            )
+                        )
+                        throw e
+                    }
+                } else {
+                    // If the tool didn't create the JSON file then create fallback with the
+                    // information we have so the user can see partial information in the UI.
+                    infoln("streaming fallback JSON for %s", file.absolutePath)
+                    val fallback = NativeBuildConfigValueMini()
+                    fallback.buildFiles =
+                        Lists.newArrayList(variant.module.makeFile)
+                    JsonReader(
+                        StringReader(
+                            Gson().toJson(fallback)
+                        )
+                    ).use { reader -> callback(reader) }
+                }
+            }
         }
     }
 
     protected open fun checkPrefabConfig() {}
-
-    @Throws(IOException::class, ProcessException::class)
-    private fun buildAndPropagateException(forceJsonGeneration: Boolean) {
-        var firstException: Exception? = null
-        for (abi in abis) {
-            try {
-                buildForOneConfiguration(forceJsonGeneration, abi)
-            } catch (e: GradleException) {
-                if (firstException == null) {
-                    firstException = e
-                }
-            } catch (e: IOException) {
-                if (firstException == null) {
-                    firstException = e
-                }
-            } catch (e: ProcessException) {
-                if (firstException == null) {
-                    firstException = e
-                }
-            }
-        }
-        if (firstException != null) {
-            if (firstException is GradleException) {
-                throw (firstException as GradleException?)!!
-            }
-            if (firstException is IOException) {
-                throw (firstException as IOException?)!!
-            }
-            throw (firstException as ProcessException?)!!
-        }
-    }
-
-    override fun buildForOneAbiName(
-        forceJsonGeneration: Boolean,
-        abiName: String
-    ) {
-        var built = 0
-        for (abi in abis) {
-            if (abi.abi.tag != abiName) {
-                continue
-            }
-            built++
-            buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi)
-        }
-        assert(built == 1)
-    }
 
     @Throws(GradleException::class, IOException::class, ProcessException::class)
     private fun buildForOneConfiguration(
@@ -324,7 +377,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                             )
                         )
                     }
-                    synchronized(stats) {
+                    synchronized(variant.statsBuilder) {
                         // Related to https://issuetracker.google.com/69408798
                         // Targets may have been removed or there could be other orphaned extra .so
                         // files. Remove these and rely on the build step to replace them if they are
@@ -333,7 +386,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                         removeUnexpectedSoFiles(
                             abi.soFolder,
                             AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                abi.jsonFile, stats
+                                abi.jsonFile, variant.statsBuilder
                             )
                         )
                     }
@@ -374,7 +427,9 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                 throw e
             } finally {
                 variantStats.generationDurationMs = System.currentTimeMillis() - startTime
-                synchronized(stats) { stats.addNativeBuildConfig(variantStats) }
+                synchronized(variant.statsBuilder) {
+                    variant.statsBuilder.addNativeBuildConfig(variantStats)
+                }
                 abi.jsonGenerationLoggingRecordFile.parentFile.mkdirs()
                 Files.write(
                     abi.jsonGenerationLoggingRecordFile.toPath(),
@@ -402,105 +457,6 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
      */
     @Throws(ProcessException::class, IOException::class)
     abstract fun executeProcess(abi: CxxAbiModel): String
-
-    @Throws(IOException::class)
-    override fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {
-        IssueReporterLoggingEnvironment(variant.module.issueReporter()).use {
-            val files = nativeBuildConfigurationsJsons
-            infoln("streaming %s JSON files", files.size)
-            for (file in nativeBuildConfigurationsJsons) {
-                if (file.exists()) {
-                    infoln("string JSON file %s", file.absolutePath)
-                    try {
-                        JsonReader(FileReader(file))
-                            .use { reader -> callback(reader) }
-                    } catch (e: Throwable) {
-                        infoln(
-                            "Error parsing: %s",
-                            java.lang.String.join(
-                                "\r\n",
-                                Files.readAllLines(file.toPath())
-                            )
-                        )
-                        throw e
-                    }
-                } else {
-                    // If the tool didn't create the JSON file then create fallback with the
-                    // information we have so the user can see partial information in the UI.
-                    infoln("streaming fallback JSON for %s", file.absolutePath)
-                    val fallback = NativeBuildConfigValueMini()
-                    fallback.buildFiles =
-                        Lists.newArrayList(variant.module.makeFile)
-                    JsonReader(
-                        StringReader(
-                            Gson().toJson(fallback)
-                        )
-                    ).use { reader -> callback(reader) }
-                }
-            }
-        }
-    }
-
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    @get:InputFile
-    val makefile: File
-        get() = variant.module.makeFile
-
-    // We don't need contents of the files in the generated JSON, just the path.
-    @get:Input
-    override val objFolder: String
-        get() = variant.objFolder.path
-
-    // We don't need contents of the files in the generated JSON, just the path.
-    @get:Input
-    val ndkFolder: String
-        get() = variant.module.ndkFolder.path
-
-    @get:Input
-    val isDebuggable: Boolean
-        get() = variant.isDebuggableEnabled
-
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    val jsonGenerationDependencyFiles: FileCollection
-        get() = variant.module.jsonGenerationInputDependencyFileCollection(abis)
-
-    @get:Input
-    @get:Optional
-    val buildArguments: List<String>
-        get() = variant.buildSystemArgumentList
-
-    @Optional
-    @Input
-    fun getcFlags(): List<String> {
-        return variant.cFlagsList
-    }
-
-    @get:Input
-    @get:Optional
-    val cppFlags: List<String>
-        get() = variant.cppFlagsList
-
-    @get:OutputFiles
-    override val nativeBuildConfigurationsJsons: List<File>
-        get() {
-            val generatedJsonFiles: MutableList<File> =
-                ArrayList()
-            for (abi in abis) {
-                generatedJsonFiles.add(abi.jsonFile)
-            }
-            return generatedJsonFiles
-        }
-
-    // We don't need contents of the files in the generated JSON, just the path.
-    @get:Input
-    override val soFolder: String
-        get() = variant.soFolder.path
-
-    // We don't need contents of the files in the generated JSON, just the path.
-    @get:Input
-    val sdkFolder: String
-        get() = variant.module.project.sdkFolder.path
 
     companion object {
         /**
@@ -611,24 +567,20 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                 // until model building.
                 registerWriteModelAfterJsonGeneration(model)
             }
-            val stats = ProcessProfileWriter.getOrCreateVariant(
-                module.gradleModulePathName, componentProperties.name
-            )
             return when (module.buildSystem) {
                 NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
                     cxxBuildModel,
                     variant,
-                    abis,
-                    stats
+                    abis
                 )
                 NativeBuildSystem.CMAKE -> {
                     val cmake =
                         Objects.requireNonNull(variant.module.cmake)!!
                     val cmakeRevision = cmake.minimumCmakeVersion
-                    stats.nativeCmakeVersion = cmakeRevision.toString()
+                    variant.statsBuilder.nativeCmakeVersion = cmakeRevision.toString()
                     if (cmakeRevision.isCmakeForkVersion()) {
                         return CmakeAndroidNinjaExternalNativeJsonGenerator(
-                            cxxBuildModel, variant, abis, stats
+                            cxxBuildModel, variant, abis
                         )
                     }
                     if (cmakeRevision.major < 3
@@ -641,7 +593,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                         )
                     }
                     CmakeServerExternalNativeJsonGenerator(
-                        cxxBuildModel, variant, abis, stats
+                        cxxBuildModel, variant, abis
                     )
                 }
             }

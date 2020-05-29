@@ -19,12 +19,7 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.tasks.NativeBuildSystem
-import com.google.gson.stream.JsonReader
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFiles
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -32,27 +27,42 @@ import java.util.concurrent.Callable
  * Abstraction of C/C++ gradle model generation and build.
  */
 interface ExternalNativeJsonGenerator {
-    @get:Input
-    val nativeBuildSystem: NativeBuildSystem
-    @get:OutputFiles
-    val nativeBuildConfigurationsJsons: List<File>
-    @get:Input
-    val objFolder: String
-    @get:Input
-    val soFolder: String
-    @get:Internal
-    val stats: GradleBuildVariant.Builder
+    //region Build model data
     @get:Internal
     val variant: CxxVariantModel
+
     @get:Internal
     val abis: List<CxxAbiModel>
+    //endregion
+
+    //region Build metadata generation
+    /**
+     * Get futures that will create native build metadata.
+     *
+     * If [forceGeneration] is true then rebuild metadata regardless of whether
+     * it is otherwise considered to be up-to-date. This flag will be set when
+     * the user chose Build/Refresh Linked C++ Projects.
+     *
+     * If [abiName] is specified then only that ABI will be built. Otherwise,
+     * all available ABIs will be built.
+     */
+    fun getMetadataGenerators(
+        forceGeneration: Boolean,
+        abiName : String? = null
+    ): List<Callable<Unit>>
+
+    /**
+     * Append all currently available C/C++ metadata to the builder without
+     * running any slow processes to create metadata that isn't there. If
+     * the caller needs to ensure metadata is available then first call
+     * [getMetadataGenerators] and invoke futures.
+     *
+     * Build metadata is added to [builder].
+     */
+    fun addCurrentMetadata(builder: NativeAndroidProjectBuilder)
+    //endregion
+
+    // TODO(153964094) this doesn't belong here. It should go into CxxAbiModel.
     @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     fun getStlSharedObjectFiles(): Map<Abi, File>
-
-    // Gradle model generator support below here.
-    // TODO(153964094) expose gradle model directly here rather than utility functions that allow it
-    fun buildForOneAbiName(forceJsonGeneration: Boolean, abiName: String)
-    fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit)
-    fun parallelBuild(forceJsonGeneration: Boolean): List<Callable<Void?>>
-    fun build(forceJsonGeneration: Boolean)
 }

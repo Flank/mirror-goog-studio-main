@@ -33,9 +33,8 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     build: CxxBuildModel,
     variant: CxxVariantModel,
-    abis: List<CxxAbiModel>,
-    stats: GradleBuildVariant.Builder
-) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
+    abis: List<CxxAbiModel>
+) : CmakeExternalNativeJsonGenerator(build, variant, abis) {
 
     override fun checkPrefabConfig() {
         errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")

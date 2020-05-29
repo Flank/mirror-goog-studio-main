@@ -27,10 +27,10 @@ import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.cmakeSettingsFile
+import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
 import java.io.File
 import org.gradle.api.tasks.InputFile
@@ -46,9 +46,8 @@ import java.io.IOException
 internal abstract class CmakeExternalNativeJsonGenerator(
     build: CxxBuildModel,
     variant: CxxVariantModel,
-    abis: List<CxxAbiModel>,
-    stats: GradleBuildVariant.Builder
-) : ExternalNativeJsonGeneratorBase(build, variant, abis, stats) {
+    abis: List<CxxAbiModel>
+) : ExternalNativeJsonGeneratorBase(build, variant, abis) {
     @JvmField
     protected val cmake: CxxCmakeModuleModel
 
@@ -61,7 +60,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
     }
 
     init {
-        this.stats.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
+        variant.statsBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
         this.cmake = variant.module.cmake!!
 
         // Check some basic requirements. This code executes at sync time but any call to
@@ -110,8 +109,6 @@ internal abstract class CmakeExternalNativeJsonGenerator(
         builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())
         return builder
     }
-
-    override val nativeBuildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE
 
     override fun getStlSharedObjectFiles(): Map<Abi, File> {
         // Search for ANDROID_STL build argument. Process in order / later flags take precedent.

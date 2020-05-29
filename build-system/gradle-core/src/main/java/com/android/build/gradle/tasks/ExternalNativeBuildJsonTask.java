@@ -29,7 +29,9 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
+import java.util.concurrent.Callable;
 import javax.inject.Inject;
+import kotlin.Unit;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
@@ -58,7 +60,11 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         new DefaultIssueReporter(new LoggerWrapper(getLogger())))) {
-            generator.get().build(false);
+            for (Callable<Unit> future : generator.get().getMetadataGenerators(false, null)) {
+                future.call();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

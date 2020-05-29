@@ -82,9 +82,8 @@ import java.util.HashMap
 internal class CmakeServerExternalNativeJsonGenerator(
     build: CxxBuildModel,
     variant: CxxVariantModel,
-    abis: List<CxxAbiModel>,
-    stats: GradleBuildVariant.Builder
-) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
+    abis: List<CxxAbiModel>
+) : CmakeExternalNativeJsonGenerator(build, variant, abis) {
     @Throws(ProcessException::class, IOException::class)
     override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         // Once a Cmake server object is created

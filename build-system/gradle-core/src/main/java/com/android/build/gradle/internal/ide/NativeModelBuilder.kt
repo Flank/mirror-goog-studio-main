@@ -16,19 +16,17 @@
 
 package com.android.build.gradle.internal.ide
 
+import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
+import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
-import com.android.builder.profile.ProcessProfileWriter
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
-import java.io.IOException
 import java.util.ArrayList
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -127,9 +125,9 @@ class NativeModelBuilder(
         builder: NativeAndroidProjectBuilder,
         generator: ExternalNativeJsonGenerator
     ) {
-        builder.addBuildSystem(generator.nativeBuildSystem.tag)
+        builder.addBuildSystem(generator.variant.module.buildSystem.tag)
         val abis = generator.abis.map { it.abi.tag }
-        val buildFolders = generator.nativeBuildConfigurationsJsons.map { it.parentFile }
+        val buildFolders = generator.abis.map { it.jsonFile.parentFile }
         builder.addVariantInfo(
             generator.variant.variantName,
             abis,
@@ -146,25 +144,14 @@ class NativeModelBuilder(
         abiName: String
     ): NativeVariantAbi {
         val builder = NativeAndroidProjectBuilder(project.name, abiName)
-        var built = 0
         generators
             .filter { generator -> generator.variant.variantName == variantName }
             .onEach { generator ->
-                generator.buildForOneAbiName(ideRefreshExternalNativeModel, abiName)
-                buildInexpensiveNativeAndroidProjectInformation(builder, generator)
-                ++built
-                try {
-                    generator.forEachNativeBuildConfiguration { jsonReader ->
-                        try {
-                            builder.addJson(jsonReader, generator.variant.variantName)
-                        } catch (e: IOException) {
-                            throw RuntimeException("Failed to read native JSON data", e)
-                        }
-                    }
-                } catch (e: IOException) {
-                    throw RuntimeException("Failed to read native JSON data", e)
+                generator.getMetadataGenerators(ideRefreshExternalNativeModel, abiName).forEach {
+                    it.call()
                 }
-
+                buildInexpensiveNativeAndroidProjectInformation(builder, generator)
+                generator.addCurrentMetadata(builder)
             }
         return builder.buildNativeVariantAbi(variantName)!!
     }
@@ -177,25 +164,7 @@ class NativeModelBuilder(
         val builder = NativeAndroidProjectBuilder(project.name)
         generators.onEach { generator ->
             buildInexpensiveNativeAndroidProjectInformation(builder, generator)
-            val stats = ProcessProfileWriter.getOrCreateVariant(project.path, generator.variant.variantName)
-            val config = GradleBuildVariant.NativeBuildConfigInfo.newBuilder()
-
-            if (stats.nativeBuildConfigCount == 0) {
-                // Do not include stats if they were gathered during build.
-                stats.addNativeBuildConfig(config)
-            }
-            try {
-                generator.forEachNativeBuildConfiguration { jsonReader ->
-                    try {
-                        builder.addJson(jsonReader, generator.variant.variantName, config)
-                    } catch (e: IOException) {
-                        throw RuntimeException("Failed to read native JSON data", e)
-                    }
-                }
-            } catch (e: IOException) {
-                throw RuntimeException("Failed to read native JSON data", e)
-            }
-
+            generator.addCurrentMetadata(builder)
         }
         return builder.buildNativeAndroidProject()
     }
@@ -209,7 +178,7 @@ class NativeModelBuilder(
             val cpuCores = Runtime.getRuntime().availableProcessors()
             val threadNumber = cpuCores.coerceAtMost(8)
             val nativeJsonGenExecutor = Executors.newFixedThreadPool(threadNumber)
-            val buildSteps = ArrayList<Callable<Void?>>()
+            val buildSteps = ArrayList<Callable<Unit>>()
             for (component in (variantModel.variants + variantModel.testComponents)) {
                 val generator = component
                     .taskContainer
@@ -219,7 +188,7 @@ class NativeModelBuilder(
                     // When refreshExternalNativeModel() is true it will also
                     // force update all JSONs.
                     buildSteps.addAll(
-                        generator.parallelBuild(ideRefreshExternalNativeModel)
+                        generator.getMetadataGenerators(ideRefreshExternalNativeModel)
                     )
                 }
             }
@@ -236,7 +205,9 @@ class NativeModelBuilder(
 
         } else {
             for (generator in generators) {
-                generator.build(ideRefreshExternalNativeModel)
+                generator.getMetadataGenerators(ideRefreshExternalNativeModel).forEach {
+                    it.call()
+                }
             }
         }
     }

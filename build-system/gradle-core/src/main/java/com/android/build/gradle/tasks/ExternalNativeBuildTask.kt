@@ -22,13 +22,15 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
-import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
+import com.android.build.gradle.internal.cxx.model.soFolder
+import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
@@ -87,21 +89,21 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
         @Throws(IOException::class)
         get() = if (stats.nativeBuildConfigCount == 0) {
             AndroidBuildGradleJsons.getNativeBuildMiniConfigs(
-                generator.get().nativeBuildConfigurationsJsons, stats
+                generator.get().abis.map { it.jsonFile }, stats
             )
         } else AndroidBuildGradleJsons.getNativeBuildMiniConfigs(
-            generator.get().nativeBuildConfigurationsJsons, null/* kotlin.Unit */
+            generator.get().abis.map { it.jsonFile }, null/* kotlin.Unit */
         )
 
     // Exposed in Variants API
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val objFolder: File
-        get() = File(generator.get().objFolder)
+        get() = generator.get().variant.objFolder
 
     // Exposed in Variants API
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val soFolder: File
-        get() = File(generator.get().soFolder)
+        get() = generator.get().variant.soFolder
 
     @get:Inject
     abstract val execOperations: ExecOperations
@@ -110,7 +112,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
         get() = generator.get().getStlSharedObjectFiles()
 
     private val stats: GradleBuildVariant.Builder
-        get() = generator.get().stats
+        get() = generator.get().variant.statsBuilder
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(
@@ -172,7 +174,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                         librariesToBuild,
                         generator
                             .get()
-                            .nativeBuildConfigurationsJsons[miniConfigIndex]
+                            .abis[miniConfigIndex].jsonFile
                             .parentFile
                     )
                 )
@@ -186,7 +188,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                             listOf(libraryValue),
                             generator
                                 .get()
-                                .nativeBuildConfigurationsJsons[miniConfigIndex]
+                                .abis[miniConfigIndex].jsonFile
                                 .parentFile
                         )
                     )
@@ -419,7 +421,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                 }
 
             val generateChromeTraces =
-                generator.get().takeIf { it.nativeBuildSystem == NativeBuildSystem.CMAKE }
+                generator.get().takeIf { it.variant.module.buildSystem == NativeBuildSystem.CMAKE }
                     ?.abis
                     ?.firstOrNull { it.abi.tag == abiName }
                     ?.let { abiModel ->

@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
 import com.google.common.reflect.ClassPath
 import com.google.common.truth.Truth.assertThat
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.junit.Test
 import java.io.File
 import java.lang.reflect.Method
@@ -62,7 +63,8 @@ private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
     Set::class.java,
     String::class.java,
     UUID::class.java,
-    DetermineUsedStlResult::class.java
+    DetermineUsedStlResult::class.java,
+    GradleBuildVariant.Builder::class.java
 )
 
 class CxxModuleModelTest {
