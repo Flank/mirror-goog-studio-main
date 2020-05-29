@@ -17,7 +17,6 @@
 package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
@@ -57,7 +56,12 @@ import java.util.concurrent.TimeUnit;
  * through {@link #getClientData()}.
  */
 public class ClientImpl extends JdwpAgent implements Client {
-    private SocketChannel mChan;
+    /**
+     * Users of mChan avoid synchronization issues by taking a local instance of the channel before
+     * using it. This class-level shared instance can be nulled by any thread calling #close() so
+     * volatile is needed to ensure threads don't read stale values if mChan.
+     */
+    private volatile SocketChannel mChan;
 
     // debugger we're associated with, if any
     private Debugger mDebugger;
@@ -507,10 +511,13 @@ public class ClientImpl extends JdwpAgent implements Client {
         }
     }
 
-    /** Registers the client with a Selector. */
+    /** Registers the client with a Selector, should be called immediately after client creation. */
     public void register(Selector sel) throws IOException {
-        if (mChan != null) {
-            mChan.register(sel, SelectionKey.OP_READ, this);
+        // Given the only caller of this method is the thread creating this instance, we don't need
+        // synchronization here.
+        SocketChannel chan = mChan;
+        if (chan != null) {
+            chan.register(sel, SelectionKey.OP_READ, this);
         }
     }
 
@@ -523,17 +530,19 @@ public class ClientImpl extends JdwpAgent implements Client {
     }
 
     /**
-     * Initiate the JDWP handshake.
+     * Initiate the JDWP handshake, should be called immediately after creating client.
      *
      * <p>On failure, closes the socket and returns false.
      */
-    public boolean sendHandshake() {
+    boolean sendHandshake() {
         ByteBuffer tempBuffer = ByteBuffer.allocate(JdwpHandshake.HANDSHAKE_LEN);
         try {
             // assume write buffer can hold 14 bytes
             JdwpHandshake.putHandshake(tempBuffer);
             int expectedLen = tempBuffer.position();
             tempBuffer.flip();
+            // synchronization on mChan not needed because it's called only once immediately after
+            // object creation.
             if (mChan.write(tempBuffer) != expectedLen) {
                 throw new IOException("partial handshake write");
             }
@@ -571,8 +580,8 @@ public class ClientImpl extends JdwpAgent implements Client {
         }
 
         packet.log("Client: sending jdwp packet to Android Device");
-        // Synchronizing on this variable is still useful as we do not want to threads
-        // reading at the same time from the same channel, and the only change that
+        // Synchronizing on this variable is still useful as we do not want more than one
+        // thread writing at the same time to the same channel, and the only change that
         // can happen to this channel is to be closed and mChan become null.
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (chan) {
@@ -586,13 +595,18 @@ public class ClientImpl extends JdwpAgent implements Client {
     }
 
     /**
-     * Read data from our channel.
+     * Read data from our channel, should only be called from one thread.
      *
      * <p>This is called when data is known to be available, and we don't yet have a full packet in
      * the buffer. If the buffer is at capacity, expand it.
      */
     public void read() throws IOException, BufferOverflowException {
-
+        // Check the channel is not closed, and keep a copy in a local variable to prevent potential
+        // NPE when we actually use the channel in the code below.
+        SocketChannel chan = mChan;
+        if (chan == null) {
+            throw new IOException("Can't read from a closed channel.");
+        }
         int count;
 
         if (mReadBuffer.position() == mReadBuffer.capacity()) {
@@ -611,7 +625,7 @@ public class ClientImpl extends JdwpAgent implements Client {
             mReadBuffer = newBuffer;
         }
 
-        count = mChan.read(mReadBuffer);
+        count = chan.read(mReadBuffer);
         if (count < 0) throw new IOException("read failed");
 
         if (Log.Config.LOGV) Log.v("ddms", "Read " + count + " bytes from " + this);
@@ -777,9 +791,12 @@ public class ClientImpl extends JdwpAgent implements Client {
 
         clear();
         try {
-            if (mChan != null) {
-                mChan.close();
-                mChan = null;
+            // we could have multiple threads calling close, but it does not matter,
+            // as close() is a no-op if the channel is already closed.
+            SocketChannel chan = mChan;
+            mChan = null;
+            if (chan != null) {
+                chan.close();
             }
 
             if (mDebugger != null) {
