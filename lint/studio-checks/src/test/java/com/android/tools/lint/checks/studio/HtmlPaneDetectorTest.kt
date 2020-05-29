@@ -33,7 +33,7 @@ class HtmlPaneDetectorTest {
                     package test.pkg;
                     import javax.swing.JEditorPane;
 
-                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                     public class EditorPaneTest {
                         public static final String HTML_KIT = "text/html";
 
@@ -101,6 +101,18 @@ class HtmlPaneDetectorTest {
                                 )
                             pane.editorKit = kit
                         }
+
+                        private val kit: EditorKit? = null
+
+                        val test5 = object : JEditorPane("text/html", "") {} // OK
+                            .also {
+                                it.editorKit = kit
+                            }
+
+                        @Suppress("MethodMayBeStatic")val test6 = object : JEditorPane() {}
+                            .also {
+                                it.contentType = "text/html" // ERROR
+                            }
                 }
                 """
                 ).indented(),
@@ -137,20 +149,23 @@ class HtmlPaneDetectorTest {
                 """
                 src/test/pkg/EditorPaneTest.java:10: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
                         pane.setContentType("text/html"); // ERROR
-                                            ~~~~~~~~~~~
-                src/test/pkg/EditorPaneTest.java:16: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
-                                "text/html"); // ERROR
-                                ~~~~~~~~~~~
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/EditorPaneTest.java:14: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
+                        JEditorPane pane = new JEditorPane(
+                                           ^
                 src/test/pkg/EditorPaneTest2.kt:7: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
                             pane.setContentType("text/html") // ERROR
-                                                 ~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/EditorPaneTest2.kt:12: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
                              pane.contentType = "text/html" // ERROR
-                                                 ~~~~~~~~~
-                src/test/pkg/EditorPaneTest2.kt:19: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
-                                    "text/html" // ERROR
-                                     ~~~~~~~~~
-                5 errors, 0 warnings
+                             ~~~~~~~~~~~~~~~~
+                src/test/pkg/EditorPaneTest2.kt:17: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
+                                JEditorPane(
+                                ^
+                src/test/pkg/EditorPaneTest2.kt:47: Error: Constructing an HTML JEditorPane directly can lead to subtle theming bugs; either set the editor kit directly (setEditorKit(UIUtil.getHTMLEditorKit())) or better yet use SwingHelper.createHtmlViewer [HtmlPaneColors]
+                                it.contentType = "text/html" // ERROR
+                                ~~~~~~~~~~~~~~
+                6 errors, 0 warnings
                 """
             )
     }
