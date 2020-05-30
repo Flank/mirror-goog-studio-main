@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
@@ -45,6 +46,11 @@ fun createCxxVariantModel(
             join(module.intermediatesFolder, module.buildSystem.tag, variantName)
         }
         override val buildTargetSet get() = buildSystem.targets
+        override val implicitBuildTargetSet
+            get() = when (val extension = componentProperties.globalScope.extension) {
+                is LibraryExtension -> extension.prefab.map { it.name }.toSet()
+                else -> emptySet()
+            }
         override val module = module
         override val buildSystemArgumentList get() = buildSystem.arguments
         override val cFlagsList get() = buildSystem.cFlags
