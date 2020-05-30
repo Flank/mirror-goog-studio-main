@@ -18,8 +18,6 @@ package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactImpl

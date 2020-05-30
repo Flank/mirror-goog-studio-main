@@ -196,11 +196,13 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
 
             artifactTransformationRequest = creationConfig.artifacts.use(taskProvider)
+                .wiredWithDirectories(
+                    ShrinkResourcesTask::uncompressedResources,
+                    ShrinkResourcesTask::compressedResources)
                 .toTransformMany(
                     InternalArtifactType.PROCESSED_RES,
-                    ShrinkResourcesTask::uncompressedResources,
-                    InternalArtifactType.SHRUNK_PROCESSED_RES,
-                    ShrinkResourcesTask::compressedResources)
+                    InternalArtifactType.SHRUNK_PROCESSED_RES)
+
         }
 
         override fun configure(

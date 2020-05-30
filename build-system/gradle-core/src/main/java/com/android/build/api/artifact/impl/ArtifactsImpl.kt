@@ -77,8 +77,8 @@ class ArtifactsImpl(
                   ARTIFACT_TYPE : Artifact.Multiple
             = getArtifactContainer(type).get()
 
-    override fun <TASK : Task> use(taskProvider: TaskProvider<TASK>): TaskBasedOperationsImpl<TASK> {
-        return TaskBasedOperationsImpl(objects, this, taskProvider)
+    override fun <TaskT : Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperationImpl<TaskT> {
+        return TaskBasedOperationImpl(objects, this, taskProvider)
     }
 
     // End of public API implementation, start of private AGP services.

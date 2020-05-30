@@ -71,21 +71,19 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.packageAndroidTask = taskProvider
+            val operationRequest = creationConfig.artifacts.use(taskProvider)
+                .wiredWithDirectories(
+                    PackageAndroidArtifact::getResourceFiles,
+                    PackageApplication::getOutputDirectory)
             transformationRequest = (if (useResourceShrinker)
-                 creationConfig.artifacts.use(taskProvider)
-                     .toTransformMany(
-                         InternalArtifactType.SHRUNK_PROCESSED_RES,
-                         PackageAndroidArtifact::getResourceFiles,
-                         InternalArtifactType.APK,
-                         PackageApplication::getOutputDirectory,
-                         outputDirectory.absolutePath)
-
-            else
-                creationConfig.artifacts.use(taskProvider)
-                    .toTransformMany(InternalArtifactType.PROCESSED_RES,
-                        PackageAndroidArtifact::getResourceFiles,
+                    operationRequest.toTransformMany(
+                        InternalArtifactType.SHRUNK_PROCESSED_RES,
                         InternalArtifactType.APK,
-                        PackageApplication::getOutputDirectory,
+                        outputDirectory.absolutePath)
+                else
+                    operationRequest.toTransformMany(
+                        InternalArtifactType.PROCESSED_RES,
+                        InternalArtifactType.APK,
                         outputDirectory.absolutePath))
 
             // in case configure is called before handleProvider, we need to save the request.

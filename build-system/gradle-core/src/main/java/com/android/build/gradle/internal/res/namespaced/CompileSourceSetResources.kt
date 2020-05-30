@@ -204,15 +204,13 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.use(taskProvider).toAppend(
-                MultipleArtifactType.PARTIAL_R_FILES,
-                CompileSourceSetResources::partialRDirectory
-            )
+            creationConfig.artifacts.use(taskProvider)
+                .wiredWith(CompileSourceSetResources::partialRDirectory)
+                .toAppendTo(MultipleArtifactType.PARTIAL_R_FILES)
 
-            creationConfig.artifacts.use(taskProvider).toAppend(
-                MultipleArtifactType.RES_COMPILED_FLAT_FILES,
-                CompileSourceSetResources::outputDirectory
-            )
+            creationConfig.artifacts.use(taskProvider)
+                .wiredWith(CompileSourceSetResources::outputDirectory)
+                .toAppendTo(MultipleArtifactType.RES_COMPILED_FLAT_FILES)
         }
 
         override fun configure(
