@@ -345,7 +345,7 @@ public class VariantScopeImpl implements VariantScope {
             return null;
         }
 
-        Boolean enableR8 = globalScope.getProjectOptions().get(ENABLE_R8);
+        Boolean enableR8 = globalScope.getProjectOptions().getValue(ENABLE_R8);
         if (variantDslInfo.getVariantType().isAar()
                 && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_R8_LIBRARIES)) {
             // R8 is disabled for libraries
@@ -436,7 +436,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean isTestOnly() {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
-        Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
+        Boolean isTestOnlyOverride = projectOptions.getValue(OptionalBooleanOption.IDE_TEST_ONLY);
 
         if (isTestOnlyOverride != null) {
             return isTestOnlyOverride;

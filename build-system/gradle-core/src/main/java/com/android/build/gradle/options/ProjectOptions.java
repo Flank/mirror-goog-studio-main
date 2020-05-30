@@ -41,7 +41,6 @@ public final class ProjectOptions {
             "android.testInstrumentationRunnerArguments.";
 
     private final ImmutableMap<ReplacedOption, String> replacedOptions;
-    private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
@@ -49,17 +48,19 @@ public final class ProjectOptions {
     private final ProviderFactory providerFactory;
     private final ImmutableMap<BooleanOption, OptionValue<BooleanOption, Boolean>>
             booleanOptionValues;
+    private final ImmutableMap<OptionalBooleanOption, OptionValue<OptionalBooleanOption, Boolean>>
+            optionalBooleanOptionValues;
 
     public ProjectOptions(
             @NonNull ImmutableMap<String, Object> properties,
             @NonNull ProviderFactory providerFactory) {
         replacedOptions = readOptions(ReplacedOption.values(), properties);
-        optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
         this.providerFactory = providerFactory;
         booleanOptionValues = createOptionValues(BooleanOption.values());
+        optionalBooleanOptionValues = createOptionValues(OptionalBooleanOption.values());
     }
 
     /**
@@ -177,9 +178,16 @@ public final class ProjectOptions {
                 });
     }
 
+    /** Obtain the gradle property value immediately at configuration time. */
     @Nullable
-    public Boolean get(OptionalBooleanOption option) {
-        return optionalBooleanOptions.get(option);
+    public Boolean getValue(OptionalBooleanOption option) {
+        return optionalBooleanOptionValues.get(option).getValueForUseAtConfiguration();
+    }
+
+    /** Returns a provider which has the gradle property value to be obtained at execution time. */
+    @NonNull
+    public Provider<Boolean> getValueProvider(OptionalBooleanOption option) {
+        return optionalBooleanOptionValues.get(option).getValueForUseAtExecution();
     }
 
     @Nullable
@@ -211,11 +219,12 @@ public final class ProjectOptions {
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
 
-    public ImmutableMap<BooleanOption, Boolean> getExplicitlySetBooleanOptions() {
-        ImmutableMap.Builder<BooleanOption, Boolean> mapBuilder = ImmutableMap.builder();
-        for (Map.Entry<BooleanOption, OptionValue<BooleanOption, Boolean>> entry :
-                booleanOptionValues.entrySet()) {
-            Boolean value = entry.getValue().getValueForUseAtConfiguration();
+    public <OptionT extends Option<ValueT>, ValueT>
+            ImmutableMap<OptionT, ValueT> getExplicitlySetOptions(
+                    ImmutableMap<OptionT, OptionValue<OptionT, ValueT>> optionValues) {
+        ImmutableMap.Builder<OptionT, ValueT> mapBuilder = ImmutableMap.builder();
+        for (Map.Entry<OptionT, OptionValue<OptionT, ValueT>> entry : optionValues.entrySet()) {
+            ValueT value = entry.getValue().getValueForUseAtConfiguration();
             if (value != null) {
                 mapBuilder.put(entry.getKey(), value);
             }
@@ -223,8 +232,12 @@ public final class ProjectOptions {
         return mapBuilder.build();
     }
 
+    public ImmutableMap<BooleanOption, Boolean> getExplicitlySetBooleanOptions() {
+        return getExplicitlySetOptions(booleanOptionValues);
+    }
+
     public ImmutableMap<OptionalBooleanOption, Boolean> getExplicitlySetOptionalBooleanOptions() {
-        return optionalBooleanOptions;
+        return getExplicitlySetOptions(optionalBooleanOptionValues);
     }
 
     public ImmutableMap<IntegerOption, Integer> getExplicitlySetIntegerOptions() {
@@ -239,7 +252,7 @@ public final class ProjectOptions {
         return new ImmutableMap.Builder()
                 .putAll(replacedOptions)
                 .putAll(getExplicitlySetBooleanOptions())
-                .putAll(optionalBooleanOptions)
+                .putAll(getExplicitlySetOptionalBooleanOptions())
                 .putAll(integerOptions)
                 .putAll(stringOptions)
                 .build();
