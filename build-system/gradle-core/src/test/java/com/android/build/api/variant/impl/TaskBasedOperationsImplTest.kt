@@ -126,12 +126,12 @@ class TaskBasedOperationsImplTest {
                 super.handleProvider(taskProvider)
                 replacementRequest = component.artifacts
                     .use(taskProvider)
+                    .wiredWithDirectories(
+                        SynchronousTask::inputDir,
+                        SynchronousTask::outputDir)
                     .toTransformMany(
-                        sourceType = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
-                        from = SynchronousTask::inputDir,
-                        targetType = InternalArtifactType.PACKAGED_MANIFESTS,
-                        into = SynchronousTask::outputDir
-                    )
+                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                        InternalArtifactType.PACKAGED_MANIFESTS)
             }
 
             override fun configure(task: SynchronousTask) {
@@ -243,12 +243,12 @@ class TaskBasedOperationsImplTest {
                 super.handleProvider(taskProvider)
                 replacementRequest = component.artifacts
                     .use(taskProvider)
+                    .wiredWithDirectories(
+                        InternalApiTask::inputDir,
+                        InternalApiTask::outputDir)
                     .toTransformMany(
-                        sourceType = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
-                        from = InternalApiTask::inputDir,
-                        targetType = InternalArtifactType.PACKAGED_MANIFESTS,
-                        into = InternalApiTask::outputDir
-                    )
+                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                        InternalArtifactType.PACKAGED_MANIFESTS)
             }
 
             override fun configure(task: InternalApiTask) {

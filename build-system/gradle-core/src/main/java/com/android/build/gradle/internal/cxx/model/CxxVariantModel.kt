@@ -72,6 +72,14 @@ interface CxxVariantModel {
      */
     val buildTargetSet : Set<String>
 
+    /**
+     * The list of implicit build targets determined by other parts of the build.
+     *
+     * Currently the only use of this is for forcing static libraries to build if they are named in
+     * an android.prefab block.
+     */
+    val implicitBuildTargetSet : Set<String>
+
     /**  The CMakeSettings.json configuration
      *      ex, android
      *          .defaultConfig

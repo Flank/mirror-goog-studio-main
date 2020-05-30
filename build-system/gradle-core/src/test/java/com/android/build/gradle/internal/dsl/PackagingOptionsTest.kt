@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.PackagingOptions
+import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -82,6 +83,10 @@ class PackagingOptionsTest {
         packagingOptions.exclude("example1")
         packagingOptions.excludes.add("example2")
         assertThat(packagingOptions.excludes).containsExactly("example1", "example2")
+
+        (packagingOptions as com.android.build.gradle.internal.dsl.PackagingOptions)
+            .setExcludes(Sets.union(packagingOptions.excludes, setOf("example3")))
+        assertThat(packagingOptions.excludes).containsExactly("example1", "example2", "example3")
     }
 
     @Test
@@ -92,6 +97,10 @@ class PackagingOptionsTest {
         packagingOptions.pickFirst("example1")
         packagingOptions.pickFirsts.add("example2")
         assertThat(packagingOptions.pickFirsts).containsExactly("example1", "example2")
+
+        (packagingOptions as com.android.build.gradle.internal.dsl.PackagingOptions)
+            .setPickFirsts(Sets.union(packagingOptions.pickFirsts, setOf("example3")))
+        assertThat(packagingOptions.pickFirsts).containsExactly("example1", "example2", "example3");
     }
 
     @Test
@@ -102,6 +111,10 @@ class PackagingOptionsTest {
         packagingOptions.merge("example1")
         packagingOptions.merges.add("example2")
         assertThat(packagingOptions.merges).containsExactly("example1", "example2")
+
+        (packagingOptions as com.android.build.gradle.internal.dsl.PackagingOptions)
+            .setMerges(Sets.union(packagingOptions.merges, setOf("example3")))
+        assertThat(packagingOptions.merges).containsExactly("example1", "example2", "example3");
     }
 
     @Test
@@ -112,5 +125,9 @@ class PackagingOptionsTest {
         packagingOptions.doNotStrip("example1")
         packagingOptions.doNotStrip.add("example2")
         assertThat(packagingOptions.doNotStrip).containsExactly("example1", "example2")
+
+        (packagingOptions as com.android.build.gradle.internal.dsl.PackagingOptions)
+            .setDoNotStrip(Sets.union(packagingOptions.doNotStrip, setOf("example3")))
+        assertThat(packagingOptions.doNotStrip).containsExactly("example1", "example2", "example3");
     }
 }

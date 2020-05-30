@@ -173,7 +173,10 @@ abstract class DexMergingTask : NewIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<DexMergingTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.use(taskProvider).toAppend(outputType, DexMergingTask::outputDir)
+            creationConfig.artifacts
+                .use(taskProvider)
+                .wiredWith(DexMergingTask::outputDir)
+                .toAppendTo(outputType)
         }
 
         override fun configure(task: DexMergingTask) {

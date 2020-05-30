@@ -146,6 +146,7 @@ class NamespacedAarTest {
         subproject.withAar("release") {
             assertThat(entries.map { it.toString() })
                 .containsExactly(
+                    "/META-INF/com/android/build/gradle/aar-metadata.properties",
                     "/res/values/values.xml",
                     "/classes.jar",
                     "/res.apk",

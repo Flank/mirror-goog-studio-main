@@ -83,11 +83,11 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
             get() = ShrinkAppBundleResourcesTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<ShrinkAppBundleResourcesTask>) {
-            creationConfig.artifacts.use(taskProvider).toTransform(
-                InternalArtifactType.INTERMEDIARY_BUNDLE,
-                ShrinkAppBundleResourcesTask::originalBundle,
-                ShrinkAppBundleResourcesTask::shrunkBundle
-            )
+            creationConfig.artifacts.use(taskProvider)
+                .wiredWithFiles(
+                    ShrinkAppBundleResourcesTask::originalBundle,
+                    ShrinkAppBundleResourcesTask::shrunkBundle)
+                .toTransform(InternalArtifactType.INTERMEDIARY_BUNDLE)
         }
 
         override fun configure(task: ShrinkAppBundleResourcesTask) {

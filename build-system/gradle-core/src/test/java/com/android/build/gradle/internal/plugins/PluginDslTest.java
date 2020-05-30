@@ -82,7 +82,6 @@ public class PluginDslTest {
                         .withPlugin(TestProjects.Plugin.APP)
                         .withProperty(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true)
                         .build();
-
         android = project.getExtensions().getByType(BaseAppModuleExtension.class);
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
         android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);

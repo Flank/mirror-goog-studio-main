@@ -32,10 +32,20 @@ fun createBuildModelServiceRegistry() : CxxServiceRegistry {
 /**
  * Create the default module-level service registry.
  */
+fun createDefaultProjectServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
+    val registry = CxxServiceRegistryBuilder()
+    createExecService(global, registry)
+    return registry.build()
+}
+
+/**
+ * Create the default module-level service registry.
+ */
 fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
     val registry = CxxServiceRegistryBuilder()
     createProcessJunctionService(registry)
     createIssueReporterService(global, registry)
+    createExecService(global, registry)
     createModelDependencyService(global, registry)
     return registry.build()
 }

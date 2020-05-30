@@ -17,18 +17,17 @@ package com.android.ide.common.gradle.model.level2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeModel;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_MODULE. */
-public final class IdeModuleLibrary implements Library, Serializable {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 5L;
-
+public final class IdeModuleLibrary implements Library {
     @NonNull private final String myArtifactAddress;
     @Nullable private final String myBuildId;
     @Nullable private final String myProjectPath;
@@ -48,18 +47,7 @@ public final class IdeModuleLibrary implements Library, Serializable {
         myHashCode = 0;
     }
 
-    IdeModuleLibrary(@NonNull Library library, @NonNull String artifactAddress) {
-        myType = LIBRARY_MODULE;
-        myArtifactAddress = artifactAddress;
-        myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
-        myProjectPath = IdeModel.copyNewProperty(library::getProjectPath, null);
-        myVariant = IdeModel.copyNewProperty(library::getVariant, null);
-        myHashCode = calculateHashCode();
-    }
-
-    IdeModuleLibrary(
-            @NonNull com.android.builder.model.AndroidLibrary library,
-            @NonNull String artifactAddress) {
+    public IdeModuleLibrary(@NonNull AndroidLibrary library, @NonNull String artifactAddress) {
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
         myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
@@ -68,9 +56,7 @@ public final class IdeModuleLibrary implements Library, Serializable {
         myHashCode = calculateHashCode();
     }
 
-    IdeModuleLibrary(
-            @NonNull com.android.builder.model.JavaLibrary library,
-            @NonNull String artifactAddress) {
+    IdeModuleLibrary(@NonNull JavaLibrary library, @NonNull String artifactAddress) {
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
         myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
@@ -79,7 +65,8 @@ public final class IdeModuleLibrary implements Library, Serializable {
         myHashCode = calculateHashCode();
     }
 
-    IdeModuleLibrary(
+    @VisibleForTesting
+    public IdeModuleLibrary(
             @NonNull String projectPath,
             @NonNull String artifactAddress,
             @Nullable String buildId) {

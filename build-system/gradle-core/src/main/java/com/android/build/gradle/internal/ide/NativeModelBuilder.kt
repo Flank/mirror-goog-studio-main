@@ -150,12 +150,7 @@ class NativeModelBuilder(
         generators
             .filter { generator -> generator.variant.variantName == variantName }
             .onEach { generator ->
-                generator.buildForOneAbiName(
-                    ideRefreshExternalNativeModel,
-                    abiName,
-                    globalScope.project::exec,
-                    globalScope.project::javaexec
-                )
+                generator.buildForOneAbiName(ideRefreshExternalNativeModel, abiName)
                 buildInexpensiveNativeAndroidProjectInformation(builder, generator)
                 ++built
                 try {
@@ -224,11 +219,7 @@ class NativeModelBuilder(
                     // When refreshExternalNativeModel() is true it will also
                     // force update all JSONs.
                     buildSteps.addAll(
-                        generator.parallelBuild(
-                            ideRefreshExternalNativeModel,
-                            globalScope.project::exec,
-                            globalScope.project::javaexec
-                        )
+                        generator.parallelBuild(ideRefreshExternalNativeModel)
                     )
                 }
             }
@@ -245,11 +236,7 @@ class NativeModelBuilder(
 
         } else {
             for (generator in generators) {
-                generator.build(
-                    ideRefreshExternalNativeModel,
-                    globalScope.project::exec,
-                    globalScope.project::javaexec
-                )
+                generator.build(ideRefreshExternalNativeModel)
             }
         }
     }

@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.util.Arrays;
@@ -45,7 +46,9 @@ public class ProjectOptionsTest {
     }
 
     private static Integer parseInteger(@NonNull Object input) {
-        return new ProjectOptions(ImmutableMap.of("android.injected.build.api", input))
+        return new ProjectOptions(
+                        ImmutableMap.of("android.injected.build.api", input),
+                        FakeProviderFactory.getFactory())
                 .get(IntegerOption.IDE_TARGET_DEVICE_API);
     }
 
@@ -74,24 +77,60 @@ public class ProjectOptionsTest {
     public void booleanSanity() {
         assertThat(BooleanOption.IDE_INVOKED_FROM_IDE.getDefaultValue()).isFalse();
 
-        assertThat(new ProjectOptions(ImmutableMap.of()).get(BooleanOption.IDE_INVOKED_FROM_IDE))
+        assertThat(
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(),
+                                                ImmutableMap.of()))
+                                .getValue(BooleanOption.IDE_INVOKED_FROM_IDE))
+                .isFalse();
+
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of("android.injected.invoked.from.ide", "true");
+        assertThat(
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(), gradleProperties))
+                                .getValue(BooleanOption.IDE_INVOKED_FROM_IDE))
+                .isTrue();
+
+        assertThat(
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(), gradleProperties))
+                                .getValueProvider(BooleanOption.IDE_INVOKED_FROM_IDE)
+                                .get())
+                .isTrue();
+
+        gradleProperties = ImmutableMap.of("android.injected.invoked.from.ide", "false");
+        assertThat(
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(), gradleProperties))
+                                .getValue(BooleanOption.IDE_INVOKED_FROM_IDE))
                 .isFalse();
 
         assertThat(
                         new ProjectOptions(
-                                        ImmutableMap.of(
-                                                "android.injected.invoked.from.ide", "true"))
-                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
-                .isTrue();
-        assertThat(
-                        new ProjectOptions(
-                                        ImmutableMap.of(
-                                                "android.injected.invoked.from.ide", "false"))
-                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(), gradleProperties))
+                                .getValueProvider(BooleanOption.IDE_INVOKED_FROM_IDE)
+                                .get())
                 .isFalse();
+
         try {
             //noinspection ResultOfObjectAllocationIgnored
-            new ProjectOptions(ImmutableMap.of("android.injected.invoked.from.ide", "?"));
+            gradleProperties = ImmutableMap.of("android.injected.invoked.from.ide", "?");
+            new ProjectOptions(
+                            ImmutableMap.of(),
+                            new FakeProviderFactory(
+                                    FakeProviderFactory.getFactory(), gradleProperties))
+                    .getValue(BooleanOption.IDE_INVOKED_FROM_IDE);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage()).contains("android.injected.invoked.from.ide");
@@ -101,7 +140,9 @@ public class ProjectOptionsTest {
     @Test
     public void integerSanity() {
         assertThat(IntegerOption.IDE_TARGET_DEVICE_API.getDefaultValue()).isNull();
-        assertThat(new ProjectOptions(ImmutableMap.of()).get(IntegerOption.IDE_TARGET_DEVICE_API))
+        assertThat(
+                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                                .get(IntegerOption.IDE_TARGET_DEVICE_API))
                 .isNull();
 
         assertThat(parseInteger("20")).isEqualTo(20);
@@ -112,7 +153,9 @@ public class ProjectOptionsTest {
 
         try {
             //noinspection ResultOfObjectAllocationIgnored
-            new ProjectOptions(ImmutableMap.of("android.injected.build.api", new Object()));
+            new ProjectOptions(
+                    ImmutableMap.of("android.injected.build.api", new Object()),
+                    FakeProviderFactory.getFactory());
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage()).contains("android.injected.build.api");
@@ -122,64 +165,92 @@ public class ProjectOptionsTest {
     @Test
     public void stringSanity() {
         assertThat(StringOption.IDE_BUILD_TARGET_ABI.getDefaultValue()).isNull();
-        assertThat(new ProjectOptions(ImmutableMap.of()).get(StringOption.IDE_BUILD_TARGET_ABI))
+        assertThat(
+                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                                .get(StringOption.IDE_BUILD_TARGET_ABI))
                 .isNull();
 
         ProjectOptions options =
                 new ProjectOptions(
-                        ImmutableMap.of("android.injected.build.abi", asGroovyString("x86")));
+                        ImmutableMap.of("android.injected.build.abi", asGroovyString("x86")),
+                        FakeProviderFactory.getFactory());
         assertThat(options.get(StringOption.IDE_BUILD_TARGET_ABI)).isEqualTo("x86");
     }
 
     @Test
     public void argsSanity() {
-        assertThat(new ProjectOptions(ImmutableMap.of()).getExtraInstrumentationTestRunnerArgs())
+        assertThat(
+                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                                .getExtraInstrumentationTestRunnerArgs())
                 .isEmpty();
         ProjectOptions options =
                 new ProjectOptions(
-                        ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b"));
+                        ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b"),
+                        FakeProviderFactory.getFactory());
         assertThat(options.getExtraInstrumentationTestRunnerArgs()).containsExactly("a", "b");
     }
 
     @Test
     public void removedOptionUse() {
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of("android.incrementalJavaCompile", "true");
         ProjectOptions projectOptions =
-                new ProjectOptions(ImmutableMap.of("android.incrementalJavaCompile", "true"));
+                new ProjectOptions(
+                        gradleProperties,
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
 
         assertThat(getWarnings(projectOptions)).contains("android.incrementalJavaCompile");
     }
 
     @Test
     public void deprecatedOptionsUse() {
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of(
+                        "android.enableDesugar", "false",
+                        "android.enableD8", "false");
         ProjectOptions projectOptions =
                 new ProjectOptions(
-                        ImmutableMap.of(
-                                "android.enableDesugar", "false",
-                                "android.enableD8", "false"));
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
 
         assertThat(getWarnings(projectOptions)).hasSize(2);
 
+        gradleProperties =
+                ImmutableMap.of(
+                        "android.enableDesugar", "true",
+                        "android.enableD8", "false");
         projectOptions =
                 new ProjectOptions(
-                        ImmutableMap.of(
-                                "android.enableDesugar", "true",
-                                "android.enableD8", "false"));
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
 
         assertThat(getWarnings(projectOptions)).hasSize(1);
 
+        gradleProperties =
+                ImmutableMap.of(
+                        "android.enableDesugar", "true",
+                        "android.enableD8", "true");
         projectOptions =
                 new ProjectOptions(
-                        ImmutableMap.of(
-                                "android.enableDesugar", "true",
-                                "android.enableD8", "true"));
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
 
         assertThat(getWarnings(projectOptions)).isEmpty();
     }
 
     @Test
     public void experimentalOptionsUse() {
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of("android.enableProfileJson", "true");
         ProjectOptions projectOptions =
-                new ProjectOptions(ImmutableMap.of("android.enableProfileJson", "true"));
+                new ProjectOptions(
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
 
         assertThat(getWarnings(projectOptions))
                 .containsExactly(BooleanOption.ENABLE_PROFILE_JSON.getPropertyName());

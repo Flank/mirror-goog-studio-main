@@ -309,13 +309,21 @@ public class VariantDslInfoTest {
     private void init(@Nullable Integer injectedDeviceApi) {
         ProjectOptions projectOptions;
         if (injectedDeviceApi == null) {
-            projectOptions = new ProjectOptions(ImmutableMap.of());
-        } else {
             projectOptions =
                     new ProjectOptions(
-                            ImmutableMap.of(
-                                    IntegerOption.IDE_TARGET_DEVICE_API.getPropertyName(),
-                                    injectedDeviceApi));
+                            ImmutableMap.of(),
+                            new FakeProviderFactory(
+                                    FakeProviderFactory.getFactory(), ImmutableMap.of()));
+        } else {
+            ImmutableMap<String, Object> gradleProperties =
+                    ImmutableMap.of(
+                            IntegerOption.IDE_TARGET_DEVICE_API.getPropertyName(),
+                            injectedDeviceApi);
+            projectOptions =
+                    new ProjectOptions(
+                            gradleProperties,
+                            new FakeProviderFactory(
+                                    FakeProviderFactory.getFactory(), gradleProperties));
         }
 
         ProjectServices projectServices =

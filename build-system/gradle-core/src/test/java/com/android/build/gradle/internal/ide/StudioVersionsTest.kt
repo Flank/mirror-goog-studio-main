@@ -41,20 +41,32 @@ class StudioVersionsTest {
     @Test
     fun testNewerStudio() {
         verifyIDEIsNotOld("3.3.1.6", MajorMinorVersion(3, 2))
+        // The IDE will always send the version in the form 10.x.y as of 4.0.
+        // See StudioVersions.parseVersion
+        verifyIDEIsNotOld("10.3.3.1 Beta 3", MajorMinorVersion(3, 1))
     }
 
     @Test
     fun testMatchingVersion() {
         verifyIDEIsNotOld("3.2.1.6", MajorMinorVersion(3, 2))
+        verifyIDEIsNotOld("10.4.7.3", MajorMinorVersion(4, 7))
     }
 
     @Test
     fun testTooOldStudioVersion() {
         val exception = assertFailsWith<RuntimeException> {
-            verifyIDEIsNotOld("3.1.3.6", MajorMinorVersion(3, 2))
+            verifyIDEIsNotOld("10.3.1.3.6", MajorMinorVersion(3, 2))
         }
 
         assertThat(exception)
+            .hasMessageThat()
+            .contains("please retry with version 3.2 or newer.")
+
+        val secondException = assertFailsWith<RuntimeException> {
+            verifyIDEIsNotOld("3.1.3.6", MajorMinorVersion(3, 2))
+        }
+
+        assertThat(secondException)
             .hasMessageThat()
             .contains("please retry with version 3.2 or newer.")
     }
@@ -80,6 +92,7 @@ class StudioVersionsTest {
     fun checkValidVersionParsing() {
         assertThat(parseVersion("3.3.0.6")).isEqualTo(MajorMinorVersion(3, 3))
         assertThat(parseVersion("3.3.0-beta1")).isEqualTo(MajorMinorVersion(3, 3))
+        assertThat(parseVersion("10.4.1 RC 3")).isEqualTo(MajorMinorVersion(4, 1))
     }
 
     @Test

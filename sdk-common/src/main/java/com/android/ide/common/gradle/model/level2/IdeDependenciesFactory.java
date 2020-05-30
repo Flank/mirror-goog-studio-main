@@ -15,7 +15,9 @@
  */
 package com.android.ide.common.gradle.model.level2;
 
-import static com.android.builder.model.level2.Library.*;
+import static com.android.builder.model.level2.Library.LIBRARY_ANDROID;
+import static com.android.builder.model.level2.Library.LIBRARY_JAVA;
+import static com.android.builder.model.level2.Library.LIBRARY_MODULE;
 import static com.android.ide.common.gradle.model.IdeLibraries.computeAddress;
 
 import com.android.annotations.NonNull;
@@ -24,11 +26,15 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /** Creates {@link IdeDependencies} from {@link BaseArtifact}. */
 public class IdeDependenciesFactory {
@@ -190,20 +196,5 @@ public class IdeDependenciesFactory {
                 javaLibraries.build(),
                 moduleDependencies.build(),
                 ImmutableList.copyOf(runtimeOnlyJars));
-    }
-
-    /**
-     * Populate global library map from the list of {@link GlobalLibraryMap} by merging and making
-     * deep copies of each entry.
-     *
-     * @param globalLibraryMaps List of GlobalLibraryMap model returned from Android Plugin.
-     */
-    public void setUpGlobalLibraryMap(@NonNull List<GlobalLibraryMap> globalLibraryMaps) {
-        for (GlobalLibraryMap globalLibraryMap : globalLibraryMaps) {
-            for (Library library : globalLibraryMap.getLibraries().values()) {
-                myLibrariesById.computeIfAbsent(
-                        library.getArtifactAddress(), k -> myLibraryFactory.create(library));
-            }
-        }
     }
 }

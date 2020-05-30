@@ -22,11 +22,9 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
+import com.android.build.gradle.internal.cxx.services.exec
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
-import org.gradle.process.ExecResult
-import org.gradle.process.ExecSpec
 
 /**
  * This strategy uses the older custom CMake (version 3.6) that directly generates the JSON file as
@@ -43,7 +41,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
         errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")
     }
 
-    override fun executeProcessAndGetOutput(abi: CxxAbiModel, execOperations: (Action<in ExecSpec?>) -> ExecResult): String {
+    override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         // buildCommandArgs is set in CMake server json generation
         if(abi.getBuildCommandArguments().isNotEmpty()){
             warnln("buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below.")
@@ -58,6 +56,6 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
         )
             .logStderrToInfo()
             .logStdoutToInfo()
-            .executeAndReturnStdoutString(execOperations)
+            .executeAndReturnStdoutString(abi.variant.module.project.exec)
     }
 }

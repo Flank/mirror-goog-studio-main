@@ -282,7 +282,7 @@ class DexArchiveBuilderTaskDelegate(
                     executor.waitForTasksWithQuickFail<Any>(true)
                 }
 
-                loggerWrapper.verbose("Done with all dex archive conversions");
+                loggerWrapper.verbose("Done with all dex archive conversions")
             }
         } catch (e: Exception) {
             PluginCrashReporter.maybeReportException(e)
@@ -383,10 +383,10 @@ class DexArchiveBuilderTaskDelegate(
         impactedFiles: Set<File>?,
         desugarGraphDir: File?, // Not null iff impactedFiles == null
         outputKeepRulesDir: File?
-    ): DexOutputs {
+    ) {
         if (isImpactedFilesComputedLazily) {
             check(impactedFiles == null)
-            return convertToDexArchive(
+            convertToDexArchive(
                 inputs = JarBucketGroup(jarInput, numberOfBuckets),
                 outputDir = outputDir,
                 isIncremental = isIncremental,
@@ -398,14 +398,12 @@ class DexArchiveBuilderTaskDelegate(
                 outputKeepRulesDir = outputKeepRulesDir
             )
         } else {
-            // This is the case where the set of impactedFiles was precomputed, so dexing
-            // avoidance and caching is possible.
             checkNotNull(impactedFiles)
             if (isIncremental && jarInput !in changedFiles && jarInput !in impactedFiles) {
-                return DexOutputs()
+                return
             }
 
-            return convertToDexArchive(
+            convertToDexArchive(
                 inputs = JarBucketGroup(jarInput, numberOfBuckets),
                 outputDir = outputDir,
                 isIncremental = false,
@@ -429,10 +427,9 @@ class DexArchiveBuilderTaskDelegate(
         impactedFiles: Set<File>?,
         desugarGraphDir: File?, // Not null iff impactedFiles == null
         outputKeepRulesDir: File?
-    ): DexOutputs {
+    ) {
         inputs.getRoots().forEach { loggerWrapper.verbose("Dexing ${it.absolutePath}") }
 
-        val dexOutputs = DexOutputs()
         for (bucketId in 0 until numberOfBuckets) {
             // For directory inputs, we prefer dexPerClass mode to support incremental dexing per
             // class, but dexPerClass mode is not supported by D8 when generating keep rules for
@@ -466,9 +463,7 @@ class DexArchiveBuilderTaskDelegate(
                 }
             }
 
-            dexOutputs.addDex(preDexOutputFile)
             val classBucket = ClassBucket(inputs, bucketId)
-            outputKeepRuleFile?.let { dexOutputs.addKeepRule(it) }
             val parameters = DexWorkActionParams(
                 dexer = dexer,
                 dexSpec = IncrementalDexSpec(
@@ -532,7 +527,6 @@ class DexArchiveBuilderTaskDelegate(
                 }
             }
         }
-        return dexOutputs
     }
 
     private fun getClasspath(withDesugaring: Boolean): List<Path> {
@@ -714,19 +708,6 @@ class DexArchiveBuilderTaskDelegate(
             } else {
                 outputDir.resolve("$hash.jar")
             }
-    }
-}
-
-private class DexOutputs {
-    val dexes = mutableListOf<File>()
-    val keepRules = mutableListOf<File>()
-
-    fun addDex(file: File) {
-        dexes.add(file)
-    }
-
-    fun addKeepRule(file: File) {
-        keepRules.add(file)
     }
 }
 

@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.tasks.Input;
@@ -211,8 +213,9 @@ public class PackagingOptions
     }
 
     public void setExcludes(@NonNull Set<String> excludes) {
+        List<String> newExcludes = new ArrayList<>(excludes);
         this.excludes.clear();
-        this.excludes.addAll(excludes);
+        this.excludes.addAll(newExcludes);
     }
 
     @Override
@@ -233,8 +236,9 @@ public class PackagingOptions
     }
 
     public void setPickFirsts(@NonNull Set<String> pickFirsts) {
+        List<String> newPickFirsts = new ArrayList<>(pickFirsts);
         this.pickFirsts.clear();
-        this.pickFirsts.addAll(pickFirsts);
+        this.pickFirsts.addAll(newPickFirsts);
     }
 
     @Override
@@ -245,8 +249,9 @@ public class PackagingOptions
     }
 
     public void setMerges(@NonNull Set<String> merges) {
+        List<String> newMerges = new ArrayList<>(merges);
         this.merges.clear();
-        this.merges.addAll(merges);
+        this.merges.addAll(newMerges);
     }
 
     @Override
@@ -262,8 +267,9 @@ public class PackagingOptions
     }
 
     public void setDoNotStrip(@NonNull Set<String> doNotStrip) {
+        List<String> newDoNotStrip = new ArrayList<>(doNotStrip);
         this.doNotStrip.clear();
-        this.doNotStrip.addAll(doNotStrip);
+        this.doNotStrip.addAll(newDoNotStrip);
     }
 
     @Override

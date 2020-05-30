@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
 import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
+import com.android.build.gradle.internal.cxx.services.javaexec
 import com.android.ide.common.process.ProcessInfoBuilder
 import org.gradle.api.Action
 import org.gradle.process.ExecResult
@@ -32,8 +33,7 @@ import java.io.File
 fun generatePrefabPackages(
     moduleModel: CxxModuleModel,
     abiModel: CxxAbiModel,
-    packages: List<File>,
-    execOperation: (Action<in JavaExecSpec?>) -> ExecResult
+    packages: List<File>
 ) {
     val packagePaths = packages.map { it.path }
 
@@ -73,5 +73,5 @@ fun generatePrefabPackages(
         abiModel.soFolder,
         "prefab_${buildSystem}_${abiModel.abi.tag}",
         builder, "prefab"
-    ).javaProcess().logStderrToInfo().execute(execOperation)
+    ).javaProcess().logStderrToInfo().execute(moduleModel.project.javaexec)
 }

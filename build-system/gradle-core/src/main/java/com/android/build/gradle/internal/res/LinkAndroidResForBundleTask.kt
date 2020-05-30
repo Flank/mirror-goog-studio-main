@@ -261,14 +261,14 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
-            task.noCompress.setDisallowChanges(creationConfig.aaptOptions.noCompress)
+            task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             task.aaptAdditionalParameters.setDisallowChanges(
                 creationConfig.aaptOptions.additionalParameters
             )
 
             task.excludeResSourcesForReleaseBundles
                 .setDisallowChanges(
-                    projectOptions.get(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
+                    projectOptions.getValueProvider(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
                 )
 
             task.buildTargetDensity =

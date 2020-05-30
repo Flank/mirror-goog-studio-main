@@ -22,8 +22,10 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +56,7 @@ public class TransformManagerTest extends TaskTestUtils {
         super.setUp();
         File projectDirectory = java.nio.file.Files.createTempDirectory(getClass().getName()).toFile();
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
-
+        TestProjects.loadGradleProperties(project, ImmutableMap.of());
         fileCollection = project.files(new File("my file")).builtBy(MY_FAKE_DEPENDENCY_TASK_NAME);
     }
 

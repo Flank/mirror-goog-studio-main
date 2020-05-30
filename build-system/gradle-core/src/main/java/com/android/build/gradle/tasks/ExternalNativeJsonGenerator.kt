@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.services.executeListenersOnceAfterJsonGeneration
 import com.android.build.gradle.internal.cxx.services.executeListenersOnceBeforeJsonGeneration
 import com.android.build.gradle.internal.cxx.services.issueReporter
+import com.android.build.gradle.internal.cxx.services.javaexec
 import com.android.build.gradle.internal.cxx.services.jsonGenerationInputDependencyFileCollection
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
@@ -62,7 +63,6 @@ import com.google.gson.stream.JsonReader
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
-import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -73,9 +73,6 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.process.ExecResult
-import org.gradle.process.ExecSpec
-import org.gradle.process.JavaExecSpec
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
@@ -120,14 +117,10 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
         return result
     }
 
-    override fun build(
-        forceJsonGeneration: Boolean,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ) {
+    override fun build(forceJsonGeneration: Boolean) {
         try {
             infoln("building json with force flag %s", forceJsonGeneration)
-            buildAndPropagateException(forceJsonGeneration, execOperation, javaExecOperation)
+            buildAndPropagateException(forceJsonGeneration)
         } catch (e: IOException) {
             errorln("exception while building Json $%s", e.message!!)
         } catch (e: GradleException) {
@@ -140,11 +133,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
         }
     }
 
-    override fun parallelBuild(
-        forceJsonGeneration: Boolean,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ): List<Callable<Void?>> {
+    override fun parallelBuild(forceJsonGeneration: Boolean): List<Callable<Void?>> {
         val buildSteps: MutableList<Callable<Void?>> =
             ArrayList(abis.size)
         // These are lazily initialized values that can only be computed from a Gradle managed
@@ -154,9 +143,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
         for (abi in abis) {
             buildSteps.add(
                 Callable {
-                    buildForOneConfigurationConvertExceptions(
-                        forceJsonGeneration, abi, execOperation, javaExecOperation
-                    )
+                    buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi)
                 }
             )
         }
@@ -165,15 +152,10 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
 
     private fun buildForOneConfigurationConvertExceptions(
         forceJsonGeneration: Boolean,
-        abi: CxxAbiModel,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ): Void? {
+        abi: CxxAbiModel): Void? {
         IssueReporterLoggingEnvironment(abi.variant.module.issueReporter()).use {
             try {
-                buildForOneConfiguration(
-                    forceJsonGeneration, abi, execOperation, javaExecOperation
-                )
+                buildForOneConfiguration(forceJsonGeneration, abi)
             } catch (e: IOException) {
                 errorln("exception while building Json %s", e.message!!)
             } catch (e: GradleException) {
@@ -191,17 +173,11 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
     protected open fun checkPrefabConfig() {}
 
     @Throws(IOException::class, ProcessException::class)
-    private fun buildAndPropagateException(
-        forceJsonGeneration: Boolean,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ) {
+    private fun buildAndPropagateException(forceJsonGeneration: Boolean) {
         var firstException: Exception? = null
         for (abi in abis) {
             try {
-                buildForOneConfiguration(
-                    forceJsonGeneration, abi, execOperation, javaExecOperation
-                )
+                buildForOneConfiguration(forceJsonGeneration, abi)
             } catch (e: GradleException) {
                 if (firstException == null) {
                     firstException = e
@@ -229,9 +205,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
 
     override fun buildForOneAbiName(
         forceJsonGeneration: Boolean,
-        abiName: String,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
+        abiName: String
     ) {
         var built = 0
         for (abi in abis) {
@@ -239,9 +213,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                 continue
             }
             built++
-            buildForOneConfigurationConvertExceptions(
-                forceJsonGeneration, abi, execOperation, javaExecOperation
-            )
+            buildForOneConfigurationConvertExceptions(forceJsonGeneration, abi)
         }
         assert(built == 1)
     }
@@ -249,10 +221,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
     @Throws(GradleException::class, IOException::class, ProcessException::class)
     private fun buildForOneConfiguration(
         forceJsonGeneration: Boolean,
-        abi: CxxAbiModel,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult,
-        javaExecOperation: (Action<in JavaExecSpec?>) -> ExecResult
-    ) {
+        abi: CxxAbiModel) {
         PassThroughPrefixingLoggingEnvironment(
             abi.variant.module.makeFile,
             abi.variant.variantName + "|" + abi.abi.tag
@@ -309,8 +278,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                         generatePrefabPackages(
                             variant.module,
                             abi,
-                            variant.prefabPackageDirectoryList,
-                            javaExecOperation
+                            variant.prefabPackageDirectoryList
                         )
                     }
 
@@ -338,7 +306,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
                         infoln("created folder '%s'", abi.cxxBuildFolder)
                     }
                     infoln("executing %s %s", nativeBuildSystem.tag, processBuilder)
-                    val buildOutput = executeProcess(abi, execOperation)
+                    val buildOutput = executeProcess(abi)
                     infoln("done executing %s", nativeBuildSystem.tag)
 
                     // Write the captured process output to a file for diagnostic purposes.
@@ -433,10 +401,7 @@ abstract class ExternalNativeJsonGeneratorBase internal constructor(
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
     @Throws(ProcessException::class, IOException::class)
-    abstract fun executeProcess(
-        abi: CxxAbiModel,
-        execOperation: (Action<in ExecSpec?>) -> ExecResult
-    ): String
+    abstract fun executeProcess(abi: CxxAbiModel): String
 
     @Throws(IOException::class)
     override fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {

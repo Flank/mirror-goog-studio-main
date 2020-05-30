@@ -15,15 +15,13 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.assertEqualsOrSimilar;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 
 import com.android.builder.model.Dependencies;
 import com.android.ide.common.gradle.model.stubs.DependenciesStub;
 import com.android.ide.common.repository.GradleVersion;
-import com.android.testutils.Serialization;
-import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,20 +34,6 @@ public class IdeDependenciesTest {
     public void setUp() throws Exception {
         myModelCache = new ModelCache();
         myModelVersion = GradleVersion.parse("2.3.0");
-    }
-
-    @Test
-    public void serializable() {
-        assertThat(IdeDependenciesImpl.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
-    public void serialization() throws Exception {
-        IdeDependencies dependencies =
-                new IdeDependenciesImpl(new DependenciesStub(), myModelCache);
-        byte[] bytes = Serialization.serialize(dependencies);
-        Object o = Serialization.deserialize(bytes);
-        assertEquals(dependencies, o);
     }
 
     @Test

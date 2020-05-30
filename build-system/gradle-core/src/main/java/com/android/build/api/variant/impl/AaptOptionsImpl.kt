@@ -22,7 +22,6 @@ import org.gradle.api.provider.ListProperty
 
 class AaptOptionsImpl(
     override val ignoreAssetsPatterns: ListProperty<String>,
-    override val noCompress: ListProperty<String>,
     override val additionalParameters: ListProperty<String>
 ) : AaptOptions
 
@@ -35,11 +34,6 @@ internal fun initializeAaptOptionsFromDsl(
             String::class.java,
             dslAaptOptions.ignoreAssetsPattern?.split(':') ?: listOf(),
             "ignoreAssetsPatterns"
-        ),
-        noCompress = variantPropertiesApiServices.listPropertyOf(
-            String::class.java,
-            dslAaptOptions.noCompress,
-            "noCompress"
         ),
         additionalParameters = variantPropertiesApiServices.listPropertyOf(
             String::class.java,

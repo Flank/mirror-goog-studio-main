@@ -190,7 +190,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 creationConfig.services.projectOptions
             )
             if (creationConfig is ApkCreationConfig) {
-                task.noCompress.set(creationConfig.aaptOptions.noCompress)
+                task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             }
             task.noCompress.disallowChanges()
             task.aapt2DaemonBuildService.setDisallowChanges(

@@ -26,7 +26,7 @@ object IncompatibleProjectOptionsReporter {
     @JvmStatic
     fun check(projectOptions: ProjectOptions, issueReporter: SyncIssueReporter) {
         if (!projectOptions.get(BooleanOption.USE_ANDROID_X)
-                && projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
+                && projectOptions.getValue(BooleanOption.ENABLE_JETIFIER)) {
             issueReporter.reportError(
                 type = IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
                 msg = "AndroidX must be enabled when Jetifier is enabled. To resolve, set" +

@@ -36,6 +36,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import org.gradle.api.Project;
+import org.gradle.api.internal.project.DefaultProject;
+import org.gradle.initialization.GradlePropertiesController;
 import org.gradle.testfixtures.ProjectBuilder;
 
 public class TestProjects {
@@ -170,9 +172,32 @@ public class TestProjects {
                 project.getExtensions().getExtraProperties().set(entry.getKey(), entry.getValue());
             }
 
+            loadGradleProperties(project, properties);
+
             project.apply(ImmutableMap.of("plugin", plugin.getPluginName()));
 
             return project;
         }
+    }
+
+    // TODO(bingran) remove this workaround when gradle issue #13122 is fixed
+    // https://github.com/gradle/gradle/issues/13122
+    public static void loadGradleProperties(
+            @NonNull Project project, @NonNull Map<String, String> gradleProperties)
+            throws IOException {
+        File propertiesFile = new File(project.getProjectDir(), "gradle.properties");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Map.Entry<String, String> entry : gradleProperties.entrySet()) {
+            stringBuilder
+                    .append(entry.getKey())
+                    .append("=")
+                    .append(entry.getValue())
+                    .append(System.lineSeparator());
+        }
+        Files.write(propertiesFile.toPath(), stringBuilder.toString().getBytes());
+        ((DefaultProject) project)
+                .getServices()
+                .get(GradlePropertiesController.class)
+                .loadGradlePropertiesFrom(project.getProjectDir());
     }
 }

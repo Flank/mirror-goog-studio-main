@@ -46,7 +46,7 @@ fun createProjectServices(
     logger: Logger = FakeLogger(),
     providerFactory: ProviderFactory = FakeProviderFactory.factory,
     projectLayout: ProjectLayout = ProjectFactory.project.layout,
-    projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of()),
+    projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of(), FakeProviderFactory(FakeProviderFactory.factory, ImmutableMap.of())),
     buildServiceRegistry: BuildServiceRegistry = ProjectFactory.project.gradle.sharedServices,
     fileResolver: (Any) -> File = { File(it.toString()) }
 ): ProjectServices =

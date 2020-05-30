@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
@@ -77,7 +78,7 @@ class BasicInstantExecutionTest {
 
     @Test
     fun testCleanBuild() {
-        executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false).run("assemble")
+        executor().run("assemble")
         executor().run("clean")
         executor().run("assemble")
     }
@@ -86,7 +87,6 @@ class BasicInstantExecutionTest {
     fun testWhenInvokedFromTheIde() {
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .run("assemble")
 
         assertThat(project.testDir.resolve(".gradle/configuration-cache")).isDirectory()
@@ -108,9 +108,41 @@ class BasicInstantExecutionTest {
         executor().run(":app:mergeDebugJniLibFolders")
     }
 
+    @Test
+    fun testAndroidTestBuild() {
+        executor().run(":app:assembleDebugAndroidTest")
+        executor().run("clean")
+        executor().run(":app:assembleDebugAndroidTest")
+    }
+
+    @Test
+    fun testAccessingChangedGradlePropertiesAtConfiguration() {
+        // AndroidX must be enabled when Jetifier is enabled
+        executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, true)
+            .run(":app:assembleDebug")
+        var result = executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, true)
+            .run(":app:assembleDebug")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains("Reusing configuration cache")
+        }
+        result = executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, false)
+            .run(":app:assembleDebug")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains(
+                "Calculating task graph as configuration cache cannot be reused because " +
+                        "Gradle property 'android.enableJetifier' has changed")
+        }
+    }
+
     private fun executor(): GradleTaskExecutor =
         project.executor()
-            // until b/154742527 is fixed we need to disable this
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
             .withLoggingLevel(LoggingLevel.LIFECYCLE)
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 }

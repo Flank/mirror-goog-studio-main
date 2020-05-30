@@ -31,6 +31,9 @@ class CachingEnvironmentTest {
     @JvmField
     val temporaryFolder = TemporaryFolder()
 
+    // This depends on the AGP version, changing it requires changing the value.
+    private val expectedKeyHash = "2z293741"
+
     @Test
     fun `exception is logged`() {
         val folder = temporaryFolder.newFolder()
@@ -43,14 +46,13 @@ class CachingEnvironmentTest {
                 }
             }
         } catch (e: Exception) {
-            val keyHash = "3d675a6b" // Hash of "key"
             assertThat(e.message).isEqualTo("Exception thrown by cached function")
-            val exceptionFile = join(folder, "empty_result_${keyHash}_exception.txt")
+            val exceptionFile = join(folder, "empty_result_${expectedKeyHash}_exception.txt")
             assertThat(exceptionFile.exists())
                 .named("Didn't find $exceptionFile among ${folder.listFiles().map { it.name }}")
                 .isTrue()
             assertThat(exceptionFile.readText()).contains("Exception thrown by cached function")
-            val logFile = join(folder, "empty_result_${keyHash}.log")
+            val logFile = join(folder, "empty_result_${expectedKeyHash}.log")
             assertThat(logFile.exists()).isTrue()
             assertThat(logFile.readText()).contains("About to throw an exception")
             return
@@ -78,8 +80,7 @@ class CachingEnvironmentTest {
                 EmptyResult
             }
         }
-        val keyHash = "3d675a6b" // Hash of "key"
-        val exceptionFile = join(folder, "empty_result_${keyHash}_exception.txt")
+        val exceptionFile = join(folder, "empty_result_${expectedKeyHash}_exception.txt")
         assertThat(!exceptionFile.exists())
             .named("Unexpectedly found $exceptionFile among ${folder.listFiles().map { it.name }}")
             .isTrue()

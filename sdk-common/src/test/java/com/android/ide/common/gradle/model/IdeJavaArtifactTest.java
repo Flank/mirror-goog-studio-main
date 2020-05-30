@@ -15,16 +15,14 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.assertEqualsOrSimilar;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 
 import com.android.builder.model.JavaArtifact;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.JavaArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
-import com.android.testutils.Serialization;
-import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,24 +37,6 @@ public class IdeJavaArtifactTest {
         myModelCache = new ModelCache();
         myGradleVersion = GradleVersion.parse("3.2");
         myDependenciesFactory = new IdeDependenciesFactory();
-    }
-
-    @Test
-    public void serializable() {
-        assertThat(IdeJavaArtifact.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
-    public void serialization() throws Exception {
-        IdeJavaArtifact javaArtifact =
-                new IdeJavaArtifactImpl(
-                        new JavaArtifactStub(),
-                        myModelCache,
-                        myDependenciesFactory,
-                        myGradleVersion);
-        byte[] bytes = Serialization.serialize(javaArtifact);
-        Object o = Serialization.deserialize(bytes);
-        assertEquals(javaArtifact, o);
     }
 
     @Test

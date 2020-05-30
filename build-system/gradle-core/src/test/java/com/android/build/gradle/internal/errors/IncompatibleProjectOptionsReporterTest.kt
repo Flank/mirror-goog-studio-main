@@ -16,11 +16,10 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.IssueReporter
-import com.android.builder.errors.IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED
 import com.android.builder.model.SyncIssue.Companion.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
@@ -34,13 +33,15 @@ class IncompatibleProjectOptionsReporterTest {
 
     @Test
     fun `test AndroidX enabled Jetifier enabled, expect success`() {
+        val gradleProperties = ImmutableMap.of<String, Any>(
+            BooleanOption.USE_ANDROID_X.propertyName, TRUE,
+            BooleanOption.ENABLE_JETIFIER.propertyName, TRUE
+        )
         IncompatibleProjectOptionsReporter.check(
             ProjectOptions(
                 @Suppress("RemoveExplicitTypeArguments")
-                ImmutableMap.of<String, Any>(
-                    BooleanOption.USE_ANDROID_X.propertyName, TRUE,
-                    BooleanOption.ENABLE_JETIFIER.propertyName, TRUE
-                )
+                ImmutableMap.of(),
+                FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)
             ),
             reporter
         )
@@ -50,13 +51,15 @@ class IncompatibleProjectOptionsReporterTest {
 
     @Test
     fun `test AndroidX disabled Jetifier enabled, expect failure`() {
+        val gradleProperties = ImmutableMap.of<String, Any>(
+            BooleanOption.USE_ANDROID_X.propertyName, FALSE,
+            BooleanOption.ENABLE_JETIFIER.propertyName, TRUE
+        )
         IncompatibleProjectOptionsReporter.check(
             ProjectOptions(
                 @Suppress("RemoveExplicitTypeArguments")
-                ImmutableMap.of<String, Any>(
-                    BooleanOption.USE_ANDROID_X.propertyName, FALSE,
-                    BooleanOption.ENABLE_JETIFIER.propertyName, TRUE
-                )
+                ImmutableMap.of(),
+                FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)
             ),
             reporter
         )

@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibrary
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
-import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
@@ -50,7 +49,7 @@ class CheckAarMetadataTaskTest {
         project.getSubproject("lib").buildFile.appendText(
             "android.defaultConfig.aarMetadata.minCompileSdk 28"
         )
-        project.executor().with(BooleanOption.ENABLE_AAR_METADATA, true).run(":app:assembleDebug")
+        project.executor().run(":app:assembleDebug")
     }
 
     @Test
@@ -86,9 +85,7 @@ class CheckAarMetadataTaskTest {
 
         // First test that the build fails when minCompileSdkVersion isn't set.
         try {
-            project.executor()
-                .with(BooleanOption.ENABLE_AAR_METADATA, true)
-                .run(":app:assembleDebug")
+            project.executor().run(":app:assembleDebug")
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
@@ -100,9 +97,7 @@ class CheckAarMetadataTaskTest {
             "android.defaultConfig.aarMetadata.minCompileSdk 28"
         )
         try {
-            project.executor()
-                .with(BooleanOption.ENABLE_AAR_METADATA, true)
-                .run(":app:assembleDebug")
+            project.executor().run(":app:assembleDebug")
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
@@ -135,7 +130,7 @@ class CheckAarMetadataTaskTest {
         project.getSubproject("lib").buildFile.appendText(
             "android.defaultConfig.aarMetadata.minCompileSdk 28"
         )
-        project.executor().with(BooleanOption.ENABLE_AAR_METADATA, true).run(":lib:assembleDebug")
+        project.executor().run(":lib:assembleDebug")
         // Copy lib's .aar build output to the app's libs directory
         FileUtils.copyFile(
             project.getSubproject("lib").getOutputFile("aar", "lib-debug.aar"),
@@ -302,6 +297,7 @@ class CheckAarMetadataTaskTest {
 
         // Manually write (possibly invalid) AAR metadata entry
         ZipArchive(aarFile).use { aar ->
+            aar.delete(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             val sb = StringBuilder()
             aarFormatVersion?.let { sb.appendln("$AAR_FORMAT_VERSION_PROPERTY=$it") }
             aarMetadataVersion?.let { sb.appendln("$AAR_METADATA_VERSION_PROPERTY=$it") }

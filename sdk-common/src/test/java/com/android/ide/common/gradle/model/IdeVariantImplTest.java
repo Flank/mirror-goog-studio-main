@@ -15,16 +15,13 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
+import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
 import com.android.ide.common.repository.GradleVersion;
-import com.android.testutils.Serialization;
-import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,21 +36,6 @@ public class IdeVariantImplTest {
         myModelCache = new ModelCache();
         myGradleVersion = GradleVersion.parse("3.2");
         myDependenciesFactory = new IdeDependenciesFactory();
-    }
-
-    @Test
-    public void serializable() {
-        assertThat(IdeVariantImpl.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
-    public void serialization() throws Exception {
-        IdeVariant apiVersion =
-                new IdeVariantImpl(
-                        new VariantStub(), myModelCache, myDependenciesFactory, myGradleVersion);
-        byte[] bytes = Serialization.serialize(apiVersion);
-        Object o = Serialization.deserialize(bytes);
-        assertEquals(apiVersion, o);
     }
 
     @Test
