@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.app.inspection;
 
+import static com.android.tools.agent.app.inspection.InspectorContext.*;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEvent;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseError;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseSuccess;
@@ -49,14 +50,14 @@ public class AppInspectionService {
     // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
     private final long mNativePtr;
 
-    private final Map<String, InspectorContext> mInspectorContexts = new ConcurrentHashMap<>();
+    private final Map<String, InspectorBridge> mInspectorBridges = new ConcurrentHashMap<>();
 
     private final Map<String, List<HookInfo<ExitHook>>> mExitTransforms = new ConcurrentHashMap<>();
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
             new ConcurrentHashMap<>();
 
-    private InspectorContext.CrashListener mCrashListener =
-            new InspectorContext.CrashListener() {
+    private CrashListener mCrashListener =
+            new CrashListener() {
                 @Override
                 public void onInspectorCrashed(String inspectorId, String message) {
                     sendCrashEvent(inspectorId, message);
@@ -90,8 +91,8 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        if (mInspectorContexts.containsKey(inspectorId)) {
-            String alreadyLaunchedProjectName = mInspectorContexts.get(inspectorId).getProject();
+        if (mInspectorBridges.containsKey(inspectorId)) {
+            String alreadyLaunchedProjectName = mInspectorBridges.get(inspectorId).getProject();
             sendServiceResponseError(
                     commandId,
                     "Inspector with the given id "
@@ -106,22 +107,26 @@ public class AppInspectionService {
             return;
         }
 
-        InspectorContext context = new InspectorContext(inspectorId, projectName, mCrashListener);
-        mInspectorContexts.put(inspectorId, context);
-        String error = context.initializeInspector(dexPath, mNativePtr);
-        if (error != null) {
-            mInspectorContexts.remove(inspectorId);
-            sendServiceResponseError(commandId, error);
-        } else {
-            sendServiceResponseSuccess(commandId);
-        }
+        InspectorBridge bridge = InspectorBridge.create(inspectorId, projectName, mCrashListener);
+        mInspectorBridges.put(inspectorId, bridge);
+        bridge.initializeInspector(
+                dexPath,
+                mNativePtr,
+                (error) -> {
+                    if (error != null) {
+                        mInspectorBridges.remove(inspectorId);
+                        sendServiceResponseError(commandId, error);
+                    } else {
+                        sendServiceResponseSuccess(commandId);
+                    }
+                });
     }
 
     public void disposeInspector(String inspectorId, int commandId) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        if (!mInspectorContexts.containsKey(inspectorId)) {
+        if (!mInspectorBridges.containsKey(inspectorId)) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
@@ -134,26 +139,26 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        InspectorContext inspectorContext = mInspectorContexts.get(inspectorId);
-        if (inspectorContext == null) {
+        InspectorBridge bridge = mInspectorBridges.get(inspectorId);
+        if (bridge == null) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
-        inspectorContext.sendCommand(commandId, rawCommand);
+        bridge.sendCommand(commandId, rawCommand);
     }
 
     public void cancelCommand(int cancelledCommandId) {
         // broadcast cancellation to every inspector even if only one of handled this command
-        for (InspectorContext context : mInspectorContexts.values()) {
-            context.cancelCommand(cancelledCommandId);
+        for (InspectorBridge bridge : mInspectorBridges.values()) {
+            bridge.cancelCommand(cancelledCommandId);
         }
     }
 
     private void doDispose(String inspectorId) {
         removeHooks(inspectorId, mEntryTransforms);
         removeHooks(inspectorId, mExitTransforms);
-        InspectorContext inspector = mInspectorContexts.remove(inspectorId);
+        InspectorBridge inspector = mInspectorBridges.remove(inspectorId);
         if (inspector != null) {
             inspector.disposeInspector();
         }
