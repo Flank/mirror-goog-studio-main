@@ -33,7 +33,7 @@ public final class DeploymentDevice {
     @NonNull
     public static AndroidVersion getDeploymentDeviceAndroidVersion(
             @NonNull ProjectOptions options) {
-        Integer apiLevel = options.get(IntegerOption.IDE_TARGET_DEVICE_API);
+        Integer apiLevel = options.getValue(IntegerOption.IDE_TARGET_DEVICE_API);
         if (apiLevel == null) {
             return AndroidVersion.DEFAULT;
         }

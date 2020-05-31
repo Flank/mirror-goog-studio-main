@@ -268,7 +268,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
         ProjectOptions projectOptions = new ProjectOptions(project);
-        Integer modelLevelInt = SyncOptions.buildModelOnlyVersion(projectOptions);
+        Integer modelLevelInt = SyncOptions.buildModelOnlyVersion(projectOptions, project);
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;
         }

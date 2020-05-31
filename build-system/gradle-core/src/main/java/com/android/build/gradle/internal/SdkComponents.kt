@@ -253,7 +253,7 @@ abstract class SdkComponentsBuildService @Inject constructor(
             parameters.issueReporter.set(getBuildService(project.gradle.sharedServices))
 
             parameters.enableSdkDownload.set(projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD))
-            parameters.androidSdkChannel.set(projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL))
+            parameters.androidSdkChannel.set(projectOptions.getValue(IntegerOption.ANDROID_SDK_CHANNEL))
             parameters.useAndroidX.set(projectOptions.get(BooleanOption.USE_ANDROID_X))
 
             parameters.compileSdkVersion.set(compileSdkVersion)

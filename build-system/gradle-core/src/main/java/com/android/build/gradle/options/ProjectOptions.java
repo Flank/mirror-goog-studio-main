@@ -41,7 +41,6 @@ public final class ProjectOptions {
             "android.testInstrumentationRunnerArguments.";
 
     private final ImmutableMap<ReplacedOption, String> replacedOptions;
-    private final ImmutableMap<IntegerOption, Integer> integerOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
 
@@ -50,17 +49,19 @@ public final class ProjectOptions {
             booleanOptionValues;
     private final ImmutableMap<OptionalBooleanOption, OptionValue<OptionalBooleanOption, Boolean>>
             optionalBooleanOptionValues;
+    private final ImmutableMap<IntegerOption, OptionValue<IntegerOption, Integer>>
+            integerOptionValues;
 
     public ProjectOptions(
             @NonNull ImmutableMap<String, Object> properties,
             @NonNull ProviderFactory providerFactory) {
         replacedOptions = readOptions(ReplacedOption.values(), properties);
-        integerOptions = readOptions(IntegerOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
         this.providerFactory = providerFactory;
         booleanOptionValues = createOptionValues(BooleanOption.values());
         optionalBooleanOptionValues = createOptionValues(OptionalBooleanOption.values());
+        integerOptionValues = createOptionValues(IntegerOption.values());
     }
 
     /**
@@ -167,32 +168,49 @@ public final class ProjectOptions {
     @NonNull
     public Provider<Boolean> getValueProvider(@NonNull BooleanOption option) {
         return providerFactory.provider(
+                () ->
+                        booleanOptionValues
+                                .get(option)
+                                .getValueForUseAtExecution()
+                                .getOrElse(option.getDefaultValue()));
+    }
+
+    /** Obtain the gradle property value immediately at configuration time. */
+    @Nullable
+    public Boolean getValue(@NonNull OptionalBooleanOption option) {
+        return optionalBooleanOptionValues.get(option).getValueForUseAtConfiguration();
+    }
+
+    /** Returns a provider which has the gradle property value to be obtained at execution time. */
+    @NonNull
+    public Provider<Boolean> getValueProvider(@NonNull OptionalBooleanOption option) {
+        return optionalBooleanOptionValues.get(option).getValueForUseAtExecution();
+    }
+
+    /** Obtain the gradle property value immediately at configuration time. */
+    @Nullable
+    public Integer getValue(@NonNull IntegerOption option) {
+        Integer value = integerOptionValues.get(option).getValueForUseAtConfiguration();
+        if (value != null) {
+            return value;
+        } else {
+            return option.getDefaultValue();
+        }
+    }
+
+    /** Returns a provider which has the gradle property value to be obtained at execution time. */
+    @NonNull
+    public Provider<Integer> getValueProvider(@NonNull IntegerOption option) {
+        return providerFactory.provider(
                 () -> {
-                    Boolean value =
-                            booleanOptionValues.get(option).getValueForUseAtExecution().getOrNull();
+                    Integer value =
+                            integerOptionValues.get(option).getValueForUseAtExecution().getOrNull();
                     if (value != null) {
                         return value;
                     } else {
                         return option.getDefaultValue();
                     }
                 });
-    }
-
-    /** Obtain the gradle property value immediately at configuration time. */
-    @Nullable
-    public Boolean getValue(OptionalBooleanOption option) {
-        return optionalBooleanOptionValues.get(option).getValueForUseAtConfiguration();
-    }
-
-    /** Returns a provider which has the gradle property value to be obtained at execution time. */
-    @NonNull
-    public Provider<Boolean> getValueProvider(OptionalBooleanOption option) {
-        return optionalBooleanOptionValues.get(option).getValueForUseAtExecution();
-    }
-
-    @Nullable
-    public Integer get(IntegerOption option) {
-        return integerOptions.getOrDefault(option, option.getDefaultValue());
     }
 
     @Nullable
@@ -241,7 +259,7 @@ public final class ProjectOptions {
     }
 
     public ImmutableMap<IntegerOption, Integer> getExplicitlySetIntegerOptions() {
-        return integerOptions;
+        return getExplicitlySetOptions(integerOptionValues);
     }
 
     public ImmutableMap<StringOption, String> getExplicitlySetStringOptions() {
@@ -253,7 +271,7 @@ public final class ProjectOptions {
                 .putAll(replacedOptions)
                 .putAll(getExplicitlySetBooleanOptions())
                 .putAll(getExplicitlySetOptionalBooleanOptions())
-                .putAll(integerOptions)
+                .putAll(getExplicitlySetIntegerOptions())
                 .putAll(stringOptions)
                 .build();
     }

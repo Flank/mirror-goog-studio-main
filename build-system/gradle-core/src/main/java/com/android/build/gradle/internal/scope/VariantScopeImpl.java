@@ -444,7 +444,7 @@ public class VariantScopeImpl implements VariantScope {
 
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
-                || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
+                || projectOptions.getValue(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
                 || variantDslInfo.getMinSdkVersion().getCodename() != null
                 || variantDslInfo.getTargetSdkVersion().getCodename() != null;
