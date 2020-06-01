@@ -49,8 +49,7 @@ interface VariantProperties: ComponentProperties {
      * time.
      *
      * @param key the build config field name
-     * @param value the build config field value which type must be one the
-     * [BuildConfigField.SupportedType]
+     * @param value the build config field value which type must be [Serializable]
      * @param comment optional comment for the field.
      */
     fun addBuildConfigField(key: String, value: Serializable, comment: String?)

@@ -18,7 +18,6 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 import java.io.Serializable
-import java.lang.Boolean
 
 /**
  * Field definition for the generated BuildConfig class.
@@ -43,20 +42,4 @@ data class BuildConfigField<T: Serializable>(
      * is necessary.
      */
     val comment: String?
-) : Serializable {
-
-    /**
-     * List of supported types for BuildConfig Fields.
-     */
-    @Incubating
-    sealed class SupportedType<T: Serializable>: Serializable {
-        @Incubating
-        object BOOLEAN: SupportedType<kotlin.Boolean>()
-        @Incubating
-        object INT: SupportedType<Int>()
-        @Incubating
-        object LONG: SupportedType<Long>()
-        @Incubating
-        object STRING: SupportedType<String>()
-    }
-}
+) : Serializable
