@@ -15,18 +15,17 @@
  */
 package com.android.builder.model.v2.models
 
-import com.android.builder.model.NativeToolchain
-import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.dsl.DependenciesInfo
+import com.android.builder.model.v2.dsl.SigningConfig
+import com.android.builder.model.v2.ide.AaptOptions
+import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
+import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.LintOptions
 import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.ProjectType
-import com.android.builder.model.v2.dsl.SigningConfig
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.ViewBindingOptions
-import com.android.builder.model.v2.ide.AaptOptions
-import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import java.io.File
 
 /**

@@ -419,6 +419,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/ide/",
                 "com/android/build/gradle/internal/ide/dependencies/",
                 "com/android/build/gradle/internal/ide/level2/",
+                "com/android/build/gradle/internal/ide/v2/",
                 "com/android/build/gradle/internal/incremental/",
                 "com/android/build/gradle/internal/lint/",
                 "com/android/build/gradle/internal/manifest/",
