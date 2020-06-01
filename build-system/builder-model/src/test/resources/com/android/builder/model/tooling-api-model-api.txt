@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a73f930e0101443928788e1654083115892d7d52acfeb36e41eba63a663a8dcd
+ac76e20ffbe0bbdcb922e3db707b71f68c74b907602a21f0bb4ff281165125bb
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -738,7 +738,6 @@ com.android.builder.model.v2.models.AndroidProject.getJavaCompileOptions: com.an
 com.android.builder.model.v2.models.AndroidProject.getLintOptions: com.android.builder.model.v2.ide.LintOptions ()
 com.android.builder.model.v2.models.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getModelVersion: java.lang.String ()
-com.android.builder.model.v2.models.AndroidProject.getNativeToolchains: java.util.Collection<com.android.builder.model.NativeToolchain> ()
 com.android.builder.model.v2.models.AndroidProject.getNdkVersion: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getPath: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getProductFlavors: java.util.Collection<com.android.builder.model.v2.ide.ProductFlavorContainer> ()

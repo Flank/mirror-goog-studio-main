@@ -224,13 +224,6 @@ interface AndroidProject {
     val frameworkSources: Collection<File>
 
     /**
-     * Returns the collection of toolchains used to create any native libraries.
-     *
-     * @return collection of toolchains.
-     */
-    val nativeToolchains: Collection<NativeToolchain>
-
-    /**
      * Returns a list of [SigningConfig].
      */
     val signingConfigs: Collection<SigningConfig>
