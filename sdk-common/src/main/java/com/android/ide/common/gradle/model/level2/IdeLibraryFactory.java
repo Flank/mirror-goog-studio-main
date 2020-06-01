@@ -75,9 +75,7 @@ public class IdeLibraryFactory {
                     androidLibrary.getResFolder().getPath(),
                     defaultValueIfNotPresent(androidLibrary::getResStaticLibrary, null),
                     androidLibrary.getAssetsFolder().getPath(),
-                    androidLibrary
-                            .getLocalJars()
-                            .stream()
+                    androidLibrary.getLocalJars().stream()
                             .map(File::getPath)
                             .collect(Collectors.toList()),
                     androidLibrary.getJniFolder().getPath(),
@@ -88,7 +86,8 @@ public class IdeLibraryFactory {
                     androidLibrary.getExternalAnnotations().getPath(),
                     androidLibrary.getPublicResources().getPath(),
                     androidLibrary.getBundle(),
-                    getSymbolFilePath(androidLibrary));
+                    getSymbolFilePath(androidLibrary),
+                    defaultValueIfNotPresent(() -> androidLibrary.isProvided(), false));
         }
     }
 
@@ -107,7 +106,7 @@ public class IdeLibraryFactory {
     }
 
     @Nullable
-    protected static <T> T defaultValueIfNotPresent(
+    public static <T> T defaultValueIfNotPresent(
             @NonNull Supplier<T> propertyInvoker, @Nullable T defaultValue) {
         try {
             return propertyInvoker.get();
@@ -128,7 +127,10 @@ public class IdeLibraryFactory {
             // Java modules don't have variant.
             return new IdeModuleLibrary(javaLibrary, computeAddress(javaLibrary));
         } else {
-            return new IdeJavaLibrary(computeAddress(javaLibrary), javaLibrary.getJarFile());
+            return new IdeJavaLibrary(
+                    computeAddress(javaLibrary),
+                    javaLibrary.getJarFile(),
+                    defaultValueIfNotPresent(() -> javaLibrary.isProvided(), false));
         }
     }
 

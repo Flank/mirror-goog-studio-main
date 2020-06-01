@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model.level2;
 
+import static com.android.ide.common.gradle.model.level2.IdeLibraryFactory.defaultValueIfNotPresent;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
@@ -32,6 +34,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
     @Nullable private final String myBuildId;
     @Nullable private final String myProjectPath;
     @Nullable private final String myVariant;
+
+    private final boolean myIsProvided;
     private final int myType;
     private final int myHashCode;
 
@@ -42,6 +46,7 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myBuildId = null;
         myProjectPath = null;
         myVariant = null;
+        myIsProvided = false;
         myType = 0;
 
         myHashCode = 0;
@@ -53,6 +58,7 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
         myProjectPath = IdeModel.copyNewProperty(library::getProject, null);
         myVariant = IdeModel.copyNewProperty(library::getProjectVariant, null);
+        myIsProvided = defaultValueIfNotPresent(() -> library.isProvided(), false);
         myHashCode = calculateHashCode();
     }
 
@@ -61,6 +67,7 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myArtifactAddress = artifactAddress;
         myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
         myProjectPath = IdeModel.copyNewProperty(library::getProject, null);
+        myIsProvided = defaultValueIfNotPresent(() -> library.isProvided(), false);
         myVariant = null;
         myHashCode = calculateHashCode();
     }
@@ -75,6 +82,7 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myBuildId = buildId;
         myProjectPath = projectPath;
         myVariant = null;
+        myIsProvided = false;
         myHashCode = calculateHashCode();
     }
 
@@ -209,6 +217,11 @@ public final class IdeModuleLibrary implements IdeLibrary {
         throw unsupportedMethodForModuleLibrary("getSymbolFile");
     }
 
+    @Override
+    public boolean isProvided() {
+        return myIsProvided;
+    }
+
     @NonNull
     private static UnsupportedOperationException unsupportedMethodForModuleLibrary(
             @NonNull String methodName) {
@@ -229,7 +242,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
                 && Objects.equals(myArtifactAddress, that.myArtifactAddress)
                 && Objects.equals(myProjectPath, that.myProjectPath)
                 && Objects.equals(myBuildId, that.myBuildId)
-                && Objects.equals(myVariant, that.myVariant);
+                && Objects.equals(myVariant, that.myVariant)
+                && Objects.equals(myIsProvided, that.myIsProvided);
     }
 
     @Override
@@ -238,7 +252,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myType, myArtifactAddress, myBuildId, myProjectPath, myVariant);
+        return Objects.hash(
+                myType, myArtifactAddress, myBuildId, myProjectPath, myVariant, myIsProvided);
     }
 
     @Override
@@ -257,6 +272,9 @@ public final class IdeModuleLibrary implements IdeLibrary {
                 + '\''
                 + ", myVariant='"
                 + myVariant
+                + '\''
+                + ", myIsProvided='"
+                + myIsProvided
                 + '\''
                 + '}';
     }

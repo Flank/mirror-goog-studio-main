@@ -48,7 +48,8 @@ class AndroidLibraryStubBuilder(
   var lintJar: String = "lint.jar",
   var externalAnnotations: String = "externalAnnotations",
   var publicResources: String = "publicResources",
-  var symbolFile: String = "symbolFile"
+  var symbolFile: String = "symbolFile",
+  var isProvided: Boolean = false
 ) {
   fun build() = IdeAndroidLibrary(
     artifactAddress,
@@ -68,17 +69,20 @@ class AndroidLibraryStubBuilder(
     externalAnnotations,
     publicResources,
     artifactFile,
-    symbolFile
+    symbolFile,
+    isProvided
   )
 }
 
 class JavaLibraryStubBuilder(
   var artifactAddress: String = "artifact:address:1.0",
-  var artifactFile: File = File("artifactFile")
+  var artifactFile: File = File("artifactFile"),
+  var isProvided: Boolean = false
 ) {
   fun build() = IdeJavaLibrary(
     artifactAddress,
-    artifactFile
+    artifactFile,
+    isProvided
   )
 }
 

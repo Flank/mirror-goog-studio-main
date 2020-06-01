@@ -241,4 +241,10 @@ public interface IdeLibrary {
      */
     @NonNull
     String getSymbolFile();
+
+    /**
+     * Returns whether the dependency is on the compile class path but is not on the runtime class
+     * path.
+     */
+    boolean isProvided();
 }
