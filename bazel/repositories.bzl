@@ -103,8 +103,8 @@ _archives = [
     },
     {
         "name": "com_google_absl",
-        "archive": "//prebuilts/tools/common/external-src-archives/google_absl/1.0.0:abseil-cpp-070f6e47b33a2909d039e620c873204f78809492.tar.gz",
-        "strip_prefix": "abseil-cpp",
+        "archive": "//prebuilts/tools/common/external-src-archives/google_absl/LTS_2020_02_25:lts_2020_02_25.zip",
+        "strip_prefix": "abseil-cpp-lts_2020_02_25",
         "repo_mapping": {
             "@upb_lib": "@upb",
         },
