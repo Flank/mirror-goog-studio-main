@@ -25,9 +25,9 @@ import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import com.google.common.primitives.Ints;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -149,7 +149,7 @@ public class PossibleResourcesMarker {
     private Stream<Resource> possibleWebResources(
             Set<String> names, String string) {
         // Look for android_res/ URL strings.
-        ImmutableList<Resource> resources = resourceStore.getResourcesFromWebUrl(string);
+        List<Resource> resources = resourceStore.getResourcesFromWebUrl(string);
         if (!resources.isEmpty()) {
             return resources.stream();
         }

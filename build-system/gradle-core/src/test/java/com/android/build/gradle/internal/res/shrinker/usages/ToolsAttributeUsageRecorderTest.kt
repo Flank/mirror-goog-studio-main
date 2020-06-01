@@ -60,7 +60,7 @@ class ToolsAttributeUsageRecorderTest {
         assertThat(model.resourceStore.keepAttributes)
             .containsExactly("layout/a", "string/*", "layout/b")
         assertThat(model.resourceStore.discardAttributes).containsExactly("drawable/hello")
-        assertThat(model.resourceStore.isSafeMode).isFalse()
+        assertThat(model.resourceStore.safeMode).isFalse()
     }
 
     @Test

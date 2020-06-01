@@ -486,7 +486,7 @@ public class ResourceUsageModel {
     }
 
     public boolean isSafeMode() {
-        return mResourceStore.isSafeMode();
+        return mResourceStore.getSafeMode();
     }
 
     public void processToolsAttributes() {

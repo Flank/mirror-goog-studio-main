@@ -52,7 +52,7 @@ class ToolsAttributeUsageRecorder(val rawResourcesPath: Path) : ResourceUsageRec
                 "discard" -> model.resourceStore.recordDiscardToolAttribute(value)
                 "shrinkMode" ->
                     if (value == VALUE_STRICT) {
-                        model.resourceStore.isSafeMode = false
+                        model.resourceStore.safeMode = false
                     }
             }
         }

@@ -135,18 +135,13 @@ public class ResourceShrinkerModel {
         return strings;
     }
 
-    /** Finds and returns unused resources */
-    public List<Resource> findUnused() {
-        return resourceStore.findUnused();
-    }
-
     /**
      * Mark resources that match string constants as reachable in case invocation of
      * {@code Resources#getIdentifier} or web content is found in code and safe mode in enabled.
      */
     public void keepPossiblyReferencedResources() {
         if (strings.isEmpty()
-                || !resourceStore.isSafeMode()
+                || !resourceStore.getSafeMode()
                 || (!foundGetIdentifier && !foundWebContent)) {
             // No calls to android.content.res.Resources#getIdentifier; or user specifically asked
             // for us not to guess resources to keep
