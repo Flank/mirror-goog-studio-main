@@ -39,7 +39,7 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -535,8 +535,8 @@ public class LibraryTaskManager
             return;
         }
 
-        Provider<ExternalNativeJsonGenerator> generator =
-                variantProperties.getTaskContainer().getExternalNativeJsonGenerator();
+        Provider<CxxMetadataGenerator> generator =
+                variantProperties.getTaskContainer().getCxxMetadataGenerator();
         if (generator == null) {
             // No external native build, so definitely no prefab tasks.
             return;

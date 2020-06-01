@@ -20,7 +20,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -76,7 +76,7 @@ import kotlin.streams.toList
  */
 abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Build task is always run as incrementality is left to the external build system.") {
 
-    private lateinit var generator: Provider<ExternalNativeJsonGenerator>
+    private lateinit var generator: Provider<CxxMetadataGenerator>
 
     /**
      * Get native build config minis. Also gather stats if they haven't already been gathered for
@@ -464,7 +464,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
     }
 
     class CreationAction(
-        private val generator: Provider<ExternalNativeJsonGenerator>,
+        private val generator: Provider<CxxMetadataGenerator>,
         private val generateTask: TaskProvider<out Task>,
         componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<ExternalNativeBuildTask, ComponentPropertiesImpl>(

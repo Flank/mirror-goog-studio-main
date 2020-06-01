@@ -237,10 +237,10 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
         artifacts.get(InternalArtifactType.MERGED_JNI_LIBS)
     )
     // add content of the local external native build
-    if (taskContainer.externalNativeJsonGenerator != null) {
+    if (taskContainer.cxxMetadataGenerator != null) {
         nativeLibs.from(
             project
-                .files(taskContainer.externalNativeJsonGenerator!!.get().variant.objFolder)
+                .files(taskContainer.cxxMetadataGenerator!!.get().variant.objFolder)
                 .builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }

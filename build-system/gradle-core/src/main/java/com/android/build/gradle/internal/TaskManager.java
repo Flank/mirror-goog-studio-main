@@ -76,7 +76,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -174,7 +174,7 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGeneratorBase;
+import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateManifestJarTask;
 import com.android.build.gradle.tasks.GenerateResValues;
@@ -1602,18 +1602,17 @@ public abstract class TaskManager<
 
         componentProperties
                 .getTaskContainer()
-                .setExternalNativeJsonGenerator(
+                .setCxxMetadataGenerator(
                         project.provider(
                                 () ->
-                                        ExternalNativeJsonGeneratorBase.create(
+                                        ExternalNativeJsonGenerator.create(
                                                 module, componentProperties)));
     }
 
     public void createExternalNativeBuildTasks(
             @NonNull ComponentPropertiesImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
-        Provider<ExternalNativeJsonGenerator> generator =
-                taskContainer.getExternalNativeJsonGenerator();
+        Provider<CxxMetadataGenerator> generator = taskContainer.getCxxMetadataGenerator();
         if (generator == null) {
             return;
         }

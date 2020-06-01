@@ -50,7 +50,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
     build: CxxBuildModel,
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>
-) : ExternalNativeJsonGeneratorBase(build, variant, abis) {
+) : ExternalNativeJsonGenerator(build, variant, abis) {
     @Throws(IOException::class)
     override fun processBuildOutput(
         buildOutput: String,

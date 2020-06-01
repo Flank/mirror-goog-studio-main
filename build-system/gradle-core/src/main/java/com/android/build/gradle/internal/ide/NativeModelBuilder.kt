@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide
 
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
@@ -47,8 +47,8 @@ class NativeModelBuilder(
         projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)
     private val scopes
         get() = (variantModel.variants + variantModel.testComponents)
-        .filter { it.taskContainer.externalNativeJsonGenerator != null }
-    private val generators get() = scopes.map { it.taskContainer.externalNativeJsonGenerator!!.get() }
+        .filter { it.taskContainer.cxxMetadataGenerator != null }
+    private val generators get() = scopes.map { it.taskContainer.cxxMetadataGenerator!!.get() }
 
     /**
      * Indicates which model classes that buildAll can support.
@@ -123,7 +123,7 @@ class NativeModelBuilder(
      */
     private fun buildInexpensiveNativeAndroidProjectInformation(
         builder: NativeAndroidProjectBuilder,
-        generator: ExternalNativeJsonGenerator
+        generator: CxxMetadataGenerator
     ) {
         builder.addBuildSystem(generator.variant.module.buildSystem.tag)
         val abis = generator.abis.map { it.abi.tag }
@@ -182,7 +182,7 @@ class NativeModelBuilder(
             for (component in (variantModel.variants + variantModel.testComponents)) {
                 val generator = component
                     .taskContainer
-                    .externalNativeJsonGenerator?.orNull
+                    .cxxMetadataGenerator?.orNull
                 if (generator != null) {
                     // This will generate any out-of-date or non-existent JSONs.
                     // When refreshExternalNativeModel() is true it will also

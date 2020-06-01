@@ -26,7 +26,7 @@ import java.util.concurrent.Callable
 /**
  * Abstraction of C/C++ gradle model generation and build.
  */
-interface ExternalNativeJsonGenerator {
+interface CxxMetadataGenerator {
     //region Build model data
     @get:Internal
     val variant: CxxVariantModel
