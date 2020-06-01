@@ -179,6 +179,10 @@ enum class BooleanOption(
     /** Incremental dexing task using D8's new API for desugaring graph computation. */
     ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
 
+    /* -------------------
+     * DEPRECATED FEATURES
+     */
+
     @Suppress("unused")
     ENABLE_BUILD_CACHE(
         "android.enableBuildCache",
