@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.StringOption
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
+import com.google.common.io.ByteStreams
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -43,6 +44,9 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
 import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 
 /**
@@ -101,6 +105,22 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
+
+        private fun compressBundle(inputFile: File, outputFile: File) {
+            ZipInputStream(inputFile.inputStream().buffered()).use { inputStream ->
+                ZipOutputStream(outputFile.outputStream().buffered()).use { outputStream ->
+                    while (true) {
+                        val entry = inputStream.nextEntry ?: break
+                        val outEntry = ZipEntry(entry.name)
+                        outEntry.time = 0
+                        outputStream.putNextEntry(outEntry)
+                        ByteStreams.copy(inputStream, outputStream)
+                        outputStream.closeEntry()
+                    }
+                }
+            }
+        }
+
         override fun run() {
             FileUtils.deleteIfExists(params.finalBundleFile)
 
@@ -111,7 +131,8 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         it.storeFile!!,
                         it.storePassword!!,
                         it.keyPassword!!,
-                        it.keyAlias!!)
+                        it.keyAlias!!
+                    )
                 val signingConfig =
                     ApkSigner.SignerConfig.Builder(
                         it.keyAlias.toUpperCase(Locale.US),
@@ -119,17 +140,23 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         listOf(certificateInfo.certificate)
                     )
                         .build()
-                ApkSigner.Builder(listOf(signingConfig))
-                    .setOutputApk(params.finalBundleFile)
-                    .setInputApk(params.intermediaryBundleFile)
-                    .setV2SigningEnabled(false)
-                    .setV3SigningEnabled(false)
-                    .setV4SigningEnabled(false)
-                    .setMinSdkVersion(18) // So that RSA + SHA256 are used
-                    .build()
-                    .sign()
+                val compressedBundleFile = createTempFile("compressedBundle", ".aab")
+                compressBundle(params.intermediaryBundleFile, compressedBundleFile)
+                try {
+                    ApkSigner.Builder(listOf(signingConfig))
+                        .setOutputApk(params.finalBundleFile)
+                        .setInputApk(compressedBundleFile)
+                        .setV2SigningEnabled(false)
+                        .setV3SigningEnabled(false)
+                        .setV4SigningEnabled(false)
+                        .setMinSdkVersion(18) // So that RSA + SHA256 are used
+                        .build()
+                        .sign()
+                } finally {
+                    FileUtils.deleteIfExists(compressedBundleFile)
+                }
             } ?: run {
-                FileUtils.copyFile(params.intermediaryBundleFile, params.finalBundleFile)
+                compressBundle(params.intermediaryBundleFile, params.finalBundleFile)
             }
 
             BuiltArtifactsImpl(
