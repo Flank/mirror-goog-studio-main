@@ -47,6 +47,17 @@ service DeployService {
    */
   rpc GetDebugPort(DebugPortRequest) returns (DebugPortResponse) {
   }
+
+  /*
+   * Using the Deployer installs the APK or series of APKs for a given package.
+   * The response contains an error code if the install fails for any reason. The Deployer will
+   * trigger a prompt if the APK installed has a version mismatch with the APK that is going to be
+   * installed. If this happens the default response to the prompt is false. The prompt is returned
+   * in the response. The caller is expected to call InstallApk again with a series of prepopulated
+   * responses to prompt.
+   */
+  rpc InstallApk(InstallApkRequest) returns (InstallApkResponse) {
+  }
 }
 
 /*
@@ -93,4 +104,33 @@ message DebugPortRequest {
 }
 message DebugPortResponse {
   int32 port = 1;
+}
+
+message InstallApkRequest {
+  string device_id = 1;
+  string package_name = 2;
+  repeated string apk = 3;
+  repeated bool promptResponse = 4;
+}
+
+message InstallApkResponse {
+  int32 exit_status = 1;
+  repeated string message = 2;
+  repeated string prompt = 3;
+  DeployLog log = 4;
+  repeated DeployMetric metric = 5;
+}
+
+message DeployLog {
+    repeated string error = 1;
+    repeated string warning = 2;
+    repeated string info = 3;
+    repeated string verbose = 4;
+}
+
+message DeployMetric {
+    string name = 1;
+    string status = 2;
+    int64 startNs = 3;
+    int64 endNs = 4;
 }

@@ -32,6 +32,7 @@ iml_module(
         "//tools/idea/.idea/libraries:Objenesis[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/base/deploy/service:deploy-service-proto",
+        "//tools/base/deploy/deployer:tools.deployer",
     ],
 )
 
@@ -50,5 +51,7 @@ java_binary(
         "//tools/idea/.idea/libraries:protobuf",
         "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
+        "//tools/base/common:studio.android.sdktools.common",
+        "//tools/base/deploy/deployer:tools.deployer",
     ],
 )

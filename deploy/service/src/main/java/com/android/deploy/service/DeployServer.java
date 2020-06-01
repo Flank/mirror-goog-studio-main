@@ -24,18 +24,34 @@ import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
+import com.android.tools.deployer.DeployMetric;
+import com.android.tools.deployer.DeployerRunner;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     private static final int GET_DEBUG_PORT_RETRY_LIMIT = 10;
     private AndroidDebugBridge myActiveBridge;
     private Server myServer;
+    private final DeployerRunner myDeployRunner;
+    private final DeployerInteraction myDeployerInteraction = new DeployerInteraction();
+
+    public DeployServer() throws IOException {
+        myDeployRunner =
+                new DeployerRunner(
+                        File.createTempFile("deploy_cache", ".files"),
+                        File.createTempFile("deploy_db", ".db"),
+                        myDeployerInteraction);
+    }
 
     /**
      * This function is responsible for starting a GRPC server and blocks until the server is
@@ -47,7 +63,6 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
     public void start(int port, String adbPath) throws InterruptedException, IOException {
         AndroidDebugBridge.init(true);
         myActiveBridge = AndroidDebugBridge.createBridge(adbPath, false);
-
         NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(port);
         serverBuilder.addService(this);
         myServer = serverBuilder.build();
@@ -55,11 +70,10 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         myServer.awaitTermination();
     }
 
-    public DeployServer() {}
-
     @VisibleForTesting
-    public DeployServer(@NonNull AndroidDebugBridge bridge) {
+    public DeployServer(@NonNull AndroidDebugBridge bridge, DeployerRunner deployerRunner) {
         myActiveBridge = bridge;
+        myDeployRunner = deployerRunner;
     }
 
     @Override
@@ -92,14 +106,8 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
             Deploy.DebugPortRequest request,
             StreamObserver<Deploy.DebugPortResponse> responseObserver) {
         Deploy.DebugPortResponse.Builder response = Deploy.DebugPortResponse.newBuilder();
-        IDevice selectedDevice = null;
+        IDevice selectedDevice = getDeviceBySerial(request.getDeviceId());
         Client selectedClient = null;
-        for (IDevice device : myActiveBridge.getDevices()) {
-            if (device.getSerialNumber().equals(request.getDeviceId())) {
-                selectedDevice = device;
-                break;
-            }
-        }
         if (selectedDevice == null) {
             // TODO (gijosh): Respond with error.
             responseObserver.onNext(response.build());
@@ -142,6 +150,67 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         response.setPort(selectedClient.getDebuggerListenPort());
         responseObserver.onNext(response.build());
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void installApk(
+            Deploy.InstallApkRequest request,
+            StreamObserver<Deploy.InstallApkResponse> responseObserver) {
+        IDevice device = getDeviceBySerial(request.getDeviceId());
+        if (device == null) {
+            responseObserver.onNext(
+                    Deploy.InstallApkResponse.newBuilder()
+                            .setExitStatus(-1)
+                            .addMessage(
+                                    "No device with matching device Id found: "
+                                            + request.getDeviceId())
+                            .build());
+            responseObserver.onCompleted();
+            return;
+        }
+        myDeployerInteraction.setPromptResponses(request.getPromptResponseList());
+        DeployLogger logger = new DeployLogger(DeployLogger.Level.ERROR);
+        List<String> arguments = new ArrayList<>();
+        arguments.add("install"); // Required by the deployer runner.
+        arguments.add(request.getPackageName());
+        arguments.addAll(request.getApkList());
+        // The string[] blob is not documented after discussing with the engineers the format is
+        // install <packageName> <baseApk> [additionalApks]...
+        // Eg. install com.example.myApp c:\Temp\myapp.apk
+        int exitCode = myDeployRunner.run(device, arguments.toArray(new String[0]), logger);
+        responseObserver.onNext(
+                Deploy.InstallApkResponse.newBuilder()
+                        .setExitStatus(exitCode)
+                        .addAllMessage(myDeployerInteraction.getMessages())
+                        .addAllPrompt(myDeployerInteraction.getPrompts())
+                        .setLog(logger.toProto())
+                        .addAllMetric(convertToMetricsProto(myDeployRunner.getMetrics()))
+                        .build());
+        responseObserver.onCompleted();
+    }
+
+    private List<Deploy.DeployMetric> convertToMetricsProto(List<DeployMetric> metrics) {
+        return metrics.stream()
+                .map(
+                        (metric) ->
+                                Deploy.DeployMetric.newBuilder()
+                                        .setName(metric.getName())
+                                        .setStatus(metric.hasStatus() ? metric.getStatus() : "")
+                                        .setStartNs(metric.getStartTimeNs())
+                                        .setEndNs(metric.getEndTimeNs())
+                                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private IDevice getDeviceBySerial(String serial) {
+        IDevice selectedDevice = null;
+        for (IDevice device : myActiveBridge.getDevices()) {
+            if (device.getSerialNumber().equals(serial)) {
+                selectedDevice = device;
+                break;
+            }
+        }
+        return selectedDevice;
     }
 
     private static Deploy.Client ddmClientToRpcClient(Client client) {
