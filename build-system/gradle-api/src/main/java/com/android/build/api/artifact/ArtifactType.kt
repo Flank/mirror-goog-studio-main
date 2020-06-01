@@ -66,4 +66,22 @@ sealed class ArtifactType<T : FileSystemLocation>(
 
     @Incubating
     object AAR: ArtifactType<RegularFile>(FILE), Transformable
+
+    /**
+     * A file containing the list of public resources exported by a library project.
+     *
+     * It will have one resource per line and be of the format
+     * `<resource-type> <resource-name>`
+     *
+     * for example
+     * ```
+     * string public_string
+     * ```
+     *
+     * This file will always be created, even if there are no resources.
+     *
+     * See [Choose resources to make public](https://developer.android.com/studio/projects/android-library.html#PrivateResources).
+     */
+    @Incubating
+    object PUBLIC_ANDROID_RESOURCES_LIST: ArtifactType<RegularFile>(FILE)
 }

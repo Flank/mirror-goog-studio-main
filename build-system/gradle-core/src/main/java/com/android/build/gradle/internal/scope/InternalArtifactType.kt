@@ -171,7 +171,7 @@ InternalArtifactType<T : FileSystemLocation>(
     object LOCAL_ONLY_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Partial R.txt directory
     object LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // public.txt output
+    // public.txt output This file might not exist if the project does not declare any public resources.
     object PUBLIC_RES: InternalArtifactType<RegularFile>(FILE), Replaceable
     object SHRUNK_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable

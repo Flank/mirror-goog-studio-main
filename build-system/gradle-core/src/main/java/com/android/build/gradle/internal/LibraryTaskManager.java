@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -494,6 +495,11 @@ public class LibraryTaskManager
         // This should be unused, except that external libraries might consume it.
         // Also used by the VerifyLibraryResourcesTask (only ran in release builds).
         createMergeResourcesTask(variantProperties, false /*processResources*/, ImmutableSet.of());
+
+        // Task to generate the public.txt for the API that always exists
+        // Unlike the internal one which is packaged in the AAR which only exists if the
+        // developer has explicitly marked resources as public.
+        taskFactory.register(new GenerateApiPublicTxtTask.CreationAction(variantProperties));
     }
 
     private void createCompileLibraryResourcesTask(

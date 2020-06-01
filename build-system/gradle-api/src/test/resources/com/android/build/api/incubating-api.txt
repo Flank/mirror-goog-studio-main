@@ -35,6 +35,7 @@ com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.ar
 com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactType
+com.android.build.api.artifact.ArtifactType$PUBLIC_ANDROID_RESOURCES_LIST extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactType.<init>: com.android.build.api.artifact.ArtifactType<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.FileNames, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactType.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.Artifacts

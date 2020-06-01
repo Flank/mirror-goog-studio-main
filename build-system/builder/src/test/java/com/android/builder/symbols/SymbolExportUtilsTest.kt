@@ -17,7 +17,12 @@
 package com.android.builder.symbols
 
 import com.android.ide.common.symbols.Symbol
+import com.android.ide.common.symbols.Symbol.Companion.attributeSymbol
+import com.android.ide.common.symbols.Symbol.Companion.normalSymbol
+import com.android.ide.common.symbols.Symbol.Companion.styleableSymbol
+import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.SymbolTable.Companion.builder
 import com.android.resources.ResourceType
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.collect.ImmutableList
@@ -26,6 +31,7 @@ import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.ByteArrayOutputStream
+import java.io.StringWriter
 
 class SymbolExportUtilsTest {
 
@@ -132,5 +138,31 @@ class SymbolExportUtilsTest {
 
                 """.trimIndent()
         )
+    }
+
+    /** See [SymbolIo.readFromPublicTxtFile] for the reading counterpart */
+    @Test
+    fun testPublicRFileWrite() {
+        val table = builder()
+            .add(attributeSymbol("color"))
+            .add(attributeSymbol("size"))
+            .add(normalSymbol(ResourceType.STRING, "publicString"))
+            .add(normalSymbol(ResourceType.INTEGER, "value"))
+            .add(styleableSymbol("myStyleable", children = ImmutableList.of("a")))
+            .build()
+        val writer = StringWriter()
+        writePublicTxtFile(table, writer)
+        assertThat(writer.toString())
+            .isEqualTo(
+                """
+                    attr color
+                    attr size
+                    integer value
+                    string publicString
+                    styleable myStyleable
+
+                """.trimIndent()
+            )
+        // (Styleable children are not included in public.txt the corresponding attrs are)
     }
 }
