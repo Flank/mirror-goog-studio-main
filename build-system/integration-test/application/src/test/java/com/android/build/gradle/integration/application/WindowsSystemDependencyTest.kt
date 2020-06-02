@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.testutils.AssumeUtil.assumeWindows
@@ -40,7 +41,7 @@ class WindowsSystemDependencyTest {
 
         project.execute("assembleDebug")
 
-        val buildElementsJson = project.file("build/intermediates/packaged_manifests/debug/output.json")
+        val buildElementsJson = project.file("build/intermediates/packaged_manifests/debug/${BuiltArtifactsImpl.METADATA_FILE_NAME}")
 
         FileSubject.assertThat(buildElementsJson).doesNotContain("\\\\")
     }
