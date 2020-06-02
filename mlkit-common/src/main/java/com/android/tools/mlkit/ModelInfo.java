@@ -211,6 +211,6 @@ public class ModelInfo {
             return false;
         }
 
-        return ModelInfo.PARSER_VERSION.compareTo(minParserVersion) < 0;
+        return MetadataExtractor.compareVersions(PARSER_VERSION, minParserVersion) < 0;
     }
 }
