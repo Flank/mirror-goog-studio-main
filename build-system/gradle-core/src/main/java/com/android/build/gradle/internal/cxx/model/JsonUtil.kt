@@ -270,10 +270,7 @@ internal data class CxxAbiModelData(
     override val originalCxxBuildFolder: File = File("."),
     override val variant: CxxVariantModelData = CxxVariantModelData(),
     override val prefabFolder: File = File(".")
-) : CxxAbiModel {
-    override val services: CxxServiceRegistry
-        get() = throw RuntimeException("Cannot use services from deserialized CxxAbiModel")
-}
+) : CxxAbiModel
 
 private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
     abi = abi,

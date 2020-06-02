@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineAr
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.cmakeSettingsFile
@@ -44,10 +43,9 @@ import java.io.IOException
  * be generated during configuration.
  */
 internal abstract class CmakeExternalNativeJsonGenerator(
-    build: CxxBuildModel,
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>
-) : ExternalNativeJsonGenerator(build, variant, abis) {
+) : ExternalNativeJsonGenerator(variant, abis) {
     @JvmField
     protected val cmake: CxxCmakeModuleModel
 

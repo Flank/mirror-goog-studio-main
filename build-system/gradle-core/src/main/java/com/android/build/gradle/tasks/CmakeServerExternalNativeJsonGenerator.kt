@@ -49,7 +49,6 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
@@ -63,7 +62,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
@@ -80,10 +78,9 @@ import java.util.HashMap
  * project and generate the android build JSON.
  */
 internal class CmakeServerExternalNativeJsonGenerator(
-    build: CxxBuildModel,
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>
-) : CmakeExternalNativeJsonGenerator(build, variant, abis) {
+) : CmakeExternalNativeJsonGenerator(variant, abis) {
     @Throws(ProcessException::class, IOException::class)
     override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         // Once a Cmake server object is created

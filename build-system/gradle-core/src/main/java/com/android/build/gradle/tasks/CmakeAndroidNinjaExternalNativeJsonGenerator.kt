@@ -19,22 +19,19 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.services.exec
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
  * This strategy uses the older custom CMake (version 3.6) that directly generates the JSON file as
  * part of project configuration.
  */
 internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
-    build: CxxBuildModel,
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>
-) : CmakeExternalNativeJsonGenerator(build, variant, abis) {
+) : CmakeExternalNativeJsonGenerator(variant, abis) {
 
     override fun checkPrefabConfig() {
         errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")

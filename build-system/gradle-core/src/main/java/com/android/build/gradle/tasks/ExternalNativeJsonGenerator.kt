@@ -19,7 +19,6 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
-import com.android.build.gradle.internal.cxx.configure.registerWriteModelAfterJsonGeneration
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.toJsonString
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
@@ -39,15 +37,14 @@ import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.buildOutputFile
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.statsBuilder
-import com.android.build.gradle.internal.cxx.services.executeListenersOnceAfterJsonGeneration
-import com.android.build.gradle.internal.cxx.services.executeListenersOnceBeforeJsonGeneration
+import com.android.build.gradle.internal.cxx.model.writeJsonToFile
 import com.android.build.gradle.internal.cxx.services.issueReporter
 import com.android.build.gradle.internal.cxx.services.jsonGenerationInputDependencyFileCollection
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
@@ -86,7 +83,6 @@ import java.util.concurrent.Callable
  * Base class for generation of native JSON.
  */
 abstract class ExternalNativeJsonGenerator internal constructor(
-    @get:Internal protected val build: CxxBuildModel,
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     override val variant: CxxVariantModel,
     @get:Internal override val abis: List<CxxAbiModel>
@@ -292,10 +288,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     abi.abi.tag,
                     abi.abiPlatformVersion
                 )
-                if (!build.executeListenersOnceBeforeJsonGeneration()) {
-                    infoln("Errors seen in validation before JSON generation started")
-                    return
-                }
+
                 val processBuilder = getProcessBuilder(abi)
 
                 // See whether the current build command matches a previously written build command.
@@ -436,7 +429,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     recorder.record.toJsonString()
                         .toByteArray(Charsets.UTF_8)
                 )
-                abi.executeListenersOnceAfterJsonGeneration()
+                infoln("Writing build model to ${abi.modelOutputFile}")
+                abi.writeJsonToFile()
             }
         }
     }
@@ -551,8 +545,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             val variant = createCxxVariantModel(module, componentProperties)
             val abis: MutableList<CxxAbiModel> =
                 Lists.newArrayList()
-            val cxxBuildModel =
-                getCxxBuildModel(componentProperties.globalScope.project.gradle)
             for (abi in variant.validAbiList) {
                 val model = createCxxAbiModel(
                     variant,
@@ -561,15 +553,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     componentProperties
                 ).rewriteCxxAbiModelWithCMakeSettings()
                 abis.add(model)
-
-                // Register callback to write Json after generation finishes.
-                // We don't write it now because sync configuration is executing. We want to defer
-                // until model building.
-                registerWriteModelAfterJsonGeneration(model)
             }
             return when (module.buildSystem) {
                 NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
-                    cxxBuildModel,
                     variant,
                     abis
                 )
@@ -579,9 +565,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     val cmakeRevision = cmake.minimumCmakeVersion
                     variant.statsBuilder.nativeCmakeVersion = cmakeRevision.toString()
                     if (cmakeRevision.isCmakeForkVersion()) {
-                        return CmakeAndroidNinjaExternalNativeJsonGenerator(
-                            cxxBuildModel, variant, abis
-                        )
+                        return CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis)
                     }
                     if (cmakeRevision.major < 3
                         || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
@@ -592,9 +576,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                                     + ". Try 3.7.0 or later."
                         )
                     }
-                    CmakeServerExternalNativeJsonGenerator(
-                        cxxBuildModel, variant, abis
-                    )
+                    CmakeServerExternalNativeJsonGenerator(variant, abis)
                 }
             }
         }

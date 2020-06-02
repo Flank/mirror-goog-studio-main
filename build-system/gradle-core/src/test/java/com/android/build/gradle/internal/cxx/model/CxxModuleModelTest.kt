@@ -42,7 +42,6 @@ import kotlin.test.fail
 
 private val ALLOWED_MODEL_INTERFACES = setOf(
     CxxAbiModel::class.java,
-    CxxBuildModel::class.java,
     CxxCmakeAbiModel::class.java,
     CxxCmakeModuleModel::class.java,
     CxxModuleModel::class.java,

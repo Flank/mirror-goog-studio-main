@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.soFolder
@@ -47,10 +46,9 @@ import java.nio.file.Files
  * JSON can be generated during configuration.
  */
 internal class NdkBuildExternalNativeJsonGenerator(
-    build: CxxBuildModel,
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>
-) : ExternalNativeJsonGenerator(build, variant, abis) {
+) : ExternalNativeJsonGenerator(variant, abis) {
     @Throws(IOException::class)
     override fun processBuildOutput(
         buildOutput: String,
