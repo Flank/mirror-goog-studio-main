@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import java.util.List;
 import javax.inject.Inject;
@@ -140,5 +141,10 @@ public class AppPlugin
     protected ApplicationVariantFactory createVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
         return new ApplicationVariantFactory(projectServices, globalScope);
+    }
+
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.APPLICATION;
     }
 }

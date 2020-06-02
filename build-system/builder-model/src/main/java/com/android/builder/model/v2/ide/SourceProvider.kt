@@ -54,21 +54,21 @@ interface SourceProvider {
     val resourcesDirectories: Collection<File>
 
     /**
-     * Returns the aidl source folders.
+     * Returns the aidl source folders or null if aidl is disabled
      *
      * @return a list of folders. They may not all exist.
      */
-    val aidlDirectories: Collection<File>
+    val aidlDirectories: Collection<File>?
 
     /**
-     * Returns the renderscript source folders.
+     * Returns the renderscript source folders or null if renderscript is disabled
      *
      * @return a list of folders. They may not all exist.
      */
-    val renderscriptDirectories: Collection<File>
+    val renderscriptDirectories: Collection<File>?
 
     /**
-     * Returns the C source folders.
+     * Returns the C source folders
      *
      * @return a list of folders. They may not all exist.
      */
@@ -82,18 +82,18 @@ interface SourceProvider {
     val cppDirectories: Collection<File>
 
     /**
-     * Returns the android resources folders.
+     * Returns the android resources folders, or null if resource processing is disabled
      *
      * @return a list of folders. They may not all exist.
      */
-    val resDirectories: Collection<File>
+    val resDirectories: Collection<File>?
 
     /**
-     * Returns the android assets folders.
+     * Returns the android assets folders or null if assets processing is disabled
      *
      * @return a list of folders. They may not all exist.
      */
-    val assetsDirectories: Collection<File>
+    val assetsDirectories: Collection<File>?
 
     /**
      * Returns the native libs folders.
@@ -103,16 +103,16 @@ interface SourceProvider {
     val jniLibsDirectories: Collection<File>
 
     /**
-     * Returns the shader folders.
+     * Returns the shader folders or null if shaders are disabled.
      *
      * @return a list of folders. They may not all exist.
      */
-    val shadersDirectories: Collection<File>
+    val shadersDirectories: Collection<File>?
 
     /**
-     * Returns the machine learning models folders.
+     * Returns the machine learning models folders or null if ML is disabled
      *
      * @return a list of folders. They may not all exist.
      */
-    val mlModelsDirectories: Collection<File>
+    val mlModelsDirectories: Collection<File>?
 }

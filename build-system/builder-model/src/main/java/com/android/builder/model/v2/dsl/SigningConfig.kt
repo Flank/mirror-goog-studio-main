@@ -45,10 +45,16 @@ interface SigningConfig {
     val storeType: String?
 
     /** Signing using JAR Signature Scheme (aka v1 scheme) is enabled. */
-    val isV1SigningEnabled: Boolean
+    val enableV1Signing: Boolean?
 
     /** Signing using APK Signature Scheme v2 (aka v2 scheme) is enabled. */
-    val isV2SigningEnabled: Boolean
+    val enableV2Signing: Boolean?
+
+    /** Signing using JAR Signature Scheme v3 (aka v3 scheme) is enabled. */
+    val enableV3Signing: Boolean?
+
+    /** Signing using JAR Signature Scheme v4 (aka v4 scheme) is enabled. */
+    val enableV4Signing: Boolean?
 
     /**
      * Whether the config is fully configured for signing.

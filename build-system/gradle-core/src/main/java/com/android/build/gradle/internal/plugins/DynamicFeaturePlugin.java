@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -59,6 +60,11 @@ public class DynamicFeaturePlugin
     @Override
     protected int getProjectType() {
         return AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE;
+    }
+
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.DYNAMIC_FEATURE;
     }
 
     @NonNull

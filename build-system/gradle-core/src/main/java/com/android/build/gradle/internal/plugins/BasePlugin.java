@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -92,6 +93,7 @@ import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -208,6 +210,9 @@ public abstract class BasePlugin<
             @NonNull Recorder threadRecorder);
 
     protected abstract int getProjectType();
+
+    /** The project type of the IDE model v2. */
+    protected abstract ProjectType getProjectTypeV2();
 
     @VisibleForTesting
     public VariantManager<VariantT, VariantPropertiesT> getVariantManager() {
@@ -466,6 +471,14 @@ public abstract class BasePlugin<
                         dslServices.getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
+
+        registry.register(
+                new com.android.build.gradle.internal.ide.v2.ModelBuilder(
+                        globalScope,
+                        variantModel,
+                        (CommonExtension) extension,
+                        projectServices.getIssueReporter(),
+                        getProjectTypeV2()));
 
         // Register a builder for the native tooling model
         NativeModelBuilder nativeModelBuilder =

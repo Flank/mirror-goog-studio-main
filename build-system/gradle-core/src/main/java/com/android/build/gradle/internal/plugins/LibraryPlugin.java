@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -107,6 +108,11 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
     @Override
     protected int getProjectType() {
         return AndroidProjectTypes.PROJECT_TYPE_LIBRARY;
+    }
+
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.LIBRARY;
     }
 
     @NonNull

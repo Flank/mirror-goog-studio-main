@@ -30,12 +30,20 @@ data class SigningConfigImpl(
     override val keyAlias: String?,
     override val keyPassword: String?,
     override val storeType: String?,
-    override val isV1SigningEnabled: Boolean,
-    override val isV2SigningEnabled: Boolean,
-    override val isSigningReady: Boolean
+    override val enableV1Signing: Boolean?,
+    override val enableV2Signing: Boolean?,
+    override val enableV3Signing: Boolean?,
+    override val enableV4Signing: Boolean?
 ) : SigningConfig, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L
     }
+
+    override val isSigningReady: Boolean
+        get() = storeFile != null &&
+                storePassword != null &&
+                keyAlias != null &&
+                keyPassword != null
+
 }

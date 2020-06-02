@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -58,6 +59,11 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @Override
     protected int getProjectType() {
         return AndroidProjectTypes.PROJECT_TYPE_TEST;
+    }
+
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.TEST;
     }
 
     @NonNull
