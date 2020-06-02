@@ -40,9 +40,7 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
-
     private final ProviderFactory providerFactory;
     private final ImmutableMap<BooleanOption, OptionValue<BooleanOption, Boolean>>
             booleanOptionValues;
@@ -52,17 +50,18 @@ public final class ProjectOptions {
             integerOptionValues;
     private final ImmutableMap<ReplacedOption, OptionValue<ReplacedOption, String>>
             replacedOptionValues;
+    private final ImmutableMap<StringOption, OptionValue<StringOption, String>> stringOptionValues;
 
     public ProjectOptions(
             @NonNull ImmutableMap<String, Object> properties,
             @NonNull ProviderFactory providerFactory) {
-        stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
         this.providerFactory = providerFactory;
         booleanOptionValues = createOptionValues(BooleanOption.values());
         optionalBooleanOptionValues = createOptionValues(OptionalBooleanOption.values());
         integerOptionValues = createOptionValues(IntegerOption.values());
         replacedOptionValues = createOptionValues(ReplacedOption.values());
+        stringOptionValues = createOptionValues(StringOption.values());
     }
 
     /**
@@ -214,9 +213,30 @@ public final class ProjectOptions {
                 });
     }
 
+    /** Obtain the gradle property value immediately at configuration time. */
     @Nullable
-    public String get(StringOption option) {
-        return stringOptions.getOrDefault(option, option.getDefaultValue());
+    public String get(@NonNull StringOption option) {
+        String value = stringOptionValues.get(option).getValueForUseAtConfiguration();
+        if (value != null) {
+            return value;
+        } else {
+            return option.getDefaultValue();
+        }
+    }
+
+    /** Returns a provider which has the gradle property value to be obtained at execution time. */
+    @NonNull
+    public Provider<String> getProvider(@NonNull StringOption option) {
+        return providerFactory.provider(
+                () -> {
+                    String value =
+                            stringOptionValues.get(option).getValueForUseAtExecution().getOrNull();
+                    if (value != null) {
+                        return value;
+                    } else {
+                        return option.getDefaultValue();
+                    }
+                });
     }
 
     @NonNull
@@ -264,7 +284,7 @@ public final class ProjectOptions {
     }
 
     public ImmutableMap<StringOption, String> getExplicitlySetStringOptions() {
-        return stringOptions;
+        return getExplicitlySetOptions(stringOptionValues);
     }
 
     private ImmutableMap<ReplacedOption, String> getExplicitlySetReplacedOptions() {
@@ -277,7 +297,7 @@ public final class ProjectOptions {
                 .putAll(getExplicitlySetBooleanOptions())
                 .putAll(getExplicitlySetOptionalBooleanOptions())
                 .putAll(getExplicitlySetIntegerOptions())
-                .putAll(stringOptions)
+                .putAll(getExplicitlySetStringOptions())
                 .build();
     }
 

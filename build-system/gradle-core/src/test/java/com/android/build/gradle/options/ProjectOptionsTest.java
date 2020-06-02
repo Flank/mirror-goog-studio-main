@@ -175,15 +175,23 @@ public class ProjectOptionsTest {
     public void stringSanity() {
         assertThat(StringOption.IDE_BUILD_TARGET_ABI.getDefaultValue()).isNull();
         assertThat(
-                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(),
+                                                ImmutableMap.of()))
                                 .get(StringOption.IDE_BUILD_TARGET_ABI))
                 .isNull();
 
         ProjectOptions options =
                 new ProjectOptions(
-                        ImmutableMap.of("android.injected.build.abi", asGroovyString("x86")),
-                        FakeProviderFactory.getFactory());
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(),
+                                ImmutableMap.of(
+                                        "android.injected.build.abi", asGroovyString("x86"))));
         assertThat(options.get(StringOption.IDE_BUILD_TARGET_ABI)).isEqualTo("x86");
+        assertThat(options.getProvider(StringOption.IDE_BUILD_TARGET_ABI).get()).isEqualTo("x86");
     }
 
     @Test

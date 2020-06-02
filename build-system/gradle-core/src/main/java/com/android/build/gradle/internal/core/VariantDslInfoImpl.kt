@@ -56,11 +56,9 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
-import jdk.internal.org.objectweb.asm.Type
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.util.ArrayList
 import java.util.concurrent.Callable
 

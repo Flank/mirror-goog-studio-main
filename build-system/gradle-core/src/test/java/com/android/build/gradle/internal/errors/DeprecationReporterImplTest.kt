@@ -30,7 +30,7 @@ class DeprecationReporterImplTest {
 
     private val issueReporter = FakeSyncIssueReporter()
     private val reporter =
-        DeprecationReporterImpl(issueReporter, ProjectOptions(ImmutableMap.of(), FakeProviderFactory.factory), "")
+        DeprecationReporterImpl(issueReporter, ProjectOptions(ImmutableMap.of(), FakeProviderFactory(FakeProviderFactory.factory, ImmutableMap.of())), "")
 
     @After
     fun after() {
