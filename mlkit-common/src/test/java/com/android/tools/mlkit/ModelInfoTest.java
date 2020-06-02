@@ -148,7 +148,10 @@ public class ModelInfoTest {
         assertFalse(ModelInfo.isMetadataVersionTooHigh(""));
         assertFalse(ModelInfo.isMetadataVersionTooHigh("0.0.0"));
         assertFalse(ModelInfo.isMetadataVersionTooHigh("1.0.0"));
+        assertFalse(ModelInfo.isMetadataVersionTooHigh("1.0.0.0"));
         assertTrue(ModelInfo.isMetadataVersionTooHigh("1.0.1"));
+        assertTrue(ModelInfo.isMetadataVersionTooHigh("10.0"));
+        assertTrue(ModelInfo.isMetadataVersionTooHigh("01.0.1"));
     }
 
     private static void testModelInfoSerialization(String modelPath)
