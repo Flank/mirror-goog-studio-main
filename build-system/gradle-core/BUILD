@@ -146,6 +146,7 @@ kotlin_test(
     ]),
     data = [
         ":TestData",
+        "//prebuilts/studio/jdk:jdk11",
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platform-tools",

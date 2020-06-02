@@ -422,6 +422,27 @@ public class TestUtils {
     }
 
     @NonNull
+    public static File getJava11Jdk() {
+        OsType osType = OsType.getHostOs();
+        String hostDir;
+        switch (osType) {
+            case LINUX:
+                hostDir = "linux";
+                break;
+            case DARWIN:
+                hostDir = "mac";
+                break;
+            case WINDOWS:
+                hostDir = "win";
+                break;
+            default:
+                throw new IllegalStateException(
+                        "Java11 JDK not found for platform: " + OsType.getOsName());
+        }
+        return getWorkspaceFile("prebuilts/studio/jdk/jdk11/" + hostDir);
+    }
+
+    @NonNull
     public static String getLatestAndroidPlatform() {
         return "android-30";
     }

@@ -155,6 +155,9 @@ public final class SdkConstants {
     public static final String FN_GRADLE_WRAPPER_JAR = "gradle-wrapper.jar"; //$NON-NLS-1$
     /** Name of the framework library, i.e. "android.jar" */
     public static final String FN_FRAMEWORK_LIBRARY = "android.jar"; //$NON-NLS-1$
+    /** Name of the library containing the packages that should be included in the system modules */
+    public static final String FN_CORE_FOR_SYSTEM_MODULES =
+            "core-for-system-modules.jar"; //$NON-NLS-1$
     /** Name of the framework library, i.e. "uiautomator.jar" */
     public static final String FN_UI_AUTOMATOR_LIBRARY = "uiautomator.jar"; //$NON-NLS-1$
     /** Name of the layout attributes, i.e. "attrs.xml" */
