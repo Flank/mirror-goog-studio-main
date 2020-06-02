@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.utils.appendCapitalized
 import org.gradle.api.file.Directory
@@ -48,7 +48,7 @@ class NamespacedResourcesTaskManager(
      * TODO: Test support, Synthesize non-namespaced output.
      */
     fun createNamespacedResourceTasks(
-            packageOutputType: SingleArtifactType<Directory>?,
+            packageOutputType: Artifact.SingleArtifact<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
 
@@ -87,7 +87,7 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedAppProcessTask(
-            packageOutputType: SingleArtifactType<Directory>?,
+            packageOutputType: Artifact.SingleArtifact<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
         // TODO fix by using the right type for field componentProperties
@@ -104,7 +104,7 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedLibraryTestProcessResourcesTask(
-            packageOutputType: SingleArtifactType<Directory>?) {
+            packageOutputType: Artifact.SingleArtifact<Directory>?) {
         taskFactory.register(ProcessAndroidAppResourcesTask.CreationAction(componentProperties))
         if (packageOutputType != null) {
             componentProperties.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)

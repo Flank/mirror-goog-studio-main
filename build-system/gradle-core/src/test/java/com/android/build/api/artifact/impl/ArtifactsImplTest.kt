@@ -16,16 +16,25 @@
 
 package com.android.build.api.artifact.impl
 
-import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_DIRECTORIES
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_DIRECTORY
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_FILE
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_FILES
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_REPLACABLE_DIRECTORY
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_REPLACABLE_FILE
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY
-import com.android.build.api.artifact.impl.ArtifactsImplTest.TestArtifactType.TEST_TRANSFORMABLE_FILE
+import com.android.build.api.artifact.ArtifactKind
+import com.android.build.api.artifact.Artifact.Appendable
+import com.android.build.api.artifact.Artifact.Replaceable
+import com.android.build.api.artifact.Artifact.Transformable
+import com.android.build.api.artifact.ArtifactKind.DIRECTORY
+import com.android.build.api.artifact.ArtifactKind.FILE
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_APPENDABLE_DIRECTORIES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_APPENDABLE_FILES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_DIRECTORIES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_FILES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_TRANSFORMABLE_DIRECTORIES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_TRANSFORMABLE_FILES
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_DIRECTORY
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_FILE
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_REPLACABLE_DIRECTORY
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_REPLACABLE_FILE
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_TRANSFORMABLE_DIRECTORY
+import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_TRANSFORMABLE_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
@@ -54,31 +63,34 @@ import java.util.concurrent.atomic.AtomicInteger
 class ArtifactsImplTest {
 
     @Suppress("ClassName")
-    sealed class TestArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>) :
-        Artifact<T>(kind) {
+    sealed class TestSingleArtifactType<T : FileSystemLocation>(
+        kind: ArtifactKind<T>
+    ) : Artifact.SingleArtifact<T>(kind) {
 
-        object TEST_FILE : TestArtifactType<RegularFile>(FILE), Single
-        object TEST_FILES : TestArtifactType<RegularFile>(FILE), Multiple
-        object TEST_DIRECTORY : TestArtifactType<Directory>(DIRECTORY), Single
-        object TEST_DIRECTORIES : TestArtifactType<Directory>(DIRECTORY), Multiple
-
-        object TEST_APPENDABLE_FILES : TestArtifactType<RegularFile>(FILE), Multiple, Appendable
-        object TEST_APPENDABLE_DIRECTORIES : TestArtifactType<Directory>(DIRECTORY), Multiple,
-            Appendable
-
-        object TEST_TRANSFORMABLE_FILE : TestArtifactType<RegularFile>(FILE), Single, Transformable
-        object TEST_TRANSFORMABLE_FILES : TestArtifactType<RegularFile>(FILE), Multiple,
-            Transformable, Appendable
-
-        object TEST_TRANSFORMABLE_DIRECTORY : TestArtifactType<Directory>(DIRECTORY), Single,
+        object TEST_FILE : TestSingleArtifactType<RegularFile>(FILE)
+        object TEST_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY)
+        object TEST_TRANSFORMABLE_FILE : TestSingleArtifactType<RegularFile>(FILE), Transformable
+        object TEST_TRANSFORMABLE_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY),
             Transformable
-
-        object TEST_TRANSFORMABLE_DIRECTORIES : TestArtifactType<Directory>(DIRECTORY), Multiple,
-            Transformable
-
-        object TEST_REPLACABLE_FILE : TestArtifactType<RegularFile>(FILE), Single, Replaceable
-        object TEST_REPLACABLE_DIRECTORY : TestArtifactType<Directory>(DIRECTORY), Single,
+        object TEST_REPLACABLE_FILE : TestSingleArtifactType<RegularFile>(FILE), Replaceable
+        object TEST_REPLACABLE_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY),
             Replaceable
+    }
+
+    sealed class TestMultipleArtifactType<T : FileSystemLocation>(
+        kind: ArtifactKind<T>
+    ) : Artifact.MultipleArtifact<T>(kind){
+
+        object TEST_FILES : TestMultipleArtifactType<RegularFile>(FILE)
+        object TEST_DIRECTORIES : TestMultipleArtifactType<Directory>(DIRECTORY)
+        object TEST_APPENDABLE_FILES : TestMultipleArtifactType<RegularFile>(FILE), Appendable
+
+        object TEST_APPENDABLE_DIRECTORIES : TestMultipleArtifactType<Directory>(DIRECTORY),
+            Appendable
+        object TEST_TRANSFORMABLE_FILES : TestMultipleArtifactType<RegularFile>(FILE),
+            Transformable, Appendable
+        object TEST_TRANSFORMABLE_DIRECTORIES : TestMultipleArtifactType<Directory>(DIRECTORY),
+            Transformable
     }
 
     @Rule
@@ -721,7 +733,7 @@ class ArtifactsImplTest {
         }
         artifacts.use(appendTaskProvider)
             .wiredWith(AppendTask::outputFile)
-            .toAppendTo(TestArtifactType.TEST_APPENDABLE_FILES)
+            .toAppendTo(TEST_APPENDABLE_FILES)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
@@ -735,13 +747,13 @@ class ArtifactsImplTest {
             agpInitialized.set(true)
         }
         artifacts.addInitialProvider(
-            TestArtifactType.TEST_APPENDABLE_FILES,
+            TEST_APPENDABLE_FILES,
             agpTaskProvider, AGPTask::outputFile)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_APPENDABLE_FILES)
         // append output should have the task name in its output.
         Truth.assertThat(appendTaskProvider.get().outputFile.get().asFile.absolutePath).contains("appendTask")
         Truth.assertThat(agpTaskProvider.get().outputFile.get().asFile.absolutePath).contains("agpTaskProvider")
@@ -769,7 +781,7 @@ class ArtifactsImplTest {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
             artifacts.use(appendTaskProvider)
                 .wiredWith(AppendTask::outputFile)
-                .toAppendTo(TestArtifactType.TEST_APPENDABLE_FILES)
+                .toAppendTo(TEST_APPENDABLE_FILES)
         }
 
         // now registers AGP provider.
@@ -779,10 +791,10 @@ class ArtifactsImplTest {
 
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
         artifacts.addInitialProvider(
-            TestArtifactType.TEST_APPENDABLE_FILES,
+            TEST_APPENDABLE_FILES,
             agpTaskProvider, AGPTask::outputFile)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_APPENDABLE_FILES)
         // final artifact values should have all tasks output.
         Truth.assertThat(artifactContainer.get().get()).hasSize(4)
 
@@ -806,7 +818,7 @@ class ArtifactsImplTest {
         }
         artifacts.use(appendTaskProvider)
             .wiredWith(AppendTask::outputDirectory)
-            .toAppendTo(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+            .toAppendTo(TEST_APPENDABLE_DIRECTORIES)
 
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
@@ -820,13 +832,13 @@ class ArtifactsImplTest {
             agpInitialized.set(true)
         }
         artifacts.addInitialProvider(
-            TestArtifactType.TEST_APPENDABLE_DIRECTORIES,
+            TEST_APPENDABLE_DIRECTORIES,
             agpTaskProvider, AGPTask::outputDirectory)
 
         Truth.assertThat(agpInitialized.get()).isFalse()
         Truth.assertThat(appendTaskInitialized.get()).isFalse()
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_APPENDABLE_DIRECTORIES)
         // append output should have the task name in its output.
         Truth.assertThat(appendTaskProvider.get().outputDirectory.get().asFile.absolutePath).contains("appendTask")
         Truth.assertThat(agpTaskProvider.get().outputDirectory.get().asFile.absolutePath).contains("agpTaskProvider")
@@ -854,7 +866,7 @@ class ArtifactsImplTest {
             val appendTaskProvider = project.tasks.register("appendTask$i", AppendTask::class.java)
             artifacts.use(appendTaskProvider)
                 .wiredWith(AppendTask::outputDirectory)
-                .toAppendTo(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+                .toAppendTo(TEST_APPENDABLE_DIRECTORIES)
         }
 
         // now registers AGP provider.
@@ -864,10 +876,10 @@ class ArtifactsImplTest {
 
         val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
         artifacts.addInitialProvider(
-            TestArtifactType.TEST_APPENDABLE_DIRECTORIES,
+            TEST_APPENDABLE_DIRECTORIES,
             agpTaskProvider, AGPTask::outputDirectory)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_APPENDABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_APPENDABLE_DIRECTORIES)
         // final artifact values should have all tasks output.
         Truth.assertThat(artifactContainer.get().get()).hasSize(4)
 
@@ -893,7 +905,7 @@ class ArtifactsImplTest {
             }
             agpTaskProviders.add(agpTaskProvider)
             artifacts.addInitialProvider(
-                TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
+                TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
         }
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
 
@@ -908,9 +920,9 @@ class ArtifactsImplTest {
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
         artifacts.use(transformTask)
             .wiredWith(TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+            .toTransform(TEST_TRANSFORMABLE_FILES)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTask")
@@ -932,7 +944,7 @@ class ArtifactsImplTest {
         for (i in 0..2) {
             val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java)
             artifacts.addInitialProvider(
-                TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
+                TEST_TRANSFORMABLE_FILES, agpTaskProvider, AGPTask::outputFile)
         }
 
         abstract class TransformMultipleTask: DefaultTask() {
@@ -946,14 +958,14 @@ class ArtifactsImplTest {
         val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
         artifacts.use(transformOneTask)
             .wiredWith(TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+            .toTransform(TEST_TRANSFORMABLE_FILES)
 
         val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
         artifacts.use(transformTwoTask)
             .wiredWith(TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+            .toTransform(TEST_TRANSFORMABLE_FILES)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTwoTask")
@@ -985,7 +997,7 @@ class ArtifactsImplTest {
                 initializedTasks.incrementAndGet()
             }
             artifacts.addInitialProvider(
-                TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
+                TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
         }
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
 
@@ -1000,9 +1012,9 @@ class ArtifactsImplTest {
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
         artifacts.use(transformTask)
             .wiredWith(TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+            .toTransform(TEST_TRANSFORMABLE_DIRECTORIES)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTask")
@@ -1024,7 +1036,7 @@ class ArtifactsImplTest {
         for (i in 0..2) {
             val agpTaskProvider = project.tasks.register("agpTaskProvider$i", AGPTask::class.java)
             artifacts.addInitialProvider(
-                TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
+                TEST_TRANSFORMABLE_DIRECTORIES, agpTaskProvider, AGPTask::outputDirectory)
         }
 
         abstract class TransformMultipleTask: DefaultTask() {
@@ -1038,14 +1050,14 @@ class ArtifactsImplTest {
         val transformOneTask = project.tasks.register("transformOneTask", TransformMultipleTask::class.java)
         artifacts.use(transformOneTask)
             .wiredWith(TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+            .toTransform(TEST_TRANSFORMABLE_DIRECTORIES)
 
         val transformTwoTask = project.tasks.register("transformTwoTask", TransformMultipleTask::class.java)
         artifacts.use(transformTwoTask)
             .wiredWith(TransformMultipleTask::inputDirectories, TransformMultipleTask::outputDirectory)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+            .toTransform(TEST_TRANSFORMABLE_DIRECTORIES)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_DIRECTORIES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_DIRECTORIES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTwoTask")
@@ -1078,7 +1090,7 @@ class ArtifactsImplTest {
             }
             agpTaskProviders.add(agpTaskProvider)
             artifacts.addInitialProvider(
-                TestArtifactType.TEST_TRANSFORMABLE_FILES, agpTaskProvider, ProducerTask::outputFile)
+                TEST_TRANSFORMABLE_FILES, agpTaskProvider, ProducerTask::outputFile)
         }
         Truth.assertThat(initializedTasks.get()).isEqualTo(0)
 
@@ -1093,16 +1105,16 @@ class ArtifactsImplTest {
         val transformTask = project.tasks.register("transformTask", TransformMultipleTask::class.java)
         artifacts.use(transformTask)
             .wiredWith(TransformMultipleTask::inputFiles, TransformMultipleTask::outputFile)
-            .toTransform(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+            .toTransform(TEST_TRANSFORMABLE_FILES)
 
         // now add a new producer, after the transfomrAll is called. Yet the transform should get
         // this appended producer anyhow.
         val lateProducer = project.tasks.register("lateProducer", ProducerTask::class.java)
         artifacts.use(lateProducer)
             .wiredWith(ProducerTask::outputFile)
-            .toAppendTo(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+            .toAppendTo(TEST_TRANSFORMABLE_FILES)
 
-        val artifactContainer = artifacts.getArtifactContainer(TestArtifactType.TEST_TRANSFORMABLE_FILES)
+        val artifactContainer = artifacts.getArtifactContainer(TEST_TRANSFORMABLE_FILES)
         Truth.assertThat(artifactContainer.get().get()).hasSize(1)
         Truth.assertThat(artifactContainer.get().get()[0].asFile.absolutePath)
             .contains("transformTask")

@@ -208,12 +208,12 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             import com.android.build.api.variant.BuiltArtifact
 
             import com.android.build.api.artifact.ArtifactKind
-            import com.android.build.api.artifact.Artifact
+            import com.android.build.api.artifact.Artifact.SingleArtifact
             import com.android.build.api.artifact.Artifact.Replaceable
             import com.android.build.api.artifact.Artifact.ContainsMany
             import com.android.build.api.artifact.ArtifactTransformationRequest
 
-            class ACME_APK extends Artifact<Directory> implements Replaceable, ContainsMany {
+            class ACME_APK extends SingleArtifact<Directory> implements Replaceable, ContainsMany {
                     ACME_APK() {
                         super(ArtifactKind.DIRECTORY.INSTANCE)
                     }

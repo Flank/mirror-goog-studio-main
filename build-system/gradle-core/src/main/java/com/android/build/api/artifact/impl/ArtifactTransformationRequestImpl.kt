@@ -43,8 +43,7 @@ class ArtifactTransformationRequestImpl<ArtifactTypeT, TaskT: Task>(
     private val outputLocation: (TaskT) -> FileSystemLocationProperty<Directory>,
     private val outputArtifactType: ArtifactTypeT
 ) : Serializable, ArtifactTransformationRequest<TaskT>
-        where ArtifactTypeT: Artifact<Directory>,
-              ArtifactTypeT: Artifact.Single {
+        where ArtifactTypeT: Artifact.SingleArtifact<Directory> {
 
     override fun <ParamT> submit(
         task: TaskT,

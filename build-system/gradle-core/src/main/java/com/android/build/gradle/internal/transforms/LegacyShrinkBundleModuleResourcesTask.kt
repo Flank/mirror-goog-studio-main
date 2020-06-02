@@ -21,7 +21,7 @@ import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -213,7 +213,7 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
                 if (creationConfig.variantScope.consumesFeatureJars()) {
                     creationConfig.artifacts.get(InternalArtifactType.BASE_DEX)
                 } else {
-                    artifacts.getAll(MultipleArtifactType.DEX)
+                    artifacts.getAll(InternalMultipleArtifactType.DEX)
                 })
 
             if (creationConfig
