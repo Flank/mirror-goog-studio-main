@@ -31,7 +31,7 @@ import java.io.Serializable
  *
  * An artifact can potentially be produced by more than one task (each task acting in an additive
  * behavior), but consumers must be aware when more than one artifact can be present,
- * implementing the [Multiple] interface will indicate such requirement.
+ * implementing the [MultipleArtifact] interface will indicate such requirement.
  *
  * An artifact must be one of the supported [ArtifactKind] and must be provided when the constructor is called.
  * ArtifactKind also defines the specific [FileSystemLocation] subclass used.
@@ -80,19 +80,19 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
      * [FileSystemLocation]
      */
     @Incubating
-    interface Multiple  {
-        fun name(): String
-    }
+    abstract class MultipleArtifact<FileTypeT: FileSystemLocation>(
+        kind: ArtifactKind<FileTypeT>
+    ) : Artifact<FileTypeT>(kind)
+
 
     /**
      * Denotes a single [FileSystemLocation] instance of this artifact type at a given time.
      * Single artifact types can be transformed or replaced but never appended.
      */
     @Incubating
-    interface Single {
-        fun name(): String
-    }
-
+    abstract class SingleArtifact<FileTypeT: FileSystemLocation>(
+        kind: ArtifactKind<FileTypeT>
+    ) : Artifact<FileTypeT>(kind)
 
     /**
      * Denotes a single [DIRECTORY] that may contain zero to many
@@ -112,27 +112,28 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
      * Appending means that existing artifacts produced by other tasks are untouched and a
      * new task producing the artifact type will have its output appended to the list of artifacts.
      *
-     * Due to the additive behavior of the append scenario, an [Appendable] is by definition also
-     * [Multiple].
+     * Due to the additive behavior of the append scenario, an [Appendable] must be a
+     * [MultipleArtifact].
      */
     @Incubating
-    interface Appendable: Multiple
+    interface Appendable
 
     /**
      * Denotes an artifact type that can transformed.
      *
-     * Either a [Single] or [Multiple] artifact type can be transformed.
+     * Either a [SingleArtifact] or [MultipleArtifact] artifact type can be transformed.
      */
     @Incubating
     interface Transformable
 
     /**
      * Denotes an artifact type that can be replaced.
-     * Only [Single] artifacts can be replaced, if you want to replace a [Multiple] artifact type,
-     * you will need to transform it by combining all the inputs into a single output instance.
+     * Only [SingleArtifact] artifacts can be replaced, if you want to replace a [MultipleArtifact]
+     * artifact type, you will need to transform it by combining all the inputs into a single output
+     * instance.
      */
     @Incubating
-    interface Replaceable: Single
+    interface Replaceable
 }
 
 
