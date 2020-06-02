@@ -39,7 +39,7 @@ class BuiltArtifactsImpl(
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
     companion object {
-        const val METADATA_FILE_NAME = "output.json"
+        const val METADATA_FILE_NAME = "output-metadata.json"
     }
 
     override fun save(out: Directory) {

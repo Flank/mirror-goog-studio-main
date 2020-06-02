@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.options.StringOption;
@@ -60,7 +61,10 @@ public class ApkLocationTest {
                                 .filter(
                                         file ->
                                                 file.isFile()
-                                                        && file.getName().equals("output.json"))
+                                                        && file.getName()
+                                                                .equals(
+                                                                        BuiltArtifactsImpl
+                                                                                .METADATA_FILE_NAME))
                                 .count())
                 .isEqualTo(1);
     }
