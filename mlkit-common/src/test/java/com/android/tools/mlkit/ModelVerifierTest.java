@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
 
 public class ModelVerifierTest {
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
@@ -36,13 +37,13 @@ public class ModelVerifierTest {
 
     @Test
     public void testEmptyMetadataNotThrowException() throws TfliteModelException {
-        when(metadataExtractor.getModelMetaData()).thenReturn(null);
+        when(metadataExtractor.getModelMetadata()).thenReturn(null);
         ModelVerifier.verifyModel(metadataExtractor);
     }
 
     @Test(expected = TfliteModelException.class)
     public void testInvalidModelThrowException() throws TfliteModelException {
-        ModelVerifier.verifyModel(ByteBuffer.wrap(new byte[] {1, 2, 4, 6}));
+        ModelVerifier.getExtractorWithVerification(ByteBuffer.wrap(new byte[] {1, 2, 4, 6}));
     }
 
     @Test(expected = TfliteModelException.class)

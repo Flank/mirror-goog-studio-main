@@ -53,22 +53,20 @@ public class ModelInfoTest {
         assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
         assertEquals("image", inputTensorInfo.getIdentifierName());
         assertEquals(new ImageProperties(ColorSpaceType.RGB), inputTensorInfo.getImageProperties());
-        MetadataExtractor.NormalizationParams inputNormalization =
+        TensorInfo.NormalizationParams inputNormalization =
                 inputTensorInfo.getNormalizationParams();
         assertEquals(127.5f, inputNormalization.getMean()[0], DELTA);
         assertEquals(127.5f, inputNormalization.getStd()[0], DELTA);
         assertEquals(0f, inputNormalization.getMin()[0], DELTA);
         assertEquals(255f, inputNormalization.getMax()[0], DELTA);
-        MetadataExtractor.QuantizationParams inputQuantization =
-                inputTensorInfo.getQuantizationParams();
+        TensorInfo.QuantizationParams inputQuantization = inputTensorInfo.getQuantizationParams();
         assertEquals(128f, inputQuantization.getZeroPoint(), DELTA);
         assertEquals(0.0078125f, inputQuantization.getScale(), DELTA);
 
         TensorInfo outputTensorInfo = modelInfo.getOutputs().get(0);
         assertEquals("probability", outputTensorInfo.getIdentifierName());
         assertEquals(TensorInfo.FileType.TENSOR_AXIS_LABELS, outputTensorInfo.getFileType());
-        MetadataExtractor.QuantizationParams outputQuantization =
-                outputTensorInfo.getQuantizationParams();
+        TensorInfo.QuantizationParams outputQuantization = outputTensorInfo.getQuantizationParams();
         assertEquals(0, outputQuantization.getZeroPoint(), DELTA);
         assertEquals(0.00390625, outputQuantization.getScale(), DELTA);
     }
@@ -103,14 +101,13 @@ public class ModelInfoTest {
         assertEquals(TensorInfo.ContentType.IMAGE, inputTensorInfo.getContentType());
         assertEquals("image", inputTensorInfo.getIdentifierName());
         assertEquals(new ImageProperties(ColorSpaceType.RGB), inputTensorInfo.getImageProperties());
-        MetadataExtractor.NormalizationParams inputNormalization =
+        TensorInfo.NormalizationParams inputNormalization =
                 inputTensorInfo.getNormalizationParams();
         assertEquals(127.5f, inputNormalization.getMean()[0], DELTA);
         assertEquals(127.5f, inputNormalization.getStd()[0], DELTA);
         assertEquals(0f, inputNormalization.getMin()[0], DELTA);
         assertEquals(255f, inputNormalization.getMax()[0], DELTA);
-        MetadataExtractor.QuantizationParams inputQuantization =
-                inputTensorInfo.getQuantizationParams();
+        TensorInfo.QuantizationParams inputQuantization = inputTensorInfo.getQuantizationParams();
         assertEquals(128f, inputQuantization.getZeroPoint(), DELTA);
         assertEquals(0.0078125f, inputQuantization.getScale(), DELTA);
 
@@ -141,17 +138,6 @@ public class ModelInfoTest {
     public void testModelInfoSerialization() throws TfliteModelException, IOException {
         testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite");
         testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata.tflite");
-    }
-
-    @Test
-    public void testIsMetadataVersionTooHigh() {
-        assertFalse(ModelInfo.isMetadataVersionTooHigh(""));
-        assertFalse(ModelInfo.isMetadataVersionTooHigh("0.0.0"));
-        assertFalse(ModelInfo.isMetadataVersionTooHigh("1.0.0"));
-        assertFalse(ModelInfo.isMetadataVersionTooHigh("1.0.0.0"));
-        assertTrue(ModelInfo.isMetadataVersionTooHigh("1.0.1"));
-        assertTrue(ModelInfo.isMetadataVersionTooHigh("10.0"));
-        assertTrue(ModelInfo.isMetadataVersionTooHigh("01.0.1"));
     }
 
     private static void testModelInfoSerialization(String modelPath)

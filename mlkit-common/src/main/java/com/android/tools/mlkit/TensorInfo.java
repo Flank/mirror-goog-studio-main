@@ -16,6 +16,9 @@
 
 package com.android.tools.mlkit;
 
+import static com.android.tools.mlkit.DataInputOutputUtils.readFloatArray;
+import static com.android.tools.mlkit.DataInputOutputUtils.writeFloatArray;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
@@ -26,6 +29,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Objects;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
 import org.tensorflow.lite.support.metadata.schema.Content;
 import org.tensorflow.lite.support.metadata.schema.ContentProperties;
@@ -134,22 +138,22 @@ public class TensorInfo {
     }
 
     // Infos from model itself.
-    private final Source source;
+    @NonNull private final Source source;
     private final int index;
-    private final DataType dataType;
+    @NonNull private final DataType dataType;
     private final int[] shape;
-    private final MetadataExtractor.QuantizationParams quantizationParams;
+    @NonNull private final QuantizationParams quantizationParams;
 
     // Infos from model metadata.
     private final boolean metadataExisted;
-    private final String name;
-    private final String identifierName;
-    private final String description;
-    private final ContentType contentType;
-    private final ContentRange contentRange;
-    private final String fileName;
-    private final FileType fileType;
-    private final MetadataExtractor.NormalizationParams normalizationParams;
+    @NonNull private final String name;
+    @NonNull private final String identifierName;
+    @NonNull private final String description;
+    @NonNull private final ContentType contentType;
+    @NonNull private final ContentRange contentRange;
+    @NonNull private final String fileName;
+    @NonNull private final FileType fileType;
+    @NonNull private final NormalizationParams normalizationParams;
     @Nullable
     private final ImageProperties imageProperties;
     @Nullable
@@ -160,7 +164,7 @@ public class TensorInfo {
             int index,
             DataType dataType,
             int[] shape,
-            MetadataExtractor.QuantizationParams quantizationParams,
+            QuantizationParams quantizationParams,
             boolean metadataExisted,
             String name,
             String description,
@@ -168,7 +172,7 @@ public class TensorInfo {
             ContentRange contentRange,
             String fileName,
             FileType fileType,
-            MetadataExtractor.NormalizationParams normalizationParams,
+            NormalizationParams normalizationParams,
             @Nullable ImageProperties imageProperties,
             @Nullable BoundingBoxProperties boundingBoxProperties) {
         this.source = source;
@@ -196,7 +200,7 @@ public class TensorInfo {
         index = in.readInt();
         dataType = DataType.fromByte(in.readByte());
         shape = DataInputOutputUtils.readIntArray(in);
-        quantizationParams = new MetadataExtractor.QuantizationParams(in);
+        quantizationParams = new QuantizationParams(in);
 
         // Read infos from model metadata.
         metadataExisted = in.readBoolean();
@@ -206,7 +210,7 @@ public class TensorInfo {
         contentRange = new ContentRange(in);
         fileName = in.readUTF();
         fileType = FileType.fromByte(in.readByte());
-        normalizationParams = new MetadataExtractor.NormalizationParams(in);
+        normalizationParams = new NormalizationParams(in);
         imageProperties = in.readBoolean() ? new ImageProperties(in) : null;
         boundingBoxProperties = in.readBoolean() ? new BoundingBoxProperties(in) : null;
 
@@ -256,7 +260,7 @@ public class TensorInfo {
     }
 
     @NonNull
-    public MetadataExtractor.QuantizationParams getQuantizationParams() {
+    public QuantizationParams getQuantizationParams() {
         return quantizationParams;
     }
 
@@ -300,7 +304,7 @@ public class TensorInfo {
     }
 
     @NonNull
-    public MetadataExtractor.NormalizationParams getNormalizationParams() {
+    public NormalizationParams getNormalizationParams() {
         return normalizationParams;
     }
 
@@ -351,7 +355,7 @@ public class TensorInfo {
         private int index;
         private DataType dataType = DataType.UNKNOWN;
         private int[] shape;
-        private MetadataExtractor.QuantizationParams quantizationParams;
+        private QuantizationParams quantizationParams;
         private boolean metadataExisted;
         private String name = "";
         private String description = "";
@@ -359,8 +363,7 @@ public class TensorInfo {
         private ContentRange contentRange = new ContentRange(-1, -1);
         private String fileName = "";
         private FileType fileType = FileType.UNKNOWN;
-        @Nullable
-        private MetadataExtractor.NormalizationParams normalizationParams;
+        @Nullable private NormalizationParams normalizationParams;
         @Nullable
         private ImageProperties imageProperties;
         @Nullable
@@ -386,8 +389,7 @@ public class TensorInfo {
             return this;
         }
 
-        private Builder setQuantizationParams(
-                MetadataExtractor.QuantizationParams quantizationParams) {
+        private Builder setQuantizationParams(QuantizationParams quantizationParams) {
             this.quantizationParams = quantizationParams;
             return this;
         }
@@ -427,8 +429,7 @@ public class TensorInfo {
             return this;
         }
 
-        private Builder setNormalizationParams(
-                MetadataExtractor.NormalizationParams normalizationParams) {
+        private Builder setNormalizationParams(NormalizationParams normalizationParams) {
             this.normalizationParams = normalizationParams;
             return this;
         }
@@ -459,11 +460,11 @@ public class TensorInfo {
                     fileType,
                     normalizationParams != null
                             ? normalizationParams
-                            : new MetadataExtractor.NormalizationParams(
-                            toFloatBuffer(0),
-                            toFloatBuffer(1),
-                            toFloatBuffer(Float.MIN_VALUE),
-                            toFloatBuffer(Float.MAX_VALUE)),
+                            : new NormalizationParams(
+                                    toFloatBuffer(0),
+                                    toFloatBuffer(1),
+                                    toFloatBuffer(Float.MIN_VALUE),
+                                    toFloatBuffer(Float.MAX_VALUE)),
                     imageProperties,
                     boundingBoxProperties);
         }
@@ -475,24 +476,26 @@ public class TensorInfo {
 
         // Deal with data from original model
         if (source == Source.INPUT) {
+            MetadataExtractor.QuantizationParams params =
+                    extractor.getInputTensorQuantizationParams(index);
             builder.setDataType(DataType.fromByte(extractor.getInputTensorType(index)))
                     .setShape(extractor.getInputTensorShape(index))
                     .setQuantizationParams(
-                            MetadataExtractor.getQuantizationParams(
-                                    extractor.getInputTensor(index)));
+                            new QuantizationParams(params.getScale(), params.getZeroPoint()));
         } else {
+            MetadataExtractor.QuantizationParams params =
+                    extractor.getOutputTensorQuantizationParams(index);
             builder.setDataType(DataType.fromByte(extractor.getOutputTensorType(index)))
                     .setShape(extractor.getOutputTensorShape(index))
                     .setQuantizationParams(
-                            MetadataExtractor.getQuantizationParams(
-                                    extractor.getOutputTensor(index)));
+                            new QuantizationParams(params.getScale(), params.getZeroPoint()));
         }
 
         // Deal with data from extra metadata
-        ModelMetadata metadata = extractor.getModelMetaData();
+        ModelMetadata metadata = extractor.hasMetadata() ? extractor.getModelMetadata() : null;
         if (metadata == null) {
             builder.setMetadataExisted(false);
-        } else if (ModelInfo.isMetadataVersionTooHigh(extractor.getMinParserVersion())) {
+        } else if (!extractor.isMinimumParserVersionSatisfied()) {
             builder.setMetadataExisted(true);
 
             // Get name and normalization data to generate compatible APIs
@@ -591,8 +594,7 @@ public class TensorInfo {
         return null;
     }
 
-    private static MetadataExtractor.NormalizationParams extractNormalizationParams(
-            TensorMetadata tensorMetadata) {
+    private static NormalizationParams extractNormalizationParams(TensorMetadata tensorMetadata) {
         NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
         FloatBuffer mean =
                 normalizationOptions != null && normalizationOptions.meanAsByteBuffer() != null
@@ -613,7 +615,7 @@ public class TensorInfo {
                         ? tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()
                         : toFloatBuffer(Float.MAX_VALUE);
 
-        return new MetadataExtractor.NormalizationParams(mean, std, min, max);
+        return new NormalizationParams(mean, std, min, max);
     }
 
     public static class ImageProperties {
@@ -809,6 +811,129 @@ public class TensorInfo {
         @Override
         public int hashCode() {
             return Objects.hash(min, max);
+        }
+    }
+
+    public static class NormalizationParams {
+        private final float[] mean;
+        private final float[] std;
+        private final float[] min;
+        private final float[] max;
+
+        public NormalizationParams(
+                @NonNull FloatBuffer meanBuffer,
+                @NonNull FloatBuffer stdBuffer,
+                @NonNull FloatBuffer minBuffer,
+                @NonNull FloatBuffer maxBuffer) {
+            mean = new float[meanBuffer.limit()];
+            meanBuffer.get(mean);
+            std = new float[stdBuffer.limit()];
+            stdBuffer.get(std);
+            min = new float[minBuffer.limit()];
+            minBuffer.get(min);
+            max = new float[maxBuffer.limit()];
+            maxBuffer.get(max);
+        }
+
+        public NormalizationParams(@NonNull DataInput in) throws IOException {
+            mean = readFloatArray(in);
+            std = readFloatArray(in);
+            min = readFloatArray(in);
+            max = readFloatArray(in);
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            writeFloatArray(out, mean);
+            writeFloatArray(out, std);
+            writeFloatArray(out, min);
+            writeFloatArray(out, max);
+        }
+
+        public float[] getMean() {
+            return mean;
+        }
+
+        public float[] getStd() {
+            return std;
+        }
+
+        public float[] getMin() {
+            return min;
+        }
+
+        public float[] getMax() {
+            return max;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NormalizationParams that = (NormalizationParams) o;
+            return Arrays.equals(mean, that.mean)
+                    && Arrays.equals(std, that.std)
+                    && Arrays.equals(min, that.min)
+                    && Arrays.equals(max, that.max);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Arrays.hashCode(mean);
+            result = 31 * result + Arrays.hashCode(std);
+            result = 31 * result + Arrays.hashCode(min);
+            result = 31 * result + Arrays.hashCode(max);
+            return result;
+        }
+    }
+
+    public static class QuantizationParams {
+        /** The scale value used in dequantization. */
+        private final float scale;
+        /** The zero point value used in dequantization. */
+        private final long zeroPoint;
+
+        /**
+         * Creates a {@link QuantizationParams} with {@code scale} and {@code zero_point}.
+         *
+         * @param scale The scale value used in dequantization.
+         * @param zeroPoint The zero point value used in dequantization.
+         */
+        public QuantizationParams(float scale, long zeroPoint) {
+            this.scale = scale;
+            this.zeroPoint = zeroPoint;
+        }
+
+        public QuantizationParams(@NonNull DataInput in) throws IOException {
+            this.scale = in.readFloat();
+            this.zeroPoint = in.readLong();
+        }
+
+        public void save(@NonNull DataOutput out) throws IOException {
+            out.writeFloat(scale);
+            out.writeLong(zeroPoint);
+        }
+
+        /** Returns the scale value. */
+        public float getScale() {
+            return scale;
+        }
+
+        /** Returns the zero point value. */
+        public long getZeroPoint() {
+            return zeroPoint;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            QuantizationParams that = (QuantizationParams) o;
+            return Float.compare(scale, that.scale) == 0 && zeroPoint == that.zeroPoint;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(scale, zeroPoint);
         }
     }
 }

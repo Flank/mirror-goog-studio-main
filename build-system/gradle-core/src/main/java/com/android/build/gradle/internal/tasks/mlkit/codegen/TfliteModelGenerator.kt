@@ -59,7 +59,7 @@ class TfliteModelGenerator(
             Modifier.FINAL
         )
 
-        if (modelInfo.isMetadataVersionTooHigh) {
+        if (!modelInfo.isMinParserVersionSatisfied) {
             androidLogger.warning(
                 "Model is not fully supported in current Android Gradle Plugin" +
                         " and will use fallback API, please upgrade to latest version if necessary: ${modelFile.absolutePath}"
