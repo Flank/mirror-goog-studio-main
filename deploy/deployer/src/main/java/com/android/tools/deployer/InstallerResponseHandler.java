@@ -78,6 +78,10 @@ public class InstallerResponseHandler {
                         == AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_ARRAY) {
             throw DeployerException.unsupportedVariableReinit(
                     failedAgent.getStatus(), failedAgent.getErrorMsg());
+        } else if (failedAgent.getStatus()
+                == AgentSwapResponse.Status.UNSUPPORTED_REINIT_R_CLASS_VALUE_MODIFIED) {
+            throw DeployerException.unsupportedRClassReassignment(
+                    failedAgent.getStatus(), failedAgent.getErrorMsg());
         }
 
         if (failedAgent.getStatus() == AgentSwapResponse.Status.JVMTI_ERROR) {

@@ -87,6 +87,10 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
   auto newVars = new std::vector<proto::ClassDef::FieldReInitState>();
   ClassVarReInitWorkItem* work_item = new ClassVarReInitWorkItem(clz, *newVars);
 
+  // For keeping track of number of R.java ID changed.
+  std::ostringstream r_class_errors;
+  int num_r_field_modified = 0;
+
   // Next step is to go though all the fields in the new definition of
   // the class and attempt to search for the same field. If we cannot find it,
   // it will be a newly added field that require initialization.
@@ -105,6 +109,12 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
       jvmti_->GetFieldName(clz, (*fields)[i], &name, &signature, &generic);
 
       if (state.name() == *name) {
+        const std::string& r_class_prefix = ".R$";
+
+        if (def.name().find(r_class_prefix) != std::string::npos) {
+          num_r_field_modified += initialValuesAltered(
+              clz, def, state, (*fields)[i], r_class_errors);
+        }
         found = true;
         break;
       }
@@ -186,6 +196,19 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
     new_static_vars_.emplace_back(work_item);
   }
 
+  if (num_r_field_modified > 0) {
+    if (num_r_field_modified > 5) {
+      std::ostringstream msg;
+      msg << "Total of " << num_r_field_modified
+          << " R.class ID values have been modified."
+          << " Possible unstable ID generation between previous build."
+          << std::endl;
+      *error_msg = msg.str();
+    } else {
+      *error_msg = r_class_errors.str();
+    }
+    return SwapResult::UNSUPPORTED_REINIT_R_CLASS_VALUE_MODIFIED;
+  }
   return SwapResult::SUCCESS;
 }
 
@@ -281,6 +304,26 @@ SwapResult::Status VariableReinitializer::ReinitializeVariables(
   }
 
   return SwapResult::SUCCESS;
+}
+
+int VariableReinitializer::initialValuesAltered(
+    jclass clz, const proto::ClassDef& def,
+    proto::ClassDef::FieldReInitState& state, jfieldID fid,
+    std::ostringstream& msg) {
+  int total = 0;
+  jclass int_class = jni_->FindClass("java/lang/Integer");
+  jmethodID parse_int =
+      jni_->GetStaticMethodID(int_class, "parseInt", "(Ljava/lang/String;)I");
+  jint new_value = jni_->CallStaticIntMethod(
+      int_class, parse_int, jni_->NewStringUTF(state.value().c_str()));
+  jint cur_value = jni_->GetStaticIntField(clz, fid);
+
+  if (new_value != cur_value) {
+    msg << def.name() << "." << state.name() << "changed from" << cur_value
+        << " to " << new_value << std::endl;
+    total++;
+  }
+  return total;
 }
 
 }  // namespace deploy
