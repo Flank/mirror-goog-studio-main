@@ -20,9 +20,10 @@ import java.io.File
 /**
  * The information for a generated Java artifact.
  *
- * This artifact is for Java components inside an Android project.
+ * This artifact is for Java components inside an Android project, which is only unit tests
+ * for now.
  *
- * As of 4.1 this is only for the unit test component.
+ * @since 4.2
  */
 interface JavaArtifact : BaseArtifact {
     /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */

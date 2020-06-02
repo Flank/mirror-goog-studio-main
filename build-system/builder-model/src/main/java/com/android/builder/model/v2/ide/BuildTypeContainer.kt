@@ -19,6 +19,8 @@ import com.android.builder.model.v2.dsl.BuildType
 
 /**
  * A Container of all the data related to [BuildType].
+ *
+ * @since 4.2
  */
 interface BuildTypeContainer {
     /**

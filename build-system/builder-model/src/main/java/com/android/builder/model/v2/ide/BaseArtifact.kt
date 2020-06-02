@@ -19,6 +19,8 @@ import java.io.File
 
 /**
  * The base information for all generated artifacts
+ *
+ * @since 4.2
  */
 interface BaseArtifact {
 

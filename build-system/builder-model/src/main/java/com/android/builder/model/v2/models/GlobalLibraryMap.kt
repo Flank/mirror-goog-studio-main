@@ -23,7 +23,7 @@ import com.android.builder.model.v2.ide.Library
  * This is a separate model to query (the same way [AndroidProject] is queried). It must
  * be queried after all the models have been queried for their [AndroidProject].
  *
- * @since 2.3
+ * @since 4.2
  */
 interface GlobalLibraryMap {
     /**

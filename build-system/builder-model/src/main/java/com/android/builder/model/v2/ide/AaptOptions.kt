@@ -17,6 +17,8 @@ package com.android.builder.model.v2.ide
 
 /**
  * Options for aapt, but only those needed by the IDE.
+ *
+ * @since 4.2
  */
 interface AaptOptions {
     enum class Namespacing {

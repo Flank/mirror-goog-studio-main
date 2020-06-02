@@ -21,6 +21,8 @@ import java.io.File
  * Represent a SourceProvider for a given configuration.
  *
  * TODO: source filters?
+ *
+ * @since 4.2
  */
 interface SourceProvider {
     /**

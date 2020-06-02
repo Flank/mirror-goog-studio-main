@@ -18,28 +18,16 @@ package com.android.builder.model.v2.ide
 /**
  * A build Variant.
  *
- * This is the combination of a Build Type and 0+ Product Flavors (exactly one for each existing
- * Flavor Dimension).
- *
- * Build Types and Flavors both contribute source folders, so this Variant is the direct
- * representation of a set of source folders (and configuration parameters) used to build something.
- *
- * However the output of a Variant is not a single item.
- *
- * First there can be several artifacts.
- * - Main Artifact: this is the main Android output(s). The app or the library being generated.
- * - Extra Android Artifacts: these are ancillary artifacts, most likely test app(s).
- * - Extra Java artifacts: these are pure-Java ancillary artifacts (junit support for instance).
+ * @since 4.2
  */
 interface Variant {
     /**
-     * The name of the variant. It is made up of the build type and flavors (if applicable)
+     * The name of the variant.
      */
     val name: String
 
     /**
-     * The display name for the variant. It is made up of the build type and flavors
-     * (if applicable)
+     * The display name for the variant.
      */
     val displayName: String
 
@@ -67,38 +55,26 @@ interface Variant {
     val buildType: String?
 
     /**
-     * Returns the flavors for this variants. This can be empty if no flavors are configured.
-     *
-     * @return a list of flavors which can be empty.
+     * The flavors for this variants. This can be empty if no flavors are configured.
      */
     val productFlavors: List<String>
 
     /**
-     * Returns the list of target projects and the variants that this variant is testing.
+     * The list of target projects and the variants that this variant is testing.
      * This is specified for the test only variants (ones using the test plugin).
-     *
-     * @return all tested variants
      */
     val testedTargetVariants: Collection<TestedTargetVariant>
 
     /**
-     * Returns true if this variant is instant app compatible, intended to be possibly built and
-     * served in an instant app context. This is populated during sync from the project's manifest.
-     * Only application modules and dynamic feature modules will set this property.
+     * Whether the variant is instant app compatible.
      *
-     * @return true if this variant is instant app compatible
-     * @since 3.3
+     * Only application modules and dynamic feature modules will set this property.
      */
     val isInstantAppCompatible: Boolean
 
     /**
-     * Returns all desugared methods including backported methods handled by D8 and methods provided
-     * by core library desugaring. Only D8 backported methods are returned if coreLibraryDesugaring
-     * is disabled or we are not able to find expected lint files from the dependency of
-     * coreLibraryDesugaring configuration.
-     *
-     * @return all desugared methods
-     * @since 4.1
+     * The list of desugared methods, including =backported methods handled by D8 and methods
+     * provided by core library desugaring.
      */
     val desugaredMethods: List<String>
 }

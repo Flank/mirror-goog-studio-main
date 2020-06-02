@@ -20,6 +20,8 @@ import java.io.File
 
 /**
  * Information for artifact that generates bundle
+ *
+ * @since 4.2
  */
 interface BundleInfo {
 
@@ -27,7 +29,6 @@ interface BundleInfo {
      * Returns the name of the task used to generate the bundle file (.aab), or null if the task is
      * not supported.
      *
-     * @since 3.2
      * @return name of the task used to generate the bundle file (.aab)
      */
     val bundleTaskName: String?
@@ -37,7 +38,6 @@ interface BundleInfo {
      * execution. The listing file will contain a reference to the produced bundle file (.aab).
      * Returns null when [.getBundleTaskName] returns null.
      *
-     * @since 4.0
      * @return the file path for the bundle model file.
      */
     val bundleTaskOutputListingFile: String?
@@ -46,7 +46,6 @@ interface BundleInfo {
      * Returns the name of the task used to generate APKs via the bundle file (.aab), or null if the
      * task is not supported.
      *
-     * @since 3.2
      * @return name of the task used to generate the APKs via the bundle
      */
     val apkFromBundleTaskName: String?
@@ -56,7 +55,6 @@ interface BundleInfo {
      * task execution. The model will contain a reference to the folder where APKs from bundle are
      * placed into. Returns null when [.getApkFromBundleTaskName] returns null.
      *
-     * @since 4.0
      * @return the file path for the [.getApkFromBundleTaskName] output model.
      */
     val apkFromBundleTaskOutputListingFile: String?

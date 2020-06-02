@@ -24,6 +24,7 @@ import java.io.File
  * output in the case of multi-apk where more than one APKs are generated from the same set
  * of sources.
  *
+ * @since 4.2
  */
 interface AndroidArtifact : BaseArtifact {
     /**

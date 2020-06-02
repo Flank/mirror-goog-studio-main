@@ -20,6 +20,8 @@ package com.android.builder.model.v2.ide
  *
  * This is currently used by the test modules, and contains the same pieces of information
  * as the ones used to define the tested application (and it's variant).
+ *
+ * @since 4.2
  */
 interface TestedTargetVariant {
     /**

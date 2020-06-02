@@ -19,6 +19,8 @@ import com.android.builder.model.v2.dsl.ProductFlavor
 
 /**
  * A Container of all the data related to [ProductFlavor].
+ *
+ * @since 4.2
  */
 interface ProductFlavorContainer {
     /**

@@ -15,8 +15,6 @@
  */
 package com.android.builder.model.v2.dsl
 
-import com.android.builder.model.v2.dsl.BaseConfig
-
 /**
  * a Build Type. This is only the configuration of the build type.
  *
@@ -27,7 +25,8 @@ import com.android.builder.model.v2.dsl.BaseConfig
  * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
  *
  * @see BuildTypeContainer
- * @see AndroidArtifact.getDependencies
+ *
+ * @since 4.2
  */
 interface BuildType : BaseConfig {
     /** Whether the build type is configured to generate a debuggable apk. */

@@ -19,22 +19,21 @@ import java.io.File
 
 /**
  * Represent a variant/module/artifact dependency.
+ *
+ * @since 4.2
  */
 interface Library {
     /**
      * The type of the dependency
      *
-     * @return the type
      * @see [LIBRARY_ANDROID]
-     *
      * @see [LIBRARY_JAVA]
-     *
      * @see [LIBRARY_MODULE]
      */
     val type: Int
 
     /**
-     * Returns the artifact address in a unique way.
+     * The artifact address in a unique way.
      *
      * This is either a module path for sub-modules (with optional variant name), or a maven
      * coordinate for external dependencies.

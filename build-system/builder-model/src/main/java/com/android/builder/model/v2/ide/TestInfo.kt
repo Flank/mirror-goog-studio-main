@@ -23,6 +23,8 @@ import java.io.File
  *
  * This includes both Android test components in app/lib modules, and the main component
  * in test modules.
+ *
+ * @since 4.2
  */
 interface TestInfo {
 

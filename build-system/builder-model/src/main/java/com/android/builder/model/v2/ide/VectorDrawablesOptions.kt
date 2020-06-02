@@ -17,6 +17,8 @@ package com.android.builder.model.v2.ide
 
 /**
  * Options for build-time support for vector drawables.
+ *
+ * @since 4.2
  */
 interface VectorDrawablesOptions {
     val generatedDensities: Set<String>?

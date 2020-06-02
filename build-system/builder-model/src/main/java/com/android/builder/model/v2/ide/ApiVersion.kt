@@ -26,32 +26,24 @@ package com.android.builder.model.v2.ide
  *
  * Preview versions of the platform are identified by a code name. Their API level
  * is usually set to the value of the previous platform.
+ *
+ * @since 4.2
  */
 interface ApiVersion {
     /**
-     * Returns the api level as an integer.
+     * The api level as an integer.
      *
-     * For target that are in preview mode, this can be superseded by
-     * [.getCodename].
+     * For target that are in preview mode, this can be superseded by [codename].
      *
-     * @see .getCodename
+     * @see codename
      */
     val apiLevel: Int
 
     /**
-     * Returns the version code name if applicable, null otherwise.
+     * The version code name if applicable, null otherwise.
      *
      * If the codename is non null, then the API level should be ignored, and this should be
      * used as a unique identifier of the target instead.
      */
     val codename: String?
-
-    /**
-     * Returns the API value as a string.
-     *
-     * If there's a codename, this returns it, otherwise this returns the string version
-     * of the integer api level.
-     * @return a String.
-     */
-    val apiString: String
 }

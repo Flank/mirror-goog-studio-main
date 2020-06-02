@@ -15,7 +15,11 @@
  */
 package com.android.builder.model.v2.ide
 
-/** Options for view binding  */
+/**
+ * Options for view binding
+ *
+ * @since 4.2
+ */
 interface ViewBindingOptions {
     /** Whether to enable view binding.  */
     val isEnabled: Boolean

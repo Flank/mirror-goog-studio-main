@@ -17,6 +17,8 @@ package com.android.builder.model.v2.dsl
 
 /**
  * Options for APK packaging.
+ *
+ * @since 4.2
  */
 interface PackagingOptions {
     /**

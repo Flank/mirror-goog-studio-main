@@ -16,16 +16,17 @@
 package com.android.builder.model.v2.ide
 
 /**
- * A set of dependency Graphs.
+ * The dependencies information for a given artifact.
  *
- * It contains both the compile and the package graphs, through the latter could be empty in
- * non full sync.
+ * It contains the compile graph, always, and optionally the runtime graph.
  *
  * Each graph is fairly lightweight, with each artifact node being mostly an address, children,
  * and modifiers that are specific to this particular usage of the artifact rather than
  * artifact properties.*
+ *
+ * @since 4.2
  */
-interface DependencyGraphs {
+interface ArtifactDependencies {
     /**
      * Returns the compile dependency graph.
      */
@@ -36,5 +37,5 @@ interface DependencyGraphs {
      *
      * Only valid in full dependency mode.
      */
-    val packageDependencies: List<GraphItem>
+    val packageDependencies: List<GraphItem>?
 }

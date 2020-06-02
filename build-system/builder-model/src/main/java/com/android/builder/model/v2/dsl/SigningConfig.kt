@@ -22,6 +22,8 @@ import java.io.File
  *
  * This is an interface for the gradle tooling api, and should only be used from Android Studio.
  * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
+ *
+ * @since 4.2
  */
 interface SigningConfig {
     /** Returns the name of the Signing config */

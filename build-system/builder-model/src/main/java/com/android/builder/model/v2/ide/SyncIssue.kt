@@ -18,6 +18,8 @@ package com.android.builder.model.v2.ide
 /**
  * Class representing a sync issue. The goal is to make these issues not fail the sync but instead
  * report them at the end of a successful sync.
+ *
+ * @since 4.2
  */
 interface SyncIssue {
     /** Returns the severity of the issue.  */

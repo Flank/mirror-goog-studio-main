@@ -17,6 +17,8 @@ package com.android.builder.model.v2.dsl
 
 /**
  * A Simple class field with name, type and value, all as strings.
+ *
+ * @since 4.2
  */
 interface ClassField {
     val type: String

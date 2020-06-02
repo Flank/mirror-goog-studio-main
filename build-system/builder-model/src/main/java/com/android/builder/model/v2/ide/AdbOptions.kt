@@ -18,6 +18,8 @@ package com.android.builder.model.v2.ide
 
 /**
  * Options for adb.
+ *
+ * @since 4.2
  */
 interface AdbOptions {
 

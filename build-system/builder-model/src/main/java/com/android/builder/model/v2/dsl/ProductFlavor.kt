@@ -29,10 +29,16 @@ import com.android.builder.model.v2.ide.ApiVersion
  *
  * @see ProductFlavorContainer
  *
- * @see BaseArtifact.getDependencies
+ * @since 4.2
  */
-interface ProductFlavor : BaseConfig,
-    DimensionAware {
+interface ProductFlavor : BaseConfig {
+
+    /**
+     * the optional dimension name.
+     *
+     * This is null for default Config.
+     */
+    val dimension: String?
 
     /**
      * The name of the product flavor. This is only the value set on this product flavor.

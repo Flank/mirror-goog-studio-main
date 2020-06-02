@@ -16,13 +16,15 @@
 
 package com.android.builder.model.v2.models
 
-import com.android.builder.model.v2.ide.DependencyGraphs
+import com.android.builder.model.v2.ide.ArtifactDependencies
 
 /**
  * The dependencies for a given variants.
  *
  * This will contain the dependencies for the variant's main artifact as well as its tests (if
  * applicable)
+ *
+ * @since 4.2
  */
 interface VariantDependencies {
     /**
@@ -32,8 +34,8 @@ interface VariantDependencies {
      */
     val name: String
 
-    val mainArtifact: DependencyGraphs
+    val mainArtifact: ArtifactDependencies
 
-    val androidTestArtifact: DependencyGraphs?
-    val unitTestArtifact: DependencyGraphs?
+    val androidTestArtifact: ArtifactDependencies?
+    val unitTestArtifact: ArtifactDependencies?
 }

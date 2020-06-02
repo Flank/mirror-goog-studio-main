@@ -17,6 +17,8 @@ package com.android.builder.model.v2.models
 
 /**
  * The parameter for ModelBuilder to build customized models.
+ *
+ * @since 4.2
  */
 interface ModelBuilderParameter {
     /**

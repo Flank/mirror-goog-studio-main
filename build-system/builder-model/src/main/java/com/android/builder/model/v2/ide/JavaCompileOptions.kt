@@ -17,6 +17,8 @@ package com.android.builder.model.v2.ide
 
 /**
  * Java compile options.
+ *
+ * @since 4.2
  */
 interface JavaCompileOptions {
     /**

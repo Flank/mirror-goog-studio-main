@@ -16,8 +16,11 @@
 package com.android.builder.model.v2.dsl
 
 /**
- * tooling model representation of resolved dependenciesInfo from the DSL
+ * Information about whether the dependencies are packaged in the apk/bundle.
+ *
  * @see `com.android.build.api.dsl.DependenciesInfo`
+ *
+ * @since 4.2
  */
 interface DependenciesInfo {
     val includeInApk: Boolean
