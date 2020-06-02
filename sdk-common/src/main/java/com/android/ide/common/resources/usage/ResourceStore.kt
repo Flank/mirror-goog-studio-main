@@ -256,31 +256,6 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
             .forEach { it.isReachable = false }
     }
 
-    /** Finds unused resources. */
-    fun findUnused(): List<Resource> {
-        val seen = Collections.newSetFromMap(IdentityHashMap<Resource, Boolean>())
-        fun visit(resource: Resource) {
-            if (seen.contains(resource)) {
-                return
-            }
-            seen += resource
-            resource.isReachable = true
-            resource.references?.forEach { visit(it) }
-        }
-
-        val roots = resources.filter { it.isReachable || it.isKeep }
-        roots.forEach { visit(it) }
-
-        return resources.asSequence()
-            .filterNot { it.isReachable }
-            // Styles not yet handled correctly: don't mark as unused
-            .filter { it.type != ResourceType.ATTR && it.type != ResourceType.STYLEABLE  }
-            // Don't flag known service keys read by library
-            .filterNot { SdkUtils.isServiceKey(it.name) }
-            .toList()
-    }
-
-
     fun dumpConfig(): String =
         _resources.asSequence()
             .sortedWith(compareBy({ it.type }, { it.name }))

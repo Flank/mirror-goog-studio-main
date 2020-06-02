@@ -50,12 +50,12 @@ import static com.google.common.base.Charsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.ResourcesUtil;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.utils.SdkUtils;
-import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -64,9 +64,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -408,52 +406,10 @@ public class ResourceUsageModel {
     }
 
     public List<Resource> findUnused(List<Resource> resources) {
-        List<Resource> roots = findRoots(resources);
-
-        Map<Resource,Boolean> seen = new IdentityHashMap<>(resources.size());
-        for (Resource root : roots) {
-            visit(root, seen);
-        }
-
-        List<Resource> unused = Lists.newArrayListWithExpectedSize(resources.size());
-        for (Resource resource : resources) {
-            if (!resource.isReachable()
-                    // Styles not yet handled correctly: don't mark as unused
-                    && resource.type != ResourceType.ATTR
-                    && resource.type != ResourceType.STYLEABLE
-                    // Don't flag known service keys read by library
-                    && !SdkUtils.isServiceKey(resource.name)) {
-                unused.add(resource);
-            }
-        }
-
-        return unused;
+        return ResourcesUtil.findUnusedResources(resources, this::onRootResourcesFound);
     }
 
-    @SuppressWarnings("MethodMayBeStatic")
-    @NonNull
-    protected List<Resource> findRoots(@NonNull List<Resource> resources) {
-        List<Resource> roots = Lists.newArrayList();
-
-        for (Resource resource : resources) {
-            if (resource.isReachable() || resource.isKeep()) {
-                roots.add(resource);
-            }
-        }
-        return roots;
-    }
-
-    private static void visit(Resource root, Map<Resource, Boolean> seen) {
-        if (seen.containsKey(root)) {
-            return;
-        }
-        seen.put(root, Boolean.TRUE);
-        root.setReachable(true);
-        if (root.references != null) {
-            for (Resource referenced : root.references) {
-                visit(referenced, seen);
-            }
-        }
+    protected void onRootResourcesFound(@NonNull List<Resource> roots) {
     }
 
     @NonNull

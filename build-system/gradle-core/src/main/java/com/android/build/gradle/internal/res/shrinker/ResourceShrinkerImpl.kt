@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGatherer
 import com.android.build.gradle.internal.res.shrinker.graph.ResourcesGraphBuilder
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ObfuscationMappingsRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.ResourceUsageRecorder
+import com.android.ide.common.resources.findUnusedResources
 import com.android.ide.common.resources.usage.ResourceStore
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
 import com.android.resources.FolderTypeRelationship
@@ -86,7 +87,10 @@ class ResourceShrinkerImpl(
 
         debugReporter.debug { model.resourceStore.dumpResourceModel() }
 
-        unused = model.resourceStore.findUnused()
+        unused = findUnusedResources(model.resourceStore.resources) { roots ->
+            debugReporter.debug { "The root reachable resources are:" }
+            debugReporter.debug { roots.joinToString("\n", transform = { " $it"}) }
+        }
     }
 
     override fun close() {

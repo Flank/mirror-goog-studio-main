@@ -1937,16 +1937,12 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             return true;
         }
 
-        @NonNull
         @Override
-        protected List<Resource> findRoots(@NonNull List<Resource> resources) {
-            List<Resource> roots = super.findRoots(resources);
+        protected void onRootResourcesFound(@NonNull List<Resource> roots) {
             if (mDebugPrinter != null) {
                 mDebugPrinter.println("\nThe root reachable resources are:\n" +
                         Joiner.on(",\n   ").join(roots));
             }
-
-            return roots;
         }
 
         @Override
