@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d472046dd3b9c0f544ebe22a85434894cfcacd4e76ab8e59033371a252f48634
+90a0b71eb50bcdbdedec26c6023aac72b0e1415931c29cf95b368d3238a13221
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -747,13 +747,7 @@ com.android.builder.model.v2.models.GlobalLibraryMap
 com.android.builder.model.v2.models.GlobalLibraryMap.getLibraries: java.util.Map<java.lang.String, com.android.builder.model.v2.ide.Library> ()
 com.android.builder.model.v2.models.ModelBuilderParameter
 com.android.builder.model.v2.models.ModelBuilderParameter.getAbiName: java.lang.String ()
-com.android.builder.model.v2.models.ModelBuilderParameter.getShouldBuildVariant: boolean ()
-com.android.builder.model.v2.models.ModelBuilderParameter.getShouldGenerateSources: boolean ()
 com.android.builder.model.v2.models.ModelBuilderParameter.getVariantName: java.lang.String ()
-com.android.builder.model.v2.models.ModelBuilderParameter.setAbiName: void (java.lang.String)
-com.android.builder.model.v2.models.ModelBuilderParameter.setShouldBuildVariant: void (boolean)
-com.android.builder.model.v2.models.ModelBuilderParameter.setShouldGenerateSources: void (boolean)
-com.android.builder.model.v2.models.ModelBuilderParameter.setVariantName: void (java.lang.String)
 com.android.builder.model.v2.models.ProjectSyncIssues
 com.android.builder.model.v2.models.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.ide.SyncIssue> ()
 com.android.builder.model.v2.models.VariantDependencies
