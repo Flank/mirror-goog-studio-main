@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurati
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -43,7 +43,6 @@ import com.android.utils.FileUtils
 import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -158,7 +157,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
         private val dexingType: DexingType,
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
-        private val outputType: MultipleArtifactType<Directory> = MultipleArtifactType.DEX
+        private val outputType: InternalMultipleArtifactType = InternalMultipleArtifactType.DEX
     ) : VariantTaskCreationAction<DexMergingTask, ComponentPropertiesImpl>(componentProperties) {
 
         private val internalName: String = when (action) {
@@ -271,7 +270,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                                     // If dexing using artifact transforms, library production code will
                                     // be dex'ed in a task, so we need to fetch the output directly.
                                     // Otherwise, it will be in the dex'ed in the dex builder transform.
-                                    files.from(it.artifacts.getAll(MultipleArtifactType.DEX))
+                                    files.from(it.artifacts.getAll(InternalMultipleArtifactType.DEX))
                                 }
                             }
                         }
@@ -290,7 +289,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                                 forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
                             } else {
                                 // we merge external dex in a separate task
-                                component.artifacts.getAll(MultipleArtifactType.EXTERNAL_LIBS_DEX)
+                                component.artifacts.getAll(InternalMultipleArtifactType.EXTERNAL_LIBS_DEX)
                             })
                     }
                 }

@@ -17,14 +17,13 @@
 package com.android.build.gradle.internal.api.artifact;
 
 import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.ArtifactKind
 import org.gradle.api.Incubating;
 import org.gradle.api.file.Directory
 
 /** [Artifact] for source set. */
 @Incubating
-sealed class SourceArtifactType: Artifact<Directory>(
-    DIRECTORY) {
-
+sealed class SourceArtifactType: Artifact.SingleArtifact<Directory>(ArtifactKind.DIRECTORY) {
     object JAVA_SOURCES : SourceArtifactType()
     object JAVA_RESOURCES : SourceArtifactType()
     object ASSETS : SourceArtifactType()

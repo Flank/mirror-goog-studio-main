@@ -16,6 +16,11 @@
 
 package com.android.build.api.artifact
 
+import com.android.build.api.artifact.Artifact.ContainsMany
+import com.android.build.api.artifact.Artifact.Replaceable
+import com.android.build.api.artifact.Artifact.Transformable
+import com.android.build.api.artifact.ArtifactKind.DIRECTORY
+import com.android.build.api.artifact.ArtifactKind.FILE
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
@@ -23,6 +28,8 @@ import org.gradle.api.file.RegularFile
 
 /**
  * Public [Artifact] for Android Gradle Plugin.
+ *
+ * These are [Artifact.SingleArtifact], see [MultipleArtifactType] for multiple ones.
  *
  * All methods in [Artifacts] should be supported with any subclass of this
  * class.
@@ -32,7 +39,7 @@ sealed class ArtifactType<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     private val fileSystemLocationName: FileNames? = null
 )
-    : Artifact<T>(kind) {
+    : Artifact.SingleArtifact<T>(kind) {
 
     override fun getFileSystemLocationName(): String {
         return fileSystemLocationName?.fileName ?: ""
@@ -42,17 +49,18 @@ sealed class ArtifactType<T : FileSystemLocation>(
      * APK directory where final APK files will be located.
      */
     @Incubating
-    object APK: ArtifactType<Directory>(DIRECTORY), Single, Transformable, Replaceable, ContainsMany
+    object APK: ArtifactType<Directory>(DIRECTORY), Transformable, Replaceable, ContainsMany
 
     /**
      * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.
      */
     @Incubating
-    object MERGED_MANIFEST: ArtifactType<RegularFile>(FILE, FileNames.ANDROID_MANIFEST_XML), Single, Replaceable, Transformable
+    object MERGED_MANIFEST: ArtifactType<RegularFile>(FILE, FileNames.ANDROID_MANIFEST_XML),
+        Replaceable, Transformable
 
     @Incubating
-    object OBFUSCATION_MAPPING_FILE: ArtifactType<RegularFile>(FILE, FileNames.OBFUSCATION_MAPPING_FILE), Single
+    object OBFUSCATION_MAPPING_FILE: ArtifactType<RegularFile>(FILE, FileNames.OBFUSCATION_MAPPING_FILE)
 
     @Incubating
-    object BUNDLE: ArtifactType<RegularFile>(FILE), Single, Transformable
+    object BUNDLE: ArtifactType<RegularFile>(FILE), Transformable
 }
