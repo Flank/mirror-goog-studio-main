@@ -137,6 +137,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GetContentDescriptionOverrideDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);
         issues.add(GradleDetector.ACCIDENTAL_OCTAL);
+        issues.add(GradleDetector.AGP_DEPENDENCY);
         issues.add(GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH);
         issues.add(GradleDetector.BUNDLED_GMS);
         issues.add(GradleDetector.COMPATIBILITY);
@@ -461,7 +462,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.MANIFEST)) {
                 initialSize += 60;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
-                initialSize += 15;
+                initialSize += 16;
             }
             return initialSize;
         }

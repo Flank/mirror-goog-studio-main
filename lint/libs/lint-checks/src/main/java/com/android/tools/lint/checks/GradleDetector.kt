@@ -1609,7 +1609,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 val versionString = it.newerVersion.toString()
                 val message = getNewerVersionAvailableMessage(it.dependency, versionString, it.safeReplacement)
                 val fix = if (!it.isResolved) getUpdateDependencyFix(it.dependency.revision, versionString, it.safeReplacement) else null
-                report(context, it.cookie, DEPENDENCY, message, fix)
+                report(context, it.cookie, AGP_DEPENDENCY, message, fix)
             }
         }
     }
@@ -2067,6 +2067,23 @@ open class GradleDetector : Detector(), GradleScanner {
                 are cases where you deliberately want to stick with an older version. \
                 However, you may simply not be aware that a more recent version is \
                 available, and that is what this lint check helps find.""",
+            category = Category.CORRECTNESS,
+            priority = 4,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
+        )
+
+        /** A dependency on an obsolete version of the Android Gradle Plugin */
+        @JvmField
+        val AGP_DEPENDENCY = Issue.create(
+            id = "AndroidGradlePluginVersion",
+            briefDescription = "Obsolete Android Gradle Plugin Version",
+            explanation = """
+                This detector looks for usage of the Android Gradle Plugin where the version \
+                you are using is not the current stable release. Using older versions is fine, \
+                and there are cases where you deliberately want to stick with an older version. \
+                However, you may simply not be aware that a more recent version is available, \
+                and that is what this lint check helps find.""",
             category = Category.CORRECTNESS,
             priority = 4,
             severity = Severity.WARNING,
