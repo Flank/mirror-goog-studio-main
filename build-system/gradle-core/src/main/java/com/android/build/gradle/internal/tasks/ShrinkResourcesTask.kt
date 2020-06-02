@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappin
 import com.android.build.gradle.internal.res.shrinker.usages.DexUsageRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.XmlAndroidManifestUsageRecorder
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -257,7 +257,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                     && creationConfig.variantType.isAar) {
                     creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
-                    artifacts.getAll(MultipleArtifactType.DEX)
+                    artifacts.getAll(InternalMultipleArtifactType.DEX)
                         .map {
                             if (it.isEmpty()) { classes } else {
                                 creationConfig.globalScope.project.files(it)

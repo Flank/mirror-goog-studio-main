@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.MultipleArtifactType;
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
 import com.android.build.gradle.internal.signing.SigningConfigProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
@@ -1093,7 +1093,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .files(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
-                return project.files(artifacts.getAll(MultipleArtifactType.DEX.INSTANCE))
+                return project.files(artifacts.getAll(InternalMultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             }
         }

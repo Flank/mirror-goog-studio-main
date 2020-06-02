@@ -75,9 +75,9 @@ interface TaskBasedOperation<TaskT: Task> {
 
     /**
      * Sets the [TaskT] input and output methods references so the [Task] can retrieve the
-     * current versions of a [Artifact.Multiple] [ArtifactType] when invoking [taskInput] while
-     * producing a new version of the same artifact type accessible through the [taskOutput] method
-     * after successful execution.
+     * current versions of a [Artifact.MultipleArtifact] [ArtifactType] when invoking [taskInput]
+     * while producing a new version of the same artifact type accessible through the [taskOutput]
+     * method after successful execution.
      *
      * This method is useful when [TaskT] is combining all elements of an [ArtifactType] into a
      * single element.

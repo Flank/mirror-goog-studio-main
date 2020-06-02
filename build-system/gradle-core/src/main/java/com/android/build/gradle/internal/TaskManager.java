@@ -52,6 +52,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.Artifact.SingleArtifact;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
@@ -96,9 +97,8 @@ import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.MultipleArtifactType;
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
@@ -1052,7 +1052,7 @@ public abstract class TaskManager<
         /** Merge all resources with all the dependencies resources (i.e. "big merge"). */
         MERGE {
             @Override
-            public SingleArtifactType<Directory> getOutputType() {
+            public SingleArtifact<Directory> getOutputType() {
                 return InternalArtifactType.MERGED_RES.INSTANCE;
             }
         },
@@ -1061,12 +1061,12 @@ public abstract class TaskManager<
          */
         PACKAGE {
             @Override
-            public SingleArtifactType<Directory> getOutputType() {
+            public SingleArtifact<Directory> getOutputType() {
                 return InternalArtifactType.PACKAGED_RES.INSTANCE;
             }
         };
 
-        public abstract SingleArtifactType<Directory> getOutputType();
+        public abstract SingleArtifact<Directory> getOutputType();
     }
 
     public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
@@ -1211,7 +1211,7 @@ public abstract class TaskManager<
 
     private void createApkProcessResTask(
             @NonNull ComponentPropertiesImpl componentProperties,
-            @Nullable SingleArtifactType<Directory> packageOutputType) {
+            @Nullable SingleArtifact<Directory> packageOutputType) {
         final GlobalScope globalScope = componentProperties.getGlobalScope();
 
         // Check AAR metadata files
@@ -1257,7 +1257,7 @@ public abstract class TaskManager<
 
     public void createProcessResTask(
             @NonNull BaseCreationConfig creationConfig,
-            @Nullable SingleArtifactType<Directory> packageOutputType,
+            @Nullable SingleArtifact<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         VariantScope scope = creationConfig.getVariantScope();
@@ -1309,7 +1309,7 @@ public abstract class TaskManager<
 
     private void createNonNamespacedResourceTasks(
             @NonNull ComponentPropertiesImpl componentProperties,
-            SingleArtifactType<Directory> packageOutputType,
+            SingleArtifact<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
@@ -2428,8 +2428,8 @@ public abstract class TaskManager<
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask,
                             produceSeparateOutputs
-                                    ? MultipleArtifactType.DEX.INSTANCE
-                                    : MultipleArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
+                                    ? InternalMultipleArtifactType.DEX.INSTANCE
+                                    : InternalMultipleArtifactType.EXTERNAL_LIBS_DEX.INSTANCE));
 
             if (produceSeparateOutputs) {
                 DexMergingTask.CreationAction mergeProject =

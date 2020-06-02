@@ -36,11 +36,11 @@ private val publicArtifactMap : Map<String, KClass<out Artifact<*>>> =
 
 private val sourceArtifactMap : Map<String, KClass<out Artifact<*>>> =
         SourceArtifactType::class.sealedSubclasses.associateBy {
-                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+                it.objectInstance?.name() ?: "class"
         }
 private val buildArtifactMap : Map<String, KClass<out Artifact<*>>> =
         BuildArtifactType::class.sealedSubclasses.associateBy {
-                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+                it.objectInstance?.name() ?:"class"
         }
 private val internalArtifactMap : Map<String, KClass<out Artifact<*>>> =
         InternalArtifactType::class.sealedSubclasses.associateBy {
@@ -48,7 +48,7 @@ private val internalArtifactMap : Map<String, KClass<out Artifact<*>>> =
         }
 private val anchorArtifactMap : Map<String, KClass<out Artifact<*>>> =
         AnchorOutputType::class.sealedSubclasses.associateBy {
-                it.objectInstance?.name() ?: throw RuntimeException("No instance")
+                it.objectInstance?.name() ?: "class"
         }
 
 /**
