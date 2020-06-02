@@ -61,7 +61,7 @@ val cppEmptyActivityTemplate
     name = "Native C++"
     minApi = MIN_API
     minBuildApi = MIN_API
-    description = "Creates a new project with an Empty Activity configured to use JNI."
+    description = "Creates a new project with an Empty Activity configured to use JNI"
     documentationUrl = DOCUMENTATION_URL
 
     category = Category.Activity
@@ -119,7 +119,7 @@ val cppEmptyActivityTemplate
 
     recipe = { data ->
       generateCppEmptyActivity(
-        data as ModuleTemplateData, activityClass.value, layoutName.value, isLauncher.value, packageName.value
+        data as ModuleTemplateData, activityClass.value, layoutName.value, isLauncher.value, packageName.value, cppStandard.value.toString()
       )
     }
   }
