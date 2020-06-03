@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
@@ -59,34 +61,33 @@ public class D8DesugaringTest {
                 new Object[] {false, false});
     }
 
-    private boolean withIncrementalDexingTaskV2;
-    private boolean withDexingArtifactTransform;
+    private final boolean withIncrementalDexingTaskV2;
+    private final boolean withDexingArtifactTransform;
+    @Rule public GradleTestProject project;
 
     public D8DesugaringTest(
             boolean withIncrementalDexingTaskV2, boolean withDexingArtifactTransform) {
         this.withIncrementalDexingTaskV2 = withIncrementalDexingTaskV2;
         this.withDexingArtifactTransform = withDexingArtifactTransform;
+        project =
+                GradleTestProject.builder()
+                        .fromTestApp(
+                                new MultiModuleTestProject(
+                                        ImmutableMap.of(
+                                                ":app",
+                                                HelloWorldApp.noBuildFile(),
+                                                ":lib",
+                                                new EmptyAndroidTestApp())))
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2.getPropertyName()
+                                        + "="
+                                        + withIncrementalDexingTaskV2)
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
+                                        + "="
+                                        + withDexingArtifactTransform)
+                        .create();
     }
-
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(
-                            new MultiModuleTestProject(
-                                    ImmutableMap.of(
-                                            ":app",
-                                            HelloWorldApp.noBuildFile(),
-                                            ":lib",
-                                            new EmptyAndroidTestApp())))
-                    .addGradleProperties(
-                            BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2.getPropertyName()
-                                    + "="
-                                    + withIncrementalDexingTaskV2)
-                    .addGradleProperties(
-                            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
-                                    + "="
-                                    + withDexingArtifactTransform)
-                    .create();
 
     @Before
     public void setUp() throws IOException {
@@ -215,10 +216,14 @@ public class D8DesugaringTest {
 
     @Test
     public void checkDesugaring() throws IOException, InterruptedException, ProcessException {
-        project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                .run("assembleBaseDebug", "assembleBaseDebugAndroidTest");
+        GradleTaskExecutor executor =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8, true)
+                        .with(BooleanOption.ENABLE_D8_DESUGARING, true);
+        if (withDexingArtifactTransform) {
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON);
+        }
+        executor.run("assembleBaseDebug", "assembleBaseDebugAndroidTest");
         Apk androidTestApk =
                 project.getSubproject(":app")
                         .getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG, "base");
@@ -252,10 +257,14 @@ public class D8DesugaringTest {
 
     @Test
     public void checkMultidex() throws IOException, InterruptedException, ProcessException {
-        project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                .run("assembleMultidexDebug");
+        GradleTaskExecutor executor =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8, true)
+                        .with(BooleanOption.ENABLE_D8_DESUGARING, true);
+        if (withDexingArtifactTransform) {
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON);
+        }
+        executor.run("assembleMultidexDebug");
         Apk multidexApk =
                 project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "multidex");
         assertThat(multidexApk).hasMainClass("Lcom/example/helloworld/InterfaceWithDefault;");
