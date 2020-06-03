@@ -44,12 +44,9 @@ final class InspectorContext {
     private final ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
             new ConcurrentHashMap<>();
 
-    private final CrashListener mCrashListener;
-
-    InspectorContext(String inspectorId, String project, CrashListener crashListener) {
+    InspectorContext(String inspectorId, String project) {
         mInspectorId = inspectorId;
         mProjectName = project;
-        mCrashListener = crashListener;
     }
     
     public String getProject() {
@@ -94,19 +91,9 @@ final class InspectorContext {
     }
 
     public void sendCommand(int commandId, byte[] rawCommand) {
-        try {
-            CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
-            mIdToCommandCallback.put(commandId, callback);
-            mInspector.onReceiveCommand(rawCommand, callback);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            mCrashListener.onInspectorCrashed(
-                    mInspectorId,
-                    "Inspector "
-                            + mInspectorId
-                            + " crashed during sendCommand due to: "
-                            + t.getMessage());
-        }
+        CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
+        mIdToCommandCallback.put(commandId, callback);
+        mInspector.onReceiveCommand(rawCommand, callback);
     }
 
     public void cancelCommand(int cancelledCommandId) {

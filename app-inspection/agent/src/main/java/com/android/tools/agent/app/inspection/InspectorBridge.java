@@ -16,19 +16,24 @@
 
 package com.android.tools.agent.app.inspection;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import com.android.tools.agent.app.inspection.InspectorContext.CrashListener;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import com.android.tools.agent.app.inspection.concurrent.AppInspectionExecutors;
+import com.android.tools.agent.app.inspection.concurrent.HandlerThreadExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /** Simple class that redirects every interaction with inspector to the inspector's thread. */
 public final class InspectorBridge {
-    private final Executor mInspectorExecutor = Executors.newSingleThreadScheduledExecutor();
+    private static final String LOG_TAG = "AppInspection";
+
+    private final HandlerThreadExecutor mInspectorExecutor;
     private final InspectorContext mInspectorContext;
 
-    private InspectorBridge(InspectorContext context) {
+    private InspectorBridge(HandlerThreadExecutor executor, InspectorContext context) {
         mInspectorContext = context;
+        mInspectorExecutor = executor;
     }
 
     /**
@@ -58,14 +63,44 @@ public final class InspectorBridge {
     }
 
     public void disposeInspector() {
-        mInspectorExecutor.execute(mInspectorContext::disposeInspector);
+        mInspectorExecutor.execute(
+                () -> {
+                    mInspectorContext.disposeInspector();
+                    // disposeInspector currently catches all errors, so it is ok to call quitSafely
+                    // here.
+                    mInspectorExecutor.quitSafely();
+                });
     }
 
     public static InspectorBridge create(
             @NonNull String inspectorId,
             @NonNull String project,
             @NonNull CrashListener crashListener) {
-        InspectorContext context = new InspectorContext(inspectorId, project, crashListener);
-        return new InspectorBridge(context);
+        HandlerThreadExecutor executor =
+                AppInspectionExecutors.newHandlerThreadExecutor(
+                        inspectorId,
+                        new Consumer<Throwable>() {
+                            private AtomicBoolean mCrashed = new AtomicBoolean();
+
+                            @Override
+                            public void accept(Throwable throwable) {
+                                Log.e(LOG_TAG, "Inspector " + inspectorId + " crashed", throwable);
+                                // If we've already crashed no need to report it to studio, because
+                                // it is probably cascade effect
+                                // from the first failure.
+
+                                if (mCrashed.compareAndSet(false, true)) {
+                                    String message =
+                                            "Inspector "
+                                                    + inspectorId
+                                                    + " crashed due to: "
+                                                    + throwable.getMessage();
+                                    crashListener.onInspectorCrashed(inspectorId, message);
+                                }
+                            }
+                        });
+        InspectorContext context = new InspectorContext(inspectorId, project);
+
+        return new InspectorBridge(executor, context);
     }
 }

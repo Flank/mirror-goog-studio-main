@@ -16,4 +16,38 @@
 
 package android.os;
 
-public class Handler {}
+public class Handler {
+
+    private final Looper mLooper;
+
+    public Handler() {
+        this(null);
+    }
+
+    public Handler(Looper looper) {
+        mLooper = looper;
+    }
+
+    public boolean post(Runnable runnable) {
+        if (mLooper instanceof HandlerThread.ExecutorLooper) {
+            ((HandlerThread.ExecutorLooper) mLooper)
+                    .getExecutor()
+                    .execute(
+                            () -> {
+                                // have to go through dispatchMessage, because it is overridden in
+                                // app inspection.
+                                Message message = new Message();
+                                message.callback = runnable;
+                                dispatchMessage(message);
+                            });
+            return true;
+        }
+        throw new IllegalStateException(
+                "Fake implementation of Handler.post works only with Looper created by "
+                        + "fake implementation of HandlerThread");
+    }
+
+    public void dispatchMessage(Message msg) {
+        msg.callback.run();
+    }
+}
