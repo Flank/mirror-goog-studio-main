@@ -27,7 +27,6 @@ import com.android.build.gradle.external.cmake.server.ServerUtils
 import com.android.build.gradle.external.cmake.server.Target
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
 import com.android.build.gradle.internal.cxx.cmake.parseLinkLibraries
 import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
@@ -55,10 +54,8 @@ import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessException
-import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Strings
-import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
@@ -70,7 +67,6 @@ import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.ArrayList
-import java.util.Collections
 import java.util.HashMap
 
 /**
@@ -277,7 +273,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         val strings =
             StringTable(nativeBuildConfigValue.stringTable!!)
         assert(nativeBuildConfigValue.buildFiles != null)
-        nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(abi, cmakeServer))
+        nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(cmakeServer))
         assert(nativeBuildConfigValue.cleanCommands != null)
         nativeBuildConfigValue.cleanCommands!!.add(
             CmakeUtils.getCleanCommand(cmake.cmakeExe, abi.cxxBuildFolder)
@@ -365,81 +361,35 @@ internal class CmakeServerExternalNativeJsonGenerator(
      * Returns the list of build files used by CMake as part of the build system. Temporary files
      * are currently ignored.
      */
-    @Throws(IOException::class)
-    private fun getBuildFiles(
-        config: CxxAbiModel,
-        cmakeServer: Server
-    ): List<File> {
+    private fun getBuildFiles(cmakeServer: Server): List<File> {
         val cmakeInputsResult = cmakeServer.cmakeInputs()
-        if (!ServerUtils.isCmakeInputsResultValid(cmakeInputsResult)) {
-            throw RuntimeException(
-                String.format(
-                    "Invalid cmakeInputs result received from Cmake server: \n%s\n%s",
-                    CmakeUtils.getObjectToString(cmakeInputsResult),
-                    getCmakeInfoString(cmakeServer)
-                )
-            )
-        }
-
-        // Ideally we should see the build files within cmakeInputs response, but in the weird case
-        // that we don't, return the default make file.
-        if (cmakeInputsResult.buildFiles == null) {
-            val buildFiles: MutableList<File> =
-                Lists.newArrayList()
-            buildFiles.add(makefile)
-            return buildFiles
-        }
-
-        // The sources listed might be duplicated, so remove the duplicates.
-        val buildSources: MutableSet<String> = mutableSetOf()
-        for (buildFile in cmakeInputsResult.buildFiles) {
-            if (buildFile.isTemporary || buildFile.isCMake || buildFile.sources == null) {
-                continue
-            }
-            Collections.addAll(buildSources, *buildFile.sources)
+        if (!ServerUtils.isCmakeInputsResultValid(cmakeInputsResult)
+            || cmakeInputsResult.buildFiles == null) {
+            // When CMake server doesn't return a result just use the CMakeLists.txt we know about.
+            return listOf(makefile.absoluteFile)
         }
 
         // The path to the build file source might be relative, so use the absolute path using
         // source directory information.
-        var sourceDirectory: File? = null
-        if (cmakeInputsResult.sourceDirectory != null) {
-            sourceDirectory = File(cmakeInputsResult.sourceDirectory)
-        }
-        val buildFiles: MutableList<File> =
-            Lists.newArrayList()
-        for (source in buildSources) {
-            // The source file can either be relative or absolute, if it's relative, use the source
-            // directory to get the absolute path.
-            var sourceFile = File(source)
-            if (!sourceFile.isAbsolute) {
-                if (sourceDirectory != null) {
-                    sourceFile = File(sourceDirectory, source).canonicalFile
-                }
-            }
-            if (!sourceFile.exists()) {
-                val logger: ILogger =
-                    LoggerWrapper.getLogger(
-                        CmakeServerExternalNativeJsonGenerator::class.java
-                    )
-                logger.error(
-                    null,
-                    "Build file "
-                            + sourceFile
-                            + " provided by CMake "
-                            + "does not exists. This might lead to incorrect Android Studio behavior."
-                )
-                continue
-            }
-            if (sourceFile
-                    .path
-                    .startsWith(config.cmake!!.cmakeWrappingBaseFolder.path)
-            ) {
-                // Skip files in .cxx/cmake/x86
-                continue
-            }
-            buildFiles.add(sourceFile)
-        }
-        return buildFiles
+        val sourceDirectory= File(cmakeInputsResult.sourceDirectory
+            ?: makefile.absoluteFile.parent)
+
+        val files = listOf(makefile) +
+            cmakeInputsResult.buildFiles
+                // Combine multiple results from CMake server
+                .flatMap { buildFiles -> buildFiles.sources?.filterNotNull() ?: listOf() }
+                .map { File(it) }
+
+        //  remove duplicates, filter down to only CMakeLists.txt
+        return files
+                // Throw away everything except CMakeLists.txt
+                .filter { it.name.compareTo("CMakeLists.txt", ignoreCase = true) == 0 }
+                // Make canonical
+                .map { file -> sourceDirectory.resolve(file).canonicalFile }
+                // Remove duplicates
+                .distinct()
+                // Sort by length of path to put more important ones higher for readability
+                .sortedBy { it.path.length }
     }
 
     companion object {

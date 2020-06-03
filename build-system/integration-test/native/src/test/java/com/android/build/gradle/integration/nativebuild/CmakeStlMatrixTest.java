@@ -154,9 +154,7 @@ public class CmakeStlMatrixTest {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getTag());
-        assertThat(model)
-                .hasExactBuildFilesShortNames(
-                        "CMakeLists.txt", "platforms.cmake", "android.toolchain.cmake");
+        assertThat(model).hasExactBuildFilesShortNames("CMakeLists.txt");
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);

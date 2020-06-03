@@ -128,6 +128,9 @@ class NativeModelBuilder(
         builder.addBuildSystem(generator.variant.module.buildSystem.tag)
         val abis = generator.abis.map { it.abi.tag }
         val buildFolders = generator.abis.map { it.jsonFile.parentFile }
+        // We don't have the full set of build files at this point.
+        // Add the root one that we do know.
+        builder.addBuildFile(generator.variant.module.makeFile)
         builder.addVariantInfo(
             generator.variant.variantName,
             abis,
