@@ -365,7 +365,13 @@ public class TestUtils {
     }
 
     @NonNull
-    public static Path getDesugarLibJarWithVersion(String version) {
+    public static Path getDesugarLibJar() {
+        // the default version is the latest version
+        return getDesugarLibJarWithVersion("1.0.5");
+    }
+
+    @NonNull
+    private static Path getDesugarLibJarWithVersion(String version) {
         return getWorkspaceFile(
                         "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/"
                                 + version
@@ -376,7 +382,7 @@ public class TestUtils {
     }
 
     @NonNull
-    public static Path getDesugarLibConfigJarWithVersion(String version) {
+    private static Path getDesugarLibConfigJarWithVersion(String version) {
         return getWorkspaceFile(
                         "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/"
                                 + version
@@ -387,7 +393,13 @@ public class TestUtils {
     }
 
     @NonNull
-    public static String getDesugarLibConfigContentWithVersion(String version) throws IOException {
+    public static String getDesugarLibConfigContent() throws IOException {
+        // the default version is the latest version
+        return getDesugarLibConfigContentWithVersion("0.11.1");
+    }
+
+    @NonNull
+    private static String getDesugarLibConfigContentWithVersion(String version) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
 
         try (JarFile jarFile = new JarFile(getDesugarLibConfigJarWithVersion(version).toFile())) {
