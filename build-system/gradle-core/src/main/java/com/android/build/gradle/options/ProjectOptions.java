@@ -40,7 +40,6 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private final ImmutableMap<ReplacedOption, String> replacedOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
 
@@ -51,17 +50,19 @@ public final class ProjectOptions {
             optionalBooleanOptionValues;
     private final ImmutableMap<IntegerOption, OptionValue<IntegerOption, Integer>>
             integerOptionValues;
+    private final ImmutableMap<ReplacedOption, OptionValue<ReplacedOption, String>>
+            replacedOptionValues;
 
     public ProjectOptions(
             @NonNull ImmutableMap<String, Object> properties,
             @NonNull ProviderFactory providerFactory) {
-        replacedOptions = readOptions(ReplacedOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
         this.providerFactory = providerFactory;
         booleanOptionValues = createOptionValues(BooleanOption.values());
         optionalBooleanOptionValues = createOptionValues(OptionalBooleanOption.values());
         integerOptionValues = createOptionValues(IntegerOption.values());
+        replacedOptionValues = createOptionValues(ReplacedOption.values());
     }
 
     /**
@@ -266,9 +267,13 @@ public final class ProjectOptions {
         return stringOptions;
     }
 
+    private ImmutableMap<ReplacedOption, String> getExplicitlySetReplacedOptions() {
+        return getExplicitlySetOptions(replacedOptionValues);
+    }
+
     public ImmutableMap<Option<?>, Object> getAllOptions() {
         return new ImmutableMap.Builder()
-                .putAll(replacedOptions)
+                .putAll(getExplicitlySetReplacedOptions())
                 .putAll(getExplicitlySetBooleanOptions())
                 .putAll(getExplicitlySetOptionalBooleanOptions())
                 .putAll(getExplicitlySetIntegerOptions())
