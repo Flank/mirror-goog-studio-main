@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.databinding
 
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper
@@ -69,6 +70,8 @@ class DataBindingMinifyDynamicFeaturesTest(val codeShrinker: CodeShrinker) {
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("databindingWithDynamicFeatures")
+        // http://b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .withDependencyChecker(false)
         .create()
 

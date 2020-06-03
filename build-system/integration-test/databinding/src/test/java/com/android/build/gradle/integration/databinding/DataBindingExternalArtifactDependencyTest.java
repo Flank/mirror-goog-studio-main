@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
@@ -84,7 +85,12 @@ public class DataBindingExternalArtifactDependencyTest {
     private List<String> createLibraryArtifact() throws IOException, InterruptedException {
         List<String> args =
                 ImmutableList.of(MAVEN_REPO_ARG_PREFIX + mavenRepo.getRoot().getAbsolutePath());
-        library.executor().withArguments(args).withFailOnWarning(false).run("uploadArchives");
+        library.executor()
+                .withArguments(args)
+                .withFailOnWarning(false)
+                // Gradle uploadArchives is not compatible for now
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("uploadArchives");
         return args;
     }
 

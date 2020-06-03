@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.databinding
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
@@ -50,8 +52,10 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
 
     @Test
     fun checkBRClasses() {
+        // http://b/146208910
+        val executor = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
         // use release to get 1 classes.dex instead of many
-        project.executor().run("clean", "assembleRelease")
+        executor.run("clean", "assembleRelease")
         val apk = getApk()
         assertThat(apk).exists()
         assertBRs("_all", "inheritedInput", "input", "appInput")
@@ -70,7 +74,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
                 }
                 """.trimIndent()
             )
-        project.executor().run("assembleRelease")
+        executor.run("assembleRelease")
         assertBRs("_all", "inheritedInput", "input", "newBindableVar", "appInput")
         // rename an input field
         TestFileUtils.searchAndReplace(
@@ -78,10 +82,10 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
             "inheritedInput",
             "inheritedInput2"
         )
-        project.executor().run("assembleRelease")
+        executor.run("assembleRelease")
         assertBRs("_all", "inheritedInput2", "input", "newBindableVar", "appInput")
         newBindable.delete()
-        project.executor().run("assembleRelease")
+        executor.run("assembleRelease")
         assertBRs("_all", "inheritedInput2", "input", "appInput")
     }
 
@@ -93,7 +97,8 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
             "android:text=\"@{input}\"",
             "app:customSetText=\"@{input}\""
         )
-        val result = project.executor().run("assembleRelease")
+        // http://b/146208910
+        val result = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run("assembleRelease")
         assertNull(result.exception)
         // now try to use it in the app, should fail
         val appLayout = project.file("app/src/main/res/layout/app_layout.xml")
@@ -103,7 +108,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
             "android:text=\"@{appInput}\"",
             "app:customSetText=\"@{appInput}\""
         )
-        val result2 = project.executor().expectFailure().run("assembleRelease")
+        val result2 = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).expectFailure().run("assembleRelease")
         MatcherAssert.assertThat(
             result2.failureMessage ?: "",
             CoreMatchers.containsString("Cannot find a setter for <android.widget.TextView app:customSetText> that accepts parameter type 'java.lang.String'")

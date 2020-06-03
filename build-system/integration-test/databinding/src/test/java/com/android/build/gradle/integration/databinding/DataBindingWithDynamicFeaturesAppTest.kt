@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.databinding
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.options.BooleanOption
@@ -36,6 +37,8 @@ class DataBindingWithDynamicFeaturesAppTest(useAndroidX: Boolean) {
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
         .fromDataBindingIntegrationTest("DynamicApp", useAndroidX)
+        // http://b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .addGradleProperties(
             BooleanOption.USE_ANDROID_X.propertyName
                     + "=" + useAndroidX
