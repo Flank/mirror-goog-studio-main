@@ -61,6 +61,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfi
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Internal
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
@@ -75,7 +76,7 @@ import java.util.concurrent.Callable
  */
 abstract class ExternalNativeJsonGenerator internal constructor(
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    override val variant: CxxVariantModel,
+    final override val variant: CxxVariantModel,
     @get:Internal override val abis: List<CxxAbiModel>
 ) : CxxMetadataGenerator {
 
@@ -106,6 +107,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     }
 
     override fun getMetadataGenerators(
+        ops: ExecOperations,
         forceGeneration: Boolean,
         abiName: String?
     ): List<Callable<Unit>> {
@@ -121,7 +123,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 Callable {
                     requireExplicitLogger()
                     try {
-                        buildForOneConfiguration(forceGeneration, abi)
+                        buildForOneConfiguration(ops, forceGeneration, abi)
                     } catch (e: IOException) {
                         errorln("exception while building Json %s", e.message!!)
                     } catch (e: GradleException) {
@@ -216,6 +218,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     @Throws(GradleException::class, IOException::class, ProcessException::class)
     private fun buildForOneConfiguration(
+        ops: ExecOperations,
         forceJsonGeneration: Boolean,
         abi: CxxAbiModel) {
         PassThroughPrefixingLoggingEnvironment(
@@ -269,9 +272,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     if (abi.shouldGeneratePrefabPackages()) {
                         checkPrefabConfig()
                         generatePrefabPackages(
-                            variant.module,
-                            abi,
-                            variant.prefabPackageDirectoryList
+                            ops,
+                            abi
                         )
                     }
 
@@ -298,8 +300,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     if (abi.cxxBuildFolder.mkdirs()) {
                         infoln("created folder '%s'", abi.cxxBuildFolder)
                     }
+
                     infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
-                    val buildOutput = executeProcess(abi)
+                    val buildOutput = executeProcess(ops, abi)
                     infoln("done executing %s", variant.module.buildSystem.tag)
 
                     // Write the captured process output to a file for diagnostic purposes.
@@ -396,8 +399,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
      *
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
-    @Throws(ProcessException::class, IOException::class)
-    abstract fun executeProcess(abi: CxxAbiModel): String
+    abstract fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String
 
     companion object {
         /**
@@ -476,7 +478,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
         @JvmStatic
         fun create(
-            module: CxxModuleModel, componentProperties: ComponentPropertiesImpl
+            module: CxxModuleModel,
+            componentProperties: ComponentPropertiesImpl
         ): CxxMetadataGenerator {
             IssueReporterLoggingEnvironment(componentProperties.services.issueReporter).use {
                 return createImpl(
@@ -487,7 +490,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         }
 
         private fun createImpl(
-            module: CxxModuleModel, componentProperties: ComponentPropertiesImpl
+            module: CxxModuleModel,
+            componentProperties: ComponentPropertiesImpl
         ): CxxMetadataGenerator {
             val variant = createCxxVariantModel(module, componentProperties)
             val abis: MutableList<CxxAbiModel> =
@@ -528,5 +532,4 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             }
         }
     }
-
 }

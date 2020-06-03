@@ -27,7 +27,11 @@ import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.process.ExecOperations
+import org.gradle.process.ExecSpec
+import org.gradle.process.JavaExecSpec
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
 import java.util.ArrayList
 import java.util.concurrent.Callable
@@ -44,6 +48,12 @@ class NativeModelBuilder(
     private val nativeAndroidProjectClass = NativeAndroidProject::class.java.name
     private val nativeVariantAbiClass = NativeVariantAbi::class.java.name
     private val projectOptions get() = globalScope.projectOptions
+    private val ops = object : ExecOperations {
+        override fun exec(action: Action<in ExecSpec>) =
+            globalScope.project.exec(action)
+        override fun javaexec(action: Action<in JavaExecSpec>) =
+            globalScope.project.javaexec(action)
+    }
     private val ideRefreshExternalNativeModel get() =
         projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)
     private val enableParallelNativeJsonGen get() =
@@ -157,7 +167,7 @@ class NativeModelBuilder(
         generators
             .filter { generator -> generator.variant.variantName == variantName }
             .onEach { generator ->
-                generator.getMetadataGenerators(ideRefreshExternalNativeModel, abiName).forEach {
+                generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel, abiName).forEach {
                     it.call()
                 }
                 buildInexpensiveNativeAndroidProjectInformation(builder, generator)
@@ -198,7 +208,7 @@ class NativeModelBuilder(
                     // When refreshExternalNativeModel() is true it will also
                     // force update all JSONs.
                     buildSteps.addAll(
-                        generator.getMetadataGenerators(ideRefreshExternalNativeModel)
+                        generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel)
                     )
                 }
             }
@@ -223,7 +233,7 @@ class NativeModelBuilder(
 
         } else {
             for (generator in generators) {
-                generator.getMetadataGenerators(ideRefreshExternalNativeModel).forEach {
+                generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel).forEach {
                     it.call()
                 }
             }

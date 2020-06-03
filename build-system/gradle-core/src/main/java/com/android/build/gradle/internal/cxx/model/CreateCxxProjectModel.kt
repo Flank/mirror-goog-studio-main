@@ -20,7 +20,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-import com.android.build.gradle.internal.cxx.services.createDefaultProjectServiceRegistry
+
 import com.android.build.gradle.internal.profile.ProfilerInitializer
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -77,6 +77,5 @@ fun createCxxProjectModel(componentProperties: ComponentPropertiesImpl) : CxxPro
             }
 
         override val isPrefabEnabled: Boolean = componentProperties.buildFeatures.prefab
-        override val services by lazy { createDefaultProjectServiceRegistry(global) }
     }
 }

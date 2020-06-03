@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
-import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -385,7 +384,6 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
     @Throws(BuildCommandException::class, IOException::class)
     private fun executeProcessBatch(buildSteps: List<BuildStep>) {
         val logger = logger
-        val processExecutor = GradleProcessExecutor(execOperations::exec)
 
         for (buildStep in buildSteps) {
             val tokens = buildStep.buildCommand.tokenizeCommandLineToEscaped()
@@ -447,10 +445,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                 buildStep.outputFolder,
                 "android_gradle_build_$logFileSuffix",
                 processBuilder,
-                logger,
-                processExecutor,
-                ""
-            )
+                "")
                 .logStderrToInfo()
                 .logStdoutToInfo()
                 .execute(execOperations::exec)

@@ -59,6 +59,7 @@ import com.google.common.base.Strings
 import com.google.common.collect.Maps
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
@@ -78,7 +79,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
     abis: List<CxxAbiModel>
 ) : CmakeExternalNativeJsonGenerator(variant, abis) {
     @Throws(ProcessException::class, IOException::class)
-    override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
+    override fun executeProcessAndGetOutput(ops: ExecOperations, abi: CxxAbiModel): String {
         // Once a Cmake server object is created
         // - connect to the server
         // - perform a handshake

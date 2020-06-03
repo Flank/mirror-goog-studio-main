@@ -20,9 +20,9 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.services.exec
+import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
+import org.gradle.process.ExecOperations
 
 /**
  * This strategy uses the older custom CMake (version 3.6) that directly generates the JSON file as
@@ -37,21 +37,20 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
         errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")
     }
 
-    override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
+    override fun executeProcessAndGetOutput(ops: ExecOperations, abi: CxxAbiModel): String {
         // buildCommandArgs is set in CMake server json generation
         if(abi.getBuildCommandArguments().isNotEmpty()){
             warnln("buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below.")
         }
 
         val logPrefix = "${variant.variantName}|${abi.abi.tag} :"
-        return abi.variant.module.createProcessOutputJunction(
+        return createProcessOutputJunction(
             abi.cxxBuildFolder,
             "android_gradle_generate_cmake_ninja_json_${abi.abi.tag}",
             getProcessBuilder(abi),
-            logPrefix
-        )
+            logPrefix)
             .logStderrToInfo()
             .logStdoutToInfo()
-            .executeAndReturnStdoutString(abi.variant.module.project.exec)
+            .executeAndReturnStdoutString(ops::exec)
     }
 }

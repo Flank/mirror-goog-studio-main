@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.Stl
@@ -119,7 +118,6 @@ fun tryCreateCxxModuleModel(
         override val moduleBuildFile by lazy { global.project.buildFile }
         override val cxxFolder get() = cxxFolder
         override val project by lazy { createCxxProjectModel(componentProperties) }
-        override val services by lazy { createDefaultServiceRegistry(global) }
         override val ndkMetaPlatforms by lazy {
             val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkFolder)
             if (ndkMetaPlatformsFile.isFile) {

@@ -27,9 +27,7 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.statsBuilder
-import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.services.exec
-import com.android.ide.common.process.ProcessException
+import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -37,6 +35,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.gson.GsonBuilder
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -136,16 +135,15 @@ internal class NdkBuildExternalNativeJsonGenerator(
         return builder
     }
 
-    @Throws(ProcessException::class, IOException::class)
-    override fun executeProcess(abi: CxxAbiModel): String {
-        return abi.variant.module.createProcessOutputJunction(
+    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String {
+        return createProcessOutputJunction(
             abi.soFolder,
             "android_gradle_generate_ndk_build_json_" + abi.abi.tag,
             getProcessBuilder(abi),
             ""
         )
             .logStderrToInfo()
-            .executeAndReturnStdoutString(abi.variant.module.project.exec)
+            .executeAndReturnStdoutString(ops::exec)
     }
 
 

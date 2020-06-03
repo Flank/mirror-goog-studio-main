@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import org.gradle.api.tasks.Internal
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -47,6 +48,7 @@ interface CxxMetadataGenerator {
      * all available ABIs will be built.
      */
     fun getMetadataGenerators(
+        ops: ExecOperations,
         forceGeneration: Boolean,
         abiName : String? = null
     ): List<Callable<Unit>>

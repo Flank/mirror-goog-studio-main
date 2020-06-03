@@ -36,6 +36,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.process.ExecOperations
 import java.io.IOException
 
 /**
@@ -63,7 +64,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
 
         // Check some basic requirements. This code executes at sync time but any call to
         // recordConfigurationError will later cause the generation of json to fail.
-        val cmakelists = this.variant.module.makeFile
+        val cmakelists = variant.module.makeFile
         if (cmakelists.isDirectory) {
             errorln(
                 "Gradle project cmake.path %s is a folder. It must be CMakeLists.txt",
@@ -89,11 +90,11 @@ internal abstract class CmakeExternalNativeJsonGenerator(
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
     @Throws(IOException::class, ProcessException::class)
-    abstract fun executeProcessAndGetOutput(abi: CxxAbiModel): String
+    abstract fun executeProcessAndGetOutput(ops: ExecOperations, abi: CxxAbiModel): String
 
-    override fun executeProcess(abi: CxxAbiModel): String {
-        val output = executeProcessAndGetOutput(abi)
-        return makeCmakeMessagePathsAbsolute(output, variant.module.makeFile.parentFile)
+    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String {
+        val output = executeProcessAndGetOutput(ops, abi)
+        return makeCmakeMessagePathsAbsolute(output, variant.module.makeFile.parentFile.parentFile)
     }
 
     override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {}

@@ -30,7 +30,6 @@ import java.io.OutputStream
 class DefaultProcessOutputHandler(
     private val stderrFile : File,
     private val stdoutFile : File,
-    private val print: (String) -> Unit,
     private val logPrefix: String,
     private val logErrorToInfo: Boolean,
     private val logOutputToInfo: Boolean) : ProcessOutputHandler {
@@ -44,10 +43,10 @@ class DefaultProcessOutputHandler(
         val stderrReceivers = mutableListOf<OutputStream>(singleStderr)
         val stdoutReceivers = mutableListOf<OutputStream>(singleStdout)
         if (logErrorToInfo) {
-            stderrReceivers.add(ChunkBytesToLineOutputStream(print, logPrefix))
+            stderrReceivers.add(ChunkBytesToLineOutputStream(logPrefix))
         }
         if (logOutputToInfo) {
-            stdoutReceivers.add(ChunkBytesToLineOutputStream(print, logPrefix))
+            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix))
         }
         return DefaultProcessOutput(
             singleStderr,
