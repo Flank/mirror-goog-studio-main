@@ -27,9 +27,16 @@ import org.junit.Test;
 
 public class ProfileCapturerTest {
     HelloWorldApp app = HelloWorldApp.forPlugin("com.android.application");
+
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestApp(app).enableProfileOutput().create();
+            GradleTestProject.builder()
+                    .fromTestApp(app)
+                    // TaskReportTask from Gradle is not compatible
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .enableProfileOutput()
+                    .create();
+
     ProfileCapturer capturer;
 
     @Before

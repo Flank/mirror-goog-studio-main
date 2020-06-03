@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.buildfeatures
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -59,7 +60,8 @@ android {
             MultiModuleTestProject.builder()
                 .subproject(":app", app)
                 .build()
-        ).create()
+        ).withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/146208910
+        .create()
 
     /**
      * Test to ensure the model is property populated when [buildFeature] is disabled.

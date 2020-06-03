@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.databinding;
 
 import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -44,6 +45,8 @@ public class DataBindingIntegrationTestAppsConnectedTest {
                         .fromDataBindingIntegrationTest(projectName, useAndroidX)
                         .addGradleProperties(
                                 BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
+                        // b/146163513
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .withDependencyChecker(!"KotlinTestApp".equals(projectName));
         if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
             builder.withCompileSdkVersion("28");

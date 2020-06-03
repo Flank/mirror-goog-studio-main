@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.application.SigningTest
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -37,6 +38,8 @@ class DynamicAppSigningConfigTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
+        // b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Test

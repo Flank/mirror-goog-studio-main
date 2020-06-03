@@ -20,6 +20,7 @@ import com.android.AndroidProjectTypes
 import com.android.SdkConstants
 import com.android.apksig.ApkVerifier
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
@@ -76,6 +77,8 @@ class DynamicAppTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
+        // b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     private val bundleContent: Array<String> = arrayOf(

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.analytics
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
@@ -37,6 +38,7 @@ class ProfileContentTest {
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .enableProfileOutput()
         .create()
 

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -44,7 +45,8 @@ class DynamicFeatureDependsOnJavaLibTest {
                 .dependency(feature, app)
                 .dependency(feature, javaLib)
                 .build()
-        ).create()
+        ).withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/158092986
+        .create()
 
     /** Regression test for b/79660649. */
     @Test()

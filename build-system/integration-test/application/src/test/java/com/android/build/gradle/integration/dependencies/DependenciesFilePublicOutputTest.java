@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -66,7 +67,10 @@ public class DependenciesFilePublicOutputTest {
     public void testPublicOutputFilePresent() throws Exception {
         TestFileUtils.appendToFile(
                 project.getGradlePropertiesFile(), "android.includeDependencyInfoInApks=true");
-        project.execute("clean", "assembleRelease");
+        project.executor()
+                .withConfigurationCaching(
+                        BaseGradleExecutor.ConfigurationCaching.OFF) // b/146208910
+                .run("clean", "assembleRelease");
 
         // Check public output of dependency information was created and stored.
         File outputDir = project.getOutputDir();
@@ -106,7 +110,10 @@ public class DependenciesFilePublicOutputTest {
     public void testPublicOutputFileAbsent_flagOff() throws Exception {
         TestFileUtils.appendToFile(
                 project.getGradlePropertiesFile(), "android.includeDependencyInfoInApks=false");
-        project.execute("clean", "assembleRelease");
+        project.executor()
+                .withConfigurationCaching(
+                        BaseGradleExecutor.ConfigurationCaching.OFF) // b/146208910
+                .run("clean", "assembleRelease");
 
         File outputDir = project.getOutputDir();
         assertThat(outputDir).isDirectory();

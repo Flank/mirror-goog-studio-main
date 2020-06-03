@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.databinding;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
@@ -51,12 +52,16 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
         library =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("IndependentLibrary", useAndroidX)
+                        // b/146163513
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .addGradleProperties(useX)
                         .create();
         app =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
                         .addGradleProperties(useX)
+                        // b/146163513
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .addGradleProperties(enableJetifier)
                         .create();
     }

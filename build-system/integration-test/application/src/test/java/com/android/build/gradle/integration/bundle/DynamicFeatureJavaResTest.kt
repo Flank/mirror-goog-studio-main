@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -103,6 +104,8 @@ class DynamicFeatureJavaResTest {
     val project =
         GradleTestProject.builder()
             .fromTestApp(testApp)
+            // b/158092986
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     @Test

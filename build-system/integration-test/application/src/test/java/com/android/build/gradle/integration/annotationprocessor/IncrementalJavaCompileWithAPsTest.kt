@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.annotationprocessor
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_COMPILE_SDK_VERSION
@@ -101,6 +103,7 @@ class IncrementalJavaCompileWithAPsTest(
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(setUpTestProject())
         .withKotlinGradlePlugin(withKapt)
+        .withConfigurationCaching(if (withKapt) ConfigurationCaching.OFF else ConfigurationCaching.ON)
         .create()
 
     private fun setUpTestProject(): TestProject {

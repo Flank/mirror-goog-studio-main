@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.analytics
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
@@ -34,6 +35,7 @@ class LibraryProfileContentTest {
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.library"))
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/157470515
         .enableProfileOutput()
         .create()
 

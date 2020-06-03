@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.testutils.truth.FileSubject
@@ -28,6 +29,8 @@ class DynamicAppPackageDependenciesTest {
     @JvmField
     val project = GradleTestProject.builder()
         .withGradleBuildCacheDirectory(File("local-build-cache"))
+        // b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .fromTestProject("dynamicApp").create()
 
     /** Regression test for http://b/150438232. */
