@@ -69,7 +69,8 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 project.getTestDir().toPath(),
                 project.getBuildFile().toPath(),
                 project.getProfileDirectory(),
-                project.getHeapSize());
+                project.getHeapSize(),
+                ConfigurationCaching.OFF);
     }
 
     public ModelBuilder(
@@ -84,7 +85,8 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 projectDirectory,
                 buildDotGradleFile,
                 null /*profileDirectory*/,
-                heapSize);
+                heapSize,
+                ConfigurationCaching.OFF);
     }
 
     /**

@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.utils.AndroidVersionMa
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -38,7 +39,10 @@ public class NoSplitNdkVariantsConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestApp(new HelloWorldJniApp()).create();
+            GradleTestProject.builder()
+                    .fromTestApp(new HelloWorldJniApp())
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws Exception {

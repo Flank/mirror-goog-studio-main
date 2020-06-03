@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -78,11 +79,12 @@ public class NdkConnectedCheckTest {
     }
 
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(app)
-            .addGradleProperties("android.useDeprecatedNdk=true")
-            .create();
-
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(app)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .addGradleProperties("android.useDeprecatedNdk=true")
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {

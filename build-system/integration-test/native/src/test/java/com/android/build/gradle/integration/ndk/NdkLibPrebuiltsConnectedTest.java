@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.ndk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,6 +27,7 @@ public class NdkLibPrebuiltsConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("ndkLibPrebuilts")
                     .addGradleProperties("android.useDeprecatedNdk=true")
                     .create();

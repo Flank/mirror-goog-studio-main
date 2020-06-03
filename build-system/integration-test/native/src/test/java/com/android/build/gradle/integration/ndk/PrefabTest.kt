@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
@@ -36,7 +37,8 @@ class PrefabTest(private val buildSystem: NativeBuildSystem) {
     @Rule
     @JvmField
     val project = GradleTestProject.builder().fromTestProject("prefabApp")
-        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION).create()
+        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
 
     companion object {
         @Parameterized.Parameters(name = "build system = {0}")

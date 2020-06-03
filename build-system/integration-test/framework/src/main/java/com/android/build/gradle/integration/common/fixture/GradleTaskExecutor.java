@@ -57,7 +57,8 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
                 gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getProfileDirectory(),
-                gradleTestProject.getHeapSize());
+                gradleTestProject.getHeapSize(),
+                gradleTestProject.getWithConfigurationCaching());
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
     }
 

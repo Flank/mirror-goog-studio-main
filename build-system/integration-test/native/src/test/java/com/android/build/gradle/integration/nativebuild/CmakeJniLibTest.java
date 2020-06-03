@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -45,6 +46,7 @@ public class CmakeJniLibTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("ndkJniLib")
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
                     .setCmakeVersion("3.10.4819442")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
