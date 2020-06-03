@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.integration.connected.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
@@ -38,7 +39,10 @@ class MlModelBindingConnectedTest {
     @Rule
     @JvmField
     var project =
-        builder().fromTestProject("mlModelBinding").create()
+        builder().fromTestProject("mlModelBinding")
+            // b/146163513
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .create()
 
     @Before
     fun setup() {

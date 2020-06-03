@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import org.junit.ClassRule
@@ -32,7 +33,10 @@ class ComposeHelloWorldConnectedTest {
 
     @JvmField
     @Rule
-    val project = GradleTestProject.builder().fromTestProject("composeHelloWorld").create()
+    val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
+        // b/146163513
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @Test
     fun connectedCheck() {

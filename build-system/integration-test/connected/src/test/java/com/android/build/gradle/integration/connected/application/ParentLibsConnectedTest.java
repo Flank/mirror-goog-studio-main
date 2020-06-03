@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.connected.application;
 
 import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
@@ -34,7 +35,11 @@ public class ParentLibsConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("parentLibsTest").create();
+            GradleTestProject.builder()
+                    .fromTestProject("parentLibsTest")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void moveLocalProperties() throws IOException {
