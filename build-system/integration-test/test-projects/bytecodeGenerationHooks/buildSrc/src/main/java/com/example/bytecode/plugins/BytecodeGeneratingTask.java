@@ -23,6 +23,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
     private File sourceJar;
     private ArtifactCollection classpath;
     private File outputDir;
+    private String projectPath = getProject().getPath().toString();
 
     @InputFile
     public File getSourceJar() {
@@ -105,12 +106,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
                 }
                 // prints the content so that the test can validate it.
                 System.out.println(
-                        "BytecodeGeneratingTask("
-                                + getProject().getPath()
-                                + ":"
-                                + getName()
-                                + "): "
-                                + file);
+                        "BytecodeGeneratingTask(" + projectPath + ":" + getName() + "): " + file);
             }
         }
     }
