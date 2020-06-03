@@ -26,7 +26,6 @@
 using grpc::ServerBuilder;
 using profiler::perfetto::TraceProcessorServiceImpl;
 
-ABSL_FLAG(uint16_t, port, 20204, "Port to open the gRPC server");
 ABSL_FLAG(absl::Duration, server_timeout, absl::Hours(1),
           "How long to keep the server alive when inactive");
 
@@ -85,9 +84,9 @@ void RunServer() {
   TraceProcessorServiceImpl service;
   builder.RegisterService(&service);
 
-  auto port_flag = absl::GetFlag(FLAGS_port);
   // Bind to to loopback only, as we will only communicate with localhost.
-  std::string server_address("127.0.0.1:" + std::to_string(port_flag));
+  // And use port "0" to let the OS pick up a port for us.
+  std::string server_address("127.0.0.1:0");
 
   // BuildAndStart() will modify this with the picked port.
   int port = 0;
@@ -101,7 +100,9 @@ void RunServer() {
     exit(EXIT_FAILURE);
   }
 
-  std::cout << "Server listening on " << server_address << std::endl;
+  // TODO(b/158080693): Add tests to cover this, where we announce the port we
+  // are using.
+  std::cout << "Server listening on 127.0.0.1:" << port << std::endl;
 
   std::thread activity_checker(&check_last_activity, server.get(), &time_point);
   server->Wait();
