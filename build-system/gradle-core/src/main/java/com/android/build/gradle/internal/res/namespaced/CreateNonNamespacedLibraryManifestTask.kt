@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -81,7 +82,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
+                ArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
         }
     }
 }

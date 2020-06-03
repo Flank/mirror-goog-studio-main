@@ -167,7 +167,7 @@ expected result : "Got an APK...." message.
             }
             ${testingElements.getGitVersionTask()}
 
-            ${testingElements.getManifestTransformerTask()}
+            ${testingElements.getGitVersionManifestTransformerTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
 

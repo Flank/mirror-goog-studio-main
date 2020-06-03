@@ -136,7 +136,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                 id 'com.android.application'
             }
             ${testingElements.getGitVersionTask()}
-            ${testingElements.getManifestTransformerTask()}
+            ${testingElements.getGitVersionManifestTransformerTask()}
 
             import com.android.build.api.artifact.ArtifactType
 

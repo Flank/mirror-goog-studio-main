@@ -2,15 +2,15 @@
 <module relativePaths="true" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../../../out/build/base/build-system/gradle-core/build/generated/source/proto/main">
-      <sourceFolder url="file://$MODULE_DIR$/../../../../out/build/base/build-system/gradle-core/build/generated/source/proto/main/java" isTestSource="false" generated="true" />
+    <content url="file://$SRC$/out/build/base/build-system/gradle-core/build/generated/source/proto/main">
+      <sourceFolder url="file://$SRC$/out/build/base/build-system/gradle-core/build/generated/source/proto/main/java" isTestSource="false" generated="true" />
     </content>
-    <content url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt">
-      <sourceFolder url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt" type="java-resource" relativeOutputPath="com/android/build/gradle/internal/res" generated="true" />
-      <excludeFolder url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt/darwin" />
-      <excludeFolder url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt/linux" />
-      <excludeFolder url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt/protos" />
-      <excludeFolder url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt/windows" />
+    <content url="file://$SRC$/prebuilts/tools/common/aapt">
+      <sourceFolder url="file://$SRC$/prebuilts/tools/common/aapt" type="java-resource" relativeOutputPath="com/android/build/gradle/internal/res" generated="true" />
+      <excludeFolder url="file://$SRC$/prebuilts/tools/common/aapt/darwin" />
+      <excludeFolder url="file://$SRC$/prebuilts/tools/common/aapt/linux" />
+      <excludeFolder url="file://$SRC$/prebuilts/tools/common/aapt/protos" />
+      <excludeFolder url="file://$SRC$/prebuilts/tools/common/aapt/windows" />
       <excludePattern pattern="darwin*" />
       <excludePattern pattern="linux*" />
       <excludePattern pattern="windows*" />
@@ -89,7 +89,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-		<root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/com/squareup/javapoet/1.10.0/javapoet-1.10.0.jar!/" />
+          <root url="jar://$SRC$/prebuilts/tools/common/m2/repository/com/squareup/javapoet/1.10.0/javapoet-1.10.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -99,7 +99,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-		<root url="file://$MODULE_DIR$/../../../../out/build/base/build-system/gradle-core/build/pluginUnderTestMetadata" />
+          <root url="file://$SRC$/out/build/base/build-system/gradle-core/build/pluginUnderTestMetadata" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -107,5 +107,7 @@
     </orderEntry>
     <orderEntry type="library" name="utp-core-proto" level="project" />
     <orderEntry type="library" scope="TEST" name="testkit-api" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.base.apkparser.cli" />
+    <orderEntry type="module" module-name="android.sdktools.base.apkparser.analyzer-base" />
   </component>
 </module>

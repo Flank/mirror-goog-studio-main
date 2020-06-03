@@ -257,7 +257,6 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // manifests that end up being packaged in the aar or the apk file formats.
     object PACKAGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
-    object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Same as above: InternalArtifactType<RegularFile>(FILE), Replaceable but the resource references have stripped namespaces.
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     object AAPT_FRIENDLY_MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable

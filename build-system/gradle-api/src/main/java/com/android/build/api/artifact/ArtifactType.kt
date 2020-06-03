@@ -59,6 +59,10 @@ sealed class ArtifactType<T : FileSystemLocation>(
         Replaceable, Transformable
 
     @Incubating
+    object LIBRARY_MANIFEST: ArtifactType<RegularFile>(FILE, FileNames.ANDROID_MANIFEST_XML),
+        Replaceable, Transformable
+
+    @Incubating
     object OBFUSCATION_MAPPING_FILE: ArtifactType<RegularFile>(FILE, FileNames.OBFUSCATION_MAPPING_FILE)
 
     @Incubating

@@ -28,6 +28,7 @@ import org.junit.rules.TestName
 import java.io.File
 import java.io.FileReader
 import java.util.Properties
+import java.util.logging.Logger
 
 /**
  * Base test class for Variant API related tasks. These tasks setup a Gradle project and execute
@@ -425,6 +426,10 @@ ${repositories.joinToString(
         val initScript = privateTestProjectDir.newFile(scriptingLanguage.makeScriptFileName("init.gradle")).also {
             it.writeText(scriptingLanguage.configureInitScript(mavenRepos))
         }
+        Logger.getGlobal().info(
+            """Init script: 
+            ${scriptingLanguage.configureInitScript(mavenRepos)}""".trim()
+        )
 
         val gradleRunner = GradleRunner.create()
             .withProjectDir(projectDir)

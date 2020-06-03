@@ -62,7 +62,7 @@ class TestingElements(val language: ScriptingLanguage) {
             import org.gradle.api.tasks.InputFile 
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
-            ${getManifestTransformerTask()}
+            ${getGitVersionManifestTransformerTask()}
             """
         )
     }
@@ -127,6 +127,18 @@ class TestingElements(val language: ScriptingLanguage) {
                                 <category android:name="android.intent.category.LAUNCHER" />
                             </intent-filter>
                         </activity>
+                    </application>
+                </manifest>
+            """.trimIndent()
+    }
+
+    fun addLibraryManifest(libName: String, builder: VariantApiBaseTest.GivenBuilder) {
+        builder.manifest =
+                // language=xml
+            """<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.build.example.$libName">
+                    <application>
                     </application>
                 </manifest>
             """.trimIndent()
@@ -317,7 +329,62 @@ fun getManifestProducerTask() =
             """
         }
 
-    fun getManifestTransformerTask() =
+    fun getSimpleManifestTransformerTask() =
+        when(language) {
+            ScriptingLanguage.Kotlin ->
+                // language=kotlin
+                """
+            abstract class ManifestTransformerTask: DefaultTask() {
+
+                @get:Input
+                abstract val activityName: Property<String>
+
+                @get:InputFile
+                abstract val mergedManifest: RegularFileProperty
+
+                @get:OutputFile
+                abstract val updatedManifest: RegularFileProperty
+
+                @TaskAction
+                fun taskAction() {
+
+                    var manifest = mergedManifest.asFile.get().readText()
+                    manifest = manifest.replace("<application",
+                    "<uses-permission android:name=\"android.permission.INTERNET\"/>\n<application")
+                    println("Writes to " + updatedManifest.get().asFile.getAbsolutePath())
+                    updatedManifest.get().asFile.writeText(manifest)
+                }
+            }
+            """
+            ScriptingLanguage.Groovy ->
+                // language=groovy
+                """
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.provider.Property
+
+            abstract class ManifestTransformerTask extends DefaultTask {
+
+                @Input
+                abstract Property<String> getActivityName()
+
+                @InputFile
+                abstract RegularFileProperty getMergedManifest()
+
+                @OutputFile
+                abstract RegularFileProperty getUpdatedManifest()
+
+                @TaskAction
+                void taskAction() {
+                    String manifest = new String(getMergedManifest().get().asFile.readBytes())
+                    manifest = manifest.replace("/<application>",
+                        "\t\t<activity android:name=" + getActivityName().get() + "></activity>\n\t</application>")
+                    getUpdatedManifest().get().asFile.write(manifest)
+                }
+            }
+            """
+        }
+
+    fun getGitVersionManifestTransformerTask() =
         when(language) {
             ScriptingLanguage.Kotlin ->
             // language=kotlin

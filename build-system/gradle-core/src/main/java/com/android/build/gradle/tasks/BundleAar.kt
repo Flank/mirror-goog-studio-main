@@ -163,7 +163,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
-                task.from(artifacts.get(InternalArtifactType.LIBRARY_MANIFEST))
+                task.from(artifacts.get(ArtifactType.LIBRARY_MANIFEST))
             } else {
                 // In namespaced projects the bundled manifest needs to have stripped resource
                 // references for backwards compatibility.

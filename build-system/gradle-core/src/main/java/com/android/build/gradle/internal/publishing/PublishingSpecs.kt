@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.publishing
 
 import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.ArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION
@@ -56,7 +57,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
-import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL_DEPENDENCIES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL_MODULE
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR

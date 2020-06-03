@@ -243,7 +243,6 @@ class ShrinkBundleResourcesTest {
             "intermediary_bundle",
             "release",
             "packageReleaseBundle",
-            "out",
             "intermediary-bundle.aab"
         )
 
@@ -252,7 +251,6 @@ class ShrinkBundleResourcesTest {
             "intermediary_bundle",
             "release",
             "shrinkBundleReleaseResources",
-            "out",
             "intermediary-bundle.aab"
         )
 }

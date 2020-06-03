@@ -16,6 +16,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -283,8 +284,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             artifacts.setInitialProvider(
                 taskProvider
             ) { task: ProcessLibraryManifest -> task.manifestOutputFile }
-                .withName(SdkConstants.ANDROID_MANIFEST_XML)
-                .on(InternalArtifactType.LIBRARY_MANIFEST)
+                .on(ArtifactType.LIBRARY_MANIFEST)
 
             artifacts.setInitialProvider(
                 taskProvider,
