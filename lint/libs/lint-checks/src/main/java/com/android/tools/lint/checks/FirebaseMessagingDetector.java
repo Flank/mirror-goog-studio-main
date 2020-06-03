@@ -71,6 +71,7 @@ public class FirebaseMessagingDetector extends Detector implements SourceCodeSca
 
         context.report(
                 MISSING_TOKEN_REFRESH,
+                declaration,
                 context.getNameLocation(declaration),
                 "Apps that use Firebase Cloud Messaging should implement "
                         + "`onNewToken()` in order to observe token changes");

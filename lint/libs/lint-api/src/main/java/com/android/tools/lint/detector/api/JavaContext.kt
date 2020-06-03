@@ -286,10 +286,25 @@ open class JavaContext(
         message: String,
         quickfixData: LintFix?
     ) {
-        if (driver.isSuppressed(this, issue, psiFile)) {
-            return
+        when (val source = location.source) {
+            is UElement -> {
+                // Detector accidentally invoked scope-less report method inherited
+                // from generic Context, but we remember the actual node from the
+                // location construction, so use it to find the best suppress scope
+                report(issue, source, location, message, quickfixData)
+            }
+            is PsiElement -> {
+                report(issue, source, location, message, quickfixData)
+            }
+            else -> {
+                // No specific scope node for the error: just look at the root
+                // of the file for suppress annotations
+                if (driver.isSuppressed(this, issue, psiFile)) {
+                    return
+                }
+                super.report(issue, location, message, quickfixData)
+            }
         }
-        super.report(issue, location, message, quickfixData)
     }
 
     /**

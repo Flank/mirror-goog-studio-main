@@ -56,6 +56,7 @@ public final class MavenCoordinatesImpl implements MavenCoordinates, Serializabl
         this(groupId, artifactId, version, null /*packaging*/, null /*classifier*/);
     }
 
+    @SuppressWarnings("NoInterning")
     public MavenCoordinatesImpl(
             @NonNull String groupId,
             @NonNull String artifactId,
@@ -149,6 +150,7 @@ public final class MavenCoordinatesImpl implements MavenCoordinates, Serializabl
         return HashCodeUtils.hashCode(groupId, artifactId, version, packaging, classifier);
     }
 
+    @SuppressWarnings("NoInterning")
     private String computeToString() {
         StringBuilder sb = new StringBuilder(
                 groupId.length()
@@ -165,6 +167,7 @@ public final class MavenCoordinatesImpl implements MavenCoordinates, Serializabl
         return sb.toString().intern();
     }
 
+    @SuppressWarnings("NoInterning")
     private String computeVersionLessId() {
         StringBuilder sb = new StringBuilder(
                 groupId.length()

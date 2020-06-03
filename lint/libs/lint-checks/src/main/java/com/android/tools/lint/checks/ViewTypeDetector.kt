@@ -375,6 +375,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         context.report(
             ADD_CAST,
+            findViewByIdCall,
             context.getLocation(findViewByIdCall),
             "Add explicit cast here; won't compile with Java language level 1.8 without it",
             fix

@@ -75,7 +75,8 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.USE_KOTLIN,
         LintDetectorDetector.USE_UAST,
         ShortNameCacheDetector.ISSUE,
-        HtmlPaneDetector.ISSUE
+        HtmlPaneDetector.ISSUE,
+        ForbiddenStudioCallDetector.INTERN
     )
 
     // TODO other checks:

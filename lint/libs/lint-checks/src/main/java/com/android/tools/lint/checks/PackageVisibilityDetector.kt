@@ -115,6 +115,7 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
             if (!permissions.canQueryAllPackages) {
                 context.report(
                     QUERY_PERMISSIONS_NEEDED,
+                    node.methodIdentifier ?: node,
                     context.getLocation(node.methodIdentifier ?: node),
                     """
                     As of Android 11, this method no longer returns information about all apps; \
@@ -125,6 +126,7 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
         } else if (!permissions.canQuerySomePackages) {
             context.report(
                 QUERY_PERMISSIONS_NEEDED,
+                node.methodIdentifier ?: node,
                 context.getLocation(node.methodIdentifier ?: node),
                 """
                 Consider adding a `<queries>` declaration to your manifest when calling this \
