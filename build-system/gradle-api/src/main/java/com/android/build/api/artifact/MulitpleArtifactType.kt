@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.api.artifact
 
-import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.ArtifactKind
-import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.Incubating
-import org.gradle.api.file.Directory
+import org.gradle.api.file.FileSystemLocation
 
 /**
- * Artifact type use for transform
+ * Public [Artifact] for Android Gradle Plugin.
  *
+ * These are [Artifact.MultipleArtifact], see [ArtifactType] for single ones.
  *
- * This interface is not currently usable. It is a work in progress.
+ * All methods in [Artifacts] should be supported with any subclass of this
+ * class.
  */
 @Incubating
-sealed class BuildArtifactType : Artifact.SingleArtifact<Directory>(ArtifactKind.DIRECTORY) {
-    @Incubating
-    object JAVAC_CLASSES : BuildArtifactType()
-    @Incubating
-    object JAVA_COMPILE_CLASSPATH: BuildArtifactType()
+sealed class MultipleArtifactType<FileTypeT : FileSystemLocation>(
+    kind: ArtifactKind<FileTypeT>
+) : Artifact.MultipleArtifact<FileTypeT>(kind) {
+    // there are no public multiple artifact types at this time.
 }

@@ -27,14 +27,14 @@ import java.io.Serializable
  * Defines a type of artifact handled by the Android Gradle Plugin.
  *
  * Each instance of [Artifact] is produced by a [org.gradle.api.Task] and potentially consumed by
- * one to many tasks.
+ * any number of tasks.
  *
- * An artifact can potentially be produced by more than one tasks (each task acting in an additive
- * behavior), but consumers must be aware when more than one artifacts can be present,
- * implementing [Multiple] interface will indicate such requirement.
+ * An artifact can potentially be produced by more than one task (each task acting in an additive
+ * behavior), but consumers must be aware when more than one artifact can be present,
+ * implementing the [MultipleArtifact] interface will indicate such requirement.
  *
- * An artifact must be one the supported [ArtifactKind] which must be provided at construction time
- * ArtifactKind also defines the concrete [FileSystemLocation] subclass used.
+ * An artifact must be one of the supported [ArtifactKind] and must be provided when the constructor is called.
+ * ArtifactKind also defines the specific [FileSystemLocation] subclass used.
  */
 @Incubating
 abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Serializable {
@@ -51,8 +51,8 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
     open fun getFolderName(): String = name().toLowerCase(Locale.US)
 
     /**
-     * @return Depending on [T] the file name of folder under the variant specific folder, empty
-     * string to use defaults.
+     * @return Depending on [T], returns the file name of the folder under the variant-specific folder or
+     * an empty string to use defaults.
      */
     open fun getFileSystemLocationName(): String = ""
 
@@ -76,31 +76,29 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
 
     /**
      * Denotes possible multiple [FileSystemLocation] instances for this artifact type.
-     * Consumers of artifact types that are multiple must be consuming collection of
+     * Consumers of artifact types with multiple instances must consume a collection of
      * [FileSystemLocation]
      */
     @Incubating
-    interface Multiple  {
-        fun name(): String
-    }
+    abstract class MultipleArtifact<FileTypeT: FileSystemLocation>(
+        kind: ArtifactKind<FileTypeT>
+    ) : Artifact<FileTypeT>(kind)
+
 
     /**
      * Denotes a single [FileSystemLocation] instance of this artifact type at a given time.
      * Single artifact types can be transformed or replaced but never appended.
-     * Consumers of artifact types that are multiple must be consuming collection of
-     * [FileSystemLocation]
      */
     @Incubating
-    interface Single {
-        fun name(): String
-    }
-
+    abstract class SingleArtifact<FileTypeT: FileSystemLocation>(
+        kind: ArtifactKind<FileTypeT>
+    ) : Artifact<FileTypeT>(kind)
 
     /**
      * Denotes a single [DIRECTORY] that may contain zero to many
      * [com.android.build.api.variant.BuiltArtifact].
      *
-     * Artifact types annotated with this marker interface are backed up by a [DIRECTORY] which
+     * Artifact types annotated with this marker interface are backed up by a [DIRECTORY] whose
      * content should be read using the [com.android.build.api.variant.BuiltArtifactsLoader].
      *
      * If producing an artifact type annotated with this marker interface, content should be
@@ -114,27 +112,28 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
      * Appending means that existing artifacts produced by other tasks are untouched and a
      * new task producing the artifact type will have its output appended to the list of artifacts.
      *
-     * Due to the additive behavior of the append scenario, an [Appendable] is by definition also
-     * [Multiple]
+     * Due to the additive behavior of the append scenario, an [Appendable] must be a
+     * [MultipleArtifact].
      */
     @Incubating
-    interface Appendable: Multiple
+    interface Appendable
 
     /**
      * Denotes an artifact type that can transformed.
      *
-     * Either a [Single] or [Multiple] artifact type can be transformed.
+     * Either a [SingleArtifact] or [MultipleArtifact] artifact type can be transformed.
      */
     @Incubating
     interface Transformable
 
     /**
      * Denotes an artifact type that can be replaced.
-     * Only [Single] artifacts can be replaced, if you want to replace a [Multiple] artifact type,
-     * you will need to transform it by combining all the inputs into a single output instance.
+     * Only [SingleArtifact] artifacts can be replaced, if you want to replace a [MultipleArtifact]
+     * artifact type, you will need to transform it by combining all the inputs into a single output
+     * instance.
      */
     @Incubating
-    interface Replaceable: Single
+    interface Replaceable
 }
 
 

@@ -30,13 +30,13 @@ import javax.lang.model.element.Modifier
 fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: ClassWriter) {
     val pfsOpcodes = Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL + Opcodes.ACC_STATIC
     when (type) {
-        BuildConfigField.SupportedType.BOOLEAN ->
+        "boolean" ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Boolean::class.java), null, value).visitEnd()
-        BuildConfigField.SupportedType.INT ->
+        "int" ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Int::class.java), null, value).visitEnd()
-        BuildConfigField.SupportedType.LONG ->
+        "long" ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Long::class.java), null, value).visitEnd()
-        BuildConfigField.SupportedType.STRING ->
+        "String" ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(String::class.java), null, value).visitEnd()
         else -> throw IllegalArgumentException(
             """BuildConfigField name: $name type: $type and value type: ${value.javaClass
@@ -63,24 +63,26 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: JavaWriter)
     } else {
         if (valueToWrite is String) {
             if (valueToWrite.length > 2 && valueToWrite.first() == '"' && valueToWrite.last() == '"') {
-                valueToWrite as String
+                valueToWrite
             } else {
                 """"$valueToWrite""""
             }
         } else valueToWrite.toString()
     }
 
-    when (type) {
-        BuildConfigField.SupportedType.BOOLEAN ->
-            writer.emitField("boolean", name, publicStaticFinal, emitValue)
-        BuildConfigField.SupportedType.INT ->
-            writer.emitField("int", name, publicStaticFinal, emitValue)
-        BuildConfigField.SupportedType.LONG ->
-            writer.emitField("long", name, publicStaticFinal, "${emitValue}L")
-        BuildConfigField.SupportedType.STRING ->
-            writer.emitField("String", name, publicStaticFinal, emitValue)
-        else -> throw IllegalArgumentException(
-            """BuildConfigField name: $name type: $type and value type: ${value.javaClass
-                .name} cannot be emitted.""".trimMargin())
+    val formattedEmitValue = if (!type.contains("string", true)) {
+        val removedQuotes = emitValue.removeSurrounding('"'.toString())
+        when {
+            type.contains("long", true) && !removedQuotes.endsWith("L") -> {
+                removedQuotes.plus("L")
+            }
+            type.contains("float", true) && !removedQuotes.endsWith("f") -> {
+                removedQuotes.plus("f")
+            }
+            else -> removedQuotes
+        }
+    } else {
+        emitValue
     }
+    writer.emitField(type, name, publicStaticFinal, formattedEmitValue)
 }

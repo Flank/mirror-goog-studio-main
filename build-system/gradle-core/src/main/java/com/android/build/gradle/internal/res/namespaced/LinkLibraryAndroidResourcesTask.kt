@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -150,7 +150,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             task.inputResourcesDirectories.set(
                 creationConfig.artifacts.getAll(
-                    MultipleArtifactType.RES_COMPILED_FLAT_FILES))
+                    InternalMultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
                     creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

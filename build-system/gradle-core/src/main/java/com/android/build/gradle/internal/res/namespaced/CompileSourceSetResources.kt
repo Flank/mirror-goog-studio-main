@@ -19,7 +19,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -206,11 +206,11 @@ abstract class CompileSourceSetResources : IncrementalTask() {
 
             creationConfig.artifacts.use(taskProvider)
                 .wiredWith(CompileSourceSetResources::partialRDirectory)
-                .toAppendTo(MultipleArtifactType.PARTIAL_R_FILES)
+                .toAppendTo(InternalMultipleArtifactType.PARTIAL_R_FILES)
 
             creationConfig.artifacts.use(taskProvider)
                 .wiredWith(CompileSourceSetResources::outputDirectory)
-                .toAppendTo(MultipleArtifactType.RES_COMPILED_FLAT_FILES)
+                .toAppendTo(InternalMultipleArtifactType.RES_COMPILED_FLAT_FILES)
         }
 
         override fun configure(

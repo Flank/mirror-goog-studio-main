@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -214,7 +214,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 else -> {
                     creationConfig.artifacts.use(taskProvider)
                         .wiredWith(R8Task::outputDex)
-                        .toAppendTo(MultipleArtifactType.DEX)
+                        .toAppendTo(InternalMultipleArtifactType.DEX)
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
                         creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
