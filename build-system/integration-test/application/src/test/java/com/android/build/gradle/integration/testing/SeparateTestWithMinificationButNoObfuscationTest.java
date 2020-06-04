@@ -1,5 +1,6 @@
 package com.android.build.gradle.integration.testing;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -27,6 +28,8 @@ public class SeparateTestWithMinificationButNoObfuscationTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
+                    // http://b/149978740
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("separateTestWithMinificationButNoObfuscation")
                     .create();
 

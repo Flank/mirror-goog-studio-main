@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.testing.unit.JUnitResults.Out
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Throwables;
@@ -32,7 +33,11 @@ import org.junit.Test;
 public class UnitTestingFlavorsSupportTest {
     @ClassRule
     public static GradleTestProject flavorsProject =
-            GradleTestProject.builder().fromTestProject("unitTestingFlavors").create();
+            GradleTestProject.builder()
+                    .fromTestProject("unitTestingFlavors")
+                    // http://b/158205860
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void testsForAGivenFlavorAreOnlyCompiledAgainstTheFlavor() throws Exception {

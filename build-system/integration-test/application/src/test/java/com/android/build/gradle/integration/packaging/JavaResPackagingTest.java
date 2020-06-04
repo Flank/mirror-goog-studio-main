@@ -25,7 +25,9 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
@@ -160,7 +162,10 @@ public class JavaResPackagingTest {
 
     @Test
     public void testNonIncrementalPackaging() throws Exception {
-        execute("clean", "assembleDebug", "assembleAndroidTest");
+        // https://github.com/gradle/gradle/issues/13317
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assembleDebug", "assembleAndroidTest");
 
         // check the files are there. Start from the bottom of the dependency graph
         checkAar(    libProject2, "library2.txt",     "library2:abcd");
@@ -584,38 +589,56 @@ public class JavaResPackagingTest {
 
     @Test
     public void testTestProjectWithNewResFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("test:clean", "test:assembleDebug");
 
-        doTest(testProject, project -> {
-            project.addFile("src/main/resources/com/foo/newtest.txt", "newfile content");
-            execute("test:assembleDebug");
+        doTest(
+                testProject,
+                project -> {
+                    project.addFile("src/main/resources/com/foo/newtest.txt", "newfile content");
+                    executor.run("test:assembleDebug");
 
-            checkApk(testProject, "newtest.txt", "newfile content");
-        });
+                    checkApk(testProject, "newtest.txt", "newfile content");
+                });
     }
 
     @Test
     public void testTestProjectWithRemovedResFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("test:clean", "test:assembleDebug");
 
-        doTest(testProject, project -> {
-            project.removeFile("src/main/resources/com/foo/test.txt");
-            execute("test:assembleDebug");
+        doTest(
+                testProject,
+                project -> {
+                    project.removeFile("src/main/resources/com/foo/test.txt");
+                    executor.run("test:assembleDebug");
 
-            checkApk(testProject, "test.txt", null);
-        });
+                    checkApk(testProject, "test.txt", null);
+                });
     }
 
     @Test
     public void testTestProjectWithModifiedResFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("test:clean", "test:assembleDebug");
 
-        doTest(testProject, project -> {
-            project.replaceFile("src/main/resources/com/foo/test.txt", "new content");
-            execute("test:assembleDebug");
+        doTest(
+                testProject,
+                project -> {
+                    project.replaceFile("src/main/resources/com/foo/test.txt", "new content");
+                    executor.run("test:assembleDebug");
 
-            checkApk(testProject, "test.txt", "new content");
-        });
+                    checkApk(testProject, "test.txt", "new content");
+                });
     }
 
     // --------------------------------
