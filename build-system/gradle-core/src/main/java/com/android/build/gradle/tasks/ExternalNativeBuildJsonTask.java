@@ -35,7 +35,6 @@ import kotlin.Unit;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -66,11 +65,6 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Nested
-    public Provider<CxxMetadataGenerator> getExternalNativeJsonGenerator() {
-        return generator;
     }
 
     @NonNull

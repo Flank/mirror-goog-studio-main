@@ -35,6 +35,5 @@ fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
     createProcessJunctionService(registry)
     createIssueReporterService(global, registry)
     createExecService(global, registry)
-    createModelDependencyService(global, registry)
     return registry.build()
 }

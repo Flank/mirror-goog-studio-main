@@ -63,7 +63,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
 
         // Check some basic requirements. This code executes at sync time but any call to
         // recordConfigurationError will later cause the generation of json to fail.
-        val cmakelists = makefile
+        val cmakelists = this.variant.module.makeFile
         if (cmakelists.isDirectory) {
             errorln(
                 "Gradle project cmake.path %s is a folder. It must be CMakeLists.txt",
@@ -93,7 +93,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
 
     override fun executeProcess(abi: CxxAbiModel): String {
         val output = executeProcessAndGetOutput(abi)
-        return makeCmakeMessagePathsAbsolute(output, makefile.parentFile)
+        return makeCmakeMessagePathsAbsolute(output, variant.module.makeFile.parentFile)
     }
 
     override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {}
@@ -111,7 +111,7 @@ internal abstract class CmakeExternalNativeJsonGenerator(
     override fun getStlSharedObjectFiles(): Map<Abi, File> {
         // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
         var stl: Stl? = null
-        for (argument in buildArguments.map { it.replace(" ", "") }) {
+        for (argument in variant.buildSystemArgumentList.map { it.replace(" ", "") }) {
             if (argument.startsWith("-DANDROID_STL=")) {
                 val stlName = argument.split("=".toRegex(), 2).toTypedArray()[1]
                 stl = Stl.fromArgumentName(stlName)

@@ -46,7 +46,6 @@ import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
 import com.android.build.gradle.internal.cxx.services.issueReporter
-import com.android.build.gradle.internal.cxx.services.jsonGenerationInputDependencyFileCollection
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
 import com.android.build.gradle.internal.profile.AnalyticsUtil
@@ -62,14 +61,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfi
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
 import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFiles
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
@@ -87,50 +79,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     override val variant: CxxVariantModel,
     @get:Internal override val abis: List<CxxAbiModel>
 ) : CxxMetadataGenerator {
-    // TODO(153964094) Move gradle task inputs and outputs [ExternalNativeBuildJsonTask]
-    //region Gradle task inputs and outputs
-    @get:Input
-    val nativeBuildSystem get() = variant.module.buildSystem
-
-    @get:OutputFiles
-    val nativeBuildConfigurationsJsons get() = abis.map { it.jsonFile }
-
-    @get:Input
-    val objFolder: String get() = variant.objFolder.path
-
-    @get:Input
-    val soFolder: String get() = variant.soFolder.path
-
-    @get:Input
-    val sdkFolder: String get() = variant.module.project.sdkFolder.path
-
-    @Input
-    @Optional
-    fun getcFlags(): List<String> = variant.cFlagsList
-
-    @get:Input
-    @get:Optional
-    val cppFlags: List<String> get() = variant.cppFlagsList
-
-    @get:Input
-    @get:Optional
-    val buildArguments: List<String> get() = variant.buildSystemArgumentList
-
-    @get:Input
-    val isDebuggable: Boolean get() = variant.isDebuggableEnabled
-
-    @get:Input
-    val ndkFolder: String get() = variant.module.ndkFolder.path
-
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    @get:InputFile
-    val makefile: File get() = variant.module.makeFile
-
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    val jsonGenerationDependencyFiles: FileCollection
-        get() = variant.module.jsonGenerationInputDependencyFileCollection(abis)
-    //endregion
 
     // TODO(153964094) Reconcile this with jsonGenerationDependencyFiles
     // They do the same work but one is for single abi and one is for all abis.
@@ -180,7 +128,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             errorln("exception while building Json %s", e.message!!)
                         } catch (e: ProcessException) {
                             errorln("executing external native build for %s %s",
-                                nativeBuildSystem.tag, variant.module.makeFile)
+                                variant.module.buildSystem.tag, variant.module.makeFile)
                         }
                     }
                 }
@@ -230,9 +178,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     private fun forEachNativeBuildConfiguration(callback: (JsonReader) -> Unit) {
         IssueReporterLoggingEnvironment(variant.module.issueReporter()).use {
-            val files = nativeBuildConfigurationsJsons
+            val files = abis.map { it.jsonFile }
             infoln("streaming %s JSON files", files.size)
-            for (file in nativeBuildConfigurationsJsons) {
+            for (file in files) {
                 if (file.exists()) {
                     infoln("string JSON file %s", file.absolutePath)
                     try {
@@ -351,9 +299,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     if (abi.cxxBuildFolder.mkdirs()) {
                         infoln("created folder '%s'", abi.cxxBuildFolder)
                     }
-                    infoln("executing %s %s", nativeBuildSystem.tag, processBuilder)
+                    infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
                     val buildOutput = executeProcess(abi)
-                    infoln("done executing %s", nativeBuildSystem.tag)
+                    infoln("done executing %s", variant.module.buildSystem.tag)
 
                     // Write the captured process output to a file for diagnostic purposes.
                     infoln("write build output %s", abi.buildOutputFile.absolutePath)

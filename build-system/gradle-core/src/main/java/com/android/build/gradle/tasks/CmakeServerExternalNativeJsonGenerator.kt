@@ -94,7 +94,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             val serverReceiver = ServerReceiver()
                 .setMessageReceiver { message: InteractiveMessage ->
                     logInteractiveMessage(
-                        message, makefile.parentFile
+                        message, variant.module.makeFile.parentFile
                     )
                 }
                 .setDiagnosticReceiver { message: String? ->
@@ -348,7 +348,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         return getNativeLibraryValue(
             cmake.cmakeExe,
             abi.cxxBuildFolder,
-            isDebuggable,
+            variant.isDebuggableEnabled,
             JsonReader(FileReader(abi.cmake!!.compileCommandsJsonFile)),
             abi.abi.tag,
             workingDirectory,
@@ -366,15 +366,15 @@ internal class CmakeServerExternalNativeJsonGenerator(
         if (!ServerUtils.isCmakeInputsResultValid(cmakeInputsResult)
             || cmakeInputsResult.buildFiles == null) {
             // When CMake server doesn't return a result just use the CMakeLists.txt we know about.
-            return listOf(makefile.absoluteFile)
+            return listOf(variant.module.makeFile.absoluteFile)
         }
 
         // The path to the build file source might be relative, so use the absolute path using
         // source directory information.
         val sourceDirectory= File(cmakeInputsResult.sourceDirectory
-            ?: makefile.absoluteFile.parent)
+            ?: variant.module.makeFile.absoluteFile.parent)
 
-        val files = listOf(makefile) +
+        val files = listOf(variant.module.makeFile) +
             cmakeInputsResult.buildFiles
                 // Combine multiple results from CMake server
                 .flatMap { buildFiles -> buildFiles.sources?.filterNotNull() ?: listOf() }
