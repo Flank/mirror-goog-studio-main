@@ -21,6 +21,7 @@ import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.profile.ProcessProfileWriter
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics
 import org.gradle.api.file.Directory
@@ -71,20 +72,27 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.packageAndroidTask = taskProvider
+            val useOptimizedResources = !creationConfig.variantDslInfo.isDebuggable &&
+                    creationConfig.services.projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]
             val operationRequest = creationConfig.artifacts.use(taskProvider)
-                .wiredWithDirectories(
-                    PackageAndroidArtifact::getResourceFiles,
-                    PackageApplication::getOutputDirectory)
-            transformationRequest = (if (useResourceShrinker)
-                    operationRequest.toTransformMany(
+                    .wiredWithDirectories(
+                            PackageAndroidArtifact::getResourceFiles,
+                            PackageApplication::getOutputDirectory)
+
+            transformationRequest = when {
+                useOptimizedResources -> operationRequest.toTransformMany(
+                        InternalArtifactType.OPTIMIZED_PROCESSED_RES,
+                        InternalArtifactType.APK,
+                        outputDirectory.absolutePath)
+                useResourceShrinker -> operationRequest.toTransformMany(
                         InternalArtifactType.SHRUNK_PROCESSED_RES,
                         InternalArtifactType.APK,
                         outputDirectory.absolutePath)
-                else
-                    operationRequest.toTransformMany(
+                else -> operationRequest.toTransformMany(
                         InternalArtifactType.PROCESSED_RES,
                         InternalArtifactType.APK,
-                        outputDirectory.absolutePath))
+                        outputDirectory.absolutePath)
+            }
 
             // in case configure is called before handleProvider, we need to save the request.
             transformationRequest?.let {

@@ -30,8 +30,6 @@ def merge_xmls(filelist):
         else:
           root.append(child)
           break
-      if child.find('testcase'):
-        root.append(child)
   return root
 
 def main():

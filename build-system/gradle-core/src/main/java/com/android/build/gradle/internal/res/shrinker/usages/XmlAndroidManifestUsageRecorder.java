@@ -18,7 +18,10 @@ package com.android.build.gradle.internal.res.shrinker.usages;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel;
+import com.android.build.gradle.internal.res.shrinker.graph.RawResourcesGraphBuilder.ResourceUsageModelForShrinker;
+import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -37,10 +40,15 @@ public final class XmlAndroidManifestUsageRecorder implements ResourceUsageRecor
 
     @Override
     public void recordUsages(@NonNull ResourceShrinkerModel model) throws IOException {
+        Preconditions.checkState(!model.getResourceStore().getSupportMultipackages(),
+                "Resource usage recorder from AndroidManifest.xml in a raw XML format is " +
+                        "incompatible with multi-module applications.");
+
         String xml = new String(Files.readAllBytes(manifest), StandardCharsets.UTF_8);
+        ResourceUsageModel usageModel = new ResourceUsageModelForShrinker(model);
         try {
             Document document = XmlUtils.parseDocument(xml, true);
-            model.getUsageModel().visitXmlDocument(manifest.toFile(), null, document);
+            usageModel.visitXmlDocument(manifest.toFile(), null, document);
         } catch (SAXException e) {
             throw new IOException(e);
         }

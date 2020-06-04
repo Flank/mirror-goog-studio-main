@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat.BINARY;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.NO_MATCH;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.convertFormatStringToRegexp;
@@ -28,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.res.shrinker.ApkFormat;
 import com.android.build.gradle.internal.res.shrinker.DummyContent;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
@@ -137,8 +137,7 @@ public class ResourceUsageAnalyzerTest {
                         mergedManifest,
                         mapping,
                         resources,
-                        null,
-                        ApkFormat.BINARY);
+                        null);
         analyzer.analyze();
         checkState(analyzer);
         assertEquals(
@@ -186,8 +185,7 @@ public class ResourceUsageAnalyzerTest {
                         createMergedManifest(dir),
                         createMappingFile(dir),
                         resources,
-                        null,
-                        ApkFormat.BINARY);
+                        null);
 
         analyzer.analyze();
         checkState(analyzer);
@@ -271,8 +269,7 @@ public class ResourceUsageAnalyzerTest {
                         mergedManifest,
                         mapping,
                         resources,
-                        null,
-                        ApkFormat.BINARY);
+                        null);
         analyzer.analyze();
         checkState(analyzer);
         assertEquals(""
@@ -424,7 +421,7 @@ public class ResourceUsageAnalyzerTest {
 
             File compressedFile = File.createTempFile("compressed", ".ap_");
 
-            analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile);
+            analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile, BINARY);
 
             // Check contents
             assertEquals(""
@@ -1367,7 +1364,7 @@ public class ResourceUsageAnalyzerTest {
     }
 
     private static void checkState(ResourceUsageAnalyzer analyzer) {
-        List<Resource> resources = analyzer.getModel().getResources();
+        List<Resource> resources = Lists.newArrayList(analyzer.getModel().getResources());
         Collections.sort(resources, new Comparator<Resource>() {
             @Override
             public int compare(Resource resource1, Resource resource2) {
@@ -1400,8 +1397,7 @@ public class ResourceUsageAnalyzerTest {
                         dummy,
                         mappingFile,
                         dummy,
-                        null,
-                        ApkFormat.BINARY);
+                        null);
         analyzer.getModel().addDeclaredResource(ResourceType.LAYOUT, "structure_status_view", null, true);
         analyzer.recordMapping(mappingFile);
         assertTrue(analyzer.isResourceClass("android/support/v7/appcompat/R$attr.class"));

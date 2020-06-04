@@ -29,25 +29,9 @@ import java.util.List;
  */
 public interface AndroidProject {
     //  Injectable properties to use with -P
-    // Sent by Studio 1.0 ONLY
-    String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
-    // Sent by Studio 1.1+
-    String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = "android.injected.build.model.only.advanced";
-    // Sent by Studio 2.4+. The value of the prop is a monotonically increasing integer.
-    // see MODEL_LEVEL_* constants
-    String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = "android.injected.build.model.only.versioned";
-    // Sent by Studio 2.4+. Additional model feature trigger on a case by case basis
-    // Value is simply true to enable.
-    String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
-    /**
-     * Was a property to disable source download during model sync, which is no longer done by AGP.
-     *
-     * @deprecated Only has effect in AGP 3.5. Android Studio 3.6 onwards downloads sources using an
-     *     injected gradle tooling model and model builder.
-     */
-    @Deprecated
-    String PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD =
-            "android.injected.build.model.disable.src.download";
+
+    // Sent by Studio 4.2+
+    String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.v2";
 
     // Sent by Studio 2.2+ and Android Support plugin running with IDEA from 4.1+
     // This property will enable compatibility checks between Android Support plugin and the Android
@@ -80,11 +64,6 @@ public interface AndroidProject {
     //   2) Generate build metadata JSON files
     String PROPERTY_INVOKED_FROM_IDE = "android.injected.invoked.from.ide";
 
-    // deprecated. Kept here so that newew Studio can still inject it for older plugin
-    // but newer plugin don't do anything different based on this property.
-    @SuppressWarnings("unused")
-    String PROPERTY_GENERATE_SOURCES_ONLY = "android.injected.generateSourcesOnly";
-
     String PROPERTY_SIGNING_STORE_FILE = "android.injected.signing.store.file";
     String PROPERTY_SIGNING_STORE_PASSWORD = "android.injected.signing.store.password";
     String PROPERTY_SIGNING_KEY_ALIAS = "android.injected.signing.key.alias";
@@ -104,19 +83,8 @@ public interface AndroidProject {
     /** Version code to be used in the built APK. */
     String PROPERTY_VERSION_CODE = "android.injected.version.code";
 
-    /** Version code injected by Android Studio when using Instant Run. */
-    int INSTANT_RUN_VERSION_CODE = Integer.MAX_VALUE;
-
     /** Version name to be used in the built APK. */
     String PROPERTY_VERSION_NAME = "android.injected.version.name";
-
-    /** Version name injected by Android Studio when using Instant Run. */
-    String INSTANT_RUN_VERSION_NAME = "INSTANT_RUN";
-
-    /**
-     * Comma-separated list of {@link OptionalCompilationStep} value names, used with Instant Run.
-     */
-    String PROPERTY_OPTIONAL_COMPILATION_STEPS = "android.optional.compilation";
 
     /**
      * Location for APKs. If defined as a relative path, then it is resolved against the
@@ -144,17 +112,6 @@ public interface AndroidProject {
     String FD_LOGS = "logs";
     String FD_OUTPUTS = "outputs";
     String FD_GENERATED = "generated";
-
-    int GENERATION_ORIGINAL = 1;
-    int GENERATION_COMPONENT = 2; // component plugin is not supported since 3.5
-
-    int MODEL_LEVEL_0_ORIGINAL = 0 ; // studio 1.0, no support for SyncIssue
-    int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
-    //int MODEL_LEVEL_2_DONT_USE = 2; // Don't use this. Go level 1 to level 3 when ready.
-    int MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD =
-            3; // Model for 3.0 with no variant output in import sync model.
-    int MODEL_LEVEL_4_NEW_DEP_MODEL = 4;
-    int MODEL_LEVEL_LATEST = MODEL_LEVEL_4_NEW_DEP_MODEL;
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
@@ -186,14 +143,6 @@ public interface AndroidProject {
      */
     @NonNull
     String getName();
-
-    /**
-     * Returns whether this is a library.
-     * @return true for a library module.
-     * @deprecated use {@link #getProjectType()} instead.
-     */
-    @Deprecated
-    boolean isLibrary();
 
     /**
      * Returns the type of project: Android application, library, feature, instantApp.
@@ -336,32 +285,6 @@ public interface AndroidProject {
     LintOptions getLintOptions();
 
     /**
-     * Returns the dependencies that were not successfully resolved. The returned list gets
-     * populated only if the system property {@link #PROPERTY_BUILD_MODEL_ONLY} has been
-     * set to {@code true}.
-     * <p>
-     * Each value of the collection has the format group:name:version, for example:
-     * com.google.guava:guava:15.0.2
-     *
-     * @return the dependencies that were not successfully resolved.
-     * @deprecated use {@link #getSyncIssues()}
-     */
-    @Deprecated
-    @NonNull
-    Collection<String> getUnresolvedDependencies();
-
-    /**
-     * Returns issues found during sync.  The returned list gets
-     * populated only if the system property {@link #PROPERTY_BUILD_MODEL_ONLY} has been
-     * set to {@code true}.
-     *
-     * @deprecated request {@link ProjectSyncIssues} instead.
-     */
-    @Deprecated
-    @NonNull
-    Collection<SyncIssue> getSyncIssues();
-
-    /**
      * Returns the compile options for Java code.
      */
     @NonNull
@@ -399,15 +322,6 @@ public interface AndroidProject {
      */
     @NonNull
     String getNdkVersion();
-
-    /**
-     * Returns the generation of the plugin.
-     *
-     * <p>1 is original plugin, 2 is component based plugin (AKA experimental, not used anymore)
-     *
-     * @return the generation value
-     */
-    int getPluginGeneration();
 
     /**
      * Returns true if this is the base feature split.

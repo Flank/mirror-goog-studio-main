@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.testutils.apk.Apk;
 import java.io.File;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /**
  * Assemble tests for embedded wear app with a single app.
  */
@@ -66,8 +68,21 @@ public class WearSimpleTest {
     @Test
     public void checkDefaultEmbedding() throws Exception {
         project.execute("clean", ":main:assemble");
-        String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
-                DOT_ANDROID_PACKAGE;
+        boolean optimizedResEnabled =
+                project.getSubproject("main")
+                        .getIntermediateFile(
+                                InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE
+                                        .getFolderName())
+                        .exists();
+        String embeddedApkPath =
+                optimizedResEnabled
+                        ? FD_RES + '/' + "sq.apk"
+                        : FD_RES
+                                + '/'
+                                + FD_RES_RAW
+                                + '/'
+                                + ANDROID_WEAR_MICRO_APK
+                                + DOT_ANDROID_PACKAGE;
 
         // each micro app has a different version name to distinguish them from one another.
         // here we record what we expect from which.

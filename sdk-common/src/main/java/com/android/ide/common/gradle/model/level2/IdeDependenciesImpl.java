@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.level2;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -28,9 +27,9 @@ public class IdeDependenciesImpl implements IdeDependencies, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
 
-    @NonNull private final Collection<Library> myAndroidLibraries;
-    @NonNull private final Collection<Library> myJavaLibraries;
-    @NonNull private final Collection<Library> myModuleDependencies;
+    @NonNull private final Collection<IdeLibrary> myAndroidLibraries;
+    @NonNull private final Collection<IdeLibrary> myJavaLibraries;
+    @NonNull private final Collection<IdeLibrary> myModuleDependencies;
     @NonNull private final Collection<File> myRuntimeOnlyClasses;
     private final int myHashCode;
 
@@ -46,9 +45,9 @@ public class IdeDependenciesImpl implements IdeDependencies, Serializable {
     }
 
     IdeDependenciesImpl(
-            @NonNull ImmutableList<Library> androidLibraries,
-            @NonNull ImmutableList<Library> javaLibraries,
-            @NonNull ImmutableList<Library> moduleDependencies,
+            @NonNull ImmutableList<IdeLibrary> androidLibraries,
+            @NonNull ImmutableList<IdeLibrary> javaLibraries,
+            @NonNull ImmutableList<IdeLibrary> moduleDependencies,
             @NonNull ImmutableList<File> runtimeOnlyClasses) {
         myAndroidLibraries = androidLibraries;
         myJavaLibraries = javaLibraries;
@@ -59,19 +58,19 @@ public class IdeDependenciesImpl implements IdeDependencies, Serializable {
 
     @Override
     @NonNull
-    public Collection<Library> getAndroidLibraries() {
+    public Collection<IdeLibrary> getAndroidLibraries() {
         return myAndroidLibraries;
     }
 
     @Override
     @NonNull
-    public Collection<Library> getJavaLibraries() {
+    public Collection<IdeLibrary> getJavaLibraries() {
         return myJavaLibraries;
     }
 
     @Override
     @NonNull
-    public Collection<Library> getModuleDependencies() {
+    public Collection<IdeLibrary> getModuleDependencies() {
         return myModuleDependencies;
     }
 

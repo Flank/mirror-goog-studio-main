@@ -30,10 +30,8 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.errors.DuplicateTypesDiagnostic;
-import com.google.common.collect.Lists;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
@@ -68,20 +66,20 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
 
     @Override
     public void mergeDexArchives(
-            @NonNull Iterator<Path> inputs,
+            @NonNull List<DexArchiveEntry> dexArchiveEntries,
+            @NonNull List<Path> dexRootsForDx,
             @NonNull Path outputDir,
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)
             throws DexArchiveMergerException {
-        List<Path> inputsList = Lists.newArrayList(inputs);
+        List<Path> inputsList = new ArrayList(dexRootsForDx);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.log(
                     Level.INFO,
                     "Merging to '"
                             + outputDir.toAbsolutePath().toString()
-                            + "' with D8 from "
-                            + inputsList
-                                    .stream()
+                            + "' with D8 from all or a subset of dex files in "
+                            + inputsList.stream()
                                     .map(path -> path.toAbsolutePath().toString())
                                     .collect(Collectors.joining(", ")));
         }
@@ -94,16 +92,10 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
         builder.setDisableDesugaring(true);
         builder.setIncludeClassesChecksum(compilationMode == CompilationMode.DEBUG);
 
-        for (Path input : inputsList) {
-            try (DexArchive archive = DexArchives.fromInput(input)) {
-                for (DexArchiveEntry dexArchiveEntry : archive.getFiles()) {
-                    builder.addDexProgramData(
-                            dexArchiveEntry.getDexFileContent(),
-                            D8DiagnosticsHandler.getOrigin(dexArchiveEntry));
-                }
-            } catch (IOException e) {
-                throw getExceptionToRethrow(e, d8DiagnosticsHandler);
-            }
+        for (DexArchiveEntry dexArchiveEntry : dexArchiveEntries) {
+            builder.addDexProgramData(
+                    dexArchiveEntry.getDexFileContent(),
+                    D8DiagnosticsHandler.getOrigin(dexArchiveEntry));
         }
         try {
             if (mainDexClasses != null) {

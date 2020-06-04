@@ -63,9 +63,10 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
           "FROM sched INNER JOIN thread using(utid) "
           "           INNER JOIN process using(upid) "
           "ORDER BY tid ASC, ts ASC";
+      break;
     default:
-      std::cerr << "SchedulingEventsParameters with no criteria set."
-                << std::endl;
+      std::cerr << "Unknown SchedulingEventsParameters criteria." << std::endl;
+      return;
   }
 
   auto it_sched = tp_->ExecuteQuery(query_string);

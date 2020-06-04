@@ -24,9 +24,11 @@ import java.util.Collection;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_JAVA. */
-public final class IdeJavaLibrary implements Library {
+public final class IdeJavaLibrary implements IdeLibrary {
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myArtifactFile;
+
+    private boolean myIsProvided;
     private final int myType;
     private final int myHashCode;
 
@@ -36,16 +38,19 @@ public final class IdeJavaLibrary implements Library {
         myArtifactAddress = "";
         //noinspection ConstantConditions
         myArtifactFile = null;
+        myIsProvided = false;
         myType = 0;
 
         myHashCode = 0;
     }
 
     @VisibleForTesting
-    public IdeJavaLibrary(@NonNull String artifactAddress, @NonNull File artifactFile) {
+    public IdeJavaLibrary(
+            @NonNull String artifactAddress, @NonNull File artifactFile, boolean isProvided) {
         myType = LIBRARY_JAVA;
         myArtifactAddress = artifactAddress;
         myArtifactFile = artifactFile;
+        myIsProvided = isProvided;
         myHashCode = calculateHashCode();
     }
 
@@ -64,6 +69,11 @@ public final class IdeJavaLibrary implements Library {
     @NonNull
     public File getArtifact() {
         return myArtifactFile;
+    }
+
+    @Override
+    public boolean isProvided() {
+        return myIsProvided;
     }
 
     @Override
@@ -198,7 +208,8 @@ public final class IdeJavaLibrary implements Library {
         IdeJavaLibrary that = (IdeJavaLibrary) o;
         return myType == that.myType
                 && Objects.equals(myArtifactAddress, that.myArtifactAddress)
-                && Objects.equals(myArtifactFile, that.myArtifactFile);
+                && Objects.equals(myArtifactFile, that.myArtifactFile)
+                && Objects.equals(myIsProvided, that.myIsProvided);
     }
 
     @Override
@@ -207,7 +218,7 @@ public final class IdeJavaLibrary implements Library {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myType, myArtifactAddress, myArtifactFile);
+        return Objects.hash(myType, myArtifactAddress, myArtifactFile, myIsProvided);
     }
 
     @Override
@@ -220,6 +231,9 @@ public final class IdeJavaLibrary implements Library {
                 + '\''
                 + ", myArtifactFile="
                 + myArtifactFile
+                + '\''
+                + ", myIsProvided="
+                + myIsProvided
                 + '}';
     }
 }

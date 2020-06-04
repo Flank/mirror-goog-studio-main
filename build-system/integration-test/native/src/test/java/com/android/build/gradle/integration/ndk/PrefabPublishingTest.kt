@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -38,7 +39,8 @@ class PrefabPublishingTest(
     @Rule
     @JvmField
     val project = GradleTestProject.builder().fromTestProject(projectName)
-        .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION).create()
+        .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
 
     private val ndkMajor = GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION.split(".").first()
 

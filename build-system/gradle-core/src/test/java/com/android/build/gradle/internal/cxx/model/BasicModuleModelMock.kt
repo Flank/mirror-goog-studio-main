@@ -61,7 +61,6 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import java.io.File
 import java.util.Locale
-import java.util.function.Supplier
 
 /**
  * Set up up a mock for constructing [CxxModuleModel]. It takes a lot of plumbing so this can
@@ -188,7 +187,7 @@ open class BasicModuleModelMock {
     val gradle = mock(
         Gradle::class.java
     )
-    val build = getCxxBuildModel(gradle)
+
     private fun <T> any(): T {
         Mockito.any<T>()
         return uninitialized()
@@ -274,7 +273,6 @@ open class BasicModuleModelMock {
     init {
         val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
         val meta = join(ndkFolder, "meta")
-        setCxxBuildModel(null)
         meta.mkdirs()
         File(meta, "platforms.json").writeText(platformsJson)
         File(meta, "abis.json").writeText(abisJson)

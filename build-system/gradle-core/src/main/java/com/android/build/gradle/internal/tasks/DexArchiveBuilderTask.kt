@@ -551,12 +551,14 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.dexer.set(creationConfig.variantScope.dexer)
             task.useGradleWorkers.set(projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
             task.dxDexParams.inBufferSize.set(
-                (projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE)
-                    ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
+                task.project.providers.provider {
+                    (projectOptions.getValueProvider(IntegerOption.DEXING_READ_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
+                }
             )
             task.dxDexParams.outBufferSize.set(
-                (projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE)
-                    ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
+                task.project.providers.provider {
+                    (projectOptions.getValueProvider(IntegerOption.DEXING_WRITE_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
+                }
             )
             task.dexParams.debuggable.setDisallowChanges(
                 creationConfig.variantDslInfo.isDebuggable
@@ -565,7 +567,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 "${creationConfig.globalScope.project.name}:${creationConfig.name}"
             )
             task.numberOfBuckets.set(
-                projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS
+                task.project.providers.provider {
+                    projectOptions.getValueProvider(IntegerOption.DEXING_NUMBER_OF_BUCKETS).orNull
+                        ?: DEFAULT_NUM_BUCKETS
+                }
             )
             task.dxDexParams.dxNoOptimizeFlagPresent.set(
                 dexOptions.additionalParameters.contains("--no-optimize")

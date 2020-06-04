@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -49,6 +50,7 @@ class HeaderInCmakeListsTest {
                 .useCppSource(true)
                 .build()
         )
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .setCmakeVersion("3.10.4819442")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)

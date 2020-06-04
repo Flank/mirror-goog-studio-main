@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.tasks.ExtractAnnotations
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.ManifestProcessorTask
@@ -91,7 +91,7 @@ class MutableTaskContainer : TaskContainer {
     lateinit var assetGenTask: TaskProvider<Task>
     var connectedTask: TaskProvider<out Task>? = null
     var microApkTask: TaskProvider<out Task>? = null
-    var externalNativeJsonGenerator: Provider<ExternalNativeJsonGenerator>? = null
+    var cxxMetadataGenerator: Provider<CxxMetadataGenerator>? = null
     var packageSplitResourcesTask: TaskProvider<out Task>? = null
     var packageSplitAbiTask: TaskProvider<out Task>? = null
     var generateResValuesTask: TaskProvider<out Task>? = null

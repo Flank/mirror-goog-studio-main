@@ -19,8 +19,6 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,27 +26,25 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.SortedMap;
 import java.util.jar.JarOutputStream;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /** Implementation of the {@link DexArchive} that does not support incremental updates. */
 final class NonIncrementalJarDexArchive implements DexArchive {
 
     private static final FileTime ZERO_TIME = FileTime.fromMillis(0);
 
-    private final Path targetPath;
-    @Nullable private JarOutputStream jarOutputStream;
-    @Nullable private ZipFile readOnlyZipFile;
+    @NonNull private final Path targetPath;
+    @Nullable private JarOutputStream jarOutputStream; // null if this jar is for reading
 
-    public NonIncrementalJarDexArchive(Path targetPath) throws IOException {
+    public NonIncrementalJarDexArchive(@NonNull Path targetPath) throws IOException {
         this.targetPath = targetPath;
         if (Files.isRegularFile(targetPath)) {
             // we should read this file
-            this.readOnlyZipFile = new ZipFile(targetPath.toFile());
+            this.jarOutputStream = null;
         } else {
             // we are creating this file
             this.jarOutputStream =
@@ -92,19 +88,17 @@ final class NonIncrementalJarDexArchive implements DexArchive {
 
     @NonNull
     @Override
-    public List<DexArchiveEntry> getFiles() throws IOException {
-        Preconditions.checkNotNull(readOnlyZipFile, "Archive is not readable : %s", targetPath);
-        List<DexArchiveEntry> dexEntries = new ArrayList<>();
-        Enumeration<? extends ZipEntry> entries = readOnlyZipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry zipEntry = entries.nextElement();
-            try (BufferedInputStream inputStream =
-                    new BufferedInputStream(readOnlyZipFile.getInputStream(zipEntry))) {
-                byte[] content = ByteStreams.toByteArray(inputStream);
-                dexEntries.add(new DexArchiveEntry(content, zipEntry.getName(), this));
-            }
+    public List<DexArchiveEntry> getSortedDexArchiveEntries() {
+        Preconditions.checkState(
+                jarOutputStream == null, "Archive is not for reading: %s", targetPath);
+
+        SortedMap<String, byte[]> dexEntries = DexUtilsKt.getSortedDexEntriesInJar(targetPath);
+        List<DexArchiveEntry> dexArchiveEntries = new ArrayList<>(dexEntries.size());
+        for (String relativePath : dexEntries.keySet()) {
+            dexArchiveEntries.add(
+                    new DexArchiveEntry(dexEntries.get(relativePath), relativePath, this));
         }
-        return dexEntries;
+        return dexArchiveEntries;
     }
 
     @Override
@@ -112,10 +106,6 @@ final class NonIncrementalJarDexArchive implements DexArchive {
         if (jarOutputStream != null) {
             jarOutputStream.flush();
             jarOutputStream.close();
-        } else if (readOnlyZipFile != null) {
-            readOnlyZipFile.close();
-        } else {
-            throw new IllegalStateException("Dex archive is neither readable nor writable.");
         }
     }
 }

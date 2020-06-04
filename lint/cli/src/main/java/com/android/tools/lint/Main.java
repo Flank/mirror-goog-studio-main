@@ -1613,7 +1613,7 @@ public class Main {
                     ARG_SDK_HOME + " <dir>",
                     "Use the given SDK instead of attempting to find it "
                             + "relative to the lint installation or via $ANDROID_SDK_ROOT",
-                    ARG_SDK_HOME + " <dir>",
+                    ARG_JDK_HOME + " <dir>",
                     "Use the given JDK instead of attempting to find it via $JAVA_HOME or java.home",
                     ARG_JAVA_LANGUAGE_LEVEL + " <level>",
                     "Use the given version of the Java programming language",

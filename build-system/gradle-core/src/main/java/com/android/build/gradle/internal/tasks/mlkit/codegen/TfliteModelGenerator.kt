@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks.mlkit.codegen
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultProcessInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getAssociatedFileInjector
@@ -37,26 +38,34 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.IOException
-import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.ArrayList
 import javax.lang.model.element.Modifier
 
 /** Generator to generate code for tflite model. */
 class TfliteModelGenerator(
-    modelFile: File,
+    private val modelFile: File,
     private val packageName: String,
     private val localModelPath: String
 ) : ModelGenerator {
     private val logger: Logger = Logging.getLogger(this.javaClass)
     private val modelInfo: ModelInfo = ModelInfo.buildFrom(ByteBuffer.wrap(modelFile.readBytes()))
     private val className: String = MlNames.computeModelClassName(localModelPath)
+    private val androidLogger: LoggerWrapper = LoggerWrapper(logger)
 
     override fun generateBuildClass(outputDirProperty: DirectoryProperty) {
         val classBuilder = TypeSpec.classBuilder(className).addModifiers(
             Modifier.PUBLIC,
             Modifier.FINAL
         )
+
+        if (modelInfo.isMetadataVersionTooHigh) {
+            androidLogger.warning(
+                "Model is not fully supported in current Android Gradle Plugin" +
+                        " and will use fallback API, please upgrade to latest version if necessary: ${modelFile.absolutePath}"
+            )
+        }
+
         if (modelInfo.isMetadataExisted) {
             classBuilder.addJavadoc(modelInfo.modelDescription)
         } else {

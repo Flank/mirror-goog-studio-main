@@ -16,20 +16,15 @@
 
 package com.android.builder.dexing;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 
 /** Helper methods for the {@link DexArchive}. */
 public final class DexArchives {
-
-    public static final Predicate<Path> DEX_ENTRY_FILTER =
-            f -> f.toString().endsWith(SdkConstants.DOT_DEX);
 
     private DexArchives() {
     }
@@ -55,7 +50,7 @@ public final class DexArchives {
     static List<DexArchiveEntry> getEntriesFromSingleArchive(@NonNull Path archivePath)
             throws IOException {
         try (DexArchive archive = fromInput(archivePath)) {
-            return archive.getFiles();
+            return archive.getSortedDexArchiveEntries();
         }
     }
 

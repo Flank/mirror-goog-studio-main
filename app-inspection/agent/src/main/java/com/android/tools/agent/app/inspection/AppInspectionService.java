@@ -16,23 +16,18 @@
 
 package com.android.tools.agent.app.inspection;
 
+import static com.android.tools.agent.app.inspection.InspectorContext.*;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEvent;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseError;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseSuccess;
 
-import android.util.Pair;
-import androidx.annotation.NonNull;
-import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorEnvironment.EntryHook;
 import androidx.inspection.InspectorEnvironment.ExitHook;
-import androidx.inspection.InspectorFactory;
-import dalvik.system.DexClassLoader;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 /** This service controls all app inspectors */
@@ -41,8 +36,6 @@ import java.util.function.Function;
 // Suppress rawtypes: Service doesn't care about specific types, works with Objects
 @SuppressWarnings({"Convert2Lambda", "unused", "rawtypes"})
 public class AppInspectionService {
-    private static final String MAIN_THREAD_NAME = "main";
-
     private static AppInspectionService sInstance;
 
     public static AppInspectionService instance() {
@@ -57,15 +50,20 @@ public class AppInspectionService {
     // currently AppInspectionService is singleton and it is never destroyed, so we don't clean this reference.
     private final long mNativePtr;
 
-    private final Map<String, InspectorContext> mInspectorContexts = new ConcurrentHashMap<>();
+    private final Map<String, InspectorBridge> mInspectorBridges = new ConcurrentHashMap<>();
 
     private final Map<String, List<HookInfo<ExitHook>>> mExitTransforms = new ConcurrentHashMap<>();
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
             new ConcurrentHashMap<>();
 
-    // it keeps reference only to pending commands.
-    private final ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
-            new ConcurrentHashMap<>();
+    private CrashListener mCrashListener =
+            new CrashListener() {
+                @Override
+                public void onInspectorCrashed(String inspectorId, String message) {
+                    sendCrashEvent(inspectorId, message);
+                    doDispose(inspectorId);
+                }
+            };
 
     /**
      * Construct an instance referencing some native (JVMTI) resources.
@@ -93,8 +91,8 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        if (mInspectorContexts.containsKey(inspectorId)) {
-            String alreadyLaunchedProjectName = mInspectorContexts.get(inspectorId).getProject();
+        if (mInspectorBridges.containsKey(inspectorId)) {
+            String alreadyLaunchedProjectName = mInspectorBridges.get(inspectorId).getProject();
             sendServiceResponseError(
                     commandId,
                     "Inspector with the given id "
@@ -103,61 +101,36 @@ public class AppInspectionService {
                             + alreadyLaunchedProjectName);
             return;
         }
-        ClassLoader mainClassLoader = mainThreadClassLoader();
-        if (mainClassLoader == null) {
-            sendServiceResponseError(commandId, "Failed to find a main thread");
-            return;
-        }
+
         if (!new File(dexPath).exists()) {
             sendServiceResponseError(commandId, "Failed to find a file with path: " + dexPath);
             return;
         }
 
-        String optimizedDir = System.getProperty("java.io.tmpdir");
-
-        try {
-            ClassLoader classLoader =
-                    new DexClassLoader(dexPath, optimizedDir, null, mainClassLoader);
-            ServiceLoader<InspectorFactory> loader =
-                    ServiceLoader.load(InspectorFactory.class, classLoader);
-            Iterator<InspectorFactory> iterator = loader.iterator();
-            Inspector inspector = null;
-            while (iterator.hasNext()) {
-                InspectorFactory inspectorFactory = iterator.next();
-                if (inspectorId.equals(inspectorFactory.getInspectorId())) {
-                    ConnectionImpl connection = new ConnectionImpl(inspectorId);
-                    InspectorEnvironment environment =
-                            new InspectorEnvironmentImpl(mNativePtr, inspectorId);
-                    inspector = inspectorFactory.createInspector(connection, environment);
-                    mInspectorContexts.put(
-                            inspectorId, new InspectorContext(inspector, projectName));
-                    break;
-                }
-            }
-            if (inspector == null) {
-                sendServiceResponseError(
-                        commandId, "Failed to find InspectorFactory with id " + inspectorId);
-                return;
-            }
-            sendServiceResponseSuccess(commandId);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            sendServiceResponseError(
-                    commandId, "Failed during instantiating inspector with id " + inspectorId);
-        }
+        InspectorBridge bridge = InspectorBridge.create(inspectorId, projectName, mCrashListener);
+        mInspectorBridges.put(inspectorId, bridge);
+        bridge.initializeInspector(
+                dexPath,
+                mNativePtr,
+                (error) -> {
+                    if (error != null) {
+                        mInspectorBridges.remove(inspectorId);
+                        sendServiceResponseError(commandId, error);
+                    } else {
+                        sendServiceResponseSuccess(commandId);
+                    }
+                });
     }
 
     public void disposeInspector(String inspectorId, int commandId) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        if (!mInspectorContexts.containsKey(inspectorId)) {
+        if (!mInspectorBridges.containsKey(inspectorId)) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
-        removeHooks(inspectorId, mEntryTransforms);
-        removeHooks(inspectorId, mExitTransforms);
         doDispose(inspectorId);
         sendServiceResponseSuccess(commandId);
     }
@@ -166,42 +139,28 @@ public class AppInspectionService {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
-        InspectorContext inspectorContext = mInspectorContexts.get(inspectorId);
-        if (inspectorContext == null) {
+        InspectorBridge bridge = mInspectorBridges.get(inspectorId);
+        if (bridge == null) {
             sendServiceResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
-        try {
-            CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
-            mIdToCommandCallback.put(commandId, callback);
-            inspectorContext.getInspector().onReceiveCommand(rawCommand, callback);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            sendCrashEvent(
-                    inspectorId,
-                    "Inspector "
-                            + inspectorId
-                            + " crashed during sendCommand due to: "
-                            + t.getMessage());
-            doDispose(inspectorId);
-        }
+        bridge.sendCommand(commandId, rawCommand);
     }
 
     public void cancelCommand(int cancelledCommandId) {
-        CommandCallbackImpl callback = mIdToCommandCallback.get(cancelledCommandId);
-        if (callback != null) {
-            callback.cancelCommand();
+        // broadcast cancellation to every inspector even if only one of handled this command
+        for (InspectorBridge bridge : mInspectorBridges.values()) {
+            bridge.cancelCommand(cancelledCommandId);
         }
     }
 
     private void doDispose(String inspectorId) {
-        Inspector inspector = mInspectorContexts.remove(inspectorId).getInspector();
+        removeHooks(inspectorId, mEntryTransforms);
+        removeHooks(inspectorId, mExitTransforms);
+        InspectorBridge inspector = mInspectorBridges.remove(inspectorId);
         if (inspector != null) {
-            try {
-                inspector.onDispose();
-            } catch (Throwable ignored) {
-            }
+            inspector.disposeInspector();
         }
     }
 
@@ -211,84 +170,6 @@ public class AppInspectionService {
             sendServiceResponseError(commandId, "Argument " + name + " must not be null");
         }
         return result;
-    }
-
-
-    enum Status {
-        PENDING,
-        REPLIED,
-        CANCELLED
-    }
-
-    class CommandCallbackImpl implements Inspector.CommandCallback {
-        private final Object mLock = new Object();
-        private volatile Status mStatus = Status.PENDING;
-        private final int mCommandId;
-        private final List<Pair<Executor, Runnable>> mCancellationListeners = new ArrayList<>();
-
-        CommandCallbackImpl(int commandId) {
-            mCommandId = commandId;
-        }
-
-        @Override
-        public void reply(@NonNull byte[] bytes) {
-            synchronized (mLock) {
-                if (mStatus == Status.PENDING) {
-                    mStatus = Status.REPLIED;
-                    mIdToCommandCallback.remove(mCommandId);
-                    NativeTransport.sendRawResponseSuccess(mCommandId, bytes, bytes.length);
-                }
-            }
-        }
-
-        @Override
-        public void addCancellationListener(
-                @NonNull Executor executor, @NonNull Runnable runnable) {
-            synchronized (mLock) {
-                if (mStatus == Status.CANCELLED) {
-                    executor.execute(runnable);
-                } else {
-                    mCancellationListeners.add(new Pair<>(executor, runnable));
-                }
-            }
-        }
-
-        void cancelCommand() {
-            List<Pair<Executor, Runnable>> listeners = null;
-            synchronized (mLock) {
-                if (mStatus == Status.PENDING) {
-                    mStatus = Status.CANCELLED;
-                    mIdToCommandCallback.remove(mCommandId);
-                    listeners = new ArrayList<>(mCancellationListeners);
-                }
-            }
-            if (listeners != null) {
-                for (Pair<Executor, Runnable> p : listeners) {
-                    p.first.execute(p.second);
-                }
-            }
-        }
-    }
-
-    /**
-     * Iterates through threads presented in the app and looks for a thread with name "main". It can
-     * return {@code null} in case if thread with a name "main" is missing.
-     */
-    private static ClassLoader mainThreadClassLoader() {
-        ThreadGroup group = Thread.currentThread().getThreadGroup();
-
-        while (group.getParent() != null) {
-            group = group.getParent();
-        }
-
-        Thread[] threads = new Thread[100];
-        group.enumerate(threads);
-        for (Thread thread : threads) {
-            if (thread != null && thread.getName().equals(MAIN_THREAD_NAME)) {
-                return thread.getContextClassLoader();
-            }
-        }
-        return null;
     }
 
     private static String createLabel(Class origin, String method) {

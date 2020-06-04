@@ -44,8 +44,7 @@ import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.res.shrinker.ApkFormat;
-import com.android.build.gradle.internal.res.shrinker.DummyContent;
+import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinker;
 import com.android.builder.dexing.AnalysisCallback;
 import com.android.builder.dexing.R8ResourceShrinker;
@@ -64,6 +63,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -224,7 +224,6 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
     private final File mReportFile;
     private final StringWriter mDebugOutput;
     private final PrintWriter mDebugPrinter;
-    private final ApkFormat format;
 
     private boolean mVerbose;
     private boolean mDebug;
@@ -253,8 +252,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             @NonNull File manifest,
             @Nullable File mapping,
             @NonNull Iterable<File> resources,
-            @Nullable File reportFile,
-            @NonNull ApkFormat format) {
+            @Nullable File reportFile) {
         mResourceClasseseSource = rClasses;
         mProguardMapping = mapping;
         mClasses = classes;
@@ -269,7 +267,6 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             mDebugOutput = null;
             mDebugPrinter = null;
         }
-        this.format = format;
     }
 
     public ResourceUsageAnalyzer(
@@ -278,9 +275,8 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             @NonNull File manifest,
             @Nullable File mapping,
             @NonNull File resources,
-            @Nullable File reportFile,
-            @NonNull ApkFormat format) {
-        this(rClasses, classes, manifest, mapping, Arrays.asList(resources), reportFile, format);
+            @Nullable File reportFile) {
+        this(rClasses, classes, manifest, mapping, Arrays.asList(resources), reportFile);
     }
 
     @Override
@@ -347,6 +343,16 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
         mDebug = verbose;
     }
 
+    @Override
+    public void rewriteResourcesInBundleFormat(
+            @NonNull File source,
+            @NonNull File dest,
+            @NonNull Map<String, String> moduleToPackageName
+    ) {
+        throw new UnsupportedOperationException(
+                "App bundles are not supported by ResourceUsageAnalyzer");
+    }
+
     /**
      * "Removes" resources from an .ap_ file by writing it out while filtering out
      * unused resources. This won't touch the values XML data (resources.arsc) but
@@ -355,10 +361,14 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
      *
      * @param source the .ap_ file created by aapt
      * @param dest a new .ap_ file with unused file-based resources removed
+     * @param format a format BINARY/PROTO in which compiled resources are represented in archive
      */
     @Override
-    public void rewriteResourcesInApkFormat(@NonNull File source, @NonNull File dest)
-            throws IOException {
+    public void rewriteResourcesInApkFormat(
+            @NonNull File source,
+            @NonNull File dest,
+            @NonNull LinkedResourcesFormat format
+    ) throws IOException {
         if (dest.exists()) {
             boolean deleted = dest.delete();
             if (!deleted) {
@@ -388,7 +398,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
                 if (resource == null || resource.isReachable()) {
                     copyToOutput(zis, zos, entry, name, directory);
                 } else if (REPLACE_DELETED_WITH_EMPTY && !directory) {
-                    replaceWithDummyEntry(zos, entry, name);
+                    replaceWithDummyEntry(zos, entry, name, format);
                 } else if (isVerbose() || mDebugPrinter != null) {
                     String message =
                             "Skipped unused resource " + name + ": " + entry.getSize() + " bytes";
@@ -430,8 +440,12 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
      *
      * @see #REPLACE_DELETED_WITH_EMPTY
      */
-    private void replaceWithDummyEntry(JarOutputStream zos, ZipEntry entry, String name)
-            throws IOException {
+    private void replaceWithDummyEntry(
+            JarOutputStream zos,
+            ZipEntry entry,
+            String name,
+            LinkedResourcesFormat format
+    ) throws IOException {
         // Create a new entry so that the compressed len is recomputed.
         byte[] bytes;
         long crc;
@@ -924,14 +938,15 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
                     int dot = string.indexOf('.', start);
                     String name = string.substring(start, dot != -1 ? dot : string.length());
                     if (names.contains(name)) {
-                        for (Map<String, Resource> map : mModel.getResourceMaps()) {
-                            resource = map.get(name);
-                            if (mDebug && resource != null) {
-                                mDebugPrinter.println("Marking " + resource + " used because it "
-                                        + "matches string pool constant " + string);
+                        for (ListMultimap<String, Resource> map : mModel.getResourceMaps()) {
+                            for (Resource currentResource : map.get(name)) {
+                                resource = currentResource;
+                                if (mDebug && resource != null) {
+                                    mDebugPrinter.println("Marking " + resource + " used because "
+                                            + "it matches string pool constant " + string);
+                                }
+                                ResourceUsageModel.markReachable(resource);
                             }
-                            ResourceUsageModel.markReachable(resource);
-                            mModel.addResourceToWhitelist(resource);
                         }
                     }
                 }
@@ -1032,13 +1047,14 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             }
 
             if (names.contains(name)) {
-                for (Map<String, Resource> map : mModel.getResourceMaps()) {
-                    Resource resource = map.get(name);
-                    if (mDebug && resource != null) {
-                        mDebugPrinter.println("Marking " + resource + " used because it "
-                                + "matches string pool constant " + string);
+                for (ListMultimap<String, Resource> map : mModel.getResourceMaps()) {
+                    for (Resource resource : map.get(name)) {
+                        if (mDebug && resource != null) {
+                            mDebugPrinter.println("Marking " + resource + " used because it "
+                                    + "matches string pool constant " + string);
+                        }
+                        ResourceUsageModel.markReachable(resource);
                     }
-                    ResourceUsageModel.markReachable(resource);
                 }
             } else if (Character.isDigit(name.charAt(0))) {
                 // Just a number? There are cases where it calls getIdentifier by
@@ -1921,16 +1937,12 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             return true;
         }
 
-        @NonNull
         @Override
-        protected List<Resource> findRoots(@NonNull List<Resource> resources) {
-            List<Resource> roots = super.findRoots(resources);
+        protected void onRootResourcesFound(@NonNull List<Resource> roots) {
             if (mDebugPrinter != null) {
                 mDebugPrinter.println("\nThe root reachable resources are:\n" +
                         Joiner.on(",\n   ").join(roots));
             }
-
-            return roots;
         }
 
         @Override

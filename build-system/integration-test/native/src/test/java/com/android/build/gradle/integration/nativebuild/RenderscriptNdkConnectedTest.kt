@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import org.junit.experimental.categories.Category
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
@@ -46,6 +47,7 @@ class RenderscriptNdkConnectedTest {
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestProject("renderscriptNdk")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 

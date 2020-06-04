@@ -21,15 +21,14 @@ import com.android.aapt.Resources.Entry
 import com.android.aapt.Resources.FileReference
 import com.android.aapt.Resources.FileReference.Type.PROTO_XML
 import com.android.aapt.Resources.Reference
-import com.android.aapt.Resources.ResourceTable
 import com.android.aapt.Resources.XmlAttribute
 import com.android.aapt.Resources.XmlElement
 import com.android.aapt.Resources.XmlNode
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.android.build.gradle.internal.res.shrinker.entriesSequence
-import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
+import com.android.ide.common.resources.usage.WebTokenizers
 import com.android.resources.ResourceType
 import com.android.utils.SdkUtils.IMAGE_EXTENSIONS
 import com.google.common.base.Ascii
@@ -64,7 +63,7 @@ class ProtoResourcesGraphBuilder(
     override fun buildGraph(model: ResourceShrinkerModel) {
         model.readResourceTable(resourceTable).entriesSequence()
             .map { (id, _, _, entry) ->
-                model.getResourceByValue(id)?.let {
+                model.resourceStore.getResource(id)?.let {
                     ReferencesForResourceFinder(resourceRoot, model, entry, it)
                 }
             }
@@ -80,8 +79,56 @@ private class ReferencesForResourceFinder(
     private val current: Resource
 ) {
     companion object {
+        /**
+         * 'android_res/' is a synthetic directory for resource references in URL format. For
+         *  example: file:///android_res/raw/intro_page.
+         */
+        private const val ANDROID_RES = "android_res/"
+
         private fun Reference.asItem(): Resources.Item =
             Resources.Item.newBuilder().setRef(this).build()
+    }
+
+    private val webTokenizers: WebTokenizers by lazy {
+        WebTokenizers(object : WebTokenizers.WebTokensCallback {
+            override fun referencedHtmlAttribute(tag: String?, attribute: String?, value: String) {
+                if (attribute == "href" || attribute == "src") {
+                    referencedUrl(value)
+                }
+            }
+
+            override fun referencedJsString(jsString: String) {
+                referencedStringFromWebContent(jsString)
+            }
+
+            override fun referencedCssUrl(url: String) {
+                referencedUrl(url)
+            }
+
+            private fun referencedUrl(url: String) {
+                // 1. if url contains '/' try to find resources from this web url.
+                // 2. if there is no '/' it might be just relative reference to another resource.
+                val resources = when {
+                    url.contains('/') -> model.resourceStore.getResourcesFromWebUrl(url)
+                    else ->
+                        model.resourceStore.getResources(ResourceType.RAW, url.substringBefore('.'))
+                }
+                if (resources.isNotEmpty()) {
+                    resources.forEach { current.addReference(it) }
+                } else {
+                    // if there is no resources found by provided url just gather this string as
+                    // found inside web content to process it afterwards.
+                    referencedStringFromWebContent(url)
+                }
+            }
+
+            private fun referencedStringFromWebContent(string: String) {
+                if (string.isNotEmpty() && string.length <= 80) {
+                    model.addStringConstant(string)
+                    model.isFoundWebContent = true
+                }
+            }
+        })
     }
 
     fun findReferences() {
@@ -133,15 +180,17 @@ private class ReferencesForResourceFinder(
         // to resource url here, because name in resource table is not normalized to R style field
         // and to find it we need normalize it first (for example, in case name in resource table is
         // MyStyle.Child in R file it is R.style.MyStyle_child).
-        val referencedResource = when {
-            reference.id != 0 -> model.getResourceByValue(reference.id)
-            reference.name.isNotEmpty() -> model.usageModel.getResourceFromUrl("@${reference.name}")
-            else -> null
+        val referencedResources = when {
+            reference.id != 0 -> listOf(model.resourceStore.getResource(reference.id))
+            reference.name.isNotEmpty() ->
+                model.resourceStore.getResourcesFromUrl("@${reference.name}")
+            else -> emptyList()
         }
         // IDs are not supported by shrinker for now, just skip it.
-        referencedResource
-            ?.takeIf { it.type != ResourceType.ID }
-            ?.let { current.addReference(it) }
+        referencedResources.asSequence()
+            .filterNotNull()
+            .filter { it.type != ResourceType.ID }
+            .forEach { current.addReference(it) }
     }
 
     private fun findFromFile(file: FileReference) {
@@ -151,16 +200,18 @@ private class ReferencesForResourceFinder(
         val extension = Ascii.toLowerCase(path.fileName.toString()).substringAfter('.')
         when {
             file.type == PROTO_XML -> fillFromXmlNode(XmlNode.parseFrom(bytes))
-            extension in listOf("html", "htm") -> model.usageModel.tokenizeHtml(current, content)
-            extension == "css" -> model.usageModel.tokenizeCss(current, content)
-            extension == "js" -> model.usageModel.tokenizeJs(current, content)
-            extension !in IMAGE_EXTENSIONS -> model.usageModel.tokenizeUnknownBinary(current, bytes)
+            extension in listOf("html", "htm") -> webTokenizers.tokenizeHtml(content)
+            extension == "css" -> webTokenizers.tokenizeCss(content)
+            extension == "js" -> webTokenizers.tokenizeJs(content)
+            extension !in IMAGE_EXTENSIONS -> maybeAndroidResUrl(content, markAsReachable = false)
         }
     }
 
     private fun fillFromXmlNode(node: XmlNode) {
         // Check for possible reference as 'android_res/<type>/<name>' pattern inside element text.
-        maybeAndroidResUrl(node.text)
+        if (current.type == ResourceType.XML) {
+            maybeAndroidResUrl(node.text, markAsReachable = true)
+        }
         // Check special xml element <rawPathResId> which provides reference to res/raw/ apk
         // resource for wear application. Applies to all XML files for now but might be re-scoped
         // to only apply to <wearableApp> XMLs.
@@ -174,16 +225,13 @@ private class ReferencesForResourceFinder(
             findFromItem(attribute.compiledItem)
         }
         // Check for possible reference as 'android_res/<type>/<name>' pattern inside attribute val.
-        maybeAndroidResUrl(attribute.value)
+        if (current.type == ResourceType.XML) {
+            maybeAndroidResUrl(attribute.value, markAsReachable = true)
+        }
     }
 
-    private fun maybeAndroidResUrl(text: String) {
-        if (current.type != ResourceType.XML) {
-            return
-        }
-        text.splitToSequence("android_res/")
-            .drop(1)
-            .map { part -> part.takeWhile { !Character.isWhitespace(it) } }
+    private fun maybeAndroidResUrl(text: String, markAsReachable: Boolean) {
+        findAndroidResReferencesInText(text)
             .map { it.split('/', limit = 2) }
             .filter { it.size == 2 }
             .map { (dir, fileName) ->
@@ -193,8 +241,14 @@ private class ReferencesForResourceFinder(
                 )
             }
             .filter { (type, _) -> type != null }
-            .map { (type, name) -> model.usageModel.getResource(type!!, name) }
-            .forEach { ResourceUsageModel.markReachable(it) }
+            .flatMap { (type, name) -> model.resourceStore.getResources(type!!, name).asSequence() }
+            .forEach {
+                if (markAsReachable) {
+                    ResourceUsageModel.markReachable(it)
+                } else {
+                    current.addReference(it)
+                }
+            }
     }
 
     private fun maybeWearAppReference(element: XmlElement) {
@@ -204,12 +258,30 @@ private class ReferencesForResourceFinder(
                 .joinToString(separator = "")
                 .trim()
 
-            current.addReference(
-                model.usageModel.getResource(
-                    ResourceType.RAW,
-                    resourceNameToFieldName(rawResourceName)
-                )
-            )
+            model.resourceStore.getResources(ResourceType.RAW, rawResourceName)
+                .forEach { current.addReference(it) }
+        }
+    }
+
+    /**
+     * Splits input text to parts that starts with 'android_res/' and returns sequence of strings
+     * between 'android_res/' occurrences and first whitespace after it. This method is used instead
+     * of {@link CharSequence#splitToSequence} because does not spawn full substrings between
+     * 'android_res/' in memory when text is big enough.
+     */
+    private fun findAndroidResReferencesInText(text: String): Sequence<String> = sequence {
+        var start = 0
+        while (start < text.length) {
+            start = text.indexOf(ANDROID_RES, start)
+            if (start == -1) {
+                break
+            }
+            var end = start + ANDROID_RES.length
+            while (end < text.length && !Character.isWhitespace(text[end])) {
+                end++
+            }
+            yield(text.substring(start + ANDROID_RES.length, end))
+            start = end
         }
     }
 }

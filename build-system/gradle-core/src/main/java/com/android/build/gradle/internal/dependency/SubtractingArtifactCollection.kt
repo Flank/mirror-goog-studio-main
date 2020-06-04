@@ -21,10 +21,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
-import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.specs.Spec
 import java.io.File
 import java.io.ObjectInputStream
@@ -43,33 +40,18 @@ import java.util.function.Consumer
 class SubtractingArtifactCollection(
     private val mainArtifacts: ArtifactCollection,
     private val removedArtifacts: ArtifactCollection,
-    fileCollectionHolder: ConfigurableFileCollection,
-    providerFactory: ProviderFactory
+    private val objectFactory: ObjectFactory
 ) : ArtifactCollection {
 
-    private var subtractingArtifactResult: Provider<SubtractingArtifactResult>
-            = providerFactory.provider { this.SubtractingArtifactResult() }
+    private var subtractingArtifactResult = this.SubtractingArtifactResult()
 
-    private val artifactFileSet: Provider<Set<File>> = providerFactory.provider {
-        ImmutableSet.builder<File>().apply {
-            for (artifact in subtractingArtifactResult.get().artifactResults.value) {
-                add(artifact.file)
-            }
-        }.build()
-    }
+    override fun getArtifactFiles() = subtractingArtifactResult.fileCollection.value
 
-    private val fileCollection: FileCollection =
-        fileCollectionHolder.from(
-            mainArtifacts.artifactFiles.filter(FilterSpec(artifactFileSet))
-        ).builtBy(mainArtifacts.artifactFiles, removedArtifacts.artifactFiles)
-
-    override fun getArtifactFiles() = fileCollection
-
-    override fun getArtifacts() = subtractingArtifactResult.get().artifactResults.value
+    override fun getArtifacts() = subtractingArtifactResult.artifactResults.value
 
     override fun getFailures() = mainArtifacts.failures + removedArtifacts.failures
 
-    override fun iterator() = subtractingArtifactResult.get().artifactResults.value.iterator()
+    override fun iterator() = subtractingArtifactResult.artifactResults.value.iterator()
 
     override fun forEach(action: Consumer<in ResolvedArtifactResult>) = artifacts.forEach(action)
 
@@ -80,21 +62,20 @@ class SubtractingArtifactCollection(
                 "removedArtifacts=$removedArtifacts)"
     }
 
-    class FilterSpec(private val acceptedFiles: Provider<Set<File>>) : Spec<File> {
-        override fun isSatisfiedBy(file: File): Boolean {
-            return acceptedFiles.get().contains(file)
-        }
-    }
-
     /**
      * Wrapper for the set of [ResolvedArtifactResult]. Gradle configuration caching cannot directly
      * serialize them, so we need to make Gradle not serialize them and instead compute them from
      * other de-serialized properties in the following configuration-cached runs.
      */
     inner class SubtractingArtifactResult : Serializable {
-        // Do not serialize this property, compute it instead when deserializing.
         @Transient
-        var artifactResults: Lazy<MutableSet<ResolvedArtifactResult>> = lazy { initValue() }
+        var artifactResults: Lazy<MutableSet<ResolvedArtifactResult>> = lazy { initArtifactResult() }
+
+        @Transient
+        private var artifactFileSet: Lazy<Set<File>> = lazy { initArtifactFileSet() }
+
+        @Transient
+        var fileCollection = lazy { initFileCollection() }
 
         /**
          * Just the [ComponentIdentifier] is not enough, we need to consider the classifier information
@@ -105,11 +86,21 @@ class SubtractingArtifactCollection(
          *   different names so the subtraction doesn't work
          *   (The classifier is actually duplicated in the name in some cases)
          */
-        private fun initValue(): MutableSet<ResolvedArtifactResult> {
+        private fun initArtifactResult(): MutableSet<ResolvedArtifactResult> {
             val removed = HashSet<ComponentArtifactIdentifier>(removedArtifacts.artifacts.size)
             removedArtifacts.artifacts.mapTo(removed) { it.id }
             return ImmutableSet.copyOf(mainArtifacts.artifacts.filter { !removed.contains(it!!.id) })
         }
+
+        private fun initArtifactFileSet() = ImmutableSet.builder<File>().apply {
+            for (artifact in artifactResults.value) {
+                add(artifact.file)
+            }
+        }.build()
+
+        private fun initFileCollection() = objectFactory.fileCollection().from(
+            mainArtifacts.artifactFiles.filter { f -> artifactFileSet.value.contains(f) }
+        ).builtBy(mainArtifacts.artifactFiles, removedArtifacts.artifactFiles)
 
         private fun writeObject(objectOutputStream: ObjectOutputStream) {
             objectOutputStream.defaultWriteObject()
@@ -117,7 +108,9 @@ class SubtractingArtifactCollection(
 
         private fun readObject(objectInputStream: ObjectInputStream) {
             objectInputStream.defaultReadObject()
-            artifactResults = lazy { initValue() }
+            artifactResults = lazy { initArtifactResult() }
+            artifactFileSet = lazy { initArtifactFileSet() }
+            fileCollection = lazy { initFileCollection() }
         }
     }
 }

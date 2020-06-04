@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.res.shrinker.ApkFormat
+import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -124,8 +124,7 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
             File(manifestFile.outputFile),
             mappingFileSrc.orNull?.asFile,
             resourceDir.get().asFile,
-            reportFile,
-            ApkFormat.PROTO
+            reportFile
         )
         try {
             analyzer.isVerbose = logger.isEnabled(LogLevel.INFO)
@@ -141,7 +140,11 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
             }
 
             // Just rewrite the .ap_ file to strip out the res/ files for unused resources
-            analyzer.rewriteResourcesInApkFormat(uncompressedResourceFile, compressedResourceFile)
+            analyzer.rewriteResourcesInApkFormat(
+                uncompressedResourceFile,
+                compressedResourceFile,
+                LinkedResourcesFormat.PROTO
+            )
 
             // Dump some stats
             val unused = analyzer.unusedResourceCount

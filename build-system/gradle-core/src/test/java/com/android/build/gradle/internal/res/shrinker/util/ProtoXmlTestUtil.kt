@@ -42,7 +42,7 @@ internal fun Resources.XmlElement.Builder.addAttribute(
     name: String,
     namespaceUri: String = "",
     value: String = "",
-    refId: Int? = null
+    refId: Long? = null
 ): Resources.XmlElement.Builder {
     val attribute = Resources.XmlAttribute.newBuilder()
         .setNamespaceUri(namespaceUri)
@@ -52,7 +52,7 @@ internal fun Resources.XmlElement.Builder.addAttribute(
         val name = value.trimStart('@', '+')
         attribute.setCompiledItem(
             Resources.Item.newBuilder()
-                .setRef(Resources.Reference.newBuilder().setName(name).setId(it))
+                .setRef(Resources.Reference.newBuilder().setName(name).setId(it.toInt()))
         )
     }
     return this.addAttribute(attribute)

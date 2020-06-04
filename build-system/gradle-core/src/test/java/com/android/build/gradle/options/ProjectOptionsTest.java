@@ -47,9 +47,11 @@ public class ProjectOptionsTest {
 
     private static Integer parseInteger(@NonNull Object input) {
         return new ProjectOptions(
-                        ImmutableMap.of("android.injected.build.api", input),
-                        FakeProviderFactory.getFactory())
-                .get(IntegerOption.IDE_TARGET_DEVICE_API);
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(),
+                                ImmutableMap.of("android.injected.build.api", input)))
+                .getValue(IntegerOption.IDE_TARGET_DEVICE_API);
     }
 
     private static Object asGroovyString(@NonNull Object input) {
@@ -141,8 +143,12 @@ public class ProjectOptionsTest {
     public void integerSanity() {
         assertThat(IntegerOption.IDE_TARGET_DEVICE_API.getDefaultValue()).isNull();
         assertThat(
-                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
-                                .get(IntegerOption.IDE_TARGET_DEVICE_API))
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(),
+                                                ImmutableMap.of()))
+                                .getValue(IntegerOption.IDE_TARGET_DEVICE_API))
                 .isNull();
 
         assertThat(parseInteger("20")).isEqualTo(20);
@@ -154,8 +160,11 @@ public class ProjectOptionsTest {
         try {
             //noinspection ResultOfObjectAllocationIgnored
             new ProjectOptions(
-                    ImmutableMap.of("android.injected.build.api", new Object()),
-                    FakeProviderFactory.getFactory());
+                            ImmutableMap.of(),
+                            new FakeProviderFactory(
+                                    FakeProviderFactory.getFactory(),
+                                    ImmutableMap.of("android.injected.build.api", new Object())))
+                    .getValue(IntegerOption.IDE_TARGET_DEVICE_API);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage()).contains("android.injected.build.api");
@@ -166,15 +175,23 @@ public class ProjectOptionsTest {
     public void stringSanity() {
         assertThat(StringOption.IDE_BUILD_TARGET_ABI.getDefaultValue()).isNull();
         assertThat(
-                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(),
+                                                ImmutableMap.of()))
                                 .get(StringOption.IDE_BUILD_TARGET_ABI))
                 .isNull();
 
         ProjectOptions options =
                 new ProjectOptions(
-                        ImmutableMap.of("android.injected.build.abi", asGroovyString("x86")),
-                        FakeProviderFactory.getFactory());
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(),
+                                ImmutableMap.of(
+                                        "android.injected.build.abi", asGroovyString("x86"))));
         assertThat(options.get(StringOption.IDE_BUILD_TARGET_ABI)).isEqualTo("x86");
+        assertThat(options.getProvider(StringOption.IDE_BUILD_TARGET_ABI).get()).isEqualTo("x86");
     }
 
     @Test

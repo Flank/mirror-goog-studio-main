@@ -35,6 +35,7 @@ namespace profiler {
 namespace perfetto {
 
 using proto::QueryParameters;
+using proto::QueryResult;
 
 grpc::Status TraceProcessorServiceImpl::LoadTrace(
     grpc::ServerContext* context, const proto::LoadTraceRequest* request,
@@ -59,6 +60,8 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
   // chunk of memory.
   config.ingest_ftrace_in_raw_table = false;
 
+  // Since tp_ is a unique_ptr, it will automatically release/delete the
+  // previously loaded trace.
   tp_ = TraceProcessor::CreateInstance(config);
 
   std::cout << "Loading trace (" << trace_id << ") from: " << trace_path
@@ -69,14 +72,21 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
   response->set_ok(read_status.ok());
   if (!read_status.ok()) {
     response->set_error(read_status.message());
+
+    // Reset tp_ to release the loaded trace.
+    tp_.reset(nullptr);
+    loaded_trace_id = 0;
+
+    return grpc::Status::OK;
   }
+
+  loaded_trace_id = trace_id;
 
   // Default query, not restricted to any process.
   proto::QueryParameters::ProcessMetadataParameters metadata_params;
   ProcessMetadataRequestHandler handler(tp_.get());
   handler.PopulateMetadata(metadata_params,
                            response->mutable_process_metadata());
-
   return grpc::Status::OK;
 }
 
@@ -84,38 +94,59 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
     grpc::ServerContext* context, const proto::QueryBatchRequest* batch_request,
     proto::QueryBatchResponse* batch_response) {
   for (auto& request : batch_request->query()) {
+    auto query_result = batch_response->add_result();
+
+    auto request_trace_id = request.trace_id();
+
+    // Guard against "last loaded trace" when we have no loaded trace.
+    if (tp_.get() == nullptr) {
+      query_result->set_ok(false);
+      query_result->set_failure_reason(QueryResult::TRACE_NOT_FOUND);
+      query_result->set_error("No trace loaded.");
+      continue;
+    }
+
+    if (request_trace_id != 0 && request_trace_id != loaded_trace_id) {
+      query_result->set_ok(false);
+      query_result->set_failure_reason(QueryResult::TRACE_NOT_FOUND);
+      query_result->set_error("Unknown trace " +
+                              std::to_string(request_trace_id));
+      continue;
+    }
+
     // Keep in the same order as the proto file.
     switch (request.query_case()) {
       case QueryParameters::kProcessMetadataRequest: {
         ProcessMetadataRequestHandler handler(tp_.get());
         handler.PopulateMetadata(
             request.process_metadata_request(),
-            batch_response->add_result()->mutable_process_metadata_result());
+            query_result->mutable_process_metadata_result());
       } break;
       case QueryParameters::kTraceEventsRequest: {
         TraceEventsRequestHandler handler(tp_.get());
         handler.PopulateTraceEvents(
             request.trace_events_request(),
-            batch_response->add_result()->mutable_trace_events_result());
+            query_result->mutable_trace_events_result());
       } break;
       case QueryParameters::kSchedRequest: {
         SchedulingRequestHandler handler(tp_.get());
-        handler.PopulateEvents(
-            request.sched_request(),
-            batch_response->add_result()->mutable_sched_result());
+        handler.PopulateEvents(request.sched_request(),
+                               query_result->mutable_sched_result());
       } break;
       case QueryParameters::kMemoryRequest: {
         MemoryRequestHandler handler(tp_.get());
-        handler.PopulateEvents(
-            batch_response->add_result()->mutable_memory_events());
+        handler.PopulateEvents(query_result->mutable_memory_events());
       } break;
       case QueryParameters::kCountersRequest: {
         CountersRequestHandler handler(tp_.get());
-        handler.PopulateCounters(
-            request.counters_request(),
-            batch_response->add_result()->mutable_counters_result());
+        handler.PopulateCounters(request.counters_request(),
+                                 query_result->mutable_counters_result());
       } break;
+      case QueryParameters::QUERY_NOT_SET:
+        // Do nothing.
+        break;
     }
+    query_result->set_ok(true);
   }
   return grpc::Status::OK;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,66 +18,228 @@ package com.android.builder.model.v2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import java.io.File;
+import java.util.Collection;
 
+/**
+ * Represent a variant/module/artifact dependency.
+ * @since 2.3
+ */
 public interface Library {
 
+    int LIBRARY_ANDROID = 1;
+    int LIBRARY_JAVA = 2;
+    int LIBRARY_MODULE = 3;
+
     /**
-     * Returns an optional build identifier.
+     * The type of the dependency
      *
-     * <p>This is only valid if {@link #getProject()} is not <code>null</code>. a <code>null</code>
-     * value in this property indicates that this is the root build.
+     * @return the type
+     * @see #LIBRARY_ANDROID
+     * @see #LIBRARY_JAVA
+     * @see #LIBRARY_MODULE
+     */
+    int getType();
+
+    /**
+     * Returns the artifact address in a unique way.
      *
-     * @return a build identifier or null.
+     * This is either a module path for sub-modules (with optional variant name), or a maven
+     * coordinate for external dependencies.
+     */
+    @NonNull
+    String getArtifactAddress();
+
+    /**
+     * Returns the artifact location.
+     */
+    @NonNull
+    File getArtifact();
+
+    /**
+     * Returns the build id.
+     *
+     * <p>This is only valid if the {@link #getProjectPath()} is not null. However this can still be
+     * null if this is the root project.
+     *
+     * @return the build id or null.
      */
     @Nullable
     String getBuildId();
 
     /**
-     * Returns an optional project identifier if the library is output
-     * by a module.
+     * Returns the gradle path.
      *
-     * @return the project identifier
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_MODULE}
      */
     @Nullable
-    String getProject();
+    String getProjectPath();
 
     /**
-     * Returns a user friendly name.
+     * Returns an optional variant name if the consumed artifact of the library is associated
+     * to one.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_MODULE}
      */
     @Nullable
-    String getName();
+    String getVariant();
 
     /**
-     * Returns this library's Maven coordinates, as requested in the build file.
-     */
-    @Nullable
-    MavenCoordinates getRequestedCoordinates();
-
-    /**
-     * Returns this library's Maven coordinates after all the project's dependencies have been
-     * resolved. This coordinate may be different than {@link #getRequestedCoordinates()}.
+     * Returns the location of the unzipped bundle folder.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
      */
     @NonNull
-    MavenCoordinates getResolvedCoordinates();
+    File getFolder();
 
     /**
-     * Returns whether the dependency is skipped.
+     * Returns the location of the manifest relative to the folder.
      *
-     * This can happen in testing artifacts when the same dependency is present in
-     * both the tested artifact and the test artifact.
-     * @return true if skipped.
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
      */
-    boolean isSkipped();
+    @NonNull
+    String getManifest();
 
     /**
-     * Returns whether the dependency is provided.
+     * Returns the location of the jar file to use for compiling and packaging.
      *
-     * This is only valid for dependencies present in the 'compile' graph.
+     * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}.
      *
-     * In the 'package' graph the value is always <code>false</code> since the provided dependencies
-     * are not present
-     *
-     * @return true if provided.
+     * @return the path to the jar file. The path may not point to an existing file.
      */
-    boolean isProvided();
+    @NonNull
+    String getJarFile();
+
+    /**
+     * Returns the location of the jar file to use for compilation.
+     *
+     * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}.
+     *
+     * @return path to the jar file used for compilation. The path may not point to an existing
+     *     file.
+     */
+    @NonNull
+    String getCompileJarFile();
+
+    /**
+     * Returns the location of the res folder.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the res folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    String getResFolder();
+
+    /**
+     * Returns the location of the namespaced resources static library (res.apk).
+     *
+     * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * <p>TODO(b/109854607): When rewriting dependencies, this should be populated with the
+     * rewritten artifact, which will not be in the exploded AAR directory.
+     *
+     * @return the static library apk. Null if the library is not namespaced.
+     */
+    @Nullable
+    File getResStaticLibrary();
+
+    /**
+     * Returns the location of the assets folder.
+     *
+     * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the assets folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    String getAssetsFolder();
+
+    /**
+     * Returns the list of local Jar files that are included in the dependency.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a list of File. May be empty but not null.
+     */
+    @NonNull
+    Collection<String> getLocalJars();
+
+    /**
+     * Returns the location of the jni libraries folder.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    String getJniFolder();
+
+    /**
+     * Returns the location of the aidl import folder.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    String getAidlFolder();
+
+    /**
+     * Returns the location of the renderscript import folder.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the folder. The file may not point to an existing folder.
+     */
+    @NonNull
+    String getRenderscriptFolder();
+
+    /**
+     * Returns the location of the proguard files.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the file. The file may not point to an existing file.
+     */
+    @NonNull
+    String getProguardRules();
+
+    /**
+     * Returns the location of the lint jar.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the jar file. The file may not point to an existing file.
+     */
+    @NonNull
+    String getLintJar();
+
+    /**
+     * Returns the location of the external annotations zip file (which may not exist)
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the zip file. The file may not point to an existing file.
+     */
+    @NonNull
+    String getExternalAnnotations();
+
+    /**
+     * Returns the location of an optional file that lists the only
+     * resources that should be considered public.
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * @return a File for the file. The file may not point to an existing file.
+     */
+    @NonNull
+    String getPublicResources();
+
+    /**
+     * Returns the location of the text symbol file
+     *
+     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     */
+    @NonNull
+    String getSymbolFile();
 }

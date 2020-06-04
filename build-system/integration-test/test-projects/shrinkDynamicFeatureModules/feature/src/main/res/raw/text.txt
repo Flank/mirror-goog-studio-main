@@ -1,0 +1,1 @@
+* Used from base and feature: android_res/drawable/from_raw_feat

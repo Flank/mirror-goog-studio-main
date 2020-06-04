@@ -68,12 +68,6 @@ interface CxxAbiModel {
     val variant: CxxVariantModel
 
     /**
-     * Service provider entry for abi-level services. These are services naturally
-     * scoped at the module level.
-     */
-    val services: CxxServiceRegistry
-
-    /**
      * Ninja/gnu make build settings specified by BuildSettings.json. Returns an empty
      * model if the file is absent.
      */

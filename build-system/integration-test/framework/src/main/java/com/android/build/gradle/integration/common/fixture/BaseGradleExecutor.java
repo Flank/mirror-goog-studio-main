@@ -96,7 +96,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     private boolean sdkInLocalProperties = false;
     private boolean localAndroidSdkHome = false;
     private boolean failOnWarning = true;
-    private ConfigurationCaching configurationCaching = ConfigurationCaching.OFF;
+    private ConfigurationCaching configurationCaching;
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -104,7 +104,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path projectDirectory,
             @Nullable Path buildDotGradleFile,
             @Nullable Path profileDirectory,
-            @NonNull GradleTestProjectBuilder.MemoryRequirement memoryRequirement) {
+            @NonNull GradleTestProjectBuilder.MemoryRequirement memoryRequirement,
+            @NonNull ConfigurationCaching configurationCaching) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.projectConnection = projectConnection;
@@ -113,6 +114,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
         this.memoryRequirement = memoryRequirement;
+        this.configurationCaching = configurationCaching;
 
         if (profileDirectory != null) {
             with(StringOption.PROFILE_OUTPUT_DIR, profileDirectory.toString());

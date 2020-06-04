@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.internal.res.shrinker.gatherer
 
-import com.android.aapt.Resources.ResourceTable
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.android.build.gradle.internal.res.shrinker.entriesSequence
 import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.resources.ResourceType
-import java.nio.file.Files
 import java.nio.file.Path
 
 /**

@@ -16,86 +16,107 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.BaseProcessOutputHandler
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.DefaultProcessExecutor
 import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.utils.FileUtils
 import com.android.utils.LineCollector
 import com.android.utils.StdLogger
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.io.IOException
 import java.io.Serializable
-import java.nio.file.Files
 import javax.inject.Inject
 
 /**
  * OptimizeResourceTask attempts to use AAPT2's optimize sub-operation to reduce the size of the
  * final apk. There are a number of potential optimizations performed such as resource obfuscation,
  * path shortening and sparse encoding. If the optimized apk file size is less than before, then
- * the optimized resources are published as InternalArtifactType.PROCESSED_RES.
+ * the optimized resources content is made identical to [InternalArtifactType.PROCESSED_RES].
  */
 abstract class OptimizeResourcesTask : NonIncrementalTask() {
 
-    @get:InputFile
+    @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputApkFile: DirectoryProperty
+    abstract val inputProcessedRes: DirectoryProperty
 
-    @get:Input
-    abstract val aapt2Executable: Property<FileCollection>
-
-    @get:Input
-    abstract val enableSparseEncoding: Property<Boolean>
+    @get:Internal
+    abstract val aapt2Executable: ConfigurableFileCollection
 
     @get:Input
     abstract val enableResourceObfuscation: Property<Boolean>
 
-    @get:Input
-    abstract val enableResourcePathShortening: Property<Boolean>
+    @get:Internal
+    abstract val transformationRequest: Property<ArtifactTransformationRequest<OptimizeResourcesTask>>
 
-    @get:OutputFile
-    abstract val optimizedApkFile: DirectoryProperty
+    @get:Nested
+    abstract val variantOutputs : ListProperty<VariantOutputImpl>
 
+    @get:OutputDirectory
+    abstract val optimizedProcessedRes: DirectoryProperty
+
+    @TaskAction
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                    Aapt2OptimizeRunnable::class.java,
-                    OptimizeResourcesParams(
-                            aapt2Executable = aapt2Executable.get().singleFile,
-                            inputApkFile = inputApkFile.get().asFile,
-                            enableResourceObfuscation = enableResourceObfuscation.get(),
-                            enableSparseResourceEncoding = enableSparseEncoding.get(),
-                            enableResourcePathShortening = enableResourcePathShortening.get(),
-                            outputApkFile = optimizedApkFile.get().asFile
-                    )
-            )
+        transformationRequest.get().submit(
+                this,
+                workerExecutor.noIsolation(),
+                Aapt2OptimizeWorkAction::class.java,
+                OptimizeResourcesParams::class.java
+        ) { builtArtifact, outputLocation: Directory, parameters ->
+            val variantOutput = variantOutputs.get().find {
+                it.variantOutputConfiguration.outputType == builtArtifact.outputType
+                        && it.variantOutputConfiguration.filters == builtArtifact.filters
+            } ?: throw java.lang.RuntimeException("Cannot find variant output for $builtArtifact")
+
+            parameters.inputResFile.set(File(builtArtifact.outputFile))
+            parameters.aapt2Executable.set(aapt2Executable.singleFile)
+            parameters.enableResourceObfuscation.set(enableResourceObfuscation.get())
+            parameters.outputResFile.set(File(outputLocation.asFile,
+                    "resources-${variantOutput.baseName}-optimize${SdkConstants.DOT_RES}"))
+
+            parameters.outputResFile.get().asFile
         }
     }
 
-    data class OptimizeResourcesParams(
-            val aapt2Executable: File,
-            val inputApkFile: File,
-            val enableResourceObfuscation: Boolean,
-            val enableSparseResourceEncoding: Boolean,
-            val enableResourcePathShortening: Boolean,
-            var outputApkFile: File
-    ) : Serializable
+    interface OptimizeResourcesParams : WorkParameters, Serializable {
+        val aapt2Executable: RegularFileProperty
+        val inputResFile: RegularFileProperty
+        val enableResourceObfuscation: Property<Boolean>
+        val outputResFile: RegularFileProperty
+    }
 
-    class Aapt2OptimizeRunnable
-    @Inject constructor(private val params: OptimizeResourcesParams) : Runnable {
-        override fun run() = doFullTaskAction(params)
+    abstract class Aapt2OptimizeWorkAction
+    @Inject constructor(private val params: OptimizeResourcesParams) : WorkAction<OptimizeResourcesParams> {
+        override fun execute() = doFullTaskAction(params)
     }
 
     class CreateAction(
@@ -106,29 +127,39 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         override val type: Class<OptimizeResourcesTask>
             get() = OptimizeResourcesTask::class.java
 
+        private lateinit var transformationRequest: ArtifactTransformationRequest<OptimizeResourcesTask>
+
+
         override fun handleProvider(taskProvider: TaskProvider<OptimizeResourcesTask>) {
             super.handleProvider(taskProvider)
-            // OPTIMIZED_PROCESSED_RES will be republished as PROCESSED_RES on task completion.
-            creationConfig.artifacts.setInitialProvider(
-                taskProvider,
-                OptimizeResourcesTask::optimizedApkFile
-            ).on(InternalArtifactType.OPTIMIZED_PROCESSED_RES)
+            val resourceShrinkingEnabled = creationConfig.variantScope.useResourceShrinker()
+            val operationRequest = creationConfig.artifacts.use(taskProvider).wiredWithDirectories(
+                    OptimizeResourcesTask::inputProcessedRes,
+                    OptimizeResourcesTask::optimizedProcessedRes)
+
+            transformationRequest = if (resourceShrinkingEnabled) {
+                operationRequest.toTransformMany(
+                    InternalArtifactType.SHRUNK_PROCESSED_RES,
+                    InternalArtifactType.OPTIMIZED_PROCESSED_RES)
+            } else {
+                operationRequest.toTransformMany(
+                        InternalArtifactType.PROCESSED_RES,
+                        InternalArtifactType.OPTIMIZED_PROCESSED_RES)
+            }
         }
 
         override fun configure(task: OptimizeResourcesTask) {
             super.configure(task)
-            val resourceShrinkingEnabled = creationConfig.variantScope.useResourceShrinker()
+            val enabledVariantOutputs = creationConfig.outputs.getEnabledVariantOutputs()
 
-            task.inputApkFile.setDisallowChanges(
-                    creationConfig.artifacts.get(InternalArtifactType
-                            .PROCESSED_RES))
-            task.aapt2Executable.setDisallowChanges(
+            task.aapt2Executable.fromDisallowChanges(
                     getAapt2FromMavenAndVersion(creationConfig.globalScope).first)
-            // TODO(lukeedgar) Determine flags which can be enabled without resource shrinking
-            //  enabled.
-            task.enableSparseEncoding.setDisallowChanges(resourceShrinkingEnabled)
-            task.enableResourceObfuscation.setDisallowChanges(resourceShrinkingEnabled)
-            task.enableResourcePathShortening.setDisallowChanges(resourceShrinkingEnabled)
+
+            task.enableResourceObfuscation.setDisallowChanges(false)
+
+            task.transformationRequest.setDisallowChanges(transformationRequest)
+
+            task.variantOutputs.setDisallowChanges(enabledVariantOutputs)
         }
     }
 }
@@ -139,33 +170,53 @@ enum class AAPT2OptimizeFlags(val flag: String) {
     ENABLE_SPARSE_ENCODING("--enable-sparse-encoding")
 }
 
-internal fun doFullTaskAction(params: OptimizeResourcesTask.OptimizeResourcesParams) {
-    if (!verifyAaptFlagEnabled(params)){
-        throw NoSuchElementException("No AAPT OPTIMIZE flags enabled.")
-    }
-    val optimizeFlags = mutableSetOf<String>()
-    if (params.enableResourceObfuscation) {
+internal fun doFullTaskAction(params: OptimizeResourcesTask.OptimizeResourcesParams)  {
+    val inputFile = params.inputResFile.get().asFile
+    val outputFile = params.outputResFile.get().asFile
+
+    val optimizeFlags = mutableSetOf(
+        AAPT2OptimizeFlags.SHORTEN_RESOURCE_PATHS.flag
+    )
+    if (params.enableResourceObfuscation.get()) {
         optimizeFlags += AAPT2OptimizeFlags.COLLAPSE_RESOURCE_NAMES.flag
     }
-    if (params.enableResourcePathShortening) {
-        optimizeFlags += AAPT2OptimizeFlags.SHORTEN_RESOURCE_PATHS.flag
+
+    val aaptInputFile = if (inputFile.isDirectory) {
+        inputFile.listFiles()
+                ?.filter {
+                    it.extension == SdkConstants.EXT_RES
+                            || it.extension == SdkConstants.EXT_ANDROID_PACKAGE
+                }
+                ?.get(0)
+    } else {
+        inputFile
     }
-    if (params.enableSparseResourceEncoding) {
-        optimizeFlags += AAPT2OptimizeFlags.ENABLE_SPARSE_ENCODING.flag
-    }
-    invokeAapt(params.aapt2Executable, "optimize", params.inputApkFile.path,
-            *optimizeFlags.toTypedArray(), "-o", params.outputApkFile.path)
-    // If the optimized file is greater number of bytes than the original file, it
-    // is reassigned to the original APK file.
-    if (params.outputApkFile.length() >= params.inputApkFile.length()) {
-        Files.copy(params.inputApkFile.toPath(), params.outputApkFile.toPath())
+
+    aaptInputFile?.let {
+        invokeAapt(
+                params.aapt2Executable.get().asFile,
+                "optimize",
+                it.path,
+                *optimizeFlags.toTypedArray(),
+                "-o",
+                outputFile.path
+        )
+        // If the optimized file is greater number of bytes than the original file, it
+        // is reassigned to the original file.
+        if (outputFile.length() >= it.length()) {
+            FileUtils.copyFile(inputFile, outputFile)
+        }
     }
 }
 
 internal fun invokeAapt(aapt2Executable: File, vararg args: String): List<String> {
+    if (!aapt2Executable.isDirectory) {
+        throw IllegalArgumentException("aapt2Executable must be contained in a directory.")
+    }
+    val aapt2 = File(aapt2Executable, SdkConstants.FN_AAPT2)
     val processOutputHeader = CachedProcessOutputHandler()
     val processInfoBuilder = ProcessInfoBuilder()
-            .setExecutable(aapt2Executable)
+            .setExecutable(aapt2)
             .addArgs(args)
     val processExecutor = DefaultProcessExecutor(StdLogger(StdLogger.Level.ERROR))
     processExecutor
@@ -176,8 +227,3 @@ internal fun invokeAapt(aapt2Executable: File, vararg args: String): List<String
     output.processStandardOutputLines(lineCollector)
     return lineCollector.result
 }
-
-internal fun verifyAaptFlagEnabled(params: OptimizeResourcesTask.OptimizeResourcesParams): Boolean =
-        params.enableResourceObfuscation
-                || params.enableResourcePathShortening
-                || params.enableSparseResourceEncoding

@@ -417,7 +417,7 @@ public class DexArchiveBuilderTest {
         }
         assertThat(classesInArchive).containsExactlyElementsIn(classNames);
 
-        for (DexArchiveEntry entry : dexArchive.getFiles()) {
+        for (DexArchiveEntry entry : dexArchive.getSortedDexArchiveEntries()) {
             byte[] dexClass = entry.getDexFileContent();
             Dex dex = new Dex(dexClass, entry.getRelativePathInArchive());
 

@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
@@ -42,6 +43,7 @@ public class CmakeInjectedAbiSplitTest {
     public static GradleTestProject sProject =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setCmakeVersion("3.10.4819442")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)

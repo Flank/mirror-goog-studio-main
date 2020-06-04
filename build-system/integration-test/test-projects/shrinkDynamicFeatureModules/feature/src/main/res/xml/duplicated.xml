@@ -1,0 +1,9 @@
+<!--
+This resource is duplicated in base and feature module but used in base module only. It must not be
+replaced with dummy content inside feature as well because resource must be the same across all
+modules.
+-->
+<root>
+    <a>Hello</a>
+    <b>World!</b>
+</root>

@@ -16,6 +16,7 @@
 
 package com.android.tools.form;
 
+import com.android.tools.utils.BazelWorker;
 import com.android.tools.utils.JarOutputCompiler;
 import com.android.tools.utils.Unzipper;
 import com.intellij.compiler.instrumentation.InstrumentationClassFinder;
@@ -34,7 +35,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,11 +55,10 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         super("formc");
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         // Radar #5755208: Command line Java applications need a way to launch without a Dock icon.
         System.setProperty("apple.awt.UIElement", "true");
-
-        System.exit(new FormCompiler().run(Arrays.asList(args)));
+        BazelWorker.run(args, compilerArgs -> new FormCompiler().run(compilerArgs));
     }
 
     @Override

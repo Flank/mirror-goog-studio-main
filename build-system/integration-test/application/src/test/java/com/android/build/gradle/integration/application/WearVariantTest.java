@@ -27,6 +27,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.testutils.apk.Apk;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /**
  * Assemble tests for embedded.
  */
@@ -72,8 +74,21 @@ public class WearVariantTest {
 
     @Test
     public void checkEmbedded() throws Exception {
-        String embeddedApkPath = FD_RES + '/' + FD_RES_RAW + '/' + ANDROID_WEAR_MICRO_APK +
-                DOT_ANDROID_PACKAGE;
+        boolean optimizedResEnabled =
+                project.getSubproject("main")
+                        .getIntermediateFile(
+                                InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE
+                                        .getFolderName())
+                        .exists();
+        String embeddedApkPath =
+                optimizedResEnabled
+                        ? FD_RES + '/' + "sq.apk"
+                        : FD_RES
+                                + '/'
+                                + FD_RES_RAW
+                                + '/'
+                                + ANDROID_WEAR_MICRO_APK
+                                + DOT_ANDROID_PACKAGE;
 
         // each micro app has a different version name to distinguish them from one another.
         // here we record what we expect from which.
@@ -87,17 +102,6 @@ public class WearVariantTest {
         variants.put(VariantInfo.of(CUSTOM, "flavor1"), "custom");
         variants.put(VariantInfo.of(DEBUG, "flavor1"), null);
         variants.put(VariantInfo.of(DEBUG, "flavor2"), null);
-
-        //List<List<String>> variantData = Lists.newArrayList(
-        //        //Output apk name             Version name
-        //        //---------------             ------------
-        //        Lists.newArrayList( "flavor1-release-unsigned", "flavor1" ),
-        //        Lists.newArrayList( "flavor2-release-unsigned", "default" ),
-        //        Lists.newArrayList( "flavor1-custom-unsigned",  "custom" ),
-        //        Lists.newArrayList( "flavor2-custom-unsigned",  "custom" ),
-        //        Lists.newArrayList( "flavor1-debug",            null ),
-        //        Lists.newArrayList( "flavor2-debug",            null )
-        //);
 
         for (Map.Entry<VariantInfo, String> variant : variants.entrySet()) {
             VariantInfo apkInfo = variant.getKey();

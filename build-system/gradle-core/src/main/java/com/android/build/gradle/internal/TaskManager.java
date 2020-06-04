@@ -76,7 +76,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -174,7 +174,7 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGeneratorBase;
+import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateManifestJarTask;
 import com.android.build.gradle.tasks.GenerateResValues;
@@ -1345,23 +1345,6 @@ public abstract class TaskManager<
                         new GenerateLibraryRFileTask.CreationAction(
                                 componentProperties, isLibrary()));
             }
-
-            if (!componentProperties.getVariantDslInfo().isDebuggable()
-                    && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
-                if (componentProperties.getVariantScope().useResourceShrinker()) {
-                    taskFactory.register(
-                            new OptimizeResourcesTask.CreateAction(componentProperties));
-                    // Republish the RES_PROCESSED_OPTIMIZED as PROCESSED_RES
-                    componentProperties
-                            .getArtifacts()
-                            .republish(
-                                    InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE,
-                                    InternalArtifactType.PROCESSED_RES.INSTANCE);
-                } else {
-                    logger.error(
-                            "Cannot apply AAPT2 OPTIMIZE without resource shrinker being enabled.");
-                }
-            }
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
@@ -1394,6 +1377,11 @@ public abstract class TaskManager<
                                     artifacts.get(
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                                     .INSTANCE)));
+
+            if (!componentProperties.getVariantDslInfo().isDebuggable()
+                    && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
+                taskFactory.register(new OptimizeResourcesTask.CreateAction(componentProperties));
+            }
         }
     }
 
@@ -1602,18 +1590,17 @@ public abstract class TaskManager<
 
         componentProperties
                 .getTaskContainer()
-                .setExternalNativeJsonGenerator(
+                .setCxxMetadataGenerator(
                         project.provider(
                                 () ->
-                                        ExternalNativeJsonGeneratorBase.create(
+                                        ExternalNativeJsonGenerator.create(
                                                 module, componentProperties)));
     }
 
     public void createExternalNativeBuildTasks(
             @NonNull ComponentPropertiesImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
-        Provider<ExternalNativeJsonGenerator> generator =
-                taskContainer.getExternalNativeJsonGenerator();
+        Provider<CxxMetadataGenerator> generator = taskContainer.getCxxMetadataGenerator();
         if (generator == null) {
             return;
         }

@@ -29,7 +29,7 @@ public class ClassAnnotationFinder extends ClassVisitor {
 
     private class MethodAnnotationFinder extends MethodVisitor {
         MethodAnnotationFinder(MethodVisitor delegate) {
-            super(Opcodes.ASM5, delegate);
+            super(Opcodes.ASM7, delegate);
         }
 
         @Override
@@ -50,7 +50,7 @@ public class ClassAnnotationFinder extends ClassVisitor {
      * @param annotationFound {@link Consumer} that will received the annotations.
      */
     public ClassAnnotationFinder(ClassVisitor delegate, Consumer<Type> annotationFound) {
-        super(Opcodes.ASM5, delegate);
+        super(Opcodes.ASM7, delegate);
         this.annotationFound = annotationFound;
     }
 

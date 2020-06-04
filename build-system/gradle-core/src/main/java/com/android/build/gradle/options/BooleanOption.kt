@@ -36,8 +36,12 @@ enum class BooleanOption(
 
     // IDE properties
     IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE, false, ApiStage.Stable),
+    IDE_BUILD_MODEL_ONLY_V2(com.android.builder.model.v2.AndroidProject.PROPERTY_BUILD_MODEL_ONLY, false, ApiStage.Stable),
+    @Deprecated("Use IDE_BUILD_MODEL_ONLY_V2")
     IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY, false, ApiStage.Stable),
+    @Deprecated("Use IDE_BUILD_MODEL_ONLY_V2")
     IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED, false, ApiStage.Stable),
+    @Deprecated("Use IDE_BUILD_MODEL_ONLY_V2")
     IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES(AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, false, ApiStage.Stable),
     IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, false, ApiStage.Stable),
     IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, false, ApiStage.Stable),

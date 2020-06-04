@@ -140,6 +140,11 @@ interface RecipeExecutor {
   fun setComposeOptions(kotlinCompilerExtensionVersion: String?, kotlinCompilerVersion: String?)
 
   /**
+   * Sets Cpp Options field values
+   */
+  fun setCppOptions(cppFlags: String, cppPath: String, cppVersion: String)
+
+  /**
    * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.
    */
   fun requireJavaVersion(version: String, kotlinSupport: Boolean = false)

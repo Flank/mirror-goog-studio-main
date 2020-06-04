@@ -21,6 +21,7 @@ import static com.android.tools.mlkit.DataInputOutputUtils.writeFloatArray;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Strings;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -37,7 +38,7 @@ import org.tensorflow.lite.schema.TensorType;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 
 /** Class to load metadata from TFLite FlatBuffer. */
-// TODO(jackqdyulei): This file is forked from metadata library because right now we only have
+// TODO(b/150458079): This file is forked from metadata library because right now we only have
 // Android library(not java one).
 // Remove this file once we have official library.
 public class MetadataExtractor {
@@ -88,6 +89,19 @@ public class MetadataExtractor {
     public byte getOutputTensorType(int outputIndex) {
         Tensor tensor = getOutputTensor(outputIndex);
         return tensor.type();
+    }
+
+    /**
+     * Gets minimum parser version from model metadata. It means in order to support this model,
+     * parser need to be no lower than the targeted version.
+     */
+    public String getMinParserVersion() {
+        ModelMetadata modelMetadata = getModelMetaData();
+        if (modelMetadata == null) {
+            return "";
+        } else {
+            return Strings.nullToEmpty(modelMetadata.minParserVersion());
+        }
     }
 
     /** Gets the input tensor with {@code inputIndex}. */
@@ -285,5 +299,34 @@ public class MetadataExtractor {
             result = 31 * result + Arrays.hashCode(max);
             return result;
         }
+    }
+
+    /**
+     * Compares two semantic version numbers.
+     *
+     * <p>Examples of comparing two versions: <br>
+     * {@code 1.9} precedes {@code 1.14}; <br>
+     * {@code 1.14} precedes {@code 1.14.1}; <br>
+     * {@code 1.14} and {@code 1.14.0} are equal;
+     *
+     * @return the value {@code 0} if the two versions are equal; a value less than {@code 0} if
+     *     {@code version1} precedes {@code version2}; a value greater than {@code 0} if {@code
+     *     version2} precedes {@code version1}.
+     */
+    static int compareVersions(String version1, String version2) {
+        String[] levels1 = version1.split("\\.", 0);
+        String[] levels2 = version2.split("\\.", 0);
+
+        int length = Math.max(levels1.length, levels2.length);
+        for (int i = 0; i < length; i++) {
+            Integer v1 = i < levels1.length ? Integer.parseInt(levels1[i]) : 0;
+            Integer v2 = i < levels2.length ? Integer.parseInt(levels2[i]) : 0;
+            int compare = v1.compareTo(v2);
+            if (compare != 0) {
+                return compare;
+            }
+        }
+
+        return 0;
     }
 }

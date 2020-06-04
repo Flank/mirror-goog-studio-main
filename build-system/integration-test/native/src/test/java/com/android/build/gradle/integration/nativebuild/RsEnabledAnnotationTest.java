@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -31,6 +32,7 @@ public class RsEnabledAnnotationTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("extractRsEnabledAnnotations")
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setCmakeVersion("3.10.4819442")
                     .setWithCmakeDirInLocalProp(true)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

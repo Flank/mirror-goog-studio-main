@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.cxx.gradle.generator.ExternalNativeJsonGenerator;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -29,7 +29,9 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
+import java.util.concurrent.Callable;
 import javax.inject.Inject;
+import kotlin.Unit;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
@@ -41,7 +43,7 @@ import org.gradle.api.tasks.PathSensitivity;
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
 
-    private Provider<ExternalNativeJsonGenerator> generator;
+    private Provider<CxxMetadataGenerator> generator;
 
     @Inject
     public ExternalNativeBuildJsonTask() {
@@ -58,19 +60,23 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         new DefaultIssueReporter(new LoggerWrapper(getLogger())))) {
-            generator.get().build(false);
+            for (Callable<Unit> future : generator.get().getMetadataGenerators(false, null)) {
+                future.call();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Nested
-    public Provider<ExternalNativeJsonGenerator> getExternalNativeJsonGenerator() {
+    public Provider<CxxMetadataGenerator> getExternalNativeJsonGenerator() {
         return generator;
     }
 
     @NonNull
     public static VariantTaskCreationAction<ExternalNativeBuildJsonTask, ComponentPropertiesImpl>
             createTaskConfigAction(
-                    @NonNull Provider<ExternalNativeJsonGenerator> generator,
+                    @NonNull Provider<CxxMetadataGenerator> generator,
                     @NonNull ComponentPropertiesImpl componentProperties) {
         return new CreationAction(componentProperties, generator);
     }
@@ -79,11 +85,11 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
             extends VariantTaskCreationAction<
                     ExternalNativeBuildJsonTask, ComponentPropertiesImpl> {
 
-        private final Provider<ExternalNativeJsonGenerator> generator;
+        private final Provider<CxxMetadataGenerator> generator;
 
         private CreationAction(
                 @NonNull ComponentPropertiesImpl componentProperties,
-                Provider<ExternalNativeJsonGenerator> generator) {
+                Provider<CxxMetadataGenerator> generator) {
             super(componentProperties);
             this.generator = generator;
         }

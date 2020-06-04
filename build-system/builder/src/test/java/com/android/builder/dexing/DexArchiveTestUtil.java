@@ -127,7 +127,7 @@ public final class DexArchiveTestUtil {
     }
 
     public static void mergeMonoDex(
-            @NonNull Collection<Path> dexArchives,
+            @NonNull List<Path> dexArchives,
             @NonNull Path outputDir,
             @NonNull DexMergerTool dexMergerTool)
             throws IOException, InterruptedException, DexArchiveMergerException {
@@ -135,7 +135,7 @@ public final class DexArchiveTestUtil {
     }
 
     public static void mergeLegacyDex(
-            @NonNull Collection<Path> dexArchives,
+            @NonNull List<Path> dexArchives,
             @NonNull Path outputDir,
             @NonNull Path mainDexList,
             @NonNull DexMergerTool dexMergerTool)
@@ -145,7 +145,7 @@ public final class DexArchiveTestUtil {
     }
 
     public static void mergeNativeDex(
-            @NonNull Collection<Path> dexArchives,
+            @NonNull List<Path> dexArchives,
             @NonNull Path outputDir,
             @NonNull DexMergerTool dexMergerTool)
             throws IOException, InterruptedException, DexArchiveMergerException {
@@ -215,7 +215,7 @@ public final class DexArchiveTestUtil {
      *     mode is legacy mulidex, must be null otherwise.
      */
     private static void implMergeDexes(
-            @NonNull Collection<Path> inputs,
+            @NonNull List<Path> inputs,
             @NonNull Path outputDir,
             @NonNull DexingType dexingType,
             @Nullable Path mainDexList,
@@ -244,6 +244,11 @@ public final class DexArchiveTestUtil {
                 throw new AssertionError();
         }
         Files.createDirectory(outputDir);
-        merger.mergeDexArchives(inputs.iterator(), outputDir, mainDexList, dexingType);
+        merger.mergeDexArchives(
+                DexArchives.getAllEntriesFromArchives(inputs),
+                inputs,
+                outputDir,
+                mainDexList,
+                dexingType);
     }
 }

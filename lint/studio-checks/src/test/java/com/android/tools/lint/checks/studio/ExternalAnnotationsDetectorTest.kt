@@ -48,7 +48,7 @@ class ExternalAnnotationsDetectorTest {
                     """
                     package com.intellij.psi;
 
-                    public interface PsiMethod implements PsiModifierListOwner {}
+                    public interface PsiMethod extends PsiModifierListOwner {}
                     """
                 ),
                 kotlin(

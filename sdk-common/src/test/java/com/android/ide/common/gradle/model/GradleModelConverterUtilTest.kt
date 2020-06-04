@@ -16,6 +16,8 @@
 
 package com.android.ide.common.gradle.model
 
+import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary
+import com.android.ide.common.gradle.model.stubs.AndroidLibraryStubBuilder
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.projectmodel.ExternalLibrary
@@ -24,6 +26,7 @@ import com.android.projectmodel.RecursiveResourceFolder
 import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.File
 
 /**
  * Tests for [GradleModelConverterUtil].
@@ -47,17 +50,17 @@ class GradleModelConverterUtilTest {
 
     @Test
     fun testConvertAndroidLibrary() {
-        val original = com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStubBuilder().build()
+        val original = AndroidLibraryStubBuilder().build()
         val result = convertLibrary(original)
 
         with(original) {
             assertThat(result).isEqualTo(
               ExternalLibrary(
-                    address = artifactAddress,
-                    location = artifact.toPathString(),
-                    manifestFile = PathString(manifest),
-                    classJars = listOf(PathString(jarFile)),
-                    dependencyJars = localJars.map(::PathString),
+                address = artifactAddress,
+                location = artifact.toPathString(),
+                manifestFile = PathString(manifest),
+                classJars = listOf(PathString(jarFile)),
+                dependencyJars = localJars.map(::PathString),
                     resFolder = RecursiveResourceFolder(PathString(resFolder)),
                     symbolFile = PathString(symbolFile),
                     resApkFile = resStaticLibrary?.let(::PathString)

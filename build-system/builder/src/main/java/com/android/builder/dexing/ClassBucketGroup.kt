@@ -16,7 +16,6 @@
 
 package com.android.builder.dexing
 
-import com.android.SdkConstants
 import java.io.File
 import java.io.Serializable
 
@@ -70,12 +69,3 @@ class JarBucketGroup(
         private const val serialVersionUID = 1L
     }
 }
-
-/** Whether the given file is a jar file. It may or may not exist. */
-val isJarFile: (File) -> Boolean = { it.extension.equals(SdkConstants.EXT_JAR, ignoreCase = true) }
-
-/**
- * Whether the regular file or jar entry with the given absolute path/relative path/name represents
- * a class file for dexing purposes (see [ClassFileInput.CLASS_MATCHER]). It may or may not exist.
- */
-val isClassFile: (String) -> Boolean = { ClassFileInput.CLASS_MATCHER.test(it) }

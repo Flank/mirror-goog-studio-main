@@ -26,6 +26,7 @@ import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.pub
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_APK_CREATOR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
@@ -220,8 +221,20 @@ public class VariantScopeImpl implements VariantScope {
             return false;
         }
 
-        // TODO: support resource shrinking for multi-apk applications http://b/78119690
-        if (variantType.isDynamicFeature() || globalScope.hasDynamicFeatures()) {
+        boolean newResourceShrinker =
+                globalScope.getProjectOptions().get(ENABLE_NEW_RESOURCE_SHRINKER);
+        if (variantType.isDynamicFeature()) {
+            String message = newResourceShrinker
+                    ? "Resource shrinking should be configured for base module."
+                    : "Resource shrinker cannot be used for multi-apk applications";
+            globalScope
+                    .getDslServices()
+                    .getIssueReporter()
+                    .reportError(Type.GENERIC, message);
+            return false;
+        }
+
+        if (!newResourceShrinker && globalScope.hasDynamicFeatures()) {
             globalScope
                     .getDslServices()
                     .getIssueReporter()
@@ -332,7 +345,7 @@ public class VariantScopeImpl implements VariantScope {
             return null;
         }
 
-        Boolean enableR8 = globalScope.getProjectOptions().get(ENABLE_R8);
+        Boolean enableR8 = globalScope.getProjectOptions().getValue(ENABLE_R8);
         if (variantDslInfo.getVariantType().isAar()
                 && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_R8_LIBRARIES)) {
             // R8 is disabled for libraries
@@ -423,7 +436,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean isTestOnly() {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
-        Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
+        Boolean isTestOnlyOverride = projectOptions.getValue(OptionalBooleanOption.IDE_TEST_ONLY);
 
         if (isTestOnlyOverride != null) {
             return isTestOnlyOverride;
@@ -431,7 +444,7 @@ public class VariantScopeImpl implements VariantScope {
 
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
-                || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
+                || projectOptions.getValue(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
                 || variantDslInfo.getMinSdkVersion().getCodename() != null
                 || variantDslInfo.getTargetSdkVersion().getCodename() != null;

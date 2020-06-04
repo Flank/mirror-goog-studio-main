@@ -29,6 +29,7 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ParameterizedAndroidProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -523,6 +524,7 @@ public class NativeModelTest {
                                             .useCppSource(isCpp)
                                             .build())
                             .addFiles(extraFiles)
+                            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                             .setCmakeVersion(cmakeVersionInLocalProperties)
                             .setWithCmakeDirInLocalProp(!cmakeVersionInLocalProperties.isEmpty())
                             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexArchiveEntryBucket
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.DexingType
@@ -27,7 +28,6 @@ import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
-import com.google.common.collect.ImmutableSet
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -42,7 +42,7 @@ class DexMergingTaskTest {
 
     @Test
     fun testMonoDexSingleClass() {
-        val dexFiles = generateArchive("test/A")
+        val dexRoots = listOf(generateArchive("test/A"))
 
         val output = tmp.newFolder()
         DexMergingTaskRunnable(
@@ -54,8 +54,8 @@ class DexMergingTaskTest {
                 true,
                 0,
                 null,
-                ImmutableSet.of(dexFiles),
-                null,
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
                 output
             )
         ).run()
@@ -64,7 +64,7 @@ class DexMergingTaskTest {
 
     @Test
     fun testMonoDexMultipleClasses() {
-        val dexFiles = generateArchive("test/A", "test/B", "test/C")
+        val dexRoots = listOf(generateArchive("test/A", "test/B", "test/C"))
 
         val output = tmp.newFolder()
         DexMergingTaskRunnable(
@@ -76,8 +76,8 @@ class DexMergingTaskTest {
                 true,
                 0,
                 null,
-                ImmutableSet.of(dexFiles),
-                null,
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
                 output
             )
         ).run()
@@ -92,7 +92,7 @@ class DexMergingTaskTest {
 
     @Test
     fun testLegacyMultiDex() {
-        val dexFiles = generateArchive("test/A", "test/B", "test/C")
+        val dexRoots = listOf(generateArchive("test/A", "test/B", "test/C"))
 
         val mainDexList = tmp.newFile()
         mainDexList.writeText("test/A.class")
@@ -107,8 +107,8 @@ class DexMergingTaskTest {
                 true,
                 0,
                 mainDexList,
-                ImmutableSet.of(dexFiles),
-                null,
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
                 output
             )
         ).run()
@@ -123,36 +123,8 @@ class DexMergingTaskTest {
 
     @Test
     fun testNativeMultiDexWithThreshold() {
-        val numInputs = 5
-        val inputFiles = (0 until numInputs).map {
-            tmp.newFile("input_$it")
-        }
-
-        val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.NATIVE_MULTIDEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                numInputs + 1,
-                null,
-                inputFiles.toSet(),
-                null,
-                output
-            )
-        ).run()
-
-        (0 until numInputs).forEach {
-            assertThat(output.resolve("classes_$it.dex")).exists()
-        }
-    }
-
-    @Test
-    fun testNativeMultiDexWithThresholdToMerge() {
-        val numInputs = 5
-        val inputFiles = (0 until numInputs).map {
+        val numDexRoots = 5
+        val dexRoots = (0 until numDexRoots).map {
             generateArchive("test/A$it")
         }
 
@@ -164,16 +136,44 @@ class DexMergingTaskTest {
                 DexMergerTool.D8,
                 21,
                 true,
-                numInputs,
+                numDexRoots + 1,
                 null,
-                inputFiles.toSet(),
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
+                output
+            )
+        ).run()
+
+        (0 until numDexRoots).forEach {
+            assertThat(output.resolve("classes_$it.dex")).exists()
+        }
+    }
+
+    @Test
+    fun testNativeMultiDexWithThresholdToMerge() {
+        val numDexRoots = 5
+        val dexRoots = (0 until numDexRoots).map {
+            generateArchive("test/A$it")
+        }
+
+        val output = tmp.newFolder()
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.NATIVE_MULTIDEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                numDexRoots,
                 null,
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
                 output
             )
         ).run()
 
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
-            (0 until numInputs).map { "Ltest/A$it;" })
+            (0 until numDexRoots).map { "Ltest/A$it;" })
     }
 
     /**
@@ -182,8 +182,8 @@ class DexMergingTaskTest {
      */
     @Test
     fun testNativeMultiDexThresholdMustNotCopy() {
-        val numInputs = 5
-        val inputFiles = (0 until numInputs).map {
+        val numDexRoots = 5
+        val dexRoots = (0 until numDexRoots).map {
             generateArchive("test/A$it", "test/B$it")
         }
 
@@ -195,16 +195,16 @@ class DexMergingTaskTest {
                 DexMergerTool.D8,
                 21,
                 true,
-                numInputs + 1,
+                numDexRoots + 1,
                 null,
-                inputFiles.toSet(),
-                null,
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
                 output
             )
         ).run()
 
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
-            (0 until numInputs).flatMap { listOf("Ltest/A$it;", "Ltest/B$it;") }
+            (0 until numDexRoots).flatMap { listOf("Ltest/A$it;", "Ltest/B$it;") }
         )
         assertThat(output.resolve("classes2.dex")).doesNotExist()
     }
@@ -227,7 +227,7 @@ class DexMergingTaskTest {
             generateArchive(tmp, rootDir.toPath(), listOf("test/A2", "test/A1"))
             rootDir
         }
-        val inputFiles = listOf(directoryB, directoryA)
+        val dexRoots = listOf(directoryB, directoryA)
 
         val output = tmp.newFolder()
         DexMergingTaskRunnable(
@@ -239,8 +239,8 @@ class DexMergingTaskTest {
                 true,
                 Int.MAX_VALUE,
                 null,
-                inputFiles.toSet(),
-                null,
+                DexArchiveEntryBucket(dexRoots),
+                dexRoots,
                 output
             )
         ).run()

@@ -100,7 +100,7 @@ public abstract class LintBaseTask extends DefaultTask {
         return lintClassPath;
     }
 
-    @Nullable protected LintOptions lintOptions;
+    @Nullable protected transient LintOptions lintOptions;
     protected File sdkHome;
     protected ToolingModelBuilderRegistry toolingRegistry;
     @Nullable protected File reportsDir;

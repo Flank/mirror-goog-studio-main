@@ -39,7 +39,7 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
     private final boolean myUnifiedPipeline;
 
     public InitializerAdapter(ClassVisitor classVisitor, boolean unifiedPipeline) {
-        super(ASM5, classVisitor);
+        super(ASM7, classVisitor);
         myUnifiedPipeline = unifiedPipeline;
     }
 
@@ -68,7 +68,7 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
         private final boolean myUnifiedPipeline;
 
         public MethodAdapter(MethodVisitor mv, boolean unifiedPipeline) {
-            super(ASM5, mv);
+            super(ASM7, mv);
             myUnifiedPipeline = unifiedPipeline;
         }
 

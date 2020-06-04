@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 
 /** Creates instance of {@link Library}. */
 public class IdeLibraryFactory {
-
     @NonNull
     private static ImmutableList<String> getLocalJars(
             @NonNull Library library, @NonNull File libraryFolderPath) {
@@ -53,7 +52,7 @@ public class IdeLibraryFactory {
      */
     @VisibleForTesting
     @NonNull
-    public Library create(
+    public IdeLibrary create(
             @NonNull AndroidLibrary androidLibrary, @NonNull BuildFolderPaths moduleBuildDirs) {
         // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
         // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
@@ -76,9 +75,7 @@ public class IdeLibraryFactory {
                     androidLibrary.getResFolder().getPath(),
                     defaultValueIfNotPresent(androidLibrary::getResStaticLibrary, null),
                     androidLibrary.getAssetsFolder().getPath(),
-                    androidLibrary
-                            .getLocalJars()
-                            .stream()
+                    androidLibrary.getLocalJars().stream()
                             .map(File::getPath)
                             .collect(Collectors.toList()),
                     androidLibrary.getJniFolder().getPath(),
@@ -89,7 +86,8 @@ public class IdeLibraryFactory {
                     androidLibrary.getExternalAnnotations().getPath(),
                     androidLibrary.getPublicResources().getPath(),
                     androidLibrary.getBundle(),
-                    getSymbolFilePath(androidLibrary));
+                    getSymbolFilePath(androidLibrary),
+                    defaultValueIfNotPresent(() -> androidLibrary.isProvided(), false));
         }
     }
 
@@ -108,7 +106,7 @@ public class IdeLibraryFactory {
     }
 
     @Nullable
-    protected static <T> T defaultValueIfNotPresent(
+    public static <T> T defaultValueIfNotPresent(
             @NonNull Supplier<T> propertyInvoker, @Nullable T defaultValue) {
         try {
             return propertyInvoker.get();
@@ -123,13 +121,16 @@ public class IdeLibraryFactory {
      */
     @VisibleForTesting
     @NonNull
-    public Library create(@NonNull JavaLibrary javaLibrary) {
+    public IdeLibrary create(@NonNull JavaLibrary javaLibrary) {
         String project = getProject(javaLibrary);
         if (project != null) {
             // Java modules don't have variant.
             return new IdeModuleLibrary(javaLibrary, computeAddress(javaLibrary));
         } else {
-            return new IdeJavaLibrary(computeAddress(javaLibrary), javaLibrary.getJarFile());
+            return new IdeJavaLibrary(
+                    computeAddress(javaLibrary),
+                    javaLibrary.getJarFile(),
+                    defaultValueIfNotPresent(() -> javaLibrary.isProvided(), false));
         }
     }
 
@@ -147,7 +148,7 @@ public class IdeLibraryFactory {
      * @return An instance of {@link Library} of type LIBRARY_MODULE.
      */
     @NonNull
-    static Library create(
+    static IdeLibrary create(
             @NonNull String projectPath,
             @NonNull String artifactAddress,
             @Nullable String buildId) {

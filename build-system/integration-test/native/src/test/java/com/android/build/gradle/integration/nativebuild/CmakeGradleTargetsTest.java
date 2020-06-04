@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -51,6 +52,7 @@ public class CmakeGradleTargetsTest {
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
                     .addFile(HelloWorldJniApp.cmakeListsWithExecutables("."))
                     .addFile(HelloWorldJniApp.executableCpp("src/main/cxx/executable", "main.cpp"))
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setCmakeVersion("3.10.4819442")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)

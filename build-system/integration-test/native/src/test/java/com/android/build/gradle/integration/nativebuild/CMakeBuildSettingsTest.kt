@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -41,6 +42,7 @@ class CMakeBuildSettingsTest(private val cmakeVersionInDsl: String) {
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 

@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
@@ -45,6 +46,7 @@ public class CmakeTargetsTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cpp").build())
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .addFile(HelloWorldJniApp.cmakeListsMultiModule("."))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))

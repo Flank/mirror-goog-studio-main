@@ -10,6 +10,9 @@ cc_binary(
     ],
     deps = [
         ":trace_processor_service_impl",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/time",
     ],
 )
 
@@ -53,6 +56,7 @@ cc_test(
         "-Itools/base/profiler/native/trace_processor_daemon",
     ],
     data = [
+        "testdata/garbage.trace",
         "testdata/tank.trace",
         "testdata/unity.heapprofd",
     ],

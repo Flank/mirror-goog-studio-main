@@ -45,14 +45,14 @@ class ProtoAndroidManifestUsageRecorder(private val manifest: Path) : ResourceUs
             .map { it.compiledItem }
             .filter { it.hasRef() }
             .map { it.ref }
-            .forEach {
+            .flatMap {
                 // If resource id is available prefer this id to name.
-                val resource = when {
-                    it.id != 0 -> model.getResourceByValue(it.id)
-                    else -> model.usageModel.getResourceFromUrl("@${it.name}")
-                }
-                ResourceUsageModel.markReachable(resource)
+                when {
+                    it.id != 0 -> listOfNotNull(model.resourceStore.getResource(it.id))
+                    else -> model.resourceStore.getResourcesFromUrl("@${it.name}")
+                }.asSequence()
             }
+            .forEach { ResourceUsageModel.markReachable(it) }
         node.element.childList.forEach { recordUsagesFromNode(it, model) }
     }
 }

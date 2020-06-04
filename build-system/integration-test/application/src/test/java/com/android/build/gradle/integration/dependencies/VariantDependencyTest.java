@@ -33,6 +33,7 @@ import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -127,8 +128,16 @@ public class VariantDependencyTest {
     public void buildMultiFlavorDependency() throws Exception {
         // check that the dependency was added by looking for a res file coming from the
         // dependency.
-        checkApkForContent("paidIcsDebug", "res/anim/abc_fade_in.xml");
-        checkApkForContent("paidIcsRelease", "res/anim/abc_fade_in.xml");
+        String fullResPath = "res/anim/abc_fade_in.xml";
+        checkApkForContent("paidIcsDebug", fullResPath);
+
+        if (project.getIntermediateFile(
+                        InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE.getFolderName())
+                .exists()) {
+            checkApkForContent("paidIcsRelease", "res/vp.xml");
+        } else {
+            checkApkForContent("paidIcsRelease", fullResPath);
+        }
     }
 
     @Test

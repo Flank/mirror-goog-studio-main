@@ -25,7 +25,9 @@ import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVa
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.getPrefabFromMaven
+import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils.join
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import java.io.File
 
 /**
@@ -121,4 +123,10 @@ val CxxVariantModel.jsonFolder
  */
 val CxxVariantModel.gradleBuildOutputFolder
         get() = join(module.cxxFolder, "cxx", variantName)
+
+/**
+ * Gradle stats builder proto for this variant
+ */
+val CxxVariantModel.statsBuilder : GradleBuildVariant.Builder
+    get() = ProcessProfileWriter.getOrCreateVariant(module.gradleModulePathName, variantName)
 

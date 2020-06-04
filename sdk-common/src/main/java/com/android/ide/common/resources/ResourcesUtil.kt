@@ -19,6 +19,12 @@ package com.android.ide.common.resources
 
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_9PNG
+import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
+import com.android.resources.ResourceType
+import com.android.utils.SdkUtils
+import java.util.Collections
+import java.util.IdentityHashMap
+import java.util.function.Consumer
 
 /**
  * Replicates the key flattening done by AAPT. If the passed key contains '.', '-' or ':', they
@@ -80,6 +86,50 @@ fun fileNameToResourceName(fileName: String): String? {
     }
     else -> fileName.substring(0, lastExtension)
   }
+}
+
+/**
+ * Finds unused resources in provided resources collection. Marks all used resources as 'reachable'
+ * in original collection.
+ *
+ * @param rootsConsumer function to consume root resources once they are computed.
+ */
+fun findUnusedResources(
+  resources: List<Resource>,
+  rootsConsumer: Consumer<List<Resource>>
+) = findUnusedResources(resources) { rootsConsumer.accept(it) }
+
+/**
+ * Finds unused resources in provided resources collection. Marks all used resources as 'reachable'
+ * in original collection.
+ *
+ * @param rootsConsumer function to consume root resources once they are computed.
+ */
+fun findUnusedResources(
+  resources: List<Resource>,
+  rootsConsumer: (List<Resource>) -> Unit
+): List<Resource> {
+  val seen = Collections.newSetFromMap(IdentityHashMap<Resource, Boolean>())
+  fun visit(resource: Resource) {
+    if (seen.contains(resource)) {
+      return
+    }
+    seen += resource
+    resource.isReachable = true
+    resource.references?.forEach { visit(it) }
+  }
+
+  val roots = resources.filter { it.isReachable || it.isKeep }
+  rootsConsumer(roots)
+  roots.forEach { visit(it) }
+
+  return resources.asSequence()
+    .filterNot { it.isReachable }
+    // Styles not yet handled correctly: don't mark as unused
+    .filter { it.type != ResourceType.ATTR && it.type != ResourceType.STYLEABLE }
+    // Don't flag known service keys read by library
+    .filterNot { SdkUtils.isServiceKey(it.name) }
+    .toList()
 }
 
 /**

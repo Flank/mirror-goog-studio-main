@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.Nullable;
 import com.android.builder.model.JavaLibrary;
+import com.android.ide.common.gradle.model.stubs.JavaLibraryStub;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,9 +35,7 @@ public class IdeLibraryFactoryTest {
     @Test
     public void createFromJavaLibrary() {
         // Verify JavaLibrary of module dependency returns instance of IdeModuleLibrary.
-        com.android.builder.model.level2.Library moduleLibrary =
-                myLibraryFactory.create(
-                        new com.android.ide.common.gradle.model.stubs.JavaLibraryStub());
+        IdeLibrary moduleLibrary = myLibraryFactory.create(new JavaLibraryStub());
         assertThat(moduleLibrary).isInstanceOf(IdeModuleLibrary.class);
 
         // Verify JavaLibrary of jar dependency returns instance of IdeJavaLibrary.

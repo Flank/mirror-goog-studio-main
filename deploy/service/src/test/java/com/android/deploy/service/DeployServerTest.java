@@ -62,15 +62,15 @@ public class DeployServerTest {
     }
 
     @Test
-    public void attachDebugger() {
+    public void getDebugPort() {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge);
-        FakeStreamObserver<Deploy.AttachResponse> response = new FakeStreamObserver<>();
-        Deploy.AttachRequest request =
-                Deploy.AttachRequest.newBuilder().setDeviceId("1234").setPid(1234).build();
-        server.attachDebugger(request, response);
+        FakeStreamObserver<Deploy.DebugPortResponse> response = new FakeStreamObserver<>();
+        Deploy.DebugPortRequest request =
+                Deploy.DebugPortRequest.newBuilder().setDeviceId("1234").setPid(1234).build();
+        server.getDebugPort(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getPort()).isEqualTo(4321);
     }
@@ -92,6 +92,7 @@ public class DeployServerTest {
         ClientData clientData = mock(ClientData.class);
         when(client.getClientData()).thenReturn(clientData);
         when(clientData.getPid()).thenReturn(1234);
+        when(clientData.getPackageName()).thenReturn(clientName);
         when(client.getDebuggerListenPort()).thenReturn(4321);
         return client;
     }

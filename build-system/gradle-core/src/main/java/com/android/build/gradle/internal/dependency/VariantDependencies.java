@@ -324,10 +324,7 @@ public class VariantDependencies {
                         .getArtifactCollection(configType, scope, artifactType, attributeMap);
         artifacts =
                 new SubtractingArtifactCollection(
-                        artifacts,
-                        testedArtifactCollection,
-                        project.files(),
-                        project.getProviders());
+                        artifacts, testedArtifactCollection, project.getObjects());
         return artifacts;
     }
 

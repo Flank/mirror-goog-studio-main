@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -34,6 +35,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /**
  * Assemble tests for ndkPrebuilts.
  */
@@ -42,6 +44,7 @@ public class NdkPrebuiltsTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("ndkPrebuilts")
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 

@@ -25,7 +25,7 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.res.shrinker.ApkFormat
+import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinker
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
@@ -194,15 +194,13 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<ShrinkResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-
             artifactTransformationRequest = creationConfig.artifacts.use(taskProvider)
-                .wiredWithDirectories(
-                    ShrinkResourcesTask::uncompressedResources,
-                    ShrinkResourcesTask::compressedResources)
-                .toTransformMany(
-                    InternalArtifactType.PROCESSED_RES,
-                    InternalArtifactType.SHRUNK_PROCESSED_RES)
-
+                    .wiredWithDirectories(
+                            ShrinkResourcesTask::uncompressedResources,
+                            ShrinkResourcesTask::compressedResources)
+                    .toTransformMany(
+                            InternalArtifactType.PROCESSED_RES,
+                            InternalArtifactType.SHRUNK_PROCESSED_RES)
         }
 
         override fun configure(
@@ -315,7 +313,8 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 try {
                     analyzer.rewriteResourcesInApkFormat(
                         parameters.uncompressedResourceFile.get().asFile,
-                        parameters.outputFile.get().asFile
+                        parameters.outputFile.get().asFile,
+                        LinkedResourcesFormat.BINARY
                     )
                 } catch (e: IOException) {
                     throw RuntimeException(e)
@@ -375,8 +374,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 File(parameters.mergedManifest.get().outputFile),
                 parameters.mappingFile.get().asFile,
                 parameters.resourceDir.get().asFile,
-                reportFile,
-                ApkFormat.BINARY
+                reportFile
             )
             analyzer.isVerbose = parameters.infoLoggingEnabled.get()
             analyzer.isDebug = parameters.debugLoggingEnabled.get()
@@ -396,12 +394,17 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             )
 
             return ResourceShrinkerImpl(
-                ResourcesGathererFromRTxt(parameters.rSourceVariant.get().asFile, ""),
-                ProguardMappingsRecorder(parameters.mappingFile.get().asFile.toPath()),
-                listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
-                RawResourcesGraphBuilder(parameters.resourceDir.get().asFile.toPath()),
-                reporter,
-                ApkFormat.BINARY
+                resourcesGatherers = listOf(
+                    ResourcesGathererFromRTxt(parameters.rSourceVariant.get().asFile)
+                ),
+                obfuscationMappingsRecorder =
+                    ProguardMappingsRecorder(parameters.mappingFile.get().asFile.toPath()),
+                usageRecorders = listOf(manifestUsageRecorder) + dexClassesUsageRecorder,
+                graphBuilders = listOf(
+                    RawResourcesGraphBuilder(parameters.resourceDir.get().asFile.toPath())
+                ),
+                debugReporter = reporter,
+                supportMultipackages = false
             )
         }
     }

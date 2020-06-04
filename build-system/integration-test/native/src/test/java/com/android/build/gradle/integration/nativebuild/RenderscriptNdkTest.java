@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -40,6 +41,7 @@ public class RenderscriptNdkTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("renderscriptNdk")
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 

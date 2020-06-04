@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -48,6 +49,7 @@ public class CmakeVanillaBasicProjectTest {
             GradleTestProject.builder()
                     .fromTestApp(
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     // Set the cmake version and set the local properties with the path to the cmake
                     // binary.
                     .setCmakeVersion("3.10.2")

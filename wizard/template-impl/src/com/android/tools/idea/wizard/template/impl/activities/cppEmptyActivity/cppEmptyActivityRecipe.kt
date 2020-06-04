@@ -24,20 +24,25 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateMan
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleLayout
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.cppEmptyActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.cppEmptyActivityKt
+import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.main.cpp.cMakeListsTxt
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.nativeLibCpp
+
+private const val CPP_VERSION = "3.10.2"
 
 fun RecipeExecutor.generateCppEmptyActivity(
   moduleData: ModuleTemplateData,
   activityClass: String,
   layoutName: String,
   isLauncher: Boolean,
-  packageName: PackageName
+  packageName: PackageName,
+  cppFlags: String
 ) {
   val (projectData, srcOut) = moduleData
   val useAndroidX = projectData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
 
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
+  setCppOptions(cppFlags = cppFlags, cppPath = "src/main/cpp/CMakeLists.txt", cppVersion = CPP_VERSION)
 
   generateManifest(
     moduleData , activityClass, "", packageName, isLauncher, false,
@@ -50,13 +55,15 @@ fun RecipeExecutor.generateCppEmptyActivity(
 
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
 
-  val nativeSrcOut = moduleData.rootDir.resolve("src/main/cpp")
   val simpleActivity = when (projectData.language) {
     Language.Kotlin -> cppEmptyActivityKt(packageName, activityClass, layoutName, useAndroidX)
     Language.Java -> cppEmptyActivityJava(packageName, activityClass, layoutName, useAndroidX)
   }
   save(simpleActivity, simpleActivityPath)
+
+  val nativeSrcOut = moduleData.rootDir.resolve("src/main/cpp")
   save(nativeLibCpp(packageName, activityClass), nativeSrcOut.resolve("native-lib.cpp"))
+  save(cMakeListsTxt(packageName), nativeSrcOut.resolve("CMakeLists.txt"))
 
   open(simpleActivityPath)
 }

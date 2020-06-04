@@ -20,6 +20,7 @@ import com.android.aapt.Resources.Package
 import com.android.aapt.Resources.PackageId
 import com.android.aapt.Resources.ResourceTable
 import com.android.aapt.Resources.XmlNode
+import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat.BINARY
 import com.android.build.gradle.internal.res.shrinker.gatherer.ProtoResourceTableGatherer
 import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRTxt
 import com.android.build.gradle.internal.res.shrinker.graph.ProtoResourcesGraphBuilder
@@ -51,7 +52,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.Arrays
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -66,7 +66,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
-/** TODO: Test Resources#getIdentifier() handling  */
 @RunWith(Parameterized::class)
 class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
     companion object {
@@ -120,16 +119,20 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         val resourceTable = lazy { createResourceTable(dir, addKeepXml = true) }
 
         val analyzer = ResourceShrinkerImpl(
-            createGatherer(rText, resourceTable),
-            ProguardMappingsRecorder(mapping.toPath()),
-            listOf(
+            resourcesGatherers = listOf(
+                createGatherer(rText, resourceTable)
+            ),
+            obfuscationMappingsRecorder = ProguardMappingsRecorder(mapping.toPath()),
+            usageRecorders = listOf(
                 DexUsageRecorder(classes.toPath()),
                 createManifestUsageRecorder(mergedManifest),
                 ToolsAttributeUsageRecorder(rawResources.toPath())
             ),
-            createGraphBuilder(resources, resourceTable),
-            NoDebugReporter,
-            ApkFormat.BINARY
+            graphBuilders = listOf(
+                createGraphBuilder(resources, resourceTable)
+            ),
+            debugReporter = NoDebugReporter,
+            supportMultipackages = false
         )
 
         analyzer.analyze()
@@ -179,7 +182,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 @xml/android_wear_micro_apk : reachable=true
                     @raw/android_wear_micro_apk
             """.trimIndent(),
-            analyzer.model.usageModel.dumpResourceModel().trim()
+            analyzer.model.resourceStore.dumpResourceModel().trim()
         )
     }
 
@@ -194,15 +197,19 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         val resourceTable = lazy { createResourceTable(dir, addKeepXml = false) }
 
         val analyzer = ResourceShrinkerImpl(
-            createGatherer(rText, resourceTable),
-            null,
-            listOf(
+            resourcesGatherers = listOf(
+                createGatherer(rText, resourceTable)
+            ),
+            obfuscationMappingsRecorder = null,
+            usageRecorders = listOf(
                 DexUsageRecorder(classes.toPath()),
                 createManifestUsageRecorder(mergedManifest)
             ),
-            createGraphBuilder(resources, resourceTable),
-            NoDebugReporter,
-            ApkFormat.BINARY
+            graphBuilders = listOf(
+                createGraphBuilder(resources, resourceTable)
+            ),
+            debugReporter = NoDebugReporter,
+            supportMultipackages = false
         )
 
         analyzer.analyze()
@@ -239,7 +246,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 style/MyStyle_Child#
                 xml/android_wear_micro_apk#
             """.trimIndent(),
-            analyzer.model.usageModel.dumpConfig().trim()
+            analyzer.model.resourceStore.dumpConfig().trim()
         )
     }
 
@@ -257,15 +264,19 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         val resourceTable = lazy { createResourceTable(dir, addKeepXml = false) }
 
         val analyzer = ResourceShrinkerImpl(
-            createGatherer(rText, resourceTable),
-            mapping?.let { ProguardMappingsRecorder(it.toPath()) },
-            Arrays.asList(
+            resourcesGatherers = listOf(
+                createGatherer(rText, resourceTable)
+            ),
+            obfuscationMappingsRecorder = mapping?.let { ProguardMappingsRecorder(it.toPath()) },
+            usageRecorders = listOf(
                 DexUsageRecorder(classes.toPath()),
                 createManifestUsageRecorder(mergedManifest)
             ),
-            createGraphBuilder(resources, resourceTable),
-            NoDebugReporter,
-            ApkFormat.BINARY
+            graphBuilders = listOf(
+                createGraphBuilder(resources, resourceTable)
+            ),
+            debugReporter = NoDebugReporter,
+            supportMultipackages = false
         )
 
         analyzer.analyze()
@@ -314,7 +325,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 @xml/android_wear_micro_apk : reachable=true
                     @raw/android_wear_micro_apk
             """.trimIndent(),
-            analyzer.model.usageModel.dumpResourceModel().trim()
+            analyzer.model.resourceStore.dumpResourceModel().trim()
         )
 
         val unusedBitmap = resources.resolve("drawable/unused.png")
@@ -362,7 +373,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         )
 
         val compressedFile = File(dir, "compressed.ap_")
-        analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile)
+        analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile, BINARY)
 
         assertEquals(
             dumpZipContents(uncompressedFile),
@@ -1072,7 +1083,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
     }
 
     private fun checkState(analyzer: ResourceShrinkerImpl) {
-        val resources = analyzer.model.usageModel.resources
+        val resources = analyzer.model.resourceStore.resources
             .sortedWith(compareBy({ it.type }, { it.name }))
 
         var prev: ResourceUsageModel.Resource? = null

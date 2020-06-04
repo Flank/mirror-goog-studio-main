@@ -25,6 +25,8 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.lang.IllegalStateException
+import org.junit.Assert.assertThrows
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -36,19 +38,29 @@ class ResourcesGathererFromRTxtTest {
 
     @Test
     fun `test gatering resources from R text file`() {
-        val model = ResourceShrinkerModel(NoDebugReporter)
-        ResourcesGathererFromRTxt(createSampleRTxt(), "").gatherResourceValues(model)
+        val model = ResourceShrinkerModel(NoDebugReporter, false)
+        ResourcesGathererFromRTxt(createSampleRTxt()).gatherResourceValues(model)
 
-        assertThat(model.usageModel.resources.map { it.name }).containsExactly(
+        assertThat(model.resourceStore.resources.map { it.name }).containsExactly(
             "support_simple_spinner_dropdown_item", "ic_launcher", "ic_launcher_round", "text",
             "AppTheme", "AppTheme_AppBarOverlay", "ActionBar"
         )
-        assertThat(model.usageModel.getResource(STRING, "text")?.value)
+        assertThat(model.resourceStore.getResources(STRING, "text")[0].value)
             .isEqualTo(0x7f0d0000)
-        assertThat(model.usageModel.getResource(STYLE, "AppTheme")?.value)
+        assertThat(model.resourceStore.getResources(STYLE, "AppTheme")[0].value)
             .isEqualTo(0x7f0e0006)
-        assertThat(model.usageModel.getResource(STYLEABLE, "ActionBar")?.value)
+        assertThat(model.resourceStore.getResources(STYLEABLE, "ActionBar")[0].value)
             .isEqualTo(-1)
+    }
+
+    @Test
+    fun `not support multi-package resource store without package name`() {
+        val model = ResourceShrinkerModel(NoDebugReporter, true)
+
+        val exception = assertThrows(IllegalStateException::class.java) {
+            ResourcesGathererFromRTxt(createSampleRTxt()).gatherResourceValues(model)
+        }
+        assertThat(exception).hasMessageThat().contains("Package name should be specified")
     }
 
     private fun createSampleRTxt(): File {

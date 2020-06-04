@@ -41,11 +41,11 @@ service DeployService {
   rpc GetClients(ClientRequest) returns (ClientResponse) {
   }
   /*
-   * Attach debugger returns the debugging port setup by DDMLIB that is expecting a debugger
+   * Returns the debugging port setup by DDMLIB that is expecting a debugger
    * connection. The debugger port is not returned in the initial client list because in the
    * future the debugger port is not guaranteed to be active just because a client is created.
    */
-  rpc AttachDebugger(AttachRequest) returns (AttachResponse) {
+  rpc GetDebugPort(DebugPortRequest) returns (DebugPortResponse) {
   }
 }
 
@@ -70,7 +70,8 @@ message Device {
  * Note: This is not a complete list of properties supported by DDMLIB.
  */
 message Client {
-  int32 pid = 1;
+  uint32 pid = 1;
+  string name = 2;
 }
 
 message DeviceRequest {
@@ -86,10 +87,10 @@ message ClientResponse {
   repeated Client clients = 1;
 }
 
-message AttachRequest {
-  int32 pid = 1;
+message DebugPortRequest {
+  uint32 pid = 1;
   string device_id = 2;
 }
-message AttachResponse {
+message DebugPortResponse {
   int32 port = 1;
 }

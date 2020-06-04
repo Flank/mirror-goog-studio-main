@@ -56,11 +56,9 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
-import jdk.internal.org.objectweb.asm.Type
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.util.ArrayList
 import java.util.concurrent.Callable
 
@@ -469,7 +467,7 @@ open class VariantDslInfoImpl internal constructor(
 
             // TODO: figure out whether it's worth it to put all this inside a Provider to make it lazy.
             val injectedVersionCode =
-                services.projectOptions[IntegerOption.IDE_VERSION_CODE_OVERRIDE]
+                services.projectOptions.getValue(IntegerOption.IDE_VERSION_CODE_OVERRIDE)
             if (injectedVersionCode != null) {
                 return services.provider(Callable { injectedVersionCode })
             }
@@ -901,7 +899,7 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() {
-            val targetApiLevel = dslServices.projectOptions[IntegerOption.IDE_TARGET_DEVICE_API]
+            val targetApiLevel = dslServices.projectOptions.getValue(IntegerOption.IDE_TARGET_DEVICE_API)
             return if (targetApiLevel != null && isMultiDexEnabled && buildTypeObj.isDebuggable) {
                 // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
                 // debuggable.

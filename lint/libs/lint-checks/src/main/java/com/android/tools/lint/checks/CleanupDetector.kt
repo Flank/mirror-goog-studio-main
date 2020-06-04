@@ -107,10 +107,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         method: PsiMethod
     ) {
-        val name = method.name
-        when {
-            BEGIN_TRANSACTION == name -> checkTransactionCommits(context, node, method)
-            EDIT == name -> checkEditorApplied(context, node, method)
+        when (method.name) {
+            BEGIN_TRANSACTION -> checkTransactionCommits(context, node, method)
+            EDIT -> checkEditorApplied(context, node, method)
             else -> checkResourceRecycled(context, node, method)
         }
     }
@@ -473,7 +472,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     ) {
         // TODO: Switch to new DataFlowAnalyzer
         if (isSharedEditorCreation(context, calledMethod)) {
-            if (!node.valueArguments.isEmpty()) {
+            if (node.valueArguments.isNotEmpty()) {
                 // Passing parameters to edit(); that's not the built-in edit method
                 // on SharedPreferences; it's probably the Android KTX extension method which
                 // handles cleanup
@@ -578,7 +577,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         isCommitCall: (JavaContext, UCallExpression) -> Boolean
     ): Boolean {
         val chain = node.getOutermostQualified().getQualifiedChain()
-        if (!chain.isEmpty()) {
+        if (chain.isNotEmpty()) {
             val lastExpression = chain[chain.size - 1]
             if (lastExpression is UCallExpression) {
                 if (isCommitCall(context, lastExpression)) {
@@ -879,7 +878,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         checker: (JavaContext, UCallExpression) -> Boolean
     ): Boolean {
         val args = methodInvocation.valueArguments
-        if (!args.isEmpty()) {
+        if (args.isNotEmpty()) {
             val last = args[args.size - 1]
             if (last is ULambdaExpression) {
                 val body = last.body

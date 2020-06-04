@@ -33,7 +33,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Merges DEX files found in {@link DexArchive}s, and produces the final DEX file(s). Inputs can
  * come from one or more dex archives. In order to process the dex archives, one should invoke
- * {@link #mergeDexArchives(Iterator, Path, Path, DexingType)} method.
+ * {@link #mergeDexArchives(List, List, Path, Path, DexingType)} method.
  *
  * <p>In order to merge individual DEX files, we are using {@link DexMergingStrategy} to determine
  * how many input DEX files can fit into a single output DEX.
@@ -61,7 +60,7 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
     /**
      * Creates an instance of merger. The executor that is specified in parameters will be used to
      * schedule tasks. Important to notice is that merging, triggered by invoking {@link
-     * #mergeDexArchives(Iterator, Path, Path, DexingType)} method, might return before final DEX
+     * #mergeDexArchives(List, List, Path, Path, DexingType)} method, might return before final DEX
      * file(s) are merged and written out. Therefore, the invoker will have to block on the
      * executor, in order to be sure the merging is finished.
      *
@@ -98,13 +97,14 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
      */
     @Override
     public void mergeDexArchives(
-            @NonNull Iterator<Path> inputs,
+            @NonNull List<DexArchiveEntry> dexArchiveEntries,
+            @NonNull List<Path> dexRootsForDx,
             @NonNull Path outputDir,
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)
             throws DexArchiveMergerException {
         // sort paths so we produce deterministic output
-        List<Path> inputPaths = Lists.newArrayList(inputs);
+        List<Path> inputPaths = Lists.newArrayList(dexRootsForDx);
         inputPaths.sort(Ordering.natural());
         if (inputPaths.isEmpty()) {
             return;
@@ -158,7 +158,8 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
                     forkJoinPool.submit(
                             () -> {
                                 try (DexArchive dexArchive = DexArchives.fromInput(archivePath)) {
-                                    List<DexArchiveEntry> entries = dexArchive.getFiles();
+                                    List<DexArchiveEntry> entries =
+                                            dexArchive.getSortedDexArchiveEntries();
                                     List<Dex> dexes = new ArrayList<>(entries.size());
                                     for (DexArchiveEntry e : entries) {
                                         dexes.add(new Dex(e.getDexFileContent()));

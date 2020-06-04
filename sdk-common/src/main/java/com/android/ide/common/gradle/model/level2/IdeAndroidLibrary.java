@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of {@link Library} of type LIBRARY_ANDROID. */
-public final class IdeAndroidLibrary implements Library {
+public final class IdeAndroidLibrary implements IdeLibrary {
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myFolder;
     @NonNull private final String myManifest;
@@ -44,6 +44,8 @@ public final class IdeAndroidLibrary implements Library {
     @NonNull private final String myPublicResources;
     @NonNull private final File myArtifactFile;
     @NonNull private final String mySymbolFile;
+
+    private final boolean myIsProvided;
     private final int myType;
     private final int myHashCode;
 
@@ -70,6 +72,7 @@ public final class IdeAndroidLibrary implements Library {
         //noinspection ConstantConditions
         myArtifactFile = null;
         mySymbolFile = "";
+        myIsProvided = false;
         myType = 0;
 
         myHashCode = 0;
@@ -94,7 +97,8 @@ public final class IdeAndroidLibrary implements Library {
             @NonNull String externalAnnotations,
             @NonNull String publicResources,
             @NonNull File artifactFile,
-            @NonNull String symbolFile) {
+            @NonNull String symbolFile,
+            boolean isProvided) {
         myType = LIBRARY_ANDROID;
         myArtifactAddress = artifactAddress;
         myFolder = folder;
@@ -114,6 +118,7 @@ public final class IdeAndroidLibrary implements Library {
         myPublicResources = publicResources;
         mySymbolFile = symbolFile;
         myArtifactFile = artifactFile;
+        myIsProvided = isProvided;
         myHashCode = calculateHashCode();
     }
 
@@ -231,6 +236,11 @@ public final class IdeAndroidLibrary implements Library {
     }
 
     @Override
+    public boolean isProvided() {
+        return myIsProvided;
+    }
+
+    @Override
     @Nullable
     public String getVariant() {
         throw unsupportedMethodForAndroidLibrary("getVariant");
@@ -282,7 +292,8 @@ public final class IdeAndroidLibrary implements Library {
                 && Objects.equals(myExternalAnnotations, that.myExternalAnnotations)
                 && Objects.equals(myPublicResources, that.myPublicResources)
                 && Objects.equals(mySymbolFile, that.mySymbolFile)
-                && Objects.equals(myArtifactFile, that.myArtifactFile);
+                && Objects.equals(myArtifactFile, that.myArtifactFile)
+                && Objects.equals(myIsProvided, that.myIsProvided);
     }
 
     @Override
@@ -310,7 +321,8 @@ public final class IdeAndroidLibrary implements Library {
                 myExternalAnnotations,
                 myPublicResources,
                 mySymbolFile,
-                myArtifactFile);
+                myArtifactFile,
+                myIsProvided);
     }
 
     @Override
@@ -369,6 +381,9 @@ public final class IdeAndroidLibrary implements Library {
                 + '\''
                 + ", myArtifactFile="
                 + myArtifactFile
+                + '\''
+                + ", myIsProvided="
+                + myIsProvided
                 + '}';
     }
 }
