@@ -194,6 +194,61 @@ class TableExtractorTest {
   }
 
   @Test
+  fun testParseCDataString() {
+      Truth.assertThat(testParse("""<string name="foo"><![CDATA[basic]]></string>""")).isTrue()
+      var str = getValue("string/foo") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("basic");
+      Truth.assertThat(str.untranslatables).isEmpty()
+
+      Truth.assertThat(testParse("""
+          <string name="bar"><![CDATA[<span>Try span</span>]]></string>""")).isTrue()
+      str = getValue("string/bar") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("<span>Try span</span>")
+
+      // Testing multiple CDATA spans and whitespace behavior across spans.
+      Truth.assertThat(testParse("""
+          <string name="baz"><![CDATA[
+            <t>trial</t>]]>multiple <![CDATA[ <t>trials</t>]]></string>
+      """.trimIndent())).isTrue();
+      str = getValue("string/baz") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("<t>trial</t>multiple <t>trials</t>")
+
+      // Quotes are handled as expected.
+      Truth.assertThat(testParse("""
+          <string name="bat">"  <![CDATA[Let's go!]]>  "</string>
+      """.trimIndent()))
+      str = getValue("string/bat") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("  Let's go!  ")
+
+      // Quotes are handle the same inside or out of CDATA.
+      Truth.assertThat(testParse("""
+          <string name="bat2"><![CDATA["  Let's go!  "]]></string>
+      """.trimIndent())).isTrue()
+      str = getValue("string/bat2") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("  Let's go!  ")
+
+      // Or across the CDATA border.
+      Truth.assertThat(testParse("""
+          <string name="bat3">" <![CDATA[ Let's go! ]]> "</string>
+      """.trimIndent())).isTrue()
+      str = getValue("string/bat3") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("  Let's go!  ")
+
+      // Invalid xml in CDATA is okay.
+      Truth.assertThat(testParse("""
+          <string name="bax"><![CDATA[<invalid>xml]]></string>
+      """.trimIndent())).isTrue()
+      str = getValue("string/bax") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("<invalid>xml")
+
+      Truth.assertThat(testParse("""
+          <string name="bav"><![CDATA[\"  QUOTE TIME  \"]]></string>
+      """.trimIndent())).isTrue()
+      str = getValue("string/bav") as BasicString
+      Truth.assertThat(str.toString()).isEqualTo("\" QUOTE TIME \"")
+  }
+
+  @Test
   fun testParseEscapedString() {
     Truth.assertThat(testParse("""<string name="foo">\?123</string>""")).isTrue()
     var str = getValue("string/foo") as BasicString

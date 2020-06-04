@@ -4,7 +4,6 @@ import com.android.aapt.Resources
 import com.android.aaptcompiler.android.stringToInt
 import com.android.resources.ResourceVisibility
 import com.android.utils.ILogger
-import sun.security.krb5.Config
 import java.io.InputStream
 import javax.xml.XMLConstants
 import javax.xml.namespace.QName
