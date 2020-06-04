@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -40,7 +41,11 @@ public class LibMinifyJarDepConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("libMinifyJarDep").create();
+            GradleTestProject.builder()
+                    .fromTestProject("libMinifyJarDep")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     @Category(DeviceTests.class)

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.ClassRule;
@@ -26,7 +27,11 @@ import org.junit.experimental.categories.Category;
 public class AttrOrderConnectedTest {
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("attrOrder").create();
+            GradleTestProject.builder()
+                    .fromTestProject("attrOrder")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     @Category(DeviceTests.class)

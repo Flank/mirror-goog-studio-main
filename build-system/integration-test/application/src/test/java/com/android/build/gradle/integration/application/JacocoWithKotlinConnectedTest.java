@@ -21,6 +21,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -37,6 +38,8 @@ public class JacocoWithKotlinConnectedTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Before

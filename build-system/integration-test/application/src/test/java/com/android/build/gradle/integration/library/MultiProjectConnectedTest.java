@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.Ignore;
@@ -28,7 +29,11 @@ import org.junit.experimental.categories.Category;
 public class MultiProjectConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("multiproject").create();
+            GradleTestProject.builder()
+                    .fromTestProject("multiproject")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Rule public Adb adb = new Adb();
 

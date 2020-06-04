@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
@@ -32,7 +33,11 @@ import org.junit.experimental.categories.Category;
 public class TestingSupportLibraryConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestApp(helloWorldApp).create();
+            GradleTestProject.builder()
+                    .fromTestApp(helloWorldApp)
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     public static final GradleProject helloWorldApp = HelloWorldApp.noBuildFile();
 

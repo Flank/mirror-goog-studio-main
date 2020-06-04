@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.ScannerSubject.a
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
@@ -45,9 +46,12 @@ public class ConnectedCheckTest {
     public Adb adb = new Adb();
 
     public ConnectedCheckTest() {
-        project = GradleTestProject.builder()
-                .fromTestProject("appWithTests")
-                .create();
+        project =
+                GradleTestProject.builder()
+                        .fromTestProject("appWithTests")
+                        // b/146163513
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .create();
     }
 
     @Category(DeviceTests.class)
