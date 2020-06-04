@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
-import com.android.build.gradle.internal.scope.MultipleArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibDexFromTransform
 import com.android.build.gradle.options.BooleanOption
@@ -239,7 +239,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 if (creationConfig.variantScope.consumesFeatureJars()) {
                     artifacts.get(InternalArtifactType.BASE_DEX)
                 } else {
-                    artifacts.getAll(MultipleArtifactType.DEX)
+                    artifacts.getAll(InternalMultipleArtifactType.DEX)
                 }
             )
             task.dexFiles.from(

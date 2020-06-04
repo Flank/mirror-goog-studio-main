@@ -53,18 +53,20 @@ interface Artifacts {
     /**
      * Get the [Provider] of [FileTypeT] for the passed [Artifact].
      *
-     * The [Artifact] must be of the [FileTypeT] and [Artifact.Single]
+     * @param type of the single artifact.
      */
-    fun <FileTypeT: FileSystemLocation, ArtifactTypeT> get(type: ArtifactTypeT): Provider<FileTypeT>
-            where ArtifactTypeT: ArtifactType<out FileTypeT>, ArtifactTypeT: Artifact.Single
+    fun <FileTypeT: FileSystemLocation> get(
+        type: ArtifactType<FileTypeT>
+    ): Provider<FileTypeT>
 
     /**
      * Get all the [Provider]s of [FileTypeT] for the passed [Artifact].
      *
-     * The [Artifact] must be [Artifact.Multiple]
+     * @param type of the multiple artifact
      */
-    fun <FileTypeT: FileSystemLocation, ArtifactTypeT> getAll(type: ArtifactTypeT): Provider<List<FileTypeT>>
-            where ArtifactTypeT : ArtifactType<FileTypeT>, ArtifactTypeT : Artifact.Multiple
+    fun <FileTypeT: FileSystemLocation> getAll(
+        type: MultipleArtifactType<FileTypeT>
+    ): Provider<List<FileTypeT>>
 
     /**
      * Access [Task] based operations.

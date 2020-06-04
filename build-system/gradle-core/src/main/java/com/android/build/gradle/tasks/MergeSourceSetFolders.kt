@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -327,7 +326,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
     open class MergeAssetBaseCreationAction(
         componentProperties: ComponentPropertiesImpl,
-        private val outputArtifactType: SingleArtifactType<Directory>,
+        private val outputArtifactType: InternalArtifactType<Directory>,
         private val includeDependencies: Boolean
     ) : CreationAction(componentProperties) {
 

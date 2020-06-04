@@ -16,8 +16,6 @@
  */
 
 package com.android.build.api.apiTest
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.getOutputPath
 import com.google.common.truth.Truth
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -232,13 +230,13 @@ expected result : "Got an APK...." message.
             import com.android.build.api.variant.BuiltArtifact
 
             import com.android.build.api.artifact.ArtifactKind
-            import com.android.build.api.artifact.Artifact
+            import com.android.build.api.artifact.Artifact.SingleArtifact
             import com.android.build.api.artifact.Artifact.Replaceable
             import com.android.build.api.artifact.Artifact.ContainsMany
 
             sealed class AcmeArtifactType<T : FileSystemLocation>(
                 kind: ArtifactKind<T>
-            ) : Artifact<T>(kind) {
+            ) : SingleArtifact<T>(kind) {
 
                 object ACME_APK: AcmeArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
             }
