@@ -224,6 +224,8 @@ message SchedulingEventsResult {
       SLEEPING = 3;
       SLEEPING_UNINTERRUPTIBLE = 4;
       DEAD = 5;
+      WAKE_KILL = 6;
+      WAKING = 7;
     }
   }
 }
