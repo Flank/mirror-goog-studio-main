@@ -552,12 +552,12 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.useGradleWorkers.set(projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
             task.dxDexParams.inBufferSize.set(
                 task.project.providers.provider {
-                    (projectOptions.getValueProvider(IntegerOption.DEXING_READ_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
+                    (projectOptions.getProvider(IntegerOption.DEXING_READ_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
                 }
             )
             task.dxDexParams.outBufferSize.set(
                 task.project.providers.provider {
-                    (projectOptions.getValueProvider(IntegerOption.DEXING_WRITE_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
+                    (projectOptions.getProvider(IntegerOption.DEXING_WRITE_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
                 }
             )
             task.dexParams.debuggable.setDisallowChanges(
@@ -568,7 +568,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             )
             task.numberOfBuckets.set(
                 task.project.providers.provider {
-                    projectOptions.getValueProvider(IntegerOption.DEXING_NUMBER_OF_BUCKETS).orNull
+                    projectOptions.getProvider(IntegerOption.DEXING_NUMBER_OF_BUCKETS).orNull
                         ?: DEFAULT_NUM_BUCKETS
                 }
             )

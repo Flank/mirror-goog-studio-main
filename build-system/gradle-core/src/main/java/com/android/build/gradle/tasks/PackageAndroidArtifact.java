@@ -1050,7 +1050,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             : null;
 
             packageAndroidArtifact.targetApi =
-                    projectOptions.getValue(IntegerOption.IDE_TARGET_DEVICE_API);
+                    projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
 
             packageAndroidArtifact.apkCreatorType =
                     creationConfig.getVariantScope().getApkCreatorType();

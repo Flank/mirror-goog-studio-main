@@ -97,7 +97,7 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
             Aapt2WorkersBuildService::class.java
         ) {
         private val aapt2ThreadPoolSize =
-            projectOptions.getValue(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?: Integer.min(
+            projectOptions.get(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?: Integer.min(
                 MAX_AAPT2_THREAD_POOL_SIZE,
                 ForkJoinPool.getCommonPoolParallelism()
             )

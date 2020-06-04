@@ -37,9 +37,9 @@ public final class SigningOptions {
         String signingKeyAlias = options.get(StringOption.IDE_SIGNING_KEY_ALIAS);
         String signingKeyPassword = options.get(StringOption.IDE_SIGNING_KEY_PASSWORD);
         Boolean isV1SigningConfigured =
-                options.getValue(OptionalBooleanOption.SIGNING_V1_ENABLED) != null;
+                options.get(OptionalBooleanOption.SIGNING_V1_ENABLED) != null;
         Boolean isV2SigningConfigured =
-                options.getValue(OptionalBooleanOption.SIGNING_V2_ENABLED) != null;
+                options.get(OptionalBooleanOption.SIGNING_V2_ENABLED) != null;
 
         if (signingStoreFile != null
                 && signingStorePassword != null
@@ -52,8 +52,8 @@ public final class SigningOptions {
                     signingKeyAlias,
                     signingKeyPassword,
                     options.get(StringOption.IDE_SIGNING_STORE_TYPE),
-                    options.getValue(OptionalBooleanOption.SIGNING_V1_ENABLED),
-                    options.getValue(OptionalBooleanOption.SIGNING_V2_ENABLED),
+                    options.get(OptionalBooleanOption.SIGNING_V1_ENABLED),
+                    options.get(OptionalBooleanOption.SIGNING_V2_ENABLED),
                     isV1SigningConfigured,
                     isV2SigningConfigured);
         }

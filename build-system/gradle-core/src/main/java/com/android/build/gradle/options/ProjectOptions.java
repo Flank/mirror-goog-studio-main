@@ -150,12 +150,8 @@ public final class ProjectOptions {
         return testRunnerArgsBuilder.build();
     }
 
-    public boolean get(BooleanOption option) {
-        return getValue(option);
-    }
-
     /** Obtain the gradle property value immediately at configuration time. */
-    public boolean getValue(@NonNull BooleanOption option) {
+    public boolean get(@NonNull BooleanOption option) {
         Boolean value = booleanOptionValues.get(option).getValueForUseAtConfiguration();
         if (value != null) {
             return value;
@@ -166,7 +162,7 @@ public final class ProjectOptions {
 
     /** Returns a provider which has the gradle property value to be obtained at execution time. */
     @NonNull
-    public Provider<Boolean> getValueProvider(@NonNull BooleanOption option) {
+    public Provider<Boolean> getProvider(@NonNull BooleanOption option) {
         return providerFactory.provider(
                 () ->
                         booleanOptionValues
@@ -177,19 +173,19 @@ public final class ProjectOptions {
 
     /** Obtain the gradle property value immediately at configuration time. */
     @Nullable
-    public Boolean getValue(@NonNull OptionalBooleanOption option) {
+    public Boolean get(@NonNull OptionalBooleanOption option) {
         return optionalBooleanOptionValues.get(option).getValueForUseAtConfiguration();
     }
 
     /** Returns a provider which has the gradle property value to be obtained at execution time. */
     @NonNull
-    public Provider<Boolean> getValueProvider(@NonNull OptionalBooleanOption option) {
+    public Provider<Boolean> getProvider(@NonNull OptionalBooleanOption option) {
         return optionalBooleanOptionValues.get(option).getValueForUseAtExecution();
     }
 
     /** Obtain the gradle property value immediately at configuration time. */
     @Nullable
-    public Integer getValue(@NonNull IntegerOption option) {
+    public Integer get(@NonNull IntegerOption option) {
         Integer value = integerOptionValues.get(option).getValueForUseAtConfiguration();
         if (value != null) {
             return value;
@@ -200,7 +196,7 @@ public final class ProjectOptions {
 
     /** Returns a provider which has the gradle property value to be obtained at execution time. */
     @NonNull
-    public Provider<Integer> getValueProvider(@NonNull IntegerOption option) {
+    public Provider<Integer> getProvider(@NonNull IntegerOption option) {
         return providerFactory.provider(
                 () -> {
                     Integer value =
