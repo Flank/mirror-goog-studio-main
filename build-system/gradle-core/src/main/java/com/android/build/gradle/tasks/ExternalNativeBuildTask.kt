@@ -230,7 +230,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                 //     that was built. This should cover the source of the copy but it is up to the
                 //     CMakeLists.txt or Android.mk author to ensure this.
                 val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
-                    "Unknown ABI seen $(ibraryValue.abi}"
+                    "Unknown ABI seen ${library.abi}"
                 )
                 val expectedOutputFile = FileUtils.join(
                     generator.get().variant.objFolder,
