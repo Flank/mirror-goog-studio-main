@@ -13,6 +13,7 @@ dependencies {
     compile project(':base:builder-test-api')
     compile libs.guava
     compile libs.kotlin_stdlib
+    compile libs.asm
 
     provided gradleApi()
     provided project(':base:builder-model') // Only present for legacy reasons.

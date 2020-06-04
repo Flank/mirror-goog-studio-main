@@ -16,6 +16,7 @@
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" name="gradle-api" level="project" />
+    <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="module" module-name="android.sdktools.builder-test-api" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
