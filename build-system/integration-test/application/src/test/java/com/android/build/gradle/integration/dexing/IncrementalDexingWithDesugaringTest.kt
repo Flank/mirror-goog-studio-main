@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.dexing
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -337,6 +338,11 @@ class IncrementalDexingWithDesugaringTest(
                 )
             })
         ).useCustomExecutor {
+            if (scenario == ANDROID_LIB && withIncrementalDexingTaskV2 && withIncrementalDexingTransform) {
+                it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            } else if (scenario == JAVA_LIB && !withIncrementalDexingTaskV2 && !withIncrementalDexingTransform) {
+                it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            }
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
         }

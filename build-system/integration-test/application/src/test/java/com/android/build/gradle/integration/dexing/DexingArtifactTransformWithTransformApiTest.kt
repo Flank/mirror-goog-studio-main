@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.dexing
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.internal.dependency.DexingNoClasspathTransform
@@ -45,7 +46,8 @@ class DexingArtifactTransformWithTransformApiTest {
 
     @Test
     fun testArtifactTransformsNotUsedForReleaseVariant() {
-        project.executor().run("assembleRelease")
+        // b/149978740
+        project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run("assembleRelease")
         project.buildResult.stdout.use { scanner ->
             ScannerSubject.assertThat(scanner)
                 .doesNotContain(DexingNoClasspathTransform::class.java.simpleName)

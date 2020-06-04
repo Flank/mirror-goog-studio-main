@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.desugar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -79,7 +80,9 @@ public class DesugarLibraryWithDesugarToolTest {
                         Locale.US,
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
+        // https://github.com/gradle/gradle/issues/13200
         project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .with(BooleanOption.ENABLE_D8_DESUGARING, false)
                 .run("assembleDebugAndroidTest");
         Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);

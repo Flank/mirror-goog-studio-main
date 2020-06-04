@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.gradleapi
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.google.common.truth.StreamSubject
@@ -41,7 +42,10 @@ class TransformVariantApiTest {
 
     @Test
     fun checkRunForRelease() {
-        val result = project.executor().run("assemblePlayFreeRelease")
+        // b/149978740
+        val result =
+            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assemblePlayFreeRelease")
 
         project.getApk(GradleTestProject.ApkType.RELEASE, "play", "free")
             .use { outputFile -> assertThat(outputFile).containsJavaResource(TRANSFORM_MARKER_FILE) }

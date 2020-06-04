@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -128,7 +129,10 @@ public class GenerateAnnotationsClassPathTest {
     @Test
     public void checkJavaGeneratingTaskAddsOutputDirToGenerateAnnotationsClasspath()
             throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug");
+        // b/158201643
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assembleDebug");
         try (Scanner stdout = project.getBuildResult().getStdout()) {
             ScannerSubject.assertThat(stdout)
                     .doesNotContain(

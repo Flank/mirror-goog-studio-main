@@ -20,6 +20,7 @@ import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -187,7 +188,10 @@ public class AidlTest {
 
     @Test
     public void lint() throws IOException, InterruptedException {
-        project.execute("lint");
+        // http://b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("lint");
     }
 
     @Test
