@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.1.0-dev">
+<issues format="5" by="lint 4.2.0-dev">
 
     <issue
         id="ProjectExecOperations"
@@ -14,7 +14,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/BasePlugin.java"
-            line="536"/>
+            line="524"/>
     </issue>
 
     <issue
@@ -30,7 +30,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/featuresplit/FeatureSetMetadataWriterTask.kt"
-            line="127"/>
+            line="130"/>
     </issue>
 
     <issue
@@ -38,7 +38,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/LinkApplicationAndroidResourcesTask.kt"
-            line="786"/>
+            line="794"/>
     </issue>
 
     <issue
@@ -94,7 +94,7 @@
         message="Use `Integer.valueOf(libraries.size)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/PerModuleReportDependenciesTask.kt"
-            line="101"/>
+            line="102"/>
     </issue>
 
     <issue
@@ -119,14 +119,6 @@
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/level2/AndroidLibraryImpl.java"
             line="218"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/ide/level2/AndroidLibraryImpl.java"
-            line="219"/>
     </issue>
 
     <issue
@@ -174,7 +166,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/DefaultAndroidProject.java"
-            line="401"/>
+            line="411"/>
     </issue>
 
     <issue
@@ -254,7 +246,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/services/Aapt2WorkersBuildService.kt"
-            line="76"/>
+            line="50"/>
     </issue>
 
     <issue
@@ -262,7 +254,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
-            line="410"/>
+            line="386"/>
     </issue>
 
 </issues>

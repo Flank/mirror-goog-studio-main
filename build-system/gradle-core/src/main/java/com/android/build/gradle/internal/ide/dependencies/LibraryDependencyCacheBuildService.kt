@@ -19,13 +19,9 @@ package com.android.build.gradle.internal.ide.dependencies
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.FD_AAR_LIBS
 import com.android.SdkConstants.FD_JARS
-import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs
-import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl
-import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl
-import com.android.build.gradle.internal.ide.level2.ModuleLibraryImpl
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.builder.model.AndroidProject
@@ -38,18 +34,25 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Maps
 import org.gradle.api.Project
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 
 /** Build service used to cache library dependencies used in the model builder. */
-abstract class LibraryDependencyCacheBuildService : BuildService<BuildServiceParameters.None>,
-    AutoCloseable {
+abstract class LibraryDependencyCacheBuildService
+    : BuildService<BuildServiceParameters.None>, AutoCloseable {
 
     val libraryCache =
         CreatingCache(CreatingCache.ValueFactory<ResolvedArtifact, Library> {
-            instantiateLibrary(it)
+            artifactHandler.handleArtifact(
+                artifact = it,
+                isProvided = false, // not needed for level2
+                lintJarMap = null // not needed for level2
+            ).also {
+                synchronized(globalLibrary) {
+                    globalLibrary[it.artifactAddress] = it
+                }
+            }
         })
 
     private val globalLibrary = Maps.newHashMap<String, Library>()
@@ -58,7 +61,7 @@ abstract class LibraryDependencyCacheBuildService : BuildService<BuildServicePar
         val localJarRoot = FileUtils.join(it, FD_JARS, FD_AAR_LIBS)
 
         if (!localJarRoot.isDirectory) {
-            ImmutableList.of<File>()
+            ImmutableList.of()
         } else {
             val jarFiles = localJarRoot.listFiles { _, name -> name.endsWith(DOT_JAR) }
             if (jarFiles != null && jarFiles.isNotEmpty()) {
@@ -66,6 +69,8 @@ abstract class LibraryDependencyCacheBuildService : BuildService<BuildServicePar
             } else ImmutableList.of()
         }
     })
+
+    private val artifactHandler = Level2ArtifactHandler(localJarCache)
 
     fun getGlobalLibMap(): Map<String, Library> {
         return ImmutableMap.copyOf(globalLibrary)
@@ -108,75 +113,6 @@ abstract class LibraryDependencyCacheBuildService : BuildService<BuildServicePar
         libraryCache.clear()
         globalLibrary.clear()
         localJarCache.clear()
-    }
-
-    private fun instantiateLibrary(artifact: ResolvedArtifact): Library {
-        val library: Library
-        val id = artifact.componentIdentifier
-        val address = artifact.computeModelAddress()
-
-        if (id !is ProjectComponentIdentifier || artifact.isWrappedModule) {
-            if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
-                val extractedFolder = Preconditions.checkNotNull<File>(artifact.extractedFolder)
-                library = AndroidLibraryImpl(
-                    address,
-                    artifact.artifactFile,
-                    extractedFolder,
-                    // TODO(b/110879504): Auto-namespacing in level4 model
-                    findResStaticLibrary(artifact),
-                    findLocalJarsAsStrings(extractedFolder)
-                )
-            } else {
-                library = JavaLibraryImpl(address, artifact.artifactFile)
-            }
-        } else {
-            // get the build ID
-            val buildId = id.getBuildId(artifact.buildMapping)
-
-            library = ModuleLibraryImpl(
-                address,
-                buildId!!,
-                id.projectPath,
-                artifact.variantName
-            )
-        }
-
-        synchronized(globalLibrary) {
-            globalLibrary[library.artifactAddress] = library
-        }
-
-        return library
-    }
-
-    private fun findLocalJarsAsStrings(folder: File): List<String> {
-        val localJarRoot = FileUtils.join(folder, FD_JARS, FD_AAR_LIBS)
-
-        if (!localJarRoot.isDirectory) {
-            return ImmutableList.of()
-        }
-
-        val jarFiles = localJarRoot.list { _, name -> name.endsWith(DOT_JAR) }
-        if (jarFiles != null && jarFiles.isNotEmpty()) {
-            val list = ImmutableList.builder<String>()
-            for (jarFile in jarFiles) {
-                list.add(FD_JARS + File.separatorChar + FD_AAR_LIBS + File.separatorChar + jarFile)
-            }
-
-            return list.build()
-        }
-
-        return ImmutableList.of()
-    }
-
-    private fun findResStaticLibrary(explodedAar: ResolvedArtifact): File? {
-        if (explodedAar.extractedFolder == null) {
-            return null
-        }
-
-        val file = File(explodedAar.extractedFolder, FN_RESOURCE_STATIC_LIBRARY)
-        return if (!file.exists()) {
-            null
-        } else file
     }
 
     class RegistrationAction(project: Project) :

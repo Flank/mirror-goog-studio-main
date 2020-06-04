@@ -29,6 +29,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
@@ -52,7 +53,6 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull private final String address;
     @NonNull private final File artifact;
     @NonNull private final File folder;
-    @Nullable private final File resStaticLibrary;
     @NonNull private final List<String> localJarPaths;
 
     public AndroidLibraryImpl(
@@ -64,7 +64,6 @@ public final class AndroidLibraryImpl implements Library, Serializable {
         this.address = address;
         this.artifact = artifact;
         this.folder = folder;
-        this.resStaticLibrary = resStaticLibrary;
         this.localJarPaths = ImmutableList.copyOf(localJarPaths);
     }
 
@@ -120,7 +119,8 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @Nullable
     @Override
     public File getResStaticLibrary() {
-        return resStaticLibrary;
+        File file = FileUtils.join(folder, FN_RESOURCE_STATIC_LIBRARY);
+        return file.isFile() ? file : null;
     }
 
     @NonNull
@@ -216,13 +216,12 @@ public final class AndroidLibraryImpl implements Library, Serializable {
         return Objects.equals(address, that.address)
                 && Objects.equals(artifact, that.artifact)
                 && Objects.equals(folder, that.folder)
-                && Objects.equals(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equals(localJarPaths, that.localJarPaths);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, artifact, folder, resStaticLibrary, localJarPaths);
+        return Objects.hash(address, artifact, folder, localJarPaths);
     }
 
     @Override
@@ -231,7 +230,6 @@ public final class AndroidLibraryImpl implements Library, Serializable {
                 .add("address", address)
                 .add("artifact", artifact)
                 .add("folder", folder)
-                .add("resStaticLibrary", resStaticLibrary)
                 .add("localJarPath", localJarPaths)
                 .toString();
     }
