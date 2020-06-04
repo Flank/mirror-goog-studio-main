@@ -127,7 +127,11 @@ abstract class VariantPropertiesImpl(
         scope: InstrumentationScope,
         instrumentationParamsConfig: (ParamT) -> Unit
     ) {
-        // TODO: implement
+        asmClassVisitorsRegistry.register(
+            classVisitorFactoryImplClass,
+            scope,
+            instrumentationParamsConfig
+        )
     }
 
     // ---------------------------------------------------------------------------------------------

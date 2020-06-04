@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
+import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -37,6 +38,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -74,6 +76,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -179,7 +182,8 @@ abstract class ComponentPropertiesImpl(
     // Private stuff
     // ---------------------------------------------------------------------------------------------
 
-    private val variantOutputs= mutableListOf<VariantOutputImpl>()
+    private val variantOutputs = mutableListOf<VariantOutputImpl>()
+    protected val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
 
     // FIXME make internal
     fun addVariantOutput(
@@ -580,5 +584,19 @@ abstract class ComponentPropertiesImpl(
         } else {
             BuildConfigType.JAVA_CLASS
         }
+    }
+
+    val asmApiVersion: Int = org.objectweb.asm.Opcodes.ASM7
+
+    fun getRegisteredProjectClassesVisitors(): List<AsmClassVisitorFactory<*>> {
+        return asmClassVisitorsRegistry.projectClassesVisitors.map { it.visitorFactory }
+    }
+
+    fun getRegisteredDependenciesClassesVisitors(): List<AsmClassVisitorFactory<*>> {
+        return asmClassVisitorsRegistry.dependenciesClassesVisitors.map { it.visitorFactory }
+    }
+
+    fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
+        asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
 }
