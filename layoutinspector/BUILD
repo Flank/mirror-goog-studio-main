@@ -5,6 +5,7 @@ iml_module(
     name = "studio.android.sdktools.layoutinspector",
     srcs = ["src"],
     iml_files = ["android.sdktools.layoutinspector.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.android.sdktools.common"],
     # do not sort: must match IML order

@@ -64,5 +64,6 @@ iml_module(
     name = "studio.android.sdktools.tracer",
     srcs = ["src"],
     iml_files = ["android.sdktools.tracer.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     visibility = ["//visibility:public"],
 )

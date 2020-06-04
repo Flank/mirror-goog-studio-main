@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 4.2.0-dev">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/tools/pixelprobe/Guide.java"
+            line="87"/>
+    </issue>
+
+</issues>

@@ -1,0 +1,780 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 4.2.0-dev">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/CountryCodeQualifier.java"
+            line="68"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/CountryCodeQualifier.java"
+            line="147"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/DexParser.java"
+            line="137"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/DexParser.java"
+            line="190"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="src/main/java/com/android/ide/common/blame/MessageJsonSerializer.java"
+            line="170"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/NetworkCodeQualifier.java"
+            line="159"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/NodeUtils.java"
+            line="249"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `toUpperCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="src/main/java/com/android/ide/common/util/PathString.kt"
+            line="716"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/ScreenDimensionQualifier.java"
+            line="54"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/ScreenHeightQualifier.java"
+            line="139"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/ScreenWidthQualifier.java"
+            line="141"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ide/common/resources/configuration/SmallestScreenWidthQualifier.java"
+            line="141"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `capitalize(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="src/main/java/com/android/projectmodel/SubmodulePath.kt"
+            line="86"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="src/main/java/com/android/projectmodel/SubmodulePath.kt"
+            line="86"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="src/main/java/com/android/projectmodel/SubmodulePath.kt"
+            line="86"/>
+    </issue>
+
+    <issue
+        id="NoInterning"
+        message="Do not intern strings; if reusing strings is truly necessary build a local cache">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeLibraries.java"
+            line="67"/>
+    </issue>
+
+    <issue
+        id="NoInterning"
+        message="Do not intern strings; if reusing strings is truly necessary build a local cache">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeLibraries.java"
+            line="77"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Aapt2ErrorNoPathParser.java"
+            line="29"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Aapt2ErrorNoPathParser.java"
+            line="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Aapt2ErrorParser.kt"
+            line="100"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/BadXmlBlockParser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error1Parser.java"
+            line="29"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error1Parser.java"
+            line="53"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error1Parser.java"
+            line="59"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error2Parser.java"
+            line="29"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error2Parser.java"
+            line="51"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error2Parser.java"
+            line="58"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error3Parser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error3Parser.java"
+            line="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error4Parser.java"
+            line="29"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error4Parser.java"
+            line="51"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error4Parser.java"
+            line="58"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error5Parser.java"
+            line="30"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error5Parser.java"
+            line="63"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error6Parser.java"
+            line="29"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error6Parser.java"
+            line="61"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error7Parser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error7Parser.java"
+            line="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error8Parser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Error8Parser.java"
+            line="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidProjectImpl.java"
+            line="190"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeDependenciesFactory.java"
+            line="155"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeDependenciesFactory.java"
+            line="179"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeLibraryFactory.java"
+            line="65"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeLibraryFactory.java"
+            line="130"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeLibraryFactory.java"
+            line="155"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/SkippingHiddenFileParser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/SkippingWarning1Parser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/SkippingWarning1Parser.java"
+            line="53"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/SkippingWarning2Parser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/SkippingWarning2Parser.java"
+            line="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/resources/StringResourceUnescaperCharacterHandler.java"
+            line="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/resources/StringResourceUnescaperCharacterHandler.java"
+            line="80"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Warning1Parser.java"
+            line="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="src/main/java/com/android/ide/common/blame/parser/aapt/Warning1Parser.java"
+            line="47"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/resources/AssetItem.java"
+            line="58"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/resources/AssetSet.java"
+            line="75"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/resources/DataItem.java"
+            line="260"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/resources/DataSet.java"
+            line="190"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/fonts/FontLoader.kt"
+            line="118"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidArtifactOutput.java"
+            line="105"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="192"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="193"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="194"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="197"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="198"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="199"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="200"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidBundle.java"
+            line="201"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidLibrary.java"
+            line="148"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidLibrary.java"
+            line="149"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidLibrary.java"
+            line="150"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidLibrary.java"
+            line="151"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidLibrary.java"
+            line="152"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeAndroidLibrary.java"
+            line="279"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeAndroidLibrary.java"
+            line="284"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeAndroidLibrary.java"
+            line="295"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidProjectImpl.java"
+            line="726"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeBaseArtifactImpl.java"
+            line="291"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeBaseArtifactImpl.java"
+            line="293"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeInstantRun.java"
+            line="80"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeJavaArtifactImpl.java"
+            line="72"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeJavaLibrary.java"
+            line="81"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeJavaLibrary.java"
+            line="211"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeArtifact.java"
+            line="153"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeFile.java"
+            line="73"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeFile.java"
+            line="75"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeToolchain.java"
+            line="81"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeToolchain.java"
+            line="82"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeOutputFile.java"
+            line="170"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeSigningConfig.java"
+            line="125"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/IdeSourceProvider.java"
+            line="178"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/resources/MergedResourceWriter.java"
+            line="445"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/resources/ResourceSet.java"
+            line="316"/>
+    </issue>
+
+    <issue
+        id="CommonForkJoinPool"
+        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
+        <location
+            file="src/main/java/com/android/ide/common/internal/WaitableExecutor.java"
+            line="74"/>
+    </issue>
+
+    <issue
+        id="NewForkJoinPool"
+        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
+        <location
+            file="src/main/java/com/android/ide/common/internal/WaitableExecutor.java"
+            line="87"/>
+    </issue>
+
+    <issue
+        id="NewForkJoinPool"
+        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
+        <location
+            file="src/main/java/com/android/ide/common/internal/WaitableExecutor.java"
+            line="100"/>
+    </issue>
+
+</issues>

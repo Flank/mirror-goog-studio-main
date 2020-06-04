@@ -8,6 +8,7 @@ iml_module(
     name = "studio.android.sdktools.lint-model",
     srcs = ["libs/lint-model/src/main/java"],
     iml_files = ["libs/lint-model/android.sdktools.lint-model.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -192,6 +193,7 @@ iml_module(
     name = "studio.android.sdktools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
     iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
+    lint_baseline = "libs/lint-checks/lint_baseline.xml",
     resources = ["libs/lint-checks/src/main/resources"],
     # do not sort: must match IML order
     test_runtime_deps = [
@@ -293,6 +295,7 @@ kotlin_library(
         "libs/lint-gradle-api/src/main/java/**/*.kt",
         "libs/lint-gradle-api/src/main/java/**/*.java",
     ]),
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     module_name = "lint-gradle-api",
     pom = "lint-gradle-api.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle-api",
@@ -330,6 +333,7 @@ kotlin_library(
         "libs/lint-gradle/src/main/java/**/*.kt",
         "libs/lint-gradle/src/main/java/**/*.java",
     ]),
+    lint_baseline = "lint_baseline_gradle.xml",
     module_name = "lint-gradle",
     pom = "lint-gradle.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle",

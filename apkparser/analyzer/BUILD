@@ -6,6 +6,7 @@ iml_module(
     name = "studio.android.sdktools.analyzer",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.analyzer.iml"],
+    lint_baseline = "lint_baseline.xml",
     test_resources = ["src/test/resources"],
     # do not sort: must match IML order
     test_runtime_deps = [

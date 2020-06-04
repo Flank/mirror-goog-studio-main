@@ -9,6 +9,7 @@ iml_module(
         "//tools/base/deploy/installer:android-installer",
     ],
     iml_files = ["android.sdktools.deployer.iml"],
+    lint_baseline = "lint_baseline.xml",
     tags = [
         "no_mac",
     ],

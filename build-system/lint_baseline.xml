@@ -1,0 +1,932 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 4.2.0-dev">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="291"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="307"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="342"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="358"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="273"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="289"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="764"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="778"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/AttributeModel.java"
+            line="346"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/AttributeModel.java"
+            line="382"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/AttributeModel.java"
+            line="425"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/AttributeModel.java"
+            line="452"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/AttributeModel.java"
+            line="476"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/AttributeModel.java"
+            line="512"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ElementsTrimmer.java"
+            line="118"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ElementsTrimmer.java"
+            line="126"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="165"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="184"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="192"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="280"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="284"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="300"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="309"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="330"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="341"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="341"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="345"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="346"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="350"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="351"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="365"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="366"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="385"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="392"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="401"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="402"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="426"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="428"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="434"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="435"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="437"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="503"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="577"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="596"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1041"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1041"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1061"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1113"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1136"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1145"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1196"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1196"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1197"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1200"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1203"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1260"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/ManifestMerger2.java"
+            line="1343"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/NavGraphExpander.kt"
+            line="106"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/NavGraphExpander.kt"
+            line="120"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/NavGraphExpander.kt"
+            line="138"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/NavGraphExpander.kt"
+            line="144"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PlaceholderHandler.java"
+            line="103"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PlaceholderHandler.java"
+            line="136"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PlaceholderHandler.java"
+            line="142"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="66"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="288"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="304"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="339"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
+            line="355"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="116"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="118"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="126"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="154"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="169"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="181"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="226"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="270"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
+            line="286"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="158"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="177"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="198"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="216"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="251"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="268"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="317"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="373"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="382"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="400"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="407"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlAttribute.java"
+            line="447"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="168"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="178"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="430"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="458"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="476"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="501"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="506"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="533"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="540"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="553"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="564"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlDocument.java"
+            line="573"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="266"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="275"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="291"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="328"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="403"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="425"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="447"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="568"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="598"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="609"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="617"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="630"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="673"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
+            line="685"/>
+    </issue>
+
+</issues>

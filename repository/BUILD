@@ -9,6 +9,7 @@ iml_module(
     name = "studio.android.sdktools.repository",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.repository.iml"],
+    lint_baseline = "lint_baseline.xml",
     test_resources = ["src/test/resources"],
     test_srcs = [
         "src/test/java",

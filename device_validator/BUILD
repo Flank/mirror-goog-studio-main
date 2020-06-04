@@ -8,6 +8,7 @@ iml_module(
     # do not sort: must match IML order
     srcs = ["dvlib/src/main/java"],
     iml_files = ["dvlib/android.sdktools.dvlib.iml"],
+    lint_baseline = "lint_baseline.xml",
     resources = ["dvlib/src/main/resources"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.android.sdktools.common"],

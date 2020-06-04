@@ -7,6 +7,7 @@ iml_module(
     name = "studio.android.sdktools.layoutlib-coroutines",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.layoutlib-coroutines.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     resources = ["src/main/resources"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

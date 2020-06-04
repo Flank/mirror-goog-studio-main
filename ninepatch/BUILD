@@ -5,6 +5,7 @@ iml_module(
     name = "studio.android.sdktools.ninepatch",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.ninepatch.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     test_srcs = [
         "src/test/java",
         "src/test/resources",

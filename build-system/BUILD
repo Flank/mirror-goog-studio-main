@@ -13,6 +13,7 @@ iml_module(
     name = "studio.android.sdktools.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
+    lint_baseline = "lint_baseline.xml",
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],

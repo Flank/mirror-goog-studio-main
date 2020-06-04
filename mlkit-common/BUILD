@@ -6,6 +6,7 @@ iml_module(
     name = "studio.android.sdktools.mlkit-common",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.mlkit-common.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     test_data = ["//prebuilts/tools/common/mlkit/testData"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
