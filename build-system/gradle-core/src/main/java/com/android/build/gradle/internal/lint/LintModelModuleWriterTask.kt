@@ -150,11 +150,6 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             buildFolder = buildDirectory.get(),
             lintOptions = LintModelFactory.getLintOptions(lintOptions.get()),
             lintRuleJars = listOf(),
-            buildFeatures = DefaultLintModelBuildFeatures(
-                viewBinding.get(),
-                coreLibraryDesugaringEnabled.get(),
-                namespacingMode.get()
-            ),
             resourcePrefix = resourcePrefix.orNull,
             dynamicFeatures = dynamicFeatures.get(),
             bootClassPath = bootClasspath.get(),
@@ -165,10 +160,21 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             oldProject = null // oldProject
         )
 
+        val viewBindingValue = viewBinding.get()
+        val coreLibraryDesugaringEnabledValue = coreLibraryDesugaringEnabled.get()
+        val namespacingModeValue = namespacingMode.get()
+
         LintModelSerialization.writeModule(
             module = module,
             destination = outputDirectory.file("modules.xml").get().asFile,
-            writeVariants = variantInputs.get().map { it.convertToLintModelVariant(module) },
+            writeVariants = variantInputs.get().map {
+                it.convertToLintModelVariant(
+                    module,
+                    viewBindingValue,
+                    coreLibraryDesugaringEnabledValue,
+                    namespacingModeValue
+                )
+            },
             writeDependencies = false
         )
     }
@@ -224,7 +230,12 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         abstract val debuggable: Property<Boolean>
 
 
-        fun convertToLintModelVariant(module: LintModelModule): LintModelVariant {
+        fun convertToLintModelVariant(
+            module: LintModelModule,
+            viewBinding: Boolean,
+            coreLibraryDesugaringEnabled: Boolean,
+            namespacingMode: LintModelNamespacingMode
+        ): LintModelVariant {
             // empty resolver since we are not dealing with dependencies in this task
             val libraryResolver = DefaultLintModelLibraryResolver(mapOf())
 
@@ -247,6 +258,11 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
                 testSourceProviders = listOf(), //FIXME
                 debuggable = false, //FIXME
                 shrinkable = false, //FIXME
+                buildFeatures = DefaultLintModelBuildFeatures(
+                    viewBinding,
+                    coreLibraryDesugaringEnabled,
+                    namespacingMode
+                ),
                 libraryResolver = libraryResolver,
                 oldVariant = null
             )

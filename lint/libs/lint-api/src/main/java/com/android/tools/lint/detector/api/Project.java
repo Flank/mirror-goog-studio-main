@@ -252,9 +252,8 @@ public class Project {
     }
 
     public boolean isCoreLibraryDesugaringEnabled() {
-        LintModelModule buildModel = getBuildModule();
-        return buildModel != null
-                && buildModel.getBuildFeatures().getCoreLibraryDesugaringEnabled();
+        LintModelVariant variant = getBuildVariant();
+        return variant != null && variant.getBuildFeatures().getCoreLibraryDesugaringEnabled();
     }
 
     /** Returns the corresponding IDE project. */
@@ -416,9 +415,9 @@ public class Project {
     /** Gets the namespacing mode used for this project */
     @NonNull
     private LintModelNamespacingMode getNamespacingMode() {
-        LintModelModule model = getBuildModule();
-        if (model != null) {
-            return model.getBuildFeatures().getNamespacingMode();
+        LintModelVariant variant = getBuildVariant();
+        if (variant != null) {
+            return variant.getBuildFeatures().getNamespacingMode();
         } else {
             return LintModelNamespacingMode.DISABLED;
         }

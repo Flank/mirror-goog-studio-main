@@ -114,7 +114,6 @@ class LintModelFactory : LintModelModuleLoader {
                 buildFolder = project.buildFolder,
                 lintOptions = getLintOptions(project),
                 lintRuleJars = project.getLintRuleJarsForAnyAgpVersion(),
-                buildFeatures = getBuildFeatures(project, gradleVersion),
                 resourcePrefix = project.resourcePrefix,
                 dynamicFeatures = project.dynamicFeatures,
                 bootClassPath = project.bootClasspath.map { File(it) },
@@ -547,6 +546,7 @@ class LintModelFactory : LintModelModuleLoader {
             testSourceProviders = computeTestSourceProviders(project, variant),
             debuggable = buildType.isDebuggable,
             shrinkable = buildType.isMinifyEnabled,
+            buildFeatures = getBuildFeatures(project, module.gradleVersion),
             libraryResolver = libraryResolver
         )
     }
@@ -968,11 +968,6 @@ class LintModelFactory : LintModelModuleLoader {
         override val lintOptions: LintModelLintOptions
             get() = _lintOptions ?: getLintOptions(project).also { _lintOptions = it }
 
-        private var _buildFeatures: LintModelBuildFeatures? = null
-        override val buildFeatures: LintModelBuildFeatures
-            get() = _buildFeatures
-                ?: getBuildFeatures(project, gradleVersion).also { _buildFeatures = it }
-
         private var _variants: List<LintModelVariant>? = null
         override val variants: List<LintModelVariant>
             // Lazily initialize the _variants property, reusing any already
@@ -1089,6 +1084,11 @@ class LintModelFactory : LintModelModuleLoader {
                 ?: (variant.mergedFlavor.consumerProguardFiles + buildType.consumerProguardFiles).also {
                     _consumerProguardFiles = it
                 }
+
+        private var _buildFeatures: LintModelBuildFeatures? = null
+        override val buildFeatures: LintModelBuildFeatures
+            get() = _buildFeatures
+                ?: getBuildFeatures(project, module.gradleVersion).also { _buildFeatures = it }
     }
 
     companion object {

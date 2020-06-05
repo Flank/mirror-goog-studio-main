@@ -154,8 +154,6 @@ class LintModelSerializationTest {
                     javaSourceLevel="1.7"
                     compileTarget="android-25"
                     neverShrinking="true">
-                  <buildFeatures
-                      viewBinding="true"/>
                   <lintOptions
                       lintConfig="default-lint.xml"
                       baselineFile="baseline.xml"
@@ -209,6 +207,8 @@ class LintModelSerializationTest {
                     targetSdkVersion="16"
                     debuggable="true"
                     resourceConfigurations="mdpi,hdpi,en,nodpi">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -554,6 +554,8 @@ class LintModelSerializationTest {
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -609,6 +611,8 @@ class LintModelSerializationTest {
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -664,6 +668,8 @@ class LintModelSerializationTest {
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -719,6 +725,8 @@ class LintModelSerializationTest {
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -773,6 +781,8 @@ class LintModelSerializationTest {
                     name="betaRelease"
                     minSdkVersion="5"
                     targetSdkVersion="16">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -825,6 +835,8 @@ class LintModelSerializationTest {
                     name="normalRelease"
                     minSdkVersion="5"
                     targetSdkVersion="16">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -877,6 +889,8 @@ class LintModelSerializationTest {
                     name="freeRelease"
                     minSdkVersion="5"
                     targetSdkVersion="16">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
@@ -929,6 +943,8 @@ class LintModelSerializationTest {
                     name="paidRelease"
                     minSdkVersion="5"
                     targetSdkVersion="16">
+                  <buildFeatures
+                      viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
                         manifest="src/main/AndroidManifest.xml"
