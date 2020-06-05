@@ -18,6 +18,7 @@ package com.android.tools.agent.layoutinspector;
 
 import android.graphics.Rect;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -81,6 +82,8 @@ class ComposeTree {
     private static final String LOG_TAG = "Compose";
     private static final ComposeView.Source EMPTY_SOURCE = new ComposeView.Source("", "", -1);
     private static final Rect EMPTY_RECT = new Rect();
+    private static final long NO_DRAW_ID = 0L;
+    private static final long UNWANTED_DRAW_ID = -1L;
 
     @VisibleForTesting protected static final boolean DEBUG_COMPOSE = false;
 
@@ -95,8 +98,12 @@ class ComposeTree {
     private final Method mGetPx;
     private final Method mGetPosition;
     private final Method mGetChildren;
+    private final Method mGetModifiers;
+    private final Method mGetExtra;
+    private final Method mGetLayerId;
     private final StringTable mStringTable;
 
+    // Only used for debug output
     private String mDebugIndent = "";
 
     ComposeTree(@NonNull ClassLoader classLoader, @NonNull StringTable stringTable)
@@ -125,6 +132,10 @@ class ComposeTree {
                         "getPosition",
                         "androidx.ui.tooling.Group");
         mGetChildren = findMethod(classLoader, "androidx.ui.tooling.Group", "getChildren");
+        mGetModifiers =
+                findMethodOrNull(classLoader, "androidx.ui.tooling.Group", "getModifierInfo");
+        mGetExtra = findMethodOrNull(classLoader, "androidx.ui.core.ModifierInfo", "getExtra");
+        mGetLayerId = findMethodOrNull(classLoader, "androidx.ui.core.OwnedLayer", "getLayerId");
     }
 
     /**
@@ -155,14 +166,15 @@ class ComposeTree {
             if (group == null) {
                 continue;
             }
-            List<ComposeView> groupViews = convertGroup(group);
+            Pair<Long, List<ComposeView>> drawIdAndSubViews = convertGroup(group);
+            List<ComposeView> groupViews = drawIdAndSubViews.second;
             for (ComposeView tree : groupViews) {
                 if (hasNonOriginViews(tree)) {
                     views.add(tree);
                 }
             }
         }
-
+        removeUnwantedDrawIds(views);
         dumpViewsFound(views);
         writeViewsFound(parentView, views);
     }
@@ -196,16 +208,23 @@ class ComposeTree {
      * <p>A new tree of the nodes of interest is created and returned.
      */
     @NonNull
-    private List<ComposeView> convertGroup(Object group) throws ReflectiveOperationException {
+    private Pair<Long, List<ComposeView>> convertGroup(@NonNull Object group)
+            throws ReflectiveOperationException {
         dumpGroup(group);
         ComposeView.Source source = getSource(group);
 
         List<ComposeView> children = Collections.emptyList();
         List<Object> subGroups = getChildren(group);
+        boolean multipleDrawIds = false;
+        long drawIdFromSubgroups = NO_DRAW_ID;
         if (!subGroups.isEmpty()) {
             incrementDebugIndent();
             for (Object subGroup : subGroups) {
-                List<ComposeView> subViews = convertGroup(subGroup);
+                Pair<Long, List<ComposeView>> drawIdAndSubViews = convertGroup(subGroup);
+                long drawId = drawIdAndSubViews.first;
+                List<ComposeView> subViews = drawIdAndSubViews.second;
+                multipleDrawIds |= drawIdFromSubgroups != NO_DRAW_ID && drawId != NO_DRAW_ID;
+                drawIdFromSubgroups = multipleDrawIds ? NO_DRAW_ID : drawId;
                 if (!subViews.isEmpty()) {
                     if (children.isEmpty()) {
                         children = new ArrayList<>();
@@ -215,11 +234,72 @@ class ComposeTree {
             }
             decrementDebugIndent();
         }
+        long drawId = getRenderNode(group);
+        if (drawId == NO_DRAW_ID) {
+            drawId = drawIdFromSubgroups;
+        }
         Rect bounds = source.isEmpty() ? EMPTY_RECT : getBounds(group);
         if (!source.isEmpty() && bounds.height() > 0 && bounds.width() > 0) {
-            return Collections.singletonList(new ComposeView(source, bounds, children));
+            return Pair.create(
+                    NO_DRAW_ID,
+                    Collections.singletonList(new ComposeView(drawId, source, bounds, children)));
         } else {
-            return children;
+            return Pair.create(drawId, children);
+        }
+    }
+
+    /**
+     * Filter out all unwanted views by setting their drawId to {@link #UNWANTED_DRAW_ID}. This
+     * approach avoids allocating more temporary views.
+     *
+     * @return a single drawId from the list of unwanted views or NO_DRAW_ID if there are none or
+     *     multiple drawIds in the list.
+     */
+    private static long removeUnwantedDrawIds(@NonNull List<ComposeView> views) {
+        boolean multipleDrawIds = false;
+        long drawIdFromSubgroups = NO_DRAW_ID;
+        for (ComposeView view : views) {
+            long drawId = removeUnwantedDrawId(view);
+            multipleDrawIds |= drawIdFromSubgroups != NO_DRAW_ID && drawId != NO_DRAW_ID;
+            drawIdFromSubgroups = multipleDrawIds ? NO_DRAW_ID : drawId;
+        }
+        return drawIdFromSubgroups;
+    }
+
+    /**
+     * Set the drawId to {@link #UNWANTED_DRAW_ID} if this is an unwanted view. We are only
+     * interested in parent, child pairs if views where the parent refers to a lambda invocation and
+     * the child doesn't.
+     *
+     * @return an unused drawId for a view pair further up in the hierarchy or NO_DRAW_ID if this is
+     *     a wanted view or there is no drawId to store in a parent.
+     */
+    private static long removeUnwantedDrawId(@NonNull ComposeView parent) {
+        ComposeView child = parent.getChildren().size() == 1 ? parent.getChildren().get(0) : null;
+        boolean wantedPair =
+                (child != null
+                        && parent.getMethod().endsWith(INVOKE)
+                        && !child.getMethod().endsWith((INVOKE)));
+        if (wantedPair) {
+            long unwantedDrawId = removeUnwantedDrawIds(child.getChildren());
+            long drawId = parent.getDrawId();
+            if (drawId == NO_DRAW_ID) {
+                drawId = child.getDrawId();
+            }
+            if (drawId == NO_DRAW_ID) {
+                drawId = unwantedDrawId;
+            }
+            parent.setDrawId(drawId);
+            child.setDrawId(UNWANTED_DRAW_ID);
+            return NO_DRAW_ID;
+        } else {
+            long drawId = parent.getDrawId();
+            long unwantedDrawId = removeUnwantedDrawIds(parent.getChildren());
+            if (drawId == NO_DRAW_ID) {
+                drawId = unwantedDrawId;
+            }
+            parent.setDrawId(UNWANTED_DRAW_ID);
+            return drawId;
         }
     }
 
@@ -237,9 +317,7 @@ class ComposeTree {
      * Composable was instantiated from a lambda in a parent Composable statement.
      */
     private void writeInvocationsAsViews(long parentViewBuffer, @NonNull ComposeView parent) {
-        if (parent.getChildren().size() == 1
-                && parent.getMethod().endsWith(INVOKE)
-                && !parent.getChildren().get(0).getMethod().endsWith((INVOKE))) {
+        if (parent.getDrawId() != UNWANTED_DRAW_ID) {
             ComposeView child = parent.getChildren().get(0);
             long buffer = emit(parentViewBuffer, parent, child);
             incrementDebugIndent();
@@ -263,6 +341,7 @@ class ComposeTree {
         Rect bounds = composable.getBounds();
         return addComposeView(
                 parentView,
+                invocation.getDrawId(),
                 bounds.left,
                 bounds.top,
                 bounds.width(),
@@ -343,6 +422,32 @@ class ComposeTree {
         @SuppressWarnings("unchecked")
         List<Object> children = (List<Object>) mGetChildren.invoke(group);
         return children != null ? children : Collections.emptyList();
+    }
+
+    private Long getRenderNode(@NonNull Object group) throws ReflectiveOperationException {
+        if (mGetModifiers == null) {
+            debugLog("mGetModifiers is null - No render nodes will be found in Compose");
+            return NO_DRAW_ID;
+        }
+        long drawId = NO_DRAW_ID;
+        @SuppressWarnings("unchecked")
+        List<Object> modifiers = (List<Object>) mGetModifiers.invoke(group);
+        for (Object modifier : modifiers) {
+            Object extra = mGetExtra.invoke(modifier);
+            if (extra != null) {
+                // There may be multiple modifiers, and therefore multiple render nodes.
+                // We can currently only handle one, so stop if we find multiple and ignore
+                // them all.
+                Object id = mGetLayerId.invoke(extra);
+                if (drawId != NO_DRAW_ID) {
+                    return NO_DRAW_ID;
+                }
+                if (id != null) {
+                    drawId = (long) id;
+                }
+            }
+        }
+        return drawId;
     }
 
     @Nullable
@@ -446,6 +551,7 @@ class ComposeTree {
     /** Adds a compose view to a View protobuf */
     private native long addComposeView(
             long parentView,
+            long drawId,
             int x,
             int y,
             int width,
@@ -499,11 +605,12 @@ class ComposeTree {
             Log.w(
                     LOG_TAG,
                     String.format(
-                            "\"%s\", %s%s%s, \"%s\", %d, \"%s\", %d, %d, %d, %d",
+                            "\"%s\", %s%s%s, %d, \"%s\", %d, \"%s\", %d, %d, %d, %d",
                             mDebugIndent,
                             quote,
                             composable,
                             quote,
+                            view.getDrawId(),
                             view.getFilename(),
                             view.getLineNumber(),
                             view.getMethod(),
@@ -516,6 +623,7 @@ class ComposeTree {
 
     private void dumpGroup(@NonNull Object group) throws ReflectiveOperationException {
         if (DEBUG_COMPOSE) {
+            long drawId = getRenderNode(group);
             String position = getPosition(group);
             //noinspection VariableNotUsedInsideIf
             String quote = position != null ? "\"" : "";
@@ -523,8 +631,9 @@ class ComposeTree {
             Log.w(
                     LOG_TAG,
                     String.format(
-                            "\"%s\", %s%s%s, %d, %d, %d, %d",
+                            "\"%s\", %d, %s%s%s, %d, %d, %d, %d",
                             mDebugIndent,
+                            drawId,
                             quote,
                             position,
                             quote,
@@ -550,6 +659,13 @@ class ComposeTree {
     private void decrementDebugIndent() {
         if (DEBUG_COMPOSE) {
             mDebugIndent = mDebugIndent.substring(0, mDebugIndent.length() - 1);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void debugLog(@NonNull String message) {
+        if (DEBUG_COMPOSE) {
+            Log.w(LOG_TAG, message);
         }
     }
     // endregion
