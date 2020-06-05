@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.agent.layoutinspector.testing
+package androidx.ui.core
 
 /**
- * A View node representing a tree from compose.
- *
- * This is used to hold nodes read by [ResultViewReader].
+ * During testing this is used instead of the version in androidx-ui-core, since that library
+ * contains only stubbed out classes.
  */
-data class ComposeViewResult(
-    val csvLineNumber: Int,
-    val className: String,
-    val drawId: Long,
-    val fileName: String,
-    val lineNumber: Int,
-    val invocation: String,
-    val left: Int,
-    val top: Int,
-    val right: Int,
-    val bottom: Int,
-    val children: MutableList<ComposeViewResult> = mutableListOf()
-)
+class OwnedLayer(val layerId: Long)

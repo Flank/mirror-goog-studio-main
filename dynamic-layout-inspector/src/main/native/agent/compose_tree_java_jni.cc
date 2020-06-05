@@ -29,11 +29,12 @@ extern "C" {
  */
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_ComposeTree_addComposeView(
-    JNIEnv *env, jclass clazz, jlong jparent, jint x, jint y, jint width,
-    jint height, jint className, jint filename, jint invocationName,
+    JNIEnv *env, jclass clazz, jlong jparent, jlong drawId, jint x, jint y,
+    jint width, jint height, jint className, jint filename, jint invocationName,
     jint invocationPackageName, jint lineNumber) {
   View *parent = (View *)jparent;
   View *view = parent->add_sub_view();
+  view->set_draw_id(drawId);
   view->set_x(x);
   view->set_y(y);
   view->set_width(width);

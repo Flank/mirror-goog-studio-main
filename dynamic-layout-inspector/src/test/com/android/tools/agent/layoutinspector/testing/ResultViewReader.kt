@@ -25,7 +25,7 @@ package com.android.tools.agent.layoutinspector.testing
  * in the layout inspector. The coordinates generated are relative to the parent. Set [viewLeft]
  * and [viewTop] to the coordinates of the view that contains the composables.
  */
-class ResultViewReader : CsvReader(9) {
+class ResultViewReader : CsvReader(10) {
     private val views = mutableListOf<ComposeViewResult>()
     val roots = mutableListOf<ComposeViewResult>()
     var viewLeft = 0
@@ -45,13 +45,14 @@ class ResultViewReader : CsvReader(9) {
         val view = ComposeViewResult(
           csvLineNumber = lineNumber,
           className = parseQuotedString(columns[1]),
-          fileName = parseQuotedString(columns[2]),
-          lineNumber = parseInt(columns[3]),
-          invocation = parseQuotedString(columns[4]),
-          left = parseInt(columns[5]),
-          top = parseInt(columns[6]),
-          right = parseInt(columns[7]),
-          bottom = parseInt(columns[8])
+          drawId = parseInt(columns[2]).toLong(),
+          fileName = parseQuotedString(columns[3]),
+          lineNumber = parseInt(columns[4]),
+          invocation = parseQuotedString(columns[5]),
+          left = parseInt(columns[6]),
+          top = parseInt(columns[7]),
+          right = parseInt(columns[8]),
+          bottom = parseInt(columns[9])
         )
         parent?.children?.add(view)
         views.add(view)
