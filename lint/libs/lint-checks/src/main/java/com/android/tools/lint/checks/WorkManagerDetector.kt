@@ -86,6 +86,10 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
 
         val surrounding = node.getParentOfType<UMethod>(UMethod::class.java, true) ?: return
 
+        if (surrounding.returnType?.canonicalText == CLASS_WORK_CONTINUATION) {
+            return
+        }
+
         var enqueued = false
 
         surrounding.accept(object : DataFlowAnalyzer(listOf(node)) {
