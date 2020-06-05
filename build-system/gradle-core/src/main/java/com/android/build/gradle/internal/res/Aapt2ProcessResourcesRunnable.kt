@@ -30,7 +30,7 @@ import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.getPackageNameFromManifest
-import com.android.utils.ILogger
+import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.IOException
@@ -43,26 +43,20 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
     override fun run() {
         val logger = Logging.getLogger(this::class.java)
         useAaptDaemon(params.aapt2ServiceKey) { daemon ->
-            try {
-                processResources(daemon, params.request, null, LoggerWrapper(logger))
-            } catch (exception: Aapt2Exception) {
-                throw rewriteLinkException(
-                    exception,
-                    params.errorFormatMode,
-                    params.mergeBlameFolder,
-                    params.manifestMergeBlameFile,
-                    logger
-                )
-            }
+            processResources(
+                aapt = daemon,
+                aaptConfig = params.request,
+                rJar = null,
+                logger = logger,
+                errorFormatMode = params.errorFormatMode
+            )
         }
     }
 
     class Params(
         val aapt2ServiceKey: Aapt2DaemonServiceKey,
         val request: AaptPackageConfig,
-        val errorFormatMode: SyncOptions.ErrorFormatMode,
-        val mergeBlameFolder: File?,
-        val manifestMergeBlameFile: File?
+        val errorFormatMode: SyncOptions.ErrorFormatMode
     ) : Serializable
 }
 
@@ -71,13 +65,20 @@ fun processResources(
     aapt: Aapt2,
     aaptConfig: AaptPackageConfig,
     rJar: File?,
-    logger: ILogger
+    logger: Logger,
+    errorFormatMode: SyncOptions.ErrorFormatMode
 ) {
 
     try {
-        aapt.link(aaptConfig, logger)
+        aapt.link(aaptConfig, LoggerWrapper(logger))
     } catch (e: Aapt2Exception) {
-        throw e
+        throw rewriteLinkException(
+            e,
+            errorFormatMode,
+            aaptConfig.mergeBlameDirectory,
+            aaptConfig.manifestMergeBlameFile,
+            logger
+        )
     } catch (e: Aapt2InternalException) {
         throw e
     } catch (e: Exception) {

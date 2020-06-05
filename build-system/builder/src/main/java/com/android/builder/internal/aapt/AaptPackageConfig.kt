@@ -59,7 +59,9 @@ data class AaptPackageConfig(
     val useFinalIds: Boolean = true,
     val excludeSources: Boolean = false,
     val emitStableIdsFile: File? = null,
-    val consumeStableIdsFile: File? = null
+    val consumeStableIdsFile: File? = null,
+    val mergeBlameDirectory: File? = null,
+    val manifestMergeBlameFile: File? = null
 ) : Serializable {
 
     init {
@@ -109,7 +111,8 @@ data class AaptPackageConfig(
         private var excludeSources: Boolean = false
         private var emitStableIdsFile: File? = null
         private var consumeStableIdsFile: File? = null
-
+        private var mergeBlameDirectory: File? = null
+        private var manifestMergeBlameFile: File? = null
         /**
          * Creates a new [AaptPackageConfig] from the data already placed in the builder.
          *
@@ -148,7 +151,9 @@ data class AaptPackageConfig(
                 useFinalIds = useFinalIds,
                 excludeSources = excludeSources,
                 emitStableIdsFile = emitStableIdsFile,
-                consumeStableIdsFile = consumeStableIdsFile
+                consumeStableIdsFile = consumeStableIdsFile,
+                mergeBlameDirectory = mergeBlameDirectory,
+                manifestMergeBlameFile = manifestMergeBlameFile
             )
         }
 
@@ -329,6 +334,16 @@ data class AaptPackageConfig(
 
         fun setGenerateProtos(value: Boolean): Builder {
             this.isGenerateProtos = value
+            return this
+        }
+
+        fun setMergeBlameDirectory(mergeBlameDirectory: File?): Builder {
+            this.mergeBlameDirectory = mergeBlameDirectory
+            return this
+        }
+
+        fun setManifestMergeBlameFile(manifestMergeBlameFile: File?): Builder {
+            this.manifestMergeBlameFile = manifestMergeBlameFile
             return this
         }
     }

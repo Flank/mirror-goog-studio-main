@@ -787,6 +787,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setEmitStableIdsFile(params.stableIdsOutputFile)
                         .setConsumeStableIdsFile(params.stableIdsInputFile)
                         .setLocalSymbolTableFile(params.localResourcesFile)
+                        .setMergeBlameDirectory(params.mergeBlameFolder)
+                        .setManifestMergeBlameFile(params.manifestMergeBlameFile)
 
                     if (params.isNamespaced) {
                         configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(params.dependencies))
@@ -802,23 +804,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         params.aapt2ServiceKey, "AAPT2 daemon manager service not initialized"
                     )
                     val logger = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
-                    try {
                         getAaptDaemon(params.aapt2ServiceKey!!).use { aaptDaemon ->
-
                             processResources(
-                                aaptDaemon,
-                                configBuilder.build(),
-                                params.rClassOutputJar,
-                                LoggerWrapper(logger)
-                            )
-                        }
-                    } catch (e: Aapt2Exception) {
-                        throw rewriteLinkException(
-                            e,
-                            params.errorFormatMode,
-                            params.mergeBlameFolder,
-                            params.manifestMergeBlameFile,
-                            logger
+                                aapt = aaptDaemon,
+                                aaptConfig = configBuilder.build(),
+                                rJar = params.rClassOutputJar,
+                                logger = logger,
+                                errorFormatMode = params.errorFormatMode
                         )
                     }
 

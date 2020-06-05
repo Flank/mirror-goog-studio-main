@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -146,7 +145,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             resourceConfigs = ImmutableSet.copyOf(resConfig),
             // We only want to exclude res sources for release builds and when the flag is turned on
             // This will result in smaller release bundles
-            excludeSources = excludeResSourcesForReleaseBundles.get() && debuggable.get().not()
+            excludeSources = excludeResSourcesForReleaseBundles.get() && debuggable.get().not(),
+            mergeBlameDirectory = mergeBlameLogFolder.get().asFile,
+            manifestMergeBlameFile = manifestMergeBlameFile.orNull?.asFile
         )
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", outputFile.absolutePath)
@@ -159,9 +160,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 Aapt2ProcessResourcesRunnable.Params(
                     aapt2ServiceKey,
                     config,
-                    aapt2.getErrorFormatMode(),
-                    mergeBlameLogFolder.get().asFile,
-                    manifestMergeBlameFile.orNull?.asFile
+                    aapt2.getErrorFormatMode()
                 )
             )
         }

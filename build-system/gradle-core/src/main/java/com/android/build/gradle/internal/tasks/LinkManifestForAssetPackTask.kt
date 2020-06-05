@@ -86,9 +86,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
                     Aapt2ProcessResourcesRunnable.Params(
                         aapt2ServiceKey,
                         config,
-                        SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                        null,
-                        null
+                        SyncOptions.ErrorFormatMode.HUMAN_READABLE
                     )
                 )
             }

@@ -55,7 +55,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -166,19 +165,25 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                         useJvmResourceCompiler = parameters.useJvmResourceCompiler.get()
                     )
 
-                    val config = getAaptPackageConfig(
-                        compiledDependenciesResources = parameters.compiledDependenciesResources,
-                        androidJar = parameters.androidJar.get().asFile,
-                        resDir = parameters.compiledDirectory.get().asFile,
+                val compiledDependenciesResourcesDirs = parameters.compiledDependenciesResources.reversed()
+                val config = AaptPackageConfig.Builder()
+                    .setManifestFile(
                         manifestFile = parameters.manifestFile.get().asFile
                     )
+                    .addResourceDirectories(compiledDependenciesResourcesDirs)
+                    .addResourceDir(resourceDir = parameters.compiledDirectory.get().asFile)
+                    .setLibrarySymbolTableFiles(ImmutableSet.of())
+                    .setOptions(AaptOptions())
+                    .setVariantType(VariantTypeImpl.LIBRARY)
+                    .setAndroidTarget(androidJar = parameters.androidJar.get().asFile)
+                    .setMergeBlameDirectory(parameters.mergeBlameFolder.get().asFile)
+                    .setManifestMergeBlameFile(parameters.manifestMergeBlameFile.get().asFile)
+                    .build()
 
                     val params = Aapt2ProcessResourcesRunnable.Params(
                         aapt2ServiceKey = parameters.aapt2ServiceKey.get(),
                         request = config,
-                        errorFormatMode = parameters.errorFormatMode.get(),
-                        mergeBlameFolder = parameters.mergeBlameFolder.get().asFile,
-                        manifestMergeBlameFile = parameters.manifestMergeBlameFile.get().asFile
+                        errorFormatMode = parameters.errorFormatMode.get()
                     )
 
                     facade.await() // All compilation must be done before linking.
@@ -242,20 +247,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     }
 
     companion object {
-        private fun getAaptPackageConfig(compiledDependenciesResources: Iterable<File>, androidJar: File, resDir: File, manifestFile: File): AaptPackageConfig {
-            val compiledDependenciesResourcesDirs = compiledDependenciesResources.reversed()
-
-            // We're do not want to generate any files - only to make sure everything links properly.
-            return AaptPackageConfig.Builder()
-                .setManifestFile(manifestFile)
-                .addResourceDirectories(compiledDependenciesResourcesDirs)
-                .addResourceDir(resDir)
-                .setLibrarySymbolTableFiles(ImmutableSet.of())
-                .setOptions(AaptOptions())
-                .setVariantType(VariantTypeImpl.LIBRARY)
-                .setAndroidTarget(androidJar)
-                .build()
-        }
 
         /**
          * Compiles new or changed files and removes files that were compiled from the removed files.
