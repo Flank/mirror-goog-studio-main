@@ -17,8 +17,10 @@
 package com.android.ide.common.repository;
 
 import com.android.annotations.NonNull;
+import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
+import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakePackage;
@@ -178,4 +180,105 @@ public class SdkMavenRepositoryTest extends TestCase {
         pattern = new GradleCoordinate("group", "artifact", 2, 1, 3);
         assertNull(SdkMavenRepository.findBestPackageMatching(pattern, packages));
     }
+
+    private static void addLocalVersion(@NonNull HashMap<String, LocalPackage> existing, String revision) {
+        String basePath = "extras;m2repository;com;android;tools;build;gradle;";
+        FakePackage.FakeLocalPackage fakePackage = new FakePackage.FakeLocalPackage(basePath + revision);
+        fakePackage.setRevision(Revision.parseRevision(revision));
+        existing.put(basePath + revision, fakePackage);
+    }
+
+    private void setUpLocalVersions() {
+        HashMap<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
+        addLocalVersion(existing, "4.0.0-rc01");
+        addLocalVersion(existing, "4.0.0");
+        addLocalVersion(existing, "4.1.0-alpha10");
+        mRepositoryPackages.setLocalPkgInfos(existing.values());
+    }
+
+    public void testFindLatestLocalVersion() {
+        setUpLocalVersions();
+
+        ProgressIndicator progress = new FakeProgressIndicator();
+        GradleCoordinate pattern = new GradleCoordinate("com.android.tools.build", "gradle", "1.0.0");
+        GradleCoordinate previewPattern = new GradleCoordinate("com.android.tools.build", "gradle", "1.0.0-alpha01");
+        String basePath = "extras;m2repository;com;android;tools;build;gradle;";
+
+        RepoPackage result = SdkMavenRepository.findLatestLocalVersion(pattern, mSdkHandler, null, progress);
+        assertEquals(mRepositoryPackages.getLocalPackages().get(basePath + "4.0.0"), result);
+
+        result = SdkMavenRepository.findLatestLocalVersion(previewPattern, mSdkHandler, null, progress);
+        assertEquals(mRepositoryPackages.getLocalPackages().get(basePath + "4.1.0-alpha10"), result);
+
+        result = SdkMavenRepository.findLatestLocalVersion(previewPattern, mSdkHandler, (revision) -> !revision.isPreview(), progress);
+        assertEquals(mRepositoryPackages.getLocalPackages().get(basePath + "4.0.0"), result);
+
+        result = SdkMavenRepository.findLatestLocalVersion(previewPattern, mSdkHandler, (revision) -> revision.getMajor() != 4, progress);
+        assertNull(result);
+    }
+
+    private void addRemoteVersion(@NonNull HashMap<String, RemotePackage> existing, String revision) {
+        String basePath = "extras;m2repository;com;android;tools;build;gradle;";
+        FakePackage.FakeRemotePackage fakePackage = new FakePackage.FakeRemotePackage(basePath + revision);
+        fakePackage.setRevision(Revision.parseRevision(revision));
+        existing.put(basePath + revision, fakePackage);
+    }
+
+    private void setUpRemoteVersions() {
+        HashMap<String, RemotePackage> existing = new HashMap<>(mRepositoryPackages.getRemotePackages());
+        addRemoteVersion(existing, "5.0.0-rc01");
+        addRemoteVersion(existing, "5.0.0");
+        addRemoteVersion(existing, "5.1.0-alpha10");
+        mRepositoryPackages.setRemotePkgInfos(existing.values());
+    }
+
+    public void testFindLatestRemoteVersion() {
+        setUpRemoteVersions();
+
+        ProgressIndicator progress = new FakeProgressIndicator();
+        GradleCoordinate pattern = new GradleCoordinate("com.android.tools.build", "gradle", "1.0.0");
+        GradleCoordinate previewPattern = new GradleCoordinate("com.android.tools.build", "gradle", "1.0.0-alpha01");
+        String basePath = "extras;m2repository;com;android;tools;build;gradle;";
+
+        RepoPackage result = SdkMavenRepository.findLatestRemoteVersion(pattern, mSdkHandler, null, progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.0.0"), result);
+
+        result = SdkMavenRepository.findLatestRemoteVersion(previewPattern, mSdkHandler, null, progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.1.0-alpha10"), result);
+
+        result = SdkMavenRepository.findLatestRemoteVersion(previewPattern, mSdkHandler, (revision) -> !revision.isPreview(), progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.0.0"), result);
+
+        result = SdkMavenRepository.findLatestRemoteVersion(previewPattern, mSdkHandler, (revision) -> revision.getMajor() != 5, progress);
+        assertNull(result);
+    }
+
+    public void testFindLatestVersion() {
+        setUpLocalVersions();
+        setUpRemoteVersions();
+
+        ProgressIndicator progress = new FakeProgressIndicator();
+        GradleCoordinate pattern = new GradleCoordinate("com.android.tools.build", "gradle", "1.0.0");
+        GradleCoordinate previewPattern = new GradleCoordinate("com.android.tools.build", "gradle", "1.0.0-alpha01");
+        String basePath = "extras;m2repository;com;android;tools;build;gradle;";
+
+        RepoPackage result = SdkMavenRepository.findLatestVersion(pattern, mSdkHandler, null, progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.0.0"), result);
+
+        result = SdkMavenRepository.findLatestVersion(previewPattern, mSdkHandler, null, progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.1.0-alpha10"), result);
+
+        result = SdkMavenRepository.findLatestVersion(pattern, mSdkHandler, (revision) -> revision.getMajor() != 4, progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.0.0"), result);
+
+        result = SdkMavenRepository.findLatestVersion(previewPattern, mSdkHandler, (revision) -> revision.getMajor() != 4, progress);
+        assertEquals(mRepositoryPackages.getRemotePackages().get(basePath + "5.1.0-alpha10"), result);
+
+        result = SdkMavenRepository.findLatestVersion(pattern, mSdkHandler, (revision) -> revision.getMajor() != 5, progress);
+        assertEquals(mRepositoryPackages.getLocalPackages().get(basePath + "4.0.0"), result);
+
+        result = SdkMavenRepository.findLatestVersion(previewPattern, mSdkHandler, (revision) -> revision.getMajor() != 5, progress);
+        assertEquals(mRepositoryPackages.getLocalPackages().get(basePath + "4.1.0-alpha10"), result);
+    }
+
 }
