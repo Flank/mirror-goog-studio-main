@@ -149,10 +149,7 @@ public class ManifestMergingTest {
                 .contains("android:testOnly=\"true\"");
     }
 
-    /**
-     * Check that setting targetSdkVersion to a preview version mark the maShrinkResourcesTestnifest
-     * with testOnly.
-     */
+    /** Check that setting targetSdkVersion to a preview version mark the manifest with testOnly. */
     @Test
     public void checkPreviewTargetSdkVersion() throws Exception {
         GradleTestProject appProject = libsTest.getSubproject("app");
