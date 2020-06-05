@@ -245,8 +245,8 @@
         id="NewForkJoinPool"
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
-            file="src/main/java/com/android/build/gradle/internal/services/Aapt2WorkersBuildService.kt"
-            line="50"/>
+            file="src/main/java/com/android/build/gradle/internal/services/Aapt2ThreadPoolBuildService.kt"
+            line="35"/>
     </issue>
 
     <issue
