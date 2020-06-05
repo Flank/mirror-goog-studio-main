@@ -28,6 +28,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -72,7 +73,11 @@ public class ShrinkResourcesTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("shrink").create();
+            GradleTestProject.builder()
+                    .fromTestProject("shrink")
+                    // http://b/149978740
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2} useRTxt={3} useNewShrinker={4}")
     public static Iterable<Object[]> data() {

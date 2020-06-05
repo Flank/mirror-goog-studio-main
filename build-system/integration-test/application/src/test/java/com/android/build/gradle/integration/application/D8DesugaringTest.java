@@ -219,8 +219,9 @@ public class D8DesugaringTest {
         GradleTaskExecutor executor = project.executor()
                 .with(BooleanOption.ENABLE_D8, true)
                 .with(BooleanOption.ENABLE_D8_DESUGARING, true);
-        if (withDexingArtifactTransform) {
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON);
+        if (!withDexingArtifactTransform) {
+            // https://github.com/gradle/gradle/issues/13200
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
         }
         executor.run("assembleBaseDebug", "assembleBaseDebugAndroidTest");
         Apk androidTestApk =
@@ -259,8 +260,9 @@ public class D8DesugaringTest {
         GradleTaskExecutor executor = project.executor()
                 .with(BooleanOption.ENABLE_D8, true)
                 .with(BooleanOption.ENABLE_D8_DESUGARING, true);
-        if (withDexingArtifactTransform) {
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON);
+        if (!withDexingArtifactTransform) {
+            // https://github.com/gradle/gradle/issues/13200
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
         }
         executor.run("assembleMultidexDebug");
         Apk multidexApk =

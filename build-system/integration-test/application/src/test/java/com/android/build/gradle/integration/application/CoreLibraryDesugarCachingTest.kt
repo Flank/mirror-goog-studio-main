@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
@@ -59,12 +60,14 @@ class CoreLibraryDesugarCachingTest {
         val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
 
-        project.executor()
+        // http://b/149978740 and http://b/146208910
+        val executor = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        executor
             .withArgument("--build-cache")
             .run("clean", ASSEMBLE_RELEASE)
         FileSubject.assertThat(buildCacheDir).exists()
 
-        val result = projectCopy.executor()
+        val result = executor
             .withArgument("--build-cache")
             .run("clean", ASSEMBLE_RELEASE)
         assertThat(result.getTask(L8_DEX_DESUGAR_LIB)).wasFromCache()

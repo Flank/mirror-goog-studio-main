@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Zip;
@@ -35,7 +36,11 @@ public class AppPublishingTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("densitySplit").create();
+            GradleTestProject.builder()
+                    .fromTestProject("densitySplit")
+                    // maven-publish is incompatible
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws IOException {

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -51,9 +52,12 @@ public class MinifyLibAndAppKeepRules {
     @Parameterized.Parameter() public CodeShrinker codeShrinker;
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("minifyLibWithJavaRes")
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("minifyLibWithJavaRes")
+                    // http://b/149978740 and http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void testReleaseClassesPackaging() throws Exception {

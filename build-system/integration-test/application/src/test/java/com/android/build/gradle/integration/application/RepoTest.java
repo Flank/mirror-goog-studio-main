@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
@@ -35,12 +36,19 @@ public class RepoTest {
 
     @ClassRule
     public static GradleTestProject app =
-            GradleTestProject.builder().withName("app").fromTestProject("repo/app").create();
+            GradleTestProject.builder()
+                    .withName("app")
+                    .fromTestProject("repo/app")
+                    // maven-publish is incompatible
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @ClassRule
     public static GradleTestProject baseLibrary =
             GradleTestProject.builder()
                     .withName("baseLibrary")
+                    // maven-publish is incompatible
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("repo/baseLibrary")
                     .create();
 
@@ -48,12 +56,19 @@ public class RepoTest {
     public static GradleTestProject library =
             GradleTestProject.builder()
                     .withName("library")
+                    // maven-publish is incompatible
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("repo/library")
                     .create();
 
     @ClassRule
     public static GradleTestProject util =
-            GradleTestProject.builder().withName("util").fromTestProject("repo/util").create();
+            GradleTestProject.builder()
+                    .withName("util")
+                    .fromTestProject("repo/util")
+                    // maven-publish is incompatible
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @BeforeClass
     public static void setUp() throws IOException {

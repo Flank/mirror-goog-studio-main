@@ -1,5 +1,6 @@
 package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -44,6 +45,9 @@ public class DensitySplitWithPublishNonDefaultTest {
     @Test
     public void buildAndPublish() throws IOException, InterruptedException {
         // build the release for publication (though debug is published too)
-        project.execute("assembleRelease");
+        project.executor()
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleRelease");
     }
 }

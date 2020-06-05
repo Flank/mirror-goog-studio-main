@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
 import com.android.apksig.ApkVerifier.IssueWithParams;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -246,6 +247,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -327,7 +330,10 @@ public class SigningTest {
 
     @Test
     public void signingReportTask() throws Exception {
-        project.execute("signingReport");
+        // SigningReportTask is not compatble
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("signingReport");
     }
 
     @Test
@@ -467,6 +473,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -481,14 +489,16 @@ public class SigningTest {
     public void assembleWithInjectedV1ConfigDependencyInfoDisabled() throws Exception {
         // add prop args for signing override.
         project.executor()
-            .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
-            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
-            .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
-            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
-            .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
-            .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-            .run("assembleRelease");
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                // http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         assertThat(apk).contains("META-INF/" + certEntryName);
@@ -508,6 +518,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, false)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);

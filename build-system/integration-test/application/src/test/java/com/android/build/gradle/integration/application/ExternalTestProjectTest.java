@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
-
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -85,6 +85,9 @@ public class ExternalTestProjectTest {
                 + "    compile project(path: ':app1', configuration: 'testLib')\n"
                 + "}\n");
 
-        project.execute("clean", "app2:assembleDebug");
+        project.executor()
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "app2:assembleDebug");
     }
 }

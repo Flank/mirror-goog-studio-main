@@ -1,6 +1,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -25,6 +26,8 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
             .addGradleProperties(
                     "${BooleanOption.GENERATE_MANIFEST_CLASS.propertyName}=$enableManifestClass")
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+            // http://b/149978740
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     @Before

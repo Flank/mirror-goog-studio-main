@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
@@ -40,12 +41,16 @@ class DependencyCheckerTest {
 
     @Test
     fun checkFailureAndWarning() {
-        val failure = app.executor().expectFailure().run("tasks")
+        // org.gradle.api.tasks.diagnostics.TaskReportTask is incompatible
+        val failure =
+            app.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .expectFailure().run("tasks")
         val rootCause = Throwables.getRootCause(failure.exception!!)
         assertThat(rootCause).hasMessageThat()
             .contains("Configuration 'debugRuntimeClasspath' was resolved")
 
-        val warning = app.executor()
+        val warning =
+            app.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
             .with(
                 BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,

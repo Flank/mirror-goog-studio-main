@@ -16,8 +16,9 @@ assembleDebug.doLast {
     }
 }
 
+File projectBuildDir = project.buildDir
 task "clean" {
     doLast {
-        project.buildDir.delete()
+        projectBuildDir.delete()
     }
 }

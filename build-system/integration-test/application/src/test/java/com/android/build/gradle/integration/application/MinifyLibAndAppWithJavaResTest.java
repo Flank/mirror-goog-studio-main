@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -68,6 +69,8 @@ public class MinifyLibAndAppWithJavaResTest {
     public void testReleasePackaging() throws Exception {
         project.executor()
                 .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run(":app:assembleRelease");
         Apk releaseApk =
                 project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED);

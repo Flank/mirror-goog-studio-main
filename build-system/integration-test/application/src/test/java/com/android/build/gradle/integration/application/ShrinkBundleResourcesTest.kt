@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
@@ -36,10 +37,16 @@ import org.junit.Test
 
 class ShrinkBundleResourcesTest {
     @get:Rule
-    var project = builder().fromTestProject("shrink").create()
+    var project = builder().fromTestProject("shrink")
+        // http://b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @get:Rule
-    var projectWithDfms = builder().fromTestProject("shrinkDynamicFeatureModules").create()
+    var projectWithDfms = builder().fromTestProject("shrinkDynamicFeatureModules")
+        // http://b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @Test
     fun `shrink resources in single module bundles`() {

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -45,7 +46,10 @@ class CoreLibraryDesugarDynamicFeatureTest {
     private lateinit var feature: GradleTestProject
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(setUpTestProject()).create()
+    val project = GradleTestProject.builder().fromTestApp(setUpTestProject())
+        // http://b/158092986
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     private fun setUpTestProject(): TestProject {
         return MultiModuleTestProject.builder()

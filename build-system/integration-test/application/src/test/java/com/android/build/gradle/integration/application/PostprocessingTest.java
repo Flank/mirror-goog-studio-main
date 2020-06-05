@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -95,7 +96,10 @@ public class PostprocessingTest {
         Files.asCharSink(project.file("proguard-rules.pro"), StandardCharsets.UTF_8)
                 .write("-printconfiguration build/proguard-config.txt");
 
-        project.execute("assembleRelease");
+        project.executor()
+                // http://b/149978740
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleRelease");
 
         String proguardConfiguration =
                 Files.toString(project.file("build/proguard-config.txt"), StandardCharsets.UTF_8);
@@ -127,7 +131,10 @@ public class PostprocessingTest {
                         + "static class DataClass {}\n"
                         + "static class OtherClassToRemove {}\n");
 
-        project.execute("assembleRelease");
+        project.executor()
+                // http://b/149978740
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleRelease");
 
         assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
                 .doesNotContainClass("Lcom/example/helloworld/HelloWorld$OtherDataClassToRemove;");
@@ -160,7 +167,10 @@ public class PostprocessingTest {
                         + "static class DataClass {}\n"
                         + "static class OtherClassToRemove {}\n");
 
-        project.execute("assembleRelease");
+        project.executor()
+                // http://b/149978740
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleRelease");
         assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
                 .containsClass("Lcom/example/helloworld/HelloWorld;");
         assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
