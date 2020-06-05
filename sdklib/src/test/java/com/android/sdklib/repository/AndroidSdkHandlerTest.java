@@ -60,7 +60,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
         assertNotNull(latest);
-        assertEquals(latest.getPath(), "p;2.1");
+        assertEquals("p;2.1", latest.getPath());
 
         LocalPackage earliest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
@@ -69,7 +69,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                 Revision::parseRevision,
                 Comparator.<Revision>reverseOrder());
         assertNotNull(earliest);
-        assertEquals(earliest.getPath(), "p;1.1");
+        assertEquals("p;1.1", earliest.getPath());
 
         LocalPackage longest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
@@ -78,7 +78,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                 String::length,
                 Comparator.naturalOrder());
         assertNotNull(longest);
-        assertEquals(longest.getPath(), "p;1.20");
+        assertEquals("p;1.20", longest.getPath());
 
         longest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
@@ -87,7 +87,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                 String::length,
                 Comparator.naturalOrder());
         assertNotNull(longest);
-        assertEquals(longest.getPath(), "p;2.2-rc3");
+        assertEquals("p;2.2-rc3", longest.getPath());
 
         latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
@@ -96,7 +96,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
         assertNotNull(latest);
-        assertEquals(latest.getPath(), "p;2.2-rc3");
+        assertEquals("p;2.2-rc3", latest.getPath());
 
         latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("q;r"),
@@ -105,7 +105,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
         assertNotNull(latest);
-        assertEquals(latest.getPath(), "q;r;2.1");
+        assertEquals("q;r;2.1", latest.getPath());
 
         latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("o"),
