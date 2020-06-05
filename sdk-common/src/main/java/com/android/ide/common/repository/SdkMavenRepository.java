@@ -237,8 +237,8 @@ public enum SdkMavenRepository {
         String prefix = DetailsTypes.MavenType.getRepositoryPath(
                 coordinate.getGroupId(), coordinate.getArtifactId(), null);
         return sdkHandler.getLatestRemotePackageForPrefix(
-                prefix, coordinate.isPreview(), GradleCoordinate::parseVersionOnly,
-                GradleCoordinate.COMPARE_PLUS_LOWER, progress);
+                prefix, null, coordinate.isPreview(),
+          GradleCoordinate::parseVersionOnly, GradleCoordinate.COMPARE_PLUS_LOWER, progress);
     }
 
     /**
