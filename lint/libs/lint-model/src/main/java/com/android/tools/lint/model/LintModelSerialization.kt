@@ -1038,9 +1038,13 @@ private class LintModelLibrariesWriter(
         indent(indent)
         printer.print("<library")
         printer.printName(library.artifactAddress, indent)
-        printer.printFiles("jars", library.jarFiles, indent)
-        library.projectPath?.let { printer.printAttribute("project", it, indent) }
-        printer.printAttribute("resolved", library.resolvedCoordinates.toString(), indent)
+        if (library is LintModelExternalLibrary) {
+            printer.printFiles("jars", library.jarFiles, indent)
+            printer.printAttribute("resolved", library.resolvedCoordinates.toString(), indent)
+        }
+        if (library is LintModelModuleLibrary) {
+            library.projectPath.let { printer.printAttribute("project", it, indent) }
+        }
         if (library.provided) {
             printer.printAttribute("provided", VALUE_TRUE, indent)
         }
@@ -1879,8 +1883,17 @@ private class LintModelLibrariesReader(
 
         finishTag("library")
 
-        if (android) {
-            return DefaultLintModelAndroidLibrary(
+        return when {
+            project != null -> DefaultLintModelModuleLibrary(
+                projectPath = project,
+                artifactAddress = artifactAddress,
+                resolvedCoordinates = resolved!!,
+                folder = folder,
+                lintJar = lintJar,
+                provided = provided,
+                skipped = skipped
+            )
+            android -> DefaultLintModelAndroidLibrary(
                 artifactAddress = artifactAddress,
                 jarFiles = jars,
                 manifest = manifestFile!!,
@@ -1892,16 +1905,14 @@ private class LintModelLibrariesReader(
                 symbolFile = symbolFile!!,
                 externalAnnotations = externalAnnotations!!,
                 proguardRules = proguardRules!!,
-                project = project,
                 provided = provided,
                 skipped = skipped,
                 resolvedCoordinates = resolved!!
             )
-        } else {
-            return DefaultLintModelJavaLibrary(
+            else -> DefaultLintModelJavaLibrary(
                 artifactAddress = artifactAddress,
+                folder = folder,
                 jarFiles = jars,
-                project = project,
                 provided = provided,
                 skipped = skipped,
                 resolvedCoordinates = resolved!!

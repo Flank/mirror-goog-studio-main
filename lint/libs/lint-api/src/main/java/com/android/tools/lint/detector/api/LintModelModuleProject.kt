@@ -24,10 +24,10 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
-import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleType
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils
@@ -234,6 +234,7 @@ open class LintModelModuleProject(
                 javaLibraries = Lists.newArrayListWithExpectedSize(direct.size)
                 for (graphItem in direct) {
                     val library = graphItem.findLibrary() ?: continue
+                    if (library !is LintModelExternalLibrary) continue
                     library.addJars(javaLibraries, false)
                 }
             }
@@ -246,6 +247,7 @@ open class LintModelModuleProject(
                 nonProvidedJavaLibraries = Lists.newArrayListWithExpectedSize(direct.size)
                 for (graphItem in direct) {
                     val library = graphItem.findLibrary() ?: continue
+                    if (library !is LintModelExternalLibrary) continue
                     library.addJars(nonProvidedJavaLibraries, true)
                 }
             }
@@ -262,11 +264,13 @@ open class LintModelModuleProject(
                     // // for getJavaLibraries, but we need to include them
                     // for tests since we don't keep them otherwise
                     // (TODO: Figure out why)
+                    if (library !is LintModelExternalLibrary) continue
                     library.addJars(testLibraries, false)
                 }
             }
             variant.testArtifact?.let { artifact ->
                 for (library in artifact.dependencies.getAll()) {
+                    if (library !is LintModelExternalLibrary) continue
                     library.addJars(testLibraries, false)
                 }
             }
@@ -351,7 +355,7 @@ open class LintModelModuleProject(
  * Adds all the jar files from this library into the given list, skipping provided
  * libraries if requested
  */
-fun LintModelLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
+fun LintModelExternalLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
     if (skipped) {
         return
     }

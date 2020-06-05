@@ -215,7 +215,6 @@ class LintModelFactory : LintModelModuleLoader {
                     publicResources = File(library.publicResources),
                     symbolFile = File(library.symbolFile),
                     externalAnnotations = File(library.externalAnnotations),
-                    project = library.projectPath,
                     provided = provided,
                     skipped = skipped,
                     resolvedCoordinates = getMavenName(library.artifactAddress),
@@ -225,9 +224,9 @@ class LintModelFactory : LintModelModuleLoader {
             LibraryL2.LIBRARY_JAVA -> {
                 DefaultLintModelJavaLibrary(
                     artifactAddress = library.artifactAddress,
+                    folder = library.folder,
                     // TODO - expose compile jar vs impl jar?
                     jarFiles = (library.localJars + library.jarFile).map { File(it) },
-                    project = library.projectPath,
                     provided = provided,
                     skipped = skipped,
                     resolvedCoordinates = getMavenName(library.artifactAddress)
@@ -387,7 +386,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
         val new = DefaultLintModelJavaLibrary(
             artifactAddress = getArtifactAddress(library.resolvedCoordinates),
-            project = library.project,
+            folder = null,
             jarFiles = listOf(library.jarFile),
             provided = isProvided(library),
             skipped = isSkipped(library),
@@ -413,25 +412,37 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun getLibrary(library: AndroidLibrary): LintModelLibrary {
         libraryMap[library]?.let { return it }
+        val projectPath = library.project
 
         @Suppress("DEPRECATION")
-        val new = DefaultLintModelAndroidLibrary(
-            manifest = library.manifest,
-            jarFiles = library.localJars + library.jarFile,
-            folder = library.folder, // Needed for workaround for b/66166521
-            resFolder = library.resFolder,
-            assetsFolder = library.assetsFolder,
-            lintJar = library.lintJar,
-            publicResources = library.publicResources,
-            symbolFile = library.symbolFile,
-            externalAnnotations = library.externalAnnotations,
-            project = library.project,
-            provided = isProvided(library),
-            skipped = isSkipped(library),
-            resolvedCoordinates = getMavenName(library.resolvedCoordinates),
-            proguardRules = library.proguardRules,
-            artifactAddress = getArtifactAddress(library.resolvedCoordinates)
-        )
+        val new = if (projectPath != null) {
+            DefaultLintModelModuleLibrary(
+                projectPath = projectPath,
+                artifactAddress = getArtifactAddress(library.resolvedCoordinates),
+                resolvedCoordinates = getMavenName(library.resolvedCoordinates),
+                folder = library.folder,
+                lintJar = library.lintJar,
+                provided = isProvided(library),
+                skipped = isSkipped(library)
+            )
+        } else {
+            DefaultLintModelAndroidLibrary(
+                manifest = library.manifest,
+                jarFiles = library.localJars + library.jarFile,
+                folder = library.folder, // Needed for workaround for b/66166521
+                resFolder = library.resFolder,
+                assetsFolder = library.assetsFolder,
+                lintJar = library.lintJar,
+                publicResources = library.publicResources,
+                symbolFile = library.symbolFile,
+                externalAnnotations = library.externalAnnotations,
+                provided = isProvided(library),
+                skipped = isSkipped(library),
+                resolvedCoordinates = getMavenName(library.resolvedCoordinates),
+                proguardRules = library.proguardRules,
+                artifactAddress = getArtifactAddress(library.resolvedCoordinates)
+            )
+        }
 
         libraryMap[library] = new
 

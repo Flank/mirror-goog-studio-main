@@ -23,6 +23,7 @@ import com.android.tools.lint.model.DefaultLintModelMavenName
 import com.android.tools.lint.model.LintModelDependencies
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.google.common.collect.Maps
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
@@ -934,7 +935,7 @@ class JavaEvaluator {
         dependencies: Collection<LintModelLibrary>,
         jarFile: String
     ): LintModelLibrary? {
-        for (library in dependencies) {
+        for (library in dependencies.asSequence().filterIsInstance<LintModelExternalLibrary>()) {
             for (jar in library.jarFiles) {
                 if (jarFile == jar.path) {
                     return library
@@ -950,7 +951,7 @@ class JavaEvaluator {
         pathPrefix: String,
         pathSuffix: String
     ): LintModelLibrary? {
-        for (library in dependencies) {
+        for (library in dependencies.asSequence().filterIsInstance<LintModelExternalLibrary>()) {
             for (jar in library.jarFiles) {
                 val path = jar.path
                 if (path.startsWith(pathPrefix) && path.endsWith(pathSuffix)) {
