@@ -22,8 +22,10 @@ import com.android.SdkConstants
 import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.builder.internal.aapt.v2.Aapt2DaemonImpl
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager
 import com.android.builder.internal.aapt.v2.Aapt2DaemonTimeouts
@@ -38,7 +40,6 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
 import java.io.Closeable
 import java.io.IOException
 import java.nio.file.Files
@@ -80,8 +81,18 @@ abstract class Aapt2DaemonBuildService : BuildService<Aapt2DaemonBuildService.Pa
     AutoCloseable {
 
     private val registeredServices = mutableSetOf<Aapt2DaemonServiceKey>()
+    private val services = mutableMapOf<Aapt2DaemonServiceKey, Aapt2DaemonManager>()
     private val closer = Closer.create()
     private val logger: ILogger = LoggerWrapper.getLogger(this.javaClass)
+
+    fun getLeasingAapt2(aapt2Input: Aapt2Input) : Aapt2 {
+        val manager = getManager(Aapt2DaemonServiceKey(aapt2Input.version.get()), getAapt2ExecutablePath(aapt2Input))
+        val leasingAapt2 = manager.leasingAapt2Daemon
+        if (!aapt2Input.useJvmResourceCompiler.get()) {
+            return leasingAapt2
+        }
+        return PartialInProcessResourceProcessor(leasingAapt2)
+    }
 
     @Synchronized
     fun registerAaptService(
@@ -91,7 +102,16 @@ abstract class Aapt2DaemonBuildService : BuildService<Aapt2DaemonBuildService.Pa
         val key = Aapt2DaemonServiceKey(aapt2Version)
 
         if (registeredServices.add(key)) {
-            val manager = Aapt2DaemonManager(
+            val manager = getManager(key, aaptExecutablePath)
+            closer.register(aapt2DaemonServiceRegistry.registerServiceAsCloseable(key, manager))
+        }
+        return key
+    }
+
+    @Synchronized
+    private fun getManager(key: Aapt2DaemonServiceKey, aaptExecutablePath: Path) : Aapt2DaemonManager {
+        return services.getOrPut(key) {
+            Aapt2DaemonManager(
                 logger = logger,
                 daemonFactory = { displayId ->
                     Aapt2DaemonImpl(
@@ -105,10 +125,7 @@ abstract class Aapt2DaemonBuildService : BuildService<Aapt2DaemonBuildService.Pa
                 expiryTimeUnit = TimeUnit.SECONDS,
                 listener = Aapt2DaemonManagerMaintainer()
             )
-            closer.register(Closeable { manager.shutdown() })
-            closer.register(aapt2DaemonServiceRegistry.registerServiceAsCloseable(key, manager))
-        }
-        return key
+        }.also { closer.register(Closeable { it.shutdown() }) }
     }
 
     fun getAapt2ExecutablePath(aapt2: Aapt2Input): Path {
@@ -150,13 +167,20 @@ interface Aapt2Input {
     @get:Internal
     val buildService: Property<Aapt2DaemonBuildService>
 
+    @get:Internal
+    val threadPoolBuildService: Property<Aapt2ThreadPoolBuildService>
+
     @get:Input
     val version: Property<String>
 
     @get:Internal
     val binaryDirectory: ConfigurableFileCollection
+
+    @get:Input
+    val useJvmResourceCompiler: Property<Boolean>
 }
 
+@Deprecated("Instead use Aapt2Input.use inside a ProfileAwareWorkAction")
 fun Aapt2Input.registerAaptService(): Aapt2DaemonServiceKey =
     this.buildService.get().registerAaptService(
         version.get(),
@@ -169,6 +193,23 @@ fun Aapt2Input.getErrorFormatMode(): SyncOptions.ErrorFormatMode {
 
 fun Aapt2Input.getAapt2Executable(): Path {
     return buildService.get().getAapt2ExecutablePath(this)
+}
+
+
+fun Aapt2Input.use(
+    context: ProfileAwareWorkAction.Parameters,
+    block: (AsyncResourceProcessor<Aapt2>) -> Unit
+) {
+    val threadPool = threadPoolBuildService.get().aapt2ThreadPool
+    val daemonBuildService = buildService.get()
+
+    AsyncResourceProcessor(
+        projectName = context.projectName.get(),
+        owner = context.taskOwner.get(),
+        executor = threadPool,
+        service = daemonBuildService.getLeasingAapt2(this),
+        errorFormatMode = daemonBuildService.parameters.errorFormatMode.get()
+    ).use(block)
 }
 
 /**

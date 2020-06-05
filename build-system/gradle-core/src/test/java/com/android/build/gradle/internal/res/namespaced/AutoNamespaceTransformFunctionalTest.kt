@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.getBuildService
@@ -64,7 +65,9 @@ class AutoNamespaceTransformFunctionalTest {
     @Before
     fun setUpTransforms() {
         val dependencies = project.dependencies
-        Aapt2DaemonBuildService.RegistrationAction(project, createProjectServices().projectOptions).execute()
+        val projectOptions = createProjectServices().projectOptions
+        Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute()
+        Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute()
         dependencies.registerTransform(
             AutoNamespacePreProcessTransform::class.java
         ) { reg: TransformSpec<AutoNamespaceParameters> ->

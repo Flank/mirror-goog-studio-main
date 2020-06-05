@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.res.Aapt2FromMaven
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
@@ -53,8 +54,10 @@ class ProjectServices constructor(
 ) {
     fun initializeAapt2Input(aapt2Input: Aapt2Input) {
         aapt2Input.buildService.setDisallowChanges(getBuildService(buildServiceRegistry))
+        aapt2Input.threadPoolBuildService.setDisallowChanges(getBuildService(buildServiceRegistry))
         aapt2Input.binaryDirectory.from(aapt2FromMaven?.aapt2Directory)
         aapt2Input.binaryDirectory.disallowChanges()
         aapt2Input.version.setDisallowChanges(aapt2FromMaven?.version)
+        aapt2Input.useJvmResourceCompiler.setDisallowChanges(projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER])
     }
 }
