@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.testutils.truth.FileSubject.assertThat
@@ -33,7 +34,10 @@ import org.junit.Test
 class LintStandaloneVitalTest {
     @Rule
     @JvmField
-    var project = GradleTestProject.builder().fromTestProject("lintStandaloneVital").create()
+    var project = GradleTestProject.builder().fromTestProject("lintStandaloneVital")
+        // http://b/146208910
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @Test
     @Throws(Exception::class)

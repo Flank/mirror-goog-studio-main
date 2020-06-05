@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -26,6 +27,8 @@ class LintDynamicFeatureTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
+        // http://b/146208910
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Test

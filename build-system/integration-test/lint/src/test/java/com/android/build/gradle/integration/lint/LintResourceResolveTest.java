@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import org.junit.Rule;
@@ -30,7 +31,11 @@ import org.junit.Test;
 public class LintResourceResolveTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintResourceResolve").create();
+            GradleTestProject.builder()
+                    .fromTestProject("lintResourceResolve")
+                    // http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void checkClean() throws Exception {

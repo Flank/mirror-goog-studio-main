@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.lint;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -32,7 +33,11 @@ import org.junit.Test;
 public class LintCustomLocalAndPublishTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintCustomLocalAndPublishRules").create();
+            GradleTestProject.builder()
+                    .fromTestProject("lintCustomLocalAndPublishRules")
+                    // http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void checkCustomLint() throws Exception {

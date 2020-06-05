@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import org.junit.Before;
@@ -40,7 +41,11 @@ public class LintDependencyModelTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintDeps").create();
+            GradleTestProject.builder()
+                    .fromTestProject("lintDeps")
+                    // http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws Exception {

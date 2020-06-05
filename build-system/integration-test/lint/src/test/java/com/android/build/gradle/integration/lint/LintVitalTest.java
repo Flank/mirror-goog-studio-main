@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.lint;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -37,7 +38,11 @@ public class LintVitalTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestApp(helloWorldApp).create();
+            GradleTestProject.builder()
+                    .fromTestApp(helloWorldApp)
+                    // http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws Exception {

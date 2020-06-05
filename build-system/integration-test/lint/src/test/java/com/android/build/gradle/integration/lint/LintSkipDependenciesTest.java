@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +34,11 @@ import org.junit.Test;
 public class LintSkipDependenciesTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintLibrarySkipDeps").create();
+            GradleTestProject.builder()
+                    .fromTestProject("lintLibrarySkipDeps")
+                    // http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void checkLintDependenciesSkipped() throws IOException, InterruptedException {
