@@ -176,6 +176,15 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
             logger.log(infoRecordOf(message))
 
         /**
+         * Throw an exception if the currently registered logger is the
+         * default one.
+         */
+        fun requireExplicitLogger() {
+            if (logger == BOTTOM_LOGGING_ENVIRONMENT)
+                throw Exception("Non-default logger is required")
+        }
+
+        /**
          * Produce an ILogger over the current logger.
          */
         fun getILogger() = object : ILogger {

@@ -33,7 +33,6 @@ fun createDefaultProjectServiceRegistry(global : GlobalScope) : CxxServiceRegist
 fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
     val registry = CxxServiceRegistryBuilder()
     createProcessJunctionService(registry)
-    createIssueReporterService(global, registry)
     createExecService(global, registry)
     return registry.build()
 }

@@ -454,7 +454,9 @@ public abstract class BasePlugin<
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
         // Register a builder for the native tooling model
-        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantModel);
+        NativeModelBuilder nativeModelBuilder =
+                new NativeModelBuilder(
+                        projectServices.getIssueReporter(), globalScope, variantModel);
         registry.register(nativeModelBuilder);
     }
 

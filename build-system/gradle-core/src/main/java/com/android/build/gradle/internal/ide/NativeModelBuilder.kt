@@ -21,7 +21,9 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
@@ -35,6 +37,7 @@ import java.util.concurrent.Executors
  * Builder for the custom Native Android model.
  */
 class NativeModelBuilder(
+    private val issueReporter: SyncIssueReporter,
     private val globalScope: GlobalScope,
     private val variantModel: VariantModel
 ) : ParameterizedToolingModelBuilder<ModelBuilderParameter> {
@@ -62,7 +65,9 @@ class NativeModelBuilder(
      * be called only for NativeAndroidProject and the result will be the full model information.
      */
     override fun buildAll(modelName: String, project: Project): Any? {
-        return buildFullNativeAndroidProject(project)
+        IssueReporterLoggingEnvironment(issueReporter).use {
+            return buildFullNativeAndroidProject(project)
+        }
     }
 
     /**
@@ -87,18 +92,20 @@ class NativeModelBuilder(
         parameter: ModelBuilderParameter,
         project: Project
     ): Any? {
-        // Prevents parameter interface evolution from breaking the model builder.
-        val modelBuilderParameter = FailsafeModelBuilderParameter(parameter)
-        return when (modelName) {
-            nativeAndroidProjectClass ->
-                if (modelBuilderParameter.shouldBuildVariant) buildFullNativeAndroidProject(project)
-                else buildNativeAndroidProjectWithJustVariantInfos(project)
-            nativeVariantAbiClass -> buildNativeVariantAbi(
-                project,
-                modelBuilderParameter.variantName!!,
-                modelBuilderParameter.abiName!!
-            )
-            else -> throw RuntimeException("Unexpected model $modelName")
+        IssueReporterLoggingEnvironment(issueReporter).use {
+            // Prevents parameter interface evolution from breaking the model builder.
+            val modelBuilderParameter = FailsafeModelBuilderParameter(parameter)
+            return when (modelName) {
+                nativeAndroidProjectClass ->
+                    if (modelBuilderParameter.shouldBuildVariant) buildFullNativeAndroidProject(project)
+                    else buildNativeAndroidProjectWithJustVariantInfos(project)
+                nativeVariantAbiClass -> buildNativeVariantAbi(
+                    project,
+                    modelBuilderParameter.variantName!!,
+                    modelBuilderParameter.abiName!!
+                )
+                else -> throw RuntimeException("Unexpected model $modelName")
+            }
         }
     }
 
@@ -198,7 +205,15 @@ class NativeModelBuilder(
             try {
                 // Need to get each result even if we're not using the output because that's how we
                 // propagate exceptions.
-                nativeJsonGenExecutor.invokeAll(buildSteps).map { it.get() }
+                nativeJsonGenExecutor.invokeAll(
+                    buildSteps.map { step ->
+                        Callable {
+                            IssueReporterLoggingEnvironment(issueReporter).use {
+                                step.call()
+                            }
+                        }
+                    }
+                ).map { it.get() }
             } catch (e: InterruptedException) {
                 throw RuntimeException(
                     "Thread was interrupted while native build JSON generation was in progress.",
