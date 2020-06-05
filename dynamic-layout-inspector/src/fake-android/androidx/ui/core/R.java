@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package androidx.ui.tooling
+package androidx.ui.core;
 
-import androidx.compose.SlotTable
-
-/**
- * During testing this is used instead of the version in androidx-ui-tooling, since that library
- * contains only stubbed out classes.
- */
-val tables = mutableSetOf<SlotTable>()
+/** Fake R class used during testing of compose related inspections. */
+public class R {
+    public class id {
+        public static final int inspection_slot_table_set = 127;
+    }
+}
