@@ -108,7 +108,7 @@ class ComponentTree {
                 if (mComposeTree == null) {
                     mComposeTree = new ComposeTree(view.getClass().getClassLoader(), mStringTable);
                 }
-                mComposeTree.loadComposeTree(viewBuffer);
+                mComposeTree.loadComposeTree(view, viewBuffer);
             } catch (Throwable ex) {
                 Log.w("Compose", "loadComposeTree failed: ", ex);
             }

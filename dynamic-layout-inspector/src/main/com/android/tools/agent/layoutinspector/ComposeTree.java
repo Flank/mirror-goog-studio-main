@@ -18,10 +18,12 @@ package com.android.tools.agent.layoutinspector;
 
 import android.graphics.Rect;
 import android.util.Log;
+import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.android.tools.agent.layoutinspector.common.StringTable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,19 +56,25 @@ class ComposeTree {
      * A pattern for matching Group positions found in the Compose tooling API.
      *
      * <p>The Group.position() extension method will return strings like:
-     * "androidx.compose.Composer.startExpr (Composer.kt:620)"
+     * "androidx.compose.Composer-Ah7q.startExpr (Composer.kt:620)"
      *
      * <p>From this format we would like to extract:
      *
      * <ul>
      *   <li>The qualified function name: "androidx.compose.Composer.startExpr" (group 1)
-     *   <li>The file where it is found: "Composer.kt" (group 2)
-     *   <li>The line number where it was found: 620 (group 3)
+     *   <li>The inline differential part: "-Ah7q" (group 2)
+     *   <li>The file where it is found: "Composer.kt" (group 3)
+     *   <li>The line number where it was found: 620 (group 4)
      * </ul>
      */
-    private static final String POSITION_REGEX = "([\\w\\\\.$]*?)\\s?\\(?([\\w.]+):(\\d+)\\)?";
+    private static final String POSITION_REGEX =
+            "([\\w\\\\.$]*?)(-\\w*)?\\s?\\(?([\\w.]+):(\\d+)\\)?";
 
     private static final Pattern POSITION_PATTERN = Pattern.compile(POSITION_REGEX);
+    private static final int POSITION_GROUP_FUNCTION_NAME = 1;
+    //  private static final int POSITION_GROUP_INLINE_DIFF = 2; // Not used...
+    private static final int POSITION_GROUP_FILENAME = 3;
+    private static final int POSITION_GROUP_LINE_NUMBER = 4;
 
     private static final Map<String, String> ignoredFunctions = createIgnoredComposeFunctions();
     private static final String INVOKE = ".invoke";
@@ -76,6 +84,7 @@ class ComposeTree {
 
     @VisibleForTesting protected static final boolean DEBUG_COMPOSE = false;
 
+    private final Field mSlotTableSetKey;
     private final Method mGetTables;
     private final Method mAsTree;
     private final Method mGetBox;
@@ -93,7 +102,10 @@ class ComposeTree {
     ComposeTree(@NonNull ClassLoader classLoader, @NonNull StringTable stringTable)
             throws Exception {
         mStringTable = stringTable;
-        mGetTables = findMethod(classLoader, "androidx.ui.tooling.InspectableKt", "getTables");
+        mSlotTableSetKey =
+                findFieldOrNull(classLoader, "androidx.ui.core.R$id", "inspection_slot_table_set");
+        mGetTables =
+                findMethodOrNull(classLoader, "androidx.ui.tooling.InspectableKt", "getTables");
         mAsTree =
                 findMethod(
                         classLoader,
@@ -120,13 +132,22 @@ class ComposeTree {
      *
      * @param parentView the id representing the protobuf instance of the parent view
      */
-    public void loadComposeTree(long parentView) throws ReflectiveOperationException {
+    public void loadComposeTree(@NonNull View view, long parentView)
+            throws ReflectiveOperationException {
         dumpGroupHeader();
-        //noinspection unchecked
-        Collection<Object> tables = (Collection<Object>) mGetTables.invoke(null);
+
+        Collection<Object> tables = null;
+        if (mSlotTableSetKey != null) { // version 0.1.0.dev14 and above
+            //noinspection unchecked
+            tables = (Collection<Object>) view.getTag(mSlotTableSetKey.getInt(null));
+        } else if (mGetTables != null) {
+            //noinspection unchecked
+            tables = (Collection<Object>) mGetTables.invoke(null);
+        }
         if (tables == null) {
             return;
         }
+
         List<ComposeView> views = new ArrayList<>();
         for (Object table : tables) {
             resetDebugIndent();
@@ -212,18 +233,20 @@ class ComposeTree {
     /**
      * Write the nodes to the protobuf as View information.
      *
-     * <p>Each composable is written as a node in the view tree. The immediate parent is used as the
-     * source location for the node. A invocation (if the method ends with "invoke") is not reported
-     * as but such nodes are used for a more exact source location.
+     * <p>The idea is to emit each Composable node to the protobuf along with the location where the
+     * Composable was instantiated from a lambda in a parent Composable statement.
      */
-    private void writeInvocationsAsViews(long parentViewBuffer, @NonNull ComposeView view) {
-        for (ComposeView child : view.getChildren()) {
-            if (!child.getMethod().endsWith(INVOKE)) {
-                long buffer = emit(parentViewBuffer, view, child);
-                incrementDebugIndent();
-                writeInvocationsAsViews(buffer, child);
-                decrementDebugIndent();
-            } else {
+    private void writeInvocationsAsViews(long parentViewBuffer, @NonNull ComposeView parent) {
+        if (parent.getChildren().size() == 1
+                && parent.getMethod().endsWith(INVOKE)
+                && !parent.getChildren().get(0).getMethod().endsWith((INVOKE))) {
+            ComposeView child = parent.getChildren().get(0);
+            long buffer = emit(parentViewBuffer, parent, child);
+            incrementDebugIndent();
+            writeInvocationsAsViews(buffer, child);
+            decrementDebugIndent();
+        } else {
+            for (ComposeView child : parent.getChildren()) {
                 writeInvocationsAsViews(parentViewBuffer, child);
             }
         }
@@ -231,9 +254,6 @@ class ComposeTree {
 
     /**
      * Emit the invocation & composable pair as a view node to the protobuf.
-     *
-     * <p>The bounds are relative to the previous emitted parent view. TODO: Consider switching to
-     * global bounds everywhere.
      */
     private long emit(
             long parentView, @NonNull ComposeView invocation, @NonNull ComposeView composable) {
@@ -261,8 +281,12 @@ class ComposeTree {
     /**
      * Return the composable from the method name.
      *
-     * <p>Example of method names to map: androidx.ui.material.MaterialThemeKt.MaterialTheme ->
-     * MaterialTheme com.example.mycompose.MainActivityKt$Greeting$1.invoke -> Greeting
+     * <p>Example of method names to map:
+     *
+     * <ul>
+     *   <li>androidx.ui.material.MaterialThemeKt.MaterialTheme -> MaterialTheme
+     *   <li>com.example.mycompose.MainActivityKt$Greeting$1.invoke -> Greeting
+     * </ul>
      */
     @NonNull
     private static String extractComposableName(@NonNull String method) {
@@ -337,9 +361,9 @@ class ComposeTree {
         if (!matcher.matches()) {
             return EMPTY_SOURCE;
         }
-        String method = matcher.group(1);
-        String fileName = matcher.group(2);
-        int lineNumber = Integer.parseInt(matcher.group(3));
+        String method = matcher.group(POSITION_GROUP_FUNCTION_NAME);
+        String fileName = matcher.group(POSITION_GROUP_FILENAME);
+        int lineNumber = Integer.parseInt(matcher.group(POSITION_GROUP_LINE_NUMBER));
         if (unwantedGroup(fileName, method)) {
             return EMPTY_SOURCE;
         }
@@ -369,13 +393,53 @@ class ComposeTree {
         return classInstance.getDeclaredMethod(methodName, argumentClasses);
     }
 
+    @Nullable
+    @SuppressWarnings("SameParameterValue")
+    private static Method findMethodOrNull(
+            @NonNull ClassLoader classLoader,
+            @NonNull String className,
+            @NonNull String methodName,
+            @NonNull String... argumentClassNames) {
+        try {
+            return findMethod(classLoader, className, methodName, argumentClassNames);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    @NonNull
+    private static Field findField(
+            @NonNull ClassLoader classLoader, @NonNull String className, @NonNull String fieldName)
+            throws Exception {
+        Class<?> classInstance = classLoader.loadClass(className);
+        return classInstance.getDeclaredField(fieldName);
+    }
+
+    @Nullable
+    @SuppressWarnings("SameParameterValue")
+    private static Field findFieldOrNull(
+            @NonNull ClassLoader classLoader,
+            @NonNull String className,
+            @NonNull String fieldName) {
+        try {
+            return findField(classLoader, className, fieldName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
     private static Map<String, String> createIgnoredComposeFunctions() {
         Map<String, String> map = new HashMap<>();
-        map.put("Ambient.kt", "androidx.compose.Ambient");
-        map.put("Composer.kt", "androidx.compose.Composer");
-        map.put("Inspectable.kt", "androidx.ui.tooling.Inspectable");
-        map.put("Layout.kt", "androidx.ui.core.Layout");
-        map.put("Semantics.kt", "androidx.ui.semantics.Semantics");
+        map.put("AndroidAmbients.kt", "androidx.ui.core.");
+        map.put("Ambient.kt", "androidx.compose.");
+        map.put("Ambients.kt", "androidx.ui.core.");
+        map.put("Composer.kt", "androidx.compose.");
+        map.put("Inspectable.kt", "androidx.ui.tooling.");
+        map.put("Layout.kt", "androidx.ui.core.");
+        map.put("SelectionContainer.kt", "androidx.ui.core.selection.");
+        map.put("Semantics.kt", "androidx.ui.semantics.");
+        map.put("Wrapper.kt", "androidx.ui.core.");
+        map.put("null", "");
         return Collections.unmodifiableMap(map);
     }
 

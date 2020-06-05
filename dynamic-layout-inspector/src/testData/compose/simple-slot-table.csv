@@ -7,7 +7,7 @@
 //                super.onCreate(savedInstanceState)
 //                setContent {
 //                    Inspectable {
-//                        MaterialTheme {
+//                        MyComposeTheme {
 //                            Column(modifier = Modifier.padding(20.dp)) {
 //                                Text("Hello", style = TextStyle(color = Color.Magenta, background = Color.White, fontSize = TextUnit.Sp(30)))
 //                                Greeting("Android")
@@ -31,472 +31,328 @@
 // Column 5: bounds.top
 // Column 6: bounds.bottom
 //
-"", null, 0, 1080, 66, 2088
-" ", null, 0, 1080, 66, 2088
-"  ", null, 0, 1080, 66, 2088
-"   ", null, 0, 0, 0, 0
-"    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"   ", null, 0, 1080, 66, 2088
-"    ", null, 0, 1080, 66, 2088
-"     ", null, 0, 1080, 66, 2088
-"      ", null, 0, 0, 0, 0
-"      ", null, 0, 0, 0, 0
-"       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"      ", null, 0, 0, 0, 0
-"      ", null, 0, 0, 0, 0
-"      ", null, 0, 1080, 66, 2088
-"       ", null, 0, 1080, 66, 2088
-"        ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 1080, 66, 2088
-"         ", null, 0, 1080, 66, 2088
-"          ", null, 0, 0, 0, 0
-"           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"          ", null, 0, 0, 0, 0
-"          ", null, 0, 1080, 66, 2088
-"           ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 0, 1080, 66, 2088
-"            ", null, 0, 1080, 66, 2088
-"             ", null, 0, 1080, 66, 2088
-"              ", null, 0, 1080, 66, 2088
-"               ", null, 0, 1080, 66, 2088
-"                ", null, 0, 1080, 66, 2088
-"                 ", null, 0, 1080, 66, 2088
-"                  ", null, 0, 1080, 66, 2088
-"                   ", null, 0, 1080, 66, 2088
-"                    ", null, 0, 0, 0, 0
-"                     ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                    ", null, 0, 0, 0, 0
-"                    ", null, 0, 1080, 66, 2088
-"                     ", null, 0, 1080, 66, 2088
-"                      ", null, 0, 1080, 66, 2088
-"                       ", null, 0, 0, 0, 0
-"                       ", null, 0, 0, 0, 0
-"                        ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                       ", null, 0, 0, 0, 0
-"                        ", null, 0, 0, 0, 0
-"                        ", null, 0, 0, 0, 0
-"                         ", null, 0, 0, 0, 0
-"                        ", null, 0, 0, 0, 0
-"                         ", null, 0, 0, 0, 0
-"                         ", null, 0, 0, 0, 0
-"                       ", null, 0, 0, 0, 0
-"                        ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                       ", null, 0, 1080, 66, 2088
-"                        ", null, 0, 1080, 66, 2088
-"                         ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 1080, 66, 2088
-"                          ", null, 0, 1080, 66, 2088
-"                           ", null, 0, 0, 0, 0
-"                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                           ", null, 0, 0, 0, 0
-"                           ", null, 0, 1080, 66, 2088
-"                            ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 0, 1080, 66, 2088
-"                             ", null, 0, 1080, 66, 2088
-"                              ", null, 0, 1080, 66, 2088
-"                               ", null, 0, 0, 0, 0
-"                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                               ", null, 0, 1080, 66, 2088
-"                                ", null, 0, 1080, 66, 2088
-"                                 ", null, 0, 1080, 66, 2088
-"                                  ", null, 0, 1080, 66, 2088
-"                                   ", null, 0, 1080, 66, 2088
-"                                    ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 1080, 66, 2088
-"                                     ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:525)", 0, 1080, 66, 2088
-"                                      ", null, 0, 1080, 66, 2088
-"                                       ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 1080, 66, 2088
-"                                        ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 0, 1080, 66, 2088
-"                                         ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 55, 1025, 121, 2033
-"                                          ", null, 55, 1025, 121, 2033
-"                                           ", null, 55, 1025, 121, 2033
-"                                            ", null, 55, 1025, 121, 2033
-"                                             ", null, 55, 1025, 121, 2033
-"                                              ", null, 55, 1025, 121, 2033
-"                                               ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                               ", null, 55, 1025, 121, 2033
-"                                                ", null, 55, 1025, 121, 2033
-"                                                 ", null, 55, 1025, 121, 2033
-"                                                  ", "androidx.ui.tooling.InspectableKt.Inspectable (Inspectable.kt:50)", 55, 1025, 121, 2033
-"                                                   ", null, 55, 1025, 121, 2033
-"                                                    ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                     ", null, 55, 1025, 121, 2033
-"                                                      ", null, 0, 0, 0, 0
-"                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                      ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                      ", null, 0, 0, 0, 0
-"                                                      ", null, 55, 1025, 121, 2033
-"                                                       ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 55, 1025, 121, 2033
-"                                                        ", null, 55, 1025, 121, 2033
-"                                                         ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                          ", "com.example.mycompose.MainActivity$onCreate$1$1.invoke (MainActivity.kt:55)", 55, 1025, 121, 2033
-"                                                           ", null, 55, 1025, 121, 2033
-"                                                            ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                             ", "androidx.ui.material.MaterialThemeKt.MaterialTheme (MaterialTheme.kt:93)", 55, 1025, 121, 2033
-"                                                              ", null, 55, 1025, 121, 2033
-"                                                               ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                ", "androidx.ui.material.ColorKt.ProvideColorPalette (Color.kt:325)", 55, 1025, 121, 2033
-"                                                                 ", null, 55, 1025, 121, 2033
-"                                                                  ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                   ", null, 55, 1025, 121, 2033
-"                                                                    ", null, 0, 0, 0, 0
-"                                                                     ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                    ", null, 0, 0, 0, 0
-"                                                                    ", null, 55, 1025, 121, 2033
-"                                                                     ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 55, 1025, 121, 2033
-"                                                                      ", null, 55, 1025, 121, 2033
-"                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 1025, 121, 2033
-"                                                                        ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                         ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                        ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1.invoke (MaterialTheme.kt:93)", 55, 1025, 121, 2033
-"                                                                         ", null, 55, 1025, 121, 2033
-"                                                                          ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                           ", null, 55, 1025, 121, 2033
-"                                                                            ", null, 0, 0, 0, 0
-"                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                            ", null, 0, 0, 0, 0
-"                                                                            ", null, 55, 1025, 121, 2033
-"                                                                             ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 55, 1025, 121, 2033
-"                                                                              ", null, 55, 1025, 121, 2033
-"                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 1025, 121, 2033
-"                                                                                ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$1.invoke (MaterialTheme.kt:93)", 55, 1025, 121, 2033
-"                                                                                 ", null, 55, 1025, 121, 2033
-"                                                                                  ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                                   ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                   ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:156)", 55, 1025, 121, 2033
-"                                                                                    ", null, 55, 1025, 121, 2033
-"                                                                                     ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                                      ", null, 55, 1025, 121, 2033
-"                                                                                       ", null, 0, 0, 0, 0
-"                                                                                        ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                         ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                       ", null, 0, 0, 0, 0
-"                                                                                       ", null, 55, 1025, 121, 2033
-"                                                                                        ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 55, 1025, 121, 2033
-"                                                                                         ", null, 55, 1025, 121, 2033
-"                                                                                          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 1025, 121, 2033
-"                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                           ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (MainActivity.kt:56)", 55, 1025, 121, 2033
-"                                                                                            ", null, 55, 1025, 121, 2033
-"                                                                                             ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                                              ", "androidx.ui.layout.ColumnKt.Column (Column.kt:283)", 55, 1025, 121, 2033
-"                                                                                               ", null, 55, 1025, 121, 2033
-"                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                                                 ", "androidx.ui.layout.RowColumnImplKt.RowColumnImpl (RowColumnImpl.kt:859)", 55, 1025, 121, 2033
-"                                                                                                  ", null, 55, 1025, 121, 2033
-"                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:505)", 55, 1025, 121, 2033
-"                                                                                                     ", null, 55, 1025, 121, 2033
-"                                                                                                      ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 1025, 121, 2033
-"                                                                                                       ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 55, 1025, 121, 2033
-"                                                                                                        ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 55, 332, 121, 390
-"                                                                                                         ", null, 55, 332, 121, 390
-"                                                                                                          ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 121, 390
-"                                                                                                           ", "androidx.ui.layout.ColumnKt$Column$1.invoke (Column.kt:283)", 55, 332, 121, 390
-"                                                                                                            ", null, 55, 332, 121, 390
-"                                                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 332, 121, 390
-"                                                                                                              ", "com.example.mycompose.MainActivity$onCreate$1$1$1$1.invoke (MainActivity.kt:55)", 55, 244, 121, 232
-"                                                                                                               ", null, 55, 244, 121, 232
-"                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 244, 121, 232
-"                                                                                                                 ", "androidx.ui.foundation.TextKt.Text (Text.kt:135)", 55, 244, 121, 232
-"                                                                                                                  ", null, 55, 244, 121, 232
-"                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 244, 121, 232
-"                                                                                                                    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                     ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                    ", "androidx.ui.foundation.TextKt.Text (Text.kt:145)", 55, 244, 121, 232
-"                                                                                                                     ", null, 55, 244, 121, 232
-"                                                                                                                      ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 244, 121, 232
-"                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                       ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:94)", 55, 244, 121, 232
-"                                                                                                                        ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:99)", 55, 244, 121, 232
-"                                                                                                                         ", null, 55, 244, 121, 232
-"                                                                                                                          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 244, 121, 232
-"                                                                                                                           ", "androidx.ui.foundation.TextKt$Text$7.invoke (Text.kt:135)", 55, 244, 121, 232
-"                                                                                                                            ", null, 55, 244, 121, 232
-"                                                                                                                             ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 244, 121, 232
-"                                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                              ", "androidx.ui.core.CoreTextKt.CoreText (CoreText.kt:302)", 55, 244, 121, 232
-"                                                                                                                               ", null, 55, 244, 121, 232
-"                                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 244, 121, 232
-"                                                                                                                                 ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:505)", 55, 244, 121, 232
-"                                                                                                                                  ", null, 55, 244, 121, 232
-"                                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 244, 121, 232
-"                                                                                                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 55, 244, 121, 232
-"                                                                                                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 0, 0, 0, 0
-"                                                                                                                                      ", null, 0, 0, 0, 0
-"                                                                                                                                       ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                              ", "androidx.ui.core.CoreTextKt.CoreText (CoreText.kt:312)", 0, 0, 0, 0
-"                                                                                                                               ", null, 0, 0, 0, 0
-"                                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                              ", "com.example.mycompose.MainActivity$onCreate$1$1$1$1.invoke (MainActivity.kt:65)", 55, 332, 232, 291
-"                                                                                                               ", null, 55, 332, 232, 291
-"                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                 ", "com.example.mycompose.MainActivityKt.Greeting (MainActivity.kt:55)", 55, 332, 232, 291
-"                                                                                                                  ", null, 55, 332, 232, 291
-"                                                                                                                   ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                   ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                    ", "androidx.ui.foundation.TextKt.Text (Text.kt:135)", 55, 332, 232, 291
-"                                                                                                                     ", null, 55, 332, 232, 291
-"                                                                                                                      ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                        ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                       ", "androidx.ui.foundation.TextKt.Text (Text.kt:145)", 55, 332, 232, 291
-"                                                                                                                        ", null, 55, 332, 232, 291
-"                                                                                                                         ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                          ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:94)", 55, 332, 232, 291
-"                                                                                                                           ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:99)", 55, 332, 232, 291
-"                                                                                                                            ", null, 55, 332, 232, 291
-"                                                                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 332, 232, 291
-"                                                                                                                              ", "androidx.ui.foundation.TextKt$Text$7.invoke (Text.kt:135)", 55, 332, 232, 291
-"                                                                                                                               ", null, 55, 332, 232, 291
-"                                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                 ", "androidx.ui.core.CoreTextKt.CoreText (CoreText.kt:302)", 55, 332, 232, 291
-"                                                                                                                                  ", null, 55, 332, 232, 291
-"                                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:505)", 55, 332, 232, 291
-"                                                                                                                                     ", null, 55, 332, 232, 291
-"                                                                                                                                      ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 332, 232, 291
-"                                                                                                                                       ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 55, 332, 232, 291
-"                                                                                                                                        ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 0, 0, 0, 0
-"                                                                                                                                         ", null, 0, 0, 0, 0
-"                                                                                                                                          ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                                 ", "androidx.ui.core.CoreTextKt.CoreText (CoreText.kt:312)", 0, 0, 0, 0
-"                                                                                                                                  ", null, 0, 0, 0, 0
-"                                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                                    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                              ", "com.example.mycompose.MainActivity$onCreate$1$1$1$1.invoke (MainActivity.kt:85)", 55, 231, 291, 390
-"                                                                                                               ", null, 55, 231, 291, 390
-"                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                  ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                 ", "androidx.ui.material.ButtonKt.Button (Button.kt:264)", 55, 231, 291, 390
-"                                                                                                                  ", null, 55, 231, 291, 390
-"                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                    ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:94)", 55, 231, 291, 390
-"                                                                                                                     ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:99)", 55, 231, 291, 390
-"                                                                                                                      ", null, 55, 231, 291, 390
-"                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 231, 291, 390
-"                                                                                                                        ", "androidx.ui.material.ButtonKt$Button$1.invoke (Button.kt:264)", 55, 231, 291, 390
-"                                                                                                                         ", null, 55, 231, 291, 390
-"                                                                                                                          ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                           ", "androidx.ui.material.SurfaceKt.Surface (Surface.kt:169)", 55, 231, 291, 390
-"                                                                                                                            ", null, 55, 231, 291, 390
-"                                                                                                                             ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                              ", "androidx.ui.material.SurfaceKt.SurfaceLayout (Surface.kt:190)", 55, 231, 291, 390
-"                                                                                                                               ", null, 55, 231, 291, 390
-"                                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                 ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:525)", 55, 231, 291, 390
-"                                                                                                                                  ", null, 55, 231, 291, 390
-"                                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 55, 231, 291, 390
-"                                                                                                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 55, 231, 291, 390
-"                                                                                                                                      ", null, 55, 231, 291, 390
-"                                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 231, 291, 390
-"                                                                                                                                        ", "androidx.ui.material.SurfaceKt$Surface$1.invoke (Surface.kt:169)", 55, 231, 291, 390
-"                                                                                                                                         ", null, 55, 231, 291, 390
-"                                                                                                                                          ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                           ", "androidx.ui.foundation.ContentColorKt.ProvideContentColor (ContentColor.kt:55)", 55, 231, 291, 390
-"                                                                                                                                            ", null, 55, 231, 291, 390
-"                                                                                                                                             ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                              ", null, 55, 231, 291, 390
-"                                                                                                                                               ", null, 0, 0, 0, 0
-"                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                  ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                   ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                               ", null, 0, 0, 0, 0
-"                                                                                                                                               ", null, 55, 231, 291, 390
-"                                                                                                                                                ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 55, 231, 291, 390
-"                                                                                                                                                 ", null, 55, 231, 291, 390
-"                                                                                                                                                  ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 231, 291, 390
-"                                                                                                                                                   ", "androidx.ui.foundation.ContentColorKt$ProvideContentColor$1.invoke (ContentColor.kt:54)", 55, 231, 291, 390
-"                                                                                                                                                    ", null, 55, 231, 291, 390
-"                                                                                                                                                     ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                      ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                      ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:156)", 55, 231, 291, 390
-"                                                                                                                                                       ", null, 55, 231, 291, 390
-"                                                                                                                                                        ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                         ", null, 55, 231, 291, 390
-"                                                                                                                                                          ", null, 0, 0, 0, 0
-"                                                                                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                          ", null, 0, 0, 0, 0
-"                                                                                                                                                          ", null, 55, 231, 291, 390
-"                                                                                                                                                           ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 55, 231, 291, 390
-"                                                                                                                                                            ", null, 55, 231, 291, 390
-"                                                                                                                                                             ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                ", "androidx.ui.animation.DisposableAnimationClockKt.asDisposableClock (DisposableAnimationClock.kt:108)", 0, 0, 0, 0
-"                                                                                                                                                                 ", null, 0, 0, 0, 0
-"                                                                                                                                                                  ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                                                                   ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                              ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:264)", 55, 231, 291, 390
-"                                                                                                                                                               ", null, 55, 231, 291, 390
-"                                                                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                 ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                  ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                 ", "androidx.ui.foundation.ClickableKt.Clickable (Clickable.kt:81)", 55, 231, 291, 390
-"                                                                                                                                                                  ", null, 55, 231, 291, 390
-"                                                                                                                                                                   ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                    ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:94)", 55, 231, 291, 390
-"                                                                                                                                                                     ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:99)", 55, 231, 291, 390
-"                                                                                                                                                                      ", null, 55, 231, 291, 390
-"                                                                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 55, 231, 291, 390
-"                                                                                                                                                                        ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                         ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                        ", "androidx.ui.foundation.ClickableKt$Clickable$2.invoke (Clickable.kt:68)", 55, 231, 291, 390
-"                                                                                                                                                                         ", null, 55, 231, 291, 390
-"                                                                                                                                                                          ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                           ", "androidx.ui.core.LayoutKt.PassThroughLayout (Layout.kt:624)", 55, 231, 291, 390
-"                                                                                                                                                                            ", "androidx.ui.core.LayoutKt.PassThroughLayout (Layout.kt:650)", 55, 231, 291, 390
-"                                                                                                                                                                             ", null, 55, 231, 291, 390
-"                                                                                                                                                                              ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                               ", "androidx.ui.material.ButtonKt$Button$1$1$1.invoke (Button.kt:264)", 55, 231, 291, 390
-"                                                                                                                                                                                ", null, 55, 231, 291, 390
-"                                                                                                                                                                                 ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                                  ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                  ", "androidx.ui.foundation.BoxKt.Box (Box.kt:144)", 55, 231, 291, 390
-"                                                                                                                                                                                   ", null, 55, 231, 291, 390
-"                                                                                                                                                                                    ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                                     ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:525)", 55, 231, 291, 390
-"                                                                                                                                                                                      ", null, 55, 231, 291, 390
-"                                                                                                                                                                                       ", "androidx.compose.Composer.start (Composer.kt:998)", 55, 231, 291, 390
-"                                                                                                                                                                                        ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 55, 231, 291, 390
-"                                                                                                                                                                                         ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 99, 149, 313, 365
-"                                                                                                                                                                                          ", null, 99, 149, 313, 365
-"                                                                                                                                                                                           ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 99, 149, 313, 365
-"                                                                                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                            ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                            ", "androidx.ui.material.ButtonKt$Button$1$1$1$1.invoke (Button.kt:264)", 99, 149, 313, 365
-"                                                                                                                                                                                             ", null, 99, 149, 313, 365
-"                                                                                                                                                                                              ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                               ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                               ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:156)", 99, 149, 313, 365
-"                                                                                                                                                                                                ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                 ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                  ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                   ", null, 0, 0, 0, 0
-"                                                                                                                                                                                                    ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                     ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                      ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                   ", null, 0, 0, 0, 0
-"                                                                                                                                                                                                   ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                    ", "androidx.compose.AmbientKt.Providers (Ambient.kt:173)", 99, 149, 313, 365
-"                                                                                                                                                                                                     ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                      ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 99, 149, 313, 365
-"                                                                                                                                                                                                       ", "com.example.mycompose.MainActivity$onCreate$1$1$1$1$6.invoke (MainActivity.kt:55)", 99, 149, 313, 365
-"                                                                                                                                                                                                        ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                         ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                         ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                         ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                          ", "androidx.ui.foundation.TextKt.Text (Text.kt:135)", 99, 149, 313, 365
-"                                                                                                                                                                                                           ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                            ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                             ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                              ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                             ", "androidx.ui.foundation.TextKt.Text (Text.kt:145)", 99, 149, 313, 365
-"                                                                                                                                                                                                              ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                               ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                                ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                                ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:94)", 99, 149, 313, 365
-"                                                                                                                                                                                                                 ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:99)", 99, 149, 313, 365
-"                                                                                                                                                                                                                  ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                                   ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 99, 149, 313, 365
-"                                                                                                                                                                                                                    ", "androidx.ui.foundation.TextKt$Text$7.invoke (Text.kt:135)", 99, 149, 313, 365
-"                                                                                                                                                                                                                     ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                                      ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                                       ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
-"                                                                                                                                                                                                                       ", "androidx.ui.core.CoreTextKt.CoreText (CoreText.kt:302)", 99, 149, 313, 365
-"                                                                                                                                                                                                                        ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                                         ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                                          ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:505)", 99, 149, 313, 365
-"                                                                                                                                                                                                                           ", null, 99, 149, 313, 365
-"                                                                                                                                                                                                                            ", "androidx.compose.Composer.start (Composer.kt:998)", 99, 149, 313, 365
-"                                                                                                                                                                                                                             ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:559)", 99, 149, 313, 365
-"                                                                                                                                                                                                                              ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:571)", 0, 0, 0, 0
-"                                                                                                                                                                                                                               ", null, 0, 0, 0, 0
-"                                                                                                                                                                                                                                ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                                                                                                                       ", "androidx.ui.core.CoreTextKt.CoreText (CoreText.kt:312)", 0, 0, 0, 0
-"                                                                                                                                                                                                                        ", null, 0, 0, 0, 0
-"                                                                                                                                                                                                                         ", "androidx.compose.Composer.start (Composer.kt:998)", 0, 0, 0, 0
-"                                                                                                                                                                                                                          ", "androidx.compose.Composer.startExpr (Composer.kt:620)", 0, 0, 0, 0
+"", null, 0, 531, 66, 445
+" ", null, 0, 531, 66, 445
+"  ", null, 0, 531, 66, 445
+"   ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"   ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 531, 66, 445
+"    ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"     ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"    ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"    ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:81)", 0, 0, 0, 0
+"    ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"     ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"      ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"       ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"        ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"         ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"          ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"        ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"        ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"      ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"      ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"      ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"       ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:81)", 0, 531, 66, 445
+"        ", "androidx.ui.core.AndroidAmbientsKt$ProvideAndroidAmbients$2.invoke (AndroidAmbients.kt:82)", 0, 531, 66, 445
+"         ", "androidx.ui.core.AndroidAmbientsKt$ProvideAndroidAmbients$2.invoke (AndroidAmbients.kt:82)", 0, 0, 0, 0
+"         ", "androidx.ui.core.AmbientsKt.ProvideCommonAmbients (Ambients.kt:114)", 0, 531, 66, 445
+"          ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"           ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"            ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"             ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"             ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"              ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"               ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"             ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"             ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"           ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"           ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"           ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"            ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 531, 66, 445
+"             ", "androidx.ui.core.WrappedComposition$setContent$1$2.invoke (null:14)", 0, 531, 66, 445
+"              ", "androidx.ui.core.WrappedComposition$setContent$1$2.invoke (Wrapper.kt:308)", 0, 531, 66, 445
+"               ", "androidx.ui.core.WrappedComposition$setContent$1$2.invoke (Wrapper.kt:308)", 0, 0, 0, 0
+"                ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"               ", "androidx.ui.core.WrappedComposition$setContent$1$2.invoke (Wrapper.kt:308)", 0, 0, 0, 0
+"               ", "androidx.ui.core.selection.SelectionContainerKt.SelectionContainer (SelectionContainer.kt:56)", 0, 531, 66, 445
+"                ", "androidx.ui.core.selection.SelectionContainerKt.SelectionContainer (SelectionContainer.kt:56)", 0, 0, 0, 0
+"                ", "androidx.ui.core.selection.SelectionContainerKt.SelectionContainer (SelectionContainer.kt:56)", 0, 0, 0, 0
+"                ", "androidx.ui.core.selection.SelectionContainerKt.SelectionContainer (SelectionContainer.kt:97)", 0, 0, 0, 0
+"                ", "androidx.ui.core.selection.SelectionContainerKt.SelectionContainer (SelectionContainer.kt:97)", 0, 531, 66, 445
+"                 ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"                  ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                   ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                    ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                     ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                      ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"                  ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                  ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 531, 66, 445
+"                   ", "androidx.ui.core.selection.SelectionContainerKt.SelectionContainer (SelectionContainer.kt:97)", 0, 531, 66, 445
+"                    ", "androidx.ui.core.selection.SelectionContainerKt$SelectionContainer$3.invoke (SelectionContainer.kt:100)", 0, 0, 0, 0
+"                    ", "androidx.ui.core.selection.SelectionContainerKt.access$Wrap (null:0)", 0, 531, 66, 445
+"                     ", "androidx.ui.core.selection.SelectionContainerKt.Wrap (SelectionContainer.kt:157)", 0, 531, 66, 445
+"                      ", "androidx.ui.core.selection.SelectionContainerKt.Wrap (SelectionContainer.kt:157)", 0, 0, 0, 0
+"                      ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 0, 531, 66, 445
+"                       ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                        ", "androidx.ui.core.gesture.TapGestureFilterKt$tapGestureFilter$1.invoke (null:16)", 0, 0, 0, 0
+"                        ", "androidx.ui.core.gesture.LongPressDragGestureFilterKt$longPressDragGestureFilter$1.invoke (null:16)", 0, 0, 0, 0
+"                        ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.gesture.RawDragGestureFilterKt$rawDragGestureFilter$1.invoke (null:16)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.gesture.LongPressGestureFilterKt$longPressGestureFilter$1.invoke (null:16)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.gesture.LongPressGestureFilterKt$longPressGestureFilter$1.invoke (null:16)", 0, 0, 0, 0
+"                       ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 0, 531, 66, 445
+"                        ", "androidx.ui.core.selection.SelectionContainerKt$SelectionContainer$3.invoke (SelectionContainer.kt:100)", 55, 476, 121, 390
+"                         ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 55, 476, 121, 390
+"                          ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                          ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 55, 476, 121, 390
+"                           ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                            ", "com.example.mycompose.ui.ThemeKt.MyComposeTheme (Theme.kt:31)", 0, 0, 0, 0
+"                             ", "com.example.mycompose.ui.ThemeKt.MyComposeTheme (Theme.kt:31)", 0, 0, 0, 0
+"                              ", "androidx.ui.foundation.DarkThemeKt.isSystemInDarkTheme (DarkTheme.kt:60)", 0, 0, 0, 0
+"                           ", "androidx.ui.foundation.DarkThemeKt.isSystemInDarkTheme (DarkTheme.kt:60)", 0, 0, 0, 0
+"                           ", "com.example.mycompose.ui.ThemeKt.MyComposeTheme (Theme.kt:38)", 55, 476, 121, 390
+"                            ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                            ", "androidx.ui.material.MaterialThemeKt.MaterialTheme (MaterialTheme.kt:59)", 0, 0, 0, 0
+"                            ", "androidx.ui.material.MaterialThemeKt.MaterialTheme (MaterialTheme.kt:59)", 55, 476, 121, 390
+"                             ", "androidx.ui.material.MaterialThemeKt.MaterialTheme (MaterialTheme.kt:59)", 0, 0, 0, 0
+"                              ", "androidx.ui.material.MaterialThemeKt.MaterialTheme (MaterialTheme.kt:59)", 0, 0, 0, 0
+"                             ", "androidx.ui.material.ColorKt.ProvideColorPalette (Color.kt:307)", 55, 476, 121, 390
+"                              ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 55, 476, 121, 390
+"                               ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                               ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                               ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                               ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 55, 476, 121, 390
+"                                ", "androidx.ui.material.MaterialThemeKt.MaterialTheme (MaterialTheme.kt:59)", 55, 476, 121, 390
+"                                 ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1.invoke (null:14)", 0, 0, 0, 0
+"                                 ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1.invoke (MaterialTheme.kt:65)", 0, 0, 0, 0
+"                                 ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1.invoke (MaterialTheme.kt:61)", 55, 476, 121, 390
+"                                  ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 55, 476, 121, 390
+"                                   ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                    ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                     ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                     ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                   ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                   ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                   ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 55, 476, 121, 390
+"                                    ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1.invoke (MaterialTheme.kt:65)", 55, 476, 121, 390
+"                                     ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$1.invoke (MaterialTheme.kt:66)", 55, 476, 121, 390
+"                                      ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:237)", 0, 0, 0, 0
+"                                      ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:237)", 0, 0, 0, 0
+"                                      ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:238)", 55, 476, 121, 390
+"                                       ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 55, 476, 121, 390
+"                                        ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                         ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                          ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                           ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                            ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"                                        ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                        ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 55, 476, 121, 390
+"                                         ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 55, 476, 121, 390
+"                                          ", "com.example.mycompose.MainActivity$onCreate$1$1.invoke (MainActivity.kt:26)", 0, 0, 0, 0
+"                                          ", "com.example.mycompose.MainActivity$onCreate$1$1.invoke (MainActivity.kt:26)", 55, 476, 121, 390
+"                                           ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                           ", "androidx.ui.layout.ColumnKt.Column (Column.kt:70)", 55, 476, 121, 390
+"                                            ", "androidx.ui.layout.RowColumnImplKt.RowColumnImpl (RowColumnImpl.kt:67)", 55, 476, 121, 390
+"                                             ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:122)", 55, 476, 121, 390
+"                                              ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 476, 121, 390
+"                                               ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 55, 476, 121, 390
+"                                                ", "com.example.mycompose.MainActivity$onCreate$1$1.invoke (MainActivity.kt:26)", 55, 476, 121, 390
+"                                                 ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (MainActivity.kt:27)", 55, 244, 121, 232
+"                                                  ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                  ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 55, 244, 121, 232
+"                                                   ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 55, 244, 121, 232
+"                                                    ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 55, 244, 121, 232
+"                                                     ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 0, 0, 0, 0
+"                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                      ", "androidx.ui.core.semantics.SemanticsModifierKt$semantics$1.invoke (null:16)", 0, 0, 0, 0
+"                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 244, 121, 232
+"                                                      ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 55, 244, 121, 232
+"                                                       ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 55, 244, 121, 232
+"                                                        ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 0, 0, 0, 0
+"                                                        ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 0, 0, 0, 0
+"                                                        ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:125)", 55, 244, 121, 232
+"                                                         ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:122)", 55, 244, 121, 232
+"                                                          ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 244, 121, 232
+"                                                           ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 0, 0, 0, 0
+"                                                            ", "androidx.ui.text.CoreTextKt$CoreText$2.invoke (CoreText.kt:126)", 0, 0, 0, 0
+"                                                        ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                         ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                 ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (MainActivity.kt:35)", 55, 476, 232, 291
+"                                                  ", "com.example.mycompose.MainActivityKt.Greeting (MainActivity.kt:45)", 55, 476, 232, 291
+"                                                   ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:108)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:237)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 55, 476, 232, 291
+"                                                    ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 0, 0, 0, 0
+"                                                     ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:199)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:199)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 55, 476, 232, 291
+"                                                     ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 55, 476, 232, 291
+"                                                      ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 0, 0, 0, 0
+"                                                      ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                       ", "androidx.ui.core.semantics.SemanticsModifierKt$semantics$1.invoke (null:16)", 0, 0, 0, 0
+"                                                      ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 476, 232, 291
+"                                                       ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 55, 476, 232, 291
+"                                                        ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 55, 476, 232, 291
+"                                                         ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 0, 0, 0, 0
+"                                                         ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 0, 0, 0, 0
+"                                                         ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:125)", 55, 476, 232, 291
+"                                                          ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:122)", 55, 476, 232, 291
+"                                                           ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 476, 232, 291
+"                                                            ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 0, 0, 0, 0
+"                                                             ", "androidx.ui.text.CoreTextKt$CoreText$2.invoke (CoreText.kt:126)", 0, 0, 0, 0
+"                                                         ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                          ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                 ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (null:16)", 0, 0, 0, 0
+"                                                 ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (MainActivity.kt:36)", 0, 0, 0, 0
+"                                                 ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (MainActivity.kt:36)", 55, 231, 291, 390
+"                                                  ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:77)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:77)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:80)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.material.Button.getDefaultDisabledBackgroundColor (Button.kt:263)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:81)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.material.ColorKt.contentColorFor-ocQagJk (Color.kt:211)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                   ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:82)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.material.Button.getDefaultDisabledContentColor (Button.kt:275)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:82)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.material.Button.getDefaultDisabledContentColor (Button.kt:276)", 0, 0, 0, 0
+"                                                     ", "androidx.ui.material.DefaultEmphasisLevels.getDisabled (Emphasis.kt:155)", 0, 0, 0, 0
+"                                                  ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                  ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:88)", 0, 0, 0, 0
+"                                                  ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:88)", 55, 231, 291, 390
+"                                                   ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 55, 231, 291, 390
+"                                                    ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                     ", "androidx.ui.core.semantics.SemanticsModifierKt$semantics$1.invoke (null:16)", 0, 0, 0, 0
+"                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 231, 291, 390
+"                                                     ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:88)", 55, 231, 291, 390
+"                                                      ", "androidx.ui.material.ButtonKt$Button$1.invoke (Button.kt:89)", 55, 231, 291, 390
+"                                                       ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                       ", "androidx.ui.material.SurfaceKt.Surface-maZXub8 (Surface.kt:96)", 0, 0, 0, 0
+"                                                        ", "androidx.ui.material.SurfaceKt.getBackgroundColorForElevation-buM4Snc (Surface.kt:145)", 0, 0, 0, 0
+"                                                       ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                       ", "androidx.ui.material.SurfaceKt.Surface-maZXub8 (Surface.kt:100)", 0, 0, 0, 0
+"                                                       ", "androidx.ui.material.SurfaceKt.Surface-maZXub8 (Surface.kt:91)", 55, 231, 291, 390
+"                                                        ", "androidx.ui.material.SurfaceKt.Surface-maZXub8 (Surface.kt:91)", 0, 0, 0, 0
+"                                                        ", "androidx.ui.material.SurfaceKt.SurfaceLayout (Surface.kt:123)", 55, 231, 291, 390
+"                                                         ", "androidx.ui.core.selection.SelectionContainerKt.Wrap (SelectionContainer.kt:157)", 0, 0, 0, 0
+"                                                         ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 231, 291, 390
+"                                                          ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                          ", "androidx.ui.core.DrawShadowKt$drawShadow$1.invoke (null:16)", 0, 0, 0, 0
+"                                                          ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 55, 231, 291, 390
+"                                                           ", "androidx.ui.material.SurfaceKt.Surface-maZXub8 (Surface.kt:100)", 99, 187, 313, 368
+"                                                            ", "androidx.ui.material.SurfaceKt$Surface$1.invoke (Surface.kt:101)", 99, 187, 313, 368
+"                                                             ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 99, 187, 313, 368
+"                                                              ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                                               ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                                                ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                                                 ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"                                                              ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                                              ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 99, 187, 313, 368
+"                                                               ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 99, 187, 313, 368
+"                                                                ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:99)", 0, 0, 0, 0
+"                                                                 ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:99)", 0, 0, 0, 0
+"                                                                 ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:99)", 0, 0, 0, 0
+"                                                                 ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$indicationFactory$1$1.invoke (MaterialTheme.kt:60)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$indicationFactory$1$1.invoke (MaterialTheme.kt:60)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$indicationFactory$1$1.invoke (MaterialTheme.kt:60)", 0, 0, 0, 0
+"                                                                   ", "androidx.ui.material.ripple.RippleThemeKt$DefaultRippleTheme$1.invoke (RippleTheme.kt:54)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:199)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.ripple.RippleThemeKt$DefaultRippleTheme$2.invoke (RippleTheme.kt:56)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.ButtonKt.Button-AidQf7c (Button.kt:79)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$indicationFactory$1$1.invoke (MaterialTheme.kt:60)", 0, 0, 0, 0
+"                                                                   ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$indicationFactory$1$1.invoke (MaterialTheme.kt:60)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.ripple.RippleIndicationKt.RippleIndication-GfhHgv8 (RippleIndication.kt:74)", 0, 0, 0, 0
+"                                                                   ", "androidx.ui.material.ripple.RippleIndicationKt.RippleIndication-GfhHgv8 (RippleIndication.kt:74)", 0, 0, 0, 0
+"                                                                   ", "androidx.ui.animation.DisposableAnimationClockKt.asDisposableClock (DisposableAnimationClock.kt:40)", 0, 0, 0, 0
+"                                                                    ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.material.MaterialThemeKt$MaterialTheme$1$indicationFactory$1$1.invoke (MaterialTheme.kt:60)", 0, 0, 0, 0
+"                                                                ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:105)", 0, 0, 0, 0
+"                                                                ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:97)", 99, 187, 313, 368
+"                                                                 ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                                 ", "androidx.ui.foundation.BoxKt.Box-2znKbH8 (Box.kt:110)", 0, 0, 0, 0
+"                                                                 ", "androidx.ui.foundation.BoxKt.Box-2znKbH8 (Box.kt:106)", 99, 187, 313, 368
+"                                                                  ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                                  ", "androidx.ui.layout.ColumnKt.Column (Column.kt:70)", 99, 187, 313, 368
+"                                                                   ", "androidx.ui.layout.RowColumnImplKt.RowColumnImpl (RowColumnImpl.kt:67)", 99, 187, 313, 368
+"                                                                    ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:122)", 99, 187, 313, 368
+"                                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                                      ", "androidx.ui.foundation.ClickableKt$clickable$2.invoke (null:16)", 0, 0, 0, 0
+"                                                                       ", "androidx.ui.foundation.ClickableKt.access$noConsumptionIndicatorGestureFilter (null:0)", 0, 0, 0, 0
+"                                                                        ", "androidx.ui.foundation.ClickableKt.access$noConsumptionIndicatorGestureFilter (null:0)", 0, 0, 0, 0
+"                                                                      ", "androidx.ui.foundation.ClickableKt$clickable$2.invoke (Clickable.kt:163)", 0, 0, 0, 0
+"                                                                       ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                                      ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                                       ", "androidx.ui.core.semantics.SemanticsModifierKt$semantics$1.invoke (null:16)", 0, 0, 0, 0
+"                                                                       ", "androidx.ui.foundation.IndicationKt$indication$1.invoke (null:16)", 0, 0, 0, 0
+"                                                                       ", "androidx.ui.core.gesture.TapGestureFilterKt$tapGestureFilter$1.invoke (null:16)", 0, 0, 0, 0
+"                                                                     ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 99, 187, 313, 368
+"                                                                      ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 115, 171, 315, 367
+"                                                                       ", "androidx.ui.foundation.BoxKt.Box-2znKbH8 (Box.kt:110)", 115, 171, 315, 367
+"                                                                        ", "androidx.ui.material.ButtonKt$Button$1$1.invoke (Button.kt:105)", 115, 171, 315, 367
+"                                                                         ", "androidx.ui.material.ButtonKt$Button$1$1$1.invoke (Button.kt:107)", 0, 0, 0, 0
+"                                                                         ", "androidx.ui.material.ButtonKt$Button$1$1$1.invoke (Button.kt:107)", 0, 0, 0, 0
+"                                                                         ", "androidx.ui.material.ButtonKt$Button$1$1$1.invoke (Button.kt:106)", 115, 171, 315, 367
+"                                                                          ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:237)", 0, 0, 0, 0
+"                                                                          ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:237)", 0, 0, 0, 0
+"                                                                          ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:238)", 115, 171, 315, 367
+"                                                                           ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 115, 171, 315, 367
+"                                                                            ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                                                             ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                                                              ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                                                               ", "androidx.compose.ComposerKt.ambientMapOf (Composer.kt:314)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.core.WrappedComposition$setContent$1.invoke (Wrapper.kt:237)", 0, 0, 0, 0
+"                                                                            ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 0, 0, 0, 0
+"                                                                            ", "androidx.ui.core.AndroidAmbientsKt.ProvideAndroidAmbients (AndroidAmbients.kt:75)", 115, 171, 315, 367
+"                                                                             ", "com.example.mycompose.MainActivity$onCreate$1$1$1.invoke (MainActivity.kt:36)", 115, 171, 315, 367
+"                                                                              ", "com.example.mycompose.MainActivity$onCreate$1$1$1$2.invoke (MainActivity.kt:36)", 115, 171, 315, 367
+"                                                                               ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:108)", 0, 0, 0, 0
+"                                                                               ", "androidx.ui.foundation.TextKt.ProvideTextStyle (Text.kt:237)", 0, 0, 0, 0
+"                                                                               ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 115, 171, 315, 367
+"                                                                                ", "com.example.mycompose.MainActivity$onCreate$1.invoke (MainActivity.kt:25)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 0, 0, 0, 0
+"                                                                                 ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:199)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:199)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.foundation.TextKt.Text-g1O9ZpA (Text.kt:110)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 0, 0, 0, 0
+"                                                                                ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 115, 171, 315, 367
+"                                                                                 ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 115, 171, 315, 367
+"                                                                                  ", "androidx.ui.semantics.SemanticsKt.Semantics (Semantics.kt:42)", 0, 0, 0, 0
+"                                                                                  ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:166)", 0, 0, 0, 0
+"                                                                                   ", "androidx.ui.core.semantics.SemanticsModifierKt$semantics$1.invoke (null:16)", 0, 0, 0, 0
+"                                                                                  ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 115, 171, 315, 367
+"                                                                                   ", "androidx.ui.foundation.TextKt.Text-EGR-OWs (Text.kt:213)", 115, 171, 315, 367
+"                                                                                    ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 115, 171, 315, 367
+"                                                                                     ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 0, 0, 0, 0
+"                                                                                     ", "androidx.ui.foundation.TextKt$Text$5.invoke (Text.kt:214)", 0, 0, 0, 0
+"                                                                                     ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:125)", 115, 171, 315, 367
+"                                                                                      ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:122)", 115, 171, 315, 367
+"                                                                                       ", "androidx.ui.core.LayoutKt.Layout (Layout.kt:157)", 115, 171, 315, 367
+"                                                                                        ", "androidx.compose.internal.RestartableFunction.invoke (null:14)", 0, 0, 0, 0
+"                                                                                         ", "androidx.ui.text.CoreTextKt$CoreText$2.invoke (CoreText.kt:126)", 0, 0, 0, 0
+"                                                                                     ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                                                                                      ", "androidx.ui.text.CoreTextKt.CoreText (CoreText.kt:240)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt$SelectionContainer$3$1.invoke (SelectionContainer.kt:102)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt.access$Handle (null:0)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt.access$Handle (null:0)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt$SelectionContainer$3$1.invoke (SelectionContainer.kt:105)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt.access$Handle (null:0)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt.access$Handle (null:0)", 0, 0, 0, 0
+"                         ", "androidx.ui.core.selection.SelectionContainerKt.access$SelectionFloatingToolBar (null:0)", 0, 0, 0, 0
