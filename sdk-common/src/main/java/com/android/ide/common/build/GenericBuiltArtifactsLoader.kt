@@ -47,14 +47,14 @@ object GenericBuiltArtifactsLoader {
         )
 
         val gson = gsonBuilder.create()
-        val reader = FileReader(metadataFile)
-        val buildOutputs  =
+        val buildOutputs = FileReader(metadataFile).use {
             try {
-                gson.fromJson<GenericBuiltArtifacts>(reader, GenericBuiltArtifacts::class.java)
+                gson.fromJson<GenericBuiltArtifacts>(it, GenericBuiltArtifacts::class.java)
             } catch (e: Exception) {
                 logger.error(e, "Cannot parse build output metadata file, please run a clean build")
                 return null
             }
+        }
         // resolve the file path to the current project location.
         return GenericBuiltArtifacts(
             artifactType = buildOutputs.artifactType,
