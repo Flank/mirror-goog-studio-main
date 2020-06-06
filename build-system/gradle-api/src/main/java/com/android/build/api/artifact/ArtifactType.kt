@@ -22,11 +22,11 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 
 /**
- * Public [Artifact] for Android Gradle Plugin.
+ * Public [Artifact] for Android Gradle plugin.
  *
  * These are [Artifact.SingleArtifact], see [MultipleArtifactType] for multiple ones.
  *
- * All methods in [Artifacts] should be supported with any subclass of this
+ * All methods in the [Artifacts] class should be supported with any subclass of this
  * class.
  */
 @Incubating

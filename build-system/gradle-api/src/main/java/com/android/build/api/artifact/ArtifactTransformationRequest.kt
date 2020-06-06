@@ -29,8 +29,8 @@ import java.io.Serializable
 import java.util.function.Supplier
 
 /**
- * When a [Directory] contains more than one artifact (consider [ArtifactType.APK] with multiple
- * APKs for each density for example), this object will abstract having to deal with
+ * When a [Directory] contains more than one artifact (for example, consider [ArtifactType.APK] with multiple
+ * APKs for different screen densities), this object will abstract away having to deal with
  * [BuiltArtifacts] and manually load and write the metadata files.
  *
  * Instead, users can focus on writing transformation code that transform one file at at time into
@@ -39,17 +39,19 @@ import java.util.function.Supplier
  *
  * Here is an example of a [Task] copying (unchanged) the APK files from one location to another.
  *
- * <pre>
+ *
+ * ```kotlin
  * // parameter interface to pass to work items.
  * interface WorkItemParameters: WorkParameters, Serializable {
  *    val inputApkFile: RegularFileProperty
  *    val outputApkFile: RegularFileProperty
  * }
- * </pre>
+ * ```
  *
  *
- * <pre>
- * // work item that copy one file at a time.
+ *
+ * ```kotlin
+ * // work item that copies one file at a time.
  * abstract class WorkItem @Inject constructor(
  *      private val workItemParameters: WorkItemParameters
  * ): WorkAction<WorkItemParameters> {
@@ -59,11 +61,13 @@ import java.util.function.Supplier
  *      workItemParameters.outputApkFile.get().asFile)
  *    }
  * }
- * </pre>
+ * ```
  *
- * And the task that wires things together :
  *
- * <pre>
+ * And the task that wires things together:
+ *
+ *
+ * ```kotlin
  * abstract class CopyApksTask @Inject constructor(private val workers: WorkerExecutor): DefaultTask() {
  *
  * @get:InputFiles
@@ -92,20 +96,21 @@ import java.util.function.Supplier
  *     }
  *   }
  * }
- * </pre>]
+ * ```
+ *
  */
 @Incubating
 interface ArtifactTransformationRequest<TaskT: Task> {
 
     /**
-     * Submit a `org.gradle.workers` style of [WorkAction] to process each input [BuiltArtifact]
+     * Submit a `org.gradle.workers` style of [WorkAction] to process each input [BuiltArtifact].
      *
-     * @param task : the Task initiating the [WorkQueue] requests.
-     * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.
-     * @param actionType the type of the [WorkAction] subclass that process that input [BuiltArtifact]
-     * @param parameterType the type of parameters expected by the [WorkAction]
-     * @param parameterConfigurator the lambda to configure instances of [parameterType] for each
-     * [BuiltArtifact]
+     * @param task The Task initiating the [WorkQueue] requests.
+     * @param workQueue The Gradle [WorkQueue] instance to use to spawn worker items with.
+     * @param actionType The type of the [WorkAction] subclass that process that input [BuiltArtifact].
+     * @param parameterType The type of parameters expected by the [WorkAction].
+     * @param parameterConfigurator The lambda to configure instances of [parameterType] for each
+     * [BuiltArtifact].
      */
     fun <ParamT> submit(
         task: TaskT,
@@ -120,7 +125,7 @@ interface ArtifactTransformationRequest<TaskT: Task> {
             where ParamT : WorkParameters, ParamT: Serializable
 
     /**
-     * Submit a lambda to process synchronously each input [BuiltArtifact]
+     * Submit a lambda to process each input [BuiltArtifact] object synchronously.
      */
     fun submit(task: TaskT, transformer: (input: BuiltArtifact) -> File)
 }

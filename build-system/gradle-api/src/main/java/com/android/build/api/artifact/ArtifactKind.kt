@@ -24,7 +24,7 @@ import java.io.Serializable
 import kotlin.reflect.KClass
 
 /**
- * Exhaustive list of artifact file representation supported by the Android Gradle Plugin.
+ * Exhaustive list of artifact file representations supported by the Android Gradle plugin.
  *
  * As of now, only [RegularFile] represented by [FILE] and [Directory] represented by [DIRECTORY]
  * are supported.
@@ -46,7 +46,7 @@ sealed class ArtifactKind<T: FileSystemLocation>(): Serializable {
     }
 
     /**
-     * @return the data type used by Gradle to represent the file abstraction for this
+     * @return The data type used by Gradle to represent the file abstraction for this
      * artifact kind.
      */
     abstract fun dataType(): KClass<T>
