@@ -27,15 +27,15 @@ import org.gradle.api.tasks.TaskProvider
  * Access to the artifacts on a Variant object.
  *
  * Artifacts are temporary or final files or directories that are produced by the Android Gradle
- * Plugin during the build. Depending on its configuration, each [com.android.build.api.variant.Variant]
+ * plugin during the build. Depending on its configuration, each [com.android.build.api.variant.Variant]
  * produces different versions of some of the output artifacts.
  *
- * Example of temporary artifacts are .class files obtained from compiling source files that will
+ * An example of temporary artifacts are .class files obtained from compiling source files that will
  * eventually get transformed further into dex files. Final artifacts are APKs and bundle files that
  * are not transformed further.
  *
  * Artifacts are uniquely defined by their [Artifact] type and public artifact types that can be
- * accessed from third party plugins or build script are defined in [ArtifactType]
+ * accessed from third-party plugins or build script are defined in [ArtifactType]
  *
  * @since 4.1
  */
@@ -46,7 +46,7 @@ interface Artifacts {
      * Provides an implementation of [BuiltArtifactsLoader] that can be used to load built artifacts
      * metadata.
      *
-     * @return a thread safe implementation pf [BuiltArtifactsLoader] that can be reused.
+     * @return A thread safe implementation of [BuiltArtifactsLoader] that can be reused.
      */
     fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
 
@@ -71,9 +71,9 @@ interface Artifacts {
     /**
      * Access [Task] based operations.
      *
-     * @param taskProvider the [TaskProvider] for the [TaskT] that will be producing and or
+     * @param taskProvider The [TaskProvider] for the [TaskT] that will be producing and/or
      * consuming artifact types.
-     * @return a [TaskBasedOperation] using the passed [TaskProvider] for all its operations
+     * @return A [TaskBasedOperation] object using the passed [TaskProvider] for all its operations.
      */
     fun <TaskT: Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperation<TaskT>
 
