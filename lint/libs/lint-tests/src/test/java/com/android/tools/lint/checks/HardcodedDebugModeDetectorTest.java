@@ -67,4 +67,25 @@ public class HardcodedDebugModeDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals("No warnings.", lintProject(manifest().minSdk(14)));
     }
+
+    public void testNoNS() throws Exception {
+        //noinspection all // Sample code
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"foo.bar2\"\n"
+                                        + "    android:versionCode=\"1\"\n"
+                                        + "    android:versionName=\"1.0\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        debuggable=\"true\" >\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n")));
+    }
 }
