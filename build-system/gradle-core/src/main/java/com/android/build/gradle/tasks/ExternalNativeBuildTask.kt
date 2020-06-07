@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
+import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -76,6 +77,8 @@ import kotlin.streams.toList
 abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Build task is always run as incrementality is left to the external build system.") {
 
     private lateinit var generator: Provider<CxxMetadataGenerator>
+    private val variant get() = generator.get().variant
+    private val abis get() = generator.get().abis
 
     /**
      * Get native build config minis. Also gather stats if they haven't already been gathered for
@@ -107,9 +110,6 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
     @get:Inject
     abstract val execOperations: ExecOperations
 
-    private val stlSharedObjectFiles: Map<Abi, File>
-        get() = generator.get().getStlSharedObjectFiles()
-
     private val stats: GradleBuildVariant.Builder
         get() = generator.get().variant.statsBuilder
 
@@ -122,6 +122,37 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
 
     override fun doTaskAction() {
         IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use { buildImpl() }
+    }
+
+    private fun getStlSharedObjectFiles(): Map<Abi, File> {
+        if (variant.module.buildSystem != NativeBuildSystem.CMAKE) return mapOf()
+        // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
+        var stl: Stl? = null
+        for (argument in variant.buildSystemArgumentList.map { it.replace(" ", "") }) {
+            if (argument.startsWith("-DANDROID_STL=")) {
+                val stlName = argument.split("=".toRegex(), 2).toTypedArray()[1]
+                stl = Stl.fromArgumentName(stlName)
+                if (stl == null) {
+                    errorln("Unrecognized STL in arguments: %s", stlName)
+                }
+            }
+        }
+
+        // TODO: Query the default from the NDK.
+        // We currently assume the default to not require packaging for the default STL. This is
+        // currently safe because the default for ndk-build has always been system (which doesn't
+        // require packaging because it's a system library) and gnustl_static or c++_static for
+        // CMake (which also doesn't require packaging).
+        //
+        // https://github.com/android-ndk/ndk/issues/744 wants to change the default for both to
+        // c++_shared, but that can't happen until we stop assuming the default does not need to be
+        // packaged.
+        return if (stl == null) {
+            mapOf()
+        } else {
+            variant.module.stlSharedObjectMap.getValue(stl)
+                .filter { e -> abis.map { it.abi }.contains(e.key) }
+        }
     }
 
     @Throws(BuildCommandException::class, IOException::class)
@@ -256,6 +287,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
             }
         }
 
+        val stlSharedObjectFiles = getStlSharedObjectFiles()
         if (stlSharedObjectFiles.isNotEmpty()) {
             infoln("copy STL shared object files")
             for (abi in stlSharedObjectFiles.keys) {

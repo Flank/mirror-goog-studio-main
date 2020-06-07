@@ -20,14 +20,12 @@ import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
 import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.cmakeSettingsFile
 import com.android.build.gradle.internal.cxx.model.statsBuilder
-import com.android.build.gradle.internal.ndk.Stl
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
@@ -107,36 +105,5 @@ internal abstract class CmakeExternalNativeJsonGenerator(
         arguments.addAll(abi.getFinalCmakeCommandLineArguments())
         builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())
         return builder
-    }
-
-    override fun getStlSharedObjectFiles(): Map<Abi, File> {
-        // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
-        var stl: Stl? = null
-        for (argument in variant.buildSystemArgumentList.map { it.replace(" ", "") }) {
-            if (argument.startsWith("-DANDROID_STL=")) {
-                val stlName = argument.split("=".toRegex(), 2).toTypedArray()[1]
-                stl = Stl.fromArgumentName(stlName)
-                if (stl == null) {
-                    errorln("Unrecognized STL in arguments: %s", stlName)
-                }
-            }
-        }
-
-        // TODO: Query the default from the NDK.
-        // We currently assume the default to not require packaging for the default STL. This is
-        // currently safe because the default for ndk-build has always been system (which doesn't
-        // require packaging because it's a system library) and gnustl_static or c++_static for
-        // CMake (which also doesn't require packaging).
-        //
-        // https://github.com/android-ndk/ndk/issues/744 wants to change the default for both to
-        // c++_shared, but that can't happen until we stop assuming the default does not need to be
-        // packaged.
-        return if (stl == null) {
-            mapOf()
-        } else {
-            variant.module.stlSharedObjectMap.getValue(stl)
-                .filter { e -> abis.map { it.abi }.contains(e.key) }
-        }
-
     }
 }

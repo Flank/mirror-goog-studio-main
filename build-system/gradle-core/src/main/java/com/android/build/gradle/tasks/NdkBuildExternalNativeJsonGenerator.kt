@@ -17,7 +17,6 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
@@ -32,7 +31,6 @@ import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.collect.Lists
-import com.google.common.collect.Maps
 import com.google.gson.GsonBuilder
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
 import org.gradle.process.ExecOperations
@@ -145,12 +143,6 @@ internal class NdkBuildExternalNativeJsonGenerator(
             .logStderrToInfo()
             .executeAndReturnStdoutString(ops::exec)
     }
-
-
-    override fun getStlSharedObjectFiles(): Map<Abi, File> {
-        return Maps.newHashMap()
-    }// Attempt to shorten ndkFolder which may have segments of "path\.."
-    // File#getAbsolutePath doesn't do this.
 
     /** Get the path of the ndk-build script.  */
     private val ndkBuild: String

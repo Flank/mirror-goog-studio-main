@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
-import java.io.File
 import java.util.concurrent.Callable
 
 /**
@@ -63,8 +61,4 @@ interface CxxMetadataGenerator {
      */
     fun addCurrentMetadata(builder: NativeAndroidProjectBuilder)
     //endregion
-
-    // TODO(153964094) this doesn't belong here. It should go into CxxAbiModel.
-    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    fun getStlSharedObjectFiles(): Map<Abi, File>
 }
