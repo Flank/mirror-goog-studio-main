@@ -154,7 +154,7 @@ open class GradleDetector : Detector(), GradleScanner {
      */
     private var agpVersionCheckInfo: AgpVersionCheckInfo? = null
 
-    private val blacklisted = HashMap<Project, BlacklistedDeps>()
+    private val blockedDependencies = HashMap<Project, BlockedDependencies>()
 
     // ---- Implements GradleScanner ----
 
@@ -905,11 +905,11 @@ open class GradleDetector : Detector(), GradleScanner {
 
         checkForKtxExtension(context, groupId, artifactId, version, cookie)
 
-        val blacklistedDeps = blacklisted[context.project]
-        if (blacklistedDeps != null) {
-            val path = blacklistedDeps.checkDependency(groupId, artifactId, true)
+        val blockedDependencies = blockedDependencies[context.project]
+        if (blockedDependencies != null) {
+            val path = blockedDependencies.checkDependency(groupId, artifactId, true)
             if (path != null) {
-                val message = getBlacklistedDependencyMessage(context, path)
+                val message = getBlockedDependencyMessage(context, path)
                 if (message != null) {
                     val fix = fix().name("Delete dependency").replace().all().build()
                     report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
@@ -1584,7 +1584,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
     override fun beforeCheckRootProject(context: Context) {
         val project = context.project
-        blacklisted[project] = BlacklistedDeps(project)
+        blockedDependencies[project] = BlockedDependencies(project)
     }
 
     override fun afterCheckRootProject(context: Context) {
@@ -1598,8 +1598,8 @@ open class GradleDetector : Detector(), GradleScanner {
             checkConsistentWearableLibraries(context, null)
         }
 
-        // Check for blacklisted dependencies
-        checkBlacklistedDependencies(context, project)
+        // Check for disallowed dependencies
+        checkBlockedDependencies(context, project)
     }
 
     private fun maybeReportAgpVersionIssue(context: Context) {
@@ -1657,15 +1657,15 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     /**
-     * Report any blacklisted dependencies that weren't found in the build.gradle source file during
+     * Report any blocked dependencies that weren't found in the build.gradle source file during
      * processing (we don't have accurate position info at this point)
      */
-    private fun checkBlacklistedDependencies(context: Context, project: Project) {
-        val blacklistedDeps = blacklisted[project] ?: return
-        val dependencies = blacklistedDeps.getBlacklistedDependencies()
+    private fun checkBlockedDependencies(context: Context, project: Project) {
+        val blockedDependencies = blockedDependencies[project] ?: return
+        val dependencies = blockedDependencies.getForbiddenDependencies()
         if (dependencies.isNotEmpty()) {
             for (path in dependencies) {
-                val message = getBlacklistedDependencyMessage(context, path) ?: continue
+                val message = getBlockedDependencyMessage(context, path) ?: continue
                 val projectDir = context.project.dir
                 // No need to use requestedCoordinates since they'll differ only in
                 // version and here we only match by group and artifact id
@@ -1684,7 +1684,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 context.report(DUPLICATE_CLASSES, location, message)
             }
         }
-        blacklisted.remove(project)
+        this.blockedDependencies.remove(project)
     }
 
     private fun report(
@@ -1934,7 +1934,7 @@ open class GradleDetector : Detector(), GradleScanner {
         return Collections.min(coordinates) { o1, o2 -> o1.toString().compareTo(o2.toString()) }
     }
 
-    private fun getBlacklistedDependencyMessage(
+    private fun getBlockedDependencyMessage(
         context: Context,
         path: List<LintModelDependency>
     ): String? {

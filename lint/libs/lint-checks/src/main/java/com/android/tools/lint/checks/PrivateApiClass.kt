@@ -24,8 +24,8 @@ import java.util.HashMap
  * Represents a class and its hidden methods/fields, which are not part of the public SDK.
  *
  * <p>Each member has an attached reflective access {@link Restriction}, corresponding to the
- * platform's runtime behavior (e.g. a reflective call to a blacklisted method is forbidden on all
- * API versions, a call to a greylisted method will be allowed with a warning, etc.)
+ * platform's runtime behavior (e.g. a reflective call to a denied method is forbidden on all
+ * API versions, a call to a maybe allowed method will be allowed with a warning, etc.)
  */
 class PrivateApiClass(name: String) : ApiClassBase(name) {
 
@@ -83,21 +83,21 @@ class PrivateApiClass(name: String) : ApiClassBase(name) {
     }
 }
 
-enum class Restriction(val severity: String, val encoding: Int) {
-    UNKNOWN("<unknown>", 0),
-    WHITE("WHITE", 1),
-    BLACK("BLACK", 2),
-    GREY("GREY", 3),
-    GREY_MAX_O("GREY_MAX_O", 4),
-    GREY_MAX_P("GREY_MAX_P", 5),
+enum class Restriction(val encoding: Int) {
+    UNKNOWN(0),
+    ALLOW(1),
+    DENY(2),
+    MAYBE(3),
+    MAYBE_MAX_O(4),
+    MAYBE_MAX_P(5),
 }
 
 fun decode(encoding: Int): Restriction =
     when (encoding) {
-        1 -> Restriction.WHITE
-        2 -> Restriction.BLACK
-        3 -> Restriction.GREY
-        4 -> Restriction.GREY_MAX_O
-        5 -> Restriction.GREY_MAX_P
+        1 -> Restriction.ALLOW
+        2 -> Restriction.DENY
+        3 -> Restriction.MAYBE
+        4 -> Restriction.MAYBE_MAX_O
+        5 -> Restriction.MAYBE_MAX_P
         else -> Restriction.UNKNOWN
     }

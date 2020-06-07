@@ -21,10 +21,10 @@ import com.android.tools.lint.model.LintModelDependency
 import java.util.ArrayDeque
 
 /**
- * This class finds blacklisted dependencies in a project by looking
+ * This class finds forbidden dependencies in a project by looking
  * transitively
  */
-class BlacklistedDeps(val project: Project) {
+class BlockedDependencies(val project: Project) {
 
     private var map: MutableMap<String, List<LintModelDependency>>? = null
 
@@ -36,8 +36,8 @@ class BlacklistedDeps(val project: Project) {
     }
 
     /**
-     * Returns the path from this dependency to one of the blacklisted dependencies,
-     * or null if this dependency is not blacklisted. If [remove] is true, the
+     * Returns the path from this dependency to one of the forbidden dependencies,
+     * or null if this dependency is not forbidden. If [remove] is true, the
      * dependency is removed from the map after this.
      */
     fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LintModelDependency>? {
@@ -52,10 +52,10 @@ class BlacklistedDeps(val project: Project) {
 
     /**
      * Returns all the dependencies found in this project that lead to a
-     * blacklisted dependency. Each list is a list from the root dependency
-     * to the blacklisted dependency.
+     * forbidden dependency. Each list is a list from the root dependency
+     * to the forbidden dependency.
      */
-    fun getBlacklistedDependencies(): List<List<LintModelDependency>> {
+    fun getForbiddenDependencies(): List<List<LintModelDependency>> {
         val map = this.map ?: return emptyList()
         return map.values.toMutableList().sortedBy { it[0].artifactName }
     }
@@ -77,7 +77,7 @@ class BlacklistedDeps(val project: Project) {
     }
 
     private fun checkLibrary(stack: ArrayDeque<LintModelDependency>, library: LintModelDependency) {
-        if (isBlacklistedDependency(library.artifactName)) {
+        if (isForbiddenDependency(library.artifactName)) {
             if (map == null) {
                 map = HashMap()
             }
@@ -86,7 +86,7 @@ class BlacklistedDeps(val project: Project) {
         }
     }
 
-    private fun isBlacklistedDependency(mavenName: String): Boolean {
+    private fun isForbiddenDependency(mavenName: String): Boolean {
         when (mavenName) {
             // org.apache.http.*
             "org.apache.httpcomponents:httpclient",

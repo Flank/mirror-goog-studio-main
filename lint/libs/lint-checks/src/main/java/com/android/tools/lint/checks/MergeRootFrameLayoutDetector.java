@@ -73,7 +73,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
      * <FrameLayout>}'s that are the root of a layout included from another layout, or directly
      * referenced via a {@code setContentView} call.
      */
-    private Set<String> mWhitelistedLayouts;
+    private Set<String> mAllowedLayouts;
 
     /**
      * Set of pending [layout, location] pairs where the given layout is a FrameLayout that perhaps
@@ -106,13 +106,13 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
 
     @Override
     public void afterCheckRootProject(@NonNull Context context) {
-        if (mPending != null && mWhitelistedLayouts != null) {
+        if (mPending != null && mAllowedLayouts != null) {
             // Process all the root FrameLayouts that are eligible, and generate
             // suggestions for <merge> replacements for any layouts that are included
             // from other layouts
             for (Pair<String, Handle> pair : mPending) {
                 String layout = pair.getFirst();
-                if (mWhitelistedLayouts.contains(layout)) {
+                if (mAllowedLayouts.contains(layout)) {
                     Handle handle = pair.getSecond();
 
                     Object clientData = handle.getClientData();
@@ -146,7 +146,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
             String layout = element.getAttribute(ATTR_LAYOUT); // NOTE: Not in android: namespace
             if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
                 layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
-                whiteListLayout(layout);
+                allowLayout(layout);
             }
         } else {
             assert tag.equals(FRAME_LAYOUT);
@@ -173,11 +173,11 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
         }
     }
 
-    private void whiteListLayout(String layout) {
-        if (mWhitelistedLayouts == null) {
-            mWhitelistedLayouts = new HashSet<>();
+    private void allowLayout(String layout) {
+        if (mAllowedLayouts == null) {
+            mAllowedLayouts = new HashSet<>();
         }
-        mWhitelistedLayouts.add(layout);
+        mAllowedLayouts.add(layout);
     }
 
     // implements SourceCodeScanner
@@ -198,7 +198,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
                     UastLintUtils.toAndroidReferenceViaResolve(expressions.get(0));
 
             if (reference != null && reference.getType() == ResourceType.LAYOUT) {
-                whiteListLayout(reference.getName());
+                allowLayout(reference.getName());
             }
         }
     }

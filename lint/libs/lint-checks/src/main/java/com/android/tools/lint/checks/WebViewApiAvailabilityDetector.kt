@@ -42,8 +42,8 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
 
         // There are some methods that we never intend to bring to AndroidX (ex.
         // getRendererPriorityWaivedWhenNotVisible), and others weren't brought over yet (ex.
-        // setDataDirectorySuffix). This blacklist ensures we don't issue a warning for any of them.
-        private val BLACKLIST = setOf(
+        // setDataDirectorySuffix). This list ensures we don't issue a warning for any of them.
+        private val BLOCKED_METHODS = setOf(
             "getAccessibilityClassName",
             "onProvideVirtualStructure",
             "autofill",
@@ -97,7 +97,7 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
         override fun visitCallExpression(node: UCallExpression) {
             val method = node.resolve() ?: return
 
-            if (BLACKLIST.contains(method.name)) {
+            if (BLOCKED_METHODS.contains(method.name)) {
                 return
             }
 
@@ -114,7 +114,7 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             )
 
             // Note: we expect to bump the maximum sdk for future releases (but doing so requires
-            // updating the blacklist).
+            // updating the deny list).
             if (api == INVALID || api <= 21 || api > 28) {
                 return
             }
