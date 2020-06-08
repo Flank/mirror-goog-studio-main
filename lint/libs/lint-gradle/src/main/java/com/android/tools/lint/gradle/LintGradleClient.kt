@@ -40,11 +40,14 @@ import com.android.tools.lint.gradle.api.VariantInputs
 import com.android.tools.lint.model.LintModelSeverity
 import com.android.utils.XmlUtils
 import com.google.common.io.Files
+import org.gradle.StartParameter
 import org.gradle.api.GradleException
 import org.w3c.dom.Document
 import java.io.File
 import java.io.File.separator
 import java.io.IOException
+import java.net.URL
+import java.net.URLConnection
 import org.gradle.api.Project as GradleProject
 
 class LintGradleClient(
@@ -129,6 +132,31 @@ class LintGradleClient(
         } else {
             super.findResource(relativePath)
         }
+    }
+
+    private fun isOffline(): Boolean {
+        return gradleProject.gradle.startParameter.isOffline
+    }
+
+    override fun openConnection(url: URL): URLConnection? {
+        if (isOffline()) {
+            return null
+        }
+        return super.openConnection(url)
+    }
+
+    override fun openConnection(url: URL, timeout: Int): URLConnection? {
+        if (isOffline()) {
+            return null
+        }
+        return super.openConnection(url, timeout)
+    }
+
+    override fun closeConnection(connection: URLConnection) {
+        if (isOffline()) {
+            return
+        }
+        super.closeConnection(connection)
     }
 
     override fun findRuleJars(project: Project): Iterable<File> {
