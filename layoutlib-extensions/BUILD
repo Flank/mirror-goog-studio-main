@@ -4,9 +4,9 @@ load("//tools/base/bazel:utils.bzl", "fileset")
 
 # managed by go/iml_to_build
 iml_module(
-    name = "studio.android.sdktools.layoutlib-coroutines",
+    name = "studio.android.sdktools.layoutlib-extensions",
     srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.layoutlib-coroutines.iml"],
+    iml_files = ["android.sdktools.layoutlib-extensions.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     resources = ["src/main/resources"],
     visibility = ["//visibility:public"],
@@ -28,7 +28,7 @@ fileset(
 )
 
 kotlin_library(
-    name = "tools.layoutlib-coroutines",
+    name = "tools.layoutlib-extensions",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
