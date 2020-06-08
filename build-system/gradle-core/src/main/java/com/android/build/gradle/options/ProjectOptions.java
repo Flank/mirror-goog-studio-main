@@ -16,11 +16,16 @@
 
 package com.android.build.gradle.options;
 
+import static com.android.build.gradle.options.TestRunnerArguments.TEST_RUNNER_ARGS_PREFIX;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -37,9 +42,6 @@ import org.gradle.api.provider.ProviderFactory;
 @Immutable
 public final class ProjectOptions {
 
-    public static final String PROPERTY_TEST_RUNNER_ARGS =
-            "android.testInstrumentationRunnerArguments.";
-
     private final ImmutableMap<String, String> testRunnerArgs;
     private final ProviderFactory providerFactory;
     private final ImmutableMap<BooleanOption, OptionValue<BooleanOption, Boolean>>
@@ -51,12 +53,13 @@ public final class ProjectOptions {
     private final ImmutableMap<ReplacedOption, OptionValue<ReplacedOption, String>>
             replacedOptionValues;
     private final ImmutableMap<StringOption, OptionValue<StringOption, String>> stringOptionValues;
+    private static final ILogger logger = LoggerWrapper.getLogger(ProjectOptions.class);
 
     public ProjectOptions(
             @NonNull ImmutableMap<String, Object> properties,
             @NonNull ProviderFactory providerFactory) {
-        testRunnerArgs = readTestRunnerArgs(properties);
         this.providerFactory = providerFactory;
+        testRunnerArgs = readTestRunnerArgs(properties);
         booleanOptionValues = createOptionValues(BooleanOption.values());
         optionalBooleanOptionValues = createOptionValues(OptionalBooleanOption.values());
         integerOptionValues = createOptionValues(IntegerOption.values());
@@ -136,15 +139,43 @@ public final class ProjectOptions {
     }
 
     @NonNull
-    private static ImmutableMap<String, String> readTestRunnerArgs(
-            @NonNull Map<String, ?> properties) {
+    private ImmutableMap<String, String> readTestRunnerArgs(@NonNull Map<String, ?> properties) {
         ImmutableMap.Builder<String, String> testRunnerArgsBuilder = ImmutableMap.builder();
+        ImmutableSet.Builder<String> standardArgKeysBuilder = ImmutableSet.builder();
+
+        // Standard test runner arguments are fully compatible with configuration caching
+        for (TestRunnerArguments arg : TestRunnerArguments.values()) {
+            standardArgKeysBuilder.add(arg.getShortKey());
+            String argValue =
+                    providerFactory
+                            .gradleProperty(arg.getFullKey())
+                            .forUseAtConfigurationTime()
+                            .getOrNull();
+            if (argValue != null) {
+                testRunnerArgsBuilder.put(arg.getShortKey(), argValue);
+            }
+        }
+        ImmutableSet standardArgKeys = standardArgKeysBuilder.build();
+
         for (Map.Entry<String, ?> entry : properties.entrySet()) {
             String name = entry.getKey();
-            if (name.startsWith(PROPERTY_TEST_RUNNER_ARGS)) {
-                String argName = name.substring(PROPERTY_TEST_RUNNER_ARGS.length());
+            if (name.startsWith(TEST_RUNNER_ARGS_PREFIX)) {
+                String argName = name.substring(TEST_RUNNER_ARGS_PREFIX.length());
+                if (standardArgKeys.contains(argName)) {
+                    continue;
+                }
+                // As we would ignore new custom arguments added as gradle properties in
+                // the following configuration-cached runs, we need to encourage users to specify
+                // custom arguments through dsl.
+                logger.warning(
+                        "Passing custom test runner argument %s from gradle.properties"
+                                + " or command line is not compatible with configuration caching. "
+                                + "Please specify this argument using android gradle dsl.",
+                        name);
                 String argValue = entry.getValue().toString();
                 testRunnerArgsBuilder.put(argName, argValue);
+                // Make sure we invalidate configuration cache if existing custom arguments change
+                providerFactory.gradleProperty(name).forUseAtConfigurationTime().get();
             }
         }
         return testRunnerArgsBuilder.build();

@@ -197,13 +197,20 @@ public class ProjectOptionsTest {
     @Test
     public void argsSanity() {
         assertThat(
-                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(),
+                                                ImmutableMap.of()))
                                 .getExtraInstrumentationTestRunnerArgs())
                 .isEmpty();
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b");
         ProjectOptions options =
                 new ProjectOptions(
-                        ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b"),
-                        FakeProviderFactory.getFactory());
+                        gradleProperties,
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
         assertThat(options.getExtraInstrumentationTestRunnerArgs()).containsExactly("a", "b");
     }
 

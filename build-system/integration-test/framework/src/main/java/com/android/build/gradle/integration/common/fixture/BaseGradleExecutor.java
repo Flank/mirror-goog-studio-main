@@ -168,7 +168,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     /** Add an additional build argument. */
     public final T withArgument(String argument) {
-        if (argument.startsWith("-Pandroid")) {
+        if (argument.startsWith("-Pandroid")
+                && !argument.contains("testInstrumentationRunnerArguments")) {
             throw new IllegalArgumentException("Use with(Option, Value) instead.");
         }
         arguments.add(argument);
