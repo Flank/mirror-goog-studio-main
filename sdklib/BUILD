@@ -45,7 +45,11 @@ fileset(
     # TODO: Why are the xml files not under resources?
     srcs = glob(
         include = [
-            "src/main/java/**",
+            "src/main/java/**/*.xml",
+            "src/main/java/**/*.xsd",
+            "src/main/java/**/*.xjb",
+            "src/main/java/com/android/sdklib/repository/README.txt",
+            "src/main/java/com/android/sdklib/internal/build/BuildConfig.template",
         ],
         exclude = [
             "**/*.java",
