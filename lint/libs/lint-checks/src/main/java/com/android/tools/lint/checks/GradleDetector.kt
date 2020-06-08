@@ -990,8 +990,8 @@ open class GradleDetector : Detector(), GradleScanner {
 
         if (newerVersion != null && newerVersion > version) {
             val versionString = newerVersion.toString()
-            val message = getNewerVersionAvailableMessage(dependency, versionString, safeReplacement)
-            val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString, safeReplacement) else null
+            val message = getNewerVersionAvailableMessage(dependency, versionString, null)
+            val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
             report(context, cookie, issue, message, fix)
         }
     }
