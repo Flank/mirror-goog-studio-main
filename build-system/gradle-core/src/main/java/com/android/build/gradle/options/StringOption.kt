@@ -74,7 +74,10 @@ enum class StringOption(
     PREFAB_VERSION("android.prefabVersion", ApiStage.Experimental),
 
     // Jetifier: List of regular expressions for libraries that should not be jetified
-    JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Experimental),
+    @Deprecated(message = "Use JETIFIER_IGNORE_LIST instead", replaceWith = ReplaceWith("JETIFIER_IGNORE_LIST"))
+    JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
+    // Jetifier: List of regular expressions for libraries that should not be jetified
+    JETIFIER_IGNORE_LIST("android.jetifier.ignorelist", ApiStage.Experimental),
 
     @Suppress("unused")
     BUILD_CACHE_DIR(

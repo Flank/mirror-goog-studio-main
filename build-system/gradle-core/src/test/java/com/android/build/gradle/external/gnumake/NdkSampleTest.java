@@ -237,7 +237,7 @@ public class NdkSampleTest {
                 .setPrettyPrinting()
                 .create()
                 .toJson(actualConfig);
-        checkOutputsHaveWhitelistedExtensions(actualConfig);
+        checkOutputsHaveAllowedExtensions(actualConfig);
 
         String testPathString = androidMkPath.toString();
         // actualResults contains JSon as text. JSon escapes back slash with a second backslash.
@@ -363,7 +363,7 @@ public class NdkSampleTest {
         return Math.max(filename.lastIndexOf('\\'), filename.lastIndexOf('/'));
     }
 
-    private static void checkOutputsHaveWhitelistedExtensions(
+    private static void checkOutputsHaveAllowedExtensions(
             @NonNull NativeBuildConfigValues configs) {
         for (NativeBuildConfigValue config : configs.configs) {
             checkNotNull(config.libraries);

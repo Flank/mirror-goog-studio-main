@@ -16,16 +16,16 @@ public class Assertions {
     /**
      * Whether the stacktrace is consumed by the {@link Baseline}, which can happen either:
      *
-     * <p>1) The stacktrace is whitelisted therefore we should skip the assertion; or 2) We are in
+     * <p>1) The stacktrace is enabled therefore we should skip the assertion; or 2) We are in
      * generating baseline mode so we shouldn't throw assertions, but add the stacktrace to the
      * baseline instead.
      */
     private static boolean consumedByBaseline(StackTraceElement[] stackTrace) {
         if (Baseline.getInstance().isGeneratingBaseline()) {
-            Baseline.getInstance().whitelistStackTrace(stackTrace);
+            Baseline.getInstance().ignoreStackTrace(stackTrace);
             return true;
         }
-        return Baseline.getInstance().isWhitelisted(stackTrace);
+        return Baseline.getInstance().isIgnored(stackTrace);
     }
 
     public static void assertIsNotEdt() {

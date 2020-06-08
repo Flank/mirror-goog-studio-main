@@ -388,8 +388,8 @@ public class ResourceUsageModel {
         return findUnused(mResourceStore.getResources());
     }
 
-    public String dumpWhitelistedResources() {
-        return mResourceStore.dumpWhitelistedResources();
+    public String dumpKeepResources() {
+        return mResourceStore.dumpKeepResources();
     }
 
     public String dumpConfig() {

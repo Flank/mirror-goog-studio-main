@@ -48,7 +48,7 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
         val skipIfPossible: Property<Boolean>
 
         @get:Input
-        val blackListOption: Property<String>
+        val ignoreListOption: Property<String>
     }
 
     companion object {
@@ -71,7 +71,7 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
     abstract val inputArtifact: Provider<FileSystemLocation>
 
     /**
-     * Computes the Jetifier blacklist of type [Regex] from a string containing a comma-separated
+     * Computes the Jetifier ignore list of type [Regex] from a string containing a comma-separated
      * list of regular expressions. The string may be empty.
      *
      * If a library's absolute path contains a substring that matches one of the regular
@@ -80,16 +80,16 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
      * For example, if the regular expression is  "doNot.*\.jar", then "/path/to/doNotJetify.jar"
      * won't be jetified.
      */
-    private fun getJetifierBlackList(blackListOption: String): List<Regex> {
-        val blackList = mutableListOf<String>()
-        if (blackListOption.isNotEmpty()) {
-            blackList.addAll(Splitter.on(",").trimResults().splitToList(blackListOption))
+    private fun getJetifierIgnoreList(ignoreListOption: String): List<Regex> {
+        val ignoreList = mutableListOf<String>()
+        if (ignoreListOption.isNotEmpty()) {
+            ignoreList.addAll(Splitter.on(",").trimResults().splitToList(ignoreListOption))
         }
 
         // Jetifier should not jetify itself (http://issuetracker.google.com/119135578)
-        blackList.add("jetifier-.*\\.jar")
+        ignoreList.add("jetifier-.*\\.jar")
 
-        return blackList.map { Regex(it) }
+        return ignoreList.map { Regex(it) }
     }
 
     override fun transform(transformOutputs: TransformOutputs) {
@@ -103,8 +103,8 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
          * The aars or jars can be categorized into 4 types:
          *  - AndroidX libraries
          *  - Old support libraries
-         *  - Other libraries that are blacklisted
-         *  - Other libraries that are not blacklisted
+         *  - Other libraries that are ignored
+         *  - Other libraries that are not ignored
          * In the following, we handle these cases accordingly.
          */
         // Case 1: If this is an AndroidX library, no need to jetify it
@@ -122,10 +122,10 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
             return
         }
 
-        val jetifierBlackList: List<Regex> = getJetifierBlackList(parameters.blackListOption.get())
+        val jetifierIgnoreList: List<Regex> = getJetifierIgnoreList(parameters.ignoreListOption.get())
 
-        // Case 3: If the library is blacklisted, do not jetify it
-        if (jetifierBlackList.any { it.containsMatchIn(aarOrJarFile.absolutePath) }) {
+        // Case 3: If the library is ignored, do not jetify it
+        if (jetifierIgnoreList.any { it.containsMatchIn(aarOrJarFile.absolutePath) }) {
             transformOutputs.file(aarOrJarFile)
             return
         }
@@ -150,7 +150,7 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
                         " - If you believe this library doesn't need to be jetified (e.g., if it" +
                         " already supports AndroidX, or if it doesn't use support" +
                         " libraries/AndroidX at all), please add" +
-                        " ${StringOption.JETIFIER_BLACKLIST.propertyName} = {comma-separated list" +
+                        " ${StringOption.JETIFIER_IGNORE_LIST.propertyName} = {comma-separated list" +
                         " of regular expressions (or simply names) of the libraries that you" +
                         " don't want to be jetified} to the gradle.properties file.\n" +
                         " - If you believe this library needs to be jetified (e.g., if it uses" +

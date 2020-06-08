@@ -66,7 +66,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.model.CodeShrinker
-import com.google.common.base.Strings
 import com.google.common.collect.Maps
 import org.gradle.api.Action
 import org.gradle.api.ActionConfiguration
@@ -105,9 +104,13 @@ class DependencyConfigurator(
         // Arguments passed to an ArtifactTransform must not be null
         val jetifierSkipIfPossible =
             globalScope.projectOptions[BooleanOption.JETIFIER_SKIP_IF_POSSIBLE]
-        val jetifierBlackList = Strings.nullToEmpty(
-            globalScope.projectOptions[StringOption.JETIFIER_BLACKLIST]
-        )
+
+        @Suppress("DEPRECATION")
+        val jetifierIgnoreList =
+            globalScope.projectOptions[StringOption.JETIFIER_IGNORE_LIST]
+                ?: globalScope.projectOptions[StringOption.JETIFIER_BLACKLIST]
+                ?: ""
+
         val autoNamespaceDependencies =
             globalScope.extension.aaptOptions.namespaced &&
                     globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
@@ -122,7 +125,7 @@ class DependencyConfigurator(
             ) { spec: TransformSpec<JetifyTransform.Parameters> ->
                 spec.parameters.projectName.set(projectName)
                 spec.parameters.skipIfPossible.set(jetifierSkipIfPossible)
-                spec.parameters.blackListOption.set(jetifierBlackList)
+                spec.parameters.ignoreListOption.set(jetifierIgnoreList)
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
                     AndroidArtifacts.ArtifactType.AAR.type
@@ -137,7 +140,7 @@ class DependencyConfigurator(
             ) { spec: TransformSpec<JetifyTransform.Parameters> ->
                 spec.parameters.projectName.set(projectName)
                 spec.parameters.skipIfPossible.set(jetifierSkipIfPossible)
-                spec.parameters.blackListOption.set(jetifierBlackList)
+                spec.parameters.ignoreListOption.set(jetifierIgnoreList)
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
                     AndroidArtifacts.ArtifactType.JAR.type

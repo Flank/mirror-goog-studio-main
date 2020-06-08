@@ -67,7 +67,7 @@ public class AssertionsTest {
         try {
             callMethod(instance, "blockingMethod");
         } catch (Exception ignore) {
-            fail("Whitelisted method is not supposed to cause an exception to be thrown.");
+            fail("Ignored method is not supposed to cause an exception to be thrown.");
         }
     }
 
@@ -85,14 +85,14 @@ public class AssertionsTest {
         try {
             Baseline baseline = Baseline.getInstance(true);
             callMethod(instance, "blockingMethod");
-            // In addition to not throwing an exception, we should add the method to the whitelist
+            // In addition to not throwing an exception, we should add the method to the ignore list
             StackTraceElement[] stackTrace =
                     stackTraceBuilder(
                             "Test2",
                             "blockingMethod",
                             "sun.reflect.NativeMethodAccessorImpl",
                             "invoke0");
-            assertTrue(baseline.isWhitelisted(stackTrace));
+            assertTrue(baseline.isIgnored(stackTrace));
             System.clearProperty("aspects.baseline.export.path");
         } catch (Exception ignore) {
             fail("Exception is not supposed to be thrown when generating the baseline.");

@@ -288,7 +288,7 @@ fun writeCompilerSettingsToCache(
             val compilerCheckVariables = buildVariables.properties
                 .asSequence()
                 .filter { property ->
-                    CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST_STRINGS.contains(property.name)
+                    CMAKE_COMPILER_CHECK_CACHE_VALUE_INCLUDED_STRING_LIST.contains(property.name)
                 }
                 .map { property ->
                     // Substitute literal NDK home for ${ANDROID_NDK} CMake variable

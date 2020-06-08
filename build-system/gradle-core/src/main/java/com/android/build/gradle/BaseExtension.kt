@@ -424,8 +424,12 @@ abstract class BaseExtension protected constructor(
             "generatePureSplits is deprecated and has no effect anymore. Use bundletool to generate configuration splits."
         )
 
+    @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     override val aidlPackageWhiteList: MutableCollection<String>?
-        get() = throw GradleException("aidlPackageWhiteList is not supported.")
+        get() = aidlPackagedList
+
+    override val aidlPackagedList: MutableCollection<String>?
+        get() = throw GradleException("aidlPackagedList is not supported.")
 
     // For compatibility with FeatureExtension.
     override val baseFeature: Boolean

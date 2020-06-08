@@ -31,8 +31,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import java.util.Collections
-import java.util.IdentityHashMap
-import java.util.function.Consumer
 import java.util.regex.PatternSyntaxException
 
 /**
@@ -72,8 +70,8 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
     private val valueToResource: MutableMap<Int, Resource> =
         Maps.newHashMapWithExpectedSize(TYPICAL_RESOURCE_COUNT)
 
-    /** Set of resource names that are explicitly whitelisted as used.  */
-    private val whitelistedResources: MutableSet<ResourceId> = Sets.newHashSet()
+    /** Set of resource names that are explicitly marked as kept */
+    private val keepResources: MutableSet<ResourceId> = Sets.newHashSet()
 
     /**
      * Recorded list of keep attributes: these can contain wildcards, so they can't be applied
@@ -238,7 +236,7 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
 
     /**
      * Processes all keep and discard rules which were added previously by
-     * [.recordKeepToolAttribute] and [.recordDiscardToolAttribute] and marks all referenced
+     * [recordKeepToolAttribute] and [recordDiscardToolAttribute] and marks all referenced
      * resources as reachable/not reachable respectively.
      *
      * <p>If the same resource is referenced by some keep and discard rule then discard takes
@@ -249,7 +247,7 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
             .flatMap { getResourcesForKeepOrDiscardPatter(it) }
             .forEach {
                 it.isReachable = true
-                whitelistedResources += ResourceId(it.type,it.name, it.packageName)
+                keepResources += ResourceId(it.type,it.name, it.packageName)
             }
         _discardAttributes.asSequence()
             .flatMap { getResourcesForKeepOrDiscardPatter(it) }
@@ -263,14 +261,14 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
                 val id = ResourceId(r.type, r.name, r.packageName)
                 val actions = listOfNotNull(
                     "remove".takeUnless { r.isReachable },
-                    "no_obfuscate".takeIf { whitelistedResources.contains(id) }
+                    "no_obfuscate".takeIf { keepResources.contains(id) }
                 ).joinToString(",")
                 "${r.type}/${r.name}#$actions"
             }
             .joinToString("\n", "", "\n")
 
-    fun dumpWhitelistedResources(): String =
-        whitelistedResources
+    fun dumpKeepResources(): String =
+        keepResources
             .map { it.name }
             .sorted()
             .joinToString(",")

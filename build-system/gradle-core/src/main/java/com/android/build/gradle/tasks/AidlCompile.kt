@@ -73,7 +73,8 @@ import org.gradle.process.ExecOperations
 abstract class AidlCompile : NonIncrementalTask() {
     @get:Input
     @get:Optional
-    var packageWhitelist: Collection<String>? = null
+    var packagedList: Collection<String>? = null
+        private set
 
     @get:Internal
     abstract val sourceDirs: ListProperty<File>
@@ -155,7 +156,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                 fullImportList,
                 destinationDir,
                 parcelableDir?.asFile,
-                packageWhitelist,
+                packagedList,
                 DepFileProcessor(),
                 GradleProcessExecutor(execOperations::exec),
                 LoggedProcessOutputHandler(LoggerWrapper(logger))
@@ -224,7 +225,7 @@ abstract class AidlCompile : NonIncrementalTask() {
             task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
             if (creationConfig.variantType.isAar) {
-                task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
+                task.packagedList = globalScope.extension.aidlPackagedList
             }
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)

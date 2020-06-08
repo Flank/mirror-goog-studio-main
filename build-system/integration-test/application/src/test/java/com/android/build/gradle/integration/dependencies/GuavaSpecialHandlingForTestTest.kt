@@ -23,7 +23,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class GuavaWhitelistTest {
+/**
+ * Checks that guava's listenablefuture does not use constraints for test.
+ */
+class GuavaSpecialHandlingForTestTest {
 
     @get:Rule
     var project = GradleTestProject.builder()

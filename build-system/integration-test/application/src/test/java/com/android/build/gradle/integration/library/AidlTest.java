@@ -94,13 +94,13 @@ public class AidlTest {
                         + "}");
 
         TestFileUtils.appendToFile(
-                new File(aidlDir, "WhiteListed.aidl"),
+                new File(aidlDir, "Packaged.aidl"),
                 ""
                         + "package com.example.helloworld;\n"
                         + "\n"
                         + "import com.example.helloworld.MyRect;\n"
                         + "\n"
-                        + "interface WhiteListed {\n"
+                        + "interface Packaged {\n"
                         + "    MyRect getMyRect();\n"
                         + "    int getInt();\n"
                         + "}");
@@ -175,7 +175,7 @@ public class AidlTest {
         if (plugin.contains("library")) {
             TestFileUtils.appendToFile(
                     project.getBuildFile(),
-                    "android.aidlPackageWhiteList = [\"com/example/helloworld/WhiteListed.aidl\"]\n"
+                    "android.aidlPackagedList = [\"com/example/helloworld/Packaged.aidl\"]\n"
                             + "\n"
                             + "// Check that AIDL is published as intermediate artifact for library.\n"
                             + "afterEvaluate {\n"
@@ -230,9 +230,9 @@ public class AidlTest {
         assumeNotWindows(); // b/145232750
         // First, add japanese characters
         TestFileUtils.searchAndReplace(
-                new File(aidlDir, "WhiteListed.aidl"),
-                "interface WhiteListed {\n",
-                "interface WhiteListed {\n" + "/**\n" + "     * テスト用コメント\n" + "     */");
+                new File(aidlDir, "Packaged.aidl"),
+                "interface Packaged {\n",
+                "interface Packaged {\n" + "/**\n" + "     * テスト用コメント\n" + "     */");
 
         // Then, change encoding to Shift_JIS and compile
         // (should fail on mac/linux if encoding is not handled properly)
@@ -242,7 +242,7 @@ public class AidlTest {
 
         changeEncoding(
                 ImmutableList.of(
-                        new File(aidlDir, "WhiteListed.aidl"),
+                        new File(aidlDir, "Packaged.aidl"),
                         new File(aidlDir, "MyRect.aidl"),
                         new File(aidlDir, "ITest.aidl"),
                         new File(javaDir, "MyRect.java"),
@@ -261,7 +261,7 @@ public class AidlTest {
                 "debug",
                 it -> {
                     it.contains("aidl/com/example/helloworld/MyRect.aidl");
-                    it.contains("aidl/com/example/helloworld/WhiteListed.aidl");
+                    it.contains("aidl/com/example/helloworld/Packaged.aidl");
                     it.doesNotContain("aidl/com/example/helloworld/" + dontInclude + ".aidl");
                 });
     }

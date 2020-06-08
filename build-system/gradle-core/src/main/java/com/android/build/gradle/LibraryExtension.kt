@@ -110,8 +110,13 @@ open class LibraryExtension(
         libraryVariantList.add(variant as LibraryVariant)
     }
 
+    @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     fun aidlPackageWhiteList(vararg aidlFqcns: String) {
-        Collections.addAll(publicExtensionImpl.aidlPackageWhiteList, *aidlFqcns)
+        Collections.addAll(publicExtensionImpl.aidlPackagedList, *aidlFqcns)
+    }
+
+    fun aidlPackagedList(vararg aidlFqcns: String) {
+        Collections.addAll(publicExtensionImpl.aidlPackagedList, *aidlFqcns)
     }
 
     override var compileSdkVersion: String?

@@ -54,11 +54,11 @@ public class AspectsLogger {
     }
 
     private static void log(Supplier<Boolean> shouldReturnEarly, StackTraceElement[] stackTrace) {
-        if (shouldReturnEarly.get() || Baseline.getInstance().isWhitelisted(stackTrace)) {
+        if (shouldReturnEarly.get() || Baseline.getInstance().isIgnored(stackTrace)) {
             return;
         }
         if (Baseline.getInstance().isGeneratingBaseline()) {
-            Baseline.getInstance().whitelistStackTrace(stackTrace);
+            Baseline.getInstance().ignoreStackTrace(stackTrace);
             return;
         }
 

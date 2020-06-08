@@ -1,6 +1,6 @@
 #
 # Test:
-# check that whitelisted package for androidx.test doesn't produce an error nor a warning, but is
+# check that ignored package for androidx.test doesn't produce an error nor a warning, but is
 # instead logged to info
 #
 

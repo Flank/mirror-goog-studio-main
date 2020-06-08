@@ -73,9 +73,6 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     private boolean mTrackSourcePositions = true;
     private boolean mCheckDuplicates = true;
 
-    @NonNull
-    private Optional<ImmutableSet<ResourceFolderType>> mWhitelistedResources = Optional.empty();
-
     public ResourceSet(
             @NonNull String name,
             @NonNull ResourceNamespace namespace,
@@ -272,17 +269,6 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         }
     }
 
-    public void setResourcesWhitelist(@NonNull ImmutableSet<ResourceFolderType> whitelist) {
-        mWhitelistedResources = Optional.of(whitelist);
-    }
-
-    private boolean isWhiteListed(File resourceFolder) {
-        return !mWhitelistedResources.isPresent()
-                || mWhitelistedResources
-                        .get()
-                        .contains(ResourceFolderType.getFolderType(resourceFolder.getName()));
-    }
-
     @Override
     protected void readSourceFolder(File sourceFolder, ILogger logger)
             throws MergingException {
@@ -290,7 +276,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         File[] folders = sourceFolder.listFiles();
         if (folders != null) {
             for (File folder : folders) {
-                if (folder.isDirectory() && isWhiteListed(folder) && !isIgnored(folder)) {
+                if (folder.isDirectory() && !isIgnored(folder)) {
                     FolderData folderData = getFolderData(folder);
                     if (folderData != null) {
                         try {

@@ -79,7 +79,7 @@ public class ManifestMerger2 {
     private static final String SPLIT_IN_DYNAMIC_FEATURE =
             "https://d.android.com/r/studio-ui/dynamic-delivery/dynamic-feature-manifest";
 
-    private static final List<String> WHITELISTED_NON_UNIQUE_PACKAGE_NAMES =
+    private static final List<String> ALLOWED_NON_UNIQUE_PACKAGE_NAMES =
             ImmutableList.of(
                     "androidx.test" // TODO(b/151171905)
                     );
@@ -1268,8 +1268,8 @@ public class ManifestMerger2 {
     /** Returns the correct logging severity for a clashing package name. */
     private static MergingReport.Record.Severity getNonUniquePackageSeverity(
             String packageName, boolean strictMode) {
-        // If we've whitelisted a library package only report in info.
-        if (WHITELISTED_NON_UNIQUE_PACKAGE_NAMES.contains(packageName))
+        // If we've allowed a library package to be non-unique, only report in info.
+        if (ALLOWED_NON_UNIQUE_PACKAGE_NAMES.contains(packageName))
             return MergingReport.Record.Severity.INFO;
 
         return strictMode

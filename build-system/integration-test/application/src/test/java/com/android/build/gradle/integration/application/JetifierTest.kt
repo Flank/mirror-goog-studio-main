@@ -175,7 +175,7 @@ class JetifierTest(private val withKotlin: Boolean) {
     }
 
     @Test
-    fun testBlacklistedLibrariesAreNotJetified() {
+    fun testIgnoredLibrariesAreNotJetified() {
         // It's enough to test without Kotlin (to save test execution time)
         assumeFalse(withKotlin)
 
@@ -202,10 +202,10 @@ class JetifierTest(private val withKotlin: Boolean) {
             )
         }
 
-        // Add doNotJetifyLib to a blacklist, the build should succeed
+        // Add doNotJetifyLib to ignorelist, the build should succeed
         TestFileUtils.appendToFile(
             project.gradlePropertiesFile,
-            """android.jetifier.blacklist = doNot.*\\.jar, foo"""
+            """android.jetifier.ignorelist = doNot.*\\.jar, foo"""
         )
         project.executor()
             .with(BooleanOption.USE_ANDROID_X, true)
@@ -236,7 +236,7 @@ class JetifierTest(private val withKotlin: Boolean) {
     }
 
     private fun addCheckThatDependenciesAreNotResolvedBeforeTaskExecutionPhase() {
-        // This configuration is resolved before task execution phase, so we blacklist it for now.
+        // This configuration is resolved before task execution phase, so we ignore it for now.
         val kotlinCompilerClasspath = "kotlinCompilerClasspath"
 
         project.buildFile.appendText(

@@ -39,5 +39,5 @@ interface InternalLibraryExtension :
                 ProductFlavor,
                 LibraryVariant<LibraryVariantProperties>,
                 LibraryVariantProperties> {
-    override var aidlPackageWhiteList: MutableCollection<String>
+    override var aidlPackagedList: MutableCollection<String>
 }

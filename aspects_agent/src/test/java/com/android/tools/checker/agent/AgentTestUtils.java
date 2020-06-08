@@ -89,7 +89,7 @@ public class AgentTestUtils {
 
         StackTraceElement[] stackTrace = new StackTraceElement[5];
         // Ignore the first two elements, as they should be Thread.currentThread().getStackTrace()
-        // and the method who called Baseline#isWhitelisted.
+        // and the method who called Baseline#isIgnored.
         stackTrace[2] = topElement;
         stackTrace[3] = secondTopElement;
 

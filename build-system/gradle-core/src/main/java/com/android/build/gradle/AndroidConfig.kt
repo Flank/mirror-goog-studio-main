@@ -512,8 +512,11 @@ interface AndroidConfig {
     /** build outputs for all variants  */
     val buildOutputs: Collection<BaseVariantOutput>
 
-    /** Aidl files to package in the aar. */
+    @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     val aidlPackageWhiteList: MutableCollection<String>?
+
+    /** Aidl files to package in the aar. */
+    val aidlPackagedList: MutableCollection<String>?
 
     val libraryRequests: MutableCollection<LibraryRequest>
 
