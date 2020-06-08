@@ -288,8 +288,15 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getArtifactName(artifactAddress: String): String {
-        val index = artifactAddress.indexOf(':')
-        val index2 = artifactAddress.indexOf(':', index + 1)
+        val index: Int
+        val index2: Int
+        if (artifactAddress.startsWith("artifacts:")) {
+            index = artifactAddress.indexOf(':')
+            index2 = artifactAddress.lastIndexOf(':')
+        } else {
+            index = artifactAddress.indexOf(':')
+            index2 = artifactAddress.indexOf(':', index + 1)
+        }
         return if (index == -1) {
             // not a Maven library, e.g. a local project reference
             artifactAddress
