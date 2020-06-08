@@ -424,6 +424,7 @@ abstract class BaseExtension protected constructor(
             "generatePureSplits is deprecated and has no effect anymore. Use bundletool to generate configuration splits."
         )
 
+    @get:Suppress("WrongTerminology")
     @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     override val aidlPackageWhiteList: MutableCollection<String>?
         get() = aidlPackagedList

@@ -76,7 +76,8 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.USE_UAST,
         ShortNameCacheDetector.ISSUE,
         HtmlPaneDetector.ISSUE,
-        ForbiddenStudioCallDetector.INTERN
+        ForbiddenStudioCallDetector.INTERN,
+        TerminologyDetector.ISSUE
     )
 
     // TODO other checks:

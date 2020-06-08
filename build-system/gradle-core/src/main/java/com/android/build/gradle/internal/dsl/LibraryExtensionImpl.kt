@@ -68,6 +68,8 @@ class LibraryExtensionImpl(
             LibraryVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
 
+    @get:Suppress("WrongTerminology")
+    @set:Suppress("WrongTerminology")
     @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     var aidlPackageWhiteList: MutableCollection<String>
         get() = aidlPackagedList

@@ -110,6 +110,7 @@ open class LibraryExtension(
         libraryVariantList.add(variant as LibraryVariant)
     }
 
+    @Suppress("WrongTerminology")
     @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     fun aidlPackageWhiteList(vararg aidlFqcns: String) {
         Collections.addAll(publicExtensionImpl.aidlPackagedList, *aidlFqcns)

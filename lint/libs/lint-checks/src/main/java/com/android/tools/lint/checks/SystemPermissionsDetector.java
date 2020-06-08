@@ -55,6 +55,7 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
 
     // List of permissions have the protection levels signature, privileged or systemOrSignature.
     // This list must be sorted alphabetically.
+    @SuppressWarnings("WrongTerminology") // external constants: can't rename
     @VisibleForTesting
     static final String[] SYSTEM_PERMISSIONS =
             new String[] {

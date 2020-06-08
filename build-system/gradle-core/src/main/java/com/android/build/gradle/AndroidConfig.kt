@@ -512,6 +512,7 @@ interface AndroidConfig {
     /** build outputs for all variants  */
     val buildOutputs: Collection<BaseVariantOutput>
 
+    @get:Suppress("WrongTerminology")
     @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
     val aidlPackageWhiteList: MutableCollection<String>?
 
