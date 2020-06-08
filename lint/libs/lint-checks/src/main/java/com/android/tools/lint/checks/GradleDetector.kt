@@ -143,6 +143,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
     data class AgpVersionCheckInfo(
         val newerVersion: GradleVersion,
+        val newerVersionIsSafe: Boolean,
         val safeReplacement: GradleVersion?,
         val dependency: GradleCoordinate,
         val isResolved: Boolean,
@@ -811,7 +812,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
                     if (newerVersion != null && newerVersion > version) {
                         agpVersionCheckInfo = AgpVersionCheckInfo(
-                            newerVersion, safeReplacement, dependency, isResolved, cookie
+                            newerVersion,
+                            newerVersion.major == version.major &&
+                                    newerVersion.minor == version.minor,
+                            safeReplacement, dependency, isResolved, cookie
                         )
                         maybeReportAgpVersionIssue(context)
                     }
@@ -1610,7 +1614,11 @@ open class GradleDetector : Detector(), GradleScanner {
             agpVersionCheckInfo?.let {
                 val versionString = it.newerVersion.toString()
                 val message = getNewerVersionAvailableMessage(it.dependency, versionString, it.safeReplacement)
-                val fix = if (!it.isResolved) getUpdateDependencyFix(it.dependency.revision, versionString, it.safeReplacement) else null
+                val fix = when {
+                    it.isResolved -> null
+                    else -> getUpdateDependencyFix(it.dependency.revision, versionString,
+                        it.newerVersionIsSafe, it.safeReplacement)
+                }
                 report(context, it.cookie, AGP_DEPENDENCY, message, fix)
             }
         }
@@ -1861,6 +1869,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun getUpdateDependencyFix(
         currentVersion: String,
         suggestedVersion: String,
+        suggestedVersionIsSafe: Boolean = false,
         safeReplacement: GradleVersion? = null
     ): LintFix {
         val fix = LintFix.create()
@@ -1869,6 +1878,7 @@ open class GradleDetector : Detector(), GradleScanner {
             .replace()
             .text(currentVersion)
             .with(suggestedVersion)
+            .autoFix(suggestedVersionIsSafe, suggestedVersionIsSafe)
             .build()
         return if (safeReplacement != null) {
             val stableVersion = safeReplacement.toString()
