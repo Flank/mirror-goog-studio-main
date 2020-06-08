@@ -792,11 +792,13 @@ open class GradleDetector : Detector(), GradleScanner {
                         context.client.getHighestKnownVersion(dependency, filter)
                     )
 
-                    // Don't just offer the latest available version, but if there is a newer
-                    // dot dot release available, offer that one as well since it may be easier
-                    // to update to
+                    // Don't just offer the latest available version, but if that is more than
+                    // a micro-level different, and there is a newer micro version of the
+                    // version that the user is currently using, offer that one as well as it
+                    // may be easier to upgrade to.
                     if (newerVersion != null && !version.isPreview && newerVersion != version &&
-                        version.minorSegment?.acceptsGreaterValue() == false
+                        version.minorSegment?.acceptsGreaterValue() == false &&
+                        (version.major != newerVersion.major || version.minor != newerVersion.minor)
                     ) {
                         safeReplacement = getGoogleMavenRepoVersion(context, dependency,
                             Predicate { filterVersion ->
