@@ -830,6 +830,11 @@ com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.LibraryVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.variant.SigningConfig
+com.android.build.api.variant.SigningConfig.getEnableV1Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.TestVariantProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)
