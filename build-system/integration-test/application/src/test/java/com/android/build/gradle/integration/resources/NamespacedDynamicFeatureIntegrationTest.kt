@@ -268,8 +268,10 @@ class NamespacedDynamicFeatureIntegrationTest {
             .build()
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp)
-        // http://b/158092986
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     @Test

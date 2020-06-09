@@ -32,19 +32,9 @@ import java.util.function.Consumer
  * dependencies of a test app, minus the runtime dependencies of the tested app (to avoid duplicated
  * classes during runtime).
  */
-class FilteredArtifactCollection(
-        project: Project,
-        private val filteringSpec: FilteringSpec) : ArtifactCollection {
-
-
-    // create a dynamic file collection, using the passed filter to filter unwanted artifacts.
-    // Include the original build dependencies.
-    // and the dependency to generate the excludeDirectoryFiles.
-    private val fileCollection: FileCollection = filteringSpec.getFilteredFileCollection(project)
-
-    override fun getArtifactFiles() = fileCollection
+class FilteredArtifactCollection(private val filteringSpec: FilteringSpec) : ArtifactCollection {
+    override fun getArtifactFiles() = filteringSpec.getFilteredFileCollection()
     override fun getArtifacts() = filteringSpec.getArtifactFiles()
-
     override fun getFailures(): Collection<Throwable> = filteringSpec.artifacts.failures
     override fun iterator() = artifacts.iterator()
     override fun spliterator() = artifacts.spliterator()

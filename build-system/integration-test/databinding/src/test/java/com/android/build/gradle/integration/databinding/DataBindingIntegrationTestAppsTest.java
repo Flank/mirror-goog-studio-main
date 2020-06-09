@@ -53,7 +53,6 @@ public class DataBindingIntegrationTestAppsTest {
                                 "ViewBindingWithDataBindingTestApp")
                         .contains(projectName)) {
             // http://b/158092419 - for Kotlin projects
-            // http://b/158092986 - projects using dynamic features
             builder.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
         }
         this.project = builder.create();

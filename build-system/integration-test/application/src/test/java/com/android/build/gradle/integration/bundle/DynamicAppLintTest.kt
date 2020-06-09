@@ -27,7 +27,7 @@ class DynamicAppLintTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
-        // b/158092986
+        // b/146208910
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 

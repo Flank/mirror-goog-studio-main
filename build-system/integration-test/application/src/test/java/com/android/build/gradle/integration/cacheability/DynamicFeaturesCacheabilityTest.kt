@@ -208,7 +208,10 @@ class DynamicFeaturesCacheabilityTest {
         return GradleTestProject
             .builder()
             .withName(projectName)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/158092986
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+            .setTargetGradleVersion("6.6-20200609220026+0000")
+            // b/157470515
+            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
             .fromTestProject("dynamicApp")
             .create()
     }

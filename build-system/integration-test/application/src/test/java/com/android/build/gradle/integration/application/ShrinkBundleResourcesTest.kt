@@ -38,14 +38,18 @@ import org.junit.Test
 class ShrinkBundleResourcesTest {
     @get:Rule
     var project = builder().fromTestProject("shrink")
-        // http://b/158092986
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515, http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
         .create()
 
     @get:Rule
     var projectWithDfms = builder().fromTestProject("shrinkDynamicFeatureModules")
-        // http://b/158092986
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515, http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
         .create()
 
     @Test

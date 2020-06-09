@@ -37,8 +37,10 @@ class DataBindingWithDynamicFeaturesAppTest(useAndroidX: Boolean) {
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
         .fromDataBindingIntegrationTest("DynamicApp", useAndroidX)
-        // http://b/158092986
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .addGradleProperties(
             BooleanOption.USE_ANDROID_X.propertyName
                     + "=" + useAndroidX
@@ -56,7 +58,10 @@ class DataBindingWithDynamicFeaturesAppTest(useAndroidX: Boolean) {
 
     @Test
     fun app() {
-        project.execute(":app:assemble")
+        project.executor()
+             // disable explicitly - b/157470515, http://b/146208910, http://b/149978740
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
+            .run(":app:assemble")
     }
 
     @Test
