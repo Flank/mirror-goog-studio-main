@@ -10,7 +10,7 @@ archivesBaseName = 'sdk-common'
 version = rootProject.ext.baseVersion
 
 licenseReport {
-    ignore = ['org.jetbrains.trove4j:trove4j:20160824']
+    ignored = ['org.jetbrains.trove4j:trove4j:20160824']
 }
 
 dependencies {
