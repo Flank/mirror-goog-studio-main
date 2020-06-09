@@ -29,7 +29,8 @@ import org.gradle.api.file.FileSystemLocation
  */
 @Incubating
 sealed class MultipleArtifactType<FileTypeT : FileSystemLocation>(
-    kind: ArtifactKind<FileTypeT>
-) : Artifact.MultipleArtifact<FileTypeT>(kind) {
+    kind: ArtifactKind<FileTypeT>,
+    category: Category
+) : Artifact.MultipleArtifact<FileTypeT>(kind, category) {
     // there are no public multiple artifact types at this time.
 }

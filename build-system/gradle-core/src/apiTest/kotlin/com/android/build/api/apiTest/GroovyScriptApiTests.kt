@@ -216,7 +216,8 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
 
             class ACME_APK extends SingleArtifact<Directory> implements Replaceable, ContainsMany {
                     ACME_APK() {
-                        super(ArtifactKind.DIRECTORY.INSTANCE)
+                        super(ArtifactKind.DIRECTORY.INSTANCE, 
+                            com.android.build.api.artifact.Artifact.Category.INTERMEDIATES)
                     }
             }
 

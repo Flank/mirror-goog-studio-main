@@ -18,6 +18,7 @@ package com.android.build.api.apiTest.kotlin
 
 import com.android.build.api.apiTest.TestingElements
 import com.android.build.api.apiTest.VariantApiBaseTest
+import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
@@ -32,6 +33,7 @@ import org.mockito.Mockito
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
+import java.util.Locale
 import kotlin.test.assertNotNull
 
 class LibraryManifestTests: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Kotlin) {
@@ -104,7 +106,7 @@ class LibraryManifestTests: VariantApiBaseTest(TestType.Script, ScriptingLanguag
         // the manually added permission made to the final merged manifest.
         val apkFolder = File(super.testProjectDir.root,
             "libraryManifestTransformerTest/app/build/"
-                    + InternalArtifactType.Category.OUTPUTS.outputPath
+                    + Artifact.Category.OUTPUTS.name.toLowerCase(Locale.US)
                     + "/"
                     + ArtifactType.APK.getFolderName()
                     + "/debug")

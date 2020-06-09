@@ -2872,16 +2872,9 @@ public abstract class TaskManager<
                     task.setDescription(
                             "Assembles bundle for variant " + componentProperties.getName());
                     task.dependsOn(
-                            componentProperties
-                                    .getArtifacts()
-                                    .get(InternalArtifactType.BUNDLE.INSTANCE));
+                            componentProperties.getArtifacts().get(ArtifactType.BUNDLE.INSTANCE));
                 },
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
-
-        // republish Bundle to the external world.
-        componentProperties
-                .getArtifacts()
-                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactType.BUNDLE.INSTANCE);
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(

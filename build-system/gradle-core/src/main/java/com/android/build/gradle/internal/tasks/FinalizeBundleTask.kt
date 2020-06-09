@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
@@ -132,7 +133,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             }
 
             BuiltArtifactsImpl(
-                artifactType = InternalArtifactType.BUNDLE,
+                artifactType = ArtifactType.BUNDLE,
                 applicationId = params.applicationId,
                 variantName = params.variantName,
                 elements = listOf(
@@ -165,7 +166,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile
-                ).withName(bundleName).on(InternalArtifactType.BUNDLE)
+                ).withName(bundleName).on(ArtifactType.BUNDLE)
             } else {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
@@ -174,7 +175,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         creationConfig.services.file(apkLocationOverride),
                         creationConfig.dirName).absolutePath)
                     .withName(bundleName)
-                    .on(InternalArtifactType.BUNDLE)
+                    .on(ArtifactType.BUNDLE)
             }
 
             creationConfig.artifacts.setInitialProvider(

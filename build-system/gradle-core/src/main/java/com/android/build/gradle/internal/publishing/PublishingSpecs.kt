@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_ZIP
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_METADATA
-import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
@@ -150,7 +149,7 @@ class PublishingSpecs {
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
-                publish(BUNDLE, ArtifactType.BUNDLE)
+                publish(com.android.build.api.artifact.ArtifactType.BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)

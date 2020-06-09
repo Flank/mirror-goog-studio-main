@@ -27,8 +27,8 @@ import org.gradle.api.file.FileSystemLocation
  * List of internal [Artifact.Multiple] [Artifact]
  */
 sealed class InternalMultipleArtifactType(
-    val category: InternalArtifactType.Category = InternalArtifactType.Category.INTERMEDIATES
-) : Artifact.MultipleArtifact<Directory>(DIRECTORY), Artifact.Appendable {
+    category: Category = Category.INTERMEDIATES
+) : Artifact.MultipleArtifact<Directory>(DIRECTORY, category), Artifact.Appendable {
 
     // The final dex files (if the dex splitter does not run)
     // that will get packaged in the APK or bundle.

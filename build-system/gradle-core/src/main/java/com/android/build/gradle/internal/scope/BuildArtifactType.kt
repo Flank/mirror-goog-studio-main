@@ -29,7 +29,10 @@ import org.gradle.api.file.Directory
  * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
-sealed class BuildArtifactType : Artifact.SingleArtifact<Directory>(ArtifactKind.DIRECTORY) {
+sealed class BuildArtifactType : Artifact.SingleArtifact<Directory>(
+    ArtifactKind.DIRECTORY,
+    Category.INTERMEDIATES
+) {
     @Incubating
     object JAVAC_CLASSES : BuildArtifactType()
     @Incubating
