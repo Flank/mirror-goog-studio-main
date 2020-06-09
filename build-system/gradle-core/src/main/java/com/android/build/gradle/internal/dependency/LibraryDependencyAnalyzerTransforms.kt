@@ -1,10 +1,9 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
-import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.getResourcesFromExplodedAarToFile
-import com.android.resources.ResourceFolderType
-import com.android.utils.XmlUtils
+import com.android.ide.common.symbols.SymbolIo
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -12,15 +11,14 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
-import com.android.ide.common.symbols.SymbolIo
 
 /** This transform outputs a directory containing two files listing the contents of this AAR,
  *  classes.txt where each line is a java class name of the form 'com/example/MyClass.class'
- *  and resource_symbols.txt which is of r-def form [SymbolIo.readRDef]) */
-abstract class LibraryDependencySourcesTransform : TransformAction<GenericTransformParameters> {
+ *  and resource_symbols.txt which is of r-def form [SymbolIo.readRDef]). */
+@CacheableTransform
+abstract class LibraryDependencyAnalyzerAarTransform : TransformAction<GenericTransformParameters> {
 
     @get:Classpath
     @get:InputArtifact
@@ -45,18 +43,33 @@ abstract class LibraryDependencySourcesTransform : TransformAction<GenericTransf
     }
 }
 
-/** Gets a list of .class filepaths from all JAR files stored within an exploded AAR File. */
-fun getClassesFromExplodedAar(explodedAar: File): List<String> {
-    return AarTransformUtil.getJars(explodedAar)
-            .flatMap {
-                getClassesInJar(it.toPath())
-            }
+/** This transform outputs a directory containing a file called 'classes.txt' listing all
+ * classes in the inputArtifact JAR. Each line in 'classes.txt' is a java class name of the form
+ * 'com/example/MyClass.class'.
+ */
+@CacheableTransform
+abstract class LibraryDependencyAnalyzerJarTransform : TransformAction<GenericTransformParameters> {
+
+    @get:Classpath
+    @get:InputArtifact
+    abstract val inputArtifact: Provider<FileSystemLocation>
+
+    override fun transform(transformOutputs: TransformOutputs) {
+        val jar = inputArtifact.get().asFile
+        val outputDir = transformOutputs.dir(
+                "dependency-sources-${jar.nameWithoutExtension}")
+        // Write class paths to transform output files.
+        writePathsToFile(
+                File(outputDir, "classes${SdkConstants.DOT_TXT}"),
+                getClassesInJar(jar.toPath())
+        )
+    }
 }
 
 /** Gets a list of .class filepaths within a JAR file. */
 fun getClassesInJar(jarFile: Path): List<String> {
     val classes = mutableListOf<String>()
-    ZipInputStream(jarFile.toFile().inputStream()).use { zipEntry ->
+    ZipInputStream(jarFile.toFile().inputStream().buffered()).use { zipEntry ->
         while (true) {
             val entry = zipEntry.nextEntry ?: break
             if (entry.name.endsWith(SdkConstants.DOT_CLASS)) {
@@ -69,9 +82,6 @@ fun getClassesInJar(jarFile: Path): List<String> {
 
 /** Write collection element by element to the outputFile. */
 fun writePathsToFile(outputFile: File, paths: Collection<String>): File {
-    if (!outputFile.exists()) {
-        Files.createFile(outputFile.toPath())
-    }
     outputFile.bufferedWriter().use { writer ->
         paths.forEach { classPath ->
             writer.append(classPath)
@@ -79,4 +89,12 @@ fun writePathsToFile(outputFile: File, paths: Collection<String>): File {
         }
     }
     return outputFile
+}
+
+/** Gets a list of .class filepaths from all JAR files stored within an exploded AAR File. */
+fun getClassesFromExplodedAar(explodedAar: File): List<String> {
+    return AarTransformUtil.getJars(explodedAar)
+            .flatMap {
+                getClassesInJar(it.toPath())
+            }
 }

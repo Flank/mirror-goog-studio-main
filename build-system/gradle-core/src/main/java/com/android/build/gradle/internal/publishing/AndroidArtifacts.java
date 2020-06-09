@@ -94,6 +94,7 @@ public class AndroidArtifacts {
     private static final String TYPE_AAR_OR_JAR = "android-aar-or-jar";
     private static final String TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS =
             "aar-class-list-and-res-symbols";
+    private static final String TYPE_JAR_ClASS_LIST = "jar-class-list";
     private static final String TYPE_COMPILED_DEPENDENCIES_RESOURCES =
             "android-compiled-dependencies-resources";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
@@ -419,6 +420,7 @@ public class AndroidArtifacts {
         // A directory containing a two files; a txt file containing all AAR .class filepaths
         // containing unique AAR resource symbols.
         AAR_CLASS_LIST_AND_RES_SYMBOLS(TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS),
+        JAR_CLASS_LIST(TYPE_JAR_ClASS_LIST),
 
         NAVIGATION_JSON(TYPE_NAVIGATION_JSON),
 

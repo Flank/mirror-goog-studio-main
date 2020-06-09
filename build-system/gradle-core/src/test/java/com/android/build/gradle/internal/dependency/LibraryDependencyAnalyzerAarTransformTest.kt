@@ -7,7 +7,6 @@ import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.utils.FileUtils
-import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
@@ -21,7 +20,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 
 
-class LibraryDependencySourcesTransformTest {
+class LibraryDependencyAnalyzerAarTransformTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -181,8 +180,8 @@ class LibraryDependencySourcesTransformTest {
         return resDir
     }
 
-    private fun getTestTransform(explodedAarFile: File): LibraryDependencySourcesTransform {
-        return object : LibraryDependencySourcesTransform() {
+    private fun getTestTransform(explodedAarFile: File): LibraryDependencyAnalyzerAarTransform {
+        return object : LibraryDependencyAnalyzerAarTransform() {
             override val inputArtifact: Provider<FileSystemLocation>
                 get() = FakeGradleProvider(FakeGradleRegularFile(explodedAarFile))
 

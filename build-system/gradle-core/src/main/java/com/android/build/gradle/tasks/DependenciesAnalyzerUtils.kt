@@ -40,7 +40,6 @@ class DependencyUsageFinder(
     /** All the dependencies required across our code base. */
     val requiredDependencies: Set<String> =
         variantClasses.getUsedClasses().mapNotNull { classFinder.find(it) }.toSet()
-
     /** Dependencies we direct declare and are being used. */
     val usedDirectDependencies: Set<String> =
         variantDependencies.all.intersect(requiredDependencies)
@@ -120,30 +119,34 @@ class DependencyGraphAnalyzer(
     }
 }
 
-private class ArtifactFinder(private val externalArtifactCollection: ArtifactCollection) {
+private class ArtifactFinder(private val externalArtifactCollections: Collection<ArtifactCollection>
+) {
     fun getMapByFileName(fileName: String): Map<String, String> {
         val map = mutableMapOf<String, String>()
-        externalArtifactCollection
-                .forEach { artifact ->
-                    FileUtils.join(artifact.file, fileName)
-                            .forEachLine { artifactFileLine ->
-                                map[artifactFileLine] = artifact.id.componentIdentifier.displayName
-                            }
+        for (artifactCollection in externalArtifactCollections)
+            for (artifact in artifactCollection) {
+                val file = FileUtils.join(artifact.file, fileName)
+                if (!file.exists()) continue
+                file.forEachLine { artifactFileLine ->
+                    map[artifactFileLine] = artifact.id.componentIdentifier.displayName
                 }
+            }
         return map
     }
 }
 
 /** Finds where a class is coming from. */
-class ClassFinder(private val externalArtifactCollection : ArtifactCollection) {
+class ClassFinder(private val externalArtifactCollections : Collection<ArtifactCollection>) {
 
     private val classToDependency: Map<String, String> by lazy {
-        val artifactFinder = ArtifactFinder(externalArtifactCollection)
+        val artifactFinder = ArtifactFinder(externalArtifactCollections)
         artifactFinder.getMapByFileName("classes${SdkConstants.DOT_TXT}")
     }
 
     /** Returns the dependency that contains {@code className} or null if we can't find it. */
-    fun find(className: String) = classToDependency[className]
+    fun find(className: String) : String? {
+        return classToDependency[className]
+    }
 
     fun findClassesInDependency(dependencyId: String) =
         classToDependency.filterValues { it == dependencyId }.keys
@@ -183,10 +186,10 @@ class ResourcesFinder(
         }
 
         // Add library AAR resources to map.
-        externalArtifactCollection
-                .forEach { artifact ->
-                    val resourceSymbols = FileUtils.join(artifact.file, fileName).readLines()
-                    resourceSymbols.forEach { resourceName ->
+        for (artifact in externalArtifactCollection){
+                    val resourceSymbols = FileUtils.join(artifact.file, fileName)
+                    if (!resourceSymbols.exists()) continue
+                    resourceSymbols.readLines().forEach { resourceName ->
                         // Get existing ResourceDependencyHolder or create a new instance. Then
                         // add the current dependency to dependency usages.
                         val resDeps = resourceToDependency.getOrDefault(resourceName,

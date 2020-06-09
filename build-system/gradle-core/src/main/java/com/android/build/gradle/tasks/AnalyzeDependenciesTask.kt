@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.SourceProvider
-import com.android.tools.build.jetifier.core.utils.Log
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
@@ -34,7 +33,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -57,11 +55,13 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val variantArtifact: ConfigurableFileCollection
 
-    private lateinit var externalArtifactCollection: ArtifactCollection
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val externalAars: FileCollection get() = externalAarsCollection.artifactFiles
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val externalArtifacts: FileCollection by lazy { externalArtifactCollection.artifactFiles }
+    val externalJars: FileCollection get() = externalJarsCollection.artifactFiles
 
     @get:InputFile
     @get:Optional
@@ -71,6 +71,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
+    private lateinit var externalAarsCollection: ArtifactCollection
+    private lateinit var externalJarsCollection : ArtifactCollection
     // Don't need to be marked as input as they are represented in externalArtifacts
     private var apiDirectDependenciesConfiguration: Configuration? = null
     private lateinit var allDirectDependencies: Collection<Dependency>
@@ -82,9 +84,9 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 allDirectDependencies,
                 apiDirectDependenciesConfiguration?.allDependencies)
         val variantClassHolder = VariantClassesHolder(variantArtifact)
-        val classFinder = ClassFinder(externalArtifactCollection)
+        val classFinder = ClassFinder(arrayListOf(externalAarsCollection, externalJarsCollection))
         val resourcesFinder = ResourcesFinder(
-                mergedManifest.orNull?.asFile , resourceSourceSets.toList(), externalArtifactCollection)
+                mergedManifest.orNull?.asFile , resourceSourceSets.toList(), externalAarsCollection)
 
         val depsUsageFinder =
             DependencyUsageFinder(classFinder, variantClassHolder, variantDepsHolder)
@@ -166,7 +168,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             mapOf(
                 CLASS_TYPE.ALL to classesUsedInVariant,
-                CLASS_TYPE.PUBLIC to classesUsedInVariant.minus(classesExposedByPublicApis))
+                CLASS_TYPE.PUBLIC to classesUsedInVariant.minus(classesExposedByPublicApis)
+            )
         }
 
         /** Returns classes used inside our variant code. */
@@ -195,11 +198,17 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
 
-            task.externalArtifactCollection = creationConfig
+            task.externalAarsCollection = creationConfig
                 .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.AAR_CLASS_LIST_AND_RES_SYMBOLS)
+
+            task.externalJarsCollection = creationConfig
+                    .variantDependencies.getArtifactCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.JAR_CLASS_LIST)
 
             task.apiDirectDependenciesConfiguration = creationConfig
                 .variantDependencies
