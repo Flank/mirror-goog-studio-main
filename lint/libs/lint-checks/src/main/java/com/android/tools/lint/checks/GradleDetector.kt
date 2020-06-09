@@ -2099,6 +2099,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 4,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
