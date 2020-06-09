@@ -14,32 +14,25 @@
  * limitations under the License.
  */
 
-package androidx.ui.tooling
+package androidx.ui.tooling.inspector
 
-import androidx.compose.SlotTable
-import androidx.ui.unit.IntPxBounds
-import androidx.ui.core.ModifierInfo
+import android.view.View
+
+const val TREE_ENTRY = 9929
 
 /**
  * During testing this is used instead of the version in androidx-ui-tooling, since that library
- * contains only stubbed out classes.
+ * is not available during tests.
  */
-sealed class Group(
-    val key: Any?,
-    val box: IntPxBounds,
-    val data: Collection<Any?>,
-    val modifierInfo: List<ModifierInfo>,
-    val children: Collection<Group>
-)
+class LayoutInspectorTree {
 
-class CallGroup(
-    key: Any?,
-    box: IntPxBounds,
-    data: Collection<Any?>,
-    modifierInfo: List<ModifierInfo>,
-    children: Collection<Group>
-) : Group(key, box, data, modifierInfo, children)
-
-fun SlotTable.asTree(): Group = slots[0] as Group
-
-val Group.position: String? get() = key as? String
+    /**
+     * Returns the hierarchy of [InspectorNode]s from the Compose call stack.
+     *
+     * This is not the real implementation. Here we simply return the tree stored
+     * by the test in the tag: [TREE_ENTRY].
+     */
+    @Suppress("UNCHECKED_CAST", "unused")  // called by reflection
+    fun convert(view: View): List<InspectorNode> =
+        view.getTag(TREE_ENTRY) as? List<InspectorNode> ?: emptyList()
+}

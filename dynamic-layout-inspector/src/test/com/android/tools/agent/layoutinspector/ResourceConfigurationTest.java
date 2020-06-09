@@ -32,7 +32,8 @@ public class ResourceConfigurationTest {
         System.loadLibrary("jni-test");
         long event = ComponentTreeTest.allocateEvent();
 
-        ComponentTree treeBuilder = new ComponentTree(false);
+        Properties properties = new Properties();
+        ComponentTree treeBuilder = new ComponentTree(properties, false);
         treeBuilder.writeTree(event, StandardView.createLinearLayoutWithTextView());
 
         ComponentTreeEvent proto =

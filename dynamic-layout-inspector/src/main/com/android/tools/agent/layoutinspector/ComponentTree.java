@@ -33,9 +33,11 @@ class ComponentTree {
     private final StringTable mStringTable = new StringTable();
     private final ResourceConfiguration mConfiguration = new ResourceConfiguration(mStringTable);
     private final boolean mShowComposeNodes;
+    private final Properties mProperties;
     private ComposeTree mComposeTree;
 
-    public ComponentTree(boolean showComposeNodes) {
+    public ComponentTree(@NonNull Properties properties, boolean showComposeNodes) {
+        mProperties = properties;
         mShowComposeNodes = showComposeNodes;
     }
 
@@ -106,7 +108,8 @@ class ComponentTree {
         if (mShowComposeNodes && COMPOSE_VIEW.equals(klass.getCanonicalName())) {
             try {
                 if (mComposeTree == null) {
-                    mComposeTree = new ComposeTree(view.getClass().getClassLoader(), mStringTable);
+                    ClassLoader classLoader = view.getClass().getClassLoader();
+                    mComposeTree = new ComposeTree(classLoader, mStringTable, mProperties);
                 }
                 mComposeTree.loadComposeTree(view, viewBuffer);
             } catch (Throwable ex) {

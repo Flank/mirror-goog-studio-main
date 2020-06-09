@@ -21,7 +21,7 @@ import android.view.ViewGroup
 
 /**
  * During testing this is used instead of the version in androidx-ui-core, since that library
- * contains only stubbed out classes.
+ * is not available during tests.
  */
 class AndroidComposeView(context: Context) : ViewGroup(context) {
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
