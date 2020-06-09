@@ -1090,6 +1090,14 @@ com.android.build.gradle.internal.dsl.DensitySplitOptions.isStrict: boolean ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setAuto: void (boolean)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setStrict: void (boolean)
+com.android.build.gradle.internal.dsl.DeviceGroup implements com.android.build.api.dsl.DeviceGroup
+com.android.build.gradle.internal.dsl.DeviceGroup.<init>: com.android.build.gradle.internal.dsl.DeviceGroup (com.android.build.gradle.internal.services.DslServices, java.lang.String)
+com.android.build.gradle.internal.dsl.DeviceGroup.getName: java.lang.String ()
+com.android.build.gradle.internal.dsl.DeviceGroup.getTargetDevices: org.gradle.api.DomainObjectSet<com.android.build.api.dsl.Device> ()
+com.android.build.gradle.internal.dsl.DeviceGroupFactory implements org.gradle.api.NamedDomainObjectFactory
+com.android.build.gradle.internal.dsl.DeviceGroupFactory.<init>: com.android.build.gradle.internal.dsl.DeviceGroupFactory (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.DeviceGroupFactory.create: com.android.build.gradle.internal.dsl.DeviceGroup (java.lang.String)
+com.android.build.gradle.internal.dsl.DeviceGroupFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.DexOptions extends com.android.builder.core.DefaultDexOptions
 com.android.build.gradle.internal.dsl.DexOptions.<init>: com.android.build.gradle.internal.dsl.DexOptions (com.android.build.gradle.internal.errors.DeprecationReporter)
 com.android.build.gradle.internal.dsl.DexOptions.additionalParameters: void (java.lang.String[])
@@ -1536,6 +1544,7 @@ com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.setIncludeAndr
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.setReturnDefaultValues: void (boolean)
 com.android.build.gradle.internal.dsl.TestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.TestOptions.getAnimationsDisabled: boolean ()
+com.android.build.gradle.internal.dsl.TestOptions.getDeviceGroups: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> ()
 com.android.build.gradle.internal.dsl.TestOptions.getDevices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> ()
 com.android.build.gradle.internal.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.gradle.internal.dsl.TestOptions.getExecutionEnum: com.android.builder.model.TestOptions$Execution ()
