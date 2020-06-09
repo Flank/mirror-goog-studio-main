@@ -251,7 +251,6 @@ public class MergingReport {
      * <p>Once the merging is finished, the {@link #build()} is called to return an immutable
      * version of itself with all the logging, action recordings and xml files obtainable.
      */
-    @VisibleForTesting
     public static class Builder {
 
         private Map<MergedManifestKind, String> mergedDocuments =

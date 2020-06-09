@@ -37,6 +37,7 @@ import org.mockito.MockitoAnnotations
 class NavGraphExpanderTest {
 
     private val model = ManifestModel()
+    private val fakeSourceFilePosition = SourceFilePosition(UNKNOWN, SourcePosition(0, 0, 0))
     @Mock private lateinit var mergingReportBuilder: MergingReport.Builder
     @Mock private lateinit var actionRecorder: ActionRecorder
 
@@ -219,12 +220,82 @@ class NavGraphExpanderTest {
         expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
 
         // verify the error was recorded.
-        Mockito.verify(mergingReportBuilder).addMessage(
+        verify(mergingReportBuilder).addMessage(
                 Mockito.any<SourceFilePosition>(),
                 Mockito.eq(MergingReport.Record.Severity.ERROR),
                 Mockito.eq(
-                        "Illegal circular reference among navigation files when traversing " +
-                        "navigation file references starting with navigationXmlId: nav1"))
+                    "Illegal circular reference among navigation files when traversing " +
+                            "navigation file references: nav1 > nav2 > nav1."
+                )
+        )
+    }
+
+    @Test
+    fun testDuplicateNavigationFileWarning() {
+
+        val navigationId1 = "nav1"
+        val navigationString1 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav2" />
+                    |    <include app:graph="@navigation/nav3" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId2 = "nav2"
+        val navigationString2 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav3" />
+                    |    <deepLink app:uri="www.example.com" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId3 = "nav3"
+        val navigationString3 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="www.example.com/foo" />
+                    |</navigation>""".trimMargin()
+
+        val inputManifestString =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<manifest
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1">
+                    |    <application android:name="TheApp">
+                    |        <activity android:name=".MainActivity">
+                    |            <nav-graph android:value="@navigation/nav1" />
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
+
+        val loadedNavigationMap: Map<String, NavigationXmlDocument> =
+            mapOf(
+                Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
+                Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)),
+                Pair(navigationId3, NavigationXmlLoader.load(UNKNOWN, navigationString3))
+            )
+
+        expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
+
+        // verify the warning was recorded.
+        verify(mergingReportBuilder).addMessage(
+            Mockito.any<SourceFilePosition>(),
+            Mockito.eq(MergingReport.Record.Severity.WARNING),
+            Mockito.eq(
+                "The navigation file with ID \"nav3\" is included multiple times in " +
+                        "the navigation graph, but only deep links on the first instance will be " +
+                        "triggered at runtime. Consider consolidating these instances into a " +
+                        "single <include> at a higher level of your navigation graph hierarchy."
+            )
+        )
     }
 
     @Test
@@ -254,7 +325,13 @@ class NavGraphExpanderTest {
                 Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
                 Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)))
 
-        val deepLinks = NavGraphExpander.findDeepLinks(navigationId1, loadedNavigationMap)
+        val deepLinks =
+            NavGraphExpander.findDeepLinks(
+                navigationId1,
+                loadedNavigationMap,
+                mergingReportBuilder,
+                fakeSourceFilePosition
+            )
         assertThat(deepLinks).containsExactly(
                 DeepLink(
                     ImmutableList.of("http"),
