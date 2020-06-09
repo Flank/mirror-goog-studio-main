@@ -23,13 +23,12 @@ fun mainActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.design.widget.BottomNavigationView", useMaterial2)}
+import ${getMaterialComponentName("android.support.design.widget.BottomNavigationView", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration

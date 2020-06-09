@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.appBarActivityXml
@@ -49,12 +50,12 @@ fun RecipeExecutor.tabbedActivityRecipe(
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   addAllKotlinDependencies(moduleData)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addLifecycleDependencies(useAndroidX)
+  addMaterialDependency(useAndroidX)
 
   generateManifest(
     moduleData, activityClass, activityClass, packageName, isLauncher, true,
@@ -70,16 +71,15 @@ fun RecipeExecutor.tabbedActivityRecipe(
     activityClass,
     packageName,
     moduleData.themesData.appBarOverlay.name,
-    useAndroidX,
-    useMaterial2)
+    useAndroidX)
   save(appBarActivityLayoutXml, resOut.resolve("layout/${layoutName}.xml"))
   val fragmentLayoutXml = fragmentSimpleXml(packageName, useAndroidX)
   save(fragmentLayoutXml, resOut.resolve("layout/${fragmentLayoutName}.xml"))
 
   val ktOrJavaExt = projectData.language.extension
   val tabsActivity = when (projectData.language) {
-    Language.Java -> tabsActivityJava(activityClass, layoutName, packageName, useAndroidX, useMaterial2)
-    Language.Kotlin -> tabsActivityKt(activityClass, layoutName, packageName, useAndroidX, useMaterial2)
+    Language.Java -> tabsActivityJava(activityClass, layoutName, packageName, useAndroidX)
+    Language.Kotlin -> tabsActivityKt(activityClass, layoutName, packageName, useAndroidX)
   }
   save(tabsActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 

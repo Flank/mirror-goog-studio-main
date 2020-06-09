@@ -31,6 +31,7 @@ import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentJava
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
@@ -51,13 +52,13 @@ fun RecipeExecutor.generateBasicActivity(
   val (projectData, srcOut, resOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   addAllKotlinDependencies(moduleData)
+  addMaterialDependency(useAndroidX)
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
     generateActivityTitle = true)
   generateAppBar(
-    moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX, useMaterial2 = useMaterial2
+    moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX
   )
 
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
@@ -74,11 +75,11 @@ fun RecipeExecutor.generateBasicActivity(
   val simpleActivity = when (projectData.language) {
     Language.Java ->
       basicActivityJava(
-        moduleData.isNewModule, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+        moduleData.isNewModule, projectData.applicationPackage, packageName, useAndroidX, activityClass, layoutName, menuName
       )
     Language.Kotlin ->
       basicActivityKt(
-        moduleData.isNewModule, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+        moduleData.isNewModule, projectData.applicationPackage, packageName, useAndroidX, activityClass, layoutName, menuName
       )
   }
 

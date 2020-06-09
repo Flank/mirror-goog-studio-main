@@ -27,11 +27,10 @@ fun itemListDialogFragmentJava(
   listLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ): String {
   val layoutManagerImport =
-    if (columnCount == 1) "import ${getMaterialComponentName("android.support.v7.widget.LinearLayoutManager", useMaterial2)};"
+    if (columnCount == 1) "import ${getMaterialComponentName("android.support.v7.widget.LinearLayoutManager", useAndroidX)};"
     else "import ${getMaterialComponentName("android.support.v7.widget.GridLayoutManager", useAndroidX)};"
 
   val layoutManagerInstantiation =
@@ -44,7 +43,7 @@ package ${packageName};
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
-import ${getMaterialComponentName("android.support.design.widget.BottomSheetDialog", useMaterial2)}Fragment;
+import ${getMaterialComponentName("android.support.design.widget.BottomSheetDialog", useAndroidX)}Fragment;
 $layoutManagerImport
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)};
 import android.view.LayoutInflater;

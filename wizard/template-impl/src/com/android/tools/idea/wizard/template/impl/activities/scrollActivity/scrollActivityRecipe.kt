@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
@@ -43,12 +44,12 @@ fun RecipeExecutor.scrollActivityRecipe(
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
+  addMaterialDependency(useAndroidX)
 
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
@@ -59,7 +60,7 @@ fun RecipeExecutor.scrollActivityRecipe(
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
   generateSimpleMenu(packageName, activityClass, resOut, menuName)
   save(appBarXml(activityClass, packageName, contentLayoutName,
-                 moduleData.themesData.appBarOverlay.name, moduleData.themesData.popupOverlay.name, useAndroidX, useMaterial2),
+                 moduleData.themesData.appBarOverlay.name, moduleData.themesData.popupOverlay.name, useAndroidX),
        resOut.resolve("layout/${layoutName}.xml"))
   save(simpleXml(activityClass, layoutName, packageName, useAndroidX), resOut.resolve("layout/${contentLayoutName}.xml"))
 
@@ -67,8 +68,8 @@ fun RecipeExecutor.scrollActivityRecipe(
 
   val scrollActivity = when (projectData.language) {
     Language.Java -> scrollActivityJava(activityClass, moduleData.projectTemplateData.applicationPackage, moduleData.isNewModule,
-                                        layoutName, menuName, packageName, useAndroidX, useMaterial2)
-    Language.Kotlin -> scrollActivityKt(activityClass, moduleData.isNewModule, layoutName, menuName, packageName, useAndroidX, useMaterial2)
+                                        layoutName, menuName, packageName, useAndroidX)
+    Language.Kotlin -> scrollActivityKt(activityClass, moduleData.isNewModule, layoutName, menuName, packageName, useAndroidX)
   }
   save(scrollActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 

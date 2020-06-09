@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.layout.activityFullscreenXml
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenAttrs
@@ -45,11 +46,11 @@ fun RecipeExecutor.fullscreenActivityRecipe(
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
+  addMaterialDependency(useAndroidX)
 
   val simpleName = activityToLayout(activityClass)
   val superClassFqcn = getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)
@@ -58,7 +59,7 @@ fun RecipeExecutor.fullscreenActivityRecipe(
            manifestOut.resolve("AndroidManifest.xml"))
 
   val finalResOut = moduleData.baseFeature?.resDir ?: resOut
-  generateThemeStyles(moduleData.themesData.main, useMaterial2, finalResOut)
+  generateThemeStyles(moduleData.themesData.main, useAndroidX, finalResOut)
 
   mergeXml(fullscreenAttrs(), finalResOut.resolve("values/attrs.xml"))
   mergeXml(fullscreenColors(), finalResOut.resolve("values/colors.xml"))

@@ -23,15 +23,14 @@ fun tabsActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean) =
+  useAndroidX: Boolean) =
 
   """package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.TabLayout", useMaterial2)}
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.TabLayout", useAndroidX)}
 import ${getMaterialComponentName("android.support.v4.view.ViewPager", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import android.view.Menu

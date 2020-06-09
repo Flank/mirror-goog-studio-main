@@ -25,15 +25,14 @@ fun contentDetailActivityKt(
   detailNameLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ): String = """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.content.Intent
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)}
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import android.view.MenuItem
 

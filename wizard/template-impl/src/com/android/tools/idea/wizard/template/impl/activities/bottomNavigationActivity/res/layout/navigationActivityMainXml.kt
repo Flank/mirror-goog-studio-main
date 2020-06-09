@@ -19,10 +19,10 @@ package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationA
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun navigationActivityMainXml(
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
-<${getMaterialComponentName("android.support.constraint.ConstraintLayout", useMaterial2)}
+<${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/container"
@@ -30,7 +30,7 @@ fun navigationActivityMainXml(
     android:layout_height="match_parent"
     android:paddingTop="?attr/actionBarSize" >
 
-    <${getMaterialComponentName("android.support.design.widget.BottomNavigationView", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.BottomNavigationView", useAndroidX)}
         android:id="@+id/nav_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -55,4 +55,4 @@ fun navigationActivityMainXml(
         app:navGraph="@navigation/mobile_navigation"
     />
 
-</${getMaterialComponentName("android.support.constraint.ConstraintLayout", useMaterial2)}>"""
+</${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}>"""

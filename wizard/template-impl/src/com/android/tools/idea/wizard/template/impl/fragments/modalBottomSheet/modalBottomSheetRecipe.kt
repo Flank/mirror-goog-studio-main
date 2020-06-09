@@ -19,6 +19,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.ColumnCount
 import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.res.layout.fragmentItemListDialogItemXml
 import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.res.layout.fragmentItemListDialogXml
@@ -38,7 +39,6 @@ fun RecipeExecutor.modalBottomSheetRecipe(
   val (projectData, srcOut, resOut, _) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
@@ -46,6 +46,7 @@ fun RecipeExecutor.modalBottomSheetRecipe(
   addDependency("com.android.support:support-v4:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
+  addMaterialDependency(useAndroidX)
 
   save(fragmentItemListDialogXml(fragmentClass, itemLayout, packageName, useAndroidX), resOut.resolve("layout/${listLayout}.xml"))
   save(fragmentItemListDialogItemXml(), resOut.resolve("layout/${itemLayout}.xml"))
@@ -53,9 +54,9 @@ fun RecipeExecutor.modalBottomSheetRecipe(
   val columnCountNumber = columnCount.ordinal + 1
   val itemListDialogFragment = when (projectData.language) {
     Language.Java -> itemListDialogFragmentJava(
-      applicationPackage, columnCountNumber, fragmentClass, itemLayout, listLayout, objectKind, packageName, useAndroidX, useMaterial2)
+      applicationPackage, columnCountNumber, fragmentClass, itemLayout, listLayout, objectKind, packageName, useAndroidX)
     Language.Kotlin -> itemListDialogFragmentKt(
-      applicationPackage, columnCountNumber, fragmentClass, itemLayout, listLayout, objectKind, packageName, useAndroidX, useMaterial2)
+      applicationPackage, columnCountNumber, fragmentClass, itemLayout, listLayout, objectKind, packageName, useAndroidX)
   }
   save(itemListDialogFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
 

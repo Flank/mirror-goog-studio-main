@@ -40,10 +40,11 @@ fun RecipeExecutor.generateSimpleMenu(packageName: PackageName, activityClass: S
 }
 
 fun RecipeExecutor.generateThemeStyles(
-  themeData: ThemeData, useMaterial2: Boolean, resOut: File
+  themeData: ThemeData, useAndroidX: Boolean, resOut: File
 ) {
+  addMaterialDependency(useAndroidX)
   if (!themeData.exists) {
-    mergeXml(themeStyles(themeData.name, useMaterial2), resOut.resolve("values/themes.xml"))
+    mergeXml(themeStyles(themeData.name, useAndroidX), resOut.resolve("values/themes.xml"))
   }
 }
 
@@ -57,7 +58,6 @@ fun RecipeExecutor.generateManifest(
   noActionBarTheme: ThemeData = moduleData.themesData.noActionBar,
   isNewModule: Boolean = moduleData.isNewModule,
   isLibrary: Boolean = moduleData.isLibrary,
-  mainTheme: ThemeData = moduleData.themesData.main,
   manifestOut: File = moduleData.manifestDir,
   baseFeatureResOut: File = moduleData.baseFeature?.resDir ?: moduleData.resDir,
   generateActivityTitle: Boolean
@@ -159,8 +159,7 @@ fun RecipeExecutor.generateAppBar(
   resDir: File = moduleData.resDir,
   baseFeatureResOut: File? = moduleData.baseFeature?.resDir,
   themesData: ThemesData = moduleData.themesData,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) {
   val appBarDimens = """
     <resources>
@@ -169,7 +168,7 @@ fun RecipeExecutor.generateAppBar(
   """.trimIndent()
 
   val coordinatorLayout = getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)
-  val layoutTag = getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)
+  val layoutTag = getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)
 
   val appBarLayout = """
     <?xml version="1.0" encoding="utf-8"?>
@@ -197,7 +196,7 @@ fun RecipeExecutor.generateAppBar(
 
         <include layout="@layout/$simpleLayoutName"/>
 
-        <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
+        <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
