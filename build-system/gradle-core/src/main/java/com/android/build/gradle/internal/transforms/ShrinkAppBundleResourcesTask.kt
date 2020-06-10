@@ -128,7 +128,7 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
     WorkAction<ResourceShrinkerParams> {
 
     override fun execute() {
-        val logger = Logging.getLogger(LegacyShrinkBundleModuleResourcesTask::class.java)
+        val logger = Logging.getLogger(ShrinkAppBundleResourcesTask::class.java)
         val allModules = parameters.modules.get()
         FileUtils.createZipFilesystem(originalBundleFile.toPath()).use { fs ->
             val proguardMappings = fs.getPath(

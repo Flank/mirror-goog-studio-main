@@ -19,6 +19,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.SdkConstants
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptUtils
@@ -349,6 +350,31 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     if (config.consumeStableIdsFile != null) {
         builder.add("--stable-ids", config.consumeStableIdsFile.absolutePath)
     }
+
+    return builder.build()
+}
+
+/**
+ * Creates the command line used to convert the resources between proto/binary formats.
+ *
+ * See [Aapt2.convert].
+ *
+ * @return the command line arguments
+ */
+fun makeConvertCommand(config: AaptConvertConfig): ImmutableList<String> {
+    val builder = ImmutableList.builder<String>()
+
+    builder.add("--output-format")
+    if (config.convertToProtos) {
+        builder.add("proto")
+    } else {
+        builder.add("binary")
+    }
+
+    FileUtils.mkdirs(config.outputFile.parentFile)
+    builder.add("-o").add(config.outputFile.absolutePath)
+
+    builder.add(config.inputFile.absolutePath)
 
     return builder.build()
 }

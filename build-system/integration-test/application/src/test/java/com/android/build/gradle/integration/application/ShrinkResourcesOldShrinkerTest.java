@@ -69,7 +69,7 @@ import org.junit.runners.Parameterized;
 
 /** Assemble tests for shrink. */
 @RunWith(Parameterized.class)
-public class ShrinkResourcesTest {
+public class ShrinkResourcesOldShrinkerTest {
 
     @Rule
     public GradleTestProject project =
@@ -79,36 +79,27 @@ public class ShrinkResourcesTest {
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
-    @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2} useRTxt={3} useNewShrinker={4}")
+    @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2} useRTxt={3}")
     public static Iterable<Object[]> data() {
         return ImmutableList.of(
                 // R classes and old resource shrinker.
                 new Object[]{
-                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, false
+                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false
                 },
-                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false, false},
-                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, false},
-                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false, false},
-                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, false},
-                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, false, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, false},
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, false},
                 // R text files and old resource shrinker.
                 new Object[]{
-                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, false
+                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true
                 },
-                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, false},
-                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, false},
-                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true, false},
-                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, false},
-                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, false},
-                // R text files and new resource shrinker.
-                // Bundles with new shrinker are tested in ShrinkBundleResourcesTest because build
-                // pipeline is different.
-                new Object[]{
-                        CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, true
-                },
-                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true, true},
-                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, true},
-                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true, true}
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true},
+                new Object[]{CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true},
+                new Object[]{CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER, true},
+                new Object[]{CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER, true}
         );
     }
 
@@ -123,9 +114,6 @@ public class ShrinkResourcesTest {
 
     @Parameterized.Parameter(3)
     public Boolean useRTxt;
-
-    @Parameterized.Parameter(4)
-    public Boolean useNewShrinker;
 
     private enum ApkPipeline {
         NO_BUNDLE("assemble", ""),
@@ -239,7 +227,7 @@ public class ShrinkResourcesTest {
         project.executor()
                 .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .with(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING, useRTxt)
-                .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, useNewShrinker)
+                .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, false)
                 .run(
                         "clean",
                         apkPipeline.taskName("Release"),

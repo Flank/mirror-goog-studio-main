@@ -17,6 +17,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager.LeasedAaptDaemon
 import com.android.ide.common.resources.CompileResourceRequest
@@ -173,6 +174,12 @@ class Aapt2DaemonManager(
         override fun link(request: AaptPackageConfig, logger: ILogger) {
             Preconditions.checkState(leaseValid, "Leased process is already closed")
             leasableDaemon.daemon.link(request, logger)
+        }
+
+        @Throws(Aapt2Exception::class)
+        override fun convert(request: AaptConvertConfig, logger: ILogger) {
+            Preconditions.checkState(leaseValid, "Leased process is already closed")
+            leasableDaemon.daemon.convert(request, logger)
         }
 
         override fun close() {

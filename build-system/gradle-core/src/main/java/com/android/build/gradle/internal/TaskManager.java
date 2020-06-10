@@ -137,7 +137,7 @@ import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.ProguardTask;
 import com.android.build.gradle.internal.tasks.R8Task;
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
-import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
+import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -162,6 +162,8 @@ import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask;
+import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask;
+import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -3014,7 +3016,7 @@ public abstract class TaskManager<
     }
 
     /**
-     * Checks if {@link ShrinkResourcesTask} and {@link LegacyShrinkBundleModuleResourcesTask} should be added
+     * Checks if {@link ShrinkResourcesOldShrinkerTask} and {@link LegacyShrinkBundleModuleResourcesTask} should be added
      * to the build pipeline and creates the tasks
      */
     protected void maybeCreateResourcesShrinkerTasks(
@@ -3023,13 +3025,24 @@ public abstract class TaskManager<
             return;
         }
 
-        // if resources are shrink, create task per variant output
-        // to transform the res package into a stripped res package
+        if (componentProperties.getVariantType().isDynamicFeature()) {
+            // For bundles resources are shrunk once bundle is packaged so the task is applicable
+            // for base module only.
+            return;
+        }
 
-        taskFactory.register(new ShrinkResourcesTask.CreationAction(componentProperties));
-
-        // And for the bundle
-        if (!globalScope.getProjectOptions().get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
+            // Shrink resources in APK with a new resource shrinker and produce stripped res package.
+            taskFactory.register(
+                    new ShrinkResourcesNewShrinkerTask.CreationAction(componentProperties));
+            // Shrink resources in bundles with new resource shrinker.
+            taskFactory.register(
+                    new ShrinkAppBundleResourcesTask.CreationAction(componentProperties));
+        } else {
+            // Shrink resources in APK with old resource shrinker and produce stripped res package.
+            taskFactory.register(
+                    new ShrinkResourcesOldShrinkerTask.CreationAction(componentProperties));
+            // Shrink base module resources in proto format to be packaged to bundle.
             taskFactory.register(
                     new LegacyShrinkBundleModuleResourcesTask.CreationAction(componentProperties));
         }

@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
@@ -107,6 +108,24 @@ class Aapt2DaemonTimeoutTest {
             daemon.link(request, logger)
         }
         assertThat(exception.message).contains("Link timed out, attempting to stop daemon")
+        assertThat(exception.suppressed).isEmpty()
+        // The daemon should be shut down.
+        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
+    }
+
+    @Test
+    fun testConvertTimeout() {
+        val logger = MockLog()
+        val inputFile = File(temporaryFolder.newFolder(), "input.apk")
+        val outputFile = File(temporaryFolder.newFolder(), "output.apk")
+
+        val request = AaptConvertConfig(inputFile, outputFile)
+
+        val daemon = CompileLinkTimeoutAapt2Daemon(name = testName.methodName)
+        val exception = assertFailsWith(Aapt2InternalException::class) {
+            daemon.convert(request, logger)
+        }
+        assertThat(exception.message).contains("Convert timed out, attempting to stop daemon")
         assertThat(exception.suppressed).isEmpty()
         // The daemon should be shut down.
         assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)

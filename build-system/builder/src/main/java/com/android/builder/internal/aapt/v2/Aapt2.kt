@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.ILogger
@@ -32,4 +33,10 @@ interface Aapt2 {
 
     /** Perform the requested linking. Throws [Aapt2Exception] on failure. */
     fun link(request: AaptPackageConfig, logger: ILogger)
+
+    /**
+     * Perform the requested conversion between proto/binary resources. Throws [Aapt2Exception] on
+     * failure.
+     */
+    fun convert(request: AaptConvertConfig, logger: ILogger)
 }

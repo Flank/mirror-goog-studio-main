@@ -87,5 +87,29 @@ public class DummyContent {
             new byte[] {0xa, 0x3, 0x1a, 0x1, 0x78, 0x1a, 0x2, 0x8, 0x1};
     public static final long TINY_PROTO_XML_CRC = 3204905971L;
 
+    // The XML document <x/> as binary-packed with AAPT
+    public static final byte[] TINY_PROTO_CONVERTED_TO_BINARY_XML =
+            new byte[] {
+                    (byte) 3, (byte) 0, (byte) 8, (byte) 0, (byte) 112, (byte) 0,
+                    (byte) 0, (byte) 0, (byte) 1, (byte) 0, (byte) 28, (byte) 0,
+                    (byte) 36, (byte) 0, (byte) 0, (byte) 0, (byte) 1, (byte) 0,
+                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+                    (byte) 0, (byte) 1, (byte) 0, (byte) 0, (byte) 32, (byte) 0,
+                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 1, (byte) 1,
+                    (byte) 120, (byte) 0, (byte) -128, (byte) 1, (byte) 8, (byte) 0,
+                    (byte) 8, (byte) 0, (byte) 0, (byte) 0, (byte) 2, (byte) 1,
+                    (byte) 16, (byte) 0, (byte) 36, (byte) 0, (byte) 0, (byte) 0,
+                    (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) -1, (byte) -1,
+                    (byte) -1, (byte) -1, (byte) -1, (byte) -1, (byte) -1, (byte) -1,
+                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 20, (byte) 0,
+                    (byte) 20, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+                    (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 3, (byte) 1,
+                    (byte) 16, (byte) 0, (byte) 24, (byte) 0, (byte) 0, (byte) 0,
+                    (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) -1, (byte) -1,
+                    (byte) -1, (byte) -1, (byte) -1, (byte) -1, (byte) -1, (byte) -1,
+                    (byte) 0, (byte) 0, (byte) 0, (byte) 0
+            };
+
     private DummyContent() {}
 }

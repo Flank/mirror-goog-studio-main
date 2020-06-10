@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
@@ -26,8 +27,8 @@ import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.testutils.MockLog
 import com.android.testutils.TestUtils
-import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -67,18 +68,20 @@ class Aapt2DaemonImplTest {
     fun testCompileMultipleCalls() {
         val outDir = temporaryFolder.newFolder()
         val requests = listOf(
-                CompileResourceRequest(
-                        inputFile = valuesFile("strings", "<resources></resources>"),
-                        outputDirectory = outDir),
-                CompileResourceRequest(
-                        inputFile = valuesFile("styles", "<resources></resources>"),
-                        outputDirectory = outDir)
+            CompileResourceRequest(
+                inputFile = valuesFile("strings", "<resources></resources>"),
+                outputDirectory = outDir
+            ),
+            CompileResourceRequest(
+                inputFile = valuesFile("styles", "<resources></resources>"),
+                outputDirectory = outDir
+            )
         )
         val daemon = createDaemon()
         requests.forEach { daemon.compile(it, logger) }
         assertThat(outDir.list()).asList()
-                .containsExactlyElementsIn(
-                        requests.map { Aapt2RenamingConventions.compilationRename(it.inputFile) })
+            .containsExactlyElementsIn(
+                requests.map { Aapt2RenamingConventions.compilationRename(it.inputFile) })
     }
 
     @Test
@@ -91,11 +94,13 @@ class Aapt2DaemonImplTest {
             CompileResourceRequest(
                 inputFile = valuesFile("strings", "<resources></resources>"),
                 outputDirectory = outDir,
-                partialRFile = partialRvalue),
+                partialRFile = partialRvalue
+            ),
             CompileResourceRequest(
                 inputFile = resourceFile("raw", "my_raw_resource.txt", "Raw Content"),
                 outputDirectory = outDir,
-                partialRFile = partialRRaw)
+                partialRFile = partialRRaw
+            )
         )
         val daemon = createDaemon()
         requests.forEach { daemon.compile(it, logger) }
@@ -111,18 +116,21 @@ class Aapt2DaemonImplTest {
     fun testWarningsDoNotFailBuild() {
         val outDir = temporaryFolder.newFolder()
         val request = CompileResourceRequest(
-                        inputFile = valuesFile(
-                                "strings",
-                                "<resources><string name=\"foo\">%s %d</string></resources>"),
-                        outputDirectory = outDir)
+            inputFile = valuesFile(
+                "strings",
+                "<resources><string name=\"foo\">%s %d</string></resources>"
+            ),
+            outputDirectory = outDir
+        )
 
         val daemon = createDaemon()
         daemon.compile(request, logger)
         assertThat(outDir.list()).asList()
-                .containsExactly(Aapt2RenamingConventions.compilationRename(request.inputFile))
+            .containsExactly(Aapt2RenamingConventions.compilationRename(request.inputFile))
         assertThat(logger.messages).hasSize(2)
         assertThat(logger.messages[1]).contains(
-                "warn: multiple substitutions specified in non-positional format")
+            "warn: multiple substitutions specified in non-positional format"
+        )
         logger.clear()
     }
 
@@ -133,10 +141,12 @@ class Aapt2DaemonImplTest {
         val daemon = createDaemon()
         val exception = assertFailsWith(Aapt2Exception::class) {
             daemon.compile(
-                    CompileResourceRequest(
-                            inputFile = inputFile,
-                            outputDirectory = compiledDir),
-                    logger)
+                CompileResourceRequest(
+                    inputFile = inputFile,
+                    outputDirectory = compiledDir
+                ),
+                logger
+            )
         }
         assertThat(exception.message).contains("error: invalid file path")
         assertThat(exception.message).contains("foo.txt")
@@ -151,29 +161,32 @@ class Aapt2DaemonImplTest {
 
         val compiledDir = temporaryFolder.newFolder()
         daemon.compile(
-                CompileResourceRequest(
-                        inputFile = resourceFile("raw", "foo.txt", "content"),
-                        outputDirectory = compiledDir),
-                logger)
+            CompileResourceRequest(
+                inputFile = resourceFile("raw", "foo.txt", "content"),
+                outputDirectory = compiledDir
+            ),
+            logger
+        )
 
         val manifest = resourceFile(
-                "src",
-                "AndroidManifest.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
+            "src",
+            "AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
                     |<manifest
                     |        xmlns:android="http://schemas.android.com/apk/res/android"
                     |        package="com.example.aapt2daemon.test">
-                    |</manifest>""".trimMargin())
+                    |</manifest>""".trimMargin()
+        )
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
         val request = AaptPackageConfig(
-                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = manifest,
-                resourceDirs = ImmutableList.of(compiledDir),
-                resourceOutputApk = outputFile,
-                options = AaptOptions(),
-                variantType = VariantTypeImpl.BASE_APK
+            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+            manifestFile = manifest,
+            resourceDirs = ImmutableList.of(compiledDir),
+            resourceOutputApk = outputFile,
+            options = AaptOptions(),
+            variantType = VariantTypeImpl.BASE_APK
         )
 
         daemon.link(request, logger)
@@ -189,25 +202,28 @@ class Aapt2DaemonImplTest {
 
         val compiledDir = temporaryFolder.newFolder()
         daemon.compile(
-                CompileResourceRequest(
-                        inputFile = resourceFile("raw", "foo.txt", "content"),
-                        outputDirectory = compiledDir),
-                logger)
+            CompileResourceRequest(
+                inputFile = resourceFile("raw", "foo.txt", "content"),
+                outputDirectory = compiledDir
+            ),
+            logger
+        )
 
         val manifest = resourceFile(
-                "src",
-                "AndroidManifest.xml",
-                """<""")
+            "src",
+            "AndroidManifest.xml",
+            """<"""
+        )
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
         val request = AaptPackageConfig(
-                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = manifest,
-                resourceOutputApk = outputFile,
-                resourceDirs = ImmutableList.of(compiledDir),
-                options = AaptOptions(),
-                variantType = VariantTypeImpl.BASE_APK
+            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+            manifestFile = manifest,
+            resourceOutputApk = outputFile,
+            resourceDirs = ImmutableList.of(compiledDir),
+            options = AaptOptions(),
+            variantType = VariantTypeImpl.BASE_APK
         )
         val exception = assertFailsWith(Aapt2Exception::class) {
             daemon.link(request.copy(intermediateDir = temporaryFolder.newFolder()), logger)
@@ -215,7 +231,6 @@ class Aapt2DaemonImplTest {
         assertThat(exception.message).contains("Android resource linking failed")
         assertThat(exception.message).contains("AndroidManifest.xml")
         assertThat(exception.message).contains("error: unclosed token.")
-
 
         // Compiled resources should be listed in a file.
         assertThat(logger.messages.joinToString("\n")).contains("@")
@@ -234,17 +249,82 @@ class Aapt2DaemonImplTest {
     }
 
     @Test
+    fun testConvert() {
+        val daemon = createDaemon()
+
+        val compiledDir = temporaryFolder.newFolder()
+        daemon.compile(
+            CompileResourceRequest(
+                inputFile = resourceFile("layout", "some.xml", "<x/>"),
+                outputDirectory = compiledDir
+            ),
+            logger
+        )
+        daemon.compile(
+            CompileResourceRequest(
+                inputFile = resourceFile(
+                    "layout",
+                    "another.xml",
+                    "<merge><a /><b attr=\"Hello\"/></merge>"
+                ),
+                outputDirectory = compiledDir
+            ),
+            logger
+        )
+
+        val manifest = resourceFile(
+            "src",
+            "AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                    |<manifest
+                    |        xmlns:android="http://schemas.android.com/apk/res/android"
+                    |        package="com.example.aapt2daemon.test">
+                    |</manifest>""".trimMargin()
+        )
+        val protoLinkedFile = File(temporaryFolder.newFolder(), "proto.apk")
+        val request = AaptPackageConfig(
+            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+            manifestFile = manifest,
+            resourceDirs = ImmutableList.of(compiledDir),
+            resourceOutputApk = protoLinkedFile,
+            options = AaptOptions(),
+            variantType = VariantTypeImpl.BASE_APK,
+            generateProtos = true
+        )
+        daemon.link(request, logger)
+        assertThat(protoLinkedFile) {
+            it.contains("resources.pb")
+        }
+
+        val binaryLinkedFile = File(temporaryFolder.newFolder(), "binary.apk")
+        daemon.convert(
+            AaptConvertConfig(
+                inputFile = protoLinkedFile,
+                outputFile = binaryLinkedFile
+            ), logger
+        )
+
+        assertThat(binaryLinkedFile) {
+            it.contains("resources.arsc")
+            it.containsFileWithContent("res/layout/some.xml", BINARY_XML_CONTENT)
+            it.contains("res/layout/another.xml")
+        }
+    }
+
+    @Test
     fun pngWithLongPathCrunchingTest() {
         val daemon = createDaemon()
 
         val request = CompileResourceRequest(
-                AaptTestUtils.getTestPngWithLongFileName(temporaryFolder),
-                AaptTestUtils.getOutputDir(temporaryFolder),
-                "test")
+            AaptTestUtils.getTestPngWithLongFileName(temporaryFolder),
+            AaptTestUtils.getOutputDir(temporaryFolder),
+            "test"
+        )
         daemon.compile(request, logger)
         val compiled =
-                request.outputDirectory.toPath().resolve(
-                        Aapt2RenamingConventions.compilationRename(request.inputFile))
+            request.outputDirectory.toPath().resolve(
+                Aapt2RenamingConventions.compilationRename(request.inputFile)
+            )
         assertThat(compiled).exists()
     }
 
@@ -255,21 +335,25 @@ class Aapt2DaemonImplTest {
         val png = AaptTestUtils.getTestPng(temporaryFolder)
         val outDir = AaptTestUtils.getOutputDir(temporaryFolder)
         daemon.compile(
-                CompileResourceRequest(
-                        inputFile = png,
-                        outputDirectory = outDir,
-                        isPseudoLocalize = false,
-                        isPngCrunching = true),
-                logger)
+            CompileResourceRequest(
+                inputFile = png,
+                outputDirectory = outDir,
+                isPseudoLocalize = false,
+                isPngCrunching = true
+            ),
+            logger
+        )
         val outFile = outDir.toPath().resolve(Aapt2RenamingConventions.compilationRename(png))
         val withCrunchEnabledSize = Files.size(outFile)
         daemon.compile(
-                CompileResourceRequest(
-                        inputFile = png,
-                        outputDirectory = outDir,
-                        isPseudoLocalize = false,
-                        isPngCrunching = false),
-                logger)
+            CompileResourceRequest(
+                inputFile = png,
+                outputDirectory = outDir,
+                isPseudoLocalize = false,
+                isPngCrunching = false
+            ),
+            logger
+        )
 
         val withCrunchDisabledSize = Files.size(outFile)
         assertThat(withCrunchEnabledSize).isLessThan(withCrunchDisabledSize)
@@ -283,21 +367,25 @@ class Aapt2DaemonImplTest {
         val outDir = AaptTestUtils.getOutputDir(temporaryFolder)
 
         daemon.compile(
-                CompileResourceRequest(
-                        inputFile = ninePatch,
-                        outputDirectory = outDir,
-                        isPseudoLocalize = false,
-                        isPngCrunching = true),
-                logger)
+            CompileResourceRequest(
+                inputFile = ninePatch,
+                outputDirectory = outDir,
+                isPseudoLocalize = false,
+                isPngCrunching = true
+            ),
+            logger
+        )
         val outFile = outDir.toPath().resolve(Aapt2RenamingConventions.compilationRename(ninePatch))
         val withCrunchEnabled = Files.readAllBytes(outFile)
         daemon.compile(
-                CompileResourceRequest(
-                        inputFile = ninePatch,
-                        outputDirectory = outDir,
-                        isPseudoLocalize = false,
-                        isPngCrunching = false),
-                logger)
+            CompileResourceRequest(
+                inputFile = ninePatch,
+                outputDirectory = outDir,
+                isPseudoLocalize = false,
+                isPngCrunching = false
+            ),
+            logger
+        )
         val withCrunchDisabled = Files.readAllBytes(outFile)
         assertThat(withCrunchDisabled).isEqualTo(withCrunchEnabled)
     }
@@ -305,7 +393,7 @@ class Aapt2DaemonImplTest {
     @After
     fun assertNoWarningOrErrorLogs() {
         assertThat(logger.messages.filter { !(isStartOrShutdownLog(it) || it.startsWith("V")) })
-                .isEmpty()
+            .isEmpty()
     }
 
     @After
@@ -318,40 +406,50 @@ class Aapt2DaemonImplTest {
     }
 
     private fun isStartOrShutdownLog(line: String) =
-            line.startsWith("P") && (line.contains("starting") || line.contains("shutdown"))
+        line.startsWith("P") && (line.contains("starting") || line.contains("shutdown"))
 
     private fun createDaemon(
-            daemonTimeouts: Aapt2DaemonTimeouts = Aapt2DaemonTimeouts(),
-            executable: Path = TestUtils.getAapt2()): Aapt2Daemon {
+        daemonTimeouts: Aapt2DaemonTimeouts = Aapt2DaemonTimeouts(),
+        executable: Path = TestUtils.getAapt2()
+    ): Aapt2Daemon {
         val daemon = Aapt2DaemonImpl(
-                displayId = "'Aapt2DaemonImplTest.${testName.methodName}'",
-                aaptExecutable = executable,
-                logger = logger,
-                daemonTimeouts = daemonTimeouts)
+            displayId = "'Aapt2DaemonImplTest.${testName.methodName}'",
+            aaptExecutable = executable,
+            logger = logger,
+            daemonTimeouts = daemonTimeouts
+        )
         this.daemon = daemon
         return daemon
     }
 
     private fun valuesFile(name: String, content: String) =
-            resourceFile("values", "$name.xml", content)
+        resourceFile("values", "$name.xml", content)
 
     private fun resourceFile(directory: String, name: String, content: String) =
-            temporaryFolder.newFolder()
-                    .toPath()
-                    .resolve(directory)
-                    .resolve(name)
-                    .apply {
-                        Files.createDirectories(this.parent)
-                        Files.write(this, content.toByteArray(StandardCharsets.UTF_8))
-                    }
-                    .toFile()
+        temporaryFolder.newFolder()
+            .toPath()
+            .resolve(directory)
+            .resolve(name)
+            .apply {
+                Files.createDirectories(this.parent)
+                Files.write(this, content.toByteArray(StandardCharsets.UTF_8))
+            }
+            .toFile()
 
     companion object {
         private val target: IAndroidTarget by lazy(LazyThreadSafetyMode.NONE) {
             AndroidSdkHandler.getInstance(TestUtils.getSdk())
-                    .getAndroidTargetManager(FakeProgressIndicator())
-                    .getTargets(FakeProgressIndicator())
-                    .maxBy { it.version }!!
+                .getAndroidTargetManager(FakeProgressIndicator())
+                .getTargets(FakeProgressIndicator())
+                .maxBy { it.version }!!
         }
+
+        val BINARY_XML_CONTENT = listOf(
+            3, 0, 8, 0, 112, 0, 0, 0, 1, 0, 28, 0, 36, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+            0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 120, 0, -128, 1, 8, 0, 8, 0, 0, 0, 2, 1,
+            16, 0, 36, 0, 0, 0, 1, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 20, 0, 20,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 16, 0, 24, 0, 0, 0, 1, 0, 0, 0, -1, -1, -1, -1, -1,
+            -1, -1, -1, 0, 0, 0, 0
+        ).map { it.toByte() }.toByteArray()
     }
 }

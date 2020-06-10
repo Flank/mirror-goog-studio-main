@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.SdkConstants
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.GrabProcessOutput
@@ -194,6 +195,34 @@ class Aapt2DaemonImpl(
                         output = result.stdErr,
                         processName = displayName,
                         command = "$aaptPath link $args"
+                    )
+                }
+                is WaitForTaskCompletion.Result.InternalAapt2Error -> {
+                    throw result.failure
+                }
+            }
+        } finally {
+            processOutput.delegate = noOutputExpected
+        }
+    }
+
+    override fun doConvert(request: AaptConvertConfig, logger: ILogger) {
+        val waitForTask = WaitForTaskCompletion(displayName, logger)
+        try {
+            processOutput.delegate = waitForTask
+            Aapt2DaemonUtil.requestConvert(writer, request)
+            val result = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)
+            when (result) {
+                is WaitForTaskCompletion.Result.Succeeded -> { }
+                is WaitForTaskCompletion.Result.Failed -> {
+                    val args = makeConvertCommand(request).joinToString("\\\n        ")
+
+                    throw Aapt2Exception.create(
+                        logger = logger,
+                        description = "Android resource linking failed",
+                        output = result.stdErr,
+                        processName = displayName,
+                        command = "$aaptPath convert $args"
                     )
                 }
                 is WaitForTaskCompletion.Result.InternalAapt2Error -> {
