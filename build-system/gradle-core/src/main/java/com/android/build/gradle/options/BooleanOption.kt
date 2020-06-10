@@ -166,6 +166,8 @@ enum class BooleanOption(
     /** Incremental dexing transform. */
     ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", false, FeatureStage.Experimental),
 
+    USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */

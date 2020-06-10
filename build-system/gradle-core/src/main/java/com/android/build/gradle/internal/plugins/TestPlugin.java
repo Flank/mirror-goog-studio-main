@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -69,6 +70,20 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            return (BaseExtension)
+                    project.getExtensions()
+                            .create(
+                                    com.android.build.api.dsl.TestExtension.class,
+                                    "android",
+                                    TestExtension.class,
+                                    dslServices,
+                                    globalScope,
+                                    buildOutputs,
+                                    dslContainers.getSourceSetManager(),
+                                    extraModelInfo,
+                                    new TestExtensionImpl(dslServices, dslContainers));
+        }
         return project.getExtensions()
                 .create(
                         "android",

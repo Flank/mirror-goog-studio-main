@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -64,6 +65,20 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            return (BaseExtension)
+                    project.getExtensions()
+                            .create(
+                                    com.android.build.api.dsl.LibraryExtension.class,
+                                    "android",
+                                    LibraryExtension.class,
+                                    dslServices,
+                                    globalScope,
+                                    buildOutputs,
+                                    dslContainers.getSourceSetManager(),
+                                    extraModelInfo,
+                                    new LibraryExtensionImpl(dslServices, dslContainers));
+        }
         return project.getExtensions()
                 .create(
                         "android",
