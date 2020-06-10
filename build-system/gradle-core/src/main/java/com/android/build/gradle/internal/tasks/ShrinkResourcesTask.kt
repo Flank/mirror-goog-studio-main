@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import android.databinding.tool.util.Preconditions
 import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.BuiltArtifact
@@ -228,7 +229,8 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.resourceDir
             )
 
-            artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
+            artifacts.setTaskInputToFinalProduct(
+                ArtifactType.OBFUSCATION_MAPPING_FILE,
                 task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(

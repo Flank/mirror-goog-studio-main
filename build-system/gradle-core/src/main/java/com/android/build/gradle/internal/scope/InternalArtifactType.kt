@@ -331,7 +331,6 @@ InternalArtifactType<T : FileSystemLocation>(
     object FULL_APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object APK_FOR_LOCAL_TEST: InternalArtifactType<RegularFile>(FILE), Replaceable
-    object APK_MAPPING: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "mapping"), Replaceable
     // zip of APK + mapping files used when publishing the APKs to a repo
     object APK_ZIP: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "apk-zips")
     object INSTANTAPP_BUNDLE: InternalArtifactType<Directory>(DIRECTORY), Replaceable

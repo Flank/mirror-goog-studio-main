@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
@@ -128,7 +129,7 @@ abstract class DexSplitterTask : NonIncrementalTask() {
                 task.baseJar)
 
             artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.APK_MAPPING,
+                ArtifactType.OBFUSCATION_MAPPING_FILE,
                 task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(

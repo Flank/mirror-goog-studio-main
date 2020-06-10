@@ -63,7 +63,7 @@ class MappingFileAccessTest {
                 // create the mapping task and register it if necessary.
                 applicationVariants.all { variant ->
                     if (variant.buildType.name == "release") {
-                      def mappingFile = variant.getFinalArtifact(com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING.INSTANCE)
+                      def mappingFile = variant.getFinalArtifact(com.android.build.api.artifact.ArtifactType.OBFUSCATION_MAPPING_FILE.INSTANCE)
                       println "Creating mapping task for " + variant.name
                       def mappingTask = tasks.create("hello" + variant.name.capitalize(), MappingFileUserTask, mappingFile)
                       variant.register(mappingTask)

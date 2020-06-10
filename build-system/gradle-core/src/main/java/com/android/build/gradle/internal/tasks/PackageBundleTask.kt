@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -404,7 +405,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.APK_MAPPING,
+                ArtifactType.OBFUSCATION_MAPPING_FILE,
                 task.obsfuscationMappingFile
             )
 

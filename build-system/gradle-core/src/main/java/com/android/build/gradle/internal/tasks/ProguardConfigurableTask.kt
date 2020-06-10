@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.google.common.base.Preconditions
 import org.gradle.api.attributes.Attribute
@@ -198,10 +197,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             creationConfig.artifacts
                 .setInitialProvider(taskProvider,
                 ProguardConfigurableTask::mappingFile)
-                .withName(FileNames.OBFUSCATION_MAPPING_FILE.fileName)
-                .on(APK_MAPPING)
-
-            creationConfig.artifacts.republish(APK_MAPPING, ArtifactType.OBFUSCATION_MAPPING_FILE)
+                .on(ArtifactType.OBFUSCATION_MAPPING_FILE)
         }
 
         override fun configure(
@@ -213,7 +209,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts
-                        .get(APK_MAPPING)
+                        .get(ArtifactType.OBFUSCATION_MAPPING_FILE)
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(

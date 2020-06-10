@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
@@ -238,7 +239,7 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
                 task.resourceDir)
 
             artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.APK_MAPPING,
+                ArtifactType.OBFUSCATION_MAPPING_FILE,
                 task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(

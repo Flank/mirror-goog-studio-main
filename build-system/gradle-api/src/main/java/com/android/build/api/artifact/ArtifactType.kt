@@ -59,7 +59,9 @@ sealed class ArtifactType<T : FileSystemLocation>(
         Replaceable, Transformable
 
     @Incubating
-    object OBFUSCATION_MAPPING_FILE: ArtifactType<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE)
+    object OBFUSCATION_MAPPING_FILE: ArtifactType<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE) {
+        override fun getFolderName(): String = "mapping"
+    }
 
     /**
      * The final Bundle ready for consumption at Play Store.

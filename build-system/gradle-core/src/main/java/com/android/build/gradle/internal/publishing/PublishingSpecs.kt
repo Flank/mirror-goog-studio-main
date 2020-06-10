@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.publishing
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactType.LIBRARY_MANIFEST
+import com.android.build.api.artifact.ArtifactType.OBFUSCATION_MAPPING_FILE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION
@@ -32,7 +33,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAR_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELABLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_ZIP
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_METADATA
@@ -133,7 +133,7 @@ class PublishingSpecs {
                 api(APP_CLASSES, ArtifactType.JAR)
                 output(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 output(JAVA_RES, ArtifactType.JAVA_RES)
-                api(APK_MAPPING, ArtifactType.APK_MAPPING)
+                api(OBFUSCATION_MAPPING_FILE, ArtifactType.APK_MAPPING)
 
                 api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -166,7 +166,7 @@ class PublishingSpecs {
                 api(APP_CLASSES, ArtifactType.JAR)
                 output(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 output(JAVA_RES, ArtifactType.JAVA_RES)
-                api(APK_MAPPING, ArtifactType.APK_MAPPING)
+                api(OBFUSCATION_MAPPING_FILE, ArtifactType.APK_MAPPING)
 
                 api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
