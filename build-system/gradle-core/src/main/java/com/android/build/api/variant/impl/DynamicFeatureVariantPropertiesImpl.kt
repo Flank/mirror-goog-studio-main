@@ -130,6 +130,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
                 ?: throw RuntimeException("Failed to find resource offset for $path in ${it.sourceFile}")
         })
 
+    override val shouldPackageDesugarLibDex: Boolean = false
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
