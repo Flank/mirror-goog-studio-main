@@ -1148,8 +1148,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         private FileCollection getDesugarLibDexIfExists(@NonNull ApkCreationConfig creationConfig) {
-            if (creationConfig.getVariantType().isDynamicFeature()) {
-                return creationConfig.getGlobalScope().getProject().files();
+            if (!creationConfig.getShouldPackageDesugarLibDex()) {
+                return creationConfig.getServices().fileCollection();
             }
             if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
                 return project.files(

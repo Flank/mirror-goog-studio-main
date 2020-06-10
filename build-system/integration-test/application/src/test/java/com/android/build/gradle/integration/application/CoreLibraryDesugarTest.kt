@@ -477,8 +477,8 @@ class CoreLibraryDesugarTest {
     fun testNonMinifyAndroidTestAppApk() {
         executor().run(":app:assembleDebugAndroidTest")
         val apk = app.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
-        DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass, apk.allDexes))
-            .isNotEqualTo(null)
+        // desugar_lib should be packaged in the tested APK, not in androidTest one
+        DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass, apk.allDexes)).isNull()
     }
 
     @Test

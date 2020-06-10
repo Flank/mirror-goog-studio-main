@@ -186,5 +186,18 @@ open class AndroidTestPropertiesImpl @Inject constructor(
             "$name:resValues"
         )
     }
+
+    /**
+     * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk
+     * desugar_lib. This should be fixed properly by analyzing the test code when generating L8
+     * keep rules, and thus packaging desugar_lib dex in the tested APK only which contains
+     * necessary classes used both in test and tested APKs.
+     */
+    override val shouldPackageDesugarLibDex: Boolean
+        get() = when {
+            !variantScope.isCoreLibraryDesugaringEnabled -> false
+            testedConfig.variantType.isAar -> true
+            else -> testedConfig.variantType.isBaseModule && testedConfig.variantScope.needsShrinkDesugarLibrary
+        }
 }
 
