@@ -116,7 +116,7 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.APK, task.apkFolder
+                ArtifactType.APK, task.apkFolder
             )
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 ArtifactType.OBFUSCATION_MAPPING_FILE,

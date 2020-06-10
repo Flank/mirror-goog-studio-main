@@ -2032,9 +2032,7 @@ public abstract class TaskManager<
             testData =
                     new BundleTestDataImpl(
                             androidTestProperties,
-                            androidTestProperties
-                                    .getArtifacts()
-                                    .get(InternalArtifactType.APK.INSTANCE),
+                            androidTestProperties.getArtifacts().get(ArtifactType.APK.INSTANCE),
                             FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             testedVariant
                                     .getVariantDependencies()
@@ -2042,15 +2040,12 @@ public abstract class TaskManager<
                                             RUNTIME_CLASSPATH, PROJECT, APKS_FROM_BUNDLE));
         } else {
             ConfigurableFileCollection testedApkFileCollection =
-                    project.files(
-                            testedVariant.getArtifacts().get(InternalArtifactType.APK.INSTANCE));
+                    project.files(testedVariant.getArtifacts().get(ArtifactType.APK.INSTANCE));
 
             testData =
                     new TestDataImpl(
                             androidTestProperties,
-                            androidTestProperties
-                                    .getArtifacts()
-                                    .get(InternalArtifactType.APK.INSTANCE),
+                            androidTestProperties.getArtifacts().get(ArtifactType.APK.INSTANCE),
                             isLibrary ? null : testedApkFileCollection);
         }
 
@@ -2663,11 +2658,6 @@ public abstract class TaskManager<
                         null);
 
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
-
-        // republish APK to the external world.
-        creationConfig
-                .getArtifacts()
-                .republish(InternalArtifactType.APK.INSTANCE, ArtifactType.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.

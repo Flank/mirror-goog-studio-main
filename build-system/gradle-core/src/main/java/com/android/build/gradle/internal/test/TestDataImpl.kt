@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.test
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
@@ -69,9 +70,7 @@ class TestDataImpl(
             .load(
                 testedConfig
                     .artifacts
-                    .get(
-                        InternalArtifactType.APK
-                    )
+                    .get(ArtifactType.APK)
                     .get()
             )
             ?: return ImmutableList.of()

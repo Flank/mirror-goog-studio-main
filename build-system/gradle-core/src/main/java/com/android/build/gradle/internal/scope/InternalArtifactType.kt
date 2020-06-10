@@ -315,7 +315,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // The AAR metadata file, specifying consumer constraints
     object AAR_METADATA: InternalArtifactType<RegularFile>(FILE), Replaceable
 
-    object APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object APK_FOR_LOCAL_TEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // zip of APK + mapping files used when publishing the APKs to a repo
     object APK_ZIP: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "apk-zips")
