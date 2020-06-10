@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.services.DslServicesImpl
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.tasks.LintStandaloneTask
 import com.android.build.gradle.options.ProjectOptions
@@ -118,6 +119,7 @@ open class LintPlugin : Plugin<Project> {
             task.lintOptions = lintOptions
             task.lintChecks = customLintChecksConfig
             task.outputs.upToDateWhen { false }
+            task.lintClassLoader.set(LintClassLoaderBuildService.RegistrationAction(project).execute())
         }
     }
 

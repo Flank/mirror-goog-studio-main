@@ -50,8 +50,6 @@ public class ExtractAnnotationTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("extractAnnotations")
-                    // http://b/158201643
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Before

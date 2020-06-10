@@ -9,7 +9,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     // NOTE NOTE NOTE - before changing this, note that lint dependencies
-    // must also be reflected in [ReflectiveLintRunner#computeUrls] as well
+    // must also be reflected in [LintClassLoaderProvider#computeUrls] as well
     // so update both in sync
     compile project(':base:sdk-common')
     compile project(':base:builder')

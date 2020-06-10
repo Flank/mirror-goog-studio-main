@@ -31,6 +31,8 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
@@ -58,10 +60,12 @@ import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.file.RelativePath;
 import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
@@ -185,6 +189,9 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         this.classDir = classDir;
     }
 
+    @Internal
+    public abstract Property<LintClassLoaderBuildService> getLintClassLoader();
+
     @Override
     protected void doTaskAction() {
         SourceFileVisitor fileVisitor = new SourceFileVisitor();
@@ -215,8 +222,9 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                         roots);
         FileCollection lintClassPath = getLintClassPath();
         if (lintClassPath != null) {
-            new ReflectiveLintRunner().extractAnnotations(getProject().getGradle(),
-                    request, lintClassPath.getFiles());
+            new ReflectiveLintRunner()
+                    .extractAnnotations(
+                            getLintClassLoader().get(), request, lintClassPath.getFiles());
         }
     }
 
@@ -375,6 +383,11 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                     task.getProject()
                             .files((Callable<List<Object>>) () -> task.sources)
                             .getAsFileTree();
+            task.getLintClassLoader()
+                    .set(
+                            BuildServicesKt.getBuildService(
+                                    creationConfig.getServices().getBuildServiceRegistry(),
+                                    LintClassLoaderBuildService.class));
         }
     }
 

@@ -74,6 +74,7 @@ import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
 import com.android.build.gradle.internal.utils.AgpVersionChecker;
@@ -308,6 +309,7 @@ public abstract class BasePlugin<
         new LibraryDependencyCacheBuildService.RegistrationAction(
                         project, mavenCoordinatesCacheBuildService)
                 .execute();
+        new LintClassLoaderBuildService.RegistrationAction(project).execute();
 
         extraModelInfo = new ExtraModelInfo(mavenCoordinatesCacheBuildService);
 
