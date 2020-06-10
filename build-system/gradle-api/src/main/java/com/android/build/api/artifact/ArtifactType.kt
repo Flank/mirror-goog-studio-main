@@ -42,36 +42,65 @@ sealed class ArtifactType<T : FileSystemLocation>(
     }
 
     /**
-     * APK directory where final APK files will be located.
+     * Directory where APK files will be located. Some builds can be optimized for testing when
+     * invoked from Android Studio. In such cases, the APKs are not suitable for deployment to
+     * Play Store.
      */
     @Incubating
-    object APK: ArtifactType<Directory>(DIRECTORY), Transformable, Replaceable, ContainsMany
+    object APK:
+        ArtifactType<Directory>(DIRECTORY),
+        Transformable,
+        Replaceable,
+        ContainsMany
 
     /**
      * Merged manifest file that will be used in the APK, Bundle and InstantApp packages.
+     * This will only be available on modules applying one of the following plugins :
+     *      com.android.application
+     *      com.android.dynamic-feature
+     *      com.android.test
+     *
+     * For each module, unit test and android test variants will not have a manifest file
+     * available.
      */
     @Incubating
-    object MERGED_MANIFEST: ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
-        Replaceable, Transformable
+    object APPLICATION_MANIFEST:
+        ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
+        Replaceable,
+        Transformable
+
+    /**
+     * Merged manifest file that will be packaged in the AAR files.
+     * This will only be available on modules applying the com.android.library plugin.
+     *
+     * For each module, unit test and android test variants will not have a manifest file
+     * available.
+     */
+    @Incubating
+    object LIBRARY_MANIFEST:
+        ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
+        Replaceable,
+        Transformable
 
     @Incubating
-    object LIBRARY_MANIFEST: ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
-        Replaceable, Transformable
-
-    @Incubating
-    object OBFUSCATION_MAPPING_FILE: ArtifactType<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE) {
-        override fun getFolderName(): String = "mapping"
-    }
+    object OBFUSCATION_MAPPING_FILE:
+        ArtifactType<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE) {
+            override fun getFolderName(): String = "mapping"
+        }
 
     /**
      * The final Bundle ready for consumption at Play Store.
      * This is only valid for the base module.
      */
     @Incubating
-    object BUNDLE: ArtifactType<RegularFile>(FILE, Category.OUTPUTS), Transformable
+    object BUNDLE:
+        ArtifactType<RegularFile>(FILE, Category.OUTPUTS),
+        Transformable
 
     @Incubating
-    object AAR: ArtifactType<RegularFile>(FILE), Transformable
+    object AAR:
+        ArtifactType<RegularFile>(FILE),
+        Transformable
 
     /**
      * A file containing the list of public resources exported by a library project.

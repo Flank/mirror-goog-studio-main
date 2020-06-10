@@ -84,6 +84,6 @@ class OperationRequestTest {
         artifacts
             .use(fileTask)
             .wiredWith(MyFileTask::output)
-            .toCreate(ArtifactType.MERGED_MANIFEST)
+            .toCreate(ArtifactType.APPLICATION_MANIFEST)
     }
 }
