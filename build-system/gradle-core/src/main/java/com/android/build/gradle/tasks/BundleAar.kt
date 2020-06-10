@@ -98,9 +98,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 property
             }
             creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
-                .on(InternalArtifactType.AAR)
-
-            creationConfig.artifacts.republish(InternalArtifactType.AAR, ArtifactType.AAR)
+                .on(ArtifactType.AAR)
         }
 
         override fun configure(

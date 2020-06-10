@@ -204,7 +204,7 @@ class PublishingSpecs {
 
 
             variantSpec(VariantTypeImpl.LIBRARY) {
-                publish(InternalArtifactType.AAR, ArtifactType.AAR)
+                publish(com.android.build.api.artifact.ArtifactType.AAR, ArtifactType.AAR)
 
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
