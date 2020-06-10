@@ -90,7 +90,7 @@ interface Cmake {
      * This directory also includes other build system files that should persist when performing
      * clean builds, such as [Ninja build files](https://ninja-build.org/). If you do not specify a
      * value for this property, the Android plugin uses the
-     * `<project_dir>/<module>/.externalNativeBuild/` directory by default.
+     * `<project_dir>/<module>/.cxx/` directory by default.
      *
      * If you specify a path that does not exist, the Android plugin creates it for you. Relative
      * paths are relative to the `build.gradle` file, as shown below:
@@ -112,7 +112,7 @@ interface Cmake {
      * If you specify a path that's a subdirectory of your project's temporary `build/` directory,
      * you get a build error. That's because files in this directory do not persist through clean
      * builds. So, you should either keep using the default
-     * `<project_dir>/<module>/.externalNativeBuild/` directory or specify a path outside the
+     * `<project_dir>/<module>/.cxx/` directory or specify a path outside the
      * temporary build directory.
      *
      * @since 3.0.0
@@ -125,7 +125,7 @@ interface Cmake {
      * This directory also includes other build system files that should persist when performing
      * clean builds, such as [Ninja build files](https://ninja-build.org/). If you do not specify a
      * value for this property, the Android plugin uses the
-     * `<project_dir>/<module>/.externalNativeBuild/` directory by default.
+     * `<project_dir>/<module>/.cxx/` directory by default.
      *
      * If you specify a path that does not exist, the Android plugin creates it for you. Relative
      * paths are relative to the `build.gradle` file, as shown below:
@@ -147,7 +147,7 @@ interface Cmake {
      * If you specify a path that's a subdirectory of your project's temporary `build/` directory,
      * you get a build error. That's because files in this directory do not persist through clean
      * builds. So, you should either keep using the default
-     * `<project_dir>/<module>/.externalNativeBuild/` directory or specify a path outside the
+     * `<project_dir>/<module>/.cxx/` directory or specify a path outside the
      * temporary build directory.
      *
      * @since 3.0.0

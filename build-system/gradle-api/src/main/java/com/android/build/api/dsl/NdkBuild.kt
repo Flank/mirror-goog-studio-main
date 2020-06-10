@@ -85,7 +85,7 @@ interface NdkBuild {
      * Specifies the path to your external native build output directory.
      *
      * If you do not specify a value for this property, the Android plugin uses the
-     * `<project_dir>/.externalNativeBuild/` directory by default.
+     * `<project_dir>/.cxx/` directory by default.
      *
      * If you specify a path that does not exist, the Android plugin creates it for you.
      * Relative paths are relative to the `build.gradle` file, as shown below:
@@ -105,7 +105,7 @@ interface NdkBuild {
      * If you specify a path that's a subdirectory of your project's temporary `build`
      * directory, you get a build error. That's because files in this directory do not
      * persist through clean builds.
-     * So, you should either keep using the default `<project_dir>/.externalNativeBuild/`
+     * So, you should either keep using the default `<project_dir>/.cxx/`
      * directory or specify a path outside the temporary build directory.
      *
      * @since 3.0.0
@@ -116,7 +116,7 @@ interface NdkBuild {
      * Specifies the path to your external native build output directory.
      *
      * If you do not specify a value for this property, the Android plugin uses the
-     * `<project_dir>/.externalNativeBuild/` directory by default.
+     * `<project_dir>/.cxx/` directory by default.
      *
      * If you specify a path that does not exist, the Android plugin creates it for you.
      * Relative paths are relative to the `build.gradle` file, as shown below:
@@ -136,7 +136,7 @@ interface NdkBuild {
      * If you specify a path that's a subdirectory of your project's temporary `build`
      * directory, you get a build error. That's because files in this directory do not
      * persist through clean builds.
-     * So, you should either keep using the default `<project_dir>/.externalNativeBuild/`
+     * So, you should either keep using the default `<project_dir>/.cxx/`
      * directory or specify a path outside the temporary build directory.
      *
      * @since 4.0.0
