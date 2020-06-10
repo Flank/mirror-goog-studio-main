@@ -77,13 +77,6 @@ public class AppPlugin
                         getProjectType()));
     }
 
-
-    @Override
-    @NonNull
-    protected Class<? extends AppExtension> getExtensionClass() {
-        return BaseAppModuleExtension.class;
-    }
-
     @NonNull
     @Override
     protected AppExtension createExtension(
@@ -97,7 +90,7 @@ public class AppPlugin
         return project.getExtensions()
                 .create(
                         "android",
-                        getExtensionClass(),
+                        BaseAppModuleExtension.class,
                         dslServices,
                         globalScope,
                         buildOutputs,

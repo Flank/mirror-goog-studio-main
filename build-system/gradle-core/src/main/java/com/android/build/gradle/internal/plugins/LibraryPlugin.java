@@ -67,18 +67,13 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
         return project.getExtensions()
                 .create(
                         "android",
-                        getExtensionClass(),
+                        LibraryExtension.class,
                         dslServices,
                         globalScope,
                         buildOutputs,
                         dslContainers.getSourceSetManager(),
                         extraModelInfo,
                         new LibraryExtensionImpl(dslServices, dslContainers));
-    }
-
-    @NonNull
-    protected Class<? extends BaseExtension> getExtensionClass() {
-        return LibraryExtension.class;
     }
 
     @NonNull

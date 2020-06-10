@@ -74,12 +74,6 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
-    protected Class<? extends AppExtension> getExtensionClass() {
-        return DynamicFeatureExtension.class;
-    }
-
-    @NonNull
-    @Override
     protected AppExtension createExtension(
             @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
@@ -91,7 +85,7 @@ public class DynamicFeaturePlugin
         return project.getExtensions()
                 .create(
                         "android",
-                        getExtensionClass(),
+                        DynamicFeatureExtension.class,
                         dslServices,
                         globalScope,
                         buildOutputs,
