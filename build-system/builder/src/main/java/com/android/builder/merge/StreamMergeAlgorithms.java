@@ -80,7 +80,7 @@ public final class StreamMergeAlgorithms {
                     messageBuilder.append(
                             " If you are using jniLibs and CMake IMPORTED targets, see ");
                     messageBuilder.append(
-                            "https://developer.android.com/studio/preview/features#automatic_packaging_of_prebuilt_dependencies_used_by_cmake");
+                            "https://developer.android.com/r/tools/jniLibs-vs-imported-targets");
                 }
                 throw new DuplicateRelativeFileException(messageBuilder.toString());
             }
