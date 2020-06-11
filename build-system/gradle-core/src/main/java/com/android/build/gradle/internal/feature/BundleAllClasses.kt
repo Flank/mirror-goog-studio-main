@@ -134,10 +134,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             )
             task.preJavacClasses = creationConfig.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = creationConfig.variantData.allPostJavacGeneratedBytecode
-            val globalScope = creationConfig.globalScope
-            task.modulePath = globalScope.project.path
+            task.modulePath = task.project.path
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
-            if (globalScope.extension.aaptOptions.namespaced) {
+            if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_R_CLASS_JAR,
                     task.rClassesJar

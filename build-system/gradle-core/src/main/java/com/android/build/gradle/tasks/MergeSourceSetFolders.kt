@@ -358,7 +358,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 ANDROID_AAPT_IGNORE
             ).forUseAtConfigurationTime().orNull
 
-            task.assetSets.set(creationConfig.globalScope.project.provider {
+            task.assetSets.set(task.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
             task.assetSets.disallowChanges()
@@ -442,7 +442,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             task.aaptEnv = creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
                 ANDROID_AAPT_IGNORE
             ).forUseAtConfigurationTime().orNull
-            task.assetSets.set(creationConfig.globalScope.project.provider {
+            task.assetSets.set(task.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
             task.assetSets.disallowChanges()
@@ -476,7 +476,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             task.aaptEnv = creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
                 ANDROID_AAPT_IGNORE
             ).forUseAtConfigurationTime().orNull
-            task.assetSets.set(creationConfig.globalScope.project.provider {
+            task.assetSets.set(task.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction, task.aaptEnv)
             })
             task.assetSets.disallowChanges()
@@ -511,7 +511,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             task.aaptEnv = creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
                 ANDROID_AAPT_IGNORE
             ).forUseAtConfigurationTime().orNull
-            task.assetSets.setDisallowChanges(creationConfig.globalScope.project.provider {
+            task.assetSets.setDisallowChanges(task.project.provider {
                 variantSources.getSourceFilesAsAssetSets(mlModelsDirFunction, task.aaptEnv)
             })
             task.sourceFolderInputs.from(Callable {

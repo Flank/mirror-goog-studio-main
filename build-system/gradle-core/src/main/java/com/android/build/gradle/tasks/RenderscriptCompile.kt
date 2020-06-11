@@ -282,14 +282,12 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.configure(task)
 
-            val globalScope = creationConfig.globalScope
-
             val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
 
             val ndkMode = variantDslInfo.renderscriptNdkModeEnabled
 
-            task.targetApi.set(globalScope.project.provider {
+            task.targetApi.set(task.project.provider {
                 variantDslInfo.renderscriptTarget
             })
             task.targetApi.disallowChanges()
@@ -299,9 +297,8 @@ abstract class RenderscriptCompile : NdkTask() {
             task.isNdkMode = ndkMode
             task.optimLevel = variantDslInfo.renderscriptOptimLevel
 
-            task.sourceDirs = globalScope
-                .project
-                .files(Callable { variantSources.renderscriptSourceList })
+            task.sourceDirs =
+                creationConfig.services.fileCollection(Callable { variantSources.renderscriptSourceList })
             task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )

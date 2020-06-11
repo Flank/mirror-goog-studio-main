@@ -93,7 +93,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             creationConfig.taskContainer.bundleLibraryTask = taskProvider
 
             val propertyProvider = { task : BundleAar ->
-                val property = creationConfig.globalScope.project.objects.fileProperty()
+                val property = task.project.objects.fileProperty()
                 property.set(task.archiveFile)
                 property
             }
@@ -139,7 +139,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             if (buildFeatures.dataBinding && buildFeatures.androidResources) {
                 task.from(
-                    creationConfig.globalScope.project.provider {
+                    task.project.provider {
                         creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
@@ -214,7 +214,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)
                 }
             )
-            task.projectPath = creationConfig.globalScope.project.path
+            task.projectPath = task.project.path
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->

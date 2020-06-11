@@ -288,7 +288,7 @@ abstract class MergeJavaResourceTask
 fun getProjectJavaRes(
     componentProperties: ComponentPropertiesImpl
 ): FileCollection {
-    val javaRes = componentProperties.globalScope.project.files()
+    val javaRes = componentProperties.services.fileCollection()
     javaRes.from(componentProperties.artifacts.get(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
@@ -313,7 +313,7 @@ private fun getExternalLibJavaRes(
     componentProperties: ComponentPropertiesImpl,
     mergeScopes: Collection<ScopeType>
 ): FileCollection {
-    val externalLibJavaRes = componentProperties.globalScope.project.files()
+    val externalLibJavaRes = componentProperties.services.fileCollection()
     if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
         externalLibJavaRes.from(
             componentProperties.variantDependencies.getArtifactFileCollection(

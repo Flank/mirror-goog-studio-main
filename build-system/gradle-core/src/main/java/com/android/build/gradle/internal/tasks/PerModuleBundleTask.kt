@@ -262,14 +262,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
             task.javaResFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
-                    creationConfig.globalScope.project.layout.files(
+                    creationConfig.services.fileCollection(
                         artifacts.get(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
                 } else if (creationConfig.variantScope.needsMergedJavaResStream) {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {
-                    creationConfig.globalScope.project.layout.files(
+                    creationConfig.services.fileCollection(
                         artifacts.get(InternalArtifactType.MERGED_JAVA_RES)
                     )
                 }
@@ -347,7 +347,7 @@ fun getNativeLibsFiles(
     creationConfig: BaseCreationConfig,
     packageCustomClassDependencies: Boolean
 ): FileCollection {
-    val nativeLibs = creationConfig.globalScope.project.files()
+    val nativeLibs = creationConfig.services.fileCollection()
     if (creationConfig.variantType.isForTesting) {
         return nativeLibs.from(creationConfig.artifacts.get(MERGED_NATIVE_LIBS))
     }

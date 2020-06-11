@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.InstrumentationTestAnalytics;
@@ -548,6 +549,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 + BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM
                                         .getPropertyName());
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
+                SdkComponentsBuildService sdkBuildService =
+                        BuildServicesKt.getBuildService(
+                                        creationConfig.getServices().getBuildServiceRegistry(),
+                                        SdkComponentsBuildService.class)
+                                .get();
                 // TODO(b/155306123): move the project options into task input.
                 task.testRunnerFactory =
                         (splitSelectExec, processExecutor, javaProcessExecutor) ->
@@ -557,7 +563,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                         javaProcessExecutor,
                                         task.getExecutorServiceAdapter(),
                                         project.getConfigurations(),
-                                        globalScope.getSdkComponents().get(),
+                                        sdkBuildService,
                                         projectOptions.get(
                                                 BooleanOption.ANDROID_TEST_USES_RETENTION));
             } else {

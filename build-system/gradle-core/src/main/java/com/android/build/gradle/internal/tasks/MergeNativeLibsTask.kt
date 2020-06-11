@@ -20,12 +20,14 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.GradleException
@@ -224,13 +226,9 @@ abstract class MergeNativeLibsTask
 }
 
 fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
-    val globalScope = componentProperties.globalScope
     val artifacts = componentProperties.artifacts
     val taskContainer = componentProperties.taskContainer
-    val project = globalScope.project
-
-    val nativeLibs = globalScope.project.files()
-
+    val nativeLibs = componentProperties.services.fileCollection()
 
     // add merged project native libs
     nativeLibs.from(
@@ -239,21 +237,23 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     // add content of the local external native build
     if (taskContainer.cxxMetadataGenerator != null) {
         nativeLibs.from(
-            project
-                .files(taskContainer.cxxMetadataGenerator!!.get().variant.objFolder)
-                .builtBy(taskContainer.externalNativeBuildTask?.name)
+            componentProperties.services.fileCollection(
+                taskContainer.cxxMetadataGenerator!!.get().variant.objFolder
+            ).builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }
     // add renderscript compilation output if support mode is enabled.
     if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
-                project.files(artifacts.get(RENDERSCRIPT_LIB))
-        val rsLibs = globalScope.sdkComponents.get().supportNativeLibFolderProvider.orNull
+                componentProperties.services.fileCollection(artifacts.get(RENDERSCRIPT_LIB))
+        val sdkComponents =
+            getBuildService<SdkComponentsBuildService>(componentProperties.services.buildServiceRegistry).get()
+        val rsLibs = sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)
         }
         if (componentProperties.variantDslInfo.renderscriptSupportModeBlasEnabled) {
-            val rsBlasLib = globalScope.sdkComponents.get().supportBlasLibFolderProvider.orNull
+            val rsBlasLib = sdkComponents.supportBlasLibFolderProvider.orNull
             if (rsBlasLib == null || !rsBlasLib.isDirectory) {
                 throw GradleException(
                     "Renderscript BLAS support mode is not supported in BuildTools $rsBlasLib"
@@ -268,7 +268,7 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
 }
 
 fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
-    val nativeLibs = componentProperties.globalScope.project.files()
+    val nativeLibs = componentProperties.services.fileCollection()
     // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
         componentProperties.variantDependencies.getArtifactFileCollection(
@@ -288,7 +288,7 @@ fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileC
 }
 
 fun getExternalNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
-    val nativeLibs = componentProperties.globalScope.project.files()
+    val nativeLibs = componentProperties.services.fileCollection()
     // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
         componentProperties.variantDependencies.getArtifactFileCollection(

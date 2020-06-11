@@ -409,7 +409,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             task.bundleNeedsFusedStandaloneConfig.set(
-                creationConfig.globalScope.project.provider {
+                task.project.providers.provider {
                     creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
                             && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }

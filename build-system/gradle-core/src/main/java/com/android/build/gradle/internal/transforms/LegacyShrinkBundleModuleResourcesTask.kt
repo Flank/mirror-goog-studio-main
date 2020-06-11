@@ -209,7 +209,7 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
             )
             task.mainSplit = creationConfig.outputs.getMainSplit()
 
-            task.dex = creationConfig.globalScope.project.files(
+            task.dex = creationConfig.services.fileCollection(
                 if (creationConfig.variantScope.consumesFeatureJars()) {
                     creationConfig.artifacts.get(InternalArtifactType.BASE_DEX)
                 } else {

@@ -885,8 +885,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.getMinSdk()
                     .set(
-                            globalScope
-                                    .getProject()
+                            task.getProject()
                                     .provider(
                                             () -> creationConfig.getMinSdkVersion().getApiLevel()));
             task.getMinSdk().disallowChanges();
@@ -955,30 +954,15 @@ public abstract class MergeResources extends ResourceAwareTask {
                             && !isLibrary
                             && variantScope.isPrecompileDependenciesResourcesEnabled();
 
-            task.getResourceDirsOutsideRootProjectDir().set(globalScope.getProject().provider(
-                () -> {
-                    Set<String> resourceDirsOutsideRootProjectDir = new HashSet<>();
-                    if (!isDataBindingEnabled && !isViewBindingEnabled) {
-                        // This set is used only when data binding / view binding is enabled
-                        return resourceDirsOutsideRootProjectDir;
-                    }
-
-                    // In this task, data binding doesn't process layout files that come from
-                    // dependencies (see the code at processSingleFile()). Therefore, we'll look at
-                    // resources in the current sub-project only (via task.getLocalResources()).
-                    // These resources are usually located inside the root project directory, but
-                    // some of them may come from custom resource sets that are outside of the root
-                    // project directory, so we need to collect the latter set.
-                    File rootProjectDir = task.getProject().getRootDir();
-                    for (FileCollection resDirs : task.getLocalResources()) {
-                        for (File resDir : resDirs.getFiles()) {
-                            if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
-                                resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
-                            }
-                        }
-                    }
-                    return resourceDirsOutsideRootProjectDir;
-                }));
+            task.getResourceDirsOutsideRootProjectDir()
+                    .set(
+                            task.getProject()
+                                    .provider(
+                                            () ->
+                                                    getResourcesDirsOutsideRoot(
+                                                            task,
+                                                            isDataBindingEnabled,
+                                                            isViewBindingEnabled)));
             task.getResourceDirsOutsideRootProjectDir().disallowChanges();
 
             task.dependsOn(creationConfig.getTaskContainer().getResourceGenTask());
@@ -1015,6 +999,35 @@ public abstract class MergeResources extends ResourceAwareTask {
                                     .getGradleEnvironmentProvider()
                                     .getEnvVariable(ANDROID_AAPT_IGNORE));
             task.getProjectRootDir().set(task.getProject().getRootDir());
+        }
+
+        @NonNull
+        private static Set<String> getResourcesDirsOutsideRoot(
+                @NonNull MergeResources task,
+                boolean isDataBindingEnabled,
+                boolean isViewBindingEnabled)
+                throws IOException {
+            Set<String> resourceDirsOutsideRootProjectDir = new HashSet<>();
+            if (!isDataBindingEnabled && !isViewBindingEnabled) {
+                // This set is used only when data binding / view binding is enabled
+                return resourceDirsOutsideRootProjectDir;
+            }
+
+            // In this task, data binding doesn't process layout files that come from dependencies
+            // (see the code at processSingleFile()). Therefore, we'll look at resources in the
+            // current sub-project only (via task.getLocalResources()). These resources are usually
+            // located inside the root project directory, but some of them may come from custom
+            // resource sets that are outside of the root project directory, so we need to collect
+            // the latter set.
+            File rootProjectDir = task.getProject().getRootDir();
+            for (FileCollection resDirs : task.getLocalResources()) {
+                for (File resDir : resDirs.getFiles()) {
+                    if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
+                        resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
+                    }
+                }
+            }
+            return resourceDirsOutsideRootProjectDir;
         }
     }
 

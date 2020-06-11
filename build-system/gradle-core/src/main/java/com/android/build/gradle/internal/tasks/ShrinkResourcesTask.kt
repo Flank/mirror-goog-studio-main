@@ -260,7 +260,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                     artifacts.getAll(InternalMultipleArtifactType.DEX)
                         .map {
                             if (it.isEmpty()) { classes } else {
-                                creationConfig.globalScope.project.files(it)
+                                creationConfig.services.fileCollection(it)
                             }
                     }
                 }
