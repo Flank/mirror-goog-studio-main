@@ -103,6 +103,11 @@ interface DeprecationReporter {
                     "what you actually intended, use `checkOnly`; otherwise switch to `enable`."
         ),
 
+        JETIFIER_IGNORE_LIST(
+            Version.VERSION_5_0,
+            "Use android.jetifier.ignorelist instead."
+        ),
+
         ;
 
         fun getDeprecationTargetMessage(): String {
