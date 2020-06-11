@@ -19,6 +19,7 @@ package com.android.tools.lint.checks.infrastructure;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.FD_GEN_SOURCES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
@@ -1498,6 +1499,19 @@ public class TestLintClient extends LintCliClient {
                 }
                 if (generatedSourceFolders == null || generatedSourceFolders.isEmpty()) {
                     generatedSourceFolders = super.getGeneratedSourceFolders();
+                    if (generatedSourceFolders.isEmpty()) {
+                        File generated = new File(dir, "generated");
+                        if (generated.isDirectory()) {
+                            generatedSourceFolders = Collections.singletonList(generated);
+                        } else {
+                            generated = new File(dir, FD_GEN_SOURCES);
+                            if (generated.isDirectory()) {
+                                generatedSourceFolders = Collections.singletonList(generated);
+                            }
+                        }
+                    }
+
+                    return generatedSourceFolders;
                 }
             }
 

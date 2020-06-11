@@ -1838,4 +1838,71 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             """
         )
     }
+
+    fun testGenerated() {
+        // Regression test for
+        // https://issuetracker.google.com/140699627
+        lint().files(
+            kotlin(
+                "generated/java/test/pkg/TestFragmentArgs.kt",
+                """
+                package test.pkg
+                data class TestFragmentArgs(val myenum: MYENUM)
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import android.support.annotation.StringRes
+                enum class MYENUM(@StringRes val title: Int) {
+                    FIRST(R.string.first_title)
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import android.app.Fragment
+                class TestFragment : Fragment() {
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import android.os.Bundle
+                import kotlinx.android.synthetic.main.activity_main.*
+                class MainActivity : android.app.Activity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContentView(R.layout.activity_main)
+                        val test = TestFragmentArgs(MYENUM.FIRST).myenum
+                        test.apply {
+                            textView.setText(title)
+                            textView.text = getString(MYENUM.FIRST.title)
+                            textView.text = getString(title)
+                        }
+                        getString(test.title)
+                        test.apply {
+                            getString(title)
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                    package test.pkg;
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public final class R {
+                        public static final class layout {
+                            public static final int activity_main = 0x7f0b0021;
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

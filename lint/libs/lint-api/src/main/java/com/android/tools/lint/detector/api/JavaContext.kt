@@ -89,6 +89,9 @@ open class JavaContext(
     /** Whether this context is in a test source folder  */
     var isTestSource: Boolean = false
 
+    /** Whether this context is in a generated source folder  */
+    var isGeneratedSource: Boolean = false
+
     /**
      * Returns a location for the given node range (from the starting offset of the first node to
      * the ending offset of the second node).
