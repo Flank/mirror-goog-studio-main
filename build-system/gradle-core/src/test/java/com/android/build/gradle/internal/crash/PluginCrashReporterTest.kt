@@ -32,7 +32,7 @@ class PluginCrashReporterTest {
     }
 
     @Test
-    fun testReportingWhiteListedException() {
+    fun testReportingUsefulException() {
         val settings = AnalyticsSettingsData()
         AnalyticsSettings.setInstanceForTest(settings)
         settings.optedIn = true
@@ -46,7 +46,7 @@ class PluginCrashReporterTest {
     }
 
     @Test
-    fun testReportingNonWhiteListedException() {
+    fun testReportingNonUsefulException() {
         val settings = AnalyticsSettingsData()
         AnalyticsSettings.setInstanceForTest(settings)
         settings.optedIn = true

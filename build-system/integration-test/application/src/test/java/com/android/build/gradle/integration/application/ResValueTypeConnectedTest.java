@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -55,7 +56,13 @@ public class ResValueTypeConnectedTest {
                                 + "}\n"));
     }
 
-    @Rule public GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create();
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(app)
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws IOException {

@@ -215,7 +215,11 @@ public class BytecodeGenerationHooksTest {
 
     @Test
     public void buildTestApp() throws IOException, InterruptedException {
-        GradleBuildResult result = project.executor().run("clean", "test:assembleDebug");
+        GradleBuildResult result =
+                project.executor()
+                        // https://github.com/gradle/gradle/issues/13317
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .run("clean", "test:assembleDebug");
 
         // verify the compile classpath
         checkDependencies(

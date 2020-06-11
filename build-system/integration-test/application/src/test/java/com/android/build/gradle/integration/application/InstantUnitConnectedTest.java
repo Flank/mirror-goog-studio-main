@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.utils.AndroidVersionMa
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.options.StringOption;
@@ -37,9 +38,12 @@ public class InstantUnitConnectedTest {
     public final Adb adb = new Adb();
 
     @ClassRule
-    public static GradleTestProject sProject = GradleTestProject.builder()
-            .fromTestProject("instant-unit-tests")
-            .create();
+    public static GradleTestProject sProject =
+            GradleTestProject.builder()
+                    .fromTestProject("instant-unit-tests")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void checkInstantUnitTestsBuild() throws Exception {

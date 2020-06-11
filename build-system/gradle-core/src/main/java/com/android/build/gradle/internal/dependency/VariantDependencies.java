@@ -230,8 +230,8 @@ public class VariantDependencies {
                             .getArtifactFiles();
 
             fileCollection =
-                    new FilteringSpec(artifacts, excludedDirectories)
-                            .getFilteredFileCollection(project);
+                    new FilteringSpec(artifacts, excludedDirectories, project.getObjects())
+                            .getFilteredFileCollection();
 
         } else {
             fileCollection = artifacts.getArtifactFiles();
@@ -268,7 +268,8 @@ public class VariantDependencies {
                             .getArtifactFiles();
             artifacts =
                     new FilteredArtifactCollection(
-                            project, new FilteringSpec(artifacts, excludedDirectories));
+                            new FilteringSpec(
+                                    artifacts, excludedDirectories, project.getObjects()));
         }
 
         if (!configType.needsTestedComponents() || !variantType.isTestComponent()) {
@@ -315,7 +316,8 @@ public class VariantDependencies {
 
             artifacts =
                     new FilteredArtifactCollection(
-                            project, new FilteringSpec(artifacts, excludedDirectories));
+                            new FilteringSpec(
+                                    artifacts, excludedDirectories, project.getObjects()));
         }
 
         ArtifactCollection testedArtifactCollection =

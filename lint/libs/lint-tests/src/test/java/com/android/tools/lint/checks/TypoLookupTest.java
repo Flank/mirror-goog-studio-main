@@ -349,8 +349,8 @@ public class TypoLookupTest extends AbstractCheckTest {
             assertTrue(
                     msg(f, i, "Typo replacements was empty: %1$s", line), !replacements.isEmpty());
 
-            for (String blacklist : sRemove) {
-                if (replacements.contains(blacklist)) {
+            for (String remove : sRemove) {
+                if (replacements.contains(remove)) {
                     fail(
                             msg(
                                     f,

@@ -50,6 +50,7 @@ import java.io.InputStreamReader;
 import java.lang.Thread.State;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -100,8 +101,10 @@ public class AndroidDebugBridge {
     /** Don't automatically manage ADB server. */
     private static boolean sUserManagedAdbMode = false;
 
-    private static InetAddress sHostAddr;
-    private static InetSocketAddress sSocketAddr;
+    private static final Object sLastKnownGoodAddressLock = new Object();
+
+    /** Last known good {@link InetSocketAddress} to ADB. */
+    private static InetSocketAddress sLastKnownGoodAddress;
 
     private static AndroidDebugBridge sThis;
     private static boolean sInitialized = false;
@@ -267,9 +270,10 @@ public class AndroidDebugBridge {
         sClientSupport = options.clientSupport;
         sAdbEnvVars = options.adbEnvVars;
         sUserManagedAdbMode = options.userManagedAdbMode;
+        sLastKnownGoodAddress = null;
 
         // Determine port and instantiate socket address.
-        initAdbSocketAddr(options.userManagedAdbPort);
+        initAdbPort(options.userManagedAdbPort);
 
         MonitorThread monitorThread = MonitorThread.createInstance();
         monitorThread.start();
@@ -322,6 +326,7 @@ public class AndroidDebugBridge {
 
         sInitialized = false;
         sThis = null;
+        sLastKnownGoodAddress = null;
     }
 
     /**
@@ -334,9 +339,73 @@ public class AndroidDebugBridge {
 
     /**
      * Returns the socket address of the ADB server on the host.
+     *
+     * <p>This method will try to return a socket address that's known to work by opening a socket
+     * channel to the ADB server. Both IPv4 and IPv6 loopback-address will be attempted. In the
+     * event where neither could connect, this method will fallback to returning the
+     * loopback-address preferred by the JVM. This fallback logic is required to prevent API
+     * breakage.
+     *
+     * <p>If fake ADB server mode is enabled, this method will automatically fallback to legacy
+     * implementation without attempting to connect to ADB.
+     *
+     * @deprecated This method returns a loopback server address that may not match what's used by
+     *     the ADB server. i.e. the JVM may be in IPv4 mode while the ADB server is hosted on the
+     *     IPv6 loopback address. Prefer {@link #openConnection()} instead when opening a connection
+     *     to the ADB server.
      */
+    @Deprecated
     public static InetSocketAddress getSocketAddress() {
-        return sSocketAddr;
+        if (!sUnitTestMode) {
+            // Use synchronized access to ensure we only ever open one connection to ADB when we
+            // need to check which local address to use.
+            synchronized (sLastKnownGoodAddressLock) {
+                if (sLastKnownGoodAddress != null) {
+                    return sLastKnownGoodAddress;
+                }
+                try (SocketChannel adbChannel = openConnection()) {
+                    // SocketAddress from adbChannel is created by openConnection and should always
+                    // be an InetSocketAddress.
+                    sLastKnownGoodAddress = (InetSocketAddress) adbChannel.getRemoteAddress();
+                    return sLastKnownGoodAddress;
+                } catch (IOException e) {
+                    // Ignore the failure and fallback to old implementation.
+                }
+            }
+        }
+        return new InetSocketAddress(InetAddress.getLoopbackAddress(), sAdbServerPort);
+    }
+
+    /**
+     * Attempts to connect to the local android debug bridge server.
+     *
+     * @return a connected socket if success
+     * @throws IOException should errors occur when opening the connection
+     */
+    public static SocketChannel openConnection() throws IOException {
+        SocketChannel adbChannel;
+        try {
+            adbChannel = SocketChannel.open(new InetSocketAddress("127.0.0.1", sAdbServerPort));
+        } catch (IOException ipv4Exception) {
+            // Fallback to IPv6.
+            try {
+                adbChannel = SocketChannel.open(new InetSocketAddress("::1", sAdbServerPort));
+            } catch (IOException ipv6Exception) {
+                IOException combinedException =
+                        new IOException(
+                                "Can't find adb server on port "
+                                        + sAdbServerPort
+                                        + ", IPv4 attempt: "
+                                        + ipv4Exception.getMessage()
+                                        + ", IPv6 attempt: "
+                                        + ipv6Exception.getMessage(),
+                                ipv4Exception);
+                combinedException.addSuppressed(ipv6Exception);
+                throw combinedException;
+            }
+        }
+        adbChannel.socket().setTcpNoDelay(true);
+        return adbChannel;
     }
 
     /**
@@ -1435,10 +1504,8 @@ public class AndroidDebugBridge {
         }
     }
 
-    /**
-     * Instantiates sSocketAddr with the address of the host's adb process.
-     */
-    private static void initAdbSocketAddr(int userManagedAdbPort) {
+    /** Instantiates sSocketAddr with the address of the host's adb process. */
+    private static void initAdbPort(int userManagedAdbPort) {
         // If we're in unit test mode, we already manually set sAdbServerPort.
         if (!sUnitTestMode) {
             if (sUserManagedAdbMode) {
@@ -1447,8 +1514,6 @@ public class AndroidDebugBridge {
                 sAdbServerPort = getAdbServerPort();
             }
         }
-        sHostAddr = InetAddress.getLoopbackAddress();
-        sSocketAddr = new InetSocketAddress(sHostAddr, sAdbServerPort);
     }
 
     /**

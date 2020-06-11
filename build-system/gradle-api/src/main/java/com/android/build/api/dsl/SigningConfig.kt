@@ -72,4 +72,18 @@ interface SigningConfig: Named {
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
     var isV2SigningEnabled: Boolean
+
+    /**
+     * Enable signing using APK Signature Scheme v3 (aka v3 signing). If null, a default value is
+     * used.
+     *
+     * See [APK Signature Scheme v3](https://source.android.com/security/apksigning/v3)
+     */
+    var enableV3Signing: Boolean?
+
+    /**
+     * Enable signing using APK Signature Scheme v4 (aka v4 signing). If null, a default value is
+     * used.
+     */
+    var enableV4Signing: Boolean?
 }

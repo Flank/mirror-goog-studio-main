@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -40,7 +41,10 @@ public class PrivateResourceTest {
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException {
-        project.execute("clean", "assemble");
+        project.executor()
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assemble");
     }
 
     @AfterClass

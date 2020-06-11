@@ -626,8 +626,6 @@ private class LintModelModuleWriter(
 
         printer.println(">")
 
-        writeBuildFeatures(module.buildFeatures, indent + 1)
-
         writeLintOptions(module.lintOptions, indent + 1)
 
         if (writeVariants != null) {
@@ -652,24 +650,6 @@ private class LintModelModuleWriter(
         printer.print("<variant name=\"")
         printer.print(variant.name)
         printer.println("\"/>")
-    }
-
-    private fun writeBuildFeatures(
-        buildFeatures: LintModelBuildFeatures,
-        indent: Int
-    ) {
-        indent(indent)
-        printer.print("<buildFeatures")
-        if (buildFeatures.coreLibraryDesugaringEnabled) {
-            printer.printAttribute("coreLibraryDesugaring", VALUE_TRUE, indent)
-        }
-        if (buildFeatures.viewBinding) {
-            printer.printAttribute("viewBinding", VALUE_TRUE, indent)
-        }
-        if (buildFeatures.namespacingMode != LintModelNamespacingMode.DISABLED) {
-            printer.printAttribute("namespacing", buildFeatures.namespacingMode.name, indent)
-        }
-        printer.println("/>")
     }
 
     private fun writeLintOptions(
@@ -812,11 +792,13 @@ private class LintModelVariantWriter(
         if (variant.shrinkable) {
             printer.printAttribute("shrinking", VALUE_TRUE, indent)
         }
+
         printer.printFiles("proguardFiles", variant.proguardFiles, indent)
         printer.printFiles("consumerProguardFiles", variant.consumerProguardFiles, indent)
         printer.printStrings("resourceConfigurations", variant.resourceConfigurations, indent)
         printer.println(">")
 
+        writeBuildFeatures(variant.buildFeatures, indent + 1)
         writeSourceProviders(variant.sourceProviders, "sourceProviders", indent + 1)
         writeSourceProviders(variant.testSourceProviders, "testSourceProviders", indent + 1)
 
@@ -834,6 +816,24 @@ private class LintModelVariantWriter(
         indent(indent)
         printer.println("</variant>")
         printer.close()
+    }
+
+    private fun writeBuildFeatures(
+        buildFeatures: LintModelBuildFeatures,
+        indent: Int
+    ) {
+        indent(indent)
+        printer.print("<buildFeatures")
+        if (buildFeatures.coreLibraryDesugaringEnabled) {
+            printer.printAttribute("coreLibraryDesugaring", VALUE_TRUE, indent)
+        }
+        if (buildFeatures.viewBinding) {
+            printer.printAttribute("viewBinding", VALUE_TRUE, indent)
+        }
+        if (buildFeatures.namespacingMode != LintModelNamespacingMode.DISABLED) {
+            printer.printAttribute("namespacing", buildFeatures.namespacingMode.name, indent)
+        }
+        printer.println("/>")
     }
 
     private fun writeManifestPlaceholders(manifestPlaceholders: Map<String, String>, indent: Int) {
@@ -1038,9 +1038,13 @@ private class LintModelLibrariesWriter(
         indent(indent)
         printer.print("<library")
         printer.printName(library.artifactAddress, indent)
-        printer.printFiles("jars", library.jarFiles, indent)
-        library.projectPath?.let { printer.printAttribute("project", it, indent) }
-        printer.printAttribute("resolved", library.resolvedCoordinates.toString(), indent)
+        if (library is LintModelExternalLibrary) {
+            printer.printFiles("jars", library.jarFiles, indent)
+            printer.printAttribute("resolved", library.resolvedCoordinates.toString(), indent)
+        }
+        if (library is LintModelModuleLibrary) {
+            library.projectPath.let { printer.printAttribute("project", it, indent) }
+        }
         if (library.provided) {
             printer.printAttribute("provided", VALUE_TRUE, indent)
         }
@@ -1214,22 +1218,6 @@ private class LintModelModuleReader(
     override val path: String
         get() = adapter.file(TargetFile.MODULE)?.path ?: "<unknown>"
 
-    private fun readBuildFeatures(): LintModelBuildFeatures {
-        expectTag("buildFeatures")
-        val coreLibraryDesugaringEnabled = getOptionalBoolean("coreLibraryDesugaring", false)
-        val viewBinding = getOptionalBoolean("viewBinding", false)
-        val namespacingMode =
-            getOptionalAttribute("nameSpacingMode")?.let { LintModelNamespacingMode.valueOf(it) }
-                ?: LintModelNamespacingMode.DISABLED
-
-        finishTag("buildFeatures")
-        return DefaultLintModelBuildFeatures(
-            viewBinding = viewBinding,
-            coreLibraryDesugaringEnabled = coreLibraryDesugaringEnabled,
-            namespacingMode = namespacingMode
-        )
-    }
-
     private fun readLintOptions(): LintModelLintOptions {
         expectTag("lintOptions")
         val isCheckTestSources = getOptionalBoolean("checkTestSources", false)
@@ -1361,7 +1349,6 @@ private class LintModelModuleReader(
             val variants = mutableListOf<LintModelVariant>()
             val lintRuleJars = getFiles("lintRuleJars")
             var lintOptions: LintModelLintOptions? = null
-            var buildFeatures: LintModelBuildFeatures? = null
 
             loop@ while (parser.next() != END_DOCUMENT) {
                 val eventType = parser.eventType
@@ -1369,14 +1356,13 @@ private class LintModelModuleReader(
                     continue
                 }
                 when (parser.name) {
-                    "buildFeatures" -> buildFeatures = readBuildFeatures()
                     "lintOptions" -> lintOptions = readLintOptions()
                     "variant" -> break@loop
                     else -> unexpectedTag()
                 }
             }
 
-            if (lintOptions == null || buildFeatures == null) {
+            if (lintOptions == null) {
                 missingData()
             }
 
@@ -1390,7 +1376,6 @@ private class LintModelModuleReader(
                 buildFolder = buildFolder,
                 lintOptions = lintOptions!!,
                 lintRuleJars = lintRuleJars,
-                buildFeatures = buildFeatures!!,
                 resourcePrefix = resourcePrefix,
                 dynamicFeatures = dynamicFeatures,
                 bootClassPath = bootClassPath,
@@ -1490,6 +1475,22 @@ private class LintModelVariantReader(
 
         finishTag("resValue")
         return DefaultLintModelResourceField(type = type, name = name, value = value)
+    }
+
+    private fun readBuildFeatures(): LintModelBuildFeatures {
+        expectTag("buildFeatures")
+        val coreLibraryDesugaringEnabled = getOptionalBoolean("coreLibraryDesugaring", false)
+        val viewBinding = getOptionalBoolean("viewBinding", false)
+        val namespacingMode =
+            getOptionalAttribute("nameSpacingMode")?.let { LintModelNamespacingMode.valueOf(it) }
+                ?: LintModelNamespacingMode.DISABLED
+
+        finishTag("buildFeatures")
+        return DefaultLintModelBuildFeatures(
+            viewBinding = viewBinding,
+            coreLibraryDesugaringEnabled = coreLibraryDesugaringEnabled,
+            namespacingMode = namespacingMode
+        )
     }
 
     private fun readManifestPlaceholders(): Map<String, String> {
@@ -1618,6 +1619,7 @@ private class LintModelVariantReader(
             var manifestPlaceholders: Map<String, String> = emptyMap()
             var sourceProviders: List<LintModelSourceProvider> = emptyList()
             var testSourceProviders: List<LintModelSourceProvider> = emptyList()
+            var buildFeatures: LintModelBuildFeatures? = null
 
             expectTag("variant")
 
@@ -1636,6 +1638,7 @@ private class LintModelVariantReader(
                         "sourceProviders" -> sourceProviders = readSourceProviders(parser.name)
                         "testSourceProviders" -> testSourceProviders =
                             readSourceProviders(parser.name)
+                        "buildFeatures" -> buildFeatures = readBuildFeatures()
                         else -> unexpectedTag()
                     }
                 } else if (eventType == END_TAG) {
@@ -1644,7 +1647,7 @@ private class LintModelVariantReader(
                 }
             }
 
-            if (mainArtifact == null) {
+            if (mainArtifact == null || buildFeatures == null) {
                 missingData()
             }
 
@@ -1668,6 +1671,7 @@ private class LintModelVariantReader(
                 testSourceProviders = testSourceProviders,
                 debuggable = debuggable,
                 shrinkable = shrinkable,
+                buildFeatures = buildFeatures!!,
                 libraryResolver = libraryResolver
             )
         } catch (e: XmlPullParserException) {
@@ -1879,8 +1883,17 @@ private class LintModelLibrariesReader(
 
         finishTag("library")
 
-        if (android) {
-            return DefaultLintModelAndroidLibrary(
+        return when {
+            project != null -> DefaultLintModelModuleLibrary(
+                projectPath = project,
+                artifactAddress = artifactAddress,
+                resolvedCoordinates = resolved!!,
+                folder = folder,
+                lintJar = lintJar,
+                provided = provided,
+                skipped = skipped
+            )
+            android -> DefaultLintModelAndroidLibrary(
                 artifactAddress = artifactAddress,
                 jarFiles = jars,
                 manifest = manifestFile!!,
@@ -1892,16 +1905,14 @@ private class LintModelLibrariesReader(
                 symbolFile = symbolFile!!,
                 externalAnnotations = externalAnnotations!!,
                 proguardRules = proguardRules!!,
-                project = project,
                 provided = provided,
                 skipped = skipped,
                 resolvedCoordinates = resolved!!
             )
-        } else {
-            return DefaultLintModelJavaLibrary(
+            else -> DefaultLintModelJavaLibrary(
                 artifactAddress = artifactAddress,
+                folder = folder,
                 jarFiles = jars,
-                project = project,
                 provided = provided,
                 skipped = skipped,
                 resolvedCoordinates = resolved!!

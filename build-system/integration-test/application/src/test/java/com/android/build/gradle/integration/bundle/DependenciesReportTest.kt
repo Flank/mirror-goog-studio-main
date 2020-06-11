@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.bundle
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -54,7 +55,11 @@ class DependenciesReportTest {
             .dependency(app, "androidx.core:core:1.0.1")
             .fileDependency(app, "local.jar")
             .build()
-    @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
+    @get:Rule
+    val project = GradleTestProject.builder()
+        // b/149978740
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .fromTestApp(testApp).create()
 
     @Test
     fun testDependenciesFile() {

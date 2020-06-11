@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -60,6 +61,8 @@ public class ManifestMergingTest {
     public GradleTestProject navigation =
             GradleTestProject.builder()
                     .withName("navigation")
+                    // http://b/158092419
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("navigation")
                     .create();
 
@@ -70,7 +73,10 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergingForLibraries() throws Exception {
-        libsTest.execute("clean", "build");
+        // http://b/146208910
+        libsTest.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "build");
         File fileOutput =
                 libsTest.file(
                         "libapp/build/"
@@ -90,8 +96,10 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergerReport() throws Exception {
-        flavors.execute("clean", "assemble");
-
+        // http://b/146208910
+        flavors.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assemble");
         File logs = new File(flavors.getOutputFile("apk").getParentFile(), "logs");
         File[] reports = logs.listFiles(file -> file.getName().startsWith("manifest-merger"));
         assertEquals(8, reports.length);
@@ -99,7 +107,10 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergeBlameReport() throws Exception {
-        flavors.execute("clean", "assemble");
+        // http://b/146208910
+        flavors.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assemble");
 
         File dirs =
                 FileUtils.join(
@@ -152,7 +163,10 @@ public class ManifestMergingTest {
                         + "        targetSdkVersion 'N'\n"
                         + "    }\n"
                         + "}");
-        libsTest.execute("clean", ":app:build");
+        // http://b/146208910
+        libsTest.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", ":app:build");
         assertThat(
                         appProject.file(
                                 "build/intermediates/packaged_manifests/debug/AndroidManifest.xml"))

@@ -16,7 +16,8 @@
 
 package androidx.ui.unit
 
-data class IntPx(val value: Int)
+@Suppress("EXPERIMENTAL_FEATURE_WARNING")
+inline class IntPx(val value: Int)
 
 /**
  * During testing this is used instead of the version in androidx-ui-unit, since that library

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.api
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.Rule
 import org.junit.Test
@@ -24,7 +25,10 @@ import org.junit.Test
 class ApiCompatibilityTest {
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("apiBinaryCompatibility").create()
+    val project = GradleTestProject.builder().fromTestProject("apiBinaryCompatibility")
+        // http://b/158092419
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @Test
     fun binaryCompatibilityTest() {

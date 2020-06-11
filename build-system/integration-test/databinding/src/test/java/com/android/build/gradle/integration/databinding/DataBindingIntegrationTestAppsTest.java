@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.integration.databinding;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.sdklib.SdkVersionInfo;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,15 @@ public class DataBindingIntegrationTestAppsTest {
                         .withDependencyChecker(!"KotlinTestApp".equals(projectName));
         if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
             builder.withCompileSdkVersion("28");
+        }
+        if (useAndroidX
+                && ImmutableSet.of(
+                                "KotlinTestApp",
+                                "ViewBindingTestApp",
+                                "ViewBindingWithDataBindingTestApp")
+                        .contains(projectName)) {
+            // http://b/158092419 - for Kotlin projects
+            builder.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
         }
         this.project = builder.create();
     }

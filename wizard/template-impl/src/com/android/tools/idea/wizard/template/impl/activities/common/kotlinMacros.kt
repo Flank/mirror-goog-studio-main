@@ -38,6 +38,12 @@ fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   }
 }
 
+fun RecipeExecutor.addMaterialDependency(useAndroidX: Boolean) {
+  if (useAndroidX) {
+    addDependency("com.google.android.material:material:+")
+  }
+}
+
 private fun RecipeExecutor.hasKotlinStdlib(): Boolean {
   val stdlibSuffixes = setOf("", "-jdk7", "-jdk8")
   return stdlibSuffixes.any { hasDependency(stdlibBaseArtifact + it) }

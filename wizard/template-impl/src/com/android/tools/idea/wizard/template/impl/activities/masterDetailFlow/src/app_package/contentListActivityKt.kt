@@ -29,8 +29,7 @@ fun contentListActivityKt(
   itemListContentLayout: String,
   itemListLayout: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
@@ -39,9 +38,9 @@ import android.os.Bundle
 import ${getMaterialComponentName("android.support.v4.widget.NestedScrollView", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
-import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)}
+import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

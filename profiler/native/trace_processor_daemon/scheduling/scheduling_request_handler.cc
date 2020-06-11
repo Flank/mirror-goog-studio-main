@@ -27,7 +27,11 @@ const std::string STATE_FOREGROUND = std::string("R+");
 const std::string STATE_SLEEPING = std::string("S");
 const std::string STATE_UNINTERRUPTIBLE = std::string("D");
 const std::string STATE_UNINTERRUPTIBLE_WAKEKILL = std::string("DK");
+const std::string STATE_WAKEKILL = std::string("K");
+const std::string STATE_WAKING = std::string("W");
 const std::string STATE_TASK_DEAD = std::string("x");
+const std::string STATE_EXIT_DEAD = std::string("X");
+const std::string STATE_ZOMBIE = std::string("Z");
 
 void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
                                               SchedulingEventsResult* result) {
@@ -109,7 +113,14 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
                  STATE_UNINTERRUPTIBLE_WAKEKILL.compare(state) == 0) {
         sched_proto->set_state(
             SchedulingEventsResult::SchedulingEvent::SLEEPING_UNINTERRUPTIBLE);
-      } else if (STATE_TASK_DEAD.compare(state) == 0) {
+      } else if (STATE_WAKEKILL.compare(state) == 0) {
+        sched_proto->set_state(
+            SchedulingEventsResult::SchedulingEvent::WAKE_KILL);
+      } else if (STATE_WAKING.compare(state) == 0) {
+        sched_proto->set_state(SchedulingEventsResult::SchedulingEvent::WAKING);
+      } else if (STATE_TASK_DEAD.compare(state) == 0 ||
+                 STATE_EXIT_DEAD.compare(state) == 0 ||
+                 STATE_ZOMBIE.compare(state) == 0) {
         sched_proto->set_state(SchedulingEventsResult::SchedulingEvent::DEAD);
       } else {
         std::cerr << "Unknown scheduling state encountered: " << state

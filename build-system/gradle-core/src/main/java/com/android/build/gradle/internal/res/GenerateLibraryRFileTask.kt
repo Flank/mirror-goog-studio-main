@@ -27,6 +27,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.SymbolTableBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -101,6 +103,9 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:Input
     abstract val useConstantIds: Property<Boolean>
 
+    @get:Internal
+    abstract val symbolTableBuildService: Property<SymbolTableBuildService>
+
     @Throws(IOException::class)
     override fun doFullTaskAction() {
         val manifestBuiltArtifacts = BuiltArtifactsLoaderImpl().load(manifestFiles)
@@ -120,6 +125,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             it.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses.get())
             it.symbolsWithPackageNameOutputFile.set(symbolsWithPackageNameOutputFile)
             it.useConstantIds.set(useConstantIds.get())
+            it.symbolTableBuildService.set(symbolTableBuildService)
         }
     }
 
@@ -140,6 +146,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         abstract val compileClasspathLibraryRClasses: Property<Boolean>
         abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
         abstract val useConstantIds: Property<Boolean>
+        abstract val symbolTableBuildService: Property<SymbolTableBuildService>
     }
 
     abstract class GenerateLibRFileRunnable @Inject constructor() :
@@ -149,6 +156,9 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             val symbolTable = SymbolIo.readRDef(parameters.localResourcesFile.asFile.get().toPath())
 
+            val depSymbolTables: List<SymbolTable> =
+                parameters.symbolTableBuildService.get().loadClasspath(parameters.dependencies)
+
             val idProvider =
                 if (parameters.useConstantIds.get()) {
                     IdProvider.constant()
@@ -157,7 +167,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 }
             processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
-                libraries = parameters.dependencies.files,
+                depSymbolTables = depSymbolTables,
                 mainPackageName = parameters.packageForR.get(),
                 manifestFile = parameters.manifest.asFile.get(),
                 rClassOutputJar = parameters.rClassOutputJar.asFile.orNull,
@@ -276,6 +286,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.useConstantIds.set(
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
+            task.symbolTableBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
@@ -325,6 +336,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.packageForR.setDisallowChanges(creationConfig.packageName)
             task.mainSplit = creationConfig.outputs.getMainSplit()
             task.useConstantIds.setDisallowChanges(false)
+            task.symbolTableBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
 
             creationConfig.onTestedConfig {
                 it.artifacts.setTaskInputToFinalProduct(

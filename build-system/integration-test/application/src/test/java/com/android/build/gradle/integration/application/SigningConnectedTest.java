@@ -26,6 +26,7 @@ import static java.lang.Math.max;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -69,7 +70,11 @@ public class SigningConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.noBuildFile())
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Rule public Adb adb = new Adb();
 

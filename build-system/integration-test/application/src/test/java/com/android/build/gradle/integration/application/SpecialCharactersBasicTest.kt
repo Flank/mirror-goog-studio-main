@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.google.common.truth.Truth.assertThat
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -48,6 +49,8 @@ class SpecialCharactersBasicTest(projectName: String) {
             FileUtils.copyDirectory(originalProjectPath, projectCopyPath)
 
             return GradleTestProject.builder()
+                // http://b/149978740
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .fromDir(projectCopyPath)
                 .create()
         } catch(err: java.io.IOException) {

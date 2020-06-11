@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.testutils.apk.Zip;
@@ -47,7 +48,11 @@ public class ExtractAnnotationTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("extractAnnotations").create();
+            GradleTestProject.builder()
+                    .fromTestProject("extractAnnotations")
+                    // http://b/158201643
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws Exception {

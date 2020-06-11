@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.library;
 
-
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -42,8 +42,10 @@ public class MinifyLibProvidedDepTest {
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
-
-        project.execute("clean", "build");
+        // http://b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "build");
     }
 
     @AfterClass

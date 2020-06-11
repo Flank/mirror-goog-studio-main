@@ -34,14 +34,14 @@ private constructor(val exception: Throwable):
             if (ex is ExternalApiUsageException) return null
 
             val rootCause = Throwables.getRootCause(ex)
-            if (isWhiteListedException(rootCause)) {
+            if (isUsefulException(rootCause)) {
                 return PluginExceptionReport(rootCause)
             } else {
                 return null
             }
         }
 
-        private fun isWhiteListedException(ex: Throwable): Boolean {
+        private fun isUsefulException(ex: Throwable): Boolean {
             return ex is NullPointerException
                     || ex is ArrayIndexOutOfBoundsException
                     || ex is IllegalStateException

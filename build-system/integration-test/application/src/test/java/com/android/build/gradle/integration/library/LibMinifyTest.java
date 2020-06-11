@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.library;
 
-
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
@@ -33,7 +33,10 @@ public class LibMinifyTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        project.execute("clean", "build");
+        // http://b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "build");
     }
 
     @AfterClass

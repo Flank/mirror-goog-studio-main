@@ -23,7 +23,9 @@ import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_C
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
@@ -158,7 +160,11 @@ public class NativeSoPackagingTest {
 
     @Test
     public void testNonIncrementalPackaging() throws Exception {
-        execute("clean", "assembleDebug", "assembleAndroidTest");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("clean", "assembleDebug", "assembleAndroidTest");
 
         // check the files are there. Start from the bottom of the dependency graph
         checkAar(    libProject2, "liblibrary2.so",     "library2:abcd");
@@ -547,38 +553,56 @@ public class NativeSoPackagingTest {
 
     @Test
     public void testTestProjectWithNewAssetFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("test:clean", "test:assembleDebug");
 
-        doTest(testProject, project -> {
-            project.addFile("src/main/jniLibs/x86/libnewtest.so", "newfile content");
-            execute("test:assembleDebug");
+        doTest(
+                testProject,
+                project -> {
+                    project.addFile("src/main/jniLibs/x86/libnewtest.so", "newfile content");
+                    executor.run("test:assembleDebug");
 
-            checkApk(testProject, "libnewtest.so", "newfile content");
-        });
+                    checkApk(testProject, "libnewtest.so", "newfile content");
+                });
     }
 
     @Test
     public void testTestProjectWithRemovedAssetFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("test:clean", "test:assembleDebug");
 
-        doTest(testProject, project -> {
-            project.removeFile("src/main/jniLibs/x86/libtest.so");
-            execute("test:assembleDebug");
+        doTest(
+                testProject,
+                project -> {
+                    project.removeFile("src/main/jniLibs/x86/libtest.so");
+                    executor.run("test:assembleDebug");
 
-            checkApk(testProject, "libtest.so", null);
-        });
+                    checkApk(testProject, "libtest.so", null);
+                });
     }
 
     @Test
     public void testTestProjectWithModifiedAssetFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        // https://github.com/gradle/gradle/issues/13317
+        GradleTaskExecutor executor =
+                project.executor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        executor.run("test:clean", "test:assembleDebug");
 
-        doTest(testProject, project -> {
-            project.replaceFile("src/main/jniLibs/x86/libtest.so", "new content");
-            execute("test:assembleDebug");
+        doTest(
+                testProject,
+                project -> {
+                    project.replaceFile("src/main/jniLibs/x86/libtest.so", "new content");
+                    executor.run("test:assembleDebug");
 
-            checkApk(testProject, "libtest.so", "new content");
-        });
+                    checkApk(testProject, "libtest.so", "new content");
+                });
     }
 
     // ---- SO ALIGNMENT ----

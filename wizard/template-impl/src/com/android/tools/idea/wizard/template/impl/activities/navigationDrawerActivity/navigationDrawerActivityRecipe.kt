@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.classToResource
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
@@ -60,10 +61,10 @@ fun RecipeExecutor.generateNavigationDrawer(
   val includeImageDrawables = minApi.api < 21
   val language = projectTemplateData.language
   val useAndroidX = projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
 
   addAllKotlinDependencies(data)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
+  addMaterialDependency(useAndroidX)
 
   generateManifest(
     data,
@@ -115,14 +116,13 @@ fun RecipeExecutor.generateNavigationDrawer(
     packageName,
     contentLayoutName,
     appBarLayoutName,
-    useAndroidX = useAndroidX,
-    useMaterial2 = useMaterial2
+    useAndroidX = useAndroidX
   )
 
   save(drawer(), resOut.resolve("menu/${drawerMenu}.xml"))
 
   save(
-    navigationViewXml(appBarLayoutName, navHeaderLayoutName, drawerMenu, useAndroidX, useMaterial2),
+    navigationViewXml(appBarLayoutName, navHeaderLayoutName, drawerMenu, useAndroidX),
     resOut.resolve("layout/${layoutName}.xml")
   )
   save(
@@ -131,9 +131,9 @@ fun RecipeExecutor.generateNavigationDrawer(
   )
   save(
     if (generateKotlin)
-      drawerActivityKt(packageName, activityClass, layoutName, menuName, useAndroidX, useMaterial2)
+      drawerActivityKt(packageName, activityClass, layoutName, menuName, useAndroidX)
     else
-      drawerActivityJava(packageName, activityClass, layoutName, menuName, useAndroidX, useMaterial2),
+      drawerActivityJava(packageName, activityClass, layoutName, menuName, useAndroidX),
     srcOut.resolve("${activityClass}.${language.extension}")
   )
 

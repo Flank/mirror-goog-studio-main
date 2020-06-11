@@ -58,6 +58,7 @@ import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.tools.lint.model.LintModelAndroidLibrary
 import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelModuleLibrary
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
@@ -1210,7 +1211,7 @@ abstract class LintClient {
                 val model = project.buildLibraryModel
                 if (model != null) {
                     val lintJar = model.lintJar
-                    if (lintJar.exists()) {
+                    if (lintJar != null && lintJar.exists()) {
                         return listOf(lintJar)
                     }
                 }
@@ -1250,7 +1251,7 @@ abstract class LintClient {
         libraries: Collection<LintModelLibrary>
     ) {
         for (library in libraries) {
-            if (library is LintModelAndroidLibrary) {
+            if (library is LintModelLibrary) {
                 addLintJarsFromDependency(lintJars, library)
             }
         }
@@ -1262,15 +1263,16 @@ abstract class LintClient {
      */
     private fun addLintJarsFromDependency(
         lintJars: MutableList<File>,
-        library: LintModelAndroidLibrary
+        library: LintModelLibrary
     ) {
         val lintJar = library.lintJar
-        if (lintJar.exists()) {
+        val folder = library.folder
+        if (lintJar != null && lintJar.exists()) {
             lintJars.add(lintJar)
-        } else if (library.projectPath != null) {
+        } else if (library is LintModelModuleLibrary && folder != null) {
             // Local project: might have locally packaged lint jar
             // Kept for backward compatibility, see b/66166521
-            val buildDir = library.folder.path.substringBefore("intermediates")
+            val buildDir = folder.path.substringBefore("intermediates")
             val lintPaths = arrayOf(
                 Paths.get(buildDir, "intermediates", "lint", SdkConstants.FN_LINT_JAR),
                 Paths.get(

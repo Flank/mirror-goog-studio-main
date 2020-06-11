@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.process
 
+import org.gradle.api.logging.Logging
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.Arrays
@@ -25,8 +26,8 @@ import java.util.Arrays
  * function. This class accounts for lines that span multiple write(byte[], int, int) blocks.
  */
 class ChunkBytesToLineOutputStream(
-    private val print: (String) -> Unit,
     private val logPrefix: String,
+    private val print: (String) -> Unit = { message -> Logging.getLogger(ChunkBytesToLineOutputStream::class.java).lifecycle(message) },
     initialBufferSize : Int = 256) : OutputStream() {
     private var buffer = ByteArray(initialBufferSize)
     private var nextByteIndex = 0

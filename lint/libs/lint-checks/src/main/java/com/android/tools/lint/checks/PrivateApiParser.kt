@@ -30,10 +30,10 @@ class PrivateApiParser {
 
             val className = items[0].fromSignature()
 
-            // Skip adding $$Lambda entries and whitelisted items.
+            // Skip adding $$Lambda entries and allowed items.
             if (className.contains("${"$$"}Lambda")) return@forEachLine
             val restriction = parse(items[2])
-            if (restriction == Restriction.WHITE ||
+            if (restriction == Restriction.ALLOW ||
                 restriction == Restriction.UNKNOWN
             )
                 return@forEachLine
@@ -80,10 +80,10 @@ private fun String.fromSignature(): String =
 
 private fun parse(name: String): Restriction =
     when (name) {
-        "WHITE" -> Restriction.WHITE
-        "BLACK" -> Restriction.BLACK
-        "GREY" -> Restriction.GREY
-        "GREY_MAX_O" -> Restriction.GREY_MAX_O
-        "GREY_MAX_P" -> Restriction.GREY_MAX_P
+        "WHITE" -> Restriction.ALLOW
+        "BLACK" -> Restriction.DENY
+        "GREY" -> Restriction.MAYBE
+        "GREY_MAX_O" -> Restriction.MAYBE_MAX_O
+        "GREY_MAX_P" -> Restriction.MAYBE_MAX_P
         else -> Restriction.UNKNOWN
     }

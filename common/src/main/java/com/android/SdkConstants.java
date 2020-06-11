@@ -1166,6 +1166,7 @@ public final class SdkConstants {
     public static final String TAG_DEEP_LINK = "deepLink";
     public static final String TAG_NAVIGATION = "navigation";
     public static final String TAG_FRAGMENT = "fragment";
+    public static final String TAG_ARGUMENT = "argument";
     public static final String ATTR_MODULE_NAME = "moduleName";
 
     public static final String VIEW = "View"; //$NON-NLS-1$

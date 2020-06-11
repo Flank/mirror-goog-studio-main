@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -166,7 +167,7 @@ class CoreLibraryDesugarTest {
     @Category(DeviceTests::class)
     fun testApiInvocation() {
         val device = adb.getDevice(AndroidVersionMatcher.exactly(21), AbiMatcher.anyAbi())
-        project.executor()
+        executor()
             .with(StringOption.DEVICE_POOL_SERIAL, device.serialNumber)
             .run("app:connectedDebugAndroidTest")
     }
@@ -176,7 +177,7 @@ class CoreLibraryDesugarTest {
      */
     @Test
     fun testApiRewriting() {
-        project.executor().run("app:assembleDebug")
+        executor().run("app:assembleDebug")
         val apk = app.getApk(GradleTestProject.ApkType.DEBUG)
         val dex = getDexWithSpecificClass(programClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $programClass")
@@ -190,7 +191,9 @@ class CoreLibraryDesugarTest {
 
             android.lintOptions.abortOnError = true
         """.trimIndent())
-        project.executor().run("app:lintDebug")
+        // http://b/146208910
+        executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .run("app:lintDebug")
     }
 
     @Test
@@ -200,7 +203,7 @@ class CoreLibraryDesugarTest {
             android.compileOptions.coreLibraryDesugaringEnabled = false
             android.lintOptions.abortOnError = true
         """.trimIndent())
-        val result = project.executor().expectFailure().run("app:lintDebug")
+        val result = executor().expectFailure().run("app:lintDebug")
         assertThat(result.failureMessage).contains(
             "Call requires API level 24 (current min is 21): java.util.Collection#stream [NewApi]")
     }
@@ -253,7 +256,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromAppProject() {
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
         val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
                 "    java.lang.Object get();$lineSeparator" +
@@ -271,7 +274,7 @@ class CoreLibraryDesugarTest {
     fun testKeepRulesGenerationFromFileDependencies() {
         addFileDependency(app)
 
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
             .getOutputDir(app.buildDir)
         val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
@@ -284,7 +287,7 @@ class CoreLibraryDesugarTest {
     fun testKeepRulesConsumptionWithArtifactTransform() {
         addFileDependency(app)
 
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
         val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
         // check consuming keep rules generated from project by d8 task
         val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
@@ -304,7 +307,7 @@ class CoreLibraryDesugarTest {
     fun testKeepRulesConsumptionWithoutArtifactTransform() {
         addFileDependency(app)
 
-        project.executor()
+        executor()
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
             .run("app:assembleRelease")
 
@@ -320,7 +323,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesConsumptionWithTwoConsecutiveBuilds() {
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
         var apk = app.getApk(GradleTestProject.ApkType.RELEASE)
         getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $usedDesugarClass")
@@ -333,7 +336,7 @@ class CoreLibraryDesugarTest {
                 }
             """.trimIndent())
 
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
         apk = app.getApk(GradleTestProject.ApkType.RELEASE)
         val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $usedDesugarClass")
@@ -344,7 +347,7 @@ class CoreLibraryDesugarTest {
     fun testExternalLibsKeepRulesGenerationWithoutArtifactTransform() {
         addExternalDependency(app)
 
-        project.executor()
+        executor()
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
             .run("clean", "app:assembleRelease")
@@ -361,7 +364,7 @@ class CoreLibraryDesugarTest {
     fun testExternalLibsKeepRulesGenerationWithTransformsForExtLibsOnly() {
         addExternalDependency(app)
 
-        project.executor()
+        executor()
             .withArgument("--build-cache")
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
             .run("clean", "app:assembleRelease")
@@ -390,7 +393,7 @@ class CoreLibraryDesugarTest {
             "getText();"
         )
 
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
 
         val keepRulesOutputDir =
             InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
@@ -419,7 +422,7 @@ class CoreLibraryDesugarTest {
             android.buildTypes.debug.minifyEnabled = true
         """.trimIndent())
 
-        project.executor().run("app:assembleRelease")
+        executor().run("app:assembleRelease")
     }
 
     @Test
@@ -442,7 +445,7 @@ class CoreLibraryDesugarTest {
             }
         """.trimIndent())
 
-        project.executor().run(":app:assembleSdk21Debug")
+        executor().run(":app:assembleSdk21Debug")
         val apk = app.getApk(GradleTestProject.ApkType.DEBUG, "sdk21")
         val dex = getDexWithSpecificClass(programClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $programClass")
@@ -460,7 +463,7 @@ class CoreLibraryDesugarTest {
             android.defaultConfig.minSdkVersion = 28
         """.trimIndent())
 
-        project.executor().run(":app:assembleDebug")
+        executor().run(":app:assembleDebug")
         val apk = app.getApk(GradleTestProject.ApkType.DEBUG)
         val dex = getDexWithSpecificClass(programClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $programClass")
@@ -472,7 +475,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testNonMinifyAndroidTestAppApk() {
-        project.executor().run(":app:assembleDebugAndroidTest")
+        executor().run(":app:assembleDebugAndroidTest")
         val apk = app.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
         DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass, apk.allDexes))
             .isNotEqualTo(null)
@@ -502,7 +505,7 @@ class CoreLibraryDesugarTest {
 
             android.buildTypes.debug.minifyEnabled = true
         """.trimIndent())
-        project.executor().run(":app:assembleDebugAndroidTest")
+        executor().run(":app:assembleDebugAndroidTest")
         val apk = app.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
         DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass3, apk.allDexes))
             .isNotEqualTo(null)
@@ -510,7 +513,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testNonMinifyAndroidTestLibraryApk() {
-        project.executor().run(":library:assembleDebugAndroidTest")
+        executor().run(":library:assembleDebugAndroidTest")
         val apk = library.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
         DexSubject.assertThat(getDexWithSpecificClass(usedDesugarClass, apk.allDexes))
             .isNotEqualTo(null)
@@ -520,7 +523,7 @@ class CoreLibraryDesugarTest {
     // and packaged as a separated dex
     @Test
     fun testConfigJarPackagedAsSeparateDex() {
-        project.executor().run(":app:assembleDebug")
+        executor().run(":app:assembleDebug")
         var apk = app.getApk(GradleTestProject.ApkType.DEBUG)
         var desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $desugarConfigClass")
@@ -533,7 +536,7 @@ class CoreLibraryDesugarTest {
                     return java.util.TimeZone.getTimeZone(java.time.ZoneId.of("GMT"));
                 }
             """.trimIndent())
-        project.executor().run(":app:assembleRelease")
+        executor().run(":app:assembleRelease")
         apk = app.getApk(GradleTestProject.ApkType.RELEASE)
         desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $desugarConfigClass")
@@ -542,7 +545,8 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testL8TaskInvocationForBundleReleaseBuild() {
-        val build = project.executor().run(":app:bundleRelease")
+        // http://b/149978740, unable to disable even with a flag
+        val build = executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run(":app:bundleRelease")
         Truth.assertThat(build.didWorkTasks).contains(":app:l8DexDesugarLibRelease")
     }
 
@@ -600,6 +604,9 @@ class CoreLibraryDesugarTest {
         file.parentFile.mkdirs()
         file.writeText(source)
     }
+
+    // http://b/149978740 - disable dependency info in apks in order to run with configuration caching
+    private fun executor() = project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 
     companion object {
         private const val APP_MODULE = ":app"

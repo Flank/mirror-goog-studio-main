@@ -25,6 +25,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -167,7 +168,11 @@ public class MatchingFallbackTest {
                         + "    implementation project(\":library\")\n"
                         + "}\n");
 
-        project.executeAndReturnMultiModel("clean", ":app:assembleFoo");
+        // b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", ":app:assembleFoo");
+        project.model().fetchAndroidProjects();
 
         final Apk apk = project.getSubproject("app").getApk(ApkType.of("foo", false));
         assertThat(apk.getFile()).isFile();

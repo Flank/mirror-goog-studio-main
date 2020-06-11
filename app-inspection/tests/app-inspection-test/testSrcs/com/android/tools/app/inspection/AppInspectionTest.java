@@ -162,9 +162,7 @@ public final class AppInspectionTest {
         assertCrashEvent(
                 crashEvent,
                 inspectorId,
-                "Inspector "
-                        + inspectorId
-                        + " crashed during sendCommand due to: This is an inspector exception.");
+                "Inspector " + inspectorId + " crashed due to: This is an inspector exception.");
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
     }
 

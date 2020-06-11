@@ -580,7 +580,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     case HOST:
                         if (shardBetweenDevices) {
                             Integer numShards =
-                                    projectOptions.getValue(IntegerOption.ANDROID_TEST_SHARD_COUNT);
+                                    projectOptions.get(IntegerOption.ANDROID_TEST_SHARD_COUNT);
                             task.testRunnerFactory =
                                     (splitSelect, processExecutor, javaProcessExecutor) ->
                                             new ShardedTestRunner(

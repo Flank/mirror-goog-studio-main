@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.Rule;
@@ -26,7 +27,11 @@ import org.junit.experimental.categories.Category;
 public class LibTestDepConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("libTestDep").create();
+            GradleTestProject.builder()
+                    .fromTestProject("libTestDep")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     @Category(DeviceTests.class)

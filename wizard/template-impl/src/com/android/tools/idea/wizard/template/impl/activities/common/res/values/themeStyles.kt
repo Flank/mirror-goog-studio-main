@@ -15,8 +15,8 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.common.res.values
 
-fun themeStyles(themeName: String, useMaterial2: Boolean) = """
+fun themeStyles(themeName: String, useAndroidX: Boolean) = """
 <resources>
-  <style name="$themeName" parent="${if (useMaterial2) "Theme.MaterialComponents.Light" else "Theme.AppCompat.Light"}"/>
+  <style name="$themeName" parent="${if (useAndroidX) "Theme.MaterialComponents.Light" else "Theme.AppCompat.Light"}"/>
 </resources>
 """

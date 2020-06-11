@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -88,7 +89,11 @@ public class DesugarAppWithDesugarToolTest {
     @Test
     public void taskRunsIfJava8Set() throws IOException, InterruptedException {
         enableJava8();
-        GradleBuildResult result = getProjectExecutor().run("assembleDebug");
+        // https://github.com/gradle/gradle/issues/13200
+        GradleBuildResult result =
+                getProjectExecutor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .run("assembleDebug");
         assertThat(result.getTask(":desugarDebug")).didWork();
     }
 
@@ -103,7 +108,10 @@ public class DesugarAppWithDesugarToolTest {
                         Locale.US,
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
-        getProjectExecutor().run("assembleDebug", "assembleDebugAndroidTest");
+        getProjectExecutor()
+                // https://github.com/gradle/gradle/issues/13200
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug", "assembleDebugAndroidTest");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
         for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
@@ -147,12 +155,16 @@ public class DesugarAppWithDesugarToolTest {
     @Test
     public void testUpToDateForIncCompileTasks() throws IOException, InterruptedException {
         enableJava8();
-        getProjectExecutor().run("assembleDebug");
+        // https://github.com/gradle/gradle/issues/13200
+        GradleTaskExecutor projectExecutor =
+                getProjectExecutor()
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        projectExecutor.run("assembleDebug");
 
         Path newSource = project.getMainSrcDir().toPath().resolve("test").resolve("Data.java");
         Files.createDirectories(newSource.getParent());
         Files.write(newSource, ImmutableList.of("package test;", "public class Data {}"));
-        GradleBuildResult result = getProjectExecutor().run("assembleDebug");
+        GradleBuildResult result = projectExecutor.run("assembleDebug");
 
         assertThat(result.getUpToDateTasks())
                 .containsAllIn(ImmutableList.of(":extractTryWithResourcesSupportJarDebug"));
@@ -163,9 +175,12 @@ public class DesugarAppWithDesugarToolTest {
         // java command is not logged when using workers
         Assume.assumeFalse(enableGradleWorkers);
         enableJava8();
+        GradleTaskExecutor projectExecutor = getProjectExecutor();
+        // https://github.com/gradle/gradle/issues/13200
+        projectExecutor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
 
         try (Scanner stdout =
-                getProjectExecutor().withEnableInfoLogging(true).run("assembleDebug").getStdout()) {
+                projectExecutor.withEnableInfoLogging(true).run("assembleDebug").getStdout()) {
 
             ScannerSubject.assertThat(stdout).doesNotContain("--legacy_jacoco_fix");
         }
@@ -180,7 +195,7 @@ public class DesugarAppWithDesugarToolTest {
 
         // now it should contain it as Jacoco version is lower
         try (Scanner stdout =
-                getProjectExecutor().withEnableInfoLogging(true).run("assembleDebug").getStdout()) {
+                projectExecutor.withEnableInfoLogging(true).run("assembleDebug").getStdout()) {
             ScannerSubject.assertThat(stdout).contains("--legacy_jacoco_fix");
         }
     }

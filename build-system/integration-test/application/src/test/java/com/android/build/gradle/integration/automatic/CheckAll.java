@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.automatic;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -80,6 +81,8 @@ public class CheckAll {
         this.project =
                 GradleTestProject.builder()
                         .fromTestProject(projectName)
+                        // b/146208910
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .create();
     }
 

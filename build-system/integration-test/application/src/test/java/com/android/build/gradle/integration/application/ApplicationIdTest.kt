@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -65,12 +66,10 @@ class ApplicationIdTest {
     }
 
     @Test
-    fun checkApplicationId() {
-        project.execute("assembleF1")
+    fun checkApplicationIdDebug() {
+        project.execute("assembleF1Debug")
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
             .hasPackageName("com.example.applicationidtest.default.f1.debug")
-        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
-            .hasPackageName("com.example.applicationidtest.default.f1")
 
         TestFileUtils.searchAndReplace(
             project.buildFile,
@@ -78,10 +77,25 @@ class ApplicationIdTest {
             "applicationIdSuffix \".foo\""
         )
 
-        project.execute("assembleF1")
+        project.execute("assembleF1Debug")
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
             .hasPackageName("com.example.applicationidtest.default.f1.foo")
+    }
+
+    @Test
+    fun checkApplicationIdRelease() {
+        project.executor()
+            // http://b/149978740 and http://b/146208910
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .run("assembleF1Release")
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
+            .hasPackageName("com.example.applicationidtest.default.f1")
+
+        project.executor()
+            // http://b/149978740 and http://b/146208910
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .run("assembleF1Release")
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
             .hasPackageName("com.example.applicationidtest.default.f1")
     }

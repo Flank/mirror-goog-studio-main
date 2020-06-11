@@ -143,6 +143,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
     data class AgpVersionCheckInfo(
         val newerVersion: GradleVersion,
+        val newerVersionIsSafe: Boolean,
         val safeReplacement: GradleVersion?,
         val dependency: GradleCoordinate,
         val isResolved: Boolean,
@@ -154,7 +155,7 @@ open class GradleDetector : Detector(), GradleScanner {
      */
     private var agpVersionCheckInfo: AgpVersionCheckInfo? = null
 
-    private val blacklisted = HashMap<Project, BlacklistedDeps>()
+    private val blockedDependencies = HashMap<Project, BlockedDependencies>()
 
     // ---- Implements GradleScanner ----
 
@@ -792,11 +793,13 @@ open class GradleDetector : Detector(), GradleScanner {
                         context.client.getHighestKnownVersion(dependency, filter)
                     )
 
-                    // Don't just offer the latest available version, but if there is a newer
-                    // dot dot release available, offer that one as well since it may be easier
-                    // to update to
+                    // Don't just offer the latest available version, but if that is more than
+                    // a micro-level different, and there is a newer micro version of the
+                    // version that the user is currently using, offer that one as well as it
+                    // may be easier to upgrade to.
                     if (newerVersion != null && !version.isPreview && newerVersion != version &&
-                        version.minorSegment?.acceptsGreaterValue() == false
+                        version.minorSegment?.acceptsGreaterValue() == false &&
+                        (version.major != newerVersion.major || version.minor != newerVersion.minor)
                     ) {
                         safeReplacement = getGoogleMavenRepoVersion(context, dependency,
                             Predicate { filterVersion ->
@@ -809,7 +812,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
                     if (newerVersion != null && newerVersion > version) {
                         agpVersionCheckInfo = AgpVersionCheckInfo(
-                            newerVersion, safeReplacement, dependency, isResolved, cookie
+                            newerVersion,
+                            newerVersion.major == version.major &&
+                                    newerVersion.minor == version.minor,
+                            safeReplacement, dependency, isResolved, cookie
                         )
                         maybeReportAgpVersionIssue(context)
                     }
@@ -905,11 +911,11 @@ open class GradleDetector : Detector(), GradleScanner {
 
         checkForKtxExtension(context, groupId, artifactId, version, cookie)
 
-        val blacklistedDeps = blacklisted[context.project]
-        if (blacklistedDeps != null) {
-            val path = blacklistedDeps.checkDependency(groupId, artifactId, true)
+        val blockedDependencies = blockedDependencies[context.project]
+        if (blockedDependencies != null) {
+            val path = blockedDependencies.checkDependency(groupId, artifactId, true)
             if (path != null) {
-                val message = getBlacklistedDependencyMessage(context, path)
+                val message = getBlockedDependencyMessage(context, path)
                 if (message != null) {
                     val fix = fix().name("Delete dependency").replace().all().build()
                     report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
@@ -988,8 +994,8 @@ open class GradleDetector : Detector(), GradleScanner {
 
         if (newerVersion != null && newerVersion > version) {
             val versionString = newerVersion.toString()
-            val message = getNewerVersionAvailableMessage(dependency, versionString, safeReplacement)
-            val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString, safeReplacement) else null
+            val message = getNewerVersionAvailableMessage(dependency, versionString, null)
+            val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
             report(context, cookie, issue, message, fix)
         }
     }
@@ -1584,7 +1590,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
     override fun beforeCheckRootProject(context: Context) {
         val project = context.project
-        blacklisted[project] = BlacklistedDeps(project)
+        blockedDependencies[project] = BlockedDependencies(project)
     }
 
     override fun afterCheckRootProject(context: Context) {
@@ -1598,8 +1604,8 @@ open class GradleDetector : Detector(), GradleScanner {
             checkConsistentWearableLibraries(context, null)
         }
 
-        // Check for blacklisted dependencies
-        checkBlacklistedDependencies(context, project)
+        // Check for disallowed dependencies
+        checkBlockedDependencies(context, project)
     }
 
     private fun maybeReportAgpVersionIssue(context: Context) {
@@ -1608,8 +1614,12 @@ open class GradleDetector : Detector(), GradleScanner {
             agpVersionCheckInfo?.let {
                 val versionString = it.newerVersion.toString()
                 val message = getNewerVersionAvailableMessage(it.dependency, versionString, it.safeReplacement)
-                val fix = if (!it.isResolved) getUpdateDependencyFix(it.dependency.revision, versionString, it.safeReplacement) else null
-                report(context, it.cookie, DEPENDENCY, message, fix)
+                val fix = when {
+                    it.isResolved -> null
+                    else -> getUpdateDependencyFix(it.dependency.revision, versionString,
+                        it.newerVersionIsSafe, it.safeReplacement)
+                }
+                report(context, it.cookie, AGP_DEPENDENCY, message, fix)
             }
         }
     }
@@ -1657,15 +1667,15 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     /**
-     * Report any blacklisted dependencies that weren't found in the build.gradle source file during
+     * Report any blocked dependencies that weren't found in the build.gradle source file during
      * processing (we don't have accurate position info at this point)
      */
-    private fun checkBlacklistedDependencies(context: Context, project: Project) {
-        val blacklistedDeps = blacklisted[project] ?: return
-        val dependencies = blacklistedDeps.getBlacklistedDependencies()
+    private fun checkBlockedDependencies(context: Context, project: Project) {
+        val blockedDependencies = blockedDependencies[project] ?: return
+        val dependencies = blockedDependencies.getForbiddenDependencies()
         if (dependencies.isNotEmpty()) {
             for (path in dependencies) {
-                val message = getBlacklistedDependencyMessage(context, path) ?: continue
+                val message = getBlockedDependencyMessage(context, path) ?: continue
                 val projectDir = context.project.dir
                 // No need to use requestedCoordinates since they'll differ only in
                 // version and here we only match by group and artifact id
@@ -1684,7 +1694,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 context.report(DUPLICATE_CLASSES, location, message)
             }
         }
-        blacklisted.remove(project)
+        this.blockedDependencies.remove(project)
     }
 
     private fun report(
@@ -1859,6 +1869,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun getUpdateDependencyFix(
         currentVersion: String,
         suggestedVersion: String,
+        suggestedVersionIsSafe: Boolean = false,
         safeReplacement: GradleVersion? = null
     ): LintFix {
         val fix = LintFix.create()
@@ -1867,6 +1878,7 @@ open class GradleDetector : Detector(), GradleScanner {
             .replace()
             .text(currentVersion)
             .with(suggestedVersion)
+            .autoFix(suggestedVersionIsSafe, suggestedVersionIsSafe)
             .build()
         return if (safeReplacement != null) {
             val stableVersion = safeReplacement.toString()
@@ -1934,7 +1946,7 @@ open class GradleDetector : Detector(), GradleScanner {
         return Collections.min(coordinates) { o1, o2 -> o1.toString().compareTo(o2.toString()) }
     }
 
-    private fun getBlacklistedDependencyMessage(
+    private fun getBlockedDependencyMessage(
         context: Context,
         path: List<LintModelDependency>
     ): String? {
@@ -2070,6 +2082,24 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 4,
             severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
+        )
+
+        /** A dependency on an obsolete version of the Android Gradle Plugin */
+        @JvmField
+        val AGP_DEPENDENCY = Issue.create(
+            id = "AndroidGradlePluginVersion",
+            briefDescription = "Obsolete Android Gradle Plugin Version",
+            explanation = """
+                This detector looks for usage of the Android Gradle Plugin where the version \
+                you are using is not the current stable release. Using older versions is fine, \
+                and there are cases where you deliberately want to stick with an older version. \
+                However, you may simply not be aware that a more recent version is available, \
+                and that is what this lint check helps find.""",
+            category = Category.CORRECTNESS,
+            priority = 4,
+            severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 

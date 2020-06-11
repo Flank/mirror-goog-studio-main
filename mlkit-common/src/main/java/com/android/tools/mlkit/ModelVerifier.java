@@ -16,28 +16,37 @@
 
 package com.android.tools.mlkit;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 import org.tensorflow.lite.support.metadata.schema.TensorMetadata;
 
 /** Verify whether model is valid to generate code. */
 class ModelVerifier {
-    static void verifyModel(ByteBuffer byteBuffer) throws TfliteModelException {
+    private static final String MODEL_UNSUPPORTED_PREFIX = "This model is not supported: ";
+
+    @NonNull
+    static MetadataExtractor getExtractorWithVerification(@NonNull ByteBuffer byteBuffer)
+            throws TfliteModelException {
         MetadataExtractor extractor;
         try {
             extractor = new MetadataExtractor(byteBuffer);
         } catch (Exception e) {
-            throw new TfliteModelException("It is not a valid TensorFlow Lite model");
+            throw new TfliteModelException("Not a valid TensorFlow Lite model");
         }
+
         verifyModel(extractor);
+        return extractor;
     }
 
     @VisibleForTesting
-    static void verifyModel(MetadataExtractor extractor) throws TfliteModelException {
-        ModelMetadata metadata = extractor.getModelMetaData();
+    static void verifyModel(@NonNull MetadataExtractor extractor) throws TfliteModelException {
+        ModelMetadata metadata = extractor.hasMetadata() ? extractor.getModelMetadata() : null;
 
         Set<String> inputNameSet = new HashSet<>();
         for (int i = 0; i < extractor.getInputTensorCount(); i++) {
@@ -50,13 +59,16 @@ class ModelVerifier {
                 String formattedName = MlNames.computeIdentifierName(tensorMetadata.name());
                 if (inputNameSet.contains(formattedName)) {
                     throw new TfliteModelException(
-                            "More than one tensor has same name: " + formattedName);
+                            String.format(
+                                    "%sTensors cannot have the same name (%s).",
+                                    MODEL_UNSUPPORTED_PREFIX, formattedName));
                 }
                 inputNameSet.add(formattedName);
 
                 if (TensorInfo.extractContentType(tensorMetadata) == TensorInfo.ContentType.IMAGE
                         && extractor.getInputTensorShape(i).length != 4) {
-                    throw new TfliteModelException("Image tensor shape doesn't have length as 4");
+                    throw new TfliteModelException(
+                            MODEL_UNSUPPORTED_PREFIX + "Image tensor shape must have length 4.");
                 }
             }
         }
@@ -73,7 +85,9 @@ class ModelVerifier {
                 String formattedName = MlNames.computeIdentifierName(tensorMetadata.name());
                 if (outputNameSet.contains(formattedName)) {
                     throw new TfliteModelException(
-                            "More than one tensor has same name: " + formattedName);
+                            String.format(
+                                    "%sTensors cannot have the same name (%s).",
+                                    MODEL_UNSUPPORTED_PREFIX, formattedName));
                 }
                 outputNameSet.add(formattedName);
             }
@@ -81,30 +95,33 @@ class ModelVerifier {
     }
 
     private static void verifyTensorMetadata(
-            TensorMetadata tensorMetadata, int index, TensorInfo.Source source)
+            @Nullable TensorMetadata tensorMetadata, int index, @NonNull TensorInfo.Source source)
             throws TfliteModelException {
         if (tensorMetadata == null) {
             throw new TfliteModelException(
-                    String.format(
-                            "Metadata of %s tensor %d is null",
-                            source == TensorInfo.Source.INPUT ? "Input" : "Output", index));
+                    MODEL_UNSUPPORTED_PREFIX
+                            + String.format(
+                                    "%s tensor %d does not have metadata.",
+                                    source == TensorInfo.Source.INPUT ? "Input" : "Output", index));
         }
         if (tensorMetadata.name() == null) {
             throw new TfliteModelException(
                     String.format(
-                            "%s tensor %d has name as null",
-                            source == TensorInfo.Source.INPUT ? "Input" : "Output", index));
+                            MODEL_UNSUPPORTED_PREFIX + "%s tensor %d does not have a name.",
+                            source == TensorInfo.Source.INPUT ? "Input" : "Output",
+                            index));
         }
     }
 
     @VisibleForTesting
-    static void verifyDataType(byte dataType, int index, TensorInfo.Source source)
+    static void verifyDataType(byte dataType, int index, @NonNull TensorInfo.Source source)
             throws TfliteModelException {
         if (TensorInfo.DataType.fromByte(dataType) == TensorInfo.DataType.UNKNOWN) {
             throw new TfliteModelException(
-                    String.format(
-                            "Data type of %s tensor %d is not supported",
-                            source == TensorInfo.Source.INPUT ? "input" : "output", index));
+                    MODEL_UNSUPPORTED_PREFIX
+                            + String.format(
+                                    "Data type of %s tensor %d is not supported.",
+                                    source == TensorInfo.Source.INPUT ? "input" : "output", index));
         }
     }
 }

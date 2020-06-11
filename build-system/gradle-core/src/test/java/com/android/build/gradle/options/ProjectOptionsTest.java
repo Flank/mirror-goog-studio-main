@@ -51,7 +51,7 @@ public class ProjectOptionsTest {
                         new FakeProviderFactory(
                                 FakeProviderFactory.getFactory(),
                                 ImmutableMap.of("android.injected.build.api", input)))
-                .getValue(IntegerOption.IDE_TARGET_DEVICE_API);
+                .get(IntegerOption.IDE_TARGET_DEVICE_API);
     }
 
     private static Object asGroovyString(@NonNull Object input) {
@@ -85,7 +85,7 @@ public class ProjectOptionsTest {
                                         new FakeProviderFactory(
                                                 FakeProviderFactory.getFactory(),
                                                 ImmutableMap.of()))
-                                .getValue(BooleanOption.IDE_INVOKED_FROM_IDE))
+                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
                 .isFalse();
 
         ImmutableMap<String, Object> gradleProperties =
@@ -95,7 +95,7 @@ public class ProjectOptionsTest {
                                         ImmutableMap.of(),
                                         new FakeProviderFactory(
                                                 FakeProviderFactory.getFactory(), gradleProperties))
-                                .getValue(BooleanOption.IDE_INVOKED_FROM_IDE))
+                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
                 .isTrue();
 
         assertThat(
@@ -103,7 +103,7 @@ public class ProjectOptionsTest {
                                         ImmutableMap.of(),
                                         new FakeProviderFactory(
                                                 FakeProviderFactory.getFactory(), gradleProperties))
-                                .getValueProvider(BooleanOption.IDE_INVOKED_FROM_IDE)
+                                .getProvider(BooleanOption.IDE_INVOKED_FROM_IDE)
                                 .get())
                 .isTrue();
 
@@ -113,7 +113,7 @@ public class ProjectOptionsTest {
                                         ImmutableMap.of(),
                                         new FakeProviderFactory(
                                                 FakeProviderFactory.getFactory(), gradleProperties))
-                                .getValue(BooleanOption.IDE_INVOKED_FROM_IDE))
+                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
                 .isFalse();
 
         assertThat(
@@ -121,7 +121,7 @@ public class ProjectOptionsTest {
                                         ImmutableMap.of(),
                                         new FakeProviderFactory(
                                                 FakeProviderFactory.getFactory(), gradleProperties))
-                                .getValueProvider(BooleanOption.IDE_INVOKED_FROM_IDE)
+                                .getProvider(BooleanOption.IDE_INVOKED_FROM_IDE)
                                 .get())
                 .isFalse();
 
@@ -132,7 +132,7 @@ public class ProjectOptionsTest {
                             ImmutableMap.of(),
                             new FakeProviderFactory(
                                     FakeProviderFactory.getFactory(), gradleProperties))
-                    .getValue(BooleanOption.IDE_INVOKED_FROM_IDE);
+                    .get(BooleanOption.IDE_INVOKED_FROM_IDE);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage()).contains("android.injected.invoked.from.ide");
@@ -148,7 +148,7 @@ public class ProjectOptionsTest {
                                         new FakeProviderFactory(
                                                 FakeProviderFactory.getFactory(),
                                                 ImmutableMap.of()))
-                                .getValue(IntegerOption.IDE_TARGET_DEVICE_API))
+                                .get(IntegerOption.IDE_TARGET_DEVICE_API))
                 .isNull();
 
         assertThat(parseInteger("20")).isEqualTo(20);
@@ -164,7 +164,7 @@ public class ProjectOptionsTest {
                             new FakeProviderFactory(
                                     FakeProviderFactory.getFactory(),
                                     ImmutableMap.of("android.injected.build.api", new Object())))
-                    .getValue(IntegerOption.IDE_TARGET_DEVICE_API);
+                    .get(IntegerOption.IDE_TARGET_DEVICE_API);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage()).contains("android.injected.build.api");
@@ -197,13 +197,20 @@ public class ProjectOptionsTest {
     @Test
     public void argsSanity() {
         assertThat(
-                        new ProjectOptions(ImmutableMap.of(), FakeProviderFactory.getFactory())
+                        new ProjectOptions(
+                                        ImmutableMap.of(),
+                                        new FakeProviderFactory(
+                                                FakeProviderFactory.getFactory(),
+                                                ImmutableMap.of()))
                                 .getExtraInstrumentationTestRunnerArgs())
                 .isEmpty();
+        ImmutableMap<String, Object> gradleProperties =
+                ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b");
         ProjectOptions options =
                 new ProjectOptions(
-                        ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b"),
-                        FakeProviderFactory.getFactory());
+                        gradleProperties,
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(), gradleProperties));
         assertThat(options.getExtraInstrumentationTestRunnerArgs()).containsExactly("a", "b");
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -103,6 +104,10 @@ class DynamicFeatureJavaResTest {
     val project =
         GradleTestProject.builder()
             .fromTestApp(testApp)
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+            .setTargetGradleVersion("6.6-20200609220026+0000")
+            // b/157470515
+            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
             .create()
 
     @Test

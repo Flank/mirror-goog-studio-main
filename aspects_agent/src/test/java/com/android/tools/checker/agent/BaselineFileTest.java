@@ -45,8 +45,8 @@ public class BaselineFileTest {
 
         Baseline baseline = Baseline.getInstance(true);
         baseline.parse(new ByteArrayInputStream(baselineContent.getBytes()));
-        assertTrue(baseline.isWhitelisted(stackTrace1));
-        assertTrue(baseline.isWhitelisted(stackTrace2));
+        assertTrue(baseline.isIgnored(stackTrace1));
+        assertTrue(baseline.isIgnored(stackTrace2));
     }
 
     @Test
@@ -55,10 +55,10 @@ public class BaselineFileTest {
                 stackTraceBuilder(
                         "com.example.MyClass", "topMethod", "com.example.MyClass", "caller");
         Baseline baseline = Baseline.getInstance(true);
-        assertFalse(baseline.isWhitelisted(stackTrace));
+        assertFalse(baseline.isIgnored(stackTrace));
 
-        baseline.whitelistStackTrace(stackTrace);
-        assertTrue(baseline.isWhitelisted(stackTrace));
+        baseline.ignoreStackTrace(stackTrace);
+        assertTrue(baseline.isIgnored(stackTrace));
     }
 
     @Test
@@ -72,16 +72,16 @@ public class BaselineFileTest {
                         "blockingMethod",
                         "sun.reflect.NativeMethodAccessorImpl",
                         "invoke0");
-        boolean isWhitelisted = baseline.isWhitelisted(stackTrace);
-        assertFalse(isWhitelisted);
+        boolean isIgnored = baseline.isIgnored(stackTrace);
+        assertFalse(isIgnored);
         List<String> content = Files.readAllLines(log.toPath());
         // Baseline doesn't contain the blocking method, so it shouldn't be logged
         assertTrue(content.isEmpty());
 
         // Add the method to the baseline.
-        baseline.whitelistStackTrace(stackTrace);
-        isWhitelisted = baseline.isWhitelisted(stackTrace);
-        assertTrue(isWhitelisted);
+        baseline.ignoreStackTrace(stackTrace);
+        isIgnored = baseline.isIgnored(stackTrace);
+        assertTrue(isIgnored);
         content = Files.readAllLines(log.toPath());
         // Method is logged as an active baseline entry
         assertEquals(1, content.size());
@@ -89,9 +89,9 @@ public class BaselineFileTest {
                 "Test2.blockingMethod|sun.reflect.NativeMethodAccessorImpl.invoke0",
                 content.get(0));
 
-        // Check again if the method is whitelisted. It shouldn't be logged again.
-        isWhitelisted = baseline.isWhitelisted(stackTrace);
-        assertTrue(isWhitelisted);
+        // Check again if the method is ignored. It shouldn't be logged again.
+        isIgnored = baseline.isIgnored(stackTrace);
+        assertTrue(isIgnored);
         content = Files.readAllLines(log.toPath());
         // Method is logged as an active baseline entry
         assertEquals(1, content.size());
@@ -99,21 +99,21 @@ public class BaselineFileTest {
                 "Test2.blockingMethod|sun.reflect.NativeMethodAccessorImpl.invoke0",
                 content.get(0));
 
-        // Add another method to the baseline but don't check if it's whitelisted yet.
+        // Add another method to the baseline but don't check if it's ignored yet.
         stackTrace =
                 stackTraceBuilder(
                         "Test2",
                         "blockingMethod2",
                         "sun.reflect.NativeMethodAccessorImpl",
                         "invoke0");
-        baseline.whitelistStackTrace(stackTrace);
+        baseline.ignoreStackTrace(stackTrace);
         content = Files.readAllLines(log.toPath());
         // Baseline has changed, but the newly added method was not yet logged.
         assertEquals(1, content.size());
 
-        // Check now if the second method is whitelisted. Since it is, it should be logged.
-        isWhitelisted = baseline.isWhitelisted(stackTrace);
-        assertTrue(isWhitelisted);
+        // Check now if the second method is ignored. Since it is, it should be logged.
+        isIgnored = baseline.isIgnored(stackTrace);
+        assertTrue(isIgnored);
         content = Files.readAllLines(log.toPath());
         assertEquals(2, content.size());
         assertEquals(

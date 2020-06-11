@@ -40,11 +40,11 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * The baseline file is a list of whitelisted callstacks that should be ignored when there is a
+ * The baseline file is a list of callstacks that should be ignored when there is a
  * matching aspect. That helps to enable rules currently currently disrespected in a few places to
  * make sure we don't introduce more occurrences in the future.
  *
- * <p>The baseline files are made by one whitelisted callstack per line, in the format defined by
+ * <p>The baseline files are made by one ignored callstack per line, in the format defined by
  * {@link com.android.tools.checker.util.StacktraceParser}.
  */
 public class Baseline {
@@ -63,14 +63,14 @@ public class Baseline {
      */
     @Nullable private Boolean isGeneratingBaseline;
 
-    // TODO: allow whitelisting stack traces for specific rules.
-    @NonNull private Set<String> whitelist = new HashSet<>();
+    // TODO: allow ignoring stack traces for specific rules.
+    @NonNull private Set<String> ignoredTraces = new HashSet<>();
 
     /**
      * Keeps track of the active stack traces, i.e. the ones that are actually being called in the
      * tests. This is helpful in case we want to remove stale stack traces from the baseline.
      */
-    @NonNull private Set<String> activeWhitelistEntries = new HashSet<>();
+    @NonNull private Set<String> activeIgnoredEntries = new HashSet<>();
 
     private File activeStackTracesLog;
 
@@ -86,19 +86,19 @@ public class Baseline {
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
-            Set<String> whitelist = new HashSet<>();
+            Set<String> ignoredTraces = new HashSet<>();
             String line;
 
             while ((line = reader.readLine()) != null) {
-                whitelist.add(line);
+                ignoredTraces.add(line);
             }
-            whitelist.forEach(
+            ignoredTraces.forEach(
                     (callstack) ->
                             LOGGER.fine(
                                     String.format(
-                                            "Ignoring whitelisted callstack:\n%s",
+                                            "Ignoring callstack:\n%s",
                                             formattedCallstack(callstack))));
-            this.whitelist = whitelist;
+            this.ignoredTraces = ignoredTraces;
         } catch (IOException e) {
             LOGGER.warning(String.format("Error while parsing the baseline.\n%s", e.getMessage()));
         }
@@ -117,16 +117,16 @@ public class Baseline {
     }
 
     /**
-     * Checks whether the given {@link StackTraceElement} corresponds to a whitelisted callstack.
-     * TODO: allow whitelisting callstacks for specific annotations/rules.
+     * Checks whether the given {@link StackTraceElement} corresponds to an ignored callstack.
+     * TODO: allow ignoring callstacks for specific annotations/rules.
      */
-    public boolean isWhitelisted(@NonNull StackTraceElement[] stackTrace) {
+    public boolean isIgnored(@NonNull StackTraceElement[] stackTrace) {
         String parsedStackTrace = stackTraceToString(stackTrace);
-        boolean isWhitelisted = whitelist.contains(parsedStackTrace);
-        if (isWhitelisted) {
+        boolean isIgnored = ignoredTraces.contains(parsedStackTrace);
+        if (isIgnored) {
             logActiveStackTrace(parsedStackTrace);
         }
-        return isWhitelisted;
+        return isIgnored;
     }
 
     /**
@@ -136,7 +136,7 @@ public class Baseline {
      */
     private void logActiveStackTrace(String parsedStackTrace) {
         synchronized (ACTIVE_STACK_TRACES_LOCK) {
-            if (activeWhitelistEntries.contains(parsedStackTrace)) {
+            if (activeIgnoredEntries.contains(parsedStackTrace)) {
                 return;
             }
             File activeStackTraceFile = getBaselineActiveStackTraceFile();
@@ -150,13 +150,13 @@ public class Baseline {
                     e.printStackTrace();
                 }
             }
-            activeWhitelistEntries.add(parsedStackTrace);
+            activeIgnoredEntries.add(parsedStackTrace);
         }
     }
 
-    public void whitelistStackTrace(StackTraceElement[] stackTrace) {
+    public void ignoreStackTrace(StackTraceElement[] stackTrace) {
         String parsedStackTrace = stackTraceToString(stackTrace);
-        whitelist.add(parsedStackTrace);
+        ignoredTraces.add(parsedStackTrace);
     }
 
     public boolean isGeneratingBaseline() {
@@ -181,9 +181,9 @@ public class Baseline {
                             String.format(
                                     Locale.getDefault(),
                                     "Exporting %d elements to %s",
-                                    whitelist.size(),
+                                    ignoredTraces.size(),
                                     outputPath));
-                    List<String> baseline = new ArrayList<>(whitelist);
+                    List<String> baseline = new ArrayList<>(ignoredTraces);
                     Collections.sort(baseline);
                     try {
                         Path output = Paths.get(outputPath);

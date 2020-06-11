@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.model.SourceProvider
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
@@ -36,9 +37,15 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.util.concurrent.Callable
+import java.util.function.Function
 
 // TODO: Make incremental
 abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val resourceSourceSets: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -65,7 +72,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             apiDirectDependenciesConfiguration?.allDependencies)
         val variantClassHolder = VariantClassesHolder(variantArtifact)
         val classFinder = ClassFinder(externalArtifactCollection)
-        val resourcesFinder = ResourcesFinder(externalArtifactCollection)
+        val resourcesFinder = ResourcesFinder(resourceSourceSets.toList(), externalArtifactCollection)
 
         val depsUsageFinder =
             DependencyUsageFinder(classFinder, variantClassHolder, variantDepsHolder)
@@ -172,6 +179,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             task: AnalyzeDependenciesTask
         ) {
             super.configure(task)
+            val resDirFunction = Function<SourceProvider, Collection<File>> { it.resDirectories }
 
             task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
 
@@ -190,6 +198,13 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 .incomingRuntimeDependencies
 
             task.isVariantLibrary = (creationConfig.variantType == VariantTypeImpl.LIBRARY)
+
+            // ResourceSets from main and generated directories of default, flavors,
+            // multiflavor and buildtype sources (if they exist).
+            // TODO(lukeedgar) Use merged resources.
+            task.resourceSourceSets.from(Callable {
+                creationConfig.variantSources.getSourceFiles(resDirFunction)
+            })
         }
 
         override fun handleProvider(
@@ -202,7 +217,6 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 AnalyzeDependenciesTask::outputDirectory
             ).withName("analyzeDependencies")
                 .on(InternalArtifactType.ANALYZE_DEPENDENCIES_REPORT)
-
         }
     }
 

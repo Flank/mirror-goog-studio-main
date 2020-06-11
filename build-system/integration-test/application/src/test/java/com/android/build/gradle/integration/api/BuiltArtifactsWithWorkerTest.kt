@@ -210,8 +210,6 @@ abstract class VerifierTask extends DefaultTask {
     }
 }
 
-File currentDir = new File(System.getProperty("user.dir"))
-
 android.onVariantProperties {
   TaskProvider outputTask = tasks.register(it.getName() + 'ProducerTask', ProducerTask) { task ->
     task.getVariantName().set(it.getName())

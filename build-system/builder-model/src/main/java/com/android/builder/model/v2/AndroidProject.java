@@ -18,6 +18,7 @@ package com.android.builder.model.v2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.NativeToolchain;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;

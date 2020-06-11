@@ -28,37 +28,35 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 
 /** Stores necessary data for one model. */
 public class ModelInfo {
-
-    /**
-     * Version of current parser. If model metadata's minParserVersion is higher than this, we will
-     * use fallback APIs (use TensorBuffer for all APIs).
-     */
-    public static final String PARSER_VERSION = "1.0.0";
-
     private final long modelSize;
-    private final String modelHash;
+    @NonNull private final String modelHash;
 
     private final boolean metadataExisted;
-    private final String modelName;
-    private final String modelDescription;
-    private final String modelVersion;
-    private final String modelAuthor;
-    private final String modelLicense;
-    private final String minParserVersion;
+    private final boolean minParserVersionSatisfied;
+    @NonNull private final String modelName;
+    @NonNull private final String modelDescription;
+    @NonNull private final String modelVersion;
+    @NonNull private final String modelAuthor;
+    @NonNull private final String modelLicense;
+    @NonNull private final String minParserVersion;
 
-    private final List<TensorInfo> inputs;
-    private final List<TensorInfo> outputs;
+    @NonNull private final List<TensorInfo> inputs;
+    @NonNull private final List<TensorInfo> outputs;
 
     public ModelInfo(
-            long modelSize, @NonNull String modelHash, @Nullable ModelMetadata modelMetadata) {
+            long modelSize, @NonNull String modelHash, @NonNull MetadataExtractor extractor) {
         this.modelSize = modelSize;
         this.modelHash = modelHash;
+
+        ModelMetadata modelMetadata = extractor.hasMetadata() ? extractor.getModelMetadata() : null;
         if (modelMetadata != null) {
             metadataExisted = true;
+            minParserVersionSatisfied = extractor.isMinimumParserVersionSatisfied();
             modelName = Strings.nullToEmpty(modelMetadata.name());
             modelDescription = Strings.nullToEmpty(modelMetadata.description());
             modelVersion = Strings.nullToEmpty(modelMetadata.version());
@@ -67,6 +65,7 @@ public class ModelInfo {
             minParserVersion = Strings.nullToEmpty(modelMetadata.minParserVersion());
         } else {
             metadataExisted = false;
+            minParserVersionSatisfied = true;
             modelName = "";
             modelDescription = "";
             modelVersion = "";
@@ -82,6 +81,7 @@ public class ModelInfo {
         modelSize = in.readLong();
         modelHash = in.readUTF();
         metadataExisted = in.readBoolean();
+        minParserVersionSatisfied = in.readBoolean();
         modelName = in.readUTF();
         modelDescription = in.readUTF();
         modelVersion = in.readUTF();
@@ -96,6 +96,7 @@ public class ModelInfo {
         out.writeLong(modelSize);
         out.writeUTF(modelHash);
         out.writeBoolean(metadataExisted);
+        out.writeBoolean(minParserVersionSatisfied);
         out.writeUTF(modelName);
         out.writeUTF(modelDescription);
         out.writeUTF(modelVersion);
@@ -150,6 +151,11 @@ public class ModelInfo {
     }
 
     @NonNull
+    public boolean isMinParserVersionSatisfied() {
+        return minParserVersionSatisfied;
+    }
+
+    @NonNull
     public List<TensorInfo> getInputs() {
         return inputs;
     }
@@ -157,10 +163,6 @@ public class ModelInfo {
     @NonNull
     public List<TensorInfo> getOutputs() {
         return outputs;
-    }
-
-    public boolean isMetadataVersionTooHigh() {
-        return isMetadataVersionTooHigh(minParserVersion);
     }
 
     @Override
@@ -187,12 +189,10 @@ public class ModelInfo {
     }
 
     @NonNull
-    public static ModelInfo buildFrom(ByteBuffer byteBuffer) throws TfliteModelException {
-        ModelVerifier.verifyModel(byteBuffer);
+    public static ModelInfo buildFrom(@NonNull ByteBuffer byteBuffer) throws TfliteModelException {
+        MetadataExtractor extractor = ModelVerifier.getExtractorWithVerification(byteBuffer);
         String modelHash = Hashing.sha256().hashBytes(byteBuffer.array()).toString();
-        MetadataExtractor extractor = new MetadataExtractor(byteBuffer);
-        ModelMetadata modelMetadata = extractor.getModelMetaData();
-        ModelInfo modelInfo = new ModelInfo(byteBuffer.remaining(), modelHash, modelMetadata);
+        ModelInfo modelInfo = new ModelInfo(byteBuffer.remaining(), modelHash, extractor);
 
         int inputLength = extractor.getInputTensorCount();
         for (int i = 0; i < inputLength; i++) {
@@ -202,15 +202,6 @@ public class ModelInfo {
         for (int i = 0; i < outputLength; i++) {
             modelInfo.outputs.add(TensorInfo.parseFrom(extractor, TensorInfo.Source.OUTPUT, i));
         }
-
         return modelInfo;
-    }
-
-    static boolean isMetadataVersionTooHigh(@NonNull String minParserVersion) {
-        if (Strings.isNullOrEmpty(minParserVersion)) {
-            return false;
-        }
-
-        return MetadataExtractor.compareVersions(PARSER_VERSION, minParserVersion) < 0;
     }
 }

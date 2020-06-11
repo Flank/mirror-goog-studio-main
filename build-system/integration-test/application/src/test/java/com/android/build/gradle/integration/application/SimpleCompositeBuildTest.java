@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -35,6 +36,8 @@ public class SimpleCompositeBuildTest {
             GradleTestProject.builder()
                     .fromTestProject("simpleCompositeBuild")
                     .withDependencyChecker(false)
+                    // composites are not yet supported
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Test

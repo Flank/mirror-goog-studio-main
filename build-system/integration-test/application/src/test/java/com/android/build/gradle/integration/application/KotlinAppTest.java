@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.AndroidProjectTypes;
 import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.builder.model.AndroidProject;
@@ -37,7 +38,11 @@ import org.junit.experimental.categories.Category;
 public class KotlinAppTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("kotlinApp").create();
+            GradleTestProject.builder()
+                    .fromTestProject("kotlinApp")
+                    // http://b/158092419
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @After
     public void cleanUp() {

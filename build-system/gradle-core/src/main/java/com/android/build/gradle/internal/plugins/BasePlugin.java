@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.profile.RecordingBuildListener;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
@@ -71,6 +72,7 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.SymbolTableBuildService;
 import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -317,6 +319,8 @@ public abstract class BasePlugin<
                                 project.getProviders().provider(() -> extension.getNdkPath()))
                         .execute();
 
+        new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
+
         projectOptions
                 .getAllOptions()
                 .forEach(projectServices.getDeprecationReporter()::reportOptionIssuesIfAny);
@@ -451,7 +455,9 @@ public abstract class BasePlugin<
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
         // Register a builder for the native tooling model
-        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantModel);
+        NativeModelBuilder nativeModelBuilder =
+                new NativeModelBuilder(
+                        projectServices.getIssueReporter(), globalScope, variantModel);
         registry.register(nativeModelBuilder);
     }
 
@@ -571,7 +577,12 @@ public abstract class BasePlugin<
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        variantManager.createVariants();
+        // create the build feature object that will be re-used everywhere
+        BuildFeatureValues buildFeatureValues =
+                variantFactory.createBuildFeatureValues(
+                        extension.getBuildFeatures(), projectServices.getProjectOptions());
+
+        variantManager.createVariants(buildFeatureValues);
 
         List<ComponentInfo<VariantT, VariantPropertiesT>> variants =
                 variantManager.getMainComponents();
@@ -585,7 +596,7 @@ public abstract class BasePlugin<
                         extension,
                         threadRecorder);
 
-        taskManager.createTasks();
+        taskManager.createTasks(variantFactory.getVariantType(), buildFeatureValues);
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
                 .configureDependencySubstitutions()

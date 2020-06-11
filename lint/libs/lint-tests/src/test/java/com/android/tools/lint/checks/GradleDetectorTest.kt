@@ -25,6 +25,7 @@ import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.GradleDetector.Companion.ACCIDENTAL_OCTAL
+import com.android.tools.lint.checks.GradleDetector.Companion.AGP_DEPENDENCY
 import com.android.tools.lint.checks.GradleDetector.Companion.ANNOTATION_PROCESSOR_ON_COMPILE_PATH
 import com.android.tools.lint.checks.GradleDetector.Companion.BUNDLED_GMS
 import com.android.tools.lint.checks.GradleDetector.Companion.COMPATIBILITY
@@ -201,7 +202,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testVersionsFromGradleCache() {
         val expected = "" +
-                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [GradleDependency]\n" +
+                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
                 "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "build.gradle:11: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
@@ -234,7 +235,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "}\n"
             )
         )
-            .issues(DEPENDENCY)
+            .issues(DEPENDENCY, AGP_DEPENDENCY)
             .run()
             .expect(expected)
             .expectFixDiffs(
@@ -275,12 +276,12 @@ class GradleDetectorTest : AbstractCheckTest() {
                             "}\n"
                 )
             )
-            .issues(DEPENDENCY)
+            .issues(AGP_DEPENDENCY)
             .sdkHome(mockSupportLibraryInstallation)
             .run()
             .expect(
                 "" +
-                        "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [GradleDependency]\n" +
+                        "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [AndroidGradlePluginVersion]\n" +
                         "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
                         "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "0 errors, 1 warnings"
@@ -548,7 +549,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         // Same (older) version of Studio and Gradle:
         // Studio 3.0, gradle: 3.0.0-alpha4: Offer latest 3.0.0, not 3.1 or 3.2 etc
         val expected = "" +
-                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]\n" +
+                "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]\n" +
                 "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "0 errors, 1 warnings"
@@ -573,7 +574,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(DEPENDENCY)
+        ).issues(AGP_DEPENDENCY)
             .client(object :
                 com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                 // Studio 3.0.0
@@ -607,7 +608,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(DEPENDENCY)
+        ).issues(AGP_DEPENDENCY)
             .client(object :
                 com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                 // Studio 3.0.0
@@ -615,7 +616,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             })
             .run().expect(
                 "" +
-                        "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [GradleDependency]\n" +
+                        "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [AndroidGradlePluginVersion]\n" +
                         "    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'\n" +
                         "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "0 errors, 1 warnings"
@@ -646,7 +647,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(DEPENDENCY)
+        ).issues(AGP_DEPENDENCY)
             .client(object :
                 com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                 // Studio 3.0.0
@@ -654,7 +655,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             })
             .run().expect(
                 """
-                build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]
+                build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]
                     classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
@@ -1255,10 +1256,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
                 GRADLE_PLUGIN_RECOMMENDED_VERSION +
-                " [GradleDependency]\n" +
+                " [AndroidGradlePluginVersion]\n" +
                 "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [GradleDependency]\n" +
+                "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
                 "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "1 errors, 2 warnings\n"
@@ -1284,7 +1285,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "    }\n" +
                         "}\n"
             )
-        ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
+        ).issues(AGP_DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
     }
 
     fun testPreviewVersionsNoGoogleMaven() {

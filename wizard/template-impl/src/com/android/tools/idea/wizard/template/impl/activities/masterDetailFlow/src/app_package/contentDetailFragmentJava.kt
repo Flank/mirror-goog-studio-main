@@ -26,14 +26,13 @@ fun contentDetailFragmentJava(
   detailNameLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 package ${packageName};
 
 import android.app.Activity;
 import android.os.Bundle;
-import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useMaterial2)};
+import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import android.view.LayoutInflater;
 import android.view.View;

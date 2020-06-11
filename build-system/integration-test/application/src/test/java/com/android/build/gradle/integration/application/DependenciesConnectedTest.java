@@ -1,6 +1,7 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.Rule;
@@ -12,7 +13,11 @@ public class DependenciesConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("dependencies").create();
+            GradleTestProject.builder()
+                    .fromTestProject("dependencies")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     @Category(DeviceTests.class)

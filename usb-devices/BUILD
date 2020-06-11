@@ -5,6 +5,7 @@ iml_module(
     name = "studio.usb-devices",
     srcs = ["src"],
     iml_files = ["usb-devices.iml"],
+    lint_baseline = "lint_baseline.xml",
     test_data = glob(["testData/**"]),
     test_resources = ["testData"],
     test_srcs = ["testSrc"],

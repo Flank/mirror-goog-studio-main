@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.tasks.databinding.DataBindingTri
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -103,6 +104,11 @@ public class DataBindingIncrementalTest {
                         .fromTestProject("databindingIncremental")
                         .addGradleProperties(
                                 BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
+                        // http://b/158092419
+                        .withConfigurationCaching(
+                                withKotlin
+                                        ? BaseGradleExecutor.ConfigurationCaching.OFF
+                                        : BaseGradleExecutor.ConfigurationCaching.ON)
                         .withKotlinGradlePlugin(withKotlin)
                         .create();
     }

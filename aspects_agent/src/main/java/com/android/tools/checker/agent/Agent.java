@@ -47,7 +47,7 @@ public class Agent {
          * The rules file is simply a list of key=value pairs defining the aspects. An aspect is
          * defined by the method to intercept defined as a Type string and the method to call.
          *
-         * The baseline file is a list of whitelisted callstacks that should be ignored when there
+         * The baseline file is a list of callstacks that should be ignored when there
          * is a matching aspect. The callstacks are represented by method names separated by a
          * pipe (|) character. For instance "com.pkg.MyClass.method1|com.pkg.OtherClass.method2".
          */

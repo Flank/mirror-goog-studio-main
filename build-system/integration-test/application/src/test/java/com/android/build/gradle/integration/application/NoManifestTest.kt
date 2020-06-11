@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -41,7 +42,10 @@ class NoManifestTest {
 
     @Test
     fun noManifestConfigurationPassesTest() {
-        project.executor().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).run("tasks")
+        project.executor()
+            // org.gradle.api.tasks.diagnostics.TaskReportTask is incompatible
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).run("tasks")
         // we should be able to create task list, without a valid manifest.
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
@@ -29,7 +30,11 @@ public class DensitySplitConnectedTest {
 
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("densitySplit").create();
+            GradleTestProject.builder()
+                    .fromTestProject("densitySplit")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void connectedCheck() throws IOException, InterruptedException {

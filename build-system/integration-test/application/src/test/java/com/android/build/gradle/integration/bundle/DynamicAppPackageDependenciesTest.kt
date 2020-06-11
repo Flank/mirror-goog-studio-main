@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.testutils.truth.FileSubject
@@ -28,6 +29,10 @@ class DynamicAppPackageDependenciesTest {
     @JvmField
     val project = GradleTestProject.builder()
         .withGradleBuildCacheDirectory(File("local-build-cache"))
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .fromTestProject("dynamicApp").create()
 
     /** Regression test for http://b/150438232. */

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -41,7 +42,11 @@ public class PackagingOptionsFilteringTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("kotlinApp").create();
+            GradleTestProject.builder()
+                    .fromTestProject("kotlinApp")
+                    // http://b/158092419
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setup() {

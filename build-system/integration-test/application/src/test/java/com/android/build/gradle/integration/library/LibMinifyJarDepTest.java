@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.library;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -55,6 +56,9 @@ public class LibMinifyJarDepTest {
 
     @Test
     public void lint() throws IOException, InterruptedException {
-        project.execute("lint");
+        // http://b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("lint");
     }
 }

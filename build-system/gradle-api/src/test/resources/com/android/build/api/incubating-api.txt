@@ -30,6 +30,7 @@ com.android.build.api.artifact.ArtifactTransformationRequest
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (TaskT, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (TaskT, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact$SingleArtifact
+com.android.build.api.artifact.ArtifactType$AAR extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
 com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
@@ -498,7 +499,7 @@ com.android.build.api.dsl.LibraryBuildType.isDefault: boolean ()
 com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
-com.android.build.api.dsl.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.LibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
 com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.LibraryProductFlavor.isDefault: boolean ()
@@ -633,6 +634,8 @@ com.android.build.api.dsl.Shaders.getScopedGlslcArgs: com.google.common.collect.
 com.android.build.api.dsl.Shaders.glslcArgs: void (java.lang.String[])
 com.android.build.api.dsl.Shaders.glslcScopedArgs: void (java.lang.String, java.lang.String[])
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
+com.android.build.api.dsl.SigningConfig.getEnableV3Signing: java.lang.Boolean ()
+com.android.build.api.dsl.SigningConfig.getEnableV4Signing: java.lang.Boolean ()
 com.android.build.api.dsl.SigningConfig.getKeyAlias: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.getKeyPassword: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.getStoreFile: java.io.File ()
@@ -640,6 +643,8 @@ com.android.build.api.dsl.SigningConfig.getStorePassword: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.getStoreType: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.isV1SigningEnabled: boolean ()
 com.android.build.api.dsl.SigningConfig.isV2SigningEnabled: boolean ()
+com.android.build.api.dsl.SigningConfig.setEnableV3Signing: void (java.lang.Boolean)
+com.android.build.api.dsl.SigningConfig.setEnableV4Signing: void (java.lang.Boolean)
 com.android.build.api.dsl.SigningConfig.setKeyAlias: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setKeyPassword: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setStoreFile: void (java.io.File)

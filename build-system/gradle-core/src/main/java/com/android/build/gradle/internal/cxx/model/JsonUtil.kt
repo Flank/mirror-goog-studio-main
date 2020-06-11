@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
-import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
@@ -128,10 +127,7 @@ data class CxxProjectModelData(
     override val sdkFolder: File = File("."),
     override val chromeTraceJsonFolder: File? = null,
     override val isPrefabEnabled: Boolean = false
-) : CxxProjectModel {
-    override val services: CxxServiceRegistry
-        get() = throw RuntimeException("Cannot use services from deserialized CxxModuleModel")
-}
+) : CxxProjectModel
 
 private fun CxxProjectModel.toData() = CxxProjectModelData(
     compilerSettingsCacheFolder = compilerSettingsCacheFolder,
@@ -173,10 +169,7 @@ data class CxxModuleModelData(
     override val project: CxxProjectModelData = CxxProjectModelData(),
     override val splitsAbiFilterSet: Set<String> = setOf(),
     override val stlSharedObjectMap: Map<Stl, Map<Abi, File>> = emptyMap()
-) : CxxModuleModel {
-    override val services: CxxServiceRegistry
-        get() = throw RuntimeException("Cannot use services from deserialized CxxModuleModel")
-}
+) : CxxModuleModel
 
 private fun CxxModuleModel.toData() = CxxModuleModelData(
     buildStagingFolder = buildStagingFolder,

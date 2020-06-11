@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
-import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -151,17 +150,10 @@ interface CxxModuleModel {
     val stlSharedObjectMap: Map<Stl, Map<Abi, File>>
 
     /**
-     * Service provider entry for module-level services. These are services naturally
-     * scoped at the module level.
-     */
-    val services: CxxServiceRegistry
-
-    /**
      * The project for this module
      */
     val project: CxxProjectModel
 }
-
 
 /**  Get the NDK level CMakeSettings.json file */
 val CxxModuleModel.ndkCmakeSettingsJsonFile: File

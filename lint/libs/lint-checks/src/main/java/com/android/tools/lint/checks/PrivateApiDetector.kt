@@ -235,7 +235,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             }
             context.report(PRIVATE_API, call, location, ERROR_MESSAGE)
         } else if (methodName != null) {
-            // When targetSDK is at least 28, we perform stricter checks against the API blacklist.
+            // When targetSDK is at least 28, we perform stricter checks against the API deny list.
             val argTypes =
                 if (arguments.size >= 2) arguments.subList(1, arguments.size)
                     .mapNotNull { getJavaClassType(it) }
@@ -393,8 +393,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         }
 
         when (restriction) {
-            Restriction.BLACK -> fatal()
-            Restriction.GREY_MAX_O ->
+            Restriction.DENY -> fatal()
+            Restriction.MAYBE_MAX_O ->
                 if (targetSdk <= AndroidVersion.VersionCodes.O ||
                     VersionChecks.isWithinVersionCheckConditional(
                         context.evaluator, call, AndroidVersion.VersionCodes.O, false
@@ -404,7 +404,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
                 } else {
                     error()
                 }
-            Restriction.GREY_MAX_P ->
+            Restriction.MAYBE_MAX_P ->
                 if (targetSdk <= AndroidVersion.VersionCodes.P ||
                     VersionChecks.isWithinVersionCheckConditional(
                         context.evaluator, call, AndroidVersion.VersionCodes.P, false
@@ -414,7 +414,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
                 } else {
                     error()
                 }
-            Restriction.GREY -> warning()
+            Restriction.MAYBE -> warning()
             else -> return // nothing to report
         }
     }

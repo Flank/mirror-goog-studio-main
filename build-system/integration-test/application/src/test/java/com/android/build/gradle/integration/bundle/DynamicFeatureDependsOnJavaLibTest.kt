@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -44,7 +45,12 @@ class DynamicFeatureDependsOnJavaLibTest {
                 .dependency(feature, app)
                 .dependency(feature, javaLib)
                 .build()
-        ).create()
+        )
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515, https://github.com/gradle/gradle/issues/13317
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=4")
+        .create()
 
     /** Regression test for b/79660649. */
     @Test()

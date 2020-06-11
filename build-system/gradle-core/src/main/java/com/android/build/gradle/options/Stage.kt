@@ -21,13 +21,16 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 /**
  * The stage of an API or feature in its life cycle.
  *
- * The difference between an API and a feature is that:
- *   - An API can be represented by any [Option]. If it is represented by a [BooleanOption] (or
- *     [OptionalBooleanOption]), it is intended that eventually both values of the option will be
- *     supported.
- *   - A feature can be represented only by a [BooleanOption] (or [OptionalBooleanOption]). It is
- *     intended that eventually only one of the two values of the option which represents the
- *     feature being enabled (usually the `true` value) will be supported.
+ * An API or feature has an associated [Option] to allow the users to change the behavior of the
+ * Android Gradle plugin. The difference between them is that:
+ *   - The [Option] associated with an API is intended to be used in the long term. For example, if
+ *     it is a [BooleanOption] (or [OptionalBooleanOption]), one value of the option may be
+ *     experimental at first, but eventually both values of the option will be supported.
+ *   - The [Option] associated with a feature is intended to be used only in the short term. It can
+ *     only be a [BooleanOption] (or [OptionalBooleanOption]). One value of the [BooleanOption] may
+ *     be experimental at first to enable the new behavior, but eventually the option will be
+ *     removed, either because the feature is fully supported and now enforced, or because the
+ *     feature was not / is no longer useful.
  */
 open class Stage(
 
@@ -177,7 +180,7 @@ enum class Version(
     VERSION_4_1("version 4.1"),
     VERSION_5_0("version 5.0"),
 
-    ;
+    ; // end of enums
 
     fun getDeprecationTargetMessage(): String {
         return "It will be removed in $stringValue of the Android Gradle plugin."

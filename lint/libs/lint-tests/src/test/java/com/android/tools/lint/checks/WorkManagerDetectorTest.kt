@@ -127,6 +127,14 @@ class WorkManagerDetectorTest : AbstractCheckTest() {
                         cont4.enqueue();
                     }
 
+                    WorkContinuation someWorkThatIsReturned(
+                            OneTimeWorkRequest workRequest1,
+                            OneTimeWorkRequest workRequest2) {
+                        WorkManager workManager = WorkManager.getInstance();
+                        WorkContinuation cont1 = workManager.beginWith(workRequest1, workRequest2); // OK
+                        return cont1;
+                    }
+
                     private void doSomeOtherStuff() {
                     }
                 }
@@ -243,6 +251,14 @@ class WorkManagerDetectorTest : AbstractCheckTest() {
                         val continuations = listOf(cont2, cont3)
                         val cont4 = WorkContinuation.combine(workRequest6, continuations) // OK
                         cont4.enqueue()
+                    }
+
+                    fun someWorkThatIsReturned(
+                        workRequest1: OneTimeWorkRequest, workRequest2: OneTimeWorkRequest
+                    ): WorkContinuation {
+                        val workManager = WorkManager.getInstance()
+                        val cont1 = workManager.beginWith(workRequest1, workRequest2) // OK
+                        return cont1
                     }
 
                     private fun doSomeOtherStuff() {}

@@ -107,7 +107,13 @@ public class IncrementalPackager implements Closeable {
     @NonNull private final ApkCreatorFactory mApkCreatorFactory;
 
     /** Whether the build is debuggable, which might influence the compression level. */
-    private boolean mIsDebuggableBuild;
+    private final boolean mIsDebuggableBuild;
+
+    /** Whether v3 signing is enabled. */
+    private final boolean mEnableV3Signing;
+
+    /** Whether v4 signing is enabled. */
+    private final boolean mEnableV4Signing;
 
     /** Returns mApkCreator, initialized lazily. */
     @NonNull
@@ -115,12 +121,27 @@ public class IncrementalPackager implements Closeable {
         if (mApkCreator == null) {
             switch (mApkCreatorType) {
                 case APK_Z_FILE_CREATOR:
+                    Preconditions.checkState(
+                            !mEnableV3Signing,
+                            ""
+                                    + "enableV3Signing cannot be true unless "
+                                    + "android.useNewApkCreator is also true.");
+                    Preconditions.checkState(
+                            !mEnableV4Signing,
+                            ""
+                                    + "enableV4Signing cannot be true unless "
+                                    + "android.useNewApkCreator is also true.");
                     mApkCreator = mApkCreatorFactory.make(mCreationData);
                     break;
                 case APK_FLINGER:
                     int compressionLevel = mIsDebuggableBuild ? BEST_SPEED : DEFAULT_COMPRESSION;
                     mApkCreator =
-                            new ApkFlinger(mCreationData, compressionLevel, !mIsDebuggableBuild);
+                            new ApkFlinger(
+                                    mCreationData,
+                                    compressionLevel,
+                                    !mIsDebuggableBuild,
+                                    mEnableV3Signing,
+                                    mEnableV4Signing);
                     break;
                 default:
                     throw new RuntimeException("unexpected apkCreatorType");
@@ -172,6 +193,8 @@ public class IncrementalPackager implements Closeable {
      * @param acceptedAbis the set of accepted ABIs; if empty then all ABIs are accepted
      * @param jniDebugMode is JNI debug mode enabled?
      * @param debuggableBuild is this a debuggable build?
+     * @param enableV3Signing is v3 signing enabled?
+     * @param enableV4Signing is v4 signing enabled?
      * @param apkCreatorType the {@link ApkCreatorType}
      * @param changedDexFiles the changed dex files
      * @param changedJavaResources the changed java resources
@@ -187,6 +210,8 @@ public class IncrementalPackager implements Closeable {
             @NonNull Set<String> acceptedAbis,
             boolean jniDebugMode,
             boolean debuggableBuild,
+            boolean enableV3Signing,
+            boolean enableV4Signing,
             @NonNull ApkCreatorType apkCreatorType,
             @NonNull Map<RelativeFile, FileStatus> changedDexFiles,
             @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
@@ -203,6 +228,8 @@ public class IncrementalPackager implements Closeable {
         mCreationData = creationData;
         mApkCreatorFactory = factory;
         mIsDebuggableBuild = debuggableBuild;
+        mEnableV3Signing = enableV3Signing;
+        mEnableV4Signing = enableV4Signing;
         mClosed = false;
         mApkCreatorType = apkCreatorType;
         mChangedDexFiles = changedDexFiles;

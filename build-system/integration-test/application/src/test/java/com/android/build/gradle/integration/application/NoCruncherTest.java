@@ -20,6 +20,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
@@ -38,6 +39,8 @@ public class NoCruncherTest {
             GradleTestProject.builder()
                     .withName("noPngCrunch")
                     .fromTestProject("noPngCrunch")
+                    // http://b/149978740
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Test

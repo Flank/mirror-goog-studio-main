@@ -33,5 +33,12 @@
     <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
     <orderEntry type="module" module-name="transport-test-framework" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library>
+        <NATIVE>
+          <root url="file://$MODULE_DIR$/../../../bazel-bin/tools/base/dynamic-layout-inspector" />
+        </NATIVE>
+      </library>
+    </orderEntry>
   </component>
 </module>

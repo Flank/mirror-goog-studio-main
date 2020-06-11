@@ -268,7 +268,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.excludeResSourcesForReleaseBundles
                 .setDisallowChanges(
-                    projectOptions.getValueProvider(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
+                    projectOptions.getProvider(BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES)
                 )
 
             task.buildTargetDensity =

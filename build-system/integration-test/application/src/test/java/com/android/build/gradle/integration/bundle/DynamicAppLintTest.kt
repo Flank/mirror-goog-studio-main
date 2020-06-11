@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.testutils.truth.FileSubject
 import com.google.common.truth.Truth.assertThat
@@ -26,6 +27,8 @@ class DynamicAppLintTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
+        // b/146208910
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Test

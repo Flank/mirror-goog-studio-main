@@ -18,13 +18,20 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.ide.DependenciesImpl
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.level2.DependencyGraphs
 import com.google.common.collect.ImmutableMap
 
 interface DependencyGraphBuilder {
+
+    fun createDependencies(
+        handler: DependencyModelBuilder<*>,
+        componentProperties: ComponentPropertiesImpl,
+        withFullDependency: Boolean,
+        buildMapping: ImmutableMap<String, String>,
+        issueReporter: IssueReporter
+    )
 
     /** Create a level 1 dependency list.  */
     fun createDependencies(
@@ -45,7 +52,6 @@ interface DependencyGraphBuilder {
         issueReporter: IssueReporter
     ): DependencyGraphs
 }
-
 
 fun getDependencyGraphBuilder(): DependencyGraphBuilder {
     return ArtifactDependencyGraph()

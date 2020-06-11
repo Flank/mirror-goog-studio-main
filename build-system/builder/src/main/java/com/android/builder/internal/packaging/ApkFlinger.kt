@@ -53,7 +53,9 @@ import java.util.zip.Deflater
 class ApkFlinger(
     creationData: ApkCreatorFactory.CreationData,
     private val compressionLevel: Int,
-    deterministicEntryOrder: Boolean = false
+    deterministicEntryOrder: Boolean = false,
+    enableV3Signing: Boolean = false,
+    enableV4Signing: Boolean = false
 ) : ApkCreator {
 
     /**
@@ -103,10 +105,17 @@ class ApkFlinger(
                         .setSdkDependencies(signingOptions.sdkDependencyData)
                         .setV1Enabled(signingOptions.isV1SigningEnabled)
                         .setV2Enabled(signingOptions.isV2SigningEnabled)
+                        .setV3Enabled(enableV3Signing)
+                        .setV4Enabled(enableV4Signing)
                         .setV1CreatedBy(creationData.createdBy ?: DEFAULT_CREATED_BY)
                         .setV1TrustManifest(creationData.isIncremental)
                         .also { builder ->
                             signingOptions.executor?.let { builder.setExecutor(it) }
+                            if (enableV4Signing) {
+                                builder.setV4Output(
+                                    File("${creationData.apkPath.absolutePath}.idsig")
+                                )
+                            }
                         }
                         .build()
                 )

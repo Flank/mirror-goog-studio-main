@@ -168,7 +168,7 @@ public class VariantManager<
     /**
      * Returns a list of all main components.
      *
-     * @see #createVariants()
+     * @see #createVariants(BuildFeatureValues)
      */
     @NonNull
     public List<ComponentInfo<VariantT, VariantPropertiesT>> getMainComponents() {
@@ -178,7 +178,7 @@ public class VariantManager<
     /**
      * Returns a list of all test components.
      *
-     * @see #createVariants()
+     * @see #createVariants(BuildFeatureValues)
      */
     @NonNull
     public List<
@@ -189,12 +189,16 @@ public class VariantManager<
         return testComponents;
     }
 
-    /** Creates the variants. */
-    public void createVariants() {
+    /**
+     * Creates the variants.
+     *
+     * @param buildFeatureValues the build feature value instance
+     */
+    public void createVariants(@NonNull BuildFeatureValues buildFeatureValues) {
         variantFactory.validateModel(variantInputModel);
         variantFactory.preVariantWork(project);
 
-        computeVariants();
+        computeVariants(buildFeatureValues);
     }
 
     @NonNull
@@ -228,8 +232,12 @@ public class VariantManager<
         return "____" + name;
     }
 
-    /** Create all variants. */
-    private void computeVariants() {
+    /**
+     * Create all variants.
+     *
+     * @param buildFeatureValues the build feature value instance
+     */
+    private void computeVariants(@NonNull BuildFeatureValues buildFeatureValues) {
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
         DimensionCombinator computer =
@@ -245,7 +253,7 @@ public class VariantManager<
 
         // loop on all the new variant objects to create the legacy ones.
         for (DimensionCombination variant : variants) {
-            createVariantsFromCombination(variant, testBuildTypeData);
+            createVariantsFromCombination(variant, testBuildTypeData, buildFeatureValues);
         }
 
         // FIXME we should lock the variant API properties after all the onVariants, and
@@ -277,7 +285,8 @@ public class VariantManager<
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData<BuildType> buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
-            @NonNull VariantType variantType) {
+            @NonNull VariantType variantType,
+            @NonNull BuildFeatureValues buildFeatureValues) {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
@@ -431,8 +440,7 @@ public class VariantManager<
                 variantFactory.createVariantPropertiesObject(
                         variant,
                         componentIdentity,
-                        variantFactory.createBuildFeatureValues(
-                                extension.getBuildFeatures(), projectOptions),
+                        buildFeatureValues,
                         variantDslInfo,
                         variantDependencies,
                         variantSources,
@@ -749,7 +757,8 @@ public class VariantManager<
      */
     private void createVariantsFromCombination(
             @NonNull DimensionCombination dimensionCombination,
-            @Nullable BuildTypeData<BuildType> testBuildTypeData) {
+            @Nullable BuildTypeData<BuildType> testBuildTypeData,
+            @NonNull BuildFeatureValues buildFeatureValues) {
         VariantType variantType = variantFactory.getVariantType();
 
         // first run the old variantFilter API
@@ -799,7 +808,8 @@ public class VariantManager<
                             dimensionCombination,
                             buildTypeData,
                             productFlavorDataList,
-                            variantType);
+                            variantType,
+                            buildFeatureValues);
             if (variantInfo != null) {
                 addVariant(variantInfo);
 
@@ -942,6 +952,9 @@ public class VariantManager<
             if (signingOptions.getV2Enabled() != null) {
                 signingConfigDsl.setV2SigningEnabled(signingOptions.getV2Enabled());
             }
+
+            signingConfigDsl.setEnableV3Signing(signingOptions.getEnableV3Signing());
+            signingConfigDsl.setEnableV4Signing(signingOptions.getEnableV4Signing());
 
             return signingConfigDsl;
         }

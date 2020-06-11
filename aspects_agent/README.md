@@ -114,7 +114,7 @@ The only requirement for the methods are to be public and static. As long as the
 
 ### Baseline file
 
-In addition to the rules file, you can also specify a **baseline** file to whitelist some known offender stack traces.
+In addition to the rules file, you can also specify a **baseline** file to allow some known offender stack traces.
 That is particularly useful to enable the agent in a project that already violates some of the rules defined in the rules file,
 in order to prevent future violations. To specify the baseline file, you should change the invocation of the agent to the following format:
 

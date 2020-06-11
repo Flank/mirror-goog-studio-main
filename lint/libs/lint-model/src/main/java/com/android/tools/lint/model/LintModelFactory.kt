@@ -114,7 +114,6 @@ class LintModelFactory : LintModelModuleLoader {
                 buildFolder = project.buildFolder,
                 lintOptions = getLintOptions(project),
                 lintRuleJars = project.getLintRuleJarsForAnyAgpVersion(),
-                buildFeatures = getBuildFeatures(project, gradleVersion),
                 resourcePrefix = project.resourcePrefix,
                 dynamicFeatures = project.dynamicFeatures,
                 bootClassPath = project.bootClasspath.map { File(it) },
@@ -215,7 +214,6 @@ class LintModelFactory : LintModelModuleLoader {
                     publicResources = File(library.publicResources),
                     symbolFile = File(library.symbolFile),
                     externalAnnotations = File(library.externalAnnotations),
-                    project = library.projectPath,
                     provided = provided,
                     skipped = skipped,
                     resolvedCoordinates = getMavenName(library.artifactAddress),
@@ -225,9 +223,9 @@ class LintModelFactory : LintModelModuleLoader {
             LibraryL2.LIBRARY_JAVA -> {
                 DefaultLintModelJavaLibrary(
                     artifactAddress = library.artifactAddress,
+                    folder = library.folder,
                     // TODO - expose compile jar vs impl jar?
                     jarFiles = (library.localJars + library.jarFile).map { File(it) },
-                    project = library.projectPath,
                     provided = provided,
                     skipped = skipped,
                     resolvedCoordinates = getMavenName(library.artifactAddress)
@@ -289,8 +287,15 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getArtifactName(artifactAddress: String): String {
-        val index = artifactAddress.indexOf(':')
-        val index2 = artifactAddress.indexOf(':', index + 1)
+        val index: Int
+        val index2: Int
+        if (artifactAddress.startsWith("artifacts:")) {
+            index = artifactAddress.indexOf(':')
+            index2 = artifactAddress.lastIndexOf(':')
+        } else {
+            index = artifactAddress.indexOf(':')
+            index2 = artifactAddress.indexOf(':', index + 1)
+        }
         return if (index == -1) {
             // not a Maven library, e.g. a local project reference
             artifactAddress
@@ -387,7 +392,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
         val new = DefaultLintModelJavaLibrary(
             artifactAddress = getArtifactAddress(library.resolvedCoordinates),
-            project = library.project,
+            folder = null,
             jarFiles = listOf(library.jarFile),
             provided = isProvided(library),
             skipped = isSkipped(library),
@@ -413,25 +418,37 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun getLibrary(library: AndroidLibrary): LintModelLibrary {
         libraryMap[library]?.let { return it }
+        val projectPath = library.project
 
         @Suppress("DEPRECATION")
-        val new = DefaultLintModelAndroidLibrary(
-            manifest = library.manifest,
-            jarFiles = library.localJars + library.jarFile,
-            folder = library.folder, // Needed for workaround for b/66166521
-            resFolder = library.resFolder,
-            assetsFolder = library.assetsFolder,
-            lintJar = library.lintJar,
-            publicResources = library.publicResources,
-            symbolFile = library.symbolFile,
-            externalAnnotations = library.externalAnnotations,
-            project = library.project,
-            provided = isProvided(library),
-            skipped = isSkipped(library),
-            resolvedCoordinates = getMavenName(library.resolvedCoordinates),
-            proguardRules = library.proguardRules,
-            artifactAddress = getArtifactAddress(library.resolvedCoordinates)
-        )
+        val new = if (projectPath != null) {
+            DefaultLintModelModuleLibrary(
+                projectPath = projectPath,
+                artifactAddress = getArtifactAddress(library.resolvedCoordinates),
+                resolvedCoordinates = getMavenName(library.resolvedCoordinates),
+                folder = library.folder,
+                lintJar = library.lintJar,
+                provided = isProvided(library),
+                skipped = isSkipped(library)
+            )
+        } else {
+            DefaultLintModelAndroidLibrary(
+                manifest = library.manifest,
+                jarFiles = library.localJars + library.jarFile,
+                folder = library.folder, // Needed for workaround for b/66166521
+                resFolder = library.resFolder,
+                assetsFolder = library.assetsFolder,
+                lintJar = library.lintJar,
+                publicResources = library.publicResources,
+                symbolFile = library.symbolFile,
+                externalAnnotations = library.externalAnnotations,
+                provided = isProvided(library),
+                skipped = isSkipped(library),
+                resolvedCoordinates = getMavenName(library.resolvedCoordinates),
+                proguardRules = library.proguardRules,
+                artifactAddress = getArtifactAddress(library.resolvedCoordinates)
+            )
+        }
 
         libraryMap[library] = new
 
@@ -529,6 +546,7 @@ class LintModelFactory : LintModelModuleLoader {
             testSourceProviders = computeTestSourceProviders(project, variant),
             debuggable = buildType.isDebuggable,
             shrinkable = buildType.isMinifyEnabled,
+            buildFeatures = getBuildFeatures(project, module.gradleVersion),
             libraryResolver = libraryResolver
         )
     }
@@ -950,11 +968,6 @@ class LintModelFactory : LintModelModuleLoader {
         override val lintOptions: LintModelLintOptions
             get() = _lintOptions ?: getLintOptions(project).also { _lintOptions = it }
 
-        private var _buildFeatures: LintModelBuildFeatures? = null
-        override val buildFeatures: LintModelBuildFeatures
-            get() = _buildFeatures
-                ?: getBuildFeatures(project, gradleVersion).also { _buildFeatures = it }
-
         private var _variants: List<LintModelVariant>? = null
         override val variants: List<LintModelVariant>
             // Lazily initialize the _variants property, reusing any already
@@ -1071,6 +1084,11 @@ class LintModelFactory : LintModelModuleLoader {
                 ?: (variant.mergedFlavor.consumerProguardFiles + buildType.consumerProguardFiles).also {
                     _consumerProguardFiles = it
                 }
+
+        private var _buildFeatures: LintModelBuildFeatures? = null
+        override val buildFeatures: LintModelBuildFeatures
+            get() = _buildFeatures
+                ?: getBuildFeatures(project, module.gradleVersion).also { _buildFeatures = it }
     }
 
     companion object {

@@ -26,8 +26,8 @@ class ChunkBytesToLineOutputStreamTest {
     fun basic() {
         val sb = StringBuilder()
         val out = ChunkBytesToLineOutputStream(
-            { message -> sb.append("->$message<-") },
-            ""
+            "",
+            { message -> sb.append("->$message<-") }
         )
         PrintWriter(out).use({ p -> p.println("Hello") })
         assertThat(sb.toString()).isEqualTo("->Hello<-")
@@ -46,8 +46,8 @@ class ChunkBytesToLineOutputStreamTest {
                 for (start in 1..100) {
                     val sb = StringBuilder()
                     val out = ChunkBytesToLineOutputStream(
-                        { message -> sb.append("->$message<-") },
                         "@",
+                        { message -> sb.append("->$message<-") },
                         start
                     )
                     PrintWriter(out).use({ p ->

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.databinding
 
 import com.android.SdkConstants
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -35,6 +36,8 @@ class DataBindingKotlinAppTest(useAndroidX: Boolean) {
     val project =
         GradleTestProject.builder()
             .fromTestProject("databindingAndKotlin")
+            // http://b/158092419
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .withDependencyChecker(false) // breaks w/ kapt
             .addGradleProperties(
                 BooleanOption.USE_ANDROID_X.propertyName

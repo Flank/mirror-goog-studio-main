@@ -35,9 +35,9 @@ public class StacktraceParser {
     private static final String SEPARATOR_REGEX = "\\|";
 
     /**
-     * Size of the subcallstack relevant to the whitelist. Generally, we don't need to whitelist the
-     * full callstack as it would be a waste of resources. The top couple/few calls should be enough
-     * to make each whitelisted flow unique.
+     * Size of the subcallstack relevant to the ignored list. Generally, we don't need to approve
+     * the full callstack as it would be a waste of resources. The top couple/few calls should be
+     * enough to make each ignored flow unique.
      */
     private static final int SUBSTACK_SIZE = 2;
 

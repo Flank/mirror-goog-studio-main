@@ -23,15 +23,14 @@ fun drawerActivityKt(
   activityClass: String,
   layoutName: String,
   menuName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 import android.os.Bundle
 import android.view.Menu
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)}
-import ${getMaterialComponentName("android.support.design.widget.NavigationView", useMaterial2)}
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
+import ${getMaterialComponentName("android.support.design.widget.NavigationView", useAndroidX)}
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp

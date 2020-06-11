@@ -45,8 +45,9 @@ interface LibraryExtension<
         LibraryVariantProperties>,
     TestedExtension {
     // TODO(b/140406102)
+
     /** Aidl files to package in the aar. */
-    val aidlPackageWhiteList: MutableCollection<String>
+    val aidlPackagedList: MutableCollection<String>?
 
     /**
      * container of Prefab options

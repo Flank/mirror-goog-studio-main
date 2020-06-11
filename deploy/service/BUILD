@@ -17,6 +17,7 @@ iml_module(
     name = "studio.android.sdktools.deploy.service",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.deploy.service.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

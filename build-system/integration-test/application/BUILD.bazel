@@ -54,6 +54,7 @@ TEST_DATA = [
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//prebuilts/tools/common/mlkit/testData",
     "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system:gradle-distrib-6.6-20200609220026+0000",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
     "//tools/base/build-system/integration-test:test-projects/BasicRenderScript",
     "//tools/base/build-system/integration-test:test-projects/additionalTestOutput",
@@ -207,6 +208,8 @@ gradle_integration_test(
         ],
         exclude = [
             "src/test/java/**/CheckAll*",
+            "src/test/java/**/IncrementalDexingWithDesugaringTest.kt",
+            "src/test/java/**/IncrementalJavaCompileWithAPsTest.kt",
         ],
     ),
     data = TEST_DATA,
@@ -222,6 +225,45 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 20,
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests_IncrementalDexingWithDesugaringTest",
+    srcs = glob(
+        [
+            "src/test/java/**/IncrementalDexingWithDesugaringTest.kt",
+        ],
+    ),
+    data = TEST_DATA,
+    #keep sorted
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests_IncrementalJavaCompileWithAPsTest",
+    srcs = glob(
+        [
+            "src/test/java/**/IncrementalJavaCompileWithAPsTest.kt",
+        ],
+    ),
+    data = TEST_DATA,
+    #keep sorted
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )
 

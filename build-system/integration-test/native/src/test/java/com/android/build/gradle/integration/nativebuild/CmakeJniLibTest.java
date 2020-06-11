@@ -110,9 +110,7 @@ public class CmakeJniLibTest {
         NativeAndroidProject model =
                 project.model().fetchMulti(NativeAndroidProject.class).get(":lib");
         assertThat(model).isNotNull();
-        assertThat(model)
-                .hasExactBuildFilesShortNames(
-                        "CMakeLists.txt", "platforms.cmake", "android.toolchain.cmake");
+        assertThat(model).hasExactBuildFilesShortNames("CMakeLists.txt");
         assertThat(model.getName()).isEqualTo("lib");
         assertThat(model.getArtifacts())
                 .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 2);

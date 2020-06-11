@@ -51,7 +51,7 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
     private final File mSourceOutputDir;
     @Nullable
     private final File mPackagedOutputDir;
-    @NonNull private final Collection<String> mPackageWhiteList;
+    @NonNull private final Collection<String> mPackagedList;
     @NonNull
     private final DependencyFileProcessor mDependencyFileProcessor;
     @NonNull
@@ -65,7 +65,7 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
             @NonNull Iterable<File> importFolders,
             @NonNull File sourceOutputDir,
             @Nullable File packagedOutputDir,
-            @Nullable Collection<String> packageWhiteList,
+            @Nullable Collection<String> packagedList,
             @NonNull DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessExecutor processExecutor,
             @NonNull ProcessOutputHandler processOutputHandler) {
@@ -74,10 +74,10 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
         mImportFolders = importFolders;
         mSourceOutputDir = sourceOutputDir;
         mPackagedOutputDir = packagedOutputDir;
-        if (packageWhiteList == null) {
-            mPackageWhiteList = ImmutableSet.of();
+        if (packagedList == null) {
+            mPackagedList = ImmutableSet.of();
         } else {
-            mPackageWhiteList = Collections.unmodifiableSet(Sets.newHashSet(packageWhiteList));
+            mPackagedList = Collections.unmodifiableSet(Sets.newHashSet(packagedList));
         }
         mDependencyFileProcessor = dependencyFileProcessor;
         mProcessExecutor = processExecutor;
@@ -143,10 +143,10 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
                 }
             }
 
-            boolean isWhiteListed = mPackageWhiteList.contains(relativeInputFile);
+            boolean isPackaged = mPackagedList.contains(relativeInputFile);
 
-            if (mPackagedOutputDir != null && (isParcelable || isWhiteListed)) {
-                // looks like a parcelable or is white-listed.
+            if (mPackagedOutputDir != null && (isParcelable || isPackaged)) {
+                // looks like a parcelable or is listed for packaging
                 // Store it in the secondary output of the DependencyData object.
 
                 File destFile = new File(mPackagedOutputDir, relativeInputFile);

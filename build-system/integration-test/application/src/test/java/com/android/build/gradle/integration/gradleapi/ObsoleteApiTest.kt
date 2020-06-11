@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.gradleapi
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -92,7 +93,15 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
     @Test
     fun `Test from command line`() {
-        val result = project.executor().with(BooleanOption.DEBUG_OBSOLETE_API, true).run("help")
+        val configurationCaching = if (provider.name == "Kotlin") {
+            // http://b/158092419
+            BaseGradleExecutor.ConfigurationCaching.OFF
+        } else {
+            BaseGradleExecutor.ConfigurationCaching.ON
+        }
+        val result = project.executor().with(BooleanOption.DEBUG_OBSOLETE_API, true)
+            .withConfigurationCaching(configurationCaching)
+            .run("help")
 
         result.stdout.use {
             when(provider.name) {

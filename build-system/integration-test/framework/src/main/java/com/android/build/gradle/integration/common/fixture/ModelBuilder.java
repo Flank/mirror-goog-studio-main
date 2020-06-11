@@ -70,7 +70,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 project.getBuildFile().toPath(),
                 project.getProfileDirectory(),
                 project.getHeapSize(),
-                ConfigurationCaching.OFF);
+                ConfigurationCaching.NONE);
     }
 
     public ModelBuilder(
@@ -86,7 +86,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 buildDotGradleFile,
                 null /*profileDirectory*/,
                 heapSize,
-                ConfigurationCaching.OFF);
+                ConfigurationCaching.NONE);
     }
 
     /**

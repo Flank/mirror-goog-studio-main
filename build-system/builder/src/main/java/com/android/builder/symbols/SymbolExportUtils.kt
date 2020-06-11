@@ -40,7 +40,7 @@ import java.nio.file.Path
  * `R.java` or `R.jar` for all libraries the main library depends on.
  *
  * @param librarySymbols table with symbols of resources for the library.
- * @param libraries libraries which this library depends on
+ * @param depSymbolTables symbol tables of the libraries which this library depends on
  * @param mainPackageName package name of this library
  * @param manifestFile manifest file
  * @param sourceOut directory to contain R.java
@@ -53,7 +53,7 @@ import java.nio.file.Path
 @Throws(IOException::class)
 fun processLibraryMainSymbolTable(
         librarySymbols: SymbolTable,
-        libraries: Set<File>,
+        depSymbolTables: List<SymbolTable>,
         mainPackageName: String?,
         manifestFile: File,
         rClassOutputJar: File?,
@@ -68,7 +68,6 @@ fun processLibraryMainSymbolTable(
     val finalPackageName = mainPackageName ?: getPackageNameFromManifest(parseManifest(manifestFile))
 
     // Get symbol tables of the libraries we depend on.
-    val depSymbolTables = SymbolIo().loadDependenciesSymbolTables(libraries)
     val tablesToWrite =
         processLibraryMainSymbolTable(
             finalPackageName,

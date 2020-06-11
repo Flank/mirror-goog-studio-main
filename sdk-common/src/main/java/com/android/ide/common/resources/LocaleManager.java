@@ -1119,6 +1119,7 @@ public class LocaleManager {
 
     };
 
+    @SuppressWarnings("WrongTerminology")
     private static final String[] ISO_639_2_NAMES = new String[] {
             "Afar",                                 // Code aar/aa
             "Abkhazian",                            // Code abk/ab

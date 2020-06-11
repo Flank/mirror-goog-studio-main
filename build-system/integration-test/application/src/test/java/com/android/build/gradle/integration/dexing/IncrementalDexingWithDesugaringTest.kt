@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.dexing
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -337,6 +339,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             })
         ).useCustomExecutor {
+            disableConfigurationCachingIfNeeded(it)
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
         }
@@ -354,8 +357,9 @@ class IncrementalDexingWithDesugaringTest(
         // Run a full build so that dex outputs are generated, then we will try to locate them.
         project.executor()
             .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
-            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
-            .run("clean", ":app:mergeDexDebug")
+            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform).also {
+                disableConfigurationCachingIfNeeded(it)
+            }.run("clean", ":app:mergeDexDebug")
 
         val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
             it.isDirectory && it.walk().any { file ->
@@ -369,6 +373,15 @@ class IncrementalDexingWithDesugaringTest(
                     dexOutputDirs.joinToString(", ", transform = { it.path })
         }
         return dexOutputDirs[0]
+    }
+
+    private fun disableConfigurationCachingIfNeeded(executor: GradleTaskExecutor): GradleTaskExecutor {
+        if (scenario == ANDROID_LIB && withIncrementalDexingTaskV2 && withIncrementalDexingTransform) {
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        } else if (scenario == JAVA_LIB) {
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        }
+        return executor
     }
 
     @Test

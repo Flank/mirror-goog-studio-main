@@ -23,6 +23,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
@@ -39,9 +40,12 @@ import org.junit.Test;
  */
 public class WearSimpleUnbundledTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("simpleMicroApp")
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("simpleMicroApp")
+                    // http://b/149978740 and http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Before
     public void setUp() throws Exception {

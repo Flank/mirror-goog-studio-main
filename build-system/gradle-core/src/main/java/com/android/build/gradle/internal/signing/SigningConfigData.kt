@@ -28,8 +28,8 @@ import java.io.File
 import java.io.Serializable
 
 /**
- * A copy of the [SigningConfig] object, with input annotations on all of its properties to be used
- * with `@Nested`, with an important exception below.
+ * A derivative of the [SigningConfig] object, with input annotations on all of its properties to be
+ * used with `@Nested`, with an important exception below.
  *
  * IMPORTANT: To support cache relocatability, we annotate storeFile with `PathSensitivity.NONE` to
  * ignore the store file's path. This requires that the tasks consuming this object do not take the
@@ -68,17 +68,43 @@ data class SigningConfigData(
     @get:Internal
     val keyPassword: String?,
 
+    /**
+     * The value from the DSL object.
+     */
     @get:Input
     val v1SigningEnabled: Boolean,
 
+    /**
+     * The value from the DSL object.
+     */
     @get:Input
     val v2SigningEnabled: Boolean,
 
+    /**
+     * Whether [v1SigningEnabled] is specified explicitly in the DSL.
+     */
     @get:Input
     val v1SigningConfigured: Boolean,
 
+    /**
+     * Whether [v2SigningEnabled] is specified explicitly in the DSL.
+     */
     @get:Input
-    val v2SigningConfigured: Boolean
+    val v2SigningConfigured: Boolean,
+
+    /**
+     * The value from the DSL object, or a default value if the DSL object's value is null or
+     * unspecified.
+     */
+    @get:Input
+    val enableV3Signing: Boolean,
+
+    /**
+     * The value from the DSL object, or a default value if the DSL object's value is null or
+     * unspecified.
+     */
+    @get:Input
+    val enableV4Signing: Boolean
 ) : Serializable {
 
     @Input
@@ -107,7 +133,9 @@ data class SigningConfigData(
                 v1SigningEnabled = signingConfig.isV1SigningEnabled,
                 v2SigningEnabled = signingConfig.isV2SigningEnabled,
                 v1SigningConfigured = signingConfig.isV1SigningConfigured,
-                v2SigningConfigured = signingConfig.isV2SigningConfigured
+                v2SigningConfigured = signingConfig.isV2SigningConfigured,
+                enableV3Signing = signingConfig.enableV3Signing ?: false,
+                enableV4Signing = signingConfig.enableV4Signing ?: false
             )
         }
     }

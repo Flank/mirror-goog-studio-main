@@ -1,5 +1,6 @@
 package com.android.build.gradle.integration.testing;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -33,6 +34,8 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("separateTestModuleWithDependencies")
+                    // http://b/149978740
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withDependencyChecker(false)
                     .create();
 

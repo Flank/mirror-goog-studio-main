@@ -27,6 +27,7 @@ import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationAc
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.src.app_package.mainActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.saveFragmentAndViewModel
@@ -42,7 +43,6 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   val (projectData, srcOut, resOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   val generateKotlin = projectData.language == Language.Kotlin
   val isLauncher = moduleData.isNewModule
@@ -51,6 +51,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
+  addMaterialDependency(useAndroidX)
 
   if (moduleData.apis.minApi.api < 21) {
     addDependency("com.android.support:support-vector-drawable:${appCompatVersion}.+")
@@ -83,11 +84,11 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   copy(File("ic_notifications_black_24dp.xml"), resOut.resolve("drawable/ic_notifications_black_24dp.xml"))
 
   val mainActivity = when (projectData.language) {
-    Language.Java -> mainActivityJava(activityClass, layoutName, packageName, useAndroidX, useMaterial2)
-    Language.Kotlin -> mainActivityKt(activityClass, layoutName, packageName, useAndroidX, useMaterial2)
+    Language.Java -> mainActivityJava(activityClass, layoutName, packageName, useAndroidX)
+    Language.Kotlin -> mainActivityKt(activityClass, layoutName, packageName, useAndroidX)
   }
   save(mainActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
-  save(navigationActivityMainXml(useMaterial2), resOut.resolve("layout/${layoutName}.xml"))
+  save(navigationActivityMainXml(useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
 
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))

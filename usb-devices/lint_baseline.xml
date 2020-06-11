@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 4.2.0-dev">
+
+    <issue
+        id="ImplicitExecutor"
+        message="Use `supplyAsync` overload with an explicit Executor instead. See `go/do-not-freeze`.">
+        <location
+            file="src/com/android/tools/usb/UsbDeviceCollector.kt"
+            line="62"/>
+    </issue>
+
+</issues>

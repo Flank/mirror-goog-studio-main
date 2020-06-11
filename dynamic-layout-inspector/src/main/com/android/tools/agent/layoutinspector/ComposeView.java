@@ -22,15 +22,28 @@ import java.util.List;
 
 /** ComposeView represents a separate temporary tree of nodes of interest. */
 public class ComposeView {
+    private long mDrawId;
     private final Source mSource;
     private final Rect mBounds;
     private final List<ComposeView> mChildren;
 
     public ComposeView(
-            @NonNull Source source, @NonNull Rect bounds, @NonNull List<ComposeView> children) {
-        this.mSource = source;
-        this.mBounds = bounds;
-        this.mChildren = children;
+            long drawId,
+            @NonNull Source source,
+            @NonNull Rect bounds,
+            @NonNull List<ComposeView> children) {
+        mDrawId = drawId;
+        mSource = source;
+        mBounds = bounds;
+        mChildren = children;
+    }
+
+    public long getDrawId() {
+        return mDrawId;
+    }
+
+    public void setDrawId(long drawId) {
+        mDrawId = drawId;
     }
 
     @NonNull

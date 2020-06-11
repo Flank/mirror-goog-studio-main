@@ -157,7 +157,7 @@ kotlin_test(
     tags = [
         "slow",
     ],
-    # TODO: Remove the blacklist, once NDK is checked in.
+    # TODO: Remove the exclude list, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
     # Specify gradle-api jar first, as kotlin-daemon-client contains older net.rubygrapefruit.platform classes
     deps = ["//tools/base/build-system:gradle-api"] + [

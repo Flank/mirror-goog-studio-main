@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.testing.unit;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,7 +25,11 @@ import org.junit.Test;
 public class UnitTestingComplexProjectTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("unitTestingComplexProject").create();
+            GradleTestProject.builder()
+                    .fromTestProject("unitTestingComplexProject")
+                    // http://b/158092419
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void runAllTests() throws Exception {

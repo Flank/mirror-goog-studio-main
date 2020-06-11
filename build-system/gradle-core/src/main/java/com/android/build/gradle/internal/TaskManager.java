@@ -85,6 +85,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.lint.LintModelModuleWriterTask;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -95,6 +96,7 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
@@ -169,7 +171,6 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
-import com.android.build.gradle.tasks.CleanBuildCacheKt;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -386,7 +387,8 @@ public abstract class TaskManager<
      *
      * <p>This creates the tasks for all the variants and all the test components
      */
-    public void createTasks() {
+    public void createTasks(
+            @NonNull VariantType variantType, @NonNull BuildFeatureValues buildFeatures) {
         // this is call before all the variants are created since they are all going to depend
         // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
@@ -411,6 +413,14 @@ public abstract class TaskManager<
                 testComponent : testComponents) {
             createTasksForTest(testComponent);
         }
+
+        taskFactory.register(
+                new LintModelModuleWriterTask.CreationAction(
+                        globalScope,
+                        variantPropertiesList,
+                        testComponentPropertiesList,
+                        variantType,
+                        buildFeatures));
 
         createReportTasks();
     }
@@ -625,13 +635,7 @@ public abstract class TaskManager<
 
         globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
 
-        // Register the cleanBuildCache task only for the root project
-        TaskFactory rootProjectTaskFactory =
-                new TaskFactoryImpl(project.getRootProject().getTasks());
-        if (rootProjectTaskFactory.findByName(CleanBuildCacheKt.CLEAN_BUILD_CACHE_TASK_NAME)
-                == null) {
-            rootProjectTaskFactory.register(new CleanBuildCache.CreationAction(globalScope));
-        }
+        taskFactory.register(new CleanBuildCache.CreationAction(globalScope));
 
         // for testing only.
         taskFactory.register(

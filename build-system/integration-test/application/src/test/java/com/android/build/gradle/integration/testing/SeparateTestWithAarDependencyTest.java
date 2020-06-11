@@ -2,6 +2,7 @@ package com.android.build.gradle.integration.testing;
 
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
@@ -65,7 +66,10 @@ public class SeparateTestWithAarDependencyTest {
                         + "'\n"
                         + "}\n");
 
-        project.execute("clean", "assemble");
+        // http://b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assemble");
         models = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(models);
     }

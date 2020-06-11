@@ -61,6 +61,10 @@ class NativeAndroidProjectBuilder {
         buildSystems.add(buildSystem)
     }
 
+    fun addBuildFile(buildFile : File) {
+        buildFiles.add(buildFile)
+    }
+
     /** Add information about a particular variant.  */
     fun addVariantInfo(
         variantName: String,

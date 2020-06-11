@@ -208,6 +208,15 @@ open class XmlContext(
         message: String,
         quickfixData: LintFix?
     ) {
+        val source = location.source
+        if (source is Node) {
+            // Detector accidentally invoked scope-less report method inherited
+            // from generic Context, but we remember the actual node from the
+            // location construction, so use it to find the best suppress scope
+            report(issue, source, location, message, quickfixData)
+            return
+        }
+
         // Warn if clients use the non-scoped form? No, there are cases where an
         //  XML detector's error isn't applicable to one particular location (or it's
         //  not feasible to compute it cheaply)

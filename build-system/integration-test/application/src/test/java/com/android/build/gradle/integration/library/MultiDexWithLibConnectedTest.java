@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.Rule;
@@ -28,6 +29,8 @@ public class MultiDexWithLibConnectedTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("multiDexWithLib")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withHeap("2048M")
                     .create();
 

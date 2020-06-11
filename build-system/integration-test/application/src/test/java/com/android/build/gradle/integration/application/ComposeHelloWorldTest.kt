@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import org.junit.Rule
 import org.junit.Test
@@ -24,7 +25,10 @@ class ComposeHelloWorldTest {
 
     @JvmField
     @Rule
-    val project = GradleTestProject.builder().fromTestProject("composeHelloWorld").create()
+    val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
+        // http://b/158092419
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @Test
     fun appBuildsSuccessfully() {

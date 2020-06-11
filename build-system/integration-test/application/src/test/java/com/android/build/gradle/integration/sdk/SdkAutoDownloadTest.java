@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -273,10 +274,15 @@ public class SdkAutoDownloadTest {
 
         File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
 
-        getOfflineExecutor().run("assembleDebug");
+        // http://b/158204704
+        getOfflineExecutor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
         assertThat(platformTools).doesNotExist();
 
-        getExecutor().run("assembleDebug");
+        getExecutor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
         assertThat(platformTools).isDirectory();
     }
 
@@ -303,8 +309,11 @@ public class SdkAutoDownloadTest {
 
         Files.write(project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
-        
-        getExecutor().run("assemble");
+
+        // b/158015183
+        getExecutor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assemble");
 
         File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
         assertThat(cmakeDirectory).isDirectory();
@@ -377,7 +386,10 @@ public class SdkAutoDownloadTest {
                 project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
 
-        getExecutor().run("assembleDebug");
+        // b/158015183
+        getExecutor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
 
         // Hard to get the NDK SxS flag here. Just check whether either expected directory exists.
         File legacyFolder = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);

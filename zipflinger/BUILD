@@ -186,6 +186,7 @@ iml_module(
     # do not sort: must match IML order
     srcs = ["src"],
     iml_files = ["android.sdktools.zipflinger.iml"],
+    lint_baseline = "lint_baseline.xml",
     tags = ["no_test_mac"],
     test_data = glob(["test/resource/**"]),
     test_srcs = ["test/src/java"],

@@ -55,6 +55,7 @@ iml_module(
     name = "studio.android.sdktools.aspects-agent",
     srcs = ["src/main"],
     iml_files = ["android.sdktools.aspects_agent.iml"],
+    lint_baseline = "lint_baseline.xml",
     test_data = glob(["testData/**"]),
     test_srcs = ["src/test"],
     visibility = ["//visibility:public"],

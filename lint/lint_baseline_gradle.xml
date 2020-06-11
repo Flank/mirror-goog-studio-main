@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 4.2.0-dev">
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
+            line="571"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
+            line="584"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
+            line="680"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
+            line="750"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
+            line="2842"/>
+    </issue>
+
+</issues>

@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
 import com.android.apksig.ApkVerifier.IssueWithParams;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -62,6 +63,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -123,11 +125,14 @@ public class SigningTest {
     @NonNull
     private static ApkVerifier.Result assertApkSignaturesVerify(@NonNull Apk apk, int minSdkVersion)
             throws Exception {
-        ApkVerifier.Result result =
+        ApkVerifier.Builder builder =
                 new ApkVerifier.Builder(apk.getFile().toFile())
-                        .setMinCheckedPlatformVersion(minSdkVersion)
-                        .build()
-                        .verify();
+                        .setMinCheckedPlatformVersion(minSdkVersion);
+        File v4SignatureFile = new File(apk.getFile().toFile().getAbsolutePath() + ".idsig");
+        if (v4SignatureFile.exists()) {
+            builder.setV4SignatureFile(v4SignatureFile);
+        }
+        ApkVerifier.Result result = builder.build().verify();
         if (result.isVerified()) {
             return result;
         }
@@ -246,6 +251,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -327,7 +334,10 @@ public class SigningTest {
 
     @Test
     public void signingReportTask() throws Exception {
-        project.execute("signingReport");
+        // SigningReportTask is not compatble
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("signingReport");
     }
 
     @Test
@@ -467,6 +477,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
@@ -481,14 +493,16 @@ public class SigningTest {
     public void assembleWithInjectedV1ConfigDependencyInfoDisabled() throws Exception {
         // add prop args for signing override.
         project.executor()
-            .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
-            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
-            .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
-            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
-            .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
-            .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-            .run("assembleRelease");
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                // http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         assertThat(apk).contains("META-INF/" + certEntryName);
@@ -508,6 +522,8 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, false)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
                 .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
@@ -529,5 +545,87 @@ public class SigningTest {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "keyPassword '" + KEY_PASSWORD + "'", "");
         project.executeExpectingFailure("assembleDebug");
+    }
+
+    @Test
+    public void signingWithV3() throws Exception {
+        // v3 signing is not supported by apkzlib
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER);
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "customDebug {",
+                ""
+                        + "customDebug {\n"
+                        + "    v1SigningEnabled false\n"
+                        + "    v2SigningEnabled false\n"
+                        + "    enableV3Signing true\n");
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).doesNotContain("META-INF/" + certEntryName);
+        assertThat(apk).doesNotContain("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        // API Level 28 is the lowest level that supports v3 signing
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
+    }
+
+    @Test
+    public void signingWithV4AndV2() throws Exception {
+        // v4 signing is not supported by apkzlib
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER);
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "customDebug {",
+                ""
+                        + "customDebug {\n"
+                        + "    v1SigningEnabled false\n"
+                        + "    v2SigningEnabled true\n"
+                        + "    enableV3Signing false\n"
+                        + "    enableV4Signing true\n");
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).doesNotContain("META-INF/" + certEntryName);
+        assertThat(apk).doesNotContain("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        // API Level 28 is the lowest level that supports v4 signing
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV3Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
+    }
+
+    @Test
+    public void signingWithV4AndV3() throws Exception {
+        // v4 and v3 signing are not supported by apkzlib
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER);
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "customDebug {",
+                ""
+                        + "customDebug {\n"
+                        + "    v1SigningEnabled false\n"
+                        + "    v2SigningEnabled false\n"
+                        + "    enableV3Signing true\n"
+                        + "    enableV4Signing true\n");
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).doesNotContain("META-INF/" + certEntryName);
+        assertThat(apk).doesNotContain("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        // API Level 28 is the lowest level that supports v4 signing
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
     }
 }

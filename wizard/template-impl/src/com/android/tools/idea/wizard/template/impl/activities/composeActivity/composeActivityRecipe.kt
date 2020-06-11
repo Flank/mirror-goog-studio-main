@@ -19,6 +19,7 @@ package com.android.tools.idea.wizard.template.impl.activities.composeActivity
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.mainActivityKt
@@ -40,6 +41,7 @@ fun RecipeExecutor.composeActivityRecipe(
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
+  addMaterialDependency(true) // useAndroidX should be always true for Compose
 
   val composeVersionVarName = getDependencyVarName("androidx.ui:ui-framework", "compose_version")
   setExtVar(composeVersionVarName, "0.1.0-dev13")

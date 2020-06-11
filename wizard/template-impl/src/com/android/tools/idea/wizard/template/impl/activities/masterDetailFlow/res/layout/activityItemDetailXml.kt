@@ -22,8 +22,7 @@ fun activityItemDetailXml(
   detailName: String,
   detailNameLayout: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 <${getMaterialComponentName("android.support.design.widget.CoordinatorLayout",
                             useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
@@ -35,14 +34,14 @@ fun activityItemDetailXml(
     tools:context="${packageName}.${detailName}Activity"
     tools:ignore="MergeRootFrame">
 
-    <${getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
         android:fitsSystemWindows="true"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useMaterial2)}
+        <${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)}
             android:id="@+id/toolbar_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -58,9 +57,9 @@ fun activityItemDetailXml(
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-        </${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useMaterial2)}>
+        </${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)}>
 
-    </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)}>
+    </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}>
 
     <${getMaterialComponentName("android.support.v4.widget.NestedScrollView", useAndroidX)}
         android:id="@+id/${detailNameLayout}_container"
@@ -68,7 +67,7 @@ fun activityItemDetailXml(
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

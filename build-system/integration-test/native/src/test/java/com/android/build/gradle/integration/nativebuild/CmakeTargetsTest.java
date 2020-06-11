@@ -126,9 +126,7 @@ public class CmakeTargetsTest {
 
     private static void assertModel(GradleTestProject project, NativeAndroidProject model) {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getTag());
-        assertThat(model)
-                .hasExactBuildFilesShortNames(
-                        "CMakeLists.txt", "platforms.cmake", "android.toolchain.cmake");
+        assertThat(model).hasExactBuildFilesShortNames("CMakeLists.txt");
         assertThat(model.getName()).isEqualTo("project");
         assertThat(model.getArtifacts())
                 .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 4);

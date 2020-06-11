@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.tasks.factory
 
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Task
@@ -92,6 +94,31 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
     }
 }
 
+/**
+ * Lazy Creation Action for non variant aware tasks.
+ *
+ * Tasks must implement [BaseTask]
+ *
+ * This contains both meta-data to create the task ([name], [type])
+ * and actions to configure the task ([preConfigure], [configure], [handleProvider])
+ */
+abstract class GlobalTaskCreationAction<TaskT>(
+    @JvmField protected val globalScope: GlobalScope
+) : TaskCreationAction<TaskT>() where TaskT: Task, TaskT: BaseTask {
+
+    override fun preConfigure(taskName: String) {
+        // default does nothing
+    }
+    override fun handleProvider(taskProvider: TaskProvider<TaskT>) {
+        // default does nothing
+    }
+
+    override fun configure(task: TaskT) {
+        task.enableGradleWorkers.set(
+            globalScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
+        )
+    }
+}
 /**
  * Configuration Action for tasks.
  */

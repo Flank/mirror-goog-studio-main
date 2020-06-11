@@ -21,8 +21,7 @@ fun navigationViewXml(
   appBarLayoutName: String,
   navHeaderLayoutName: String,
   drawerMenu: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
 <${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)}
@@ -40,7 +39,7 @@ fun navigationViewXml(
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <${getMaterialComponentName("android.support.design.widget.NavigationView", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.NavigationView", useAndroidX)}
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

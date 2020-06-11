@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.application.SigningTest
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -37,6 +38,10 @@ class DynamicAppSigningConfigTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     @Test
@@ -84,6 +89,8 @@ class DynamicAppSigningConfigTest {
         Files.write(keystoreFile.toPath(), keystoreContents)
 
         project.executor()
+            // http://b/146208910
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
             .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
             .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
             .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)

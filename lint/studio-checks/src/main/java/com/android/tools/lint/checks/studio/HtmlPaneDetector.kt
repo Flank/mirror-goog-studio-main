@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
@@ -77,7 +78,7 @@ class HtmlPaneDetector : Detector(), SourceCodeScanner {
         val arguments = node.valueArguments
         if (arguments.size == 2) {
             val contentTypeParameter = arguments[1]
-            checkContentTypeWithoutEditorKit(context, contentTypeParameter)
+            checkContentTypeWithoutEditorKit(context, contentTypeParameter, node)
         }
     }
 
@@ -90,18 +91,19 @@ class HtmlPaneDetector : Detector(), SourceCodeScanner {
     ) {
         val arguments = node.valueArguments
         if (arguments.size == 1) {
-            checkContentTypeWithoutEditorKit(context, arguments[0])
+            checkContentTypeWithoutEditorKit(context, arguments[0], node)
         }
     }
 
     private fun checkContentTypeWithoutEditorKit(
         context: JavaContext,
-        contentTypeParameter: UExpression
+        contentTypeParameter: UExpression,
+        locationElement: UElement
     ) {
         val contentType = ConstantEvaluator.evaluate(context, contentTypeParameter)
         if (contentType == "text/html" && !setsEditorKit(contentTypeParameter)) {
             context.report(
-                ISSUE, contentTypeParameter, context.getNameLocation(contentTypeParameter),
+                ISSUE, contentTypeParameter, context.getLocation(locationElement),
                 "Constructing an HTML JEditorPane directly can lead to subtle theming " +
                         "bugs; either set the editor kit directly " +
                         "(`setEditorKit(UIUtil.getHTMLEditorKit())`) or better yet use " +

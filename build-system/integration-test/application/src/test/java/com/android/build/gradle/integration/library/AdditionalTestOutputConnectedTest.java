@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.library;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
@@ -34,7 +35,11 @@ public class AdditionalTestOutputConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("additionalTestOutput").create();
+            GradleTestProject.builder()
+                    .fromTestProject("additionalTestOutput")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     @Category(DeviceTests.class)

@@ -225,9 +225,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Override
     public void beforeCheckEachProject(@NonNull Context context) {
         projectUsesViewBinding = false;
-        LintModelModule model = context.getProject().getBuildModule();
-        if (model != null) {
-            projectUsesViewBinding = model.getBuildFeatures().getViewBinding();
+        LintModelVariant variant = context.getProject().getBuildVariant();
+        if (variant != null) {
+            projectUsesViewBinding = variant.getBuildFeatures().getViewBinding();
         }
     }
 

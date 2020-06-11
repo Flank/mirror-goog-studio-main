@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.api;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
@@ -41,7 +42,11 @@ public class TransformInModuleWithKotlinTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("transformInModuleWithKotlin").create();
+            GradleTestProject.builder()
+                    .fromTestProject("transformInModuleWithKotlin")
+                    // b/158092419
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void testTransform() throws IOException, InterruptedException, ProcessException {

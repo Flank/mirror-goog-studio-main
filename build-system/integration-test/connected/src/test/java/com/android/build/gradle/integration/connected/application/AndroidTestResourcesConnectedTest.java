@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.connected.application;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -40,6 +41,8 @@ public class AndroidTestResourcesConnectedTest {
     public GradleTestProject appProject =
             GradleTestProject.builder()
                     .withName("application")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestApp(HelloWorldApp.noBuildFile())
                     .create();
 

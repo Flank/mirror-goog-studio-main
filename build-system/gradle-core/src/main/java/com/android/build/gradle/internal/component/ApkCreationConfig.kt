@@ -37,4 +37,6 @@ interface ApkCreationConfig: BaseCreationConfig {
     val testOnlyApk: Boolean
 
     val resValues: MapProperty<ResValue.Key, ResValue>
+
+    val minifiedEnabled: Boolean
 }

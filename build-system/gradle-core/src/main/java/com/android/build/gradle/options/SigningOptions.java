@@ -37,9 +37,9 @@ public final class SigningOptions {
         String signingKeyAlias = options.get(StringOption.IDE_SIGNING_KEY_ALIAS);
         String signingKeyPassword = options.get(StringOption.IDE_SIGNING_KEY_PASSWORD);
         Boolean isV1SigningConfigured =
-                options.getValue(OptionalBooleanOption.SIGNING_V1_ENABLED) != null;
+                options.get(OptionalBooleanOption.SIGNING_V1_ENABLED) != null;
         Boolean isV2SigningConfigured =
-                options.getValue(OptionalBooleanOption.SIGNING_V2_ENABLED) != null;
+                options.get(OptionalBooleanOption.SIGNING_V2_ENABLED) != null;
 
         if (signingStoreFile != null
                 && signingStorePassword != null
@@ -52,10 +52,12 @@ public final class SigningOptions {
                     signingKeyAlias,
                     signingKeyPassword,
                     options.get(StringOption.IDE_SIGNING_STORE_TYPE),
-                    options.getValue(OptionalBooleanOption.SIGNING_V1_ENABLED),
-                    options.getValue(OptionalBooleanOption.SIGNING_V2_ENABLED),
+                    options.get(OptionalBooleanOption.SIGNING_V1_ENABLED),
+                    options.get(OptionalBooleanOption.SIGNING_V2_ENABLED),
                     isV1SigningConfigured,
-                    isV2SigningConfigured);
+                    isV2SigningConfigured,
+                    false,
+                    false);
         }
 
         return null;
@@ -70,6 +72,8 @@ public final class SigningOptions {
     @Nullable private final Boolean v2Enabled;
     @NonNull private final Boolean v1Configured;
     @NonNull private final Boolean v2Configured;
+    @NonNull private final Boolean enableV3Signing;
+    @NonNull private final Boolean enableV4Signing;
 
     public SigningOptions(
             @NonNull String storeFile,
@@ -80,7 +84,9 @@ public final class SigningOptions {
             @Nullable Boolean v1Enabled,
             @Nullable Boolean v2Enabled,
             @NonNull Boolean v1Configured,
-            @NonNull Boolean v2Configured) {
+            @NonNull Boolean v2Configured,
+            @NonNull Boolean enableV3Signing,
+            @NonNull Boolean enableV4Signing) {
         this.storeFile = storeFile;
         this.storeType = storeType;
         this.storePassword = storePassword;
@@ -90,6 +96,8 @@ public final class SigningOptions {
         this.v2Enabled = v2Enabled;
         this.v1Configured = v1Configured;
         this.v2Configured = v2Configured;
+        this.enableV3Signing = enableV3Signing;
+        this.enableV4Signing = enableV4Signing;
     }
 
     @NonNull
@@ -135,5 +143,15 @@ public final class SigningOptions {
     @NonNull
     public Boolean getV2Configured() {
         return v2Configured;
+    }
+
+    @NonNull
+    public Boolean getEnableV3Signing() {
+        return enableV3Signing;
+    }
+
+    @NonNull
+    public Boolean getEnableV4Signing() {
+        return enableV4Signing;
     }
 }

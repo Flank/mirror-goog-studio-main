@@ -48,6 +48,9 @@ interface LintModelVariant {
     val debuggable: Boolean
     val shrinkable: Boolean
 
+    /** Build features in effect */
+    val buildFeatures: LintModelBuildFeatures
+
     /**
      * Lookup from artifact address in a [LintModelDependencyGraph] to a [LintModelLibrary].
      * The libraries are shared across modules and variants, only the dependency graphs
@@ -90,6 +93,7 @@ class DefaultLintModelVariant(
 
     override val debuggable: Boolean,
     override val shrinkable: Boolean,
+    override val buildFeatures: LintModelBuildFeatures,
     override val libraryResolver: LintModelLibraryResolver,
 
     // For temporary backwards compatibility

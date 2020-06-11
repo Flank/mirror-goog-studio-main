@@ -6,6 +6,7 @@ import static com.android.build.gradle.integration.common.truth.ApkSubject.asser
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
@@ -67,7 +68,9 @@ public class SeparateTestModuleTest {
 
     @Test
     public void checkDependencySubtraction() throws Exception {
-        project.execute(":app:assembleDebug", ":test:assembleDebug");
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run(":app:assembleDebug", ":test:assembleDebug");
         try (Apk main = project.getSubproject("app").getApk(ApkType.DEBUG);
                 Apk test = project.getSubproject("test").getApk(ApkType.DEBUG)) {
 
@@ -90,7 +93,11 @@ public class SeparateTestModuleTest {
     @Test
     public void checkDependenciesBetweenTasks() throws Exception {
         // Check :test:assembleDebug succeeds on its own, i.e. compiles the app module.
-        project.execute("clean", ":test:assembleDebug", ":test:checkDependencies");
+        project.execute("clean", ":test:assembleDebug");
+        // check dependencies is not compatible
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run(":test:checkDependencies");
     }
 
     @Test

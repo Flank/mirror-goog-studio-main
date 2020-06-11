@@ -68,7 +68,16 @@ class LibraryExtensionImpl(
             LibraryVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
 
-    override var aidlPackageWhiteList: MutableCollection<String> = ArrayList<String>()
+    @get:Suppress("WrongTerminology")
+    @set:Suppress("WrongTerminology")
+    @Deprecated("Use aidlPackagedList instead", ReplaceWith("aidlPackagedList"))
+    var aidlPackageWhiteList: MutableCollection<String>
+        get() = aidlPackagedList
+        set(value) {
+            aidlPackagedList = value
+        }
+
+    override var aidlPackagedList: MutableCollection<String> = ArrayList<String>()
         set(value) {
             field.addAll(value)
         }

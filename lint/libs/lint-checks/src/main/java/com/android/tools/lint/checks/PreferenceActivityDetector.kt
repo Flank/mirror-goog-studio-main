@@ -87,7 +87,7 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
             )
         ) {
             // Ignore the issue if we target an API greater than 19 and the class in
-            // question specifically overrides isValidFragment() and thus knowingly white-lists
+            // question specifically overrides isValidFragment() and thus knowingly allows
             // valid fragments.
             if (context.mainProject.targetSdk >= 19 && overridesIsValidFragment(
                     evaluator,

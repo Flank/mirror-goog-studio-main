@@ -534,8 +534,8 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
         zos.closeEntry();
     }
 
-     /** Writes the whitelist string to whitelist file specified by destination */
-    public void emitWhitelist(Path destination) throws IOException {
+     /** Writes the keep resources string to file specified by destination */
+    public void emitKeepResources(Path destination) throws IOException {
         File destinationFile = destination.toFile();
         if (!destinationFile.exists()) {
             destinationFile.getParentFile().mkdirs();
@@ -544,7 +544,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
                 throw new IOException("Could not create " + destination);
             }
         }
-        Files.asCharSink(destinationFile, UTF_8).write(mModel.dumpWhitelistedResources());
+        Files.asCharSink(destinationFile, UTF_8).write(mModel.dumpKeepResources());
     }
 
     public void emitConfig(Path destination) throws IOException {

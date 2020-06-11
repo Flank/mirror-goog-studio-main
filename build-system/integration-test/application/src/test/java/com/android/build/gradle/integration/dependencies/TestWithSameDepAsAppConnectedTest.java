@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -119,7 +120,11 @@ public class TestWithSameDepAsAppConnectedTest {
         this.testUsage = testUsage;
 
         this.project =
-                GradleTestProject.builder().fromTestApp(HelloWorldApp.forPlugin(plugin)).create();
+                GradleTestProject.builder()
+                        .fromTestApp(HelloWorldApp.forPlugin(plugin))
+                        // b/146163513
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .create();
     }
 
     @Before

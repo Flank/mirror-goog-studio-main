@@ -24,8 +24,7 @@ fun activityItemListAppBarXml(
   packageName: String,
   themeNameAppBarOverlay: String,
   themeNamePopupOverlay: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
 <${getMaterialComponentName("android.support.design.widget.CoordinatorLayout",
@@ -37,7 +36,7 @@ fun activityItemListAppBarXml(
     android:fitsSystemWindows="true"
     tools:context="${packageName}.${collectionName}Activity">
 
-    <${getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -49,7 +48,7 @@ fun activityItemListAppBarXml(
             android:layout_height="?attr/actionBarSize"
             app:popupTheme="@style/${themeNamePopupOverlay}" />
 
-    </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)}>
+    </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}>
 
     <FrameLayout
         android:id="@+id/frameLayout"
@@ -60,7 +59,7 @@ fun activityItemListAppBarXml(
         <include layout="@layout/${itemListLayout}" />
     </FrameLayout>
 
-    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

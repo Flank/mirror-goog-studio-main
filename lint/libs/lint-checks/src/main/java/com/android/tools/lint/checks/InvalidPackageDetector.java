@@ -257,7 +257,7 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
             }
 
             if (jarFile.getName().startsWith("junit-")) {
-                // Deliberately whitelisted; see b/73555280
+                // Deliberately allowed; see b/73555280
                 return;
             }
 

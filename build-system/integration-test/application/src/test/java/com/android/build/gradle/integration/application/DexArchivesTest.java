@@ -22,6 +22,7 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -174,7 +175,12 @@ public class DexArchivesTest {
 
     @Test
     public void testForReleaseVariants() throws IOException, InterruptedException {
-        GradleBuildResult result = runTask("assembleRelease");
+        GradleBuildResult result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
+                        // http://b/149978740
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .run("assembleRelease");
 
         assertThat(result.getTask(":dexBuilderRelease")).didWork();
         assertThat(result.getTask(":mergeDexRelease")).didWork();

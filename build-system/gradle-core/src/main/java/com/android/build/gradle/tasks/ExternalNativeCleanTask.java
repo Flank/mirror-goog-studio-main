@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.DefaultIssueReporter;
@@ -129,8 +128,6 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
                             variant.getObjFolder(),
                             "android_gradle_clean_" + commandIndex,
                             processBuilder,
-                            getLogger(),
-                            new GradleProcessExecutor(execOperations::exec),
                             "")
                     .logStderrToInfo()
                     .logStdoutToInfo()

@@ -30,6 +30,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
+import com.android.builder.model.NativeVariantAbi
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
@@ -171,6 +172,13 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
 
         val lib = ZipHelper.extractFile(apk, "lib/x86_64/libhello-jni.so")
         TruthHelper.assertThatNativeLib(lib).isStripped()
+    }
+
+    @Test
+    fun checkModelSingleVariant() {
+        project.model().fetchAndroidProjects() // Make sure we can successfully get AndroidProject
+        val model = project.model().fetch(NativeVariantAbi::class.java)
+        assertThat(model.buildFiles.map { it.name }).containsExactly("CMakeLists.txt")
     }
 
     @Test

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_BUILD_TOOL_VERSION
@@ -49,7 +50,8 @@ class AnnotationProcessorConnectedTest {
                     ":lib-compiler" to AnnotationProcessorLib.createCompiler()
                 )
             )
-        ).create()
+        ).withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/146163513
+        .create()
 
     @Before
     fun setUp() {

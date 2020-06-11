@@ -21,11 +21,17 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.process.ExecOperations
+import org.gradle.process.ExecSpec
+import org.gradle.process.JavaExecSpec
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
 import java.util.ArrayList
 import java.util.concurrent.Callable
@@ -35,12 +41,19 @@ import java.util.concurrent.Executors
  * Builder for the custom Native Android model.
  */
 class NativeModelBuilder(
+    private val issueReporter: SyncIssueReporter,
     private val globalScope: GlobalScope,
     private val variantModel: VariantModel
 ) : ParameterizedToolingModelBuilder<ModelBuilderParameter> {
     private val nativeAndroidProjectClass = NativeAndroidProject::class.java.name
     private val nativeVariantAbiClass = NativeVariantAbi::class.java.name
     private val projectOptions get() = globalScope.projectOptions
+    private val ops = object : ExecOperations {
+        override fun exec(action: Action<in ExecSpec>) =
+            globalScope.project.exec(action)
+        override fun javaexec(action: Action<in JavaExecSpec>) =
+            globalScope.project.javaexec(action)
+    }
     private val ideRefreshExternalNativeModel get() =
         projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)
     private val enableParallelNativeJsonGen get() =
@@ -62,7 +75,9 @@ class NativeModelBuilder(
      * be called only for NativeAndroidProject and the result will be the full model information.
      */
     override fun buildAll(modelName: String, project: Project): Any? {
-        return buildFullNativeAndroidProject(project)
+        IssueReporterLoggingEnvironment(issueReporter).use {
+            return buildFullNativeAndroidProject(project)
+        }
     }
 
     /**
@@ -87,18 +102,20 @@ class NativeModelBuilder(
         parameter: ModelBuilderParameter,
         project: Project
     ): Any? {
-        // Prevents parameter interface evolution from breaking the model builder.
-        val modelBuilderParameter = FailsafeModelBuilderParameter(parameter)
-        return when (modelName) {
-            nativeAndroidProjectClass ->
-                if (modelBuilderParameter.shouldBuildVariant) buildFullNativeAndroidProject(project)
-                else buildNativeAndroidProjectWithJustVariantInfos(project)
-            nativeVariantAbiClass -> buildNativeVariantAbi(
-                project,
-                modelBuilderParameter.variantName!!,
-                modelBuilderParameter.abiName!!
-            )
-            else -> throw RuntimeException("Unexpected model $modelName")
+        IssueReporterLoggingEnvironment(issueReporter).use {
+            // Prevents parameter interface evolution from breaking the model builder.
+            val modelBuilderParameter = FailsafeModelBuilderParameter(parameter)
+            return when (modelName) {
+                nativeAndroidProjectClass ->
+                    if (modelBuilderParameter.shouldBuildVariant) buildFullNativeAndroidProject(project)
+                    else buildNativeAndroidProjectWithJustVariantInfos(project)
+                nativeVariantAbiClass -> buildNativeVariantAbi(
+                    project,
+                    modelBuilderParameter.variantName!!,
+                    modelBuilderParameter.abiName!!
+                )
+                else -> throw RuntimeException("Unexpected model $modelName")
+            }
         }
     }
 
@@ -128,6 +145,9 @@ class NativeModelBuilder(
         builder.addBuildSystem(generator.variant.module.buildSystem.tag)
         val abis = generator.abis.map { it.abi.tag }
         val buildFolders = generator.abis.map { it.jsonFile.parentFile }
+        // We don't have the full set of build files at this point.
+        // Add the root one that we do know.
+        builder.addBuildFile(generator.variant.module.makeFile)
         builder.addVariantInfo(
             generator.variant.variantName,
             abis,
@@ -147,7 +167,7 @@ class NativeModelBuilder(
         generators
             .filter { generator -> generator.variant.variantName == variantName }
             .onEach { generator ->
-                generator.getMetadataGenerators(ideRefreshExternalNativeModel, abiName).forEach {
+                generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel, abiName).forEach {
                     it.call()
                 }
                 buildInexpensiveNativeAndroidProjectInformation(builder, generator)
@@ -188,14 +208,22 @@ class NativeModelBuilder(
                     // When refreshExternalNativeModel() is true it will also
                     // force update all JSONs.
                     buildSteps.addAll(
-                        generator.getMetadataGenerators(ideRefreshExternalNativeModel)
+                        generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel)
                     )
                 }
             }
             try {
                 // Need to get each result even if we're not using the output because that's how we
                 // propagate exceptions.
-                nativeJsonGenExecutor.invokeAll(buildSteps).map { it.get() }
+                nativeJsonGenExecutor.invokeAll(
+                    buildSteps.map { step ->
+                        Callable {
+                            IssueReporterLoggingEnvironment(issueReporter).use {
+                                step.call()
+                            }
+                        }
+                    }
+                ).map { it.get() }
             } catch (e: InterruptedException) {
                 throw RuntimeException(
                     "Thread was interrupted while native build JSON generation was in progress.",
@@ -205,7 +233,7 @@ class NativeModelBuilder(
 
         } else {
             for (generator in generators) {
-                generator.getMetadataGenerators(ideRefreshExternalNativeModel).forEach {
+                generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel).forEach {
                     it.call()
                 }
             }

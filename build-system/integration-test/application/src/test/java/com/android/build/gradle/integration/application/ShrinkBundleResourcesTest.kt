@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
@@ -36,10 +37,20 @@ import org.junit.Test
 
 class ShrinkBundleResourcesTest {
     @get:Rule
-    var project = builder().fromTestProject("shrink").create()
+    var project = builder().fromTestProject("shrink")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515, http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
+        .create()
 
     @get:Rule
-    var projectWithDfms = builder().fromTestProject("shrinkDynamicFeatureModules").create()
+    var projectWithDfms = builder().fromTestProject("shrinkDynamicFeatureModules")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515, http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
+        .create()
 
     @Test
     fun `shrink resources in single module bundles`() {

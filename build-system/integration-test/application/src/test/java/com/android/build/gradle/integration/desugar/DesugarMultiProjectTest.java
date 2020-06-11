@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -263,12 +264,18 @@ public class DesugarMultiProjectTest {
         boolean enableD8Desugaring =
                 tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS
                         || tool == Tool.D8_WITHOUT_ARTIFACT_TRANSFORMS;
+        // https://github.com/gradle/gradle/issues/13200
+        BaseGradleExecutor.ConfigurationCaching configurationCaching =
+                (tool != Tool.R8)
+                        ? BaseGradleExecutor.ConfigurationCaching.OFF
+                        : BaseGradleExecutor.ConfigurationCaching.ON;
         return project.executor()
                 .with(BooleanOption.ENABLE_D8_DESUGARING, enableD8Desugaring)
                 .with(OptionalBooleanOption.ENABLE_R8, tool == Tool.R8)
                 .with(BooleanOption.ENABLE_R8_DESUGARING, tool == Tool.R8)
                 .with(
                         BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
-                        tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS);
+                        tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS)
+                .withConfigurationCaching(configurationCaching);
     }
 }

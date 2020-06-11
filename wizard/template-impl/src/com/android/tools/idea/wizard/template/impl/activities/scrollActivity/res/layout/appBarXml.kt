@@ -24,8 +24,7 @@ fun appBarXml(
   simpleLayoutName: String,
   themeNameAppBarOverlay: String,
   themeNamePopupOverlay: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean) =
+  useAndroidX: Boolean) =
   """<?xml version="1.0" encoding="utf-8"?>
 <${getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -36,14 +35,14 @@ fun appBarXml(
     android:fitsSystemWindows="true"
     tools:context="${packageName}.${activityClass}">
 
-    <${getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}
         android:id="@+id/app_bar"
         android:fitsSystemWindows="true"
         android:layout_height="@dimen/app_bar_height"
         android:layout_width="match_parent"
         android:theme="@style/${themeNameAppBarOverlay}">
 
-        <${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useMaterial2)}
+        <${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)}
             android:id="@+id/toolbar_layout"
             android:fitsSystemWindows="true"
             android:layout_width="match_parent"
@@ -59,12 +58,12 @@ fun appBarXml(
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/${themeNamePopupOverlay}" />
 
-        </${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useMaterial2)}>
-    </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useMaterial2)}>
+        </${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)}>
+    </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}>
 
     <include layout="@layout/${simpleLayoutName}" />
 
-    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)}
+    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

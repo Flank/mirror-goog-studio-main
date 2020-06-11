@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -42,7 +43,12 @@ class ProjectNoJavaSourcesTest(testProject: MinimalSubProject) {
             android.buildFeatures.buildConfig = false
         """.trimIndent()
         )
-    ).create()
+    ).also {
+        if (testProject.plugin == "com.android.application") {
+            // http://b/149978740 and http://b/146208910
+            it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        }
+    }.create()
 
     @Test
     fun testBuild() {

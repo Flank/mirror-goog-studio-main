@@ -22,8 +22,6 @@ import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock

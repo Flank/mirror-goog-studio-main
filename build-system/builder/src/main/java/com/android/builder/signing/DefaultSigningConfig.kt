@@ -70,6 +70,9 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
     var isV2SigningConfigured = false
         private set
 
+    var enableV3Signing: Boolean? = null
+    var enableV4Signing: Boolean? = null
+
     override val isSigningReady: Boolean
         get() = storeFile != null &&
                 storePassword != null &&

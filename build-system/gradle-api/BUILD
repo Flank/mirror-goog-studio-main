@@ -16,6 +16,7 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
     resources = [":resources"],

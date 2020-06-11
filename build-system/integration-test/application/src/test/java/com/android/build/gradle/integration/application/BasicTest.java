@@ -22,7 +22,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import com.android.AndroidProjectTypes;
 import com.android.build.api.variant.VariantOutputConfiguration;
@@ -30,6 +29,7 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -61,9 +61,12 @@ import org.junit.experimental.categories.Category;
 @Category(SmokeTests.class)
 public class BasicTest {
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("basic")
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("basic")
+                    // http://b/149978740 and http://b/146208910
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     public static AndroidProject model;
 

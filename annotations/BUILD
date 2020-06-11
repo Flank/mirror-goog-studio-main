@@ -6,6 +6,7 @@ iml_module(
     name = "studio.android.sdktools.android-annotations",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.android-annotations.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     visibility = ["//visibility:public"],
     deps = ["//tools/idea/.idea/libraries:kotlin-stdlib-jdk8"],
 )

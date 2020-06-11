@@ -11,6 +11,7 @@ iml_module(
         "src/main/java/com/android/SdkConstants.java",
     ],
     iml_files = ["android.sdktools.common.iml"],
+    lint_baseline = "lint_baseline.xml",
     res_zips = [":extra_res"],
     resources = ["src/main/resources"],
     visibility = ["//visibility:public"],

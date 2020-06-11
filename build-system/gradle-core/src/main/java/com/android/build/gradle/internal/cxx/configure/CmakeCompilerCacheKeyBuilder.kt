@@ -25,15 +25,15 @@ import com.android.build.gradle.internal.cxx.logging.warnln
 import java.io.File
 
 /**
- * Convert a CMake command-line into a compiler hash key. Removes black-listed
+ * Convert a CMake command-line into a compiler hash key. Removes ignored
  * flags and keeps unrecognized flags in case they are relevant to compiler
  * settings.
  */
 fun makeCmakeCompilerCacheKey(commandLine : List<CommandLineArgument>) : CmakeCompilerCacheKey? {
     val (args, ndkInstallationFolder) = commandLine
         .asSequence()
-        .removeBlackListedProperties()
-        .removeBlacklistedFlags()
+        .removeIgnoredProperties()
+        .removeIgnoredFlags()
         .findAndroidNdk()
     if (ndkInstallationFolder == null) {
         warnln("$ANDROID_NDK property was not defined")
@@ -49,13 +49,13 @@ fun makeCmakeCompilerCacheKey(commandLine : List<CommandLineArgument>) : CmakeCo
 /**
  * Remove properties that shouldn't affect the outcome of the compiler settings.
  */
-private fun Sequence<CommandLineArgument>.removeBlackListedProperties() : Sequence<CommandLineArgument> {
+private fun Sequence<CommandLineArgument>.removeIgnoredProperties() : Sequence<CommandLineArgument> {
     return asSequence()
         .filter { argument ->
             when (argument) {
                 is DefineProperty -> {
                     when {
-                        CMAKE_COMPILER_CHECK_CACHE_KEY_BLACKLIST_STRINGS
+                        CMAKE_COMPILER_CHECK_CACHE_KEY_IGNORED_STRING_LIST
                             .contains(argument.propertyName) -> false
                         else -> true
                     }
@@ -68,7 +68,7 @@ private fun Sequence<CommandLineArgument>.removeBlackListedProperties() : Sequen
 /**
  * Remove flags that shouldn't affect the outcome of the compiler settings
  */
-private fun Sequence<CommandLineArgument>.removeBlacklistedFlags() : Sequence<CommandLineArgument> {
+private fun Sequence<CommandLineArgument>.removeIgnoredFlags() : Sequence<CommandLineArgument> {
     return asSequence()
         .filter { argument ->
             when (argument) {

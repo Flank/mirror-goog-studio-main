@@ -53,7 +53,7 @@ public class AspectsLoggerTest {
         List<String> content = Files.readAllLines(log.toPath());
         assertTrue(content.isEmpty());
 
-        // Log file set. Method whitelisted.
+        // Log file set. Method ignored.
         AspectsLogger.aspectsAgentLog = log;
         String baseline = "Test2.blockingMethod|sun.reflect.NativeMethodAccessorImpl.invoke0";
         Baseline.getInstance(true).parse(new ByteArrayInputStream(baseline.getBytes()));
@@ -61,7 +61,7 @@ public class AspectsLoggerTest {
         content = Files.readAllLines(log.toPath());
         assertTrue(content.isEmpty());
 
-        // Log file set. Method not whitelisted.
+        // Log file set. Method not ignored.
         Baseline.getInstance(true); // Empty baseline
         callMethod(instance, "blockingMethod");
         content = Files.readAllLines(log.toPath());

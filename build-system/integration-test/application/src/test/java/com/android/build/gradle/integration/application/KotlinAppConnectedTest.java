@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,7 +27,11 @@ import org.junit.experimental.categories.Category;
 public class KotlinAppConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("kotlinApp").create();
+            GradleTestProject.builder()
+                    .fromTestProject("kotlinApp")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Rule public Adb adb = new Adb();
 

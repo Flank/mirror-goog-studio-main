@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -42,7 +43,16 @@ import org.junit.Test;
 public class AppWithProvidedLibTest {
 
     @ClassRule
-    public static GradleTestProject project = builder().fromTestProject("dynamicApp").create();
+    public static GradleTestProject project =
+            builder()
+                    .fromTestProject("dynamicApp")
+                    .withConfigurationCaching(
+                            BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+                    .setTargetGradleVersion("6.6-20200609220026+0000")
+                    // b/157470515
+                    .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
+                    .create();
+
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass

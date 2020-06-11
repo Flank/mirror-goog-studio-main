@@ -168,7 +168,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     /** Add an additional build argument. */
     public final T withArgument(String argument) {
-        if (argument.startsWith("-Pandroid")) {
+        if (argument.startsWith("-Pandroid")
+                && !argument.contains("testInstrumentationRunnerArguments")) {
             throw new IllegalArgumentException("Use with(Option, Value) instead.");
         }
         arguments.add(argument);
@@ -231,7 +232,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (failOnWarning) {
             arguments.add("--warning-mode=fail");
         }
-        if (configurationCaching != ConfigurationCaching.NONE) {
+
+        if (configurationCaching == ConfigurationCaching.WARN_GRADLE_6_6) {
+            arguments.add("--configuration-cache");
+            arguments.add("--configuration-cache-problems=warn");
+        } else if (configurationCaching != ConfigurationCaching.NONE) {
             arguments.add(
                     "--configuration-cache=" + configurationCaching.name().toLowerCase(Locale.US));
         }
@@ -377,6 +382,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         OFF,
         WARN,
         NONE,
+        // Make a default once we migrate to Gradle 6.6
+        WARN_GRADLE_6_6,
     }
 
     @Nullable

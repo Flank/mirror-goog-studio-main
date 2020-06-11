@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.androidThingsActivity.src.app_package.simpleActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.androidThingsActivity.src.app_package.simpleActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleLayout
 
 fun RecipeExecutor.androidThingsActivityRecipe(
@@ -35,7 +36,6 @@ fun RecipeExecutor.androidThingsActivityRecipe(
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
@@ -48,8 +48,8 @@ fun RecipeExecutor.androidThingsActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   val simpleActivity = when (projectData.language) {
-    Language.Java -> simpleActivityJava(activityClass, generateLayout, layoutName, packageName, useMaterial2)
-    Language.Kotlin -> simpleActivityKt(activityClass, generateLayout, layoutName, packageName, useMaterial2)
+    Language.Java -> simpleActivityJava(activityClass, generateLayout, layoutName, packageName, useAndroidX)
+    Language.Kotlin -> simpleActivityKt(activityClass, generateLayout, layoutName, packageName, useAndroidX)
   }
   save(simpleActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 

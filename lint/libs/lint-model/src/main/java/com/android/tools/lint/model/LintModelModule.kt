@@ -63,9 +63,6 @@ interface LintModelModule {
      */
     val lintRuleJars: List<File>
 
-    /** Build features in effect */
-    val buildFeatures: LintModelBuildFeatures
-
     /**
      * The resource prefix to use, if any. This is an optional prefix which can be set and
      * which is used by the defaults to automatically choose new resources with a certain prefix,
@@ -160,7 +157,6 @@ class DefaultLintModelModule(
     override val buildFolder: File,
     override val lintOptions: LintModelLintOptions,
     override val lintRuleJars: List<File>,
-    override val buildFeatures: LintModelBuildFeatures,
     override val resourcePrefix: String?,
     override val dynamicFeatures: Collection<String>,
     override val bootClassPath: List<File>,

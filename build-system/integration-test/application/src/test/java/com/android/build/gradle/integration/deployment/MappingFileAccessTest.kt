@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.deployment
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
@@ -77,7 +78,10 @@ class MappingFileAccessTest {
     @Test
     fun assembleTest() {
 
-        val buildResult = project.executor().run("clean", "assemble")
+        // b/149978740
+        val buildResult =
+            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "assemble")
         assertThat(buildResult.tasks).contains(":helloRelease")
         assertThat(buildResult.tasks).doesNotContain(":helloDebug")
 
@@ -89,8 +93,10 @@ class MappingFileAccessTest {
 
     @Test
     fun bundleTest() {
-
-        val buildResult = project.executor().run("clean", "bundle")
+        // b/149978740
+        val buildResult =
+            project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("clean", "bundle")
         assertThat(buildResult.tasks).contains(":helloRelease")
         assertThat(buildResult.tasks).doesNotContain(":helloDebug")
 

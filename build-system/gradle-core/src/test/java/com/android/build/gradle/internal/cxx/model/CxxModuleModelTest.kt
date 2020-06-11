@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
-import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
@@ -53,7 +52,6 @@ private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
     AbiInfo::class.java,
     BuildSettingsConfiguration::class.java,
     CMakeSettingsConfiguration::class.java,
-    CxxServiceRegistry::class.java,
     File::class.java,
     List::class.java,
     Map::class.java,
@@ -264,8 +262,7 @@ class CxxModuleModelTest {
     }
 
     private fun checkStaticMethod(method: Method) {
-        val modifiers = Modifier.toString(method.modifiers)
-        when(modifiers) {
+        when(Modifier.toString(method.modifiers)) {
             "public static final",
             "public static" -> {}
             else -> {

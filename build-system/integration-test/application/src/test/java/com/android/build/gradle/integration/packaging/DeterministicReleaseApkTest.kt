@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.packaging
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -46,6 +47,8 @@ class DeterministicReleaseApkTest(apkCreatorType: ApkCreatorType) {
     var project =
         GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+            // http://b/149978740
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .setApkCreatorType(apkCreatorType)
             .create()
 

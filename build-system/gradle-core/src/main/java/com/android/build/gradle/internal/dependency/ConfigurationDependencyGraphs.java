@@ -106,6 +106,7 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
         for (File file : files) {
             Library javaLib =
                     new JavaLibraryImpl(
+                            //noinspection NoInterning
                             mavenCoordinatesCache
                                     .get()
                                     .getMavenCoordForLocalFile(file)

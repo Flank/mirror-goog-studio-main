@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
@@ -41,6 +42,8 @@ public class CompositeBuildTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .withName("app")
+                    // composite builds are not supported
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withDependencyChecker(false)
                     .create();
 
@@ -48,6 +51,8 @@ public class CompositeBuildTest {
     public GradleTestProject lib =
             GradleTestProject.builder()
                     .fromTestApp(new EmptyAndroidTestApp())
+                    // composite builds are not supported
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withName("lib")
                     .create();
 
@@ -62,6 +67,8 @@ public class CompositeBuildTest {
                                             "androidLib2",
                                             new EmptyAndroidTestApp("com.example.androidLib2"))))
                     .withName("androidLib")
+                    // composite builds are not supported
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withDependencyChecker(false)
                     .create();
 

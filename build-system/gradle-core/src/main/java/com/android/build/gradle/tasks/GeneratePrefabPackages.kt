@@ -18,24 +18,19 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
 import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.soFolder
-import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.services.javaexec
+import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
-import org.gradle.api.Action
-import org.gradle.process.ExecResult
-import org.gradle.process.JavaExecSpec
+import org.gradle.process.ExecOperations
 import java.io.File
 
 fun generatePrefabPackages(
-    moduleModel: CxxModuleModel,
-    abiModel: CxxAbiModel,
-    packages: List<File>
-) {
-    val packagePaths = packages.map { it.path }
+    ops: ExecOperations,
+    abiModel: CxxAbiModel) {
+    val packagePaths =
+        abiModel.variant.prefabPackageDirectoryList.map { it.path }
 
     val buildSystem = when (abiModel.variant.module.buildSystem) {
         NativeBuildSystem.NDK_BUILD -> "ndk-build"
@@ -69,9 +64,9 @@ fun generatePrefabPackages(
         .addArgs("--output", abiModel.prefabFolder.resolve("prefab").toString())
         .addArgs(packagePaths)
 
-    moduleModel.createProcessOutputJunction(
+    createProcessOutputJunction(
         abiModel.soFolder,
         "prefab_${buildSystem}_${abiModel.abi.tag}",
         builder, "prefab"
-    ).javaProcess().logStderrToInfo().execute(moduleModel.project.javaexec)
+    ).javaProcess().logStderrToInfo().execute(ops::javaexec)
 }

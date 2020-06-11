@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.application.MultiDexTest.MainDexListTool;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import org.junit.Ignore;
@@ -32,7 +33,12 @@ import org.junit.runners.Parameterized;
 public class MultiDexConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("multiDex").withHeap("2048M").create();
+            GradleTestProject.builder()
+                    .fromTestProject("multiDex")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withHeap("2048M")
+                    .create();
 
     @Rule public Adb adb = new Adb();
 

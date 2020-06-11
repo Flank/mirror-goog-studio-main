@@ -24,6 +24,7 @@ package com.android.tools.agent.layoutinspector.testing
 data class ComposeViewResult(
     val csvLineNumber: Int,
     val className: String,
+    val drawId: Long,
     val fileName: String,
     val lineNumber: Int,
     val invocation: String,

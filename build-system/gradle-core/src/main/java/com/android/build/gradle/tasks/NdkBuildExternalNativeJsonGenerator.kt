@@ -17,7 +17,6 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
@@ -27,16 +26,14 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.statsBuilder
-import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.services.exec
-import com.android.ide.common.process.ProcessException
+import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.collect.Lists
-import com.google.common.collect.Maps
 import com.google.gson.GsonBuilder
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -136,23 +133,16 @@ internal class NdkBuildExternalNativeJsonGenerator(
         return builder
     }
 
-    @Throws(ProcessException::class, IOException::class)
-    override fun executeProcess(abi: CxxAbiModel): String {
-        return abi.variant.module.createProcessOutputJunction(
+    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String {
+        return createProcessOutputJunction(
             abi.soFolder,
             "android_gradle_generate_ndk_build_json_" + abi.abi.tag,
             getProcessBuilder(abi),
             ""
         )
             .logStderrToInfo()
-            .executeAndReturnStdoutString(abi.variant.module.project.exec)
+            .executeAndReturnStdoutString(ops::exec)
     }
-
-
-    override fun getStlSharedObjectFiles(): Map<Abi, File> {
-        return Maps.newHashMap()
-    }// Attempt to shorten ndkFolder which may have segments of "path\.."
-    // File#getAbsolutePath doesn't do this.
 
     /** Get the path of the ndk-build script.  */
     private val ndkBuild: String
@@ -161,7 +151,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
             if (isWindows) {
                 tool += ".cmd"
             }
-            val toolFile = File(ndkFolder, tool)
+            val toolFile = File(variant.module.ndkFolder.path, tool)
             return try {
                 // Attempt to shorten ndkFolder which may have segments of "path\.."
                 // File#getAbsolutePath doesn't do this.
@@ -182,9 +172,9 @@ internal class NdkBuildExternalNativeJsonGenerator(
      * If the make file is a directory then get the implied file, otherwise return the path.
      */
     private val makeFile: File
-        get() = if (makefile.isDirectory) {
-            File(makefile, "Android.mk")
-        } else makefile
+        get() = if (variant.module.makeFile.isDirectory) {
+            File(variant.module.makeFile, "Android.mk")
+        } else variant.module.makeFile
 
     /** Get the base list of arguments for invoking ndk-build.  */
     private fun getBaseArgs(
@@ -217,7 +207,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // aside from the current.
         result.add("APP_ABI=" + abi.abi.tag)
         result.add("NDK_ALL_ABIS=" + abi.abi.tag)
-        if (isDebuggable) {
+        if (variant.isDebuggableEnabled) {
             result.add("NDK_DEBUG=1")
         } else {
             result.add("NDK_DEBUG=0")
@@ -226,7 +216,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
 
         // getObjFolder is set to the "local" subfolder in the user specified directory, therefore,
         // NDK_OUT should be set to getObjFolder().getParent() instead of getObjFolder().
-        var ndkOut = File(objFolder).parent
+        var ndkOut = File(variant.objFolder.path).parent
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             // Due to b.android.com/219225, NDK_OUT on Windows requires forward slashes.
             // ndk-build.cmd is supposed to escape the back-slashes but it doesn't happen.
@@ -236,20 +226,20 @@ internal class NdkBuildExternalNativeJsonGenerator(
             ndkOut = ndkOut.replace('\\', '/')
         }
         result.add("NDK_OUT=$ndkOut")
-        result.add("NDK_LIBS_OUT=$soFolder")
+        result.add("NDK_LIBS_OUT=${variant.soFolder.path}")
 
         // Related to issuetracker.google.com/69110338. Semantics of APP_CFLAGS and APP_CPPFLAGS
         // is that the flag(s) are unquoted. User may place quotes if it is appropriate for the
         // target compiler. User in this case is build.gradle author of
         // externalNativeBuild.ndkBuild.cppFlags or the author of Android.mk.
-        for (flag in getcFlags()) {
+        for (flag in variant.cFlagsList) {
             result.add(String.format("APP_CFLAGS+=%s", flag))
         }
-        for (flag in cppFlags) {
+        for (flag in variant.cppFlagsList) {
             result.add(String.format("APP_CPPFLAGS+=%s", flag))
         }
         var skipNextArgument = false
-        for (argument in buildArguments) {
+        for (argument in variant.buildSystemArgumentList) {
             // Jobs flag is removed for clean command because Make has issues running
             // cleans in parallel. See b.android.com/214558
             if (removeJobsFlag && argument == "-j") {
@@ -292,16 +282,16 @@ internal class NdkBuildExternalNativeJsonGenerator(
         variant.statsBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD
 
         // Do some basic sync time checks.
-        if (makefile.isDirectory) {
+        if (this.variant.module.makeFile.isDirectory) {
             errorln(
                 "Gradle project ndkBuild.path %s is a folder. "
                         + "Only files (like Android.mk) are allowed.",
-                makefile
+                this.variant.module.makeFile
             )
-        } else if (!makefile.exists()) {
+        } else if (!this.variant.module.makeFile.exists()) {
             errorln(
                 "Gradle project ndkBuild.path is %s but that file doesn't exist",
-                makefile
+                this.variant.module.makeFile
             )
         }
     }

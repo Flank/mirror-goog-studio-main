@@ -17,7 +17,6 @@ package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbHelper;
-import com.android.ddmlib.AndroidDebugBridge;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -67,17 +66,5 @@ public class AdbSocketUtils {
 
         // we receive something we can't read. It's better to reset the connection at this point.
         throw new IOException("Unable to read length");
-    }
-
-    /**
-     * Attempts to connect to the debug bridge server.
-     *
-     * @return a connect socket if success
-     * @throws IOException should errors occur when opening the connection
-     */
-    static SocketChannel openAdbConnection() throws IOException {
-        SocketChannel adbChannel = SocketChannel.open(AndroidDebugBridge.getSocketAddress());
-        adbChannel.socket().setTcpNoDelay(true);
-        return adbChannel;
     }
 }

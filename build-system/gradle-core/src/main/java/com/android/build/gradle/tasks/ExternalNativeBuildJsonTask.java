@@ -27,27 +27,28 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.DefaultIssueReporter;
-import com.android.ide.common.process.ProcessException;
-import java.io.IOException;
 import java.util.concurrent.Callable;
 import javax.inject.Inject;
 import kotlin.Unit;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.process.ExecOperations;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
 
     private Provider<CxxMetadataGenerator> generator;
 
+    @NonNull private final ExecOperations ops;
+
     @Inject
-    public ExternalNativeBuildJsonTask() {
+    public ExternalNativeBuildJsonTask(ExecOperations ops) {
         super("Generate json model is always run.");
+        this.ops = ops;
     }
 
     @InputFiles
@@ -56,21 +57,17 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
     public abstract DirectoryProperty getRenderscriptSources();
 
     @Override
-    protected void doTaskAction() throws ProcessException, IOException {
+    protected void doTaskAction() {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(
                         new DefaultIssueReporter(new LoggerWrapper(getLogger())))) {
-            for (Callable<Unit> future : generator.get().getMetadataGenerators(false, null)) {
+
+            for (Callable<Unit> future : generator.get().getMetadataGenerators(ops, false, null)) {
                 future.call();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Nested
-    public Provider<CxxMetadataGenerator> getExternalNativeJsonGenerator() {
-        return generator;
     }
 
     @NonNull

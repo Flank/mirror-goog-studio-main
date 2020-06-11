@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifestStrings
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXml
@@ -59,7 +60,6 @@ fun RecipeExecutor.loginActivityRecipe(
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
@@ -68,10 +68,11 @@ fun RecipeExecutor.loginActivityRecipe(
   addDependency("com.android.support:support-annotations:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addLifecycleDependencies(useAndroidX)
+  addMaterialDependency(useAndroidX)
 
   val baseFeatureResOut = moduleData.baseFeature?.resDir
   val simpleName = activityToLayout(activityClass)
-  generateThemeStyles(moduleData.themesData.main, useMaterial2, baseFeatureResOut ?: resOut)
+  generateThemeStyles(moduleData.themesData.main, useAndroidX, baseFeatureResOut ?: resOut)
   generateManifestStrings(activityClass, activityClass, baseFeatureResOut ?: resOut, moduleData.isNewModule, generateActivityTitle = true)
   mergeXml(androidManifestXml(activityClass, simpleName,
                               isLauncher = moduleData.isNewModule, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNewModule),

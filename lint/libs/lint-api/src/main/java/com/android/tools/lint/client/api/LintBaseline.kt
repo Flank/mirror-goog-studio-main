@@ -51,7 +51,7 @@ import java.util.ArrayList
 
 /**
  * A lint baseline is a collection of warnings for a project that have been
- * obtained from a previous run of lint. These warnings are them exempt from
+ * obtained from a previous run of lint. These warnings are then exempt from
  * reporting. This lets you set a "baseline" with a known set of issues that you
  * haven't attempted to fix yet, but then be alerted whenever new issues crop
  * up.

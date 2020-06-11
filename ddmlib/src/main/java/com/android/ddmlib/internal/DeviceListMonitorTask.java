@@ -75,14 +75,9 @@ public class DeviceListMonitorTask implements Runnable {
             if (mAdbConnection == null) {
                 Log.d("DeviceMonitor", "Opening adb connection");
                 try {
-                    mAdbConnection = AdbSocketUtils.openAdbConnection();
+                    mAdbConnection = AndroidDebugBridge.openConnection();
                 } catch (IOException exception) {
-                    Log.d(
-                            "DeviceMonitor",
-                            "Unable to open connection to ADB server on "
-                                    + AndroidDebugBridge.getSocketAddress()
-                                    + ", due to: "
-                                    + exception);
+                    Log.d("DeviceMonitor", "Unable to open connection to ADB server: " + exception);
                 }
                 if (mAdbConnection == null) {
                     mConnectionAttempt++;

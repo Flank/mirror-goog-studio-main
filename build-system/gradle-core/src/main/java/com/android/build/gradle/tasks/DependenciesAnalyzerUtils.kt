@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.ide.common.resources.usage.getResourcesFromDirectory
 import com.android.utils.FileUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
@@ -147,51 +148,97 @@ class ClassFinder(private val externalArtifactCollection : ArtifactCollection) {
         classToDependency.filterValues { it == dependencyId }.keys
 }
 
-class ResourcesFinder(private val externalArtifactCollection: ArtifactCollection) {
+data class ResourceDependencyHolder(
+        val resourceName: String,
+        var isUsedbyAppModule: Boolean,
+        val dependencyUsages: MutableSet<String> = mutableSetOf()
+)
 
-    private val resourceToDependency: Map<String, List<String>> by lazy {
+class ResourcesFinder(
+        private val resourceSets: List<File>,
+        private val externalArtifactCollection: ArtifactCollection) {
+
+    private val resourceToDependency: Map<String, ResourceDependencyHolder> by lazy {
         getMapByFileName("resources_symbols${SdkConstants.DOT_TXT}")
     }
 
-    private fun getMapByFileName(fileName: String): Map<String, List<String>> {
-        val map = mutableMapOf<String, List<String>>()
+    private fun getMapByFileName(fileName: String): Map<String, ResourceDependencyHolder> {
+        val resourceToDependency = mutableMapOf<String, ResourceDependencyHolder>()
 
+        // Extract resources from application modules.
+        val usedResources = resourceSets.flatMap(this::parseResourceSourceSet)
+
+        usedResources.forEach {
+            resourceToDependency[it] = ResourceDependencyHolder(it, true)
+        }
+
+        // Add library AAR resources to map.
         externalArtifactCollection
                 .forEach { artifact ->
                     val resourceSymbols = FileUtils.join(artifact.file, fileName).readLines()
-                    resourceSymbols.forEach { artifactFileLine ->
-                        val resDeps = map.getOrDefault(artifactFileLine, emptyList())
-                        map[artifactFileLine] =
-                                resDeps + artifact.id.componentIdentifier.displayName
+                    resourceSymbols.forEach { resourceName ->
+                        // Get existing ResourceDependencyHolder or create a new instance. Then
+                        // add the current dependency to dependency usages.
+                        val resDeps = resourceToDependency.getOrDefault(resourceName,
+                                ResourceDependencyHolder(resourceName, false)).apply {
+                            dependencyUsages += artifact.id.componentIdentifier.displayName
+                        }
+                        resourceToDependency[resourceName] = resDeps
                     }
                 }
-        return map
+
+        return resourceToDependency
     }
 
     /**
      * Returns a list of dependencies which contain the resource, otherwise returns an empty list.
      */
-    fun find(resourceId: String): List<String> =
-            resourceToDependency[resourceId] ?: emptyList()
+    fun find(resourceId: String): Set<String> =
+            resourceToDependency[resourceId]?.dependencyUsages ?: emptySet()
 
     /**
      * Returns a list of resources which are declared or referenced by the dependency.
      */
-    fun findResourcesInDependency(dependencyId: String) =
-            resourceToDependency.filterValues { it.contains(dependencyId) }.keys
+    fun findResourcesInDependency(dependencyId: String): Set<ResourceDependencyHolder> = resourceToDependency
+            .filterValues { it.dependencyUsages.contains(dependencyId) }
+            .values
+            .toSet()
 
     /**
      * Returns a list of dependencies which contains an identical resource in another dependency.
      */
-    fun findUsedDependencies(): List<String> =
-            resourceToDependency.filter { it.value.size > 1 }.flatMap { it.value }
+    fun findUsedDependencies(): Set<String> = resourceToDependency
+            .filter {
+                it.value.isUsedbyAppModule ||
+                        checkDependenciesForAppUsages(it.value.dependencyUsages)
+            }
+            .flatMap { it.value.dependencyUsages }
+            .toSet()
 
     /**
      * Returns a list of dependencies which do not contain an identical resource in another
      * dependency.
      */
-    fun findUnUsedDependencies(): List<String> =
-            resourceToDependency.flatMap { it.value }.minus(findUsedDependencies())
+    fun findUnUsedDependencies(): Set<String> = externalArtifactCollection
+            .map { it.id.componentIdentifier.displayName }
+            .minus(findUsedDependencies())
+            .toSet()
+    /**
+     * Gets a list of declared and referenced resources from all files in the given resource set
+     * directory.
+     */
+    private fun parseResourceSourceSet(resourceSourceSet : File) : List<String> =
+            getResourcesFromDirectory(resourceSourceSet)
+
+    /**
+     * Check if a collection of dependencies have a resource used by an app module.
+     */
+    private fun checkDependenciesForAppUsages(dependencies: Collection<String>) = dependencies
+            .flatMap { findResourcesInDependency(it) }
+            .asSequence()
+            .filter { it.isUsedbyAppModule }
+            .any()
+
 }
 
 data class DependenciesUsageReport (

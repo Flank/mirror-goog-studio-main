@@ -147,6 +147,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
      * protected-broadcast entries can be defined elsewhere, but should address
      * most situations.
      */
+    @SuppressWarnings("WrongTerminology") // external constants: can't rename
     @VisibleForTesting
     static boolean isProtectedBroadcast(@NonNull String actionName) {
         switch (actionName) {

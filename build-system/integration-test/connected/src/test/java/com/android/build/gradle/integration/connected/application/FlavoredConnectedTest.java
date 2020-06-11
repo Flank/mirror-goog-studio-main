@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
@@ -30,7 +31,11 @@ public class FlavoredConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("flavored").create();
+            GradleTestProject.builder()
+                    .fromTestProject("flavored")
+                    // b/146163513
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .create();
 
     @Test
     public void connectedCheck() throws Exception {

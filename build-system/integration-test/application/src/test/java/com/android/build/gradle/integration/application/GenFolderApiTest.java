@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -142,6 +143,8 @@ public class GenFolderApiTest {
     @Test
     public void checkAddingAndRemovingGeneratingTasks() throws Exception {
         project.executor()
+                // http://b/155766476
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .withArgument("-P" + "inject_enable_generate_values_res=false")
                 .run("assembleDebug");
 
@@ -153,6 +156,8 @@ public class GenFolderApiTest {
         }
 
         project.executor()
+                // http://b/155766476
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .withArgument("-P" + "inject_enable_generate_values_res=true")
                 .run("assembleDebug");
         try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {

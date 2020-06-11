@@ -8,6 +8,7 @@ iml_module(
     name = "studio.android.sdktools.sdk-common",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdk-common.iml"],
+    lint_baseline = "lint_baseline.xml",
     resources = ["src/main/resources"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],

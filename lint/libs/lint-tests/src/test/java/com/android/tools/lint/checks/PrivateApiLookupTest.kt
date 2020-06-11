@@ -77,21 +77,21 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
 
     fun testMethodEntries() {
         assertEquals(
-            Restriction.GREY_MAX_O,
+            Restriction.MAYBE_MAX_O,
             db.getMethodRestriction(
                 "android/app/Activity",
                 "dispatchPictureInPictureModeChanged",
                 "(ZLandroid/content/res/Configuration;)")
         )
         assertEquals(
-            Restriction.GREY_MAX_P,
+            Restriction.MAYBE_MAX_P,
             db.getMethodRestriction(
                 "android.animation.LayoutTransition",
                 "cancel",
                 "()")
         )
         assertEquals(
-            Restriction.BLACK,
+            Restriction.DENY,
             db.getMethodRestriction(
                 "android/app/Notification",
                 "getContextualActions",
@@ -108,19 +108,19 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
 
     fun testFieldEntries() {
         assertEquals(
-            Restriction.BLACK,
+            Restriction.DENY,
             db.getFieldRestriction(
                 "android/Manifest\$permission",
                 "INSTALL_EXISTING_PACKAGES")
         )
         assertEquals(
-            Restriction.GREY,
+            Restriction.MAYBE,
             db.getFieldRestriction(
                 "android/content/ContentProviderOperation",
                 "mUri")
         )
         assertEquals(
-            Restriction.GREY_MAX_P,
+            Restriction.MAYBE_MAX_P,
             db.getFieldRestriction(
                 "android.animation.ValueAnimator",
                 "sDurationScale")
@@ -135,7 +135,7 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
         logBuffer.setLength(0)
         lookup = PrivateApiLookup.Companion.get(LookupTestClient())!!
         assertEquals(
-            Restriction.BLACK,
+            Restriction.DENY,
             lookup.getFieldRestriction("android/Manifest\$permission", "INSTALL_EXISTING_PACKAGES")
         )
         assertEquals("", logBuffer.toString()) // No warnings
@@ -146,7 +146,7 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
         logBuffer.setLength(0)
         lookup = PrivateApiLookup.Companion.get(LookupTestClient())!!
         assertEquals(
-            Restriction.BLACK,
+            Restriction.DENY,
             lookup.getFieldRestriction("android/Manifest\$permission", "INSTALL_EXISTING_PACKAGES")
         )
         assertEquals("", logBuffer.toString()) // No warnings
@@ -185,7 +185,7 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
         raf.close()
         lookup = PrivateApiLookup.Companion.get(LookupTestClient())!!
         assertEquals(
-            Restriction.BLACK,
+            Restriction.DENY,
             lookup.getFieldRestriction("android/Manifest\$permission", "INSTALL_EXISTING_PACKAGES")
         )
         assertEquals("", logBuffer.toString()) // No warnings

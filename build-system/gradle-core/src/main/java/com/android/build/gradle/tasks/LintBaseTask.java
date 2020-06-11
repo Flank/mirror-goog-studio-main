@@ -45,7 +45,8 @@ import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask;
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.DefaultIssueReporter;
@@ -64,7 +65,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -85,7 +85,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-public abstract class LintBaseTask extends DefaultTask {
+public abstract class LintBaseTask extends NonIncrementalGlobalTask {
     public static final String LINT_CLASS_PATH = "lintClassPath";
 
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
@@ -415,12 +415,10 @@ public abstract class LintBaseTask extends DefaultTask {
     }
 
     public abstract static class BaseCreationAction<T extends LintBaseTask>
-            extends TaskCreationAction<T> {
-
-        @NonNull protected final GlobalScope globalScope;
+            extends GlobalTaskCreationAction<T> {
 
         public BaseCreationAction(@NonNull GlobalScope globalScope) {
-            this.globalScope = globalScope;
+            super(globalScope);
         }
 
         @NonNull
@@ -430,6 +428,8 @@ public abstract class LintBaseTask extends DefaultTask {
 
         @Override
         public void configure(@NonNull T lintTask) {
+            super.configure(lintTask);
+
             lintTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             lintTask.lintOptions = globalScope.getExtension().getLintOptions();
             lintTask.sdkHome =

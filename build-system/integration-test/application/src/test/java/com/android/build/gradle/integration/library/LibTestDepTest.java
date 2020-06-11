@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -60,7 +61,10 @@ public class LibTestDepTest {
 
     @Test
     public void lint() throws IOException, InterruptedException {
-        project.execute("lint");
+        // http://b/146208910
+        project.executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("lint");
     }
 
     @Test

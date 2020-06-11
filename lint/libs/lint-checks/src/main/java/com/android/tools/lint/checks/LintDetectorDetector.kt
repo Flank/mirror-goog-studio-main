@@ -1087,7 +1087,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 briefDescription = "Unexpected URL Domain",
                 explanation = """
                     This checks flags URLs to domains that have not been explicitly \
-                    whitelisted for use as a documentation source.
+                    allowed for use as a documentation source.
                 """,
                 category = CUSTOM_LINT_CHECKS,
                 priority = 6,

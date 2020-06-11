@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.StringOption
@@ -33,7 +34,7 @@ class CleanBuildCacheTest {
     val tmpDir = TemporaryFolder()
 
     @get:Rule
-    val project = EmptyActivityProjectBuilder().build()
+    val project = EmptyActivityProjectBuilder().addAndroidLibrary().build()
 
     @Test
     fun test() {
@@ -49,5 +50,23 @@ class CleanBuildCacheTest {
                 "The Android Gradle plugin's build cache has been deprecated."
             )
         }
+    }
+
+    /** Regression test for http://b/158468794. */
+    @Test
+    fun testConfigureOnDemand() {
+        // force-configure all tasks
+        project.buildFile.appendText(
+            """
+            tasks.register("mytask") {
+                project.rootProject.subprojects { project.rootProject.evaluationDependsOn(it.path) }
+            }
+        """.trimIndent()
+        )
+        // running "tasks" is incompatible
+        project.executor()
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .withArgument("--configure-on-demand")
+            .run(":tasks")
     }
 }

@@ -103,7 +103,7 @@ class TaskMethodModifiersAndAnnotationsTest {
     @Test
     fun `check for public task setters`() {
 
-        val whiteListedSetters =
+        val currentPublicSetters =
             listOf(
                 "com.android.build.gradle.internal.coverage.JacocoReportTask::setCoverageFile",
                 "com.android.build.gradle.internal.coverage.JacocoReportTask::setJacocoClasspath",
@@ -135,13 +135,13 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.LintStandaloneTask::setReportDir",
                 "com.android.build.gradle.internal.tasks.MergeFileTask::setInputFiles",
                 "com.android.build.gradle.internal.tasks.NdkTask::setNdkConfig",
+                "com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.PackageRenderscriptTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.ProcessJavaResTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.SigningReportTask::setComponents",
                 "com.android.build.gradle.internal.tasks.TestServerTask::setTestServer",
                 "com.android.build.gradle.internal.tasks.UninstallTask::setTimeOutInMs",
                 "com.android.build.gradle.tasks.factory.AndroidUnitTest::setVariantName",
-                "com.android.build.gradle.tasks.AidlCompile::setPackageWhitelist",
                 "com.android.build.gradle.tasks.BundleAar::setVariantName",
                 "com.android.build.gradle.tasks.ExtractAnnotations::setBootClasspath",
                 "com.android.build.gradle.tasks.ExtractAnnotations::setClassDir",
@@ -181,7 +181,7 @@ class TaskMethodModifiersAndAnnotationsTest {
 
         Truth.assertThat(publicSetters)
             .named("Task public setters")
-            .containsExactlyElementsIn(whiteListedSetters)
+            .containsExactlyElementsIn(currentPublicSetters)
     }
 
     @Test

@@ -16,18 +16,15 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 
 abstract class LintFixTask : LintBaseTask() {
 
@@ -41,8 +38,7 @@ abstract class LintFixTask : LintBaseTask() {
         return allInputs
     }
 
-    @TaskAction
-    fun lint() {
+    override fun doTaskAction() {
         runLint(LintFixTaskDescriptor())
     }
 
@@ -75,6 +71,8 @@ abstract class LintFixTask : LintBaseTask() {
 
         override fun configure(task: LintFixTask) {
             super.configure(task)
+            task.enableGradleWorkers.set(false)
+            task.enableGradleWorkers.disallowChanges()
 
             task.description =
                     "Runs lint on all variants and applies any safe suggestions to the source code."

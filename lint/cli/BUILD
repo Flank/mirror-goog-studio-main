@@ -9,6 +9,7 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    lint_baseline = "lint_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/lint/cli",
     resources = glob(

@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 384;
+    public static final int INITIAL_CAPACITY = 382;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -77,8 +77,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AssertDetector.DISABLED);
         issues.add(AssertDetector.EXPENSIVE);
         issues.add(AutofillDetector.ISSUE);
-        issues.add(AutoRevokeDetector.DISALLOWED_AUTO_REVOKE);
-        issues.add(AutoRevokeDetector.MISSING_AUTO_REVOKE_TOLERANCE);
         issues.add(BadHostnameVerifierDetector.ISSUE);
         issues.add(BatteryDetector.ISSUE);
         issues.add(BottomAppBarDetector.ISSUE);
@@ -139,6 +137,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GetContentDescriptionOverrideDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);
         issues.add(GradleDetector.ACCIDENTAL_OCTAL);
+        issues.add(GradleDetector.AGP_DEPENDENCY);
         issues.add(GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH);
         issues.add(GradleDetector.BUNDLED_GMS);
         issues.add(GradleDetector.COMPATIBILITY);
@@ -463,7 +462,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.MANIFEST)) {
                 initialSize += 60;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
-                initialSize += 15;
+                initialSize += 16;
             }
             return initialSize;
         }

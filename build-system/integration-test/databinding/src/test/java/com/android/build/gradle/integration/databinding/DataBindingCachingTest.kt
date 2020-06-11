@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.databinding
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TaskStateList
@@ -98,11 +99,15 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         .fromTestProject("databinding")
         .withKotlinGradlePlugin(withKotlin)
         .withName("project")
+        // http://b/158092419
+        .withConfigurationCaching(if (withKotlin) BaseGradleExecutor.ConfigurationCaching.OFF else  BaseGradleExecutor.ConfigurationCaching.ON)
         .create()
 
     @get:Rule
     val projectCopy = GradleTestProject.builder()
         .fromTestProject("databinding")
+        // http://b/158092419
+        .withConfigurationCaching(if (withKotlin) BaseGradleExecutor.ConfigurationCaching.OFF else  BaseGradleExecutor.ConfigurationCaching.ON)
         .withKotlinGradlePlugin(withKotlin)
         .withName("projectCopy")
         .create()

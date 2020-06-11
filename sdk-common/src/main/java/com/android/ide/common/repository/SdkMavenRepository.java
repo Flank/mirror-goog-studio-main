@@ -236,9 +236,11 @@ public enum SdkMavenRepository {
             @NonNull ProgressIndicator progress) {
         String prefix = DetailsTypes.MavenType.getRepositoryPath(
                 coordinate.getGroupId(), coordinate.getArtifactId(), null);
+        Predicate<Revision> revisionFilter = filter == null ? null
+                : (revision) -> filter.test(revisionToGradleVersion(revision));
         return sdkHandler.getLatestRemotePackageForPrefix(
-                prefix, coordinate.isPreview(), GradleCoordinate::parseVersionOnly,
-                GradleCoordinate.COMPARE_PLUS_LOWER, progress);
+                prefix, revisionFilter, coordinate.isPreview(),
+          GradleCoordinate::parseVersionOnly, GradleCoordinate.COMPARE_PLUS_LOWER, progress);
     }
 
     /**

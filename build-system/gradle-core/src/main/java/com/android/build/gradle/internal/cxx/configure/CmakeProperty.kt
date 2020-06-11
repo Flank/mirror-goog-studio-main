@@ -73,7 +73,7 @@ enum class CmakeProperty {
  * These are flags that shouldn't matter when it comes to caching compiler check values.
  * In other words, they don't affect the result of CMake compiler detection.
  */
-private val CMAKE_COMPILER_CHECK_CACHE_KEY_BLACKLIST = listOf(
+private val CMAKE_COMPILER_CHECK_CACHE_KEY_IGNORED_PROPERTY_LIST = listOf(
     CMAKE_BUILD_TYPE,
     CMAKE_EXPORT_COMPILE_COMMANDS,
     CMAKE_LIBRARY_OUTPUT_DIRECTORY,
@@ -82,15 +82,15 @@ private val CMAKE_COMPILER_CHECK_CACHE_KEY_BLACKLIST = listOf(
 )
 
 /**
- * String version of CMAKE_COMPILER_CHECK_CACHE_KEY_BLACKLIST
+ * String version of CMAKE_COMPILER_CHECK_CACHE_KEY_IGNORED_PROPERTY_LIST
  */
-val CMAKE_COMPILER_CHECK_CACHE_KEY_BLACKLIST_STRINGS =
-    CMAKE_COMPILER_CHECK_CACHE_KEY_BLACKLIST.map { it.name }
+val CMAKE_COMPILER_CHECK_CACHE_KEY_IGNORED_STRING_LIST =
+    CMAKE_COMPILER_CHECK_CACHE_KEY_IGNORED_PROPERTY_LIST.map { it.name }
 
 /**
  * These are flags that are computed by compiler-checks. These are the value that is cached.
  */
-private val CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST = listOf(
+private val CMAKE_COMPILER_CHECK_CACHE_VALUE_INCLUDE_LIST = listOf(
     C_TEST_WAS_RUN,
     CMAKE_C11_COMPILE_FEATURES,
     CMAKE_C90_COMPILE_FEATURES,
@@ -120,10 +120,10 @@ private val CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST = listOf(
 )
 
 /**
- * String version of CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST
+ * String version of CMAKE_COMPILER_CHECK_CACHE_VALUE_INCLUDE_LIST
  */
-val CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST_STRINGS =
-    CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST.map { it.name }
+val CMAKE_COMPILER_CHECK_CACHE_VALUE_INCLUDED_STRING_LIST =
+    CMAKE_COMPILER_CHECK_CACHE_VALUE_INCLUDE_LIST.map { it.name }
 
 /**
  * These are values that *must* be in the cache for the cache to be valid.

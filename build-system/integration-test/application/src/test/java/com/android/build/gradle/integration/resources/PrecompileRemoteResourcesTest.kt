@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.resources
 
 import com.android.SdkConstants.FD_MERGED
 import com.android.SdkConstants.FD_RES
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -241,10 +242,16 @@ class PrecompileRemoteResourcesTest {
 
     @Test
     fun testIntegrationWithResourceShrinker() {
-        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
+        project.executor()
+            // http://b/149978740
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .run(":publishedLib:assembleRelease")
 
-        project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
+        project.executor()
+            // http://b/149978740
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             .with(OptionalBooleanOption.ENABLE_R8, true)
             .run(":app:assembleRelease")
 

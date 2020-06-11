@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.extractLetters
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentJava
@@ -50,7 +51,6 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
-  val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   val collection = extractLetters(objectKind)
   val itemListLayout = collection.toLowerCase() + "_list"
@@ -64,8 +64,9 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
+  addMaterialDependency(useAndroidX)
 
-  generateThemeStyles(moduleData.themesData.main, useMaterial2, moduleData.baseFeature?.resDir ?: resOut)
+  generateThemeStyles(moduleData.themesData.main, useAndroidX, moduleData.baseFeature?.resDir ?: resOut)
   mergeXml(androidManifestXml(
     collectionName, detailName, itemListLayout, detailNameLayout, isLauncher, moduleData.isLibrary, moduleData.isNewModule,
     packageName, moduleData.themesData.noActionBar.name),
@@ -82,7 +83,7 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
 
-  save(activityItemDetailXml(detailName, detailNameLayout, packageName, useAndroidX, useMaterial2),
+  save(activityItemDetailXml(detailName, detailNameLayout, packageName, useAndroidX),
        resOut.resolve("layout/activity_${detailNameLayout}.xml"))
   save(fragmentItemListXml(collectionName, itemListLayout, itemListContentLayout, packageName, useAndroidX),
        resOut.resolve("layout/${itemListLayout}.xml"))
@@ -92,20 +93,20 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   save(fragmentItemDetailXml(detailName, detailNameLayout, packageName), resOut.resolve("layout/${detailNameLayout}.xml"))
   save(activityItemListAppBarXml(
     collectionName, itemListLayout, packageName, moduleData.themesData.appBarOverlay.name, moduleData.themesData.popupOverlay.name,
-    useAndroidX, useMaterial2),
+    useAndroidX),
        resOut.resolve("layout/activity_${itemListLayout}.xml"))
 
   val contentDetailActivity = when (projectData.language) {
     Language.Java -> contentDetailActivityJava(collectionName, detailName, applicationPackage, detailNameLayout,
-                                               objectKind, packageName, useAndroidX, useMaterial2)
+                                               objectKind, packageName, useAndroidX)
     Language.Kotlin -> contentDetailActivityKt(collectionName, detailName, detailNameLayout, objectKind,
-                                               packageName, useAndroidX, useMaterial2)
+                                               packageName, useAndroidX)
   }
   save(contentDetailActivity, srcOut.resolve("${detailName}Activity.${ktOrJavaExt}"))
 
   val contentDetailFragment = when (projectData.language) {
     Language.Java -> contentDetailFragmentJava(collectionName, detailName, applicationPackage, detailNameLayout, objectKind, packageName,
-                                               useAndroidX, useMaterial2)
+                                               useAndroidX)
     Language.Kotlin -> contentDetailFragmentKt(collectionName, detailName, applicationPackage, detailNameLayout, objectKind, packageName,
                                                useAndroidX)
   }
@@ -113,10 +114,9 @@ fun RecipeExecutor.masterDetailFlowRecipe(
 
   val contentListActivity = when (projectData.language) {
     Language.Java -> contentListActivityJava(collectionName, detailName, applicationPackage, itemListLayout, detailNameLayout,
-                                             itemListContentLayout, itemListLayout, objectKindPlural, packageName, useAndroidX,
-                                             useMaterial2)
+                                             itemListContentLayout, itemListLayout, objectKindPlural, packageName, useAndroidX)
     Language.Kotlin -> contentListActivityKt(collectionName, detailName, applicationPackage, itemListLayout, detailNameLayout,
-                                             itemListContentLayout, itemListLayout, packageName, useAndroidX, useMaterial2)
+                                             itemListContentLayout, itemListLayout, packageName, useAndroidX)
   }
   save(contentListActivity, srcOut.resolve("${collectionName}Activity.${ktOrJavaExt}"))
 

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -45,7 +46,12 @@ class CoreLibraryDesugarDynamicFeatureTest {
     private lateinit var feature: GradleTestProject
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(setUpTestProject()).create()
+    val project = GradleTestProject.builder().fromTestApp(setUpTestProject())
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+        .setTargetGradleVersion("6.6-20200609220026+0000")
+        // b/157470515, http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=2")
+        .create()
 
     private fun setUpTestProject(): TestProject {
         return MultiModuleTestProject.builder()

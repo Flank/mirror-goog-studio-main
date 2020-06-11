@@ -29,8 +29,7 @@ fun contentListActivityJava(
   itemListLayout: String,
   objectKindPlural: String,
   packageName: String,
-  useAndroidX: Boolean,
-  useMaterial2: Boolean
+  useAndroidX: Boolean
 ) = """
 package ${packageName};
 
@@ -41,8 +40,8 @@ import ${getMaterialComponentName("android.support.annotation.NonNull", useAndro
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useMaterial2)};
-import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)};
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)};
+import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)};
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
