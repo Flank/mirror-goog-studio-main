@@ -21,6 +21,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
+import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -43,6 +44,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.process.ProcessException
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
+import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -258,11 +260,22 @@ abstract class DexMergingTask : NewIncrementalTask() {
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
                         return if (dexingUsingArtifactTransforms) {
+                            // For incremental dexing, when requesting DEX we will need to indicate
+                            // a preference for CLASSES_DIR over CLASSES_JAR, otherwise Gradle will
+                            // select CLASSES_JAR by default. We do that by adding the
+                            // LibraryElements.CLASSES attribute to the query.
+                            val classesLibraryElements = component.named(
+                                LibraryElements::class.java,
+                                LibraryElements.CLASSES
+                            )
+                            check(attributes.libraryElementsAttribute == null)
+                            val updatedAttributes = AndroidAttributes(
+                                    attributes.stringAttributes, classesLibraryElements)
                             component.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.PROJECT,
                                 AndroidArtifacts.ArtifactType.DEX,
-                                attributes
+                                updatedAttributes
                             )
                         } else {
                             component.services.fileCollection(

@@ -71,6 +71,7 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.Named
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
@@ -603,4 +604,7 @@ abstract class ComponentPropertiesImpl(
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
+
+    internal fun <T : Named> named(type: Class<T>, name: String): T =
+        internalServices.named(type, name)
 }

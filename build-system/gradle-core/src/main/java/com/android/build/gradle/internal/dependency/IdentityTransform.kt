@@ -20,15 +20,30 @@ import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
-import java.io.IOException
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 
 /**
- * Transform to go from one artifact type to one or multiple other artifact types without changing
- * the artifact's contents.
+ * Transform from one artifact type to another artifact type without changing the artifact's
+ * contents.
  */
-abstract class IdentityTransform : TransformAction<GenericTransformParameters> {
+abstract class IdentityTransform : TransformAction<IdentityTransform.Parameters> {
+
+    interface Parameters : GenericTransformParameters {
+
+        /**
+         * Whether to create an empty output directory if the input file/directory does not exist.
+         *
+         * Example use case: A Java library subproject without any classes publishes but does not
+         * create the classes directory, but we still need to transform it.
+         */
+        @get:Input
+        @get:Optional // false by default if not set
+        val acceptNonExistentInputFile: Property<Boolean>
+    }
 
     @get:Classpath
     @get:InputArtifact
@@ -39,7 +54,9 @@ abstract class IdentityTransform : TransformAction<GenericTransformParameters> {
         when {
             input.isDirectory -> transformOutputs.dir(input)
             input.isFile -> transformOutputs.file(input)
-            else -> throw IOException("Expecting a file or a directory: ${input.canonicalPath}")
+            parameters.acceptNonExistentInputFile.getOrElse(false) -> transformOutputs.dir("empty")
+            else -> throw IllegalArgumentException(
+                "File/directory does not exist: ${input.absolutePath}")
         }
     }
 }

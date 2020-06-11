@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
@@ -212,12 +213,7 @@ public class VariantScopeImpl implements VariantScope {
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {
-                    Map<Attribute<LibraryElements>, LibraryElements> attributes = null;
-                    if (libraryElements != null) {
-                        attributes = new HashMap<>();
-                        attributes.put(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
-                    }
-                    publishArtifactToConfiguration(config, artifact, artifactType, attributes);
+                    publishArtifactToConfiguration(config, artifact, artifactType, new AndroidAttributes(null, libraryElements));
                 }
             }
         }

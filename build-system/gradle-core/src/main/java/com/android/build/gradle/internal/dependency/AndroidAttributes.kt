@@ -22,8 +22,8 @@ import org.gradle.api.attributes.LibraryElements
 
 /** Contains attributes of different types. */
 class AndroidAttributes(
-    private val stringAttributes: Map<Attribute<String>, String>? = null,
-    private val libraryElementsAttribute: LibraryElements? = null
+    val stringAttributes: Map<Attribute<String>, String>? = null,
+    val libraryElementsAttribute: LibraryElements? = null
 ) {
 
     constructor(stringAttribute: Pair<Attribute<String>, String>) : this(mapOf(stringAttribute))
@@ -38,4 +38,19 @@ class AndroidAttributes(
             container.attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, it)
         }
     }
+
+    /** Returns a string listing all the attributes. */
+    fun toAttributeMapString(): String {
+        val stringAttrs = stringAttributes?.let { stringAttributes ->
+            stringAttributes.entries
+                .sortedBy { it.key.name }
+                .fold("") { it, entry -> "$it-A${entry.key.name}=${entry.value}" }
+        } ?: ""
+        val libraryElementsAttr = libraryElementsAttribute?.let {
+            "-A${LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE.name}=$it"
+        } ?: ""
+        return stringAttrs + libraryElementsAttr
+    }
+
+    override fun toString() = toAttributeMapString()
 }

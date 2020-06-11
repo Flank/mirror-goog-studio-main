@@ -54,30 +54,46 @@ import java.io.File
 @RunWith(FilterableParameterized::class)
 class IncrementalDexingWithDesugaringTest(
     private val scenario: Scenario,
-    private val withIncrementalDexingTaskV2: Boolean,
+    private val withMinSdk24Plus: Boolean,
     private val withIncrementalDexingTransform: Boolean
 ) {
 
     companion object {
 
         @Parameterized.Parameters(
-            name = "scenario_{0}_incrementalDexingTaskV2_{1}_withIncrementalDexingTransform_{2}")
+            name = "scenario_{0}_minSdk24Plus_{1}_withIncrementalDexingTransform_{2}")
         @JvmStatic
-        fun parameters() = listOf(
-            arrayOf(APP, true, true),
-            arrayOf(APP, false, false),
-            arrayOf(ANDROID_LIB, true, true),
-            arrayOf(ANDROID_LIB, false, false),
-            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true, true),
-            arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, false, false),
-            arrayOf(JAVA_LIB, true, true),
-            arrayOf(JAVA_LIB, false, false)
-        )
+        fun parameters(): List<Array<Any>> {
+            val incrementalDexingTransformDefaultValue =
+                BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM.defaultValue
+            // Test 3 out of the 4 combinations of the 2 flags to save test execution time
+            return listOf(
+                arrayOf(APP, true, true),
+                arrayOf(APP, true, false),
+                arrayOf(APP, false, incrementalDexingTransformDefaultValue),
+                arrayOf(ANDROID_LIB, true, true),
+                arrayOf(ANDROID_LIB, true, false),
+                arrayOf(ANDROID_LIB, false, incrementalDexingTransformDefaultValue),
+                arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true, true),
+                arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true, false),
+                arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, false, incrementalDexingTransformDefaultValue),
+                arrayOf(JAVA_LIB, true, true),
+                arrayOf(JAVA_LIB, true, false),
+                arrayOf(JAVA_LIB, false, incrementalDexingTransformDefaultValue)
+            )
+        }
     }
 
     @get:Rule
     var project = EmptyActivityProjectBuilder()
-        .also { it.withUnitTest = false }
+        .also {
+            if (withMinSdk24Plus) {
+                it.minSdkVersion = 24
+            } else {
+                it.minSdkVersion = 21
+            }
+            it.withUnitTest = false
+        }
         .addAndroidLibrary()
         .addJavaLibrary()
         .build()
@@ -255,7 +271,7 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB -> {
                     {
-                        if (withIncrementalDexingTransform) {
+                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
                             RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
                                 .resolve("debug/$it.class")
                         } else {
@@ -266,7 +282,7 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
                     {
-                        if (withIncrementalDexingTransform) {
+                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
                             RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
                                 .resolve("debug/classes.jar")
                         } else {
@@ -296,7 +312,7 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB -> {
                     {
-                        if (withIncrementalDexingTransform) {
+                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
                             findDexTransformOutputDir(subproject.buildDir).resolve("debug/$it.dex")
                         } else {
                             findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
@@ -310,7 +326,11 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 JAVA_LIB -> {
                     {
-                        findDexTransformOutputDir(subproject.buildDir).resolve("jetified-javalib/classes.dex")
+                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                            findDexTransformOutputDir(subproject.buildDir).resolve("main/$it.dex")
+                        } else {
+                            findDexTransformOutputDir(subproject.buildDir).resolve("jetified-javalib/classes.dex")
+                        }
                     }
                 }
             }
@@ -321,7 +341,7 @@ class IncrementalDexingWithDesugaringTest(
 
         incrementalTestHelper = IncrementalTestHelper(
             project = project,
-            buildTask = ":app:mergeDexDebug",
+            buildTasks = listOf(":app:mergeProjectDexDebug", ":app:mergeLibDexDebug"),
             filesToTrackChanges = setOf(
                 interfaceWithDefaultMethodClassFile,
                 classUsingInterfaceWithDefaultMethodClassFile,
@@ -340,7 +360,6 @@ class IncrementalDexingWithDesugaringTest(
             })
         ).useCustomExecutor {
             disableConfigurationCachingIfNeeded(it)
-            it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
         }
     }
@@ -356,10 +375,9 @@ class IncrementalDexingWithDesugaringTest(
     private fun findDexTransformOutputDir(buildDir: File): File {
         // Run a full build so that dex outputs are generated, then we will try to locate them.
         project.executor()
-            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2, withIncrementalDexingTaskV2)
             .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform).also {
                 disableConfigurationCachingIfNeeded(it)
-            }.run("clean", ":app:mergeDexDebug")
+            }.run("clean", ":app:mergeProjectDexDebug", ":app:mergeLibDexDebug")
 
         val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
             it.isDirectory && it.walk().any { file ->
@@ -376,9 +394,8 @@ class IncrementalDexingWithDesugaringTest(
     }
 
     private fun disableConfigurationCachingIfNeeded(executor: GradleTaskExecutor): GradleTaskExecutor {
-        if (scenario == ANDROID_LIB && withIncrementalDexingTaskV2 && withIncrementalDexingTransform) {
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        } else if (scenario == JAVA_LIB) {
+        if ((scenario == ANDROID_LIB || scenario == JAVA_LIB)
+                && withIncrementalDexingTransform && withMinSdk24Plus) {
             executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         }
         return executor
@@ -407,7 +424,12 @@ class IncrementalDexingWithDesugaringTest(
                         dummyStandAloneClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
+                        classUsingInterfaceWithDefaultMethodDexFile to
+                                if (withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
                         dummyStandAloneDexFile to UNCHANGED
                     )
                 )
@@ -422,22 +444,27 @@ class IncrementalDexingWithDesugaringTest(
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAlonePublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
+                        classUsingInterfaceWithDefaultMethodDexFile to
+                                if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
                         dummyStandAloneDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -458,8 +485,18 @@ class IncrementalDexingWithDesugaringTest(
                         dummyStandAlonePublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
-                        dummyStandAloneDexFile to CHANGED
+                        classUsingInterfaceWithDefaultMethodDexFile to
+                                if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
+                        dummyStandAloneDexFile to
+                            if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                                UNCHANGED
+                            } else {
+                                CHANGED
+                            }
                     )
                 )
             }
@@ -489,7 +526,12 @@ class IncrementalDexingWithDesugaringTest(
                         dummyStandAloneClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
+                        classUsingInterfaceWithDefaultMethodDexFile to
+                                if (withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                },
                         dummyStandAloneDexFile to UNCHANGED
                     )
                 )
@@ -504,13 +546,13 @@ class IncrementalDexingWithDesugaringTest(
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAlonePublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -518,13 +560,13 @@ class IncrementalDexingWithDesugaringTest(
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
-                                    CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
+                                    UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAloneDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -545,75 +587,18 @@ class IncrementalDexingWithDesugaringTest(
                         dummyStandAlonePublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneDexFile to CHANGED
-                    )
-                )
-            }
-        }
-    }
-
-    @Test
-    fun `change interface with default method, with a comment change`() {
-        val testHelper = incrementalTestHelper
-            .runFullBuild()
-            .applyChange {
-                TestFileUtils.searchAndReplace(
-                    interfaceWithDefaultMethodJavaFile,
-                    "default void defaultMethod() {",
-                    "default void defaultMethod() { // This is a comment-only change"
-                )
-            }
-            .runIncrementalBuild()
-
-        when (scenario) {
-            APP -> {
-                testHelper.assertFileChanges(
-                    mapOf(
-                        // Compiled class files
-                        interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
-                        // Dex files
-                        interfaceWithDefaultMethodDexFile to UNCHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
-                        dummyStandAloneDexFile to UNCHANGED
-                    )
-                )
-            }
-            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                testHelper.assertFileChanges(
-                    mapOf(
-                        // Compiled class files
-                        interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
-                        // Published class files
-                        interfaceWithDefaultMethodPublishedClassFile!! to UNCHANGED,
-                        classUsingInterfaceWithDefaultMethodPublishedClassFile!! to UNCHANGED,
-                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
-                        // Dex files
-                        interfaceWithDefaultMethodDexFile to UNCHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
-                        dummyStandAloneDexFile to UNCHANGED
-                    )
-                )
-            }
-            JAVA_LIB -> {
-                testHelper.assertFileChanges(
-                    mapOf(
-                        // Compiled class files
-                        interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
-                        // Published class files
-                        interfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
-                        // Dex files
-                        interfaceWithDefaultMethodDexFile to UNCHANGED,
-                        classUsingInterfaceWithDefaultMethodDexFile to UNCHANGED,
-                        dummyStandAloneDexFile to UNCHANGED
+                        classUsingInterfaceWithDefaultMethodDexFile to
+                                if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                },
+                        dummyStandAloneDexFile to
+                                if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                }
                     )
                 )
             }

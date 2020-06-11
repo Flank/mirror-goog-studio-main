@@ -79,6 +79,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
+import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -232,6 +233,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import kotlin.Pair;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -2959,13 +2961,11 @@ public abstract class TaskManager<
         for (String modulePath : modulePaths) {
             Provider<RegularFile> file =
                     artifactDirectory.file(getFeatureFileName(modulePath, null));
-            Map<Attribute<String>, String> attributeMap =
-                    ImmutableMap.of(MODULE_PATH, project.absoluteProjectPath(modulePath));
             publishArtifactToConfiguration(
                     configuration,
                     file,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    attributeMap);
+                    new AndroidAttributes(new Pair<>(MODULE_PATH, project.absoluteProjectPath(modulePath))));
         }
     }
 
