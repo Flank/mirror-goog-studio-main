@@ -1048,9 +1048,6 @@ private class LintModelLibrariesWriter(
         if (library.provided) {
             printer.printAttribute("provided", VALUE_TRUE, indent)
         }
-        if (library.skipped) {
-            printer.printAttribute("skipped", VALUE_TRUE, indent)
-        }
         if (library is LintModelAndroidLibrary) {
             printer.printFile("folder", library.folder, indent)
             printer.printFile("manifest", library.manifest, indent, library.folder)
@@ -1887,11 +1884,8 @@ private class LintModelLibrariesReader(
             project != null -> DefaultLintModelModuleLibrary(
                 projectPath = project,
                 artifactAddress = artifactAddress,
-                resolvedCoordinates = resolved!!,
-                folder = folder,
                 lintJar = lintJar,
-                provided = provided,
-                skipped = skipped
+                provided = provided
             )
             android -> DefaultLintModelAndroidLibrary(
                 artifactAddress = artifactAddress,
@@ -1906,15 +1900,12 @@ private class LintModelLibrariesReader(
                 externalAnnotations = externalAnnotations!!,
                 proguardRules = proguardRules!!,
                 provided = provided,
-                skipped = skipped,
                 resolvedCoordinates = resolved!!
             )
             else -> DefaultLintModelJavaLibrary(
                 artifactAddress = artifactAddress,
-                folder = folder,
                 jarFiles = jars,
                 provided = provided,
-                skipped = skipped,
                 resolvedCoordinates = resolved!!
             )
         }

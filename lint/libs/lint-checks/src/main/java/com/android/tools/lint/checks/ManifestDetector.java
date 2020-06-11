@@ -75,6 +75,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.tools.lint.model.LintModelExternalLibrary;
 import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelMavenName;
 import com.android.tools.lint.model.LintModelSourceProvider;
@@ -1181,11 +1182,11 @@ public class ManifestDetector extends Detector implements XmlScanner {
     private static boolean hasWearableGmsDependency(@NonNull LintModelVariant variant) {
         LintModelLibrary library =
                 variant.getMainArtifact().findCompileDependency(PLAY_SERVICES_WEARABLE);
-        if (library == null) {
+        if (!(library instanceof LintModelExternalLibrary)) {
             return false;
         }
 
-        LintModelMavenName mc = library.getResolvedCoordinates();
+        LintModelMavenName mc = ((LintModelExternalLibrary) library).getResolvedCoordinates();
         GradleCoordinate gc = GradleCoordinate.parseVersionOnly(mc.getVersion());
         return COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0;
     }

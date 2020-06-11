@@ -158,7 +158,6 @@ class LintModelFactory : LintModelModuleLoader {
                     symbolFile = File(library.symbolFile),
                     externalAnnotations = File(library.externalAnnotations),
                     provided = library.isProvided,
-                    skipped = false,
                     resolvedCoordinates = library.getMavenName(),
                     proguardRules = File(library.proguardRules)
                 )
@@ -167,10 +166,8 @@ class LintModelFactory : LintModelModuleLoader {
                 DefaultLintModelJavaLibrary(
                     artifactAddress = library.getMavenArtifactAddress(),
                     // TODO - expose compile jar vs impl jar?
-                    folder = library.folder,
                     jarFiles = listOf(library.artifact),
                     provided = library.isProvided,
-                    skipped = false,
                     resolvedCoordinates = library.getMavenName()
                 )
             }
@@ -179,11 +176,8 @@ class LintModelFactory : LintModelModuleLoader {
                 DefaultLintModelModuleLibrary(
                     artifactAddress = library.getMavenArtifactAddress(),
                     projectPath = projectPath,
-                    resolvedCoordinates = DefaultLintModelMavenName("artifacts:", projectPath, "unspecified"),
-                    folder = library.folder,
                     lintJar = library.lintJar?.let(::File),
-                    provided = library.isProvided,
-                    skipped = false
+                    provided = library.isProvided
                 )
             }
             else -> {

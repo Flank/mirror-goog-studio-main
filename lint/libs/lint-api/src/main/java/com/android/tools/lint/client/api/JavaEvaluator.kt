@@ -844,7 +844,7 @@ class JavaEvaluator {
             var coordinates: LintModelMavenName? = jarToGroup!![jarFile]
             if (coordinates == null) {
                 val library = findOwnerLibrary(jarFile.replace('/', File.separatorChar))
-                if (library != null) {
+                if (library != null && library is LintModelExternalLibrary) {
                     coordinates = library.resolvedCoordinates
                 }
                 if (coordinates == null) {

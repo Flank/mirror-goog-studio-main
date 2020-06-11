@@ -46,6 +46,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.isLayoutMarkerTag
+import com.android.tools.lint.model.LintModelExternalLibrary
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
@@ -74,7 +75,7 @@ class ConstraintLayoutDetector : LayoutDetector() {
             val dependencies = variant.mainArtifact.dependencies.compileDependencies
             val library = dependencies.findLibrary(CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
                 ?: dependencies.findLibrary(ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
-            if (library != null) {
+            if (library != null && library is LintModelExternalLibrary) {
                 val rc = library.resolvedCoordinates
                 if (CONSTRAINT_LAYOUT_LIB_GROUP_ID == rc.groupId &&
                     CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId
