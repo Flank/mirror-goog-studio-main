@@ -123,6 +123,7 @@ enum class BooleanOption(
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
+    ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
     GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, FeatureStage.Experimental),
     ENABLE_SYMBOL_TABLE_CACHING("android.enableSymbolTableCaching", false, FeatureStage.Experimental),
 

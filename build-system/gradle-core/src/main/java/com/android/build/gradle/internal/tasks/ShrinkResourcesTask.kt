@@ -116,6 +116,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     @get:Input
     abstract val useNewResourceShrinker: Property<Boolean>
 
+    @get:Input
+    abstract val usePreciseResourceShrinking: Property<Boolean>
+
     @get:Nested
     abstract val variantOutputs: ListProperty<VariantOutputImpl>
 
@@ -133,8 +136,8 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             Preconditions.check(
                 enableRTxtResourceShrinking.get(),
                 "New implementation of resource shrinker supports gathering resources from R " +
-                        "text files only. Enable 'android.enableRTxtResourceShrinking' flag to " +
-                        "use it."
+                       "text files only. Enable 'android.enableRTxtResourceShrinking' flag to " +
+                       "use it."
             )
         }
 
@@ -153,18 +156,22 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             val variantOutput = variantOutputs.get().find {
                 it.variantOutputConfiguration.outputType == builtArtifact.outputType
-                        && it.variantOutputConfiguration.filters == builtArtifact.filters
+                && it.variantOutputConfiguration.filters == builtArtifact.filters
             } ?: throw java.lang.RuntimeException("Cannot find variant output for $builtArtifact")
             parameters.outputFile.set(File(
                 directory.asFile,
                 "resources-${variantOutput.baseName}-stripped.ap_"))
-            parameters.rSourceVariant.set(if (enableRTxtResourceShrinking.get()){
-                rTxtFile.get().asFile } else { lightRClasses.get().asFile })
+            parameters.rSourceVariant.set(if (enableRTxtResourceShrinking.get()) {
+                rTxtFile.get().asFile
+            } else {
+                lightRClasses.get().asFile
+            })
             parameters.uncompressedResourceFile.set(File(builtArtifact.outputFile))
             parameters.resourceDir.set(resourceDir)
             parameters.infoLoggingEnabled.set(logger.isEnabled(LogLevel.INFO))
             parameters.debugLoggingEnabled.set(logger.isEnabled(LogLevel.DEBUG))
             parameters.useNewResourceShrinker.set(useNewResourceShrinker)
+            parameters.usePreciseResourceShrinking.set(usePreciseResourceShrinking)
             parameters.classes.set(classes.toList())
             parameters.mergedManifest.set(mergedManifest)
 
@@ -248,6 +255,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
             task.useNewResourceShrinker.set(creationConfig
                 .globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER])
+
+            task.usePreciseResourceShrinking.set(creationConfig
+                .globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER_PRECISE])
 
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
             task.variantOutputs.disallowChanges()
@@ -406,7 +416,8 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                     RawResourcesGraphBuilder(parameters.resourceDir.get().asFile.toPath())
                 ),
                 debugReporter = reporter,
-                supportMultipackages = false
+                supportMultipackages = false,
+                usePreciseShrinking = parameters.usePreciseResourceShrinking.get()
             )
         }
     }
@@ -431,6 +442,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         abstract val infoLoggingEnabled: Property<Boolean>
         abstract val debugLoggingEnabled: Property<Boolean>
         abstract val useNewResourceShrinker: Property<Boolean>
+        abstract val usePreciseResourceShrinking: Property<Boolean>
     }
 
     companion object {

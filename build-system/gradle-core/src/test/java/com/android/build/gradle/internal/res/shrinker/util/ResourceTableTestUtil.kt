@@ -34,6 +34,19 @@ internal fun Resources.Package.Builder.addType(id: Int, name: String, vararg ent
             .build()
     )
 
+internal fun Resources.ResourceTable.containsString(string: String): Boolean =
+  this.packageList.any {
+    it.typeList.any {
+      it.entryList.any {
+        it.configValueList.any {
+          // Ignore any difference in types of entry, just ensure the string is not in the table.
+          it.value.toString().contains(string)
+        }
+      }
+    }
+  }
+
+
 internal fun attrEntry(id: Int, name: String, format: FormatFlags): Entry =
     Entry.newBuilder()
         .setEntryId(Resources.EntryId.newBuilder().setId(id))

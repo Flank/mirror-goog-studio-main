@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.res.shrinker.util.addNamespace
 import com.android.build.gradle.internal.res.shrinker.util.addType
 import com.android.build.gradle.internal.res.shrinker.util.attrEntry
 import com.android.build.gradle.internal.res.shrinker.util.buildNode
+import com.android.build.gradle.internal.res.shrinker.util.containsString
 import com.android.build.gradle.internal.res.shrinker.util.dimenEntry
 import com.android.build.gradle.internal.res.shrinker.util.externalFile
 import com.android.build.gradle.internal.res.shrinker.util.idEntry
@@ -48,6 +49,16 @@ import com.android.build.gradle.internal.res.shrinker.util.xmlFile
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.google.common.io.ByteStreams
 import com.google.common.io.Resources
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.ClassRule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
@@ -56,15 +67,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
 
 @RunWith(Parameterized::class)
 class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
@@ -92,17 +94,20 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
 
     @Test
     fun `test shrinking with proguard obfuscated classes`() {
-        check(CodeInput.PROGUARD)
+        check(CodeInput.PROGUARD, false)
+        check(CodeInput.PROGUARD, true)
     }
 
     @Test
     fun `test shrinking with no obfuscation`() {
-        check(CodeInput.NO_SHRINKER)
+        check(CodeInput.NO_SHRINKER, false)
+        check(CodeInput.NO_SHRINKER, true)
     }
 
     @Test
     fun `test shrinking with R8 obfuscation`() {
-        check(CodeInput.R8)
+        check(CodeInput.R8, false)
+        check(CodeInput.R8, true)
     }
 
     @Test
@@ -132,7 +137,8 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 createGraphBuilder(resources, resourceTable)
             ),
             debugReporter = NoDebugReporter,
-            supportMultipackages = false
+            supportMultipackages = false,
+            usePreciseShrinking = false
         )
 
         analyzer.analyze()
@@ -209,7 +215,8 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 createGraphBuilder(resources, resourceTable)
             ),
             debugReporter = NoDebugReporter,
-            supportMultipackages = false
+            supportMultipackages = false,
+            usePreciseShrinking = false
         )
 
         analyzer.analyze()
@@ -250,7 +257,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         )
     }
 
-    private fun check(codeInput: CodeInput) {
+    private fun check(codeInput: CodeInput, usesPreciseShrinking: Boolean) {
         val dir = sTemporaryFolder.newFolder()
 
         val (classes, mapping) = when (codeInput) {
@@ -262,7 +269,6 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         val resources = createResourceFolder(dir, resourcesVariant)
         val rText = lazy { createResourceTextFile(dir) }
         val resourceTable = lazy { createResourceTable(dir, addKeepXml = false) }
-
         val analyzer = ResourceShrinkerImpl(
             resourcesGatherers = listOf(
                 createGatherer(rText, resourceTable)
@@ -276,7 +282,8 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 createGraphBuilder(resources, resourceTable)
             ),
             debugReporter = NoDebugReporter,
-            supportMultipackages = false
+            supportMultipackages = false,
+            usePreciseShrinking = usesPreciseShrinking
         )
 
         analyzer.analyze()
@@ -338,6 +345,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 "res/drawable/avd_heart_fill_1.xml",
                 "res/drawable/avd_heart_fill_2.xml"
             ),
+            resourcesArsc = resourceTable.value,
             outZip = File(dir, "uncompressed.ap_")
         )
 
@@ -367,7 +375,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 res/values/
                 res/xml/
                 res/xml/android_wear_micro_apk.xml
-                resources.arsc
+                resources.pb
             """.trimIndent(),
             dumpZipContents(uncompressedFile)
         )
@@ -375,18 +383,87 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         val compressedFile = File(dir, "compressed.ap_")
         analyzer.rewriteResourcesInApkFormat(uncompressedFile, compressedFile, BINARY)
 
-        assertEquals(
-            dumpZipContents(uncompressedFile),
-            dumpZipContents(compressedFile)
-        )
-        assertArrayEquals(
-            DummyContent.TINY_PNG,
-            getZipContents(compressedFile, "res/drawable/unused.png")
-        )
-        assertArrayEquals(
-            DummyContent.TINY_BINARY_XML,
-            getZipContents(compressedFile, "res/drawable/avd_heart_fill.xml")
-        )
+        if (usesPreciseShrinking) {
+            assertEquals(
+                """
+                res/drawable-hdpi/
+                res/drawable-hdpi/ic_launcher.png
+                res/drawable-mdpi/
+                res/drawable-mdpi/ic_launcher.png
+                res/drawable-xxhdpi/
+                res/drawable-xxhdpi/ic_launcher.png
+                res/drawable/
+                res/layout/
+                res/layout/activity_main.xml
+                res/menu/
+                res/menu/main.xml
+                res/raw/
+                res/raw/android_wear_micro_apk.apk
+                res/values/
+                res/xml/
+                res/xml/android_wear_micro_apk.xml
+                resources.pb
+            """.trimIndent(),
+                dumpZipContents(compressedFile)
+            )
+
+            val beforeOnly = listOf(
+                "res/drawable/avd_heart_fill.xml",
+                "res/drawable/avd_heart_fill_1.xml",
+                "res/drawable/avd_heart_fill_2.xml",
+                "res/drawable/unused.png",
+                "res/menu/menu2.xml",
+                "res/raw/index1.html",
+                "res/raw/my_js.js",
+                "res/raw/styles2.css")
+
+            val beforeAndAfter =
+                listOf("res/drawable-hdpi/ic_launcher.png",
+                       "res/drawable-mdpi/ic_launcher.png",
+                       "res/drawable-xxhdpi/ic_launcher.png",
+                       "res/layout/activity_main.xml",
+                       "res/menu/main.xml",
+                       "res/raw/android_wear_micro_apk.apk",
+                       "res/xml/android_wear_micro_apk.xml")
+
+            val resourceTableBefore =
+                ResourceTable.parseFrom(getZipContents(uncompressedFile, "resources.pb"))
+            val resourceTableAfter =
+                ResourceTable.parseFrom(getZipContents(compressedFile, "resources.pb"))
+
+            for (beforeFile in beforeOnly) {
+                assertFalse(resourceTableAfter.containsString(beforeFile))
+                assertTrue(resourceTableBefore.containsString(beforeFile))
+            }
+            for (both in beforeAndAfter) {
+                assertTrue(resourceTableAfter.containsString(both))
+                assertTrue(resourceTableBefore.containsString(both))
+            }
+            validateResourceStore(analyzer.model)
+        } else {
+            assertEquals(
+                dumpZipContents(uncompressedFile),
+                dumpZipContents(compressedFile)
+            )
+            assertArrayEquals(
+                DummyContent.TINY_PNG,
+                getZipContents(compressedFile, "res/drawable/unused.png")
+            )
+            assertArrayEquals(
+                DummyContent.TINY_BINARY_XML,
+                getZipContents(compressedFile, "res/drawable/avd_heart_fill.xml")
+            )
+        }
+    }
+
+    private fun validateResourceStore(model: ResourceShrinkerModel) {
+        model.resourceStore.resources.forEach { resource ->
+            // Validate that if a resource is reachable, then all referenced resources are also
+            // reachable.
+            if (resource.isReachable && resource.references != null) {
+                resource.references.forEach { assertTrue(it.isReachable) }
+            }
+        }
     }
 
     private fun createGatherer(rText: Lazy<File>, resourceTable: Lazy<File>) =
@@ -568,10 +645,22 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 .addNamespace("tools", TOOLS_NS)
                 .addAttribute("layout_width", ANDROID_NS, value = "match_parent")
                 .addAttribute("layout_height", ANDROID_NS, value = "match_parent")
-                .addAttribute("paddingTop", ANDROID_NS, "@dimen/activity_vertical_margin", 0x7f040001)
-                .addAttribute("paddingBottom", ANDROID_NS, "@dimen/activity_vertical_margin", 0x7f040001)
-                .addAttribute("paddingLeft", ANDROID_NS, "@dimen/activity_horizontal_margin", 0x7f040000)
-                .addAttribute("paddingRight", ANDROID_NS, "@dimen/activity_horizontal_margin", 0x7f040000)
+                .addAttribute("paddingTop",
+                              ANDROID_NS,
+                              "@dimen/activity_vertical_margin",
+                              0x7f040001)
+                .addAttribute("paddingBottom",
+                              ANDROID_NS,
+                              "@dimen/activity_vertical_margin",
+                              0x7f040001)
+                .addAttribute("paddingLeft",
+                              ANDROID_NS,
+                              "@dimen/activity_horizontal_margin",
+                              0x7f040000)
+                .addAttribute("paddingRight",
+                              ANDROID_NS,
+                              "@dimen/activity_horizontal_margin",
+                              0x7f040000)
                 .addAttribute("context", TOOLS_NS, "com.example.shrinkunittest.app.MainActivity")
                 .addChild(
                     xmlElement("TextView")
@@ -590,7 +679,9 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
             xmlElement("menu")
                 .addNamespace("android", ANDROID_NS)
                 .addNamespace("tools", TOOLS_NS)
-                .addAttribute("context", TOOLS_NS, value = "com.example.shrinkunittest.app.MainActivity")
+                .addAttribute("context",
+                              TOOLS_NS,
+                              value = "com.example.shrinkunittest.app.MainActivity")
                 .addChild(
                     xmlElement("item")
                         .addAttribute("id", ANDROID_NS, "@+id/action_settings", 0x7f080000)
@@ -608,7 +699,9 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
             xmlElement("menu")
                 .addNamespace("android", ANDROID_NS)
                 .addNamespace("tools", TOOLS_NS)
-                .addAttribute("context", TOOLS_NS, value = "com.example.shrinkunittest.app.MainActivity")
+                .addAttribute("context",
+                              TOOLS_NS,
+                              value = "com.example.shrinkunittest.app.MainActivity")
                 .addChild(
                     xmlElement("item")
                         .addAttribute("id", ANDROID_NS, "@+id/action_settings2", 0x7f080001)
@@ -818,7 +911,9 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         val animation =
             xmlElement("objectAnimator")
                 .addAttribute("propertyName", ANDROID_NS, value = "pathData")
-                .addAttribute("interpolator", ANDROID_NS, value = "@android:interpolator/fast_out_slow_in")
+                .addAttribute("interpolator",
+                              ANDROID_NS,
+                              value = "@android:interpolator/fast_out_slow_in")
 
         when (format) {
             ResourcesVariant.RAW -> {
@@ -854,10 +949,16 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                     format,
                     xmlElement("animated-vector")
                         .addNamespace("android", ANDROID_NS)
-                        .addAttribute("drawable", ANDROID_NS, "@drawable/avd_heart_fill_1.xml", 0x7f020003)
+                        .addAttribute("drawable",
+                                      ANDROID_NS,
+                                      "@drawable/avd_heart_fill_1.xml",
+                                      0x7f020003)
                         .addChild(
                             xmlElement("target")
-                                .addAttribute("animation", ANDROID_NS, "@drawable/avd_heart_fill_2.xml", 0x7f020004)
+                                .addAttribute("animation",
+                                              ANDROID_NS,
+                                              "@drawable/avd_heart_fill_2.xml",
+                                              0x7f020004)
                         )
                         .buildNode()
                 )
@@ -902,23 +1003,34 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                         .addChild(
                             xmlElement("activity")
                                 .addAttribute("label", ANDROID_NS, "@string/app_name", 0x7f050002)
-                                .addAttribute("name", ANDROID_NS, "com.example.shrinkunittest.app.MainActivity")
+                                .addAttribute("name",
+                                              ANDROID_NS,
+                                              "com.example.shrinkunittest.app.MainActivity")
                                 .addChild(
                                     xmlElement("intent-filter")
                                         .addChild(
                                             xmlElement("action")
-                                                .addAttribute("name", ANDROID_NS, "android.intent.action.MAIN")
+                                                .addAttribute("name",
+                                                              ANDROID_NS,
+                                                              "android.intent.action.MAIN")
                                         )
                                         .addChild(
                                             xmlElement("category")
-                                                .addAttribute("name", ANDROID_NS, "android.intent.category.LAUNCHER")
+                                                .addAttribute("name",
+                                                              ANDROID_NS,
+                                                              "android.intent.category.LAUNCHER")
                                         )
                                 )
                         )
                         .addChild(
                             xmlElement("meta-data")
-                                .addAttribute("name", ANDROID_NS, "com.google.android.wearable.beta.app")
-                                .addAttribute("resource", ANDROID_NS, "@xml/android_wear_micro_apk", 0x7f0a0000)
+                                .addAttribute("name",
+                                              ANDROID_NS,
+                                              "com.google.android.wearable.beta.app")
+                                .addAttribute("resource",
+                                              ANDROID_NS,
+                                              "@xml/android_wear_micro_apk",
+                                              0x7f0a0000)
                         )
                 )
                 .buildNode()
@@ -1016,6 +1128,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
     private fun zipResourcesTo(
         resourcesDir: File,
         inlinedResources: List<String>,
+        resourcesArsc: File,
         outZip: File
     ): File {
         val root = resourcesDir.toPath()
@@ -1026,10 +1139,11 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
             ZipOutputStream(fos).use { zos ->
                 for (path in paths) {
                     var relative = "res/" +
-                            root.relativize(path).toString().replace(File.separatorChar, '/')
+                                   root.relativize(path).toString().replace(File.separatorChar, '/')
                     val isValuesFile = relative == "res/values/values.xml"
                     if (isValuesFile) {
-                        relative = "resources.arsc"
+                        // We explicitly add a resources.pb file
+                        continue
                     }
                     if (Files.isDirectory(path)) {
                         relative += '/'
@@ -1047,6 +1161,9 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                     zos.write(ByteArray(0))
                     zos.closeEntry()
                 }
+                zos.putNextEntry(ZipEntry("resources.pb"))
+                zos.write(Files.readAllBytes(resourcesArsc.toPath()))
+                zos.closeEntry()
             }
         }
         return outZip

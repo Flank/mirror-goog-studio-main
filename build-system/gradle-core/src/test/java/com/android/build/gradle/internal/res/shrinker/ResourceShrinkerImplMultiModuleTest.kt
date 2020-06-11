@@ -70,23 +70,24 @@ class ResourceShrinkerImplMultiModuleTest{
         val app = createBasicMultiModuleApp()
 
         val shrinker = ResourceShrinkerImpl(
-            resourcesGatherers = listOf(
-                ProtoResourceTableGatherer(app.baseResourceTable),
-                ProtoResourceTableGatherer(app.featureResourceTable)
-            ),
-            obfuscationMappingsRecorder = null,
-            usageRecorders = listOf(
-                ProtoAndroidManifestUsageRecorder(app.baseManifest),
-                ProtoAndroidManifestUsageRecorder(app.featureManifest),
-                DexUsageRecorder(app.baseDex),
-                ToolsAttributeUsageRecorder(app.featureResources.resolve("raw"))
-            ),
-            graphBuilders = listOf(
-                ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
-                ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
-            ),
-            debugReporter = NoDebugReporter,
-            supportMultipackages = true
+          resourcesGatherers = listOf(
+              ProtoResourceTableGatherer(app.baseResourceTable),
+              ProtoResourceTableGatherer(app.featureResourceTable)
+          ),
+          obfuscationMappingsRecorder = null,
+          usageRecorders = listOf(
+              ProtoAndroidManifestUsageRecorder(app.baseManifest),
+              ProtoAndroidManifestUsageRecorder(app.featureManifest),
+              DexUsageRecorder(app.baseDex),
+              ToolsAttributeUsageRecorder(app.featureResources.resolve("raw"))
+          ),
+          graphBuilders = listOf(
+              ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
+              ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
+          ),
+          debugReporter = NoDebugReporter,
+          supportMultipackages = true,
+          usePreciseShrinking = false
         )
 
         shrinker.analyze()
@@ -165,23 +166,24 @@ class ResourceShrinkerImplMultiModuleTest{
         createFeatureWebContent(app.root)
 
         val shrinker = ResourceShrinkerImpl(
-            resourcesGatherers = listOf(
-                ProtoResourceTableGatherer(app.baseResourceTable),
-                ProtoResourceTableGatherer(app.featureResourceTable)
-            ),
-            obfuscationMappingsRecorder = null,
-            usageRecorders = listOf(
-                ProtoAndroidManifestUsageRecorder(app.baseManifest),
-                ProtoAndroidManifestUsageRecorder(app.featureManifest),
-                DexUsageRecorder(app.baseDex),
-                ToolsAttributeUsageRecorder(app.featureResources.resolve("raw"))
-            ),
-            graphBuilders = listOf(
-                ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
-                ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
-            ),
-            debugReporter = NoDebugReporter,
-            supportMultipackages = true
+          resourcesGatherers = listOf(
+              ProtoResourceTableGatherer(app.baseResourceTable),
+              ProtoResourceTableGatherer(app.featureResourceTable)
+          ),
+          obfuscationMappingsRecorder = null,
+          usageRecorders = listOf(
+              ProtoAndroidManifestUsageRecorder(app.baseManifest),
+              ProtoAndroidManifestUsageRecorder(app.featureManifest),
+              DexUsageRecorder(app.baseDex),
+              ToolsAttributeUsageRecorder(app.featureResources.resolve("raw"))
+          ),
+          graphBuilders = listOf(
+              ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
+              ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
+          ),
+          debugReporter = NoDebugReporter,
+          supportMultipackages = true,
+          usePreciseShrinking = false
         )
 
         shrinker.analyze()
@@ -264,23 +266,24 @@ class ResourceShrinkerImplMultiModuleTest{
         createKeepDiscardFile(app.root)
 
         val shrinker = ResourceShrinkerImpl(
-            resourcesGatherers = listOf(
-                ProtoResourceTableGatherer(app.baseResourceTable),
-                ProtoResourceTableGatherer(app.featureResourceTable)
-            ),
-            obfuscationMappingsRecorder = null,
-            usageRecorders = listOf(
-                ProtoAndroidManifestUsageRecorder(app.baseManifest),
-                ProtoAndroidManifestUsageRecorder(app.featureManifest),
-                DexUsageRecorder(app.baseDex),
-                ToolsAttributeUsageRecorder(app.featureResources.resolve("raw"))
-            ),
-            graphBuilders = listOf(
-                ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
-                ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
-            ),
-            debugReporter = NoDebugReporter,
-            supportMultipackages = true
+          resourcesGatherers = listOf(
+              ProtoResourceTableGatherer(app.baseResourceTable),
+              ProtoResourceTableGatherer(app.featureResourceTable)
+          ),
+          obfuscationMappingsRecorder = null,
+          usageRecorders = listOf(
+              ProtoAndroidManifestUsageRecorder(app.baseManifest),
+              ProtoAndroidManifestUsageRecorder(app.featureManifest),
+              DexUsageRecorder(app.baseDex),
+              ToolsAttributeUsageRecorder(app.featureResources.resolve("raw"))
+          ),
+          graphBuilders = listOf(
+              ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
+              ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
+          ),
+          debugReporter = NoDebugReporter,
+          supportMultipackages = true,
+          usePreciseShrinking = false
         )
 
         shrinker.analyze()
@@ -360,24 +363,25 @@ class ResourceShrinkerImplMultiModuleTest{
         val featureDex = createDexWithGetIdentifier(app.root).toPath()
 
         val shrinker = ResourceShrinkerImpl(
-            resourcesGatherers = listOf(
-                ProtoResourceTableGatherer(app.baseResourceTable),
-                ProtoResourceTableGatherer(app.featureResourceTable)
-            ),
-            obfuscationMappingsRecorder = null,
-            usageRecorders = listOf(
-                ProtoAndroidManifestUsageRecorder(app.baseManifest),
-                ProtoAndroidManifestUsageRecorder(app.featureManifest),
-                DexUsageRecorder(app.baseDex),
-                ToolsAttributeUsageRecorder(app.featureResources.resolve("raw")),
-                DexUsageRecorder(featureDex)
-            ),
-            graphBuilders = listOf(
-                ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
-                ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
-            ),
-            debugReporter = NoDebugReporter,
-            supportMultipackages = true
+          resourcesGatherers = listOf(
+              ProtoResourceTableGatherer(app.baseResourceTable),
+              ProtoResourceTableGatherer(app.featureResourceTable)
+          ),
+          obfuscationMappingsRecorder = null,
+          usageRecorders = listOf(
+              ProtoAndroidManifestUsageRecorder(app.baseManifest),
+              ProtoAndroidManifestUsageRecorder(app.featureManifest),
+              DexUsageRecorder(app.baseDex),
+              ToolsAttributeUsageRecorder(app.featureResources.resolve("raw")),
+              DexUsageRecorder(featureDex)
+          ),
+          graphBuilders = listOf(
+              ProtoResourcesGraphBuilder(app.baseResources, app.baseResourceTable),
+              ProtoResourcesGraphBuilder(app.featureResources, app.featureResourceTable)
+          ),
+          debugReporter = NoDebugReporter,
+          supportMultipackages = true,
+          usePreciseShrinking = false
         )
 
         shrinker.analyze()
