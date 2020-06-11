@@ -1612,8 +1612,8 @@ public abstract class TaskManager<
         // Set up JSON generation tasks
         TaskProvider<? extends Task> generateTask =
                 taskFactory.register(
-                        ExternalNativeBuildJsonTask.createTaskConfigAction(
-                                generator, componentProperties));
+                        new ExternalNativeBuildJsonTask.CreationAction(
+                                componentProperties, generator));
 
         // Set up build tasks
         TaskProvider<ExternalNativeBuildTask> buildTask =
