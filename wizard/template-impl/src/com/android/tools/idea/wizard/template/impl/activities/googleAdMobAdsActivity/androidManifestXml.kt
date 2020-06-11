@@ -38,6 +38,14 @@ fun androidManifestXml(
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application>
+        <!--
+            Adding this meta data is required as of Google Mobile Ads SDK version 17.0.0 as explained in
+            https://developers.google.com/ad-manager/mobile-ads-sdk/android/quick-start#update_your_androidmanifestxml
+        -->
+        <meta-data
+            android:name="com.google.android.gms.ads.AD_MANAGER_APP"
+            android:value="true"/>
+
         <activity android:name="${packageName}.${activityClass}"
             $labelBlock>
             $activityBody
