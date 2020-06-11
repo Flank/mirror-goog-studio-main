@@ -144,10 +144,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 componentProperties
                     .transformManager
                     .addStream(
-                        OriginalStream.builder(
-                            componentProperties.globalScope.project,
-                            "desugared-classes-${scope.name}"
-                        )
+                        OriginalStream.builder("desugared-classes-${scope.name}")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(scope)
                             .setFileCollection(processedClasses)

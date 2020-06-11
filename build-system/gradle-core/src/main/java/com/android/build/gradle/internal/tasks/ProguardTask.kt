@@ -145,7 +145,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
                 .get(InternalArtifactType.SHRUNK_JAR)
             val project = creationConfig.globalScope.project
             creationConfig.transformManager.addStream(
-                OriginalStream.builder(project, "shrunk_classes_and_resources")
+                OriginalStream.builder("shrunk_classes_and_resources")
                     .addContentTypes(TransformManager.CONTENT_JARS)
                     .addScopes(inputScopes)
                     .setFileCollection(project.layout.files(shrunkClassesAndResourcesProvider))

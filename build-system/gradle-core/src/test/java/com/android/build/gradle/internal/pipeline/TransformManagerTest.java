@@ -64,7 +64,7 @@ public class TransformManagerTest extends TaskTestUtils {
     public void simpleTransform() {
         // create a stream and add it to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -109,7 +109,7 @@ public class TransformManagerTest extends TaskTestUtils {
     public void missingStreams() {
         // create a stream and add it to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -140,7 +140,7 @@ public class TransformManagerTest extends TaskTestUtils {
     public void referencedScope() {
         // create streams and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -148,7 +148,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         TransformStream libClasses =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setFileCollection(fileCollection)
@@ -156,7 +156,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(libClasses);
 
         TransformStream modulesClasses =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.SUB_PROJECTS)
                         .setFileCollection(fileCollection)
@@ -202,7 +202,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         OriginalStream projectClassAndResources =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -336,7 +336,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // There's a (class, res) stream in a scope that's referenced. This stream should not
         // be split in two since it's not consumed.
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -344,7 +344,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         TransformStream libClassAndResources =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setFileCollection(fileCollection)
@@ -436,7 +436,7 @@ public class TransformManagerTest extends TaskTestUtils {
     public void combinedScopes() throws Exception {
         // create streams and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -444,7 +444,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         TransformStream libClasses =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setFileCollection(fileCollection)
@@ -490,7 +490,7 @@ public class TransformManagerTest extends TaskTestUtils {
     public void noOpTransform() throws Exception {
         // create stream and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -524,7 +524,7 @@ public class TransformManagerTest extends TaskTestUtils {
     public void combinedTypes() {
         // create streams and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -532,7 +532,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         TransformStream libClasses =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -581,7 +581,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -629,7 +629,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -637,7 +637,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         TransformStream libClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.SUB_PROJECTS)
                         .setFileCollection(fileCollection)
@@ -688,7 +688,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(fileCollection)
@@ -888,7 +888,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 project.files(new File("discard")).builtBy(MY_FAKE_DEPENDENCY_TASK_NAME);
 
         TransformStream originalStreamKeep =
-                OriginalStream.builder(project, "keepOriginal")
+                OriginalStream.builder("keepOriginal")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(keepFileCollection)
@@ -896,7 +896,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(originalStreamKeep);
 
         TransformStream originalStreamDiscardLib =
-                OriginalStream.builder(project, "discardOriginalLib")
+                OriginalStream.builder("discardOriginalLib")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setFileCollection(discardFileCollection)
@@ -904,7 +904,7 @@ public class TransformManagerTest extends TaskTestUtils {
         transformManager.addStream(originalStreamDiscardLib);
 
         TransformStream originalStreamDiscardRes =
-                OriginalStream.builder(project, "discardOriginalRes")
+                OriginalStream.builder("discardOriginalRes")
                         .addContentTypes(DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(discardFileCollection)

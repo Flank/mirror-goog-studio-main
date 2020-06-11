@@ -374,7 +374,7 @@ public class LibraryTaskManager
         variantProperties
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "compile-only-r-class")
+                        OriginalStream.builder("compile-only-r-class")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(scopeType)
                                 .setFileCollection(compileRClass)
@@ -437,7 +437,7 @@ public class LibraryTaskManager
         componentProperties
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "local-deps-classes")
+                        OriginalStream.builder("local-deps-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(InternalScope.LOCAL_DEPS)
                                 .setFileCollection(

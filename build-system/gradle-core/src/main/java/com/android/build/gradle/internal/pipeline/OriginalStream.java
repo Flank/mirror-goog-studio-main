@@ -63,20 +63,18 @@ public class OriginalStream extends TransformStream {
 
     @Nullable private final ArtifactCollection artifactCollection;
 
-    public static Builder builder(@NonNull Project project, @NonNull String name) {
-        return new Builder(project, name);
+    public static Builder builder(@NonNull String name) {
+        return new Builder(name);
     }
 
     public static final class Builder {
-        @NonNull private final Project project;
         @NonNull private final String name;
         private Set<ContentType> contentTypes = Sets.newHashSet();
         private Set<ScopeType> scopes = Sets.newHashSet();
         private FileCollection fileCollection;
         private ArtifactCollection artifactCollection;
 
-        public Builder(@NonNull Project project, @NonNull String name) {
-            this.project = project;
+        public Builder(@NonNull String name) {
             this.name = name;
         }
 

@@ -840,7 +840,7 @@ public abstract class TaskManager<
 
         // This might be consumed by RecalculateFixedStackFrames if that's created
         transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-classes")
+                OriginalStream.builder("ext-libs-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
@@ -855,7 +855,7 @@ public abstract class TaskManager<
         if (!getJavaResMergingScopes(componentProperties, RESOURCES)
                 .contains(Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-java-res")
+                    OriginalStream.builder("ext-libs-java-res")
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
@@ -868,7 +868,7 @@ public abstract class TaskManager<
 
         // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-classes")
+                OriginalStream.builder("sub-projects-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
@@ -881,7 +881,7 @@ public abstract class TaskManager<
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
         if (!getJavaResMergingScopes(componentProperties, RESOURCES).contains(Scope.SUB_PROJECTS)) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "sub-projects-java-res")
+                    OriginalStream.builder("sub-projects-java-res")
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
@@ -900,7 +900,7 @@ public abstract class TaskManager<
         // only
         if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "metadata-classes")
+                    OriginalStream.builder("metadata-classes")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
@@ -915,7 +915,7 @@ public abstract class TaskManager<
 
         // provided only scopes.
         transformManager.addStream(
-                OriginalStream.builder(project, "provided-classes")
+                OriginalStream.builder("provided-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.PROVIDED_ONLY)
                         .setFileCollection(variantScope.getProvidedOnlyClasspath())
@@ -924,7 +924,7 @@ public abstract class TaskManager<
         componentProperties.onTestedConfig(
                 testedConfig -> {
                     transformManager.addStream(
-                            OriginalStream.builder(project, "tested-code-deps")
+                            OriginalStream.builder("tested-code-deps")
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.TESTED_CODE)
                                     .setArtifactCollection(
@@ -1291,7 +1291,7 @@ public abstract class TaskManager<
             creationConfig
                     .getTransformManager()
                     .addStream(
-                            OriginalStream.builder(project, "final-r-classes")
+                            OriginalStream.builder("final-r-classes")
                                     .addContentTypes(
                                             scope.getNeedsJavaResStreams()
                                                     ? TransformManager.CONTENT_JARS
@@ -1433,7 +1433,7 @@ public abstract class TaskManager<
             componentProperties
                     .getTransformManager()
                     .addStream(
-                            OriginalStream.builder(project, "processed-java-res")
+                            OriginalStream.builder("processed-java-res")
                                     .addContentType(RESOURCES)
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
@@ -1469,7 +1469,7 @@ public abstract class TaskManager<
             Provider<RegularFile> mergedJavaResProvider =
                     componentProperties.getArtifacts().get(MERGED_JAVA_RES.INSTANCE);
             transformManager.addStream(
-                    OriginalStream.builder(project, "merged-java-res")
+                    OriginalStream.builder("merged-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
                             .addScopes(mergeScopes)
                             .setFileCollection(project.getLayout().files(mergedJavaResProvider))
@@ -1543,7 +1543,7 @@ public abstract class TaskManager<
                 componentProperties.getVariantScope().getNeedsJavaResStreams();
 
         transformManager.addStream(
-                OriginalStream.builder(project, "javac-output")
+                OriginalStream.builder("javac-output")
                         // Need both classes and resources because some annotation
                         // processors generate resources
                         .addContentTypes(
@@ -1556,7 +1556,7 @@ public abstract class TaskManager<
 
         BaseVariantData variantData = componentProperties.getVariantData();
         transformManager.addStream(
-                OriginalStream.builder(project, "pre-javac-generated-bytecode")
+                OriginalStream.builder("pre-javac-generated-bytecode")
                         .addContentTypes(
                                 needsJavaResStreams
                                         ? TransformManager.CONTENT_JARS
@@ -1566,7 +1566,7 @@ public abstract class TaskManager<
                         .build());
 
         transformManager.addStream(
-                OriginalStream.builder(project, "post-javac-generated-bytecode")
+                OriginalStream.builder("post-javac-generated-bytecode")
                         .addContentTypes(
                                 needsJavaResStreams
                                         ? TransformManager.CONTENT_JARS
@@ -1780,7 +1780,7 @@ public abstract class TaskManager<
         componentProperties
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "compile-and-runtime-light-r-classes")
+                        OriginalStream.builder("compile-and-runtime-light-r-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(QualifiedContent.Scope.PROJECT)
                                 .setFileCollection(project.files(rClassJar))
@@ -2306,7 +2306,7 @@ public abstract class TaskManager<
                                     componentProperties));
             variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
             transformManager.addStream(
-                    OriginalStream.builder(project, "runtime-deps-try-with-resources")
+                    OriginalStream.builder("runtime-deps-try-with-resources")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(scopeType)
                             .setFileCollection(variantScope.getTryWithResourceRuntimeSupportJar())
@@ -2536,7 +2536,7 @@ public abstract class TaskManager<
         componentProperties
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "jacoco-instrumented-classes")
+                        OriginalStream.builder("jacoco-instrumented-classes")
                                 .addContentTypes(DefaultContentType.CLASSES)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(instumentedClasses)
