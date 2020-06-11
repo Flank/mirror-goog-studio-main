@@ -35,6 +35,9 @@ public final class IdeModuleLibrary implements IdeLibrary {
     @Nullable private final String myProjectPath;
     @Nullable private final String myVariant;
 
+    @Nullable private final File myFolder;
+
+    @Nullable private final String myLintJar;
     private final boolean myIsProvided;
     private final int myType;
     private final int myHashCode;
@@ -46,6 +49,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myBuildId = null;
         myProjectPath = null;
         myVariant = null;
+        myFolder = null;
+        myLintJar = null;
         myIsProvided = false;
         myType = 0;
 
@@ -58,6 +63,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myBuildId = IdeModel.copyNewProperty(library::getBuildId, null);
         myProjectPath = IdeModel.copyNewProperty(library::getProject, null);
         myVariant = IdeModel.copyNewProperty(library::getProjectVariant, null);
+        myFolder = defaultValueIfNotPresent(() -> library.getFolder(), null);
+        myLintJar = defaultValueIfNotPresent(() -> library.getLintJar().getPath(), null);
         myIsProvided = defaultValueIfNotPresent(() -> library.isProvided(), false);
         myHashCode = calculateHashCode();
     }
@@ -69,6 +76,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myProjectPath = IdeModel.copyNewProperty(library::getProject, null);
         myIsProvided = defaultValueIfNotPresent(() -> library.isProvided(), false);
         myVariant = null;
+        myFolder = null;
+        myLintJar = null;
         myHashCode = calculateHashCode();
     }
 
@@ -82,6 +91,8 @@ public final class IdeModuleLibrary implements IdeLibrary {
         myBuildId = buildId;
         myProjectPath = projectPath;
         myVariant = null;
+        myFolder = null;
+        myLintJar = null;
         myIsProvided = false;
         myHashCode = calculateHashCode();
     }
@@ -122,9 +133,9 @@ public final class IdeModuleLibrary implements IdeLibrary {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public File getFolder() {
-        throw unsupportedMethodForModuleLibrary("getFolder");
+        return myFolder;
     }
 
     @Override
@@ -194,9 +205,9 @@ public final class IdeModuleLibrary implements IdeLibrary {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public String getLintJar() {
-        throw unsupportedMethodForModuleLibrary("getLintJar");
+        return myLintJar;
     }
 
     @Override

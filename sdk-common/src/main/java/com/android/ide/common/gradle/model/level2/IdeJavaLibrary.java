@@ -95,9 +95,9 @@ public final class IdeJavaLibrary implements IdeLibrary {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public File getFolder() {
-        throw unsupportedMethodForJavaLibrary("getFolder");
+        return null;
     }
 
     @Override
@@ -167,9 +167,9 @@ public final class IdeJavaLibrary implements IdeLibrary {
     }
 
     @Override
-    @NonNull
+    @Nullable
     public String getLintJar() {
-        throw unsupportedMethodForJavaLibrary("getLintJar");
+        return null;
     }
 
     @Override

@@ -88,7 +88,7 @@ public interface IdeLibrary {
      *
      * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
      */
-    @NonNull
+    @Nullable
     File getFolder();
 
     /**
@@ -210,7 +210,7 @@ public interface IdeLibrary {
      *
      * @return a File for the jar file. The file may not point to an existing file.
      */
-    @NonNull
+    @Nullable
     String getLintJar();
 
     /**

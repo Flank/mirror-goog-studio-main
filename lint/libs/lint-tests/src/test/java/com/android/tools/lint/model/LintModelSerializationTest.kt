@@ -298,78 +298,74 @@ class LintModelSerializationTest {
                 "dependencies-freeBetaDebug-mainArtifact" to """
                     <dependencies>
                       <compile
-                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0">
+                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support:support-v4:25.0.1,com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,com.android.support:support-annotations:25.0.1,com.android.support.constraint:constraint-layout-solver:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0,org.jetbrains:annotations:13.0">
                         <dependency
-                            name="com.android.support:appcompat-v7:25.0.1"
-                            dependencies="com.android.support:support-v4:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1"/>
+                            name="com.android.support:appcompat-v7:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-v4:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1"/>
+                            name="com.android.support:support-v4:25.0.1"/>
                         <dependency
                             name="com.android.support:support-compat:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-media-compat:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-media-compat:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-core-utils:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-core-utils:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-core-ui:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-core-ui:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-fragment:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-core-utils:25.0.1"/>
+                            name="com.android.support:support-fragment:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-vector-drawable:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-vector-drawable:25.0.1"/>
                         <dependency
-                            name="com.android.support:animated-vector-drawable:25.0.1"
-                            dependencies="com.android.support:support-vector-drawable:25.0.1"/>
+                            name="com.android.support:animated-vector-drawable:25.0.1"/>
                         <dependency
                             name="com.android.support.constraint:constraint-layout:1.0.0-beta3"/>
+                        <dependency
+                            name="com.android.support:support-annotations:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"/>
                         <dependency
                             name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
                         <dependency
                             name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
                         <dependency
                             name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains:annotations:13.0"/>
                       </compile>
                       <package
-                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0">
+                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support:support-v4:25.0.1,com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,com.android.support:support-annotations:25.0.1,com.android.support.constraint:constraint-layout-solver:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0,org.jetbrains:annotations:13.0">
                         <dependency
-                            name="com.android.support:appcompat-v7:25.0.1"
-                            dependencies="com.android.support:support-v4:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1"/>
+                            name="com.android.support:appcompat-v7:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-v4:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1"/>
+                            name="com.android.support:support-v4:25.0.1"/>
                         <dependency
                             name="com.android.support:support-compat:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-media-compat:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-media-compat:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-core-utils:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-core-utils:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-core-ui:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-core-ui:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-fragment:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-core-utils:25.0.1"/>
+                            name="com.android.support:support-fragment:25.0.1"/>
                         <dependency
-                            name="com.android.support:support-vector-drawable:25.0.1"
-                            dependencies="com.android.support:support-compat:25.0.1"/>
+                            name="com.android.support:support-vector-drawable:25.0.1"/>
                         <dependency
-                            name="com.android.support:animated-vector-drawable:25.0.1"
-                            dependencies="com.android.support:support-vector-drawable:25.0.1"/>
+                            name="com.android.support:animated-vector-drawable:25.0.1"/>
                         <dependency
                             name="com.android.support.constraint:constraint-layout:1.0.0-beta3"/>
+                        <dependency
+                            name="com.android.support:support-annotations:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"/>
                         <dependency
                             name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
                         <dependency
                             name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
                         <dependency
                             name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains:annotations:13.0"/>
                       </package>
                     </dependencies>
                 """,
@@ -526,6 +522,14 @@ class LintModelSerializationTest {
                       externalAnnotations="annotations.zip"
                       proguardRules="proguard.pro"/>
                   <library
+                      name="com.android.support:support-annotations:25.0.1"
+                      jars="$ROOT/caches/modules-2/files-2.1/com.android.support/support-annotations/25.0.19c6ef172e8de35fd8d4d8783e4821e57cdef7445/support-annotations-25.0.1.jar"
+                      resolved="com.android.support:support-annotations:25.0.1"/>
+                  <library
+                      name="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"
+                      jars="$ROOT/caches/modules-2/files-2.1/com.android.support.constraint/constraint-layout-solver/1.0.0-beta39c6ef172e8de35fd8d4d8783e4821e57cdef7445/constraint-layout-solver-1.0.0-beta3.jar"
+                      resolved="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"/>
+                  <library
                       name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"
                       jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-jdk7-1.3.0.jar"
                       resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
@@ -537,6 +541,10 @@ class LintModelSerializationTest {
                       name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"
                       jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-common-1.3.0.jar"
                       resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                  <library
+                      name="org.jetbrains:annotations:13.0"
+                      jars="$ROOT/caches/modules-2/files-2.1/org.jetbrains/annotations/13.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/annotations-13.0.jar"
+                      resolved="org.jetbrains:annotations:13.0"/>
                 </libraries>
                 """,
                 "library_table-freeBetaDebug-testArtifact" to """
@@ -1236,3 +1244,5 @@ class LintModelSerializationTest {
         }
     }
 }
+private const val ROOT: String = "\uFF04ROOT"
+
