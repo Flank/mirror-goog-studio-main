@@ -3212,6 +3212,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         id 'kotlin-android'
                     }
                     dependencies {
+                        implementation "org.jetbrains.kotlin:kotlin-stdlib:1.0.0"
                         implementation "androidx.core:core:1.2.0"
                         implementation "androidx.core:core:999.2.0" // No KTX extensions for this version.
                         implementation "androidx.core:fake-artifact:1.2.0" // No KTX extensions for this artifact.
@@ -3222,18 +3223,20 @@ class GradleDetectorTest : AbstractCheckTest() {
             .issues(KTX_EXTENSION_AVAILABLE)
             .run()
             .expect("""
-                build.gradle:6: Information: Add suffix -ktx to enable the Kotlin extensions for this library [KtxExtensionAvailable]
+                build.gradle:7: Information: Add suffix -ktx to enable the Kotlin extensions for this library [KtxExtensionAvailable]
                     implementation "androidx.core:core:1.2.0"
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 0 warnings
             """)
             .expectFixDiffs("""
-                Fix for build.gradle line 6: Replace with KTX dependency:
-                @@ -6 +6
+                Fix for build.gradle line 7: Replace with KTX dependency:
+                @@ -7 +7
                 -     implementation "androidx.core:core:1.2.0"
                 +     implementation "androidx.core:core-ktx:1.2.0"
             """.trimIndent())
+    }
 
+    fun testKtxExtensionsClean() {
         // Expect clean when the project does not depend on Kotlin.
         lint().files(
             gradle(
@@ -3242,6 +3245,25 @@ class GradleDetectorTest : AbstractCheckTest() {
                         id 'com.android.application'
                     }
                     dependencies {
+                        implementation "androidx.core:core:1.2.0"
+                    }
+                """
+            ).indented()
+        )
+            .issues(KTX_EXTENSION_AVAILABLE)
+            .run()
+            .expectClean()
+
+        // Expect clean when the project only depends on Kotlin for tests.
+        lint().files(
+            gradle(
+                """
+                    plugins {
+                        id 'com.android.application'
+                        id 'kotlin-android'
+                    }
+                    dependencies {
+                        testImplementation "org.jetbrains.kotlin:kotlin-stdlib:1.0.0"
                         implementation "androidx.core:core:1.2.0"
                     }
                 """
