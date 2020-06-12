@@ -59,4 +59,6 @@ public class Compressor {
 
         return out.getByteBuffer();
     }
+
+    private Compressor() {}
 }

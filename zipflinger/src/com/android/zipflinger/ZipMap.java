@@ -82,7 +82,7 @@ public class ZipMap {
             fileSize = channel.size();
 
             EndOfCentralDirectory eocd = EndOfCentralDirectory.find(channel);
-            if (eocd.getLocation() == Location.INVALID) {
+            if (!eocd.getLocation().isValid()) {
                 throw new IllegalStateException(String.format("Could not find EOCD in '%s'", file));
             }
             eocdLocation = eocd.getLocation();
@@ -90,20 +90,20 @@ public class ZipMap {
 
             // Check if this is a zip64 archive
             Zip64Locator locator = Zip64Locator.find(channel, eocd);
-            if (locator.getLocation() != Location.INVALID) {
+            if (locator.getLocation().isValid()) {
                 if (policy == Zip64.Policy.FORBID) {
                     String message = String.format("Cannot parse forbidden zip64 archive %s", file);
                     throw new IllegalStateException(message);
                 }
                 Zip64Eocd zip64EOCD = Zip64Eocd.parse(channel, locator.getOffsetToEOCD64());
                 cdLocation = zip64EOCD.getCdLocation();
-                if (cdLocation == Location.INVALID) {
+                if (!cdLocation.isValid()) {
                     String message = String.format("Zip64Locator led to bad EOCD64 in %s", file);
                     throw new IllegalStateException(message);
                 }
             }
 
-            if (cdLocation == Location.INVALID) {
+            if (!cdLocation.isValid()) {
                 throw new IllegalStateException(String.format("Could not find CD in '%s'", file));
             }
 

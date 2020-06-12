@@ -35,7 +35,7 @@ class FreeStore {
     // a bigger free zone.
     //
     // Used space is not tracked but inferred from each gap between free zones.
-    protected class Zone {
+    protected static class Zone {
         public Zone next;
         public Zone prev;
         public Location loc;

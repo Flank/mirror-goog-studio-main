@@ -54,4 +54,6 @@ class Ints {
         }
         return i;
     }
+
+    private Ints() {}
 }

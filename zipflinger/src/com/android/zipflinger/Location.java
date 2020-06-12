@@ -34,7 +34,12 @@ public class Location implements Comparable<Location> {
         return last - first + 1;
     }
 
+    public boolean isValid() {
+        return !this.equals(INVALID);
+    }
+
     @NonNull
+    @Override
     public String toString() {
         return "(offset="
                 + NumberFormat.getInstance().format(first)
