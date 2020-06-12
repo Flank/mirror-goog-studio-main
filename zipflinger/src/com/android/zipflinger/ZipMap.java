@@ -195,7 +195,7 @@ public class ZipMap {
     public void parseCentralDirectoryRecord(
             @NonNull ByteBuffer buf, @NonNull FileChannel channel, @NonNull Entry entry)
             throws IOException {
-        long cdEntryStart = buf.position() - 4;
+        long cdEntryStart = (long) buf.position() - 4;
 
         buf.position(buf.position() + 4);
         //short versionMadeBy = buf.getShort();
@@ -276,7 +276,8 @@ public class ZipMap {
         entry.setPayloadLocation(payloadLocation);
 
         // At this point we have everything we need to calculate CD location.
-        long cdEntrySize = CentralDirectoryRecord.SIZE + pathLength + extraLength + commentLength;
+        long cdEntrySize =
+                (long) CentralDirectoryRecord.SIZE + pathLength + extraLength + commentLength;
         entry.setCdLocation(new Location(cdEntryStart, cdEntrySize));
 
         // Parse data descriptor to adjust crc, compressed size, and uncompressed size.
