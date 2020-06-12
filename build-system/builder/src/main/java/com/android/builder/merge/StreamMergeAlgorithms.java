@@ -81,6 +81,12 @@ public final class StreamMergeAlgorithms {
                             " If you are using jniLibs and CMake IMPORTED targets, see ");
                     messageBuilder.append(
                             "https://developer.android.com/r/tools/jniLibs-vs-imported-targets");
+                } else {
+                    messageBuilder.append(
+                            " Adding a packagingOptions block may help, please refer to ");
+                    messageBuilder.append(
+                            "https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html");
+                    messageBuilder.append(" for more information");
                 }
                 throw new DuplicateRelativeFileException(messageBuilder.toString());
             }

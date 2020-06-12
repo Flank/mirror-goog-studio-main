@@ -375,7 +375,7 @@ class MergeJavaResourcesDelegateTest {
         assertThat(File(outputDir, "lib/x86/bar.so")).isFile()
     }
 
-    @Test(expected = DuplicateRelativeFileException::class)
+    @Test
     fun testErrorWhenDuplicateJavaResInFeature() {
         // Create jar files from base module and feature with duplicate resources
         val jarFile1 = File(tmpDir.root, "jarFile1.jar")
@@ -402,7 +402,12 @@ class MergeJavaResourcesDelegateTest {
             noCompress = listOf()
         )
 
-        delegate.run()
+        try {
+            delegate.run()
+        }
+        catch (e: DuplicateRelativeFileException) {
+            assertThat(e.message).contains("Adding a packagingOptions block may help")
+        }
     }
 
     private fun createIncrementalFilerMergerInputFromJar(jar: File): IncrementalFileMergerInput {
