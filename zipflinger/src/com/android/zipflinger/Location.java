@@ -57,6 +57,11 @@ public class Location implements Comparable<Location> {
     }
 
     @Override
+    public int hashCode() {
+        return Long.hashCode(first);
+    }
+
+    @Override
     public int compareTo(Location o) {
         return Math.toIntExact(this.first - o.first);
     }
