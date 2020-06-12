@@ -84,8 +84,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         transformationRequest.get().submit(
                 this,
                 workerExecutor.noIsolation(),
-                Aapt2OptimizeWorkAction::class.java,
-                OptimizeResourcesParams::class.java
+                Aapt2OptimizeWorkAction::class.java
         ) { builtArtifact, outputLocation: Directory, parameters ->
             val variantOutput = variantOutputs.get().find {
                 it.variantOutputConfiguration.outputType == builtArtifact.outputType

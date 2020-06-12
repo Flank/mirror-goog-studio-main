@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.services.getAaptDaemon
 import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.utils.FileUtils
@@ -61,8 +63,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -118,8 +118,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
         artifactTransformationRequest.get().submit(
             task = this,
             workQueue = workerExecutor.noIsolation(),
-            actionType = ShrinkProtoResourcesAction::class.java,
-            parameterType = ShrinkProtoResourcesParams::class.java
+            actionType = ShrinkProtoResourcesAction::class.java
         ) { builtArtifact: BuiltArtifact, directory: Directory, parameters: ShrinkProtoResourcesParams ->
 
             parameters.usePreciseShrinking.set(usePreciseShrinking)
@@ -224,7 +223,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
     }
 }
 
-abstract class ShrinkProtoResourcesParams : WorkParameters, Serializable {
+abstract class ShrinkProtoResourcesParams : DecoratedWorkParameters, Serializable {
     abstract val usePreciseShrinking: Property<Boolean>
     abstract val requiresInitialConversionToProto: Property<Boolean>
 
@@ -247,11 +246,11 @@ abstract class ShrinkProtoResourcesParams : WorkParameters, Serializable {
 }
 
 abstract class ShrinkProtoResourcesAction @Inject constructor() :
-    WorkAction<ShrinkProtoResourcesParams> {
+    WorkActionAdapter<ShrinkProtoResourcesParams> {
 
     private val logger = Logging.getLogger(ShrinkAppBundleResourcesTask::class.java)
 
-    override fun execute() {
+    override fun doExecute() {
         val aapt2ServiceKey = parameters.aapt2ServiceKey.get()
         val originalFile = parameters.originalFile.get().asFile
         val originalProtoFile = parameters.originalProtoFile.get().asFile

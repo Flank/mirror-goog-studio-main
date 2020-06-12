@@ -72,8 +72,7 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
 
         transformationRequest.get().submit(this,
             workers.noIsolation(),
-            WorkItem::class.java,
-            WorkItemParameters::class.java)
+            WorkItem::class.java)
         { builtArtifact: BuiltArtifact, directory: Directory, parameters: WorkItemParameters ->
             parameters.inputXmlFile.set(File(builtArtifact.outputFile))
             parameters.outputXmlFile.set(

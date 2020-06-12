@@ -69,7 +69,9 @@ import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -121,10 +123,13 @@ abstract class ProducerTask extends DefaultTask {
     }
 }
 
+interface MyWorkItemParameters extends DecoratedWorkParameters {
+    abstract RegularFileProperty getOutputFile()
+}
 
-abstract class ConsumerTask extends DefaultTask {
+
+abstract class ConsumerTask extends BaseTask {
     private final WorkerExecutor workerExecutor
-    private final ObjectFactory objectFactory
 
     @InputFiles
     abstract DirectoryProperty getCompatibleManifests()
@@ -134,57 +139,43 @@ abstract class ConsumerTask extends DefaultTask {
 
     @Inject
     public ConsumerTask(
-      ObjectFactory objectFactory,
       WorkerExecutor workerExecutor) {
-      this.objectFactory = objectFactory
       this.workerExecutor = workerExecutor
     }
 
     @org.gradle.api.tasks.Internal
     ArtifactTransformationRequest replacementRequest
 
-    static class MyWorkItemParameters implements Serializable, WorkParameters {
-      File outputFile
-
-      File getOutputFile() {
-       return outputFile
-      }
-    }
-
-    abstract static class WorkItem extends WorkAction<MyWorkItemParameters> {
+    abstract static class WorkItem implements WorkActionAdapter<MyWorkItemParameters> {
       MyWorkItemParameters myParameters
 
       @Inject
       WorkItem(MyWorkItemParameters parameters) {
          myParameters = parameters;
       }
+      
+      @Override
+      MyWorkItemParameters getParameters() {
+        return myParameters;
+      }
 
-      void execute() {
-         FileWriter writer = new FileWriter(myParameters.getOutputFile())
+      void doExecute() {
+         FileWriter writer = new FileWriter(myParameters.getOutputFile().get().getAsFile())
          writer.write("task " + getName() + " was here !")
          writer.close()
       }
     }
 
-    static class ConcreteParameters extends WorkActionAdapter.AdaptedWorkParameters<MyWorkItemParameters> {}
-
-    static class ConcreteClass extends WorkActionAdapter<MyWorkItemParameters, ConcreteParameters> {
-      @Inject
-      ConcreteClass(ObjectFactory objectFactory, ConcreteParameters parameters) {
-        super(objectFactory, parameters)
-      }
-    }
-
     @TaskAction
     void taskAction() {
+    
       replacementRequest.submit(
                 this,
                 workerExecutor.noIsolation(),
-                WorkItem.class,
-                MyWorkItemParameters.class
+                WorkItem.class
             ) { BuiltArtifact builtArtifact, Directory outputLocation, MyWorkItemParameters parameters ->
-            parameters.outputFile = outputLocation.file(new File(builtArtifact.outputFile).name).getAsFile()
-            return parameters.outputFile
+            parameters.outputFile.set(outputLocation.file(new File(builtArtifact.outputFile).name).getAsFile())
+            return parameters.outputFile.get().getAsFile()
             }
     }
 }
@@ -232,6 +223,7 @@ android.onVariantProperties {
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
+    task.enableGradleWorkers.set(true)
   }
 
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->

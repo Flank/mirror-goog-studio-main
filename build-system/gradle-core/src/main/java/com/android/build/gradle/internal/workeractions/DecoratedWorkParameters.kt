@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.api.artifact.impl
+package com.android.build.gradle.internal.workeractions
 
-import org.gradle.workers.WorkQueue
+import org.gradle.api.provider.Property
+import org.gradle.workers.WorkParameters
+import java.io.Serializable
 
 /**
- * Facade object for a [WorkQueue] that remembers the task and project it was created in.
- *
- * The information will be used to provide task and work items profiling information.
+ * Decorated [WorkParameters] that will remember the project name, task name and worker key to be
+ * able to sent sensible events to the profiler MBean objects.
  */
-class ProfilerEnabledWorkQueue(
-    val projectName: String,
-    val taskName: String,
-    private val workQueue: WorkQueue): WorkQueue by workQueue {
+interface DecoratedWorkParameters : WorkParameters, Serializable {
+    val projectName: Property<String>
+    val taskName: Property<String>
+    val workerKey: Property<String>
 }

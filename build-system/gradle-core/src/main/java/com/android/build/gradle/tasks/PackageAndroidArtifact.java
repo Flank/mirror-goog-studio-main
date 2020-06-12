@@ -360,7 +360,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         this,
                         getWorkerExecutor().noIsolation(),
                         IncrementalSplitterRunnable.class,
-                        SplitterParams.class,
                         configure(changedResourceFiles, changes));
     }
 

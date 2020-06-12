@@ -611,8 +611,7 @@ fun getManifestProducerTask() =
                      transformationRequest.get().submit(
                          this,
                          workers.noIsolation(),
-                         WorkItem,
-                         WorkItemParameters, {
+                         WorkItem, {
                              BuiltArtifact builtArtifact,
                              Directory outputLocation,
                              WorkItemParameters param ->
@@ -657,8 +656,7 @@ fun getManifestProducerTask() =
                   transformationRequest.get().submit(
                      this, 
                      workers.noIsolation(),
-                     WorkItem::class.java,
-                     WorkItemParameters::class.java) {
+                     WorkItem::class.java) {
                          builtArtifact: BuiltArtifact, 
                          outputLocation: Directory, 
                          param: WorkItemParameters -> 

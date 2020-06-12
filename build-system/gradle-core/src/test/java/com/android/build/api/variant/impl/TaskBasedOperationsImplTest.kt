@@ -19,14 +19,15 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.artifact.impl.ProfilerEnabledWorkQueue
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.profile.ProfileAgent
 import com.android.build.gradle.internal.profile.RecordingBuildListener
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.builder.profile.ProfileRecordWriter
 import com.android.ide.common.workers.GradlePluginMBeans
@@ -37,7 +38,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -57,7 +57,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
-import java.io.Serializable
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -162,14 +161,14 @@ class TaskBasedOperationsImplTest {
         val task = taskProvider.get()
         task.execute()
         @Suppress("UNCHECKED_CAST")
-        (task.replacementRequest as ArtifactTransformationRequestImpl<*, SynchronousTask>).wrapUp(task)
+        (task.replacementRequest as ArtifactTransformationRequestImpl<SynchronousTask>).wrapUp(task)
 
         checkOutputFolderCorrectness(outputFolder)
     }
 
     abstract class InternalApiTask @Inject constructor(
-        val objectFactory: ObjectFactory,
-        var workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
+        var workers: WorkerExecutor
+    ): VariantAwareTask, NonIncrementalGlobalTask() {
 
         @get:InputFiles
         abstract val inputDir: DirectoryProperty
@@ -177,55 +176,46 @@ class TaskBasedOperationsImplTest {
         abstract val outputDir: DirectoryProperty
 
         private val waiting = AtomicBoolean(false)
-        val useProfiler = AtomicBoolean(false)
 
         @get:Internal
         lateinit var replacementRequest: ArtifactTransformationRequest<InternalApiTask>
 
-        interface WorkItemParameters: WorkParameters, Serializable {
+        interface WorkItemParameters: DecoratedWorkParameters {
             val builtArtifact: Property<BuiltArtifact>
             val outputFile: Property<File>
             val someInputToWorkerItem: Property<Int>
         }
 
-        abstract class WorkItem @Inject constructor(private val workItemParameters: WorkItemParameters): WorkAction<WorkItemParameters> {
-            override fun execute() {
+        abstract class WorkItem @Inject constructor(
+            private val workItemParameters: WorkItemParameters
+        ): WorkActionAdapter<WorkItemParameters> {
+            override fun getParameters(): WorkItemParameters {
+                return workItemParameters
+            }
+
+
+
+            override fun doExecute() {
                 Truth.assertThat(workItemParameters.someInputToWorkerItem.get()).isAnyOf(1,2,3)
                 workItemParameters.outputFile.get().writeText(
                     workItemParameters.builtArtifact.get().filters.joinToString { it.identifier })
             }
         }
 
-        @TaskAction
-        fun execute() {
+        override fun doTaskAction() {
             val counter = AtomicInteger(0)
             // depending if profiler information is requested, invoke the right submit API.
-            val updatedBuiltArtifacts = if (useProfiler.get()) {
-                (replacementRequest as ArtifactTransformationRequestImpl<*, InternalApiTask>).submitWithProfiler(
+            val updatedBuiltArtifacts =
+                (replacementRequest as ArtifactTransformationRequestImpl<InternalApiTask>).submit(
                     this,
-                    objectFactory,
                     workers.noIsolation(),
-                    WorkItem::class.java,
-                    WorkItemParameters::class.java
+                    WorkItem::class.java
                 ) { builtArtifact: BuiltArtifact, outputLocation: Directory, workItemParameters: WorkItemParameters ->
                     workItemParameters.someInputToWorkerItem.set(counter.incrementAndGet())
                     workItemParameters.builtArtifact.set(builtArtifact)
                     workItemParameters.outputFile.set(outputLocation.file(File(builtArtifact.outputFile).name).asFile)
                     workItemParameters.outputFile.get()
                 }
-            } else {
-                replacementRequest.submit(
-                    this,
-                    workers.noIsolation(),
-                    WorkItem::class.java,
-                    WorkItemParameters::class.java
-                ) {builtArtifact: BuiltArtifact, outputLocation: Directory, workItemParameters: WorkItemParameters ->
-                    workItemParameters.someInputToWorkerItem.set(counter.incrementAndGet())
-                    workItemParameters.builtArtifact.set(builtArtifact)
-                    workItemParameters.outputFile.set(outputLocation.file(File(builtArtifact.outputFile).name).asFile)
-                    workItemParameters.outputFile.get()
-                }
-            }
             if (waiting.get()) {
                 updatedBuiltArtifacts.get()
             }
@@ -252,7 +242,6 @@ class TaskBasedOperationsImplTest {
             }
 
             override fun configure(task: InternalApiTask) {
-                task.variantName = "debug"
                 task.replacementRequest = replacementRequest
             }
         }
@@ -261,20 +250,17 @@ class TaskBasedOperationsImplTest {
     @Test
     fun asynchronousApiTest() {
         asynchronousTest(
-            workers =  getFakeWorkerExecutor(false, ":replace", InternalApiTask.WorkItemParameters::class.java),
-            withProfiler = false)
+            workers =  getFakeWorkerExecutor(false, ":replace", InternalApiTask.WorkItemParameters::class.java))
     }
 
     @Test
     fun asynchronousWaitingTest() {
         asynchronousTest(
-            workers = getFakeWorkerExecutor(true, ":replace", InternalApiTask.WorkItemParameters::class.java),
-            withProfiler = false)
+            workers = getFakeWorkerExecutor(true, ":replace", InternalApiTask.WorkItemParameters::class.java))
     }
 
     private fun asynchronousTest(
         workers: WorkerExecutor,
-        withProfiler: Boolean,
         recordingBuildListener: RecordingBuildListener? = null) {
 
         val taskACreationAction = InternalApiTask.CreationAction(component)
@@ -298,14 +284,13 @@ class TaskBasedOperationsImplTest {
 
         val task = taskProvider.get()
         task.workers = workers
-        task.useProfiler.set(withProfiler)
         recordingBuildListener?.beforeExecute(task)
-        task.execute()
+        task.taskAction()
         recordingBuildListener?.afterExecute(task, Mockito.mock(TaskState::class.java))
 
         // force wrap up
         @Suppress("UNCHECKED_CAST")
-        (task.replacementRequest as ArtifactTransformationRequestImpl<*, InternalApiTask>).wrapUp(task)
+        (task.replacementRequest as ArtifactTransformationRequestImpl<InternalApiTask>).wrapUp(task)
 
         checkOutputFolderCorrectness(outputFolder)
     }
@@ -344,9 +329,7 @@ class TaskBasedOperationsImplTest {
             asynchronousTest(
                 workers = getFakeWorkerExecutor(waiting = waiting,
                     taskPath = ":replace",
-                    parameterType = WorkActionAdapter.AdaptedWorkParameters::class.java,
-                    includeProfiler = true),
-                withProfiler = true,
+                    parameterType = InternalApiTask.WorkItemParameters::class.java),
                 recordingBuildListener = recordingBuildListener)
             val profileMBean =
                 GradlePluginMBeans.getProfileMBean(projectName)
@@ -365,15 +348,13 @@ class TaskBasedOperationsImplTest {
      * @param waiting true if [WorkQueue.await] is supposed to be called.
      * @param taskPath Task path used for profiling information.
      * @param parameterType Class for the parameters used when executing [WorkQueue] submissions.
-     * @param includeProfiler true if the profiler information should be included.
      */
     private fun getFakeWorkerExecutor(
         waiting: Boolean,
         taskPath: String,
-        parameterType: Class<*>,
-        includeProfiler: Boolean = false): WorkerExecutor {
+        parameterType: Class<*>): WorkerExecutor {
 
-        var workQueue: WorkQueue = object: WorkQueue {
+        val workQueue: WorkQueue = object: WorkQueue {
 
             override fun <T : WorkParameters?> submit(
                 workActionType: Class<out WorkAction<T>>,
@@ -389,9 +370,6 @@ class TaskBasedOperationsImplTest {
             override fun await() {
                 Assert.assertTrue("Task was not supposed to wait for results", waiting)
             }
-        }
-        if (includeProfiler) {
-            workQueue = ProfilerEnabledWorkQueue("project_name_" + tmpDir.root.path.hashCode(), taskPath, workQueue)
         }
 
         // replace injected WorkerExecutor with dummy version.
@@ -410,11 +388,11 @@ class TaskBasedOperationsImplTest {
 
         Truth.assertThat(updatedBuiltArtifacts).isNotNull()
         Truth.assertThat(updatedBuiltArtifacts!!.elements).hasSize(3)
-        updatedBuiltArtifacts.elements.forEach {
-            Truth.assertThat(File(it.outputFile).absolutePath)
+        updatedBuiltArtifacts.elements.forEach { builtArtifactImpl ->
+            Truth.assertThat(File(builtArtifactImpl.outputFile).absolutePath)
                 .startsWith(outputFolder.absolutePath)
-            Truth.assertThat(File(it.outputFile).readText(Charset.defaultCharset()))
-                .isEqualTo(it.filters.joinToString { it.identifier })
+            Truth.assertThat(File(builtArtifactImpl.outputFile).readText(Charset.defaultCharset()))
+                .isEqualTo(builtArtifactImpl.filters.joinToString { it.identifier })
         }
     }
 

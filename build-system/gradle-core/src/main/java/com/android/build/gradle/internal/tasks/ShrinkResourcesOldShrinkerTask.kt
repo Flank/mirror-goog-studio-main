@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.BuiltArtifact
@@ -30,6 +30,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.model.CodeShrinker
@@ -54,13 +56,9 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
-import java.io.Serializable
-import javax.inject.Inject
 import javax.xml.parsers.ParserConfigurationException
 
 /**
@@ -108,7 +106,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
     abstract val variantOutputs: ListProperty<VariantOutputImpl>
 
     @get:Internal
-    abstract val artifactTransformationRequest: Property<ArtifactTransformationRequest<ShrinkResourcesOldShrinkerTask>>
+    abstract val artifactTransformationRequest: Property<ArtifactTransformationRequestImpl<ShrinkResourcesOldShrinkerTask>>
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -123,8 +121,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
         artifactTransformationRequest.get().submit(
             task = this,
             workQueue = workerExecutor.noIsolation(),
-            actionType = SplitterRunnable::class.java,
-            parameterType = SplitterParams::class.java
+            actionType = SplitterRunnable::class.java
         ) { builtArtifact: BuiltArtifact, directory: Directory, parameters: SplitterParams ->
 
             val mergedManifest = mergedManifestsOutputs.getBuiltArtifact(builtArtifact)
@@ -167,7 +164,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
                         || contentTypes.contains(ExtendedContentType.DEX))
             }
 
-        private lateinit var artifactTransformationRequest: ArtifactTransformationRequest<ShrinkResourcesOldShrinkerTask>
+        private lateinit var artifactTransformationRequest: ArtifactTransformationRequestImpl<ShrinkResourcesOldShrinkerTask>
 
         override fun handleProvider(
             taskProvider: TaskProvider<ShrinkResourcesOldShrinkerTask>
@@ -246,9 +243,9 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
         }
     }
 
-    abstract class SplitterRunnable @Inject constructor() : WorkAction<SplitterParams> {
+    abstract class SplitterRunnable : WorkActionAdapter<SplitterParams> {
 
-        override fun execute() {
+        override fun doExecute() {
             var reportFile: File? = null
             if (parameters.mappingFile.isPresent) {
                 val logDir = parameters.mappingFile.get().asFile.parentFile
@@ -350,7 +347,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
         }
     }
 
-    abstract class SplitterParams : WorkParameters, Serializable {
+    abstract class SplitterParams : DecoratedWorkParameters {
 
         abstract val outputFile: RegularFileProperty
 

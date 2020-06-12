@@ -84,8 +84,7 @@ import java.util.function.Supplier
  *  transformationRequest.get().submit(
  *     this,
  *     workers.noIsolation(),
- *     WorkItem::class.java,
- *     WorkItemParameters::class.java) {
+ *     WorkItem::class.java) {
  *     builtArtifact: BuiltArtifact,
  *     outputLocation: Directory,
  *     param: WorkItemParameters ->
@@ -108,7 +107,6 @@ interface ArtifactTransformationRequest<TaskT: Task> {
      * @param task The Task initiating the [WorkQueue] requests.
      * @param workQueue The Gradle [WorkQueue] instance to use to spawn worker items with.
      * @param actionType The type of the [WorkAction] subclass that process that input [BuiltArtifact].
-     * @param parameterType The type of parameters expected by the [WorkAction].
      * @param parameterConfigurator The lambda to configure instances of [parameterType] for each
      * [BuiltArtifact].
      */
@@ -116,7 +114,6 @@ interface ArtifactTransformationRequest<TaskT: Task> {
         task: TaskT,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
-        parameterType: Class<out ParamT>,
         parameterConfigurator: (
             builtArtifact: BuiltArtifact,
             outputLocation: Directory,
