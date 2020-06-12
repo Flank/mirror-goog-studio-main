@@ -45,9 +45,6 @@ message LoadTraceResponse {
   // In case the trace was not loaded correctly, this field contains
   // a string explaining the reason.
   string error = 2;
-
-  // Available processes and threads in the trace.
-  ProcessMetadataResult process_metadata = 3;
 }
 
 message QueryBatchRequest {
