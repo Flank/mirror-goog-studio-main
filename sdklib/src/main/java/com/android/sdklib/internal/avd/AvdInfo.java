@@ -28,7 +28,6 @@ import com.android.sdklib.devices.Device;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.google.common.base.Strings;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
@@ -127,6 +126,13 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     @NonNull
     public String getName() {
         return mName;
+    }
+
+    /** Returns the name of the AVD for use in UI. */
+    @NonNull
+    public String getDisplayName() {
+        String name = getProperties().get(AvdManager.AVD_INI_DISPLAY_NAME);
+        return name == null ? mName.replace('_', ' ') : name;
     }
 
     /** Returns the path of the AVD data directory. */
