@@ -34,6 +34,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -172,25 +173,12 @@ class DeviceClientMonitorTask implements Runnable {
     }
 
     /** Registers track-jdwp key with the corresponding device's socket channel's selector. */
-    void processChannelsToRegister() {
-        // register any new channels
-        mChannelsToRegister
-                .entrySet()
-                .removeIf(
-                        entry -> {
-                            try {
-                                entry.getKey()
-                                        .register(
-                                                mSelector, SelectionKey.OP_READ, entry.getValue());
-                            } catch (ClosedChannelException e) {
-                                // We'll remove the channel if there's an error. We most likely
-                                // won't be able to recover from this.
-                                Log.e(
-                                        "DeviceClientMonitorTask",
-                                        "Connection error while monitoring clients.");
-                            }
-                            return true;
-                        });
+    void processChannelsToRegister() throws ClosedChannelException {
+        List<SocketChannel> channels = Collections.list(mChannelsToRegister.keys());
+        for (SocketChannel channel : channels) {
+            channel.register(mSelector, SelectionKey.OP_READ, mChannelsToRegister.get(channel));
+        }
+        mChannelsToRegister.keySet().removeAll(channels);
     }
 
     @Override
