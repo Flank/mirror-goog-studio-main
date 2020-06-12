@@ -17,7 +17,8 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask.*
+import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask.WorkItem
+import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask.WorkItemParameters
 import com.android.utils.PositionXmlParser
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -107,7 +108,7 @@ class ProcessManifestForInstantAppTaskTest {
             File(temporaryFolder.newFolder("target_manifests"),
                 SdkConstants.ANDROID_MANIFEST_XML)
         )
-        project.objects.newInstance(WorkItem::class.java, workItemParameters).execute()
+        project.objects.newInstance(WorkItem::class.java, workItemParameters as WorkItemParameters).execute()
 
         val xmlDocument =
             PositionXmlParser.parse(

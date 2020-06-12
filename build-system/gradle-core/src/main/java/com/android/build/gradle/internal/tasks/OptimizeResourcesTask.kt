@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.ide.common.process.BaseProcessOutputHandler
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.DefaultProcessExecutor
@@ -46,8 +48,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -101,7 +101,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         }
     }
 
-    interface OptimizeResourcesParams : WorkParameters, Serializable {
+    interface OptimizeResourcesParams : DecoratedWorkParameters, Serializable {
         val aapt2Executable: RegularFileProperty
         val inputResFile: RegularFileProperty
         val enableResourceObfuscation: Property<Boolean>
@@ -109,8 +109,8 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
     }
 
     abstract class Aapt2OptimizeWorkAction
-    @Inject constructor(private val params: OptimizeResourcesParams) : WorkAction<OptimizeResourcesParams> {
-        override fun execute() = doFullTaskAction(params)
+    @Inject constructor(private val params: OptimizeResourcesParams) : WorkActionAdapter<OptimizeResourcesParams> {
+        override fun doExecute() = doFullTaskAction(params)
     }
 
     class CreateAction(

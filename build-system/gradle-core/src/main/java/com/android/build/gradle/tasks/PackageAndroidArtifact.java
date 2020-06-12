@@ -54,6 +54,8 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.DesugarLibUtils;
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters;
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -133,8 +135,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.FileChange;
 import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
-import org.gradle.workers.WorkAction;
-import org.gradle.workers.WorkParameters;
 
 /** Abstract task to package an Android artifact. */
 public abstract class PackageAndroidArtifact extends NewIncrementalTask {
@@ -510,7 +510,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
     }
 
-    public abstract static class SplitterParams implements WorkParameters, Serializable {
+    public abstract static class SplitterParams implements DecoratedWorkParameters, Serializable {
         @NonNull
         public abstract Property<VariantOutputImpl.SerializedForm> getVariantOutput();
 
@@ -792,13 +792,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return acceptedAbis;
     }
 
-    public abstract static class IncrementalSplitterRunnable implements WorkAction<SplitterParams> {
+    public abstract static class IncrementalSplitterRunnable
+            implements WorkActionAdapter<SplitterParams> {
 
         @Inject
         public IncrementalSplitterRunnable(SplitterParams splitterParams) {}
 
         @Override
-        public void execute() {
+        public void doExecute() {
             SplitterParams params = getParameters();
             try {
                 File incrementalDirForSplit =
