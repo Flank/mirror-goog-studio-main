@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -173,6 +174,38 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         project.testDir.resolve(".cxx").deleteRecursively()
         assertThat(project.buildDir.resolve("intermediates/cmake/debug/obj/armeabi-v7a/libfoo.so")).isFile()
         project.execute("assembleDebug")
+    }
+
+    @Test
+    fun `runtimeFiles are included even if not built yet`() {
+        // https://issuetracker.google.com/158317988
+        // runtimeFiles doesn't work pre-3.7 because there's no CMake server.
+        if (cmakeVersionInDsl == "3.6.0") return
+        project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
+        project.buildFile.resolveSibling("bar.cpp").writeText("void bar() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.7)
+
+            add_library(foo SHARED foo.cpp)
+            add_library(bar SHARED bar.cpp)
+
+            target_link_libraries(foo ${'$'}{log-lib})
+            target_link_libraries(bar foo)
+            """.trimIndent())
+
+        project.execute("generateJsonModelDebug")
+
+        val fooPath = project.buildDir.resolve("intermediates/cmake/debug/obj/x86_64/libfoo.so")
+        assertThat(fooPath).doesNotExist()
+
+        val json = project.testDir.resolve(".cxx/cmake/debug/x86_64/android_gradle_build_mini.json")
+        assertThat(json).isFile()
+
+        val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, null)
+        val library = config.libraries["bar-Debug-x86_64"] ?: fail()
+        assertThat(library.runtimeFiles).contains(fooPath)
     }
 
     // See b/131857476

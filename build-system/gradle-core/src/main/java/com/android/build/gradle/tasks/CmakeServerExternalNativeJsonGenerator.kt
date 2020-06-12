@@ -491,7 +491,6 @@ internal class CmakeServerExternalNativeJsonGenerator(
                     continue
                 }
 
-                // Filter out any other arguments that aren't files.
                 // We don't actually care about the normalization here except that it makes it
                 // possible to write a test for https://issuetracker.google.com/158317988. Without
                 // it, the runtimeFile is sometimes a path that includes .. that resolves to the
@@ -508,9 +507,17 @@ internal class CmakeServerExternalNativeJsonGenerator(
                         it
                     }
                 }.normalize()
-                if (!Files.exists(libraryPath)) {
-                    continue
-                }
+
+                // Note: This used to contain a check for libraryPath.exists() to defend against any
+                // items in the linkLibraries that were neither files nor - prefixed arguments. This
+                // hasn't been observed and I'm not sure there are any valid inputs to
+                // target_link_libraries that would have that problem.
+                //
+                // Ignoring files that didn't exist was causing different results depending on
+                // whether this function was being run before or after a build. If run before a
+                // build, any libraries the user is building will not be present yet and would not
+                // be added to runtimeFiles. After a build they would. We no longer skip non-present
+                // files for the sake of consistency.
 
                 // Anything under the sysroot shouldn't be included in the APK. This isn't strictly
                 // true since the STLs live here, but those are handled separately by
