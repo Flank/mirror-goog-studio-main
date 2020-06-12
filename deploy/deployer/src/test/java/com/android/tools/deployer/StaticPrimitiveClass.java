@@ -27,4 +27,6 @@ public class StaticPrimitiveClass {
 
     public final int notStatic = 1;
     public static int notFinal;
+
+    public static final int invokedFunction = (int) (Math.random() * 100);
 }
