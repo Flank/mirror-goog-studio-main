@@ -933,16 +933,15 @@ public class VariantManager<
     private SigningConfig createSigningOverride() {
         SigningOptions signingOptions = SigningOptions.readSigningOptions(projectOptions);
         if (signingOptions != null) {
-            com.android.build.gradle.internal.dsl.SigningConfig signingConfigDsl =
-                    new com.android.build.gradle.internal.dsl.SigningConfig("externalOverride");
+            SigningConfig signingConfigDsl = new SigningConfig("externalOverride");
 
-            signingConfigDsl.setStoreFile(new File(signingOptions.getStoreFile()));
-            signingConfigDsl.setStorePassword(signingOptions.getStorePassword());
-            signingConfigDsl.setKeyAlias(signingOptions.getKeyAlias());
-            signingConfigDsl.setKeyPassword(signingOptions.getKeyPassword());
+            signingConfigDsl.storeFile(new File(signingOptions.getStoreFile()));
+            signingConfigDsl.storePassword(signingOptions.getStorePassword());
+            signingConfigDsl.keyAlias(signingOptions.getKeyAlias());
+            signingConfigDsl.keyPassword(signingOptions.getKeyPassword());
 
             if (signingOptions.getStoreType() != null) {
-                signingConfigDsl.setStoreType(signingOptions.getStoreType());
+                signingConfigDsl.storeType(signingOptions.getStoreType());
             }
 
             if (signingOptions.getV1Enabled() != null) {
