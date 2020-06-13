@@ -93,9 +93,6 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                     TaskProvider manifestProducer = tasks.register(it.getName() + 'ManifestProducer', ManifestProducerTask) {
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
-                            task.outputManifest.set(
-                                new File(project.buildDir, "intermediates/" + getName() + "ManifestProducer/output")
-                            )
                     }
                     it.artifacts.use(manifestProducer)
                         .wiredWith({ it.outputManifest })

@@ -124,9 +124,6 @@ expected result : "Got an APK...." message.
                 onVariantProperties {
                     val manifestProducer = tasks.register<ManifestProducerTask>("${'$'}{name}ManifestProducer") {
                         gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
-                        outputManifest.set(
-                            File(project.buildDir, "intermediates/${'$'}{name}/ManifestProducer/output")
-                        )
                     }
                     artifacts.use(manifestProducer)
                         .wiredWith(ManifestProducerTask::outputManifest)
