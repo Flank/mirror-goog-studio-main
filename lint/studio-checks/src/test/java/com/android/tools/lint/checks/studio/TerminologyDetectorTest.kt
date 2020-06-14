@@ -42,6 +42,8 @@ class TerminologyDetectorTest {
         val w8 = "\u0077\u0068\u0069\u0074\u0065\u004c\u0069\u0073\u0074"
         val w9 = "\u0077\u0068\u0069\u0074\u0065-\u006c\u0069\u0073\u0074"
         val w10 = "\u0057\u0068\u0069\u0074\u0065\u004c\u0069\u0073\u0074"
+        val w11 = "\u0063\u0068\u0061\u0072\u0061\u0063\u0074\u0065\u0072\u0073\u0057\u0068\u0069\u0074\u0065\u006c\u0069\u0073\u0074"
+        val w12 = "\u0057\u0068\u0069\u0074\u0065\u006c\u0069\u0073\u0074"
         // </unicode>
 
         studioLint()
@@ -77,6 +79,7 @@ class TerminologyDetectorTest {
                       /** This is $w4 */
                       fun test() {
                             // Random $w2 comment
+                            val $w11: String = ""
                       }
                     """
                 ).indented(),
@@ -93,7 +96,7 @@ class TerminologyDetectorTest {
                 src/test/pkg/Test.java:10: Error: Avoid using "$w2"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                      // This is the $w2 variable
                                     ~~~~~~~~~
-                src/test/pkg/Test.java:11: Error: Avoid using "$w10"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                src/test/pkg/Test.java:11: Error: Avoid using "$w10" in "$w3"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                      public int $w3() { return 0; }
                                    ~~~~~~~~~
                 src/test/pkg/Test.java:12: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
@@ -120,8 +123,11 @@ class TerminologyDetectorTest {
                 src/test.kt:4: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                       // Random $w5 comment
                                 ~~~~~~~~~
+                src/test.kt:5: Error: Avoid using "$w12" in "$w11"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                      val $w11: String = ""
+                                    ~~~~~~~~~
                 src/main/resources/cts/${w5}_devices.json: Error: Avoid using "$w5" in filename; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
-                12 errors, 0 warnings
+                13 errors, 0 warnings
                 """
             )
     }
@@ -262,8 +268,9 @@ class TerminologyDetectorTest {
         printer.println(
             """        var state = ${stateMap[""]}
         var begin = 0
-        for (i in source.indices) {
-            val c = source[i]
+        var i = 0
+        while (i < source.length) {
+            val c = source[i++]
             when (state) {"""
         )
 
@@ -274,7 +281,7 @@ class TerminologyDetectorTest {
             val stateName = stateMap[statePrefix]
             printer.println("                $stateName -> {")
             if (statePrefix.isEmpty()) {
-                printer.println("                    begin = i")
+                printer.println("                    begin = i - 1")
             }
             printer.println("                    state = when (c) {")
             for (prefix in prefixes) {
@@ -291,9 +298,10 @@ class TerminologyDetectorTest {
                         val recommendation = recommendationsMap[prefix]!!
                         val replacement = recommendation.with
                         val words = recommendation.words
+                        val from = if (words) "begin" else "i - " + prefix.length
                         printer.println(
                             """{
-                            report(context, element, source, begin, i + 1, "$replacement", $words)
+                            report(context, element, source, $from, i, "$replacement", $words)
                             ${stateMap[""]}
                         }"""
                         )
@@ -302,11 +310,28 @@ class TerminologyDetectorTest {
                     }
                 }
             }
-            printer.println(
-                """                        else -> ${stateMap[""]}
+
+            if (statePrefix.isEmpty()) {
+                printer.println(
+                    """                        else -> ${stateMap[""]}
                     }
                 }"""
-            )
+                )
+            } else {
+                var next = ""
+                for (j in 1 until statePrefix.length) {
+                    val sub = statePrefix.substring(j)
+                    if (prefixes.contains(sub)) {
+                        next = sub
+                        break
+                    }
+                }
+                printer.println(
+                    """                        else -> { i--; ${stateMap[next] } }
+                    }
+                }"""
+                )
+            }
         }
         printer.print(
             """            }
