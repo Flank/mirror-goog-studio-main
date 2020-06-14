@@ -20,8 +20,8 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.StringOption
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.artifacts.ArtifactAttributes
-import java.io.File
 
 /**
  * To update:
@@ -49,7 +49,7 @@ import java.io.File
 private const val DEFAULT_PREFAB_VERSION = "1.0.0"
 private const val PREFAB_CONFIG_NAME = "_internal_prefab_binary"
 
-private fun getPrefabArtifact(configuration: Configuration): File =
+private fun getPrefabArtifact(configuration: Configuration): FileCollection =
     configuration.incoming.artifactView { config ->
         config.attributes {
             it.attribute(
@@ -57,13 +57,13 @@ private fun getPrefabArtifact(configuration: Configuration): File =
                 ArtifactTypeDefinition.JAR_TYPE
             )
         }
-    }.artifacts.artifactFiles.singleFile
+    }.artifacts.artifactFiles
 
-fun getPrefabFromMaven(globalScope: GlobalScope): File {
+fun getPrefabFromMaven(globalScope: GlobalScope): FileCollection {
     val project = globalScope.project
 
     globalScope.projectOptions[StringOption.PREFAB_CLASSPATH]?.let {
-        return project.file(it)
+        return project.files(it)
     }
 
     project.configurations.findByName(PREFAB_CONFIG_NAME)?.let {

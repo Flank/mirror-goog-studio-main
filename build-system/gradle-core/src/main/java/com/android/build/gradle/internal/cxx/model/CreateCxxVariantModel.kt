@@ -16,15 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
-import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils.join
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -34,30 +30,20 @@ import java.io.File
  * Construct a [CxxVariantModel], careful to be lazy with module-level fields.
  */
 fun createCxxVariantModel(
-    module: CxxModuleModel,
-    componentProperties: ComponentPropertiesImpl) : CxxVariantModel {
+    configurationModel: CxxConfigurationModel,
+    module: CxxModuleModel) : CxxVariantModel {
 
     return object : CxxVariantModel {
-        private val buildSystem by lazy {
-            createNativeBuildSystemVariantConfig(
-                module.buildSystem,
-                componentProperties.variantDslInfo
-            )
-        }
         private val intermediatesFolder by lazy {
             join(module.intermediatesFolder, module.buildSystem.tag, variantName)
         }
-        override val buildTargetSet get() = buildSystem.targets
-        override val implicitBuildTargetSet
-            get() = when (val extension = componentProperties.globalScope.extension) {
-                is LibraryExtension -> extension.prefab.map { it.name }.toSet()
-                else -> emptySet()
-            }
+        override val buildTargetSet = configurationModel.nativeVariantConfig.targets
+        override val implicitBuildTargetSet = configurationModel.implicitBuildTargetSet
         override val module = module
-        override val buildSystemArgumentList get() = buildSystem.arguments
-        override val cFlagsList get() = buildSystem.cFlags
-        override val cppFlagsList get() = buildSystem.cppFlags
-        override val variantName get() = componentProperties.name
+        override val buildSystemArgumentList = configurationModel.nativeVariantConfig.arguments
+        override val cFlagsList = configurationModel.nativeVariantConfig.cFlags
+        override val cppFlagsList = configurationModel.nativeVariantConfig.cppFlags
+        override val variantName = configurationModel.variantName
         override val cmakeSettingsConfiguration
             // TODO remove this after configuration has been added to DSL
             // If CMakeSettings.json has a configuration with this exact name then
@@ -71,16 +57,15 @@ fun createCxxVariantModel(
             } else {
                 join(intermediatesFolder, "obj")
             }
-        override val isDebuggableEnabled
-            get() = componentProperties.variantDslInfo.isDebuggable
+        override val isDebuggableEnabled = configurationModel.isDebuggable
         override val validAbiList by lazy {
             CachingEnvironment(module.cxxFolder).use {
                 AbiConfigurator(
                     AbiConfigurationKey(
                         module.ndkSupportedAbiList,
                         module.ndkDefaultAbiList,
-                        buildSystem.externalNativeBuildAbiFilters,
-                        buildSystem.ndkAbiFilters,
+                        configurationModel.nativeVariantConfig.externalNativeBuildAbiFilters,
+                        configurationModel.nativeVariantConfig.ndkAbiFilters,
                         module.splitsAbiFilterSet,
                         module.project.isBuildOnlyTargetAbiEnabled,
                         module.project.ideBuildTargetAbi
@@ -89,23 +74,8 @@ fun createCxxVariantModel(
             }
         }
 
-        override val prefabClassPath: File? by lazy {
-            // Don't fetch Prefab from maven unless we actually need it.
-            if (module.project.isPrefabEnabled && prefabPackageDirectoryList.isNotEmpty()) {
-                getPrefabFromMaven(componentProperties.globalScope)
-            } else {
-                null
-            }
-        }
-
-        override val prefabPackageDirectoryList: List<File> by lazy {
-            componentProperties.variantDependencies.getArtifactCollection(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
-            ).artifactFiles.toList()
-        }
-
+        override val prefabClassPath = configurationModel.prefabClassPath?.singleFile
+        override val prefabPackageDirectoryList get() = configurationModel.prefabPackageDirectoryList?.toList()?:listOf()
         override val prefabDirectory: File = jsonFolder.resolve("prefab")
     }
 }

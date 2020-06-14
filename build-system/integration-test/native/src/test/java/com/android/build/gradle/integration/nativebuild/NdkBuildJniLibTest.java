@@ -58,7 +58,7 @@ public class NdkBuildJniLibTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .fromTestProject("ndkJniLib")
                     .addFile(androidMk)
                     .create();

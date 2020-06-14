@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getBuildRootFolder
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.CmakeSettingsMock
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
@@ -81,10 +82,10 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 override val cmakeSettingsConfiguration = DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
             }
             val abi = createCxxAbiModel(
+                sdkComponents,
+                configurationModel,
                 variant,
-                Abi.X86,
-                global,
-                componentProperties)
+                Abi.X86)
             val rewritten = abi.rewriteCxxAbiModelWithCMakeSettings()
             assertThat(rewritten.cmake!!.effectiveConfiguration.generator).isEqualTo("some other generator")
             assertThat(rewritten.cxxBuildFolder.path).contains("some other build root folder")
@@ -117,10 +118,10 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 override val cmakeSettingsConfiguration = DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
             }
             val abi = createCxxAbiModel(
+                sdkComponents,
+                configurationModel,
                 variant,
-                Abi.X86,
-                global,
-                componentProperties).rewriteCxxAbiModelWithCMakeSettings()
+                Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getGenerator()).isEqualTo("some other generator")
@@ -138,10 +139,10 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 override val variantName = "myMinSizeRel" // Should cause CMAKE_BUILD_TYPE to be MinSizeRel
             }
             val abi = createCxxAbiModel(
+                sdkComponents,
+                configurationModel,
                 variant,
-                Abi.X86,
-                global,
-                componentProperties).rewriteCxxAbiModelWithCMakeSettings()
+                Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("MinSizeRel")
@@ -158,10 +159,10 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                         "-D${CmakeProperty.CMAKE_TOOLCHAIN_FILE}=PrecedenceCheckingToolchainFile")
             }
             val abi = createCxxAbiModel(
+                sdkComponents,
+                configurationModel,
                 variant,
-                Abi.X86,
-                global,
-                componentProperties).rewriteCxxAbiModelWithCMakeSettings()
+                Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("PrecedenceCheckingBuildType")
@@ -187,7 +188,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     @Test
     fun `configuration type build name does contribute to hash`() {
         val (abi1, abi2) = abisOf { mock, abi ->
-            when(abi) {
+            when (abi) {
                 1 -> Mockito.doReturn("debug").`when`(mock.componentProperties).name
                 2 -> Mockito.doReturn("release").`when`(mock.componentProperties).name
             }
@@ -271,13 +272,19 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             setup(this, 1)
 
-            val variant1 = createCxxVariantModel(module, componentProperties)
-            val result1 = createCxxAbiModel(variant1, abi1, global, componentProperties).rewriteCxxAbiModelWithCMakeSettings()
+            val configurationModel1 = tryCreateCxxConfigurationModel(componentProperties)!!
+            val variant1 = createCxxVariantModel(configurationModel1, module)
+            val result1 = createCxxAbiModel(
+                sdkComponents, configurationModel1,
+                variant1, abi1).rewriteCxxAbiModelWithCMakeSettings()
             result1.toJsonString() // Force all lazy values
 
             setup(this, 2)
-            val variant2 = createCxxVariantModel(module, componentProperties)
-            val result2 = createCxxAbiModel(variant2, abi2, global, componentProperties).rewriteCxxAbiModelWithCMakeSettings()
+            val configurationModel2 = tryCreateCxxConfigurationModel(componentProperties)!!
+            val variant2 = createCxxVariantModel(configurationModel2, module)
+            val result2 = createCxxAbiModel(
+                sdkComponents, configurationModel2,
+                variant2, abi2).rewriteCxxAbiModelWithCMakeSettings()
             result2.toJsonString() // Force all lazy values
 
             return Pair(result1, result2)

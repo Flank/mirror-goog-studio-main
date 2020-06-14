@@ -36,8 +36,6 @@ fun gradleLocalProperties(projectRootDir : File) : Properties {
         InputStreamReader(FileInputStream(localProperties), Charsets.UTF_8).use { reader ->
             properties.load(reader)
         }
-    } else {
-        infoln("Gradle local properties file not found at $localProperties")
     }
     return properties
 }

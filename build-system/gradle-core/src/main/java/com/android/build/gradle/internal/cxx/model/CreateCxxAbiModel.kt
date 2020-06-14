@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -29,10 +29,11 @@ import java.io.File
  * Construct a [CxxAbiModel], careful to be lazy with module level fields.
  */
 fun createCxxAbiModel(
+    sdkComponents: SdkComponentsBuildService,
+    configurationModel: CxxConfigurationModel,
     variant: CxxVariantModel,
-    abi: Abi,
-    global: GlobalScope,
-    componentProperties: ComponentPropertiesImpl) : CxxAbiModel {
+    abi: Abi
+) : CxxAbiModel {
     return object : CxxAbiModel {
         override val variant = variant
         override val abi = abi
@@ -46,10 +47,8 @@ fun createCxxAbiModel(
             join(variant.jsonFolder, abi.tag)
         }
         override val abiPlatformVersion by lazy {
-            val minSdkVersion = componentProperties.minSdkVersion
-            global
-                .sdkComponents
-                .get()
+            val minSdkVersion = configurationModel.minSdkVersion
+            sdkComponents
                 .ndkHandler
                 .ndkPlatform
                 .getOrThrow()

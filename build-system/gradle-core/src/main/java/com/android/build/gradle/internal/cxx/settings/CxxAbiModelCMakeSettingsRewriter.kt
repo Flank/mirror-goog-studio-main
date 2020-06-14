@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.cxx.configure.removeSubsumedArguments
 import com.android.build.gradle.internal.cxx.configure.toCmakeArgument
 import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
+import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.replaceWith
 import com.android.build.gradle.internal.cxx.settings.Macro.*

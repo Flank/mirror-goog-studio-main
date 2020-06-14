@@ -47,7 +47,7 @@ class RenderscriptNdkConnectedTest {
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestProject("renderscriptNdk")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 

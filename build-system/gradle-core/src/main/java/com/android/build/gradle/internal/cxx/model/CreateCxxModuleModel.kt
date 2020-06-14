@@ -20,9 +20,7 @@ import com.android.SdkConstants.CMAKE_DIR_PROPERTY
 import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
@@ -31,14 +29,9 @@ import com.android.build.gradle.internal.cxx.configure.findCmakeVersion
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
-import com.android.build.gradle.internal.cxx.logging.errorln
-import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild
-import com.android.build.gradle.internal.ndk.NdkHandler
-import com.android.build.gradle.internal.ndk.Stl
-import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
-import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -57,7 +50,7 @@ import java.util.function.Consumer
  * A note about laziness:
  * ----------------------
  * Everything except for information needed to determine whether this is a C/C++
- * module (and so [tryCreateCxxModuleModel] returns null) should be deferred with
+ * module (and so [createCxxModuleModel] returns null) should be deferred with
  * 'by lazy' or some other means.
  *
  * The primary reason for this is that the configuration phase of sync should be
@@ -76,48 +69,32 @@ import java.util.function.Consumer
  * - Some fields have side effects (like logging errors or warnings). These
  *   shouldn't be logged multiple times.
  * - If all fields that access global are lazy then it is trivial to write a
- *   unittest that verifies that global isn't accessed in [tryCreateCxxModuleModel].
+ *   unittest that verifies that global isn't accessed in [createCxxModuleModel].
  *
  * Since 'by lazy' is not costly in terms of memory or time it's preferable just
  * to always use it.
  */
-fun tryCreateCxxModuleModel(
-    componentProperties: ComponentPropertiesImpl,
+fun createCxxModuleModel(
+    sdkComponents : SdkComponentsBuildService,
+    configurationModel: CxxConfigurationModel,
     cmakeLocator: CmakeLocator
-) : CxxModuleModel? {
-    val global = componentProperties.globalScope
-
-    val (buildSystem, makeFile, buildStagingFolder) =
-        getProjectPath(global.extension.externalNativeBuild) ?: return null
+) : CxxModuleModel {
 
     val cxxFolder = findCxxFolder(
-        global.project.projectDir,
-        buildStagingFolder,
-        global.project.buildDir)
-
-    /**
-     * Construct an [NdkHandler] and attempt to auto-download an NDK. If auto-download fails then
-     * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
-     * in Android Studio
-     */
-    val ndkHandler = global.sdkComponents.get().ndkHandler
-    val ndkInstall = CachingEnvironment(cxxFolder).use {
-        ndkHandler.getNdkPlatform(downloadOkay = true)
-    }
-    if (!ndkInstall.isConfigured) {
-        infoln("Not creating C/C++ model because NDK could not be configured.")
-        return null
-    }
+        configurationModel.moduleRootFolder,
+        configurationModel.buildStagingFolder,
+        configurationModel.buildDir)
 
     fun localPropertyFile(property : String) : File? {
-        val path = gradleLocalProperties(global.project.rootDir)
+        val path = gradleLocalProperties(configurationModel.rootDir)
             .getProperty(property) ?: return null
         return File(path)
     }
+    val ndk by lazy { sdkComponents.ndkHandler.ndkPlatform.getOrThrow() }
     return object : CxxModuleModel {
-        override val moduleBuildFile by lazy { global.project.buildFile }
-        override val cxxFolder get() = cxxFolder
-        override val project by lazy { createCxxProjectModel(componentProperties) }
+        override val moduleBuildFile = configurationModel.buildFile
+        override val cxxFolder = cxxFolder
+        override val project by lazy { createCxxProjectModel(sdkComponents, configurationModel) }
         override val ndkMetaPlatforms by lazy {
             val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkFolder)
             if (ndkMetaPlatformsFile.isFile) {
@@ -135,15 +112,14 @@ fun tryCreateCxxModuleModel(
                     val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
                     object: CxxCmakeModuleModel {
                         override val minimumCmakeVersion by lazy {
-                            findCmakeVersion(
-                                global.extension.externalNativeBuild.cmake.version)
+                            findCmakeVersion(configurationModel.cmakeVersion)
                         }
                         private val cmakeFolder by lazy {
                             cmakeLocator.findCmakePath(
-                                global.extension.externalNativeBuild.cmake.version,
+                                configurationModel.cmakeVersion,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
-                                global.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile,
-                                Consumer { global.sdkComponents.get().installCmake(it) })!!
+                                sdkComponents.sdkDirectoryProvider.get().asFile,
+                                Consumer { sdkComponents.installCmake(it) })!!
                         }
                         override val cmakeExe by lazy {
                             join(cmakeFolder, "bin", "cmake$exe")
@@ -158,77 +134,42 @@ fun tryCreateCxxModuleModel(
                 }
         override val ndkFolder by lazy {
             trySymlinkNdk(
-                ndkHandler.ndkPlatform.getOrThrow().ndkDirectory,
+                ndk.ndkDirectory,
                 cxxFolder,
                 localPropertyFile(NDK_SYMLINK_DIR))
         }
-        override val ndkVersion by lazy {
-            ndkHandler.ndkPlatform.getOrThrow().revision
-        }
-        override val ndkSupportedAbiList by lazy {
-            ndkHandler.ndkPlatform.getOrThrow().supportedAbis
-        }
-        override val ndkDefaultAbiList by lazy {
-            ndkHandler.ndkPlatform.getOrThrow().defaultAbis
-        }
-        override val ndkDefaultStl: Stl by lazy {
-            ndkHandler.ndkPlatform.getOrThrow().ndkInfo.getDefaultStl(buildSystem)
-        }
-        override val makeFile = makeFile
-        override val buildSystem = buildSystem
-        override val splitsAbiFilterSet by lazy {
-            global.extension.splits.abiFilters
-        }
-        override val intermediatesFolder by lazy {
-            global.intermediatesDir
-        }
-        override val gradleModulePathName by lazy {
-            global.project.path
-        }
-        override val moduleRootFolder by lazy {
-            global.project.projectDir
-        }
-        override val buildStagingFolder get() = buildStagingFolder
+        override val ndkVersion by lazy { ndk.revision }
+        override val ndkSupportedAbiList by lazy { ndk.supportedAbis }
+        override val ndkDefaultAbiList by lazy { ndk.defaultAbis }
+        override val ndkDefaultStl by lazy { ndk.ndkInfo.getDefaultStl(configurationModel.buildSystem) }
+        override val makeFile get() = configurationModel.makeFile
+        override val buildSystem get() = configurationModel.buildSystem
+        override val splitsAbiFilterSet get() = configurationModel.splitsAbiFilterSet
+        override val intermediatesFolder get() = configurationModel.intermediatesFolder
+        override val gradleModulePathName get() = configurationModel.gradleModulePathName
+        override val moduleRootFolder get() = configurationModel.moduleRootFolder
+        override val buildStagingFolder get() = configurationModel.buildStagingFolder
         override val stlSharedObjectMap by lazy {
-            val map: MutableMap<Stl, Map<Abi, File>> = mutableMapOf()
-            val ndkInfo = ndkHandler.ndkPlatform.getOrThrow().ndkInfo
-            for (stl in ndkInfo.supportedStls) {
-                map[stl] = ndkInfo.getStlSharedObjectFiles(stl, ndkInfo.supportedAbis)
-            }
-            map.toMap()
+            ndk.ndkInfo.supportedStls
+                .map { stl ->
+                    Pair(
+                        stl,
+                        ndk.ndkInfo.getStlSharedObjectFiles(stl, ndk.ndkInfo.supportedAbis)
+                    )
+                }
+                .toMap()
         }
     }
 }
 
-fun tryCreateCxxModuleModel(componentProperties: ComponentPropertiesImpl) = tryCreateCxxModuleModel(
-    componentProperties,
+fun createCxxModuleModel(
+    sdkComponents: SdkComponentsBuildService,
+    configurationModel: CxxConfigurationModel
+) = createCxxModuleModel(
+    sdkComponents,
+    configurationModel,
     CmakeLocator()
 )
-
-/**
- * Resolve the CMake or ndk-build path and buildStagingDirectory of native build project.
- * - If there is exactly 1 path in the DSL, then use it.
- * - If there are more than 1, then that is an error. The user has specified both cmake and
- *   ndkBuild in the same project.
- */
-private fun getProjectPath(config: CoreExternalNativeBuild)
-        : Triple<NativeBuildSystem, File, File?>? {
-    val externalProjectPaths = listOfNotNull(
-        config.cmake.path?.let { Triple(CMAKE, it, config.cmake.buildStagingDirectory)},
-        config.ndkBuild.path?.let { Triple(NDK_BUILD, it, config.ndkBuild.buildStagingDirectory) })
-
-    return when {
-        externalProjectPaths.size > 1 -> {
-            errorln("More than one externalNativeBuild path specified")
-            null
-        }
-        externalProjectPaths.isEmpty() -> {
-            // No external projects present.
-            null
-        }
-        else -> externalProjectPaths[0]
-    }
-}
 
 /**
  * Finds the location of the build-system output folder. For example, .cxx/cmake/debug/x86/
@@ -252,13 +193,14 @@ internal fun findCxxFolder(
     return when {
         buildStagingDirectory == null -> defaultCxxFolder
         FileUtils.isFileInDirectory(buildStagingDirectory, buildFolder) -> {
-            errorln("""
+            warnln("""
             The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
             is a subdirectory of your project's temporary build directory (
             '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
-            builds. Either use the default build staging directory ('$defaultCxxFolder'), or
-            specify a path outside the temporary build directory.""".trimIndent())
-            defaultCxxFolder
+            builds. It is recommended to either use the default build staging directory 
+            ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
+            """.trimIndent())
+            buildStagingDirectory
         }
         else -> buildStagingDirectory
     }

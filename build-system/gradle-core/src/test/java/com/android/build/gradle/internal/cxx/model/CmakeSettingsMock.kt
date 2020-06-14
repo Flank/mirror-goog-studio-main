@@ -19,9 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.settings.Macro
-import com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions
 import com.android.utils.FileUtils.join
-import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 
 const val DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "different-mock-cmake-settings-configuration"
@@ -32,13 +30,9 @@ const val NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "no-varia
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
  */
 class CmakeSettingsMock : BasicModuleModelMock() {
-    val module by lazy { tryCreateCxxModuleModel(componentProperties, cmakeFinder)!! }
-    val variant by lazy { createCxxVariantModel(module, componentProperties) }
-    val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, componentProperties) }
-    private val externalNativeCmakeOptions = Mockito.mock(
-        ExternalNativeCmakeOptions::class.java,
-        throwUnmocked
-    )!!
+    val module by lazy { createCxxModuleModel(sdkComponents, configurationModel, cmakeFinder) }
+    val variant by lazy { createCxxVariantModel(configurationModel, module) }
+    val abi by lazy { createCxxAbiModel(sdkComponents, configurationModel, variant, Abi.X86) }
 
     init {
         doReturn(externalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions

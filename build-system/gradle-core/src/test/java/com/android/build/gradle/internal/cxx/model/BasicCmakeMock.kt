@@ -17,10 +17,8 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.mock
 
 /**
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
@@ -28,17 +26,11 @@ import org.mockito.Mockito.mock
 open class BasicCmakeMock : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
-    val module by lazy { tryCreateCxxModuleModel(componentProperties, cmakeFinder)!! }
-    val variant by lazy { createCxxVariantModel(module, componentProperties) }
-    val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, componentProperties) }
-
-    private val externalNativeCmakeOptions: ExternalNativeCmakeOptions = mock(
-        ExternalNativeCmakeOptions::class.java,
-        throwUnmocked
-    )
+    val module by lazy { createCxxModuleModel(sdkComponents, configurationModel, cmakeFinder)!! }
+    val variant by lazy { createCxxVariantModel(configurationModel, module) }
+    val abi by lazy { createCxxAbiModel(sdkComponents, configurationModel, variant, Abi.X86) }
 
     init {
-        doReturn(externalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
         doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters
         doReturn(listOf("-DCMAKE_ARG=1")).`when`(externalNativeCmakeOptions).arguments
         doReturn(listOf("-DC_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).getcFlags()

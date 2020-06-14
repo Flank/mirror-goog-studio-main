@@ -41,7 +41,7 @@ public class Pre21SplitTest {
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder()
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .fromTestApp(new HelloWorldJniApp())
                     .create();

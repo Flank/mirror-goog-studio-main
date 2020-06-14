@@ -524,7 +524,7 @@ public class NativeModelTest {
                                             .useCppSource(isCpp)
                                             .build())
                             .addFiles(extraFiles)
-                            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                             .setCmakeVersion(cmakeVersionInLocalProperties)
                             .setWithCmakeDirInLocalProp(!cmakeVersionInLocalProperties.isEmpty())
                             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

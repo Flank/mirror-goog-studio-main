@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.testutils.GoldenFile
 import org.junit.Test
 
@@ -46,19 +46,14 @@ class CMakeSettingsJsonPropertiesGoldenFileTest {
                 result += ""
                 BasicCmakeMock().let {
                     // Walk all vals in the model and invoke them
-                    val module = tryCreateCxxModuleModel(
-                        it.componentProperties, it.cmakeFinder
-                    )!!
+                    val module = createCxxModuleModel(it.sdkComponents, it.configurationModel)
                     val variant = createCxxVariantModel(
-                        module,
-                        it.componentProperties
-                    )
+                        it.configurationModel,
+                        module)
                     val abi = createCxxAbiModel(
+                        it.sdkComponents, it.configurationModel,
                         variant,
-                        Abi.X86_64,
-                        it.global,
-                        it.componentProperties
-                    )
+                        Abi.X86_64)
                     Macro.values()
                         .toList()
                         .sortedBy { it.qualifiedName }

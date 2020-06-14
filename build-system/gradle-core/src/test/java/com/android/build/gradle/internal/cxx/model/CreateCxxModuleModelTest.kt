@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth.assertThat
@@ -24,12 +25,14 @@ import org.junit.Test
 import org.mockito.Mockito.doReturn
 import java.io.File
 
-class TryCreateCxxModuleModelTest {
+class CreateCxxModuleModelTest {
 
     @Test
     fun `no native build`() {
         BasicModuleModelMock().let {
-            assertThat(tryCreateCxxModuleModel(it.componentProperties)).isNull()
+            assertThat(tryCreateCxxConfigurationModel(
+                it.componentProperties
+            )).isNull()
         }
     }
 
@@ -37,7 +40,9 @@ class TryCreateCxxModuleModelTest {
     fun `simplest cmake`() {
         BasicModuleModelMock().let {
             doReturn(File("./CMakeLists.txt")).`when`(it.cmake).path
-            assertThat(tryCreateCxxModuleModel(it.componentProperties)).isNotNull()
+            assertThat(createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel)).isNotNull()
         }
     }
 
@@ -45,7 +50,10 @@ class TryCreateCxxModuleModelTest {
     fun `simplest ndk-build`() {
         BasicModuleModelMock().let {
             doReturn(File("./Android.mk")).`when`(it.ndkBuild).path
-            assertThat(tryCreateCxxModuleModel(it.componentProperties)).isNotNull()
+            assertThat(createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel
+            )).isNotNull()
         }
     }
 
@@ -53,7 +61,10 @@ class TryCreateCxxModuleModelTest {
     fun `fully exercise model expect no exceptions`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel
+            )
             CxxModuleModel::class.java.methods.toList().onEach { method ->
                 method.invoke(module)
             }
@@ -65,9 +76,13 @@ class TryCreateCxxModuleModelTest {
         BasicCmakeMock().let {
             doReturn(join(it.projectRootDir, "Android.mk")).`when`(it.ndkBuild).path
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
-                assertThat(tryCreateCxxModuleModel(it.componentProperties)).isNull()
+                assertThat(
+                    tryCreateCxxConfigurationModel(
+                        it.componentProperties
+                    )
+                ).isNull()
                 assertThat(logEnvironment.errors).hasSize(1)
-                assertThat(logEnvironment.errors[0].toString()).contains("More than one")
+                assertThat(logEnvironment.errors[0]).contains("More than one")
             }
         }
     }
@@ -78,7 +93,14 @@ class TryCreateCxxModuleModelTest {
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 doReturn(File("my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
-                val module = tryCreateCxxModuleModel(it.componentProperties)!!
+                val componentModel =
+                    tryCreateCxxConfigurationModel(
+                        it.componentProperties
+                    )!!
+                val module = createCxxModuleModel(
+                    it.sdkComponents,
+                    componentModel
+                )
                 val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(0)
                 assertThat(finalStagingDir.path).contains("my-build-staging-directory")
@@ -88,17 +110,21 @@ class TryCreateCxxModuleModelTest {
 
     @Test
     fun `remap of buildStagingDirectory into build folder`() {
-        BasicCmakeMock().let {
-            PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
+        PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
+            BasicCmakeMock().let {
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
-                val module = tryCreateCxxModuleModel(it.componentProperties)!!
+                val configurationModel = tryCreateCxxConfigurationModel(it.componentProperties)!!
+                val module = createCxxModuleModel(
+                    it.sdkComponents,
+                    configurationModel
+                )
                 val finalStagingDir = module.cxxFolder
-                assertThat(logEnvironment.errors).hasSize(1)
-                assertThat(logEnvironment.errors[0].toString())
+                assertThat(logEnvironment.warnings).hasSize(1)
+                assertThat(logEnvironment.warnings[0])
                     .contains("The build staging directory you specified")
-                assertThat(finalStagingDir.path).doesNotContain("build-dir")
-                assertThat(finalStagingDir.path).contains(".cxx")
+                assertThat(finalStagingDir.path).contains("my-build-staging-directory")
+                assertThat(finalStagingDir.path).doesNotContain(".cxx")
             }
         }
     }

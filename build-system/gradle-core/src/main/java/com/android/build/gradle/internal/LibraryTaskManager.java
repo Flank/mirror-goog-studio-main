@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
+import static com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModelKt.createCxxMetadataGenerator;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
@@ -39,7 +40,9 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -92,7 +95,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -541,11 +543,21 @@ public class LibraryTaskManager
             return;
         }
 
-        Provider<CxxMetadataGenerator> generator =
-                variantProperties.getTaskContainer().getCxxMetadataGenerator();
-        if (generator == null) {
+        CxxConfigurationModel configurationModel =
+                variantProperties.getTaskContainer().getCxxConfigurationModel();
+        if (configurationModel == null) {
             // No external native build, so definitely no prefab tasks.
             return;
+        }
+
+        CxxMetadataGenerator generator;
+        try (IssueReporterLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(
+                        variantProperties.getServices().getIssueReporter())) {
+            generator =
+                    createCxxMetadataGenerator(
+                            variantProperties.getGlobalScope().getSdkComponents().get(),
+                            variantProperties.getTaskContainer().getCxxConfigurationModel());
         }
 
         LibraryExtension extension = (LibraryExtension) globalScope.getExtension();
@@ -567,8 +579,8 @@ public class LibraryTaskManager
                     taskFactory.register(
                             new PrefabPackageTask.CreationAction(
                                     modules,
-                                    generator.get().getVariant(),
-                                    generator.get().getAbis(),
+                                    generator.getVariant(),
+                                    generator.getAbis(),
                                     variantProperties));
             packageTask
                     .get()

@@ -21,6 +21,7 @@ import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -234,11 +235,20 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     nativeLibs.from(
         artifacts.get(InternalArtifactType.MERGED_JNI_LIBS)
     )
+
+    val sdkComponents =
+        getBuildService<SdkComponentsBuildService>(componentProperties.services.buildServiceRegistry).get()
+
     // add content of the local external native build
-    if (taskContainer.cxxMetadataGenerator != null) {
+    if (taskContainer.cxxConfigurationModel != null) {
+        val generator =
+            createCxxMetadataGenerator(
+                sdkComponents,
+                taskContainer.cxxConfigurationModel!!
+            )
         nativeLibs.from(
             componentProperties.services.fileCollection(
-                taskContainer.cxxMetadataGenerator!!.get().variant.objFolder
+                generator.variant.objFolder
             ).builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }
@@ -246,8 +256,6 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
                 componentProperties.services.fileCollection(artifacts.get(RENDERSCRIPT_LIB))
-        val sdkComponents =
-            getBuildService<SdkComponentsBuildService>(componentProperties.services.buildServiceRegistry).get()
         val rsLibs = sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)

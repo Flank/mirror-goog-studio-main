@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
+import static com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModelKt.tryCreateCxxConfigurationModel;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
@@ -77,8 +77,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -177,7 +176,6 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateManifestJarTask;
 import com.android.build.gradle.tasks.GenerateResValues;
@@ -1588,26 +1586,21 @@ public abstract class TaskManager<
 
     public void createExternalNativeBuildJsonGenerators(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
+        CxxConfigurationModel configurationModel =
+                tryCreateCxxConfigurationModel(componentProperties, false);
 
-        if (module == null) {
+        if (configurationModel == null) {
             return;
         }
 
-        componentProperties
-                .getTaskContainer()
-                .setCxxMetadataGenerator(
-                        project.provider(
-                                () ->
-                                        ExternalNativeJsonGenerator.create(
-                                                module, componentProperties)));
+        componentProperties.getTaskContainer().setCxxConfigurationModel(configurationModel);
     }
 
     public void createExternalNativeBuildTasks(
             @NonNull ComponentPropertiesImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
-        Provider<CxxMetadataGenerator> generator = taskContainer.getCxxMetadataGenerator();
-        if (generator == null) {
+        CxxConfigurationModel configurationModel = taskContainer.getCxxConfigurationModel();
+        if (configurationModel == null) {
             return;
         }
 
@@ -1615,25 +1608,25 @@ public abstract class TaskManager<
         TaskProvider<? extends Task> generateTask =
                 taskFactory.register(
                         new ExternalNativeBuildJsonTask.CreationAction(
-                                componentProperties, generator));
+                                configurationModel, componentProperties));
 
         // Set up build tasks
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.register(
                         new ExternalNativeBuildTask.CreationAction(
-                                generator, generateTask, componentProperties));
+                                configurationModel, componentProperties, generateTask));
 
         TaskFactoryUtils.dependsOn(taskContainer.getCompileTask(), buildTask);
 
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
-
-        if (module != null) {
+        CxxConfigurationModel allAbisModel =
+                tryCreateCxxConfigurationModel(componentProperties, true);
+        if (allAbisModel != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
                     taskFactory.register(
                             new ExternalNativeCleanTask.CreationAction(
-                                    module, componentProperties));
+                                    allAbisModel, componentProperties));
             TaskFactoryUtils.dependsOn(cleanTask, externalNativeCleanTask);
         }
     }

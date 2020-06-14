@@ -32,7 +32,7 @@ public class RsEnabledAnnotationTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("extractRsEnabledAnnotations")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
                     .setCmakeVersion("3.10.4819442")
                     .setWithCmakeDirInLocalProp(true)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

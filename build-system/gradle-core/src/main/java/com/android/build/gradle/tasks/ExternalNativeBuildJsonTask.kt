@@ -17,15 +17,20 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -35,7 +40,9 @@ import javax.inject.Inject
 /** Task wrapper around ExternalNativeJsonGenerator.  */
 abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: ExecOperations) :
     UnsafeOutputsTask("Generate json model is always run.") {
-    private var generator: Provider<CxxMetadataGenerator>? = null
+    @get:Internal
+    abstract val sdkComponents: Property<SdkComponentsBuildService>
+    private lateinit var configurationModel: CxxConfigurationModel
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
@@ -44,15 +51,20 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: 
 
     override fun doTaskAction() {
         IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use {
-            for (future in generator!!.get().getMetadataGenerators(ops, false, null)) {
+            val generator =
+                createCxxMetadataGenerator(
+                    sdkComponents.get(),
+                    configurationModel
+                )
+            for (future in generator.getMetadataGenerators(ops, false, null)) {
                 future.call()
             }
         }
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
-        private val generator: Provider<CxxMetadataGenerator>
+        private val configurationModel : CxxConfigurationModel,
+        componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<ExternalNativeBuildJsonTask, ComponentPropertiesImpl>(componentProperties) {
         override val name
             get() = computeTaskName("generateJsonModel")
@@ -62,7 +74,10 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: 
 
         override fun configure(task: ExternalNativeBuildJsonTask) {
             super.configure(task)
-            task.generator = generator
+            task.configurationModel = configurationModel
+            task.sdkComponents.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
             val variantDslInfo = creationConfig.variantDslInfo
             if (variantDslInfo.renderscriptNdkModeEnabled) {
                 creationConfig

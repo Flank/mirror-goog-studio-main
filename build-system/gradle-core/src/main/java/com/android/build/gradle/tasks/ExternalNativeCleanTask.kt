@@ -17,24 +17,25 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.common.base.Joiner
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
 import java.io.File
 import javax.inject.Inject
@@ -45,10 +46,10 @@ import javax.inject.Inject
  * It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-abstract class ExternalNativeCleanTask @Inject constructor(private val execOperations: ExecOperations) :
-    NonIncrementalTask() {
-    private var variant: CxxVariantModel? = null
-    private var abis: List<CxxAbiModel>? = null
+abstract class ExternalNativeCleanTask @Inject constructor(private val ops: ExecOperations) : NonIncrementalTask() {
+    @get:Internal
+    abstract val sdkComponents: Property<SdkComponentsBuildService>
+    private lateinit var configurationModel: CxxConfigurationModel
 
     override fun doTaskAction() {
         IssueReporterLoggingEnvironment(
@@ -56,8 +57,13 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val execOpera
         ).use {
             infoln("starting clean")
             infoln("finding existing JSONs")
+            val generator =
+                createCxxMetadataGenerator(
+                    sdkComponents.get(),
+                    configurationModel
+                )
             val existingJsons = mutableListOf<File>()
-            for (abi in abis!!) {
+            for (abi in generator.abis) {
                 if (abi.jsonFile.isFile) {
                     existingJsons.add(abi.jsonFile)
                 } else {
@@ -79,7 +85,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val execOpera
                 targetNames.add(Joiner.on(",").join(targets))
             }
             infoln("about to execute %s clean commands", cleanCommands.size)
-            executeProcessBatch(cleanCommands, targetNames)
+            executeProcessBatch(generator, cleanCommands, targetNames)
             infoln("clean complete")
         }
     }
@@ -88,7 +94,10 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val execOpera
      * Given a list of build commands, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    private fun executeProcessBatch(commands: List<String>, targetNames: List<String>) {
+    private fun executeProcessBatch(
+        generator: CxxMetadataGenerator,
+        commands: List<String>,
+        targetNames: List<String>) {
         for (commandIndex in commands.indices) {
             val command = commands[commandIndex]
             val target = targetNames[commandIndex]
@@ -101,35 +110,23 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val execOpera
             }
             infoln("$processBuilder")
             createProcessOutputJunction(
-                variant!!.objFolder,
+                generator.variant.objFolder,
                 "android_gradle_clean_$commandIndex",
                 processBuilder,
                 ""
             )
                 .logStderrToInfo()
                 .logStdoutToInfo()
-                .execute(execOperations::exec)
+                .execute(ops::exec)
         }
     }
 
     class CreationAction(
-        module: CxxModuleModel,
+        private val configurationModel : CxxConfigurationModel,
         componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<ExternalNativeCleanTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
-        private val variant = createCxxVariantModel(module, componentProperties)
-        // Attempt to clean every possible ABI even those that aren't currently built.
-        // This covers cases where user has changed abiFilters or platform. We don't want
-        // to leave stale results hanging around.
-        private val abis = Abi.getDefaultValues(). map { abi ->
-            createCxxAbiModel(
-                variant,
-                abi,
-                componentProperties.globalScope,
-                componentProperties
-            ).rewriteCxxAbiModelWithCMakeSettings()
-        }
 
         override val name
             get() = computeTaskName("externalNativeBuildClean")
@@ -139,8 +136,10 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val execOpera
 
         override fun configure(task: ExternalNativeCleanTask) {
             super.configure(task)
-            task.variant = variant
-            task.abis = abis
+            task.configurationModel = configurationModel
+            task.sdkComponents.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }
