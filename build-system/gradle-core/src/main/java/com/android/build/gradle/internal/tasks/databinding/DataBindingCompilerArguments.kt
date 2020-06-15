@@ -17,19 +17,19 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
+import com.android.build.api.artifact.impl.DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -90,13 +90,12 @@ class DataBindingCompilerArguments constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     val featureInfoDir: Provider<Directory>,
 
-    @get:Optional
     @get:OutputDirectory
-    val aarOutDir: Provider<Directory>,
+    val aarOutDir: File,
 
     @get:Optional
     @get:OutputFile
-    val exportClassListOutFile: Provider<RegularFile>,
+    val exportClassListOutFile: File?,
 
     @get:Input
     val enableDebugLogs: Boolean,
@@ -130,8 +129,8 @@ class DataBindingCompilerArguments constructor(
             classLogDir = classLogDir.get().asFile,
             baseFeatureInfoDir = baseFeatureInfoDir.orNull?.asFile,
             featureInfoDir = featureInfoDir.orNull?.asFile,
-            aarOutDir = aarOutDir.orNull?.asFile,
-            exportClassListOutFile = exportClassListOutFile.orNull?.asFile,
+            aarOutDir = aarOutDir,
+            exportClassListOutFile = exportClassListOutFile,
             enableDebugLogs = enableDebugLogs,
             printEncodedErrorLogs = printEncodedErrorLogs,
             isTestVariant = isTestVariant,
@@ -171,15 +170,28 @@ class DataBindingCompilerArguments constructor(
                 ),
                 featureInfoDir = artifacts.get(FEATURE_DATA_BINDING_FEATURE_INFO),
                 // Note that aarOurDir and exportClassListOutFile below are outputs. In the usual
-                // pattern, they need to be a DirectoryProperty or RegularFileProperty and should
-                // be created by calling project.objects.directoryProperty() or fileProperty().
-                // However, we currently create these properties in JavaCompile.kt to register them
-                // as artifacts in AGP, so it is not possible here. Instead, we have to call
-                // getFinalProduct() to get the artifacts' locations.
-                // This is a non-standard pattern, but we've used it only for data binding so far,
-                // so it's probably acceptable for now.
-                aarOutDir = artifacts.get(DATA_BINDING_ARTIFACT),
-                exportClassListOutFile = artifacts.get(DATA_BINDING_EXPORT_CLASS_LIST),
+                // pattern, they need to be wired with the corresponding artifacts through AGP
+                // Artifacts API. However, since the actual task that will produce these artifacts
+                // is not known at this point (it could be either JavaCompile or Kapt), using the
+                // Artifacts API is not possible.
+                //
+                // Instead, we wire them when JavaCompile or Kapt is registered, and here we'll just
+                // get the artifacts' locations.
+                //
+                // There is still another issue: Ideally, we should just call
+                // artifacts.get(<ARTIFACT-NAME>) to get a Provider<Directory/RegularFile> and
+                // resolve the actual locations lazily, but because KaptGenerateStubsTask currently
+                // resolves annotation processor options early
+                // (https://youtrack.jetbrains.com/issue/KT-39715), we need to get the artifacts'
+                // locations immediately here rather than lazily, using internal API.
+                aarOutDir = artifacts.getOutputPath(DATA_BINDING_ARTIFACT),
+                exportClassListOutFile =
+                        if (componentProperties.variantType.isExportDataBindingClassList) {
+                            artifacts.getOutputPath(
+                                DATA_BINDING_EXPORT_CLASS_LIST,
+                                DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
+                            )
+                        } else null,
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = componentProperties.variantType.isTestComponent,

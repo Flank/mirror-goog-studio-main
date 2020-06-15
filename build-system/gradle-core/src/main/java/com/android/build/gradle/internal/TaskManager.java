@@ -43,6 +43,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
+import static com.android.build.gradle.tasks.JavaCompileUtils.KOTLIN_KAPT_PLUGIN_ID;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -1512,7 +1513,10 @@ public abstract class TaskManager<
         taskFactory.register(new JavaPreCompileTask.CreationAction(componentProperties));
 
         final TaskProvider<? extends JavaCompile> javacTask =
-                taskFactory.register(new JavaCompileCreationAction(componentProperties));
+                taskFactory.register(
+                        new JavaCompileCreationAction(
+                                componentProperties,
+                                project.getPluginManager().hasPlugin(KOTLIN_KAPT_PLUGIN_ID)));
 
         postJavacCreation(componentProperties);
 
@@ -3272,7 +3276,7 @@ public abstract class TaskManager<
             }
             project.getPluginManager()
                     .withPlugin(
-                            "org.jetbrains.kotlin.kapt",
+                            KOTLIN_KAPT_PLUGIN_ID,
                             appliedPlugin ->
                                     configureKotlinKaptTasksForDataBinding(project, version));
         }
@@ -3365,14 +3369,11 @@ public abstract class TaskManager<
                 dataBindingArtifactDir,
                 exportClassListFile,
                 componentProperties.getVariantType().isExportDataBindingClassList(),
-                false, // Set to false to replace the first registration done by JavaCompile earlier
                 kaptTaskProvider,
                 componentProperties.getArtifacts());
 
         // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
-        // Ideally we need to unset the corresponding properties from JavaCompile's outputs, but
-        // there's currently no way to do it.
         kaptTask.getOutputs()
                 .dir(dataBindingArtifactDir)
                 .withPropertyName("dataBindingArtifactDir");

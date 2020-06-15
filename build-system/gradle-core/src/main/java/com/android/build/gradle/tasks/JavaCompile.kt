@@ -46,8 +46,9 @@ import java.util.concurrent.Callable
  * annotation processing and compilation. When Kapt is used (e.g., in most Kotlin-only or hybrid
  * Kotlin-Java projects), [JavaCompile] performs compilation only, without annotation processing.
  */
-class JavaCompileCreationAction(private val componentProperties: ComponentPropertiesImpl) :
-    TaskCreationAction<JavaCompile>() {
+class JavaCompileCreationAction(
+    private val componentProperties: ComponentPropertiesImpl, private val usingKapt: Boolean
+) : TaskCreationAction<JavaCompile>() {
 
     private val globalScope = componentProperties.globalScope
 
@@ -92,15 +93,17 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
             .on(AP_GENERATED_SOURCES)
 
         if (componentProperties.buildFeatures.dataBinding) {
-            // Data binding artifacts are part of the annotation processing outputs
-            registerDataBindingOutputs(
-                dataBindingArtifactDir,
-                dataBindingExportClassListFile,
-                componentProperties.variantType.isExportDataBindingClassList,
-                true, /* firstRegistration */
-                taskProvider,
-                artifacts
-            )
+            // Data binding artifacts are part of the annotation processing outputs of JavaCompile
+            // if Kapt is not used; otherwise, they are the outputs of Kapt.
+            if (!usingKapt) {
+                registerDataBindingOutputs(
+                    dataBindingArtifactDir,
+                    dataBindingExportClassListFile,
+                    componentProperties.variantType.isExportDataBindingClassList,
+                    taskProvider,
+                    artifacts
+                )
+            }
         }
     }
 
@@ -128,7 +131,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
             .withPropertyName("annotationProcessorList")
 
-        task.handleAnnotationProcessors(apList, componentProperties.name)
+        task.handleAnnotationProcessors(apList, componentProperties.name, usingKapt)
 
         // Set up the outputs
         task.setDestinationDir(classesOutputDirectory.asFile)
@@ -150,10 +153,14 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         // Also do that for data binding artifacts
         if (componentProperties.buildFeatures.dataBinding) {
-            task.outputs.dir(dataBindingArtifactDir).withPropertyName("dataBindingArtifactDir")
-            if (componentProperties.variantType.isExportDataBindingClassList) {
-                task.outputs.file(dataBindingExportClassListFile)
-                    .withPropertyName("dataBindingExportClassListFile")
+            // Data binding artifacts are part of the annotation processing outputs of JavaCompile
+            // if Kapt is not used; otherwise, they are the outputs of Kapt.
+            if (!usingKapt) {
+                task.outputs.dir(dataBindingArtifactDir).withPropertyName("dataBindingArtifactDir")
+                if (componentProperties.variantType.isExportDataBindingClassList) {
+                    task.outputs.file(dataBindingExportClassListFile)
+                        .withPropertyName("dataBindingExportClassListFile")
+                }
             }
         }
 
@@ -164,49 +171,29 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
     }
 }
 
-/**
- * Registers data binding outputs as outputs of the JavaCompile task (or the Kapt task if Kapt is
- * used).
- */
+/** Registers data binding artifacts as outputs of JavaCompile (or Kapt if Kapt is used). */
 fun registerDataBindingOutputs(
     dataBindingArtifactDir: DirectoryProperty,
     dataBindingExportClassListFile: RegularFileProperty,
     isExportDataBindingClassList: Boolean,
-    firstRegistration: Boolean,
     taskProvider: TaskProvider<out Task>,
     artifacts: ArtifactsImpl
 ) {
-    if (firstRegistration) {
-        artifacts
-            .setInitialProvider(taskProvider) { dataBindingArtifactDir }
-            // a name is required, or DataBindingCachingTest would fail (somehow adding a name
-            // solves the issue of overlapping outputs between Kapt and JavaCompile when this
-            // artifact is set as the output of both tasks).
-            .withName("out")
-            .on(DATA_BINDING_ARTIFACT)
-    } else {
-        artifacts.use(taskProvider)
-            .wiredWith { dataBindingArtifactDir }
-            .toCreate(DATA_BINDING_ARTIFACT)
-    }
+    artifacts
+        .setInitialProvider(taskProvider) { dataBindingArtifactDir }
+        .on(DATA_BINDING_ARTIFACT)
     if (isExportDataBindingClassList) {
-        if (firstRegistration) {
-            artifacts
-                .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
-                .on(DATA_BINDING_EXPORT_CLASS_LIST)
-        } else {
-            artifacts.use(taskProvider)
-                .wiredWith { dataBindingExportClassListFile }
-                .toCreate(DATA_BINDING_EXPORT_CLASS_LIST)
-        }
+        artifacts
+            .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
+            .on(DATA_BINDING_EXPORT_CLASS_LIST)
     }
 }
 
 private fun JavaCompile.handleAnnotationProcessors(
     processorListFile: Provider<RegularFile>,
-    variantName: String
+    variantName: String,
+    usingKapt: Boolean
 ) {
-    val hasKapt = this.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
     val projectPath = this.project.path
     doFirst {
         val annotationProcessors =
@@ -216,7 +203,7 @@ private fun JavaCompile.handleAnnotationProcessors(
         val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
 
         // Warn users about non-incremental annotation processors
-        if (!hasKapt && !allAPsAreIncremental && options.isIncremental) {
+        if (!usingKapt && !allAPsAreIncremental && options.isIncremental) {
             logger
                 .warn(
                     "The following annotation processors are not incremental:" +
