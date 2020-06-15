@@ -463,11 +463,6 @@ com.android.build.api.dsl.ExternalNativeCmakeOptions.getArguments: java.util.Lis
 com.android.build.api.dsl.ExternalNativeCmakeOptions.getCFlags: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ExternalNativeCmakeOptions.getCppFlags: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ExternalNativeCmakeOptions.getTargets: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.ExternalNativeCmakeOptions.setAbiFilters: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeCmakeOptions.setArguments: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeCmakeOptions.setCFlags: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeCmakeOptions.setCppFlags: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeCmakeOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ExternalNativeCmakeOptions.targets: void (java.lang.String[])
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.abiFilters: void (java.lang.String[])
@@ -479,11 +474,6 @@ com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getArguments: java.util.
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getCFlags: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getCppFlags: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getTargets: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.ExternalNativeNdkBuildOptions.setAbiFilters: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeNdkBuildOptions.setArguments: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeNdkBuildOptions.setCFlags: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeNdkBuildOptions.setCppFlags: void (java.util.List<java.lang.String>)
-com.android.build.api.dsl.ExternalNativeNdkBuildOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
 com.android.build.api.dsl.JacocoOptions
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
