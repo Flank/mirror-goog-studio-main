@@ -35,6 +35,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -53,6 +54,7 @@ import javax.inject.Inject
  *
  * Enabled when android.experimental.enableNewResourceShrinker=true.
  */
+@CacheableTask
 abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile
