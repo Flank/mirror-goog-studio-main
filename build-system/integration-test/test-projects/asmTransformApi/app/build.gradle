@@ -1,0 +1,27 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'instrumentation-plugin'
+}
+
+android {
+    dynamicFeatures = [":feature"]
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation project(':instrumentationLib')
+    implementation project(':lib')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
+
+    testImplementation 'junit:junit:4.12'
+}

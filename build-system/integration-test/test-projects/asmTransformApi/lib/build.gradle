@@ -1,0 +1,15 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'instrumentation-plugin'
+}
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+}
+
+apply from: "../../commonHeader.gradle"  // for $kotlinVersion
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
+}
