@@ -22,14 +22,11 @@ import com.android.aapt.Resources.ResourceTable
 import com.android.aapt.Resources.XmlNode
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat.BINARY
 import com.android.build.gradle.internal.res.shrinker.gatherer.ProtoResourceTableGatherer
-import com.android.build.gradle.internal.res.shrinker.gatherer.ResourcesGathererFromRTxt
 import com.android.build.gradle.internal.res.shrinker.graph.ProtoResourcesGraphBuilder
-import com.android.build.gradle.internal.res.shrinker.graph.RawResourcesGraphBuilder
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappingsRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.DexUsageRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.ProtoAndroidManifestUsageRecorder
 import com.android.build.gradle.internal.res.shrinker.usages.ToolsAttributeUsageRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.XmlAndroidManifestUsageRecorder
 import com.android.build.gradle.internal.res.shrinker.util.addAttribute
 import com.android.build.gradle.internal.res.shrinker.util.addChild
 import com.android.build.gradle.internal.res.shrinker.util.addNamespace
@@ -56,9 +53,6 @@ import org.junit.Assert.assertTrue
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
@@ -68,16 +62,11 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
 
-@RunWith(Parameterized::class)
-class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
+class ResourceShrinkerImplTest {
     companion object {
         @ClassRule
         @JvmField
         var sTemporaryFolder = TemporaryFolder()
-
-        @Parameters(name = "resourcesVariant={0}")
-        @JvmStatic
-        fun testParameters(): Array<ResourcesVariant> = ResourcesVariant.values()
 
         private val ANDROID_NS = "http://schemas.android.com/apk/res/android"
         private val AAPT_NS = "http://schemas.android.com/aapt"
@@ -114,27 +103,27 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
     fun `test support for tools_keep and tools_discard attributes`() {
         val dir = sTemporaryFolder.newFolder()
 
-        val resources = createResourceFolder(dir, resourcesVariant, addKeepXml = true)
+        val resources =
+            createResourceFolder(dir, ResourcesVariant.PROTO_COMPILED, addKeepXml = true)
         val rawResources =
             createResourceFolder(dir.resolve("raw"), ResourcesVariant.RAW, addKeepXml = true)
         val classes = createR8Dex(dir)
         val mergedManifest = createMergedManifest(dir)
         val mapping = createMappingFile(dir)
-        val rText = lazy { createResourceTextFile(dir) }
-        val resourceTable = lazy { createResourceTable(dir, addKeepXml = true) }
+        val resourceTable = createResourceTable(dir, addKeepXml = true)
 
         val analyzer = ResourceShrinkerImpl(
             resourcesGatherers = listOf(
-                createGatherer(rText, resourceTable)
+                ProtoResourceTableGatherer(resourceTable.toPath())
             ),
             obfuscationMappingsRecorder = ProguardMappingsRecorder(mapping.toPath()),
             usageRecorders = listOf(
                 DexUsageRecorder(classes.toPath()),
-                createManifestUsageRecorder(mergedManifest),
+                ProtoAndroidManifestUsageRecorder(mergedManifest.toPath()),
                 ToolsAttributeUsageRecorder(rawResources.toPath())
             ),
             graphBuilders = listOf(
-                createGraphBuilder(resources, resourceTable)
+                ProtoResourcesGraphBuilder(resources.toPath(), resourceTable.toPath())
             ),
             debugReporter = NoDebugReporter,
             supportMultipackages = false,
@@ -198,21 +187,20 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
 
         val classes = createR8Dex(dir)
         val mergedManifest = createMergedManifest(dir)
-        val resources = createResourceFolder(dir, resourcesVariant)
-        val rText = lazy { createResourceTextFile(dir) }
-        val resourceTable = lazy { createResourceTable(dir, addKeepXml = false) }
+        val resources = createResourceFolder(dir, ResourcesVariant.PROTO_COMPILED)
+        val resourceTable = createResourceTable(dir, addKeepXml = false)
 
         val analyzer = ResourceShrinkerImpl(
             resourcesGatherers = listOf(
-                createGatherer(rText, resourceTable)
+                ProtoResourceTableGatherer(resourceTable.toPath())
             ),
             obfuscationMappingsRecorder = null,
             usageRecorders = listOf(
                 DexUsageRecorder(classes.toPath()),
-                createManifestUsageRecorder(mergedManifest)
+                ProtoAndroidManifestUsageRecorder(mergedManifest.toPath())
             ),
             graphBuilders = listOf(
-                createGraphBuilder(resources, resourceTable)
+                ProtoResourcesGraphBuilder(resources.toPath(), resourceTable.toPath())
             ),
             debugReporter = NoDebugReporter,
             supportMultipackages = false,
@@ -266,20 +254,19 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
             CodeInput.R8 -> Pair(createR8Dex(dir), createMappingFile(dir))
         }
         val mergedManifest = createMergedManifest(dir)
-        val resources = createResourceFolder(dir, resourcesVariant)
-        val rText = lazy { createResourceTextFile(dir) }
-        val resourceTable = lazy { createResourceTable(dir, addKeepXml = false) }
+        val resources = createResourceFolder(dir, ResourcesVariant.PROTO_COMPILED)
+        val resourceTable = createResourceTable(dir, addKeepXml = false)
         val analyzer = ResourceShrinkerImpl(
             resourcesGatherers = listOf(
-                createGatherer(rText, resourceTable)
+                ProtoResourceTableGatherer(resourceTable.toPath())
             ),
             obfuscationMappingsRecorder = mapping?.let { ProguardMappingsRecorder(it.toPath()) },
             usageRecorders = listOf(
                 DexUsageRecorder(classes.toPath()),
-                createManifestUsageRecorder(mergedManifest)
+                ProtoAndroidManifestUsageRecorder(mergedManifest.toPath())
             ),
             graphBuilders = listOf(
-                createGraphBuilder(resources, resourceTable)
+                ProtoResourcesGraphBuilder(resources.toPath(), resourceTable.toPath())
             ),
             debugReporter = NoDebugReporter,
             supportMultipackages = false,
@@ -345,7 +332,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
                 "res/drawable/avd_heart_fill_1.xml",
                 "res/drawable/avd_heart_fill_2.xml"
             ),
-            resourcesArsc = resourceTable.value,
+            resourcesArsc = resourceTable,
             outZip = File(dir, "uncompressed.ap_")
         )
 
@@ -466,73 +453,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         }
     }
 
-    private fun createGatherer(rText: Lazy<File>, resourceTable: Lazy<File>) =
-        when (resourcesVariant) {
-            ResourcesVariant.RAW ->
-                ResourcesGathererFromRTxt(
-                    createResourceTextFile(rText.value),
-                    "com.example.shrinkunittest.app"
-                )
-            ResourcesVariant.PROTO_COMPILED ->
-                ProtoResourceTableGatherer(resourceTable.value.toPath())
-        }
-
-    private fun createManifestUsageRecorder(manifest: File) =
-        when (resourcesVariant) {
-            ResourcesVariant.RAW -> XmlAndroidManifestUsageRecorder(manifest.toPath())
-            ResourcesVariant.PROTO_COMPILED -> ProtoAndroidManifestUsageRecorder(manifest.toPath())
-        }
-
-    private fun createGraphBuilder(resources: File, resourceTable: Lazy<File>) =
-        when (resourcesVariant) {
-            ResourcesVariant.RAW ->
-                RawResourcesGraphBuilder(resources.toPath())
-            ResourcesVariant.PROTO_COMPILED ->
-                ProtoResourcesGraphBuilder(resources.toPath(), resourceTable.value.toPath())
-        }
-
     /* ktlint-disable */
-    private fun createResourceTextFile(dir: File): File {
-        val rDir =
-            File(dir, "app/build/source/r/release".replace('/', File.separatorChar))
-        rDir.mkdirs()
-        createFile(
-            rDir,
-            "com/example/shrinkunittest/app/R.txt",
-            """
-                int attr myAttr1 0x7f010000
-                int attr myAttr2 0x7f010001
-                int dimen activity_horizontal_margin 0x7f040000
-                int dimen activity_vertical_margin 0x7f040001
-                int drawable ic_launcher 0x7f020000
-                int drawable unused 0x7f020001
-                int drawable avd_heart_fill 0x7f020002
-                int drawable avd_heart_fill_1 0x7f020003
-                int drawable avd_heart_fill_2 0x7f020004
-                int id action_settings 0x7f080000
-                int id action_settings2 0x7f080001
-                int layout activity_main 0x7f030000
-                int menu main 0x7f070000
-                int menu menu2 0x7f070001
-                int raw android_wear_micro_apk 0x7f090000
-                int raw index1 0x7f090001
-                int raw styles2 0x7f090002
-                int raw my_js 0x7f090003
-                int raw my_used_raw_drawable 0x7f090004
-                int string action_settings 0x7f050000
-                int string action_settings2 0x7f050004
-                int string alias 0x7f050001
-                int string app_name 0x7f050002
-                int string hello_world 0x7f050003
-                int style AppTheme 0x7f060000
-                int style MyStyle 0x7f060001
-                int style MyStyle_Child 0x7f060002
-                int xml android_wear_micro_apk 0x7f0a0000
-            """.trimIndent()
-        )
-        return rDir
-    }
-
     private fun createResourceTable(dir: File, addKeepXml: Boolean): File {
         val basePackage = Package.newBuilder()
             .setPackageName("com.example.shrinkunittest.app")
@@ -984,7 +905,7 @@ class ResourceShrinkerImplTest(private val resourcesVariant: ResourcesVariant) {
         return createXml(
             dir,
             "app/build/manifests/release/AndroidManifest.xml",
-            resourcesVariant,
+            ResourcesVariant.PROTO_COMPILED,
             xmlElement("manifest")
                 .addNamespace("android", ANDROID_NS)
                 .addAttribute("versionCode", ANDROID_NS, "1")
