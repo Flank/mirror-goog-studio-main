@@ -38,6 +38,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.tools.analytics.CommonMetricsData;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
+import com.android.tools.build.gradle.internal.profile.VariantApiArtifactType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -92,6 +93,15 @@ public class AnalyticsUtil {
             return GradleTaskExecutionType.valueOf(getPotentialTaskExecutionTypeName(taskClass));
         } catch (IllegalArgumentException ignored) {
             return GradleTaskExecutionType.UNKNOWN_TASK_TYPE;
+        }
+    }
+
+    @NonNull
+    public static VariantApiArtifactType getVariantApiArtifactType(@NonNull Class<?> artifactType) {
+        try {
+            return VariantApiArtifactType.valueOf(artifactType.getSimpleName());
+        } catch (IllegalArgumentException ignored) {
+            return VariantApiArtifactType.CUSTOM_ARTIFACT_TYPE;
         }
     }
 
