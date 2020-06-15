@@ -76,6 +76,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val asmFramesComputationMode: FramesComputationMode
     val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
     val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
+    val allProjectClassesPostAsmInstrumentation: FileCollection
 
     // ---------------------------------------------------------------------------------------------
     // TODO figure out whether these properties are needed by all

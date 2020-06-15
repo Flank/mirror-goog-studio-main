@@ -38,7 +38,7 @@ class BundleAllClassesTest {
                 return object : Parameters() {
                     override val inputDirs =
                         FakeObjectFactory.factory.fileCollection().from(testFolder.newFolder())
-                    override val rClassesJar = FakeObjectFactory.factory.fileProperty()
+                    override val inputJars = FakeObjectFactory.factory.fileCollection()
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val outputJar =
                         FakeObjectFactory.factory.fileProperty().fileValue(outputJar)

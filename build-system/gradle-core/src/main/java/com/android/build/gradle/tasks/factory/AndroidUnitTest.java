@@ -185,7 +185,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             }
 
             // 2. the test creationConfig classes and java_res
-            collection.from(creationConfig.getArtifacts().getAllClasses());
+            collection.from(creationConfig.getAllProjectClassesPostAsmInstrumentation());
             // TODO is this the right thing? this doesn't include the res merging via transform
             // AFAIK
             collection.from(artifacts.get(InternalArtifactType.JAVA_RES.INSTANCE));

@@ -207,6 +207,7 @@ import com.android.build.gradle.tasks.ProcessPackagedManifestTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
+import com.android.build.gradle.tasks.TransformClassesWithAsmTask;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessArgs;
@@ -1708,6 +1709,8 @@ public abstract class TaskManager<
         //        TaskFactoryUtils.dependsOn(javacTask,
         // testedVariantScope.getTaskContainer().getJavacTask());
 
+        maybeCreateTransformClassesWithAsmTask(unitTestCreationConfig, false);
+
         // TODO: use merged java res for unit tests (bug 118690729)
 
         createRunUnitTestTask(unitTestCreationConfig);
@@ -2083,6 +2086,8 @@ public abstract class TaskManager<
         if (isTestCoverageEnabled) {
             createJacocoTask(creationConfig);
         }
+
+        maybeCreateTransformClassesWithAsmTask(creationConfig, isTestCoverageEnabled);
 
         maybeCreateDesugarTask(
                 creationConfig,
@@ -3344,6 +3349,34 @@ public abstract class TaskManager<
                             apkCreationConfig,
                             enableDexingArtifactTransform,
                             separateFileDependenciesDexingTask));
+        }
+    }
+
+    protected void maybeCreateTransformClassesWithAsmTask(
+            @NonNull ComponentCreationConfig creationConfig, boolean isTestCoverageEnabled) {
+        creationConfig.configureAndLockAsmClassesVisitors(project.getObjects());
+
+        if (!creationConfig.getRegisteredProjectClassesVisitors().isEmpty()) {
+            creationConfig
+                    .getTransformManager()
+                    .consumeStreams(
+                            ImmutableSet.of(Scope.PROJECT),
+                            ImmutableSet.of(DefaultContentType.CLASSES));
+
+            taskFactory.register(
+                    new TransformClassesWithAsmTask.CreationAction(
+                            creationConfig, isTestCoverageEnabled));
+
+            creationConfig
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder("asm-instrumented-classes")
+                                    .addContentTypes(DefaultContentType.CLASSES)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(
+                                            creationConfig
+                                                    .getAllProjectClassesPostAsmInstrumentation())
+                                    .build());
         }
     }
 }

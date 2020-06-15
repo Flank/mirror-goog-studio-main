@@ -151,7 +151,8 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: ComponentCreationConfig
+        creationConfig: ComponentCreationConfig,
+        val isTestCoverageEnabled: Boolean
     ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentCreationConfig>(
         creationConfig
     ) {
@@ -180,15 +181,28 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
             task.asmApiVersion.setDisallowChanges(creationConfig.asmApiVersion)
 
-            task.inputClassesDir.from(creationConfig.artifacts.getAllClasses().filter {
-                !it.name.endsWith(DOT_JAR)
-            })
+            if (isTestCoverageEnabled) {
+                task.inputClassesDir.from(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
+                    )
+                )
+                task.inputJarsWithIdentity.inputJars.from(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS
+                    )
+                )
+            } else {
+                task.inputClassesDir.from(creationConfig.artifacts.getAllClasses().filter {
+                    !it.name.endsWith(DOT_JAR)
+                })
 
-            task.inputJarsWithIdentity.inputJars.from(
-                creationConfig.artifacts.getAllClasses().filter {
-                    it.name.endsWith(DOT_JAR)
-                }
-            )
+                task.inputJarsWithIdentity.inputJars.from(
+                    creationConfig.artifacts.getAllClasses().filter {
+                        it.name.endsWith(DOT_JAR)
+                    }
+                )
+            }
 
             task.bootClasspath.from(creationConfig.variantScope.bootClasspath)
 

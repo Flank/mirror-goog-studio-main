@@ -247,6 +247,8 @@ public class LibraryTaskManager
             createJacocoTask(libVariantProperties);
         }
 
+        maybeCreateTransformClassesWithAsmTask(libVariantProperties, instrumented);
+
         // ----- External Transforms -----
         // apply all the external transforms.
         List<Transform> customTransforms = extension.getTransforms();

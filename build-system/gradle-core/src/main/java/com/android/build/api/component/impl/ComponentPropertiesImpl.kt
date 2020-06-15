@@ -178,6 +178,19 @@ abstract class ComponentPropertiesImpl(
     override val asmFramesComputationMode: FramesComputationMode
         get() = asmClassVisitorsRegistry.framesComputationMode
 
+    override val allProjectClassesPostAsmInstrumentation: FileCollection
+        get() =
+            if (registeredProjectClassesVisitors.isNotEmpty()) {
+                services.fileCollection(
+                    artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES),
+                    services.fileCollection(
+                        artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
+                    ).asFileTree
+                )
+            } else {
+                artifacts.getAllClasses()
+            }
+
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
      *
