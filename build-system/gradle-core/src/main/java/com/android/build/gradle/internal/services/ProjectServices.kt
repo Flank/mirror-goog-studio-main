@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.res.Aapt2FromMaven
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
@@ -37,7 +39,7 @@ import java.io.File
  * Stage-specific services should expose only part of what these objects expose, based on the need
  * of the context.
  */
-class ProjectServices(
+class ProjectServices constructor(
     val issueReporter: SyncIssueReporter,
     val deprecationReporter: DeprecationReporter,
     val objectFactory: ObjectFactory,
@@ -46,5 +48,13 @@ class ProjectServices(
     val projectLayout: ProjectLayout,
     val projectOptions: ProjectOptions,
     val buildServiceRegistry: BuildServiceRegistry,
+    private val aapt2FromMaven: Aapt2FromMaven? = null,
     val fileResolver: (Any) -> File
-)
+) {
+    fun initializeAapt2Input(aapt2Input: Aapt2Input) {
+        aapt2Input.buildService.setDisallowChanges(getBuildService(buildServiceRegistry))
+        aapt2Input.binaryDirectory.from(aapt2FromMaven?.aapt2Directory)
+        aapt2Input.binaryDirectory.disallowChanges()
+        aapt2Input.version.setDisallowChanges(aapt2FromMaven?.version)
+    }
+}

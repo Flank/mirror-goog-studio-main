@@ -20,7 +20,10 @@ package com.android.build.gradle.internal.services
 
 import com.android.SdkConstants
 import com.android.annotations.concurrency.GuardedBy
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2DaemonImpl
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager
 import com.android.builder.internal.aapt.v2.Aapt2DaemonTimeouts
@@ -29,12 +32,17 @@ import com.android.utils.ILogger
 import com.google.common.io.Closer
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import java.io.Closeable
-import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -63,33 +71,24 @@ fun getAaptDaemon(
         : Aapt2DaemonManager.LeasedAaptDaemon =
     serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
-data class  Aapt2DaemonServiceKey(val file: File): WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
+data class Aapt2DaemonServiceKey(val version: String): WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
     override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
 }
 
 /** Build service used to access AAPT2 daemons. */
-abstract class Aapt2DaemonBuildService : BuildService<BuildServiceParameters.None>,
+abstract class Aapt2DaemonBuildService : BuildService<Aapt2DaemonBuildService.Parameters>,
     AutoCloseable {
 
     private val registeredServices = mutableSetOf<Aapt2DaemonServiceKey>()
     private val closer = Closer.create()
+    private val logger: ILogger = LoggerWrapper.getLogger(this.javaClass)
 
-    @JvmOverloads
     @Synchronized
     fun registerAaptService(
-        aapt2FromMaven: File,
-        logger: ILogger,
-        serviceRegistry: WorkerActionServiceRegistry = aapt2DaemonServiceRegistry
+        aapt2Version: String,
+        aaptExecutablePath: Path
     ): Aapt2DaemonServiceKey {
-        val key = Aapt2DaemonServiceKey(aapt2FromMaven)
-        val aaptExecutablePath = aapt2FromMaven.toPath().resolve(SdkConstants.FN_AAPT2)
-
-        if (!Files.exists(aaptExecutablePath)) {
-            throw InvalidUserDataException(
-                "Specified AAPT2 executable does not exist: $aaptExecutablePath. "
-                        + "Must supply one of aapt2 from maven or custom location."
-            )
-        }
+        val key = Aapt2DaemonServiceKey(aapt2Version)
 
         if (registeredServices.add(key)) {
             val manager = Aapt2DaemonManager(
@@ -107,24 +106,69 @@ abstract class Aapt2DaemonBuildService : BuildService<BuildServiceParameters.Non
                 listener = Aapt2DaemonManagerMaintainer()
             )
             closer.register(Closeable { manager.shutdown() })
-            closer.register(serviceRegistry.registerServiceAsCloseable(key, manager))
+            closer.register(aapt2DaemonServiceRegistry.registerServiceAsCloseable(key, manager))
         }
         return key
+    }
+
+    fun getAapt2ExecutablePath(aapt2: Aapt2Input): Path {
+        return aapt2.binaryDirectory.singleFile.toPath().resolve(SdkConstants.FN_AAPT2).also {
+            if (!Files.exists(it)) {
+                throw InvalidUserDataException(
+                    "Specified AAPT2 executable does not exist: $it. "
+                            + "Must supply one of aapt2 from maven or custom location."
+                )
+            }
+        }
     }
 
     override fun close() {
         closer.close()
     }
 
-    class RegistrationAction(project: Project) :
-        ServiceRegistrationAction<Aapt2DaemonBuildService, BuildServiceParameters.None>(
+    abstract class Parameters: BuildServiceParameters {
+        abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+    }
+
+    class RegistrationAction(project: Project, val projectOptions: ProjectOptions) :
+        ServiceRegistrationAction<Aapt2DaemonBuildService, Parameters>(
             project,
             Aapt2DaemonBuildService::class.java
         ) {
-        override fun configure(parameters: BuildServiceParameters.None) {
-            // do nothing
+        override fun configure(parameters: Parameters) {
+            parameters.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
         }
     }
+}
+
+/**
+ * An AAPT2 input for use in a task or a transform, for use with [org.gradle.api.tasks.Nested]
+ *
+ * Use [ProjectServices.initializeAapt2Input] to initialize it.
+ */
+interface Aapt2Input {
+    @get:Internal
+    val buildService: Property<Aapt2DaemonBuildService>
+
+    @get:Input
+    val version: Property<String>
+
+    @get:Internal
+    val binaryDirectory: ConfigurableFileCollection
+}
+
+fun Aapt2Input.registerAaptService(): Aapt2DaemonServiceKey =
+    this.buildService.get().registerAaptService(
+        version.get(),
+        buildService.get().getAapt2ExecutablePath(this)
+    )
+
+fun Aapt2Input.getErrorFormatMode(): SyncOptions.ErrorFormatMode {
+    return this.buildService.get().parameters.errorFormatMode.get()
+}
+
+fun Aapt2Input.getAapt2Executable(): Path {
+    return buildService.get().getAapt2ExecutablePath(this)
 }
 
 /**

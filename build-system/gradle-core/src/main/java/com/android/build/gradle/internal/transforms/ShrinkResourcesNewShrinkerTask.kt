@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
@@ -34,17 +33,16 @@ import com.android.build.gradle.internal.res.shrinker.usages.ProtoAndroidManifes
 import com.android.build.gradle.internal.res.shrinker.usages.ToolsAttributeUsageRecorder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAaptDaemon
-import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.utils.FileUtils
 import com.google.common.io.Files
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -113,12 +111,8 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
     @get:Input
     abstract val usePreciseShrinking: Property<Boolean>
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
-    @get:Input
-    abstract val aapt2Version: Property<String>
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
+    @get:Nested
+    abstract val aapt: Aapt2Input
 
     override fun doTaskAction() {
         artifactTransformationRequest.get().submit(
@@ -162,9 +156,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
             parameters.mappingFileSrc.set(mappingFileSrc)
             parameters.resourceDir.set(resourceDir)
 
-            parameters.aapt2DaemonBuildService.set(aapt2DaemonBuildService)
-            parameters.aapt2Version.set(aapt2Version)
-            parameters.aapt2FromMaven.from(aapt2FromMaven)
+            parameters.aapt2ServiceKey.set(aapt.registerAaptService())
 
             parameters.outputFile.get().asFile
         }
@@ -227,12 +219,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
 
             task.dex.addAll(creationConfig.artifacts.getAll(InternalMultipleArtifactType.DEX))
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version.setDisallowChanges(aapt2Version)
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt)
         }
     }
 }
@@ -254,9 +241,7 @@ abstract class ShrinkProtoResourcesParams : WorkParameters, Serializable {
     abstract val resourceDir: DirectoryProperty
     abstract val dex: ListProperty<Directory>
 
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
-    abstract val aapt2Version: Property<String>
-    abstract val aapt2FromMaven: ConfigurableFileCollection
+    abstract val aapt2ServiceKey: Property<Aapt2DaemonServiceKey>
 
     abstract val reportFile: RegularFileProperty
 }
@@ -267,9 +252,7 @@ abstract class ShrinkProtoResourcesAction @Inject constructor() :
     private val logger = Logging.getLogger(ShrinkAppBundleResourcesTask::class.java)
 
     override fun execute() {
-        val aapt2ServiceKey = parameters.aapt2DaemonBuildService.get().registerAaptService(
-            parameters.aapt2FromMaven.singleFile, LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = parameters.aapt2ServiceKey.get()
         val originalFile = parameters.originalFile.get().asFile
         val originalProtoFile = parameters.originalProtoFile.get().asFile
         val shrunkProtoFile = parameters.shrunkProtoFile.get().asFile

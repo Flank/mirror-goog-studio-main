@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -26,8 +25,10 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -43,7 +44,6 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -72,8 +72,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
     abstract val debuggable: Property<Boolean>
 
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
-
     // Not an input as it is only used to rewrite exceptions and doesn't affect task output
     @get:Internal
     abstract val mergeBlameLogFolder: DirectoryProperty
@@ -101,17 +99,10 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         private set
 
     @get:Input
-    lateinit var aapt2Version: String
-        private set
-
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
-
-    @get:Input
     abstract val excludeResSourcesForReleaseBundles: Property<Boolean>
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     @get:Nested
     abstract val androidJarInput: AndroidJarInput
@@ -161,17 +152,14 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             logger.info("Aapt output file {}", outputFile.absolutePath)
         }
 
-        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven = aapt2FromMaven.singleFile,
-            logger = LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = aapt2.registerAaptService()
         getWorkerFacadeWithWorkers().use {
             it.submit(
                 Aapt2ProcessResourcesRunnable::class.java,
                 Aapt2ProcessResourcesRunnable.Params(
                     aapt2ServiceKey,
                     config,
-                    errorFormatMode,
+                    aapt2.getErrorFormatMode(),
                     mergeBlameLogFolder.get().asFile,
                     manifestMergeBlameFile.orNull?.asFile
                 )
@@ -276,17 +264,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.mergeBlameLogFolder.setDisallowChanges(creationConfig.artifacts.get(InternalArtifactType.MERGED_RES_BLAME_FOLDER))
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
             task.minSdkVersion = creationConfig.minSdkVersion.apiLevel
 
             task.resConfig = creationConfig.variantDslInfo.resourceConfigurations
-
-
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.services.projectOptions
-            )
 
             task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
@@ -299,9 +279,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                     AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
                 )
             }
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )

@@ -20,7 +20,10 @@ import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.ServiceRegistrationAction
+import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
@@ -61,7 +64,7 @@ class AutoNamespaceTransformFunctionalTest {
     @Before
     fun setUpTransforms() {
         val dependencies = project.dependencies
-        Aapt2DaemonBuildService.RegistrationAction(project).execute()
+        Aapt2DaemonBuildService.RegistrationAction(project, createProjectServices().projectOptions).execute()
         dependencies.registerTransform(
             AutoNamespacePreProcessTransform::class.java
         ) { reg: TransformSpec<AutoNamespaceParameters> ->
@@ -243,11 +246,7 @@ class AutoNamespaceTransformFunctionalTest {
 
     private fun AutoNamespaceParameters.initialize() {
         projectName.set(project.name)
-        errorFormatMode.set(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-        val aapt2 = TestUtils.getAapt2()
-        aapt2Version.set("Custom for tests $aapt2")
-        aapt2FromMaven.from(aapt2.parent)
-        aapt2DaemonBuildService.set(getBuildService(project.gradle.sharedServices))
+        createProjectServices(buildServiceRegistry = project.gradle.sharedServices).initializeAapt2Input(aapt2)
     }
 
     companion object {

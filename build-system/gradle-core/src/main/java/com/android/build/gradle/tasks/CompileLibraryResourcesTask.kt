@@ -18,14 +18,14 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationService
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -36,7 +36,6 @@ import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileType
 import org.gradle.api.provider.Property
@@ -44,6 +43,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -59,8 +59,6 @@ import javax.inject.Inject
 @CacheableTask
 abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
-
     @get:InputFiles
     @get:Incremental
     @get:PathSensitive(PathSensitivity.ABSOLUTE) // TODO(b/141301405): use relative paths
@@ -74,13 +72,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     var crunchPng: Boolean = true
         private set
 
-    @get:Input
-    lateinit var aapt2Version: String
-        private set
-
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
-
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -91,13 +82,11 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     @get:Internal
     abstract val aapt2WorkersBuildService: Property<Aapt2WorkersBuildService>
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven.singleFile, LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = aapt2.registerAaptService()
 
         getWorkerFacadeWithWorkers().use { workers ->
             val requests = ImmutableList.builder<CompileResourceRequest>()
@@ -129,7 +118,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                     path,
                     aapt2ServiceKey,
                     aapt2WorkersBuildService.get().getWorkersServiceKey(),
-                    errorFormatMode,
+                    aapt2.getErrorFormatMode(),
                     requests.build(),
                     useJvmResourceCompiler
                 )
@@ -243,27 +232,19 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 task.mergedLibraryResourcesDir
             )
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
-
             task.pseudoLocalesEnabled = creationConfig
                 .variantDslInfo
                 .isPseudoLocalesEnabled
 
             task.crunchPng = creationConfig.variantScope.isCrunchPngs
 
-            task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
-
             task.useJvmResourceCompiler =
               creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
+
         }
     }
 }

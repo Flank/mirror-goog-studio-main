@@ -16,21 +16,18 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.signing.SigningConfigProvider
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -50,11 +47,8 @@ abstract class BundleToApkTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val bundle: RegularFileProperty
 
-    @get:Input
-    lateinit var aapt2Version: String
-        private set
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
+    @get:Nested
+    abstract val aapt2 : Aapt2Input
 
     @get:Nested
     lateinit var signingConfig: SigningConfigProvider
@@ -70,7 +64,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
                 BundleToolRunnable::class.java,
                 Params(
                     bundle.get().asFile,
-                    File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
+                    aapt2.getAapt2Executable().toFile(),
                     outputFile.get().asFile,
                     config?.storeFile,
                     config?.storePassword,
@@ -139,9 +133,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
+            creationConfig.services.initializeAapt2Input(task.aapt2)
             task.signingConfig = SigningConfigProvider.create(creationConfig)
         }
     }

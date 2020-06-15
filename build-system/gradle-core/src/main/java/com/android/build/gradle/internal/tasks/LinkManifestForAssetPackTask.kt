@@ -18,24 +18,19 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -59,21 +54,14 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
     @get:Nested
     abstract val androidJarInput: AndroidJarInput
 
-    @get:Input
-    lateinit var aapt2Version: String
-        private set
-
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     /**
      * A directory containing the archives for each asset pack that contains the linked manifest file and resources.pb file produced by AAPT2.
      */
     @get:OutputDirectory
     abstract val linkedManifestsDirectory: DirectoryProperty
-
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
 
     override fun doTaskAction() {
         for (manifestFile: File in manifestsDirectory.asFileTree.files) {
@@ -90,10 +78,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
                 packageId = 0xFF
             )
 
-            val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-                aapt2FromMaven = aapt2FromMaven.singleFile,
-                logger = LoggerWrapper(logger)
-            )
+            val aapt2ServiceKey = aapt2.registerAaptService()
 
             getWorkerFacadeWithWorkers().use {
                 it.submit(
@@ -136,13 +121,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
-
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )

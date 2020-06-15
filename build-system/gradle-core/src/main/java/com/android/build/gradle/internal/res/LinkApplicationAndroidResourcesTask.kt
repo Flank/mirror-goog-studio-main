@@ -42,8 +42,11 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAaptDaemon
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -162,12 +165,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     private lateinit var type: VariantType
 
     @get:Input
-    lateinit var aapt2Version: String
-        private set
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
-
-    @get:Input
     val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
 
     @get:Input
@@ -256,15 +253,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val aarMetadataCheck: ConfigurableFileCollection
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private var compiledDependenciesResources: ArtifactCollection? = null
-
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override val incremental: Boolean
         get() = useStableIds
@@ -302,9 +297,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             sharedLibraryDependencies!!.files
         else
             emptySet()
-        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven.singleFile, LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = aapt2.registerAaptService()
 
         getWorkerFacadeWithWorkers().use {
             val variantOutputsList = variantOutputs.get()
@@ -436,10 +429,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             preconditionsCheck(creationConfig)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
-
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
@@ -521,16 +510,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.services.projectOptions
-            )
-
             task.manifestMergeBlameFile = creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
@@ -907,7 +890,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
         val useMinimalKeepRules: Boolean = task.useMinimalKeepRules
         val useFinalIds: Boolean = task.useFinalIds
-        val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
+        val errorFormatMode: SyncOptions.ErrorFormatMode = task.aapt2.getErrorFormatMode()
         val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile
         val stableIdsOutputFile: File? = task.stableIdsOutputFileProperty.orNull?.asFile
     }

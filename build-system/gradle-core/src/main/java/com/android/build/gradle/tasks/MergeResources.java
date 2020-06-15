@@ -33,14 +33,14 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
 import com.android.build.gradle.internal.databinding.MergingFileLookup;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
-import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
+import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey;
+import com.android.build.gradle.internal.services.Aapt2Input;
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.Blocks;
@@ -83,19 +83,17 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.xml.bind.JAXBException;
-import kotlin.Pair;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
@@ -129,11 +127,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     private boolean vectorSupportLibraryIsUsed;
 
     private Collection<String> generatedDensities;
-
-    private String aapt2Version;
-
-    @Internal
-    public abstract ConfigurableFileCollection getAapt2FromMaven();
 
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
@@ -173,8 +166,8 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     public abstract Property<Aapt2WorkersBuildService> getAapt2WorkersBuildService();
 
-    @Internal
-    public abstract Property<Aapt2DaemonBuildService> getAapt2DaemonBuildService();
+    @Nested
+    public abstract Aapt2Input getAapt2();
 
     private boolean useJvmResourceCompiler;
 
@@ -182,14 +175,12 @@ public abstract class MergeResources extends ResourceAwareTask {
     private static ResourceCompilationService getResourceProcessor(
             String projectName,
             String owner,
-            @Nullable FileCollection aapt2FromMaven,
             @NonNull WorkerExecutorFacade workerExecutor,
             SyncOptions.ErrorFormatMode errorFormatMode,
             ImmutableSet<Flag> flags,
             boolean processResources,
             boolean useJvmResourceCompiler,
-            Logger logger,
-            Aapt2DaemonBuildService aapt2DaemonBuildService) {
+            Aapt2Input aapt2Input) {
         // If we received the flag for removing namespaces we need to use the namespace remover to
         // process the resources.
         if (flags.contains(Flag.REMOVE_RESOURCE_NAMESPACES)) {
@@ -202,9 +193,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             return CopyToOutputDirectoryResourceCompilationService.INSTANCE;
         }
 
-        Aapt2DaemonServiceKey aapt2ServiceKey =
-                aapt2DaemonBuildService.registerAaptService(
-                        aapt2FromMaven.getSingleFile(), new LoggerWrapper(logger));
+        Aapt2DaemonServiceKey aapt2ServiceKey = Aapt2Daemon.registerAaptService(aapt2Input);
 
         return new WorkerExecutorResourceCompilationService(
                 projectName,
@@ -274,14 +263,12 @@ public abstract class MergeResources extends ResourceAwareTask {
                         getResourceProcessor(
                                 getProjectName(),
                                 getPath(),
-                                getAapt2FromMaven(),
                                 workerExecutorFacade,
                                 errorFormatMode,
                                 flags,
                                 processResources,
                                 useJvmResourceCompiler,
-                                getLogger(),
-                                getAapt2DaemonBuildService().get())) {
+                                getAapt2())) {
 
             SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
 
@@ -449,14 +436,12 @@ public abstract class MergeResources extends ResourceAwareTask {
                             getResourceProcessor(
                                     getProjectName(),
                                     getPath(),
-                                    getAapt2FromMaven(),
                                     workerExecutorFacade,
                                     errorFormatMode,
                                     flags,
                                     processResources,
                                     useJvmResourceCompiler,
-                                    getLogger(),
-                                    getAapt2DaemonBuildService().get())) {
+                                    getAapt2())) {
 
                 SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
 
@@ -774,11 +759,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         return vectorSupportLibraryIsUsed;
     }
 
-    @Input
-    public String getAapt2Version() {
-        return aapt2Version;
-    }
-
     @Nullable
     @OutputDirectory
     @Optional
@@ -890,10 +870,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                                             () -> creationConfig.getMinSdkVersion().getApiLevel()));
             task.getMinSdk().disallowChanges();
 
-            Pair<FileCollection, String> aapt2AndVersion =
-                    Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);
-            task.getAapt2FromMaven().from(aapt2AndVersion.getFirst());
-            task.aapt2Version = aapt2AndVersion.getSecond();
             task.setIncrementalFolder(paths.getIncrementalDir(getName()));
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
@@ -987,11 +963,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                     BuildServicesKt.getBuildService(
                             creationConfig.getServices().getBuildServiceRegistry(),
                             Aapt2WorkersBuildService.class));
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getAapt2DaemonBuildService(),
-                    BuildServicesKt.getBuildService(
-                            creationConfig.getServices().getBuildServiceRegistry(),
-                            Aapt2DaemonBuildService.class));
+            creationConfig.getServices().initializeAapt2Input(task.getAapt2());
             task.getAaptEnv()
                     .set(
                             creationConfig

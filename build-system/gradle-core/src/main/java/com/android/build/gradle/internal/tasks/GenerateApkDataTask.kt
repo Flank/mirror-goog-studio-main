@@ -23,7 +23,8 @@ import com.android.SdkConstants.FD_RES_XML
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ApkInfoParser
@@ -42,7 +43,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -79,11 +80,8 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
     @get:Input
     abstract val targetSdkVersion: Property<Int>
 
-    @get:Input
-    abstract val aapt2Version: Property<String>
-
-    @get:Internal
-    abstract val aapt2Executable: ConfigurableFileCollection
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     @get:Input
     abstract val mainPkgName: Property<String>
@@ -133,7 +131,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             Files.copy(File(apk), to)
 
             generateApkData(
-                File(apk), outDir, mainPkgName.get(), aapt2Executable.singleFile
+                File(apk), outDir, mainPkgName.get(), aapt2.getAapt2Executable().toFile()
             )
         } else {
             generateUnbundledWearApkData(outDir, mainPkgName.get())
@@ -257,11 +255,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
             task.targetSdkVersion.setDisallowChanges(creationConfig.targetSdkVersion.apiLevel)
 
-            val aapt2AndVersion = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2Executable.from(aapt2AndVersion.first)
-            task.aapt2Executable.disallowChanges()
-
-            task.aapt2Version.setDisallowChanges(aapt2AndVersion.second)
+            creationConfig.services.initializeAapt2Input(task.aapt2)
         }
     }
 }

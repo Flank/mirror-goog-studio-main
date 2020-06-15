@@ -20,20 +20,20 @@ import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -87,12 +87,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val manifestFiles: DirectoryProperty
 
-    @get:Input
-    lateinit var aapt2Version: String
-        private set
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
-
     /** A file collection of the directories containing the compiled dependencies resource files. */
     @get:Incremental
     @get:InputFiles
@@ -106,8 +100,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     @get:Internal
     abstract val aapt2WorkersBuildService: Property<Aapt2WorkersBuildService>
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     // Not an input as it doesn't affect task outputs
     @get:Internal
@@ -118,8 +112,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
-
     override fun doTaskAction(inputChanges: InputChanges) {
         val manifestsOutputs = BuiltArtifactsLoaderImpl().load(manifestFiles)
             ?: throw RuntimeException("Cannot load manifests from $manifestFiles")
@@ -129,10 +121,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             params.initializeFromAndroidVariantTask(this)
 
             params.androidJar.set(androidJarInput.getAndroidJar().get())
-            params.aapt2DaemonBuildService.set(aapt2DaemonBuildService)
+            params.aapt2ServiceKey.set(aapt2.registerAaptService())
             params.aapt2WorkersBuildService.set(aapt2WorkersBuildService)
-            params.aapt2FromMaven.from(aapt2FromMaven)
-            params.errorFormatMode.set(errorFormatMode)
+            params.errorFormatMode.set(aapt2.getErrorFormatMode())
             params.inputs.set(inputChanges.getChangesInSerializableForm(inputDirectory))
             params.manifestFile.set(File(manifestFile))
             params.compiledDependenciesResources.from(compiledDependenciesResources)
@@ -146,8 +137,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     protected abstract class Params : ProfileAwareWorkAction.Parameters() {
         abstract val androidJar: RegularFileProperty
         abstract val aapt2WorkersBuildService: Property<Aapt2WorkersBuildService>
-        abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
-        abstract val aapt2FromMaven: ConfigurableFileCollection
+        abstract val aapt2ServiceKey: Property<Aapt2DaemonServiceKey>
         abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
         abstract val inputs: Property<SerializableInputChanges>
         abstract val manifestFile: RegularFileProperty
@@ -164,16 +154,13 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     protected abstract class Action : ProfileAwareWorkAction<Params>() {
 
         override fun run() {
-            val logger = Logging.getLogger(this.javaClass)
-            val aapt2ServiceKey =
-                parameters.aapt2DaemonBuildService.get().registerAaptService(parameters.aapt2FromMaven.singleFile, LoggerWrapper(logger))
             parameters.aapt2WorkersBuildService.get().getSharedExecutorForAapt2(
                 parameters.projectName.get(), parameters.taskOwner.get()).use { facade ->
                     compileResources(
                         inputs = parameters.inputs.get(),
                         outDirectory = parameters.compiledDirectory.get().asFile,
                         workerExecutor = facade,
-                        aapt2ServiceKey = aapt2ServiceKey,
+                        aapt2ServiceKey = parameters.aapt2ServiceKey.get(),
                         errorFormatMode = parameters.errorFormatMode.get(),
                         mergeBlameFolder = parameters.mergeBlameFolder.get().asFile,
                         useJvmResourceCompiler = parameters.useJvmResourceCompiler.get()
@@ -187,7 +174,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                     )
 
                     val params = Aapt2ProcessResourcesRunnable.Params(
-                        aapt2ServiceKey = aapt2ServiceKey,
+                        aapt2ServiceKey = parameters.aapt2ServiceKey.get(),
                         request = config,
                         errorFormatMode = parameters.errorFormatMode.get(),
                         mergeBlameFolder = parameters.mergeBlameFolder.get().asFile,
@@ -217,10 +204,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.fromDisallowChanges(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
-
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.inputDirectory
@@ -237,10 +220,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.services.projectOptions
-            )
-
             if (creationConfig.variantScope.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources.fromDisallowChanges(
                     creationConfig.variantDependencies.getArtifactFileCollection(
@@ -255,9 +234,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             task.aapt2WorkersBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )

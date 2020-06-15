@@ -52,14 +52,11 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
-import com.android.build.gradle.internal.res.namespaced.init
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
@@ -86,7 +83,8 @@ class DependencyConfigurator(
     private val project: Project,
     private val projectName: String,
     private val globalScope: GlobalScope,
-    private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+    private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
+    private val projectServices: ProjectServices
 ) {
     fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
@@ -286,21 +284,7 @@ class DependencyConfigurator(
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES.type
                     )
                 reg.parameters { params: AarResourcesCompilerTransform.Parameters ->
-                    val (first, second) = getAapt2FromMavenAndVersion(
-                        globalScope
-                    )
-                    params.aapt2FromMaven
-                        .from(first)
-                    params.aapt2Version
-                        .set(second)
-                    params.errorFormatMode
-                        .set(
-                            SyncOptions.getErrorFormatMode(
-                                globalScope.projectOptions
-                            )
-                        )
-                    params.aapt2DaemonBuildService
-                        .setDisallowChanges(getBuildService(project.gradle.sharedServices))
+                    projectServices.initializeAapt2Input(params.aapt2)
                 }
             }
         }
@@ -404,7 +388,7 @@ class DependencyConfigurator(
                         ArtifactAttributes.ARTIFACT_FORMAT,
                         AndroidArtifacts.ArtifactType.PREPROCESSED_AAR_FOR_AUTO_NAMESPACE.type
                 )
-                spec.parameters.init(globalScope)
+                projectServices.initializeAapt2Input(spec.parameters.aapt2)
             }
             dependencies.registerTransform(AutoNamespacePreProcessTransform::class.java) { spec ->
                 spec.from.attribute(
@@ -415,7 +399,7 @@ class DependencyConfigurator(
                     ArtifactAttributes.ARTIFACT_FORMAT,
                     AndroidArtifacts.ArtifactType.PREPROCESSED_AAR_FOR_AUTO_NAMESPACE.type
                 )
-                spec.parameters.init(globalScope)
+                projectServices.initializeAapt2Input(spec.parameters.aapt2)
             }
 
             dependencies.registerTransform(AutoNamespaceTransform::class.java) { spec ->
@@ -427,7 +411,7 @@ class DependencyConfigurator(
                     ArtifactAttributes.ARTIFACT_FORMAT,
                     AndroidArtifacts.ArtifactType.PROCESSED_AAR.type
                 )
-                spec.parameters.init(globalScope)
+                projectServices.initializeAapt2Input(spec.parameters.aapt2)
             }
 
         }
