@@ -109,7 +109,10 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, componentProperties.name)
 
         task.configureProperties(componentProperties)
-        task.configurePropertiesForAnnotationProcessing(componentProperties)
+        // Set up annotation processing only when Kapt is not used (bug 159050744)
+        if (!task.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
+            task.configurePropertiesForAnnotationProcessing(componentProperties)
+        }
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
         val sourcesToCompile = Callable { listOf(componentProperties.javaSources) }
