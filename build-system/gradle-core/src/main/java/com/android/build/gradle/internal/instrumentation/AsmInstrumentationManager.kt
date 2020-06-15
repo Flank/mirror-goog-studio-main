@@ -114,15 +114,18 @@ class AsmInstrumentationManager(
         }
     }
 
-    fun instrumentModifiedClass(inputFile: File, outputFile: File, packageName: String) {
+    fun instrumentModifiedFile(inputFile: File, outputFile: File, packageName: String) {
         outputFile.parentFile.mkdirs()
-
-        instrumentClassToDir(
-            packageName = packageName,
-            className = inputFile.name.removeSuffix(DOT_CLASS),
-            classFile = inputFile,
-            outputFile = outputFile
-        )
+        if (inputFile.name.endsWith(DOT_CLASS)) {
+            instrumentClassToDir(
+                packageName = packageName,
+                className = inputFile.name.removeSuffix(DOT_CLASS),
+                classFile = inputFile,
+                outputFile = outputFile
+            )
+        } else {
+            FileUtils.copyFile(inputFile, outputFile)
+        }
     }
 
     private fun doInstrumentClass(

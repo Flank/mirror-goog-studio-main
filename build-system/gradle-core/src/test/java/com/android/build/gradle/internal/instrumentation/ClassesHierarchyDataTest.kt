@@ -63,11 +63,11 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
 
         if (testMode == TestMode.DIR) {
             TestInputsGenerator.pathWithClasses(inputDir.toPath(), srcClasses)
-            classesHierarchyData.addClassesFromDir(inputDir)
+            classesHierarchyData.addClasses(setOf(inputDir))
         } else {
             val inputJar = File(inputDir, "classes.jar")
             TestInputsGenerator.pathWithClasses(inputJar.toPath(), srcClasses)
-            classesHierarchyData.addClassesFromJar(inputJar)
+            classesHierarchyData.addClasses(setOf(inputJar))
         }
 
         classesHierarchyData.addClass(

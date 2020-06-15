@@ -128,6 +128,8 @@ abstract class ComponentPropertiesImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    override val asmApiVersion = org.objectweb.asm.Opcodes.ASM7
+
     // this is technically a public API for the Application Variant (only)
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
@@ -160,7 +162,21 @@ abstract class ComponentPropertiesImpl(
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
     // enabled, see b/134766811.
     override val isPrecompileDependenciesResourcesEnabled: Boolean
-        get() = internalServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] && !variantScope.useResourceShrinker()
+        get() = internalServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] &&
+                !variantScope.useResourceShrinker()
+
+    override val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
+        get() {
+            return asmClassVisitorsRegistry.projectClassesVisitors.map { it.visitorFactory }
+        }
+
+    override val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
+        get() {
+            return asmClassVisitorsRegistry.dependenciesClassesVisitors.map { it.visitorFactory }
+        }
+
+    override val asmFramesComputationMode: FramesComputationMode
+        get() = asmClassVisitorsRegistry.framesComputationMode
 
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
@@ -599,17 +615,7 @@ abstract class ComponentPropertiesImpl(
         }
     }
 
-    val asmApiVersion: Int = org.objectweb.asm.Opcodes.ASM7
-
-    fun getRegisteredProjectClassesVisitors(): List<AsmClassVisitorFactory<*>> {
-        return asmClassVisitorsRegistry.projectClassesVisitors.map { it.visitorFactory }
-    }
-
-    fun getRegisteredDependenciesClassesVisitors(): List<AsmClassVisitorFactory<*>> {
-        return asmClassVisitorsRegistry.dependenciesClassesVisitors.map { it.visitorFactory }
-    }
-
-    fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
+    override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
 

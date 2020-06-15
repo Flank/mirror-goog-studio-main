@@ -133,6 +133,15 @@ InternalArtifactType<T : FileSystemLocation>(
     object CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
     // Additional test output data from the device provider tasks.
     object DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
+    // A folder with project classes instrumented with ASM visitors registered via
+    // variantProperties.transformClassesWith. Internal folder file structure reflects the hierarchy
+    // of namespaces
+    // This is a temporary artifact until we have a transformable project classes artifact
+    object ASM_INSTRUMENTED_PROJECT_CLASSES : InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // A folder with project jars instrumented with ASM visitors registered via
+    // variantProperties.transformClassesWith
+    // This is a temporary artifact until we have a transformable project classes artifact
+    object ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- android res ---
     // output of the resource merger ready for aapt.
