@@ -224,23 +224,24 @@ public class VariantScopeImpl implements VariantScope {
         boolean newResourceShrinker =
                 globalScope.getProjectOptions().get(ENABLE_NEW_RESOURCE_SHRINKER);
         if (variantType.isDynamicFeature()) {
-            String message = newResourceShrinker
-                    ? "Resource shrinking should be configured for base module."
-                    : "Resource shrinker cannot be used for multi-apk applications";
-            globalScope
-                    .getDslServices()
-                    .getIssueReporter()
-                    .reportError(Type.GENERIC, message);
-            return false;
-        }
-
-        if (!newResourceShrinker && globalScope.hasDynamicFeatures()) {
             globalScope
                     .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
-                            "Resource shrinker cannot be used for multi-apk applications");
+                            "Resource shrinking must be configured for base module.");
+            return false;
+        }
+
+        if (!newResourceShrinker && globalScope.hasDynamicFeatures()) {
+            String message = String.format(
+                    "Resource shrinker for multi-apk applications can be enabled via " +
+                            "experimental flag: '%s'.",
+                    ENABLE_NEW_RESOURCE_SHRINKER.getPropertyName());
+            globalScope
+                    .getDslServices()
+                    .getIssueReporter()
+                    .reportError(Type.GENERIC, message);
             return false;
         }
 
