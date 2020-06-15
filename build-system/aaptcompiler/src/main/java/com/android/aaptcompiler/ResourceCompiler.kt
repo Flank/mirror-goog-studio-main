@@ -169,7 +169,6 @@ private fun compileTable(
   val tableExtractor =
     TableExtractor(table, pathData.source, pathData.config, extractorOptions, logger)
 
-
   pathData.file.inputStream().use {
     if (!tableExtractor.extract(it)) {
       logger?.warning("Failed to extract resources for ${pathData.file.absolutePath}")
