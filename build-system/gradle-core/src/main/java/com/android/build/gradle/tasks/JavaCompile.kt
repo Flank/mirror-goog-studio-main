@@ -112,6 +112,10 @@ class JavaCompileCreationAction(
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, componentProperties.name)
 
         task.configureProperties(componentProperties)
+        // Set up the annotation processor classpath even when Kapt is used, because Java compiler
+        // plugins like ErrorProne share their classpath with annotation processors (see
+        // https://github.com/gradle/gradle/issues/6573), and special annotation processors like
+        // Lombok want to run via JavaCompile (see https://youtrack.jetbrains.com/issue/KT-7112).
         task.configurePropertiesForAnnotationProcessing(componentProperties)
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
@@ -123,12 +127,18 @@ class JavaCompileCreationAction(
         task.options.isIncremental = globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
-        // Record apList as input. It impacts handleAnnotationProcessors() below.
-        val apList = componentProperties.artifacts.get(ANNOTATION_PROCESSOR_LIST)
-        task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
-            .withPropertyName("annotationProcessorList")
+        // When Kapt is used, it runs annotation processors declared in the `kapt` configurations.
+        // However, we currently collect annotation processors for analytics purposes only from the
+        // `annotationProcessor` configurations, not `kapt` configurations, so the data is only
+        // correct if Kapt is not used.
+        if (!usingKapt) {
+            // Record apList as input. It impacts recordAnnotationProcessors() below.
+            val apList = componentProperties.artifacts.get(ANNOTATION_PROCESSOR_LIST)
+            task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
+                .withPropertyName("annotationProcessorList")
 
-        task.handleAnnotationProcessors(apList, componentProperties.name, usingKapt)
+            task.recordAnnotationProcessors(apList, componentProperties.name)
+        }
 
         // Set up the outputs
         task.setDestinationDir(classesOutputDirectory.asFile)
@@ -186,10 +196,9 @@ fun registerDataBindingOutputs(
     }
 }
 
-private fun JavaCompile.handleAnnotationProcessors(
+private fun JavaCompile.recordAnnotationProcessors(
     processorListFile: Provider<RegularFile>,
-    variantName: String,
-    usingKapt: Boolean
+    variantName: String
 ) {
     val projectPath = this.project.path
     doFirst {
@@ -200,7 +209,7 @@ private fun JavaCompile.handleAnnotationProcessors(
         val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
 
         // Warn users about non-incremental annotation processors
-        if (!usingKapt && !allAPsAreIncremental && options.isIncremental) {
+        if (!allAPsAreIncremental && options.isIncremental) {
             logger
                 .warn(
                     "The following annotation processors are not incremental:" +

@@ -20,12 +20,12 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TaskStateList
-import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
-import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
+import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
@@ -69,7 +69,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":generateDebugBuildConfig" to FROM_CACHE,
         ":generateDebugResources" to UP_TO_DATE,
         ":generateDebugResValues" to FROM_CACHE,
-        ":javaPreCompileDebug" to FROM_CACHE,
         ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
@@ -89,7 +88,8 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         } else {
             mapOf(
-                ":clean" to UP_TO_DATE
+                ":clean" to UP_TO_DATE,
+                ":javaPreCompileDebug" to FROM_CACHE
             )
         }
     )
