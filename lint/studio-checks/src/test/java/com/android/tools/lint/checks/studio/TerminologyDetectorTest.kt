@@ -74,6 +74,7 @@ class TerminologyDetectorTest {
                    """
                 ).indented(),
                 kotlin(
+                    "test/test.kt",
                     """
                       // Random $w4 comment
                       /** This is $w4 */
@@ -114,16 +115,16 @@ class TerminologyDetectorTest {
                 src/main/resources/something:1: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                 device $w5:
                        ~~~~~~~~~
-                src/test.kt:1: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                test/test.kt:1: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                 // Random $w4 comment
                           ~~~~~~~~~~
-                src/test.kt:2: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                test/test.kt:2: Error: Avoid using "$w9"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                 /** This is $w4 */
                             ~~~~~~~~~~
-                src/test.kt:4: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                test/test.kt:4: Error: Avoid using "$w5"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                       // Random $w5 comment
                                 ~~~~~~~~~
-                src/test.kt:5: Error: Avoid using "$w12" in "$w11"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
+                test/test.kt:5: Error: Avoid using "$w12" in "$w11"; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]
                       val $w11: String = ""
                                     ~~~~~~~~~
                 src/main/resources/cts/${w5}_devices.json: Error: Avoid using "$w5" in filename; consider something like "include"; see https://developers.google.com/style/word-list [WrongTerminology]

@@ -47,7 +47,7 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
         private val IMPLEMENTATION =
             Implementation(
                 TerminologyDetector::class.java,
-                EnumSet.of(Scope.JAVA_FILE, Scope.OTHER),
+                EnumSet.of(Scope.JAVA_FILE, Scope.OTHER, Scope.TEST_SOURCES),
                 Scope.JAVA_FILE_SCOPE
             )
 
