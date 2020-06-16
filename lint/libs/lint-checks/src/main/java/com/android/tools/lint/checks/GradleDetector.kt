@@ -1636,6 +1636,10 @@ open class GradleDetector : Detector(), GradleScanner {
             return
         }
 
+        // Make sure the Kotlin stdlib is used by the main artifact (not just by tests).
+        val variant = context.project.buildVariant ?: return
+        variant.mainArtifact.findCompileDependency("org.jetbrains.kotlin:kotlin-stdlib") ?: return
+
         // Make sure the KTX extension exists for this version of the library.
         val repository = getGoogleMavenRepository(context.client)
         repository.findVersion(

@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -44,15 +45,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class is responsible for managing debuggable clients for a registered device. When a device is registered
- * a connection is established to the adb host then command {@link ADB_TRACK_JDWP_COMMAND} is sent. This command
- * informs adb to monitor and send state about each debuggable client. This service then creates a ClientImpl that
- * represents a debuggable process on the device establishing a handshake and sending a {@link HandleHello.CHUNK_HELO} packet.
+ * This class is responsible for managing debuggable clients for a registered device. When a device
+ * is registered a connection is established to the adb host then command {@link
+ * ADB_TRACK_JDWP_COMMAND} is sent. This command informs adb to monitor and send state about each
+ * debuggable client. This service then creates a ClientImpl that represents a debuggable process on
+ * the device establishing a handshake and sending a {@link HandleHello.CHUNK_HELO} packet.
+ *
+ * <p>Note that this class tracks {@link com.android.ddmlib.Client}s for all devices tied to an adb
+ * host. Devices are keyed off of the given {@link Socketchannel} connection.
  */
 class DeviceClientMonitorTask implements Runnable {
     private static final String ADB_TRACK_JDWP_COMMAND = "track-jdwp";
     private volatile boolean mQuit;
     @NonNull private final Selector mSelector;
+    // Note that mChannelsToRegister is not synchronized other than through the compute* interface.
+    // Therefore, make sure atomic operations are done via that extended API.
     private final ConcurrentHashMap<SocketChannel, DeviceImpl> mChannelsToRegister =
             new ConcurrentHashMap<>();
     private final Set<ClientImpl> mClientsToReopen = new HashSet<>();
@@ -70,14 +77,11 @@ class DeviceClientMonitorTask implements Runnable {
     boolean register(@NonNull DeviceImpl device) {
         SocketChannel socketChannel;
         try {
-            socketChannel = AdbSocketUtils.openAdbConnection();
+            socketChannel = AndroidDebugBridge.openConnection();
         } catch (IOException exception) {
             Log.e(
                     "DeviceClientMonitorTask",
-                    "Unable to open connection to: "
-                            + AndroidDebugBridge.getSocketAddress()
-                            + ", due to: "
-                            + exception);
+                    "Unable to open connection to ADB server: " + exception);
             return false;
         }
         if (socketChannel != null) {
@@ -167,14 +171,26 @@ class DeviceClientMonitorTask implements Runnable {
         }
     }
 
-    void processClientsToRegister() throws IOException {
+    /** Registers track-jdwp key with the corresponding device's socket channel's selector. */
+    void processChannelsToRegister() {
         // register any new channels
-        synchronized (mChannelsToRegister) {
-            for (SocketChannel channel : mChannelsToRegister.keySet()) {
-                channel.register(mSelector, SelectionKey.OP_READ, mChannelsToRegister.get(channel));
-            }
-            mChannelsToRegister.clear();
-        }
+        mChannelsToRegister
+                .entrySet()
+                .removeIf(
+                        entry -> {
+                            try {
+                                entry.getKey()
+                                        .register(
+                                                mSelector, SelectionKey.OP_READ, entry.getValue());
+                            } catch (ClosedChannelException e) {
+                                // We'll remove the channel if there's an error. We most likely
+                                // won't be able to recover from this.
+                                Log.e(
+                                        "DeviceClientMonitorTask",
+                                        "Connection error while monitoring clients.");
+                            }
+                            return true;
+                        });
     }
 
     @Override
@@ -188,7 +204,7 @@ class DeviceClientMonitorTask implements Runnable {
                     return;
                 }
 
-                processClientsToRegister();
+                processChannelsToRegister();
                 processDropAndReopenClients();
 
                 if (count == 0) {

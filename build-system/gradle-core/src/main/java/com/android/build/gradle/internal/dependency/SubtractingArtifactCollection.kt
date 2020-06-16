@@ -17,15 +17,17 @@
 package com.android.build.gradle.internal.dependency
 
 import com.google.common.collect.ImmutableSet
-import java.io.File
-import java.util.HashSet
-import java.util.function.Consumer
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
+import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
+import java.util.HashSet
+import java.util.function.Consumer
 
 /**
  * Implementation of a [ArtifactCollection] in order to do lazy subtractions.
@@ -37,45 +39,18 @@ import org.gradle.api.file.FileCollection
 class SubtractingArtifactCollection(
     private val mainArtifacts: ArtifactCollection,
     private val removedArtifacts: ArtifactCollection,
-    fileCollectionHolder: ConfigurableFileCollection
+    private val objectFactory: ObjectFactory
 ) : ArtifactCollection {
 
-    /**
-     * Just the [ComponentIdentifier] is not enough, we need to consider the classifier information
-     * (see TestWithSameDepAsAppWithClassifier).
-     *
-     *  TODO(b/132924287): We should be able to instead pass the configuration and call
-     *   `configuration.artifactView {  }.artifacts.artifacts`, but this gives artifacts with
-     *   different names so the subtraction doesn't work
-     *   (The classifier is actually duplicated in the name in some cases)
-     */
-    private val artifactResults: MutableSet<ResolvedArtifactResult> by lazy {
-        val removed = HashSet<ComponentArtifactIdentifier>(removedArtifacts.artifacts.size)
-        removedArtifacts.artifacts.mapTo(removed) { it.id }
+    private var subtractingArtifactResult = this.SubtractingArtifactResult()
 
-        ImmutableSet.copyOf(mainArtifacts.artifacts.filter { !removed.contains(it!!.id) })
-    }
+    override fun getArtifactFiles() = subtractingArtifactResult.fileCollection.value
 
-    private val artifactFileSet: Set<File> by lazy {
-        ImmutableSet.builder<File>().apply {
-            for (artifact in artifactResults) {
-                add(artifact.file)
-            }
-        }.build()
-    }
-
-    private val fileCollection: FileCollection =
-        fileCollectionHolder.from(
-            mainArtifacts.artifactFiles.filter { file -> artifactFileSet.contains(file) }
-        ).builtBy(mainArtifacts.artifactFiles, removedArtifacts.artifactFiles)
-
-    override fun getArtifactFiles() = fileCollection
-
-    override fun getArtifacts() = artifactResults
+    override fun getArtifacts() = subtractingArtifactResult.artifactResults.value
 
     override fun getFailures() = mainArtifacts.failures + removedArtifacts.failures
 
-    override fun iterator() = artifactResults.iterator()
+    override fun iterator() = subtractingArtifactResult.artifactResults.value.iterator()
 
     override fun forEach(action: Consumer<in ResolvedArtifactResult>) = artifacts.forEach(action)
 
@@ -84,5 +59,57 @@ class SubtractingArtifactCollection(
     override fun toString(): String {
         return "SubtractingArtifactCollection(mainArtifacts=$mainArtifacts, " +
                 "removedArtifacts=$removedArtifacts)"
+    }
+
+    /**
+     * Wrapper for the set of [ResolvedArtifactResult]. Gradle configuration caching cannot directly
+     * serialize them, so we need to make Gradle not serialize them and instead compute them from
+     * other de-serialized properties in the following configuration-cached runs.
+     */
+    inner class SubtractingArtifactResult : Serializable {
+        @Transient
+        var artifactResults: Lazy<MutableSet<ResolvedArtifactResult>> = lazy { initArtifactResult() }
+
+        @Transient
+        private var artifactFileSet: Lazy<Set<File>> = lazy { initArtifactFileSet() }
+
+        @Transient
+        var fileCollection = lazy { initFileCollection() }
+
+        /**
+         * Just the [ComponentIdentifier] is not enough, we need to consider the classifier information
+         * (see TestWithSameDepAsAppWithClassifier).
+         *
+         *  TODO(b/132924287): We should be able to instead pass the configuration and call
+         *   `configuration.artifactView {  }.artifacts.artifacts`, but this gives artifacts with
+         *   different names so the subtraction doesn't work
+         *   (The classifier is actually duplicated in the name in some cases)
+         */
+        private fun initArtifactResult(): MutableSet<ResolvedArtifactResult> {
+            val removed = HashSet<ComponentArtifactIdentifier>(removedArtifacts.artifacts.size)
+            removedArtifacts.artifacts.mapTo(removed) { it.id }
+            return ImmutableSet.copyOf(mainArtifacts.artifacts.filter { !removed.contains(it!!.id) })
+        }
+
+        private fun initArtifactFileSet() = ImmutableSet.builder<File>().apply {
+            for (artifact in artifactResults.value) {
+                add(artifact.file)
+            }
+        }.build()
+
+        private fun initFileCollection() = objectFactory.fileCollection().from(
+            mainArtifacts.artifactFiles.filter { f -> artifactFileSet.value.contains(f) }
+        ).builtBy(mainArtifacts.artifactFiles, removedArtifacts.artifactFiles)
+
+        private fun writeObject(objectOutputStream: ObjectOutputStream) {
+            objectOutputStream.defaultWriteObject()
+        }
+
+        private fun readObject(objectInputStream: ObjectInputStream) {
+            objectInputStream.defaultReadObject()
+            artifactResults = lazy { initArtifactResult() }
+            artifactFileSet = lazy { initArtifactFileSet() }
+            fileCollection = lazy { initFileCollection() }
+        }
     }
 }

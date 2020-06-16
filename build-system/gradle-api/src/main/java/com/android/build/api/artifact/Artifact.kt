@@ -46,7 +46,7 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
     fun name(): String = javaClass.simpleName
 
     /**
-     * @return the folder name under which the artifact files or folders should be stored.
+     * @return The folder name under which the artifact files or folders should be stored.
      */
     open fun getFolderName(): String = name().toLowerCase(Locale.US)
 

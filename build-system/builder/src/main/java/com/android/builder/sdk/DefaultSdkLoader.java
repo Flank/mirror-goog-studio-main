@@ -438,7 +438,7 @@ public class DefaultSdkLoader implements SdkLoader {
                     sdkLibData.getSettings());
 
             RemotePackage sdkToolPackage =
-                    mSdkHandler.getLatestRemotePackageForPrefix(packageId, true, progress);
+                    mSdkHandler.getLatestRemotePackageForPrefix(packageId, null, true, progress);
             if (sdkToolPackage == null) {
                 // If we haven't found the SDK Tool package remotely or locally return null.
                 return null;

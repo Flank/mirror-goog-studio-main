@@ -334,6 +334,11 @@ class TypesTest : TestCase() {
                     "            ULiteralExpression (value = 3) [3] : PsiType:int\n" +
                     "        UMethod (name = JavaEnum) [private fun JavaEnum(arg: int) {...}]\n" +
                     "            UParameter (name = arg) [var arg: int]\n" +
+                    "            UBlockExpression [{...}]\n" +
+                    "        UMethod (name = values) [public static fun values() : test.pkg.JavaEnum[] {...}]\n" +
+                    "            UBlockExpression [{...}]\n" +
+                    "        UMethod (name = valueOf) [public static fun valueOf(name: java.lang.String) : test.pkg.JavaEnum {...}]\n" +
+                    "            UParameter (name = name) [var name: java.lang.String]\n" +
                     "            UBlockExpression [{...}]\n",
             file?.asLogTypes()
         )
@@ -373,7 +378,11 @@ class TypesTest : TestCase() {
                     "        UMethod (name = getResId) [public final fun getResId() : int = UastEmptyExpression]\n" +
                     "        UMethod (name = KotlinEnum) [private fun KotlinEnum(@org.jetbrains.annotations.NotNull resId: int) = UastEmptyExpression]\n" +
                     "            UParameter (name = resId) [@org.jetbrains.annotations.NotNull var resId: int]\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n",
+                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
+                    "        UMethod (name = values) [public static fun values() = UastEmptyExpression]\n" +
+                    "        UMethod (name = valueOf) [public static fun valueOf(@null name: java.lang.String) = UastEmptyExpression]\n" +
+                    "            UParameter (name = name) [@null var name: java.lang.String]\n" +
+                    "                UAnnotation (fqName = null) [@null]\n",
             file?.asLogTypes()
         )
         Disposer.dispose(pair.second)

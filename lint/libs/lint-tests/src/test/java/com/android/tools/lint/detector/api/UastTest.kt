@@ -21,13 +21,16 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.intellij.openapi.util.Disposer
 import com.intellij.pom.java.LanguageLevel
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiRecursiveElementVisitor
 import junit.framework.TestCase
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
-import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElement
+import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 // Misc tests to verify type handling in the Kotlin UAST initialization.
@@ -51,6 +54,20 @@ class UastTest : TestCase() {
         val uastFile = pair.first.uastFile
         assertNotNull(uastFile)
         check(uastFile!!)
+
+        // Sanity check: everything should be convertible
+        pair.first.psiFile?.accept(object : PsiRecursiveElementVisitor() {
+            override fun visitElement(element: PsiElement) {
+                try {
+                    element.toUElement()
+                } catch (e: Throwable) {
+                    System.err.println("Converting element " + element + " of class " + element.javaClass + ":")
+                    throw e
+                }
+                super.visitElement(element)
+            }
+        })
+
         Disposer.dispose(pair.second)
     }
 
@@ -73,18 +90,19 @@ class UastTest : TestCase() {
 
         check(source, { file ->
             assertEquals(
-                """
-                public final class TestKt {
-                    @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()
-                    public static final fun foo1() : void {
-                        foo2({ 
-                            return variable.hashCode()
-                        })
-                    }
-                    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {
-                    }
-                }
-                """.trimIndent().trim(), file.asSourceString().trim()
+                "" +
+                        "public final class TestKt {\n" +
+                        "    @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()\n" +
+                        "    public static final fun foo1() : void {\n" +
+                        // Using plain string literal such that we can have our trailing space
+                        // here without IntelliJ removing it every time we save this file:
+                        "        foo2({ \n" +
+                        "            return variable.hashCode()\n" +
+                        "        })\n" +
+                        "    }\n" +
+                        "    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {\n" +
+                        "    }\n" +
+                        "}", file.asSourceString().trim()
             )
         })
     }
@@ -339,15 +357,15 @@ class UastTest : TestCase() {
                                                         USimpleNameReferenceExpression (identifier = it) [it]
                                                         UTypeReferenceExpression (name = java.lang.Integer) [java.lang.Integer]
                                                     UExpressionList (when_entry) [{...]
-                                                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:void
-                                                            UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
-                                                            USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
-                                                            USimpleNameReferenceExpression (identifier = something) [something] : PsiType:int
-                                                        UBreakExpression (label = null) [break]
+                                                        UYieldExpression [yield println(something)]
+                                                            UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:void
+                                                                UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                                                USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                                                USimpleNameReferenceExpression (identifier = something) [something] : PsiType:int
                                                 USwitchClauseExpressionWithBody [ -> {...]
                                                     UExpressionList (when_entry) [{...]
-                                                        ULiteralExpression (value = "") [""] : PsiType:String
-                                                        UBreakExpression (label = null) [break]
+                                                        UYieldExpression [yield ""]
+                                                            ULiteralExpression (value = "") [""] : PsiType:String
                             UMethod (name = getUint) [public static final fun getUint() : int = UastEmptyExpression]
                             UMethod (name = getUlong) [public static final fun getUlong() : long = UastEmptyExpression]
                             UMethod (name = getUbyte) [public static final fun getUbyte() : byte = UastEmptyExpression]
@@ -391,6 +409,10 @@ class UastTest : TestCase() {
                                     UAnnotation (fqName = null) [@null]
                                     USimpleNameReferenceExpression (identifier = Direction) [Direction]
                                 UMethod (name = Direction) [private fun Direction() = UastEmptyExpression]
+                                UMethod (name = values) [public static fun values() = UastEmptyExpression]
+                                UMethod (name = valueOf) [public static fun valueOf(@null name: java.lang.String) = UastEmptyExpression]
+                                    UParameter (name = name) [@null var name: java.lang.String]
+                                        UAnnotation (fqName = null) [@null]
                             UClass (name = Bar) [public static abstract annotation Bar {...}]
                             UClass (name = Companion) [public static final class Companion {...}]
                                 UField (name = bar) [@org.jetbrains.annotations.NotNull private static final var bar: int = 42]
@@ -922,13 +944,82 @@ class UastTest : TestCase() {
                 override fun visitLocalVariable(node: ULocalVariable): Boolean {
                     val initializerType = node.uastInitializer?.getExpressionType()
                     val interfaceType = node.type
+                    @Suppress("UNUSED_VARIABLE")
                     val equals = initializerType == interfaceType // Stack overflow!
 
                     return super.visitLocalVariable(node)
                 }
+            })
+        })
+    }
 
-                override fun visitMethod(node: UMethod): Boolean {
-                    return super.visitMethod(node)
+    fun testKt27935() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-27935
+        val source = kotlin(
+            """
+            package test.pkg
+
+            typealias IndexedDistance = Pair<Int, Double>
+            typealias Window = (Array<IndexedDistance>) -> List<IndexedDistance>
+            class Core(
+                    val window: Window
+            )
+            """
+        ).indented()
+
+        check(source, check = { })
+    }
+
+    fun testKt36275() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-36275
+        val source = kotlin(
+            """
+            package test.pkg
+
+             fun foo() {
+                fun bar() {
+                }
+                bar()
+            }
+            """
+        ).indented()
+
+        check(source, check = { file ->
+            // Make sure that all calls correctly resolve
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitCallExpression(node: UCallExpression): Boolean {
+                    val resolved = node.resolve()
+                    assertNotNull(resolved)
+                    return super.visitCallExpression(node)
+                }
+            })
+        })
+    }
+
+    fun testKt34187() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-34187
+        val source = kotlin(
+            """
+            package test.pkg
+
+            class Publisher { }
+
+            fun usedAsArrayElement() {
+                val a = arrayOfNulls<Publisher<*>>(10)
+                a[0] = Publisher()
+            }
+            """
+        ).indented()
+
+        check(source, check = { file ->
+            // Make sure that all calls correctly resolve
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
+                    if (node.isAssignment()) {
+                        val type = node.leftOperand.getExpressionType()
+                        assertNotNull("type of ${node.leftOperand.sourcePsi?.text} is null", type)
+                    }
+                    return super.visitBinaryExpression(node)
                 }
             })
         })

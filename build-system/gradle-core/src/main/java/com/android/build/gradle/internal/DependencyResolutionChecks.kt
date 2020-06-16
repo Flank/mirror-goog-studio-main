@@ -20,12 +20,9 @@ package com.android.build.gradle.internal
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.base.Throwables
-import org.gradle.BuildAdapter
 import org.gradle.api.Project
-import org.gradle.api.artifacts.DependencyResolutionListener
-import org.gradle.api.artifacts.ResolvableDependencies
-import org.gradle.api.invocation.Gradle
 import org.gradle.api.logging.LogLevel
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val REGISTERED_EXTENSION_EXT_PROPERTY_NAME =
     "_internalAndroidGradlePluginDependencyCheckerRegistered"
@@ -41,53 +38,51 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
     }
     project.rootProject.extensions.add(REGISTERED_EXTENSION_EXT_PROPERTY_NAME, true)
 
-    val listener = EarlyDependencyResolutionListener(
-        project = project,
-        warn = projectOptions[BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION],
-        fail = projectOptions[BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
-    )
-    project.gradle.addListener(listener)
+    val warn = projectOptions[BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
+    val fail = projectOptions[BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
+    val isProjectEvaluated = AtomicBoolean(false)
+    project.gradle.projectsEvaluated { isProjectEvaluated.set(true) }
+
+    project.configurations.all { configuration ->
+        configuration.incoming.beforeResolve {
+            if (isProjectEvaluated.get()) {
+                return@beforeResolve
+            }
+            if (configuration.name == "classpath") {
+                return@beforeResolve
+            }
+            if (project.findProperty(BooleanOption.IDE_BUILD_MODEL_ONLY.propertyName)
+                    ?.let { BooleanOption.IDE_BUILD_MODEL_ONLY.parse(it) } == true
+            ) {
+                return@beforeResolve
+            }
+
+            val errorMessage = errorMessage(configurationName = configuration.name)
+            if (fail) {
+                throw RuntimeException(errorMessage)
+            } else {
+                if (warn) {
+                    project.logger.warn("$errorMessage\nRun with --info for a stacktrace.")
+                    // TODO b/80230357: Heuristically sanitized stacktrace to show what triggered the resolution.
+                }
+                if (project.logger.isEnabled(LogLevel.INFO)) {
+                    project.logger.info(
+                        Throwables.getStackTraceAsString(
+                            RuntimeException(
+                                errorMessage
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
 }
 
-private class EarlyDependencyResolutionListener(
-    val project: Project, val warn: Boolean, val fail: Boolean
-) : DependencyResolutionListener, BuildAdapter() {
-
-    override fun beforeResolve(configuration: ResolvableDependencies) {
-        if (configuration.name == "classpath") {
-            return
-        }
-        if (project.findProperty(BooleanOption.IDE_BUILD_MODEL_ONLY.propertyName)
-                ?.let { BooleanOption.IDE_BUILD_MODEL_ONLY.parse(it) } == true) {
-            return
-        }
-
-        val errorMessage = errorMessage(configurationName = configuration.name)
-        if (fail) {
-            throw RuntimeException(errorMessage)
-        } else {
-            if (warn) {
-                project.logger.warn("$errorMessage\nRun with --info for a stacktrace.")
-                // TODO b/80230357: Heuristically sanitized stacktrace to show what triggered the resolution.
-            }
-            if (project.logger.isEnabled(LogLevel.INFO)) {
-                project.logger.info(Throwables.getStackTraceAsString(RuntimeException(errorMessage)))
-            }
-        }
-    }
-
-    override fun afterResolve(p0: ResolvableDependencies) {
-    }
-
-    override fun projectsEvaluated(gradle: Gradle) {
-        gradle.removeListener(this)
-    }
-
-    private fun errorMessage(configurationName: String): String {
-        return """Configuration '$configurationName' was resolved during configuration time.
+private fun errorMessage(configurationName: String): String {
+    return """Configuration '$configurationName' was resolved during configuration time.
 This is a build performance and scalability issue.
 See https://github.com/gradle/gradle/issues/2298"""
-    }
 }
 
 

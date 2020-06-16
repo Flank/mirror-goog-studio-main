@@ -18,6 +18,7 @@ package androidx.ui.tooling
 
 import androidx.compose.SlotTable
 import androidx.ui.unit.IntPxBounds
+import androidx.ui.core.ModifierInfo
 
 /**
  * During testing this is used instead of the version in androidx-ui-tooling, since that library
@@ -27,19 +28,17 @@ sealed class Group(
     val key: Any?,
     val box: IntPxBounds,
     val data: Collection<Any?>,
+    val modifierInfo: List<ModifierInfo>,
     val children: Collection<Group>
 )
 
-class CallGroup(key: Any?, box: IntPxBounds, data: Collection<Any?>, children: Collection<Group>) :
-    Group(key, box, data, children)
-
-class NodeGroup(
+class CallGroup(
     key: Any?,
-    val node: Any,
     box: IntPxBounds,
     data: Collection<Any?>,
+    modifierInfo: List<ModifierInfo>,
     children: Collection<Group>
-) : Group(key, box, data, children)
+) : Group(key, box, data, modifierInfo, children)
 
 fun SlotTable.asTree(): Group = slots[0] as Group
 

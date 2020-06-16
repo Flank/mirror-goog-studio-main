@@ -231,8 +231,9 @@ class JetifierTest(private val withKotlin: Boolean) {
     }
 
     private fun addCheckThatDependenciesAreNotResolvedBeforeTaskExecutionPhase() {
-        // This configuration is resolved before task execution phase, so we blacklist it for now.
+        // These configurations are resolved before task execution phase, so we ignore them for now.
         val kotlinCompilerClasspath = "kotlinCompilerClasspath"
+        val kotlinKaptWorkers = "kotlinKaptWorkerDependencies"
 
         project.buildFile.appendText(
             """
@@ -246,6 +247,7 @@ class JetifierTest(private val withKotlin: Boolean) {
                     it.incoming.beforeResolve { configuration ->
                         if (configuration.name != "classpath"
                                 && configuration.name != "$kotlinCompilerClasspath"
+                                && configuration.name != "$kotlinKaptWorkers"
                                 && beforeTaskExecutionPhase) {
                             throw new RuntimeException(
                                     configuration.name +

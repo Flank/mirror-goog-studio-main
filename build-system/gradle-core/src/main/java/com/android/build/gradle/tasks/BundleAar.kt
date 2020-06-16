@@ -200,15 +200,13 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.from(
                 creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
-            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_AAR_METADATA]) {
-                task.from(
-                    artifacts.get(InternalArtifactType.AAR_METADATA)
-                ) {
-                    it.rename(
-                        AarMetadataTask.AAR_METADATA_FILE_NAME,
-                        AarMetadataTask.AAR_METADATA_ENTRY_PATH
-                    )
-                }
+            task.from(
+                artifacts.get(InternalArtifactType.AAR_METADATA)
+            ) {
+                it.rename(
+                    AarMetadataTask.AAR_METADATA_FILE_NAME,
+                    AarMetadataTask.AAR_METADATA_ENTRY_PATH
+                )
             }
             task.localAarDeps.from(
                 creationConfig.variantScope.getLocalFileDependencies {

@@ -40,7 +40,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Scanner;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assume;
@@ -59,6 +58,7 @@ public class DataBindingIncrementalTest {
 
     // Tasks
     private static final String TRIGGER_TASK = ":dataBindingTriggerDebug";
+    private static final String KAPT_TASK = ":kaptDebugKotlin";
     private static final String COMPILE_JAVA_TASK = ":compileDebugJavaWithJavac";
 
     // Generated source files
@@ -255,24 +255,12 @@ public class DataBindingIncrementalTest {
         String stacktrace = Throwables.getStackTraceAsString(checkNotNull(result.getException()));
 
         if (withKotlin) {
-            assertThat(stacktrace.contains("Execution failed for task ':kaptDebugKotlin'"));
-            // The root cause could be printed out on stdout or stderr, possibly based on build bot
-            // configurations.
-            try (Scanner stdout = result.getStdout();
-                    Scanner stderr = result.getStderr()) {
-                String stdoutPresent =
-                        stdout.findWithinHorizon(
-                                "Could not find accessor android.databinding.testapp.User.name", 0);
-                String stderrPresent =
-                        stderr.findWithinHorizon(
-                                "Could not find accessor android.databinding.testapp.User.name", 0);
-                assertThat(stdoutPresent != null || stderrPresent != null).isTrue();
-            }
+            assertThat(result.getTask(KAPT_TASK)).failed();
         } else {
             assertThat(result.getTask(COMPILE_JAVA_TASK)).failed();
-            assertThat(stacktrace)
-                    .contains("Could not find accessor android.databinding.testapp.User.name");
         }
+        assertThat(stacktrace)
+                .contains("Could not find accessor android.databinding.testapp.User.name");
     }
 
     @Test

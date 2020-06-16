@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package androidx.ui.tooling
-
-import androidx.compose.SlotTable
+package androidx.ui.core
 
 /**
- * During testing this is used instead of the version in androidx-ui-tooling, since that library
+ * During testing this is used instead of the version in androidx-ui-core, since that library
  * contains only stubbed out classes.
  */
-val tables = mutableSetOf<SlotTable>()
+class OwnedLayer(val layerId: Long)

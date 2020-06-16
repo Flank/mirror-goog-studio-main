@@ -34,6 +34,7 @@ import com.intellij.openapi.extensions.ExtensionsArea
 import com.intellij.openapi.fileTypes.FileTypeExtensionPoint
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.psi.FileContextProvider
@@ -44,7 +45,6 @@ import com.intellij.psi.compiled.ClassFileDecompilers
 import com.intellij.psi.impl.compiled.ClsCustomNavigationPolicy
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.meta.MetaDataContributor
-import com.intellij.psi.stubs.BinaryFileStubBuilders
 import com.intellij.util.io.URLUtil
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.cli.common.CliModuleVisibilityManagerImpl
@@ -290,9 +290,10 @@ class UastEnvironment private constructor(
             // We don't bundle .dll files in the Gradle plugin for native file system access;
             // prevent warning logs on Windows when it's not found (see b.android.com/260180)
             System.setProperty("idea.use.native.fs.for.win", "false")
-
             synchronized(APPLICATION_LOCK) {
                 if (ourApplicationEnvironment == null) {
+                    Registry.getInstance().markAsLoaded()
+                    System.setProperty("idea.plugins.compatible.build", "201.7223.91")
                     val disposable = Disposer.newDisposable()
                     ourApplicationEnvironment = KotlinCoreEnvironment.createApplicationEnvironment(
                         disposable,
@@ -369,7 +370,7 @@ class UastEnvironment private constructor(
             val rootArea = Extensions.getRootArea()
             registerExtensionPoint(
                 rootArea,
-                BinaryFileStubBuilders.EP_NAME,
+                "com.intellij.filetype.stubBuilder",
                 FileTypeExtensionPoint::class.java
             )
             registerExtensionPoint(

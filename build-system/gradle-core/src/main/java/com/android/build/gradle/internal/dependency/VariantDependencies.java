@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dependency;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
@@ -325,7 +324,7 @@ public class VariantDependencies {
                         .getArtifactCollection(configType, scope, artifactType, attributeMap);
         artifacts =
                 new SubtractingArtifactCollection(
-                        artifacts, testedArtifactCollection, project.files());
+                        artifacts, testedArtifactCollection, project.getObjects());
         return artifacts;
     }
 

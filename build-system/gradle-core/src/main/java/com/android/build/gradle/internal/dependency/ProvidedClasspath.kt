@@ -24,6 +24,9 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.file.FileCollection
 import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
 
 fun getProvidedClasspath(
     compileClasspath: ArtifactCollection, runtimeClasspath: ArtifactCollection
@@ -43,10 +46,12 @@ fun getProvidedClasspath(
 private class ProvidedClasspathSubtractor(
     private val compileClasspath: ArtifactCollection,
     private val runtimeClasspath: ArtifactCollection
-) {
+): Serializable {
 
-    private val fileToIds = lazy { this.getFileToIds() }
-    private val excludes = lazy { this.getExcludes() }
+    @Transient
+    private var fileToIds = lazy { this.getFileToIds() }
+    @Transient
+    private var excludes = lazy { this.getExcludes() }
 
     fun getFileCollection(): FileCollection {
         return compileClasspath.artifactFiles.filter { f -> isSatisfiedBy(f) }
@@ -75,5 +80,15 @@ private class ProvidedClasspathSubtractor(
             excludes.add(runtimeArtifacts.id.componentIdentifier)
         }
         return excludes
+    }
+
+    private fun writeObject(objectOutputStream: ObjectOutputStream) {
+        objectOutputStream.defaultWriteObject()
+    }
+
+    private fun readObject(objectInputStream: ObjectInputStream) {
+        objectInputStream.defaultReadObject()
+        fileToIds = lazy { this.getFileToIds() }
+        excludes = lazy { this.getExcludes() }
     }
 }

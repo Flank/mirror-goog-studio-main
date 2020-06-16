@@ -65,7 +65,7 @@ public class HardcodedDebugModeDetector extends Detector implements XmlScanner {
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
-        if (attribute.getNamespaceURI().equals(ANDROID_URI)) {
+        if (ANDROID_URI.equals(attribute.getNamespaceURI())) {
             //if (attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
             context.report(
                     ISSUE,

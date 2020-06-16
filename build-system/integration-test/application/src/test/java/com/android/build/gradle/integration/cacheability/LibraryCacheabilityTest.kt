@@ -73,7 +73,8 @@ class LibraryCacheabilityTest {
                     ":lib:parseReleaseLocalResources",
                     ":lib:processReleaseManifest",
                     ":lib:syncReleaseLibJars",
-                    ":lib:verifyReleaseResources"
+                    ":lib:verifyReleaseResources",
+                    ":lib:writeReleaseAarMetadata"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.

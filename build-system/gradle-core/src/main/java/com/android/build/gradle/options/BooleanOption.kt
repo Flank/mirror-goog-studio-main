@@ -121,7 +121,6 @@ enum class BooleanOption(
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", false, FeatureStage.Experimental),
     ENABLE_STABLE_IDS("android.experimental.enableStableIds", false, FeatureStage.Experimental),
-    ENABLE_AAR_METADATA("android.experimental.enableAarMetadata", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, FeatureStage.Experimental),
     

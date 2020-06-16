@@ -24,6 +24,7 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.tools.analytics.AnalyticsSettings;
 import com.android.tools.analytics.AnalyticsSettingsData;
 import com.android.tools.analytics.Anonymizer;
+import com.android.tools.analytics.Environment;
 import com.android.tools.analytics.UsageTracker;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
@@ -64,6 +65,10 @@ public final class ProcessProfileWriterFactory {
 
     @GuardedBy("this")
     @Nullable
+    private Environment environment = null;
+
+    @GuardedBy("this")
+    @Nullable
     private ProcessProfileWriter processProfileWriter = null;
 
     @GuardedBy("this")
@@ -80,21 +85,28 @@ public final class ProcessProfileWriterFactory {
             @NonNull File rootProjectDirectoryPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
-            boolean enableChromeTracingOutput) {
+            boolean enableChromeTracingOutput,
+            @Nullable Environment environment) {
         getFactory()
                 .initializeInternal(
-                        rootProjectDirectoryPath, gradleVersion, logger, enableChromeTracingOutput);
+                        rootProjectDirectoryPath,
+                        gradleVersion,
+                        logger,
+                        enableChromeTracingOutput,
+                        environment);
     }
 
     private synchronized void initializeInternal(
             @NonNull File rootProjectDirectoryPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
-            boolean enableChromeTracingOutput) {
+            boolean enableChromeTracingOutput,
+            @Nullable Environment environment) {
         if (isInitialized()) {
             return;
         }
         this.mLogger = logger;
+        this.environment = environment;
         this.enableChromeTracingOutput = enableChromeTracingOutput;
         ProcessProfileWriter recorder = get();
         setGlobalProperties(recorder, rootProjectDirectoryPath, gradleVersion, logger);
@@ -149,13 +161,15 @@ public final class ProcessProfileWriterFactory {
                 new File("fake/path/to/test_project"),
                 "2.10",
                 new StdLogger(StdLogger.Level.VERBOSE),
-                false);
+                false,
+                null);
     }
 
-
-    private static void initializeAnalytics(@NonNull ILogger logger,
-            @NonNull ScheduledExecutorService eventLoop) {
-        AnalyticsSettings.initialize(logger);
+    private static void initializeAnalytics(
+            @NonNull ILogger logger,
+            @NonNull ScheduledExecutorService eventLoop,
+            @Nullable Environment environment) {
+        AnalyticsSettings.initialize(logger, null, environment);
         UsageTracker.initialize(eventLoop);
         UsageTracker.setMaxJournalTime(10, TimeUnit.MINUTES);
         UsageTracker.setMaxJournalSize(1000);
@@ -194,7 +208,7 @@ public final class ProcessProfileWriterFactory {
             if (mLogger == null) {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
-            initializeAnalytics(mLogger, getScheduledExecutorService());
+            initializeAnalytics(mLogger, getScheduledExecutorService(), environment);
             processProfileWriter = new ProcessProfileWriter(enableChromeTracingOutput);
         }
         return processProfileWriter;

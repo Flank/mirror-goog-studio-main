@@ -33,6 +33,12 @@ import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 /** Stores necessary data for one model. */
 public class ModelInfo {
 
+    /**
+     * Version of current parser. If model metadata's minParserVersion is higher than this, we will
+     * use fallback APIs (use TensorBuffer for all APIs).
+     */
+    public static final String PARSER_VERSION = "1.0.0";
+
     private final long modelSize;
     private final String modelHash;
 
@@ -42,6 +48,7 @@ public class ModelInfo {
     private final String modelVersion;
     private final String modelAuthor;
     private final String modelLicense;
+    private final String minParserVersion;
 
     private final List<TensorInfo> inputs;
     private final List<TensorInfo> outputs;
@@ -57,6 +64,7 @@ public class ModelInfo {
             modelVersion = Strings.nullToEmpty(modelMetadata.version());
             modelAuthor = Strings.nullToEmpty(modelMetadata.author());
             modelLicense = Strings.nullToEmpty(modelMetadata.license());
+            minParserVersion = Strings.nullToEmpty(modelMetadata.minParserVersion());
         } else {
             metadataExisted = false;
             modelName = "";
@@ -64,6 +72,7 @@ public class ModelInfo {
             modelVersion = "";
             modelAuthor = "";
             modelLicense = "";
+            minParserVersion = "";
         }
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
@@ -78,6 +87,7 @@ public class ModelInfo {
         modelVersion = in.readUTF();
         modelAuthor = in.readUTF();
         modelLicense = in.readUTF();
+        minParserVersion = in.readUTF();
         inputs = readTensorInfoList(in);
         outputs = readTensorInfoList(in);
     }
@@ -91,6 +101,7 @@ public class ModelInfo {
         out.writeUTF(modelVersion);
         out.writeUTF(modelAuthor);
         out.writeUTF(modelLicense);
+        out.writeUTF(minParserVersion);
         writeTensorInfoList(out, inputs);
         writeTensorInfoList(out, outputs);
     }
@@ -134,6 +145,11 @@ public class ModelInfo {
     }
 
     @NonNull
+    public String getMinParserVersion() {
+        return minParserVersion;
+    }
+
+    @NonNull
     public List<TensorInfo> getInputs() {
         return inputs;
     }
@@ -141,6 +157,10 @@ public class ModelInfo {
     @NonNull
     public List<TensorInfo> getOutputs() {
         return outputs;
+    }
+
+    public boolean isMetadataVersionTooHigh() {
+        return isMetadataVersionTooHigh(minParserVersion);
     }
 
     @Override
@@ -156,6 +176,7 @@ public class ModelInfo {
                 && modelVersion.equals(that.modelVersion)
                 && modelAuthor.equals(that.modelAuthor)
                 && modelLicense.equals(that.modelLicense)
+                && minParserVersion.equals(that.minParserVersion)
                 && inputs.equals(that.inputs)
                 && outputs.equals(that.outputs);
     }
@@ -183,5 +204,13 @@ public class ModelInfo {
         }
 
         return modelInfo;
+    }
+
+    static boolean isMetadataVersionTooHigh(@NonNull String minParserVersion) {
+        if (Strings.isNullOrEmpty(minParserVersion)) {
+            return false;
+        }
+
+        return MetadataExtractor.compareVersions(PARSER_VERSION, minParserVersion) < 0;
     }
 }

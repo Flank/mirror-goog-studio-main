@@ -33,7 +33,10 @@ class ComposeTreeTest {
 
     @Test
     fun testSimpleComposeExample() {
-        val slots = SlotTableReader()
+        val linearLayout = StandardView.createLinearLayoutWithComposeView()
+        val androidComposeView = linearLayout.getChildAt(0)
+
+        val slots = SlotTableReader(androidComposeView)
         slots.read("simple-slot-table.csv")
         val expected = ResultViewReader()
         expected.viewLeft = 55
@@ -43,7 +46,6 @@ class ComposeTreeTest {
         System.loadLibrary("jni-test")
         val event = ComponentTreeTest.allocateEvent()
 
-        val linearLayout = StandardView.createLinearLayoutWithComposeView()
         val treeBuilder = ComponentTree(true)
         treeBuilder.writeTree(event, linearLayout)
 
@@ -73,6 +75,7 @@ class ComposeTreeTest {
         assertThat(table[view.className]).named(name).isEqualTo(expected.className)
         val actualInvocation = "${table[view.composePackage]}.${table[view.composeInvocation]}"
         assertThat(actualInvocation).named(name).isEqualTo(expected.invocation)
+        assertThat(view.drawId).named(name).isEqualTo(expected.drawId)
         assertThat(table[view.composeFilename]).named(name).isEqualTo(expected.fileName)
         assertThat(view.composeLineNumber).named(name).isEqualTo(expected.lineNumber)
         assertThat(view.x).named(name).isEqualTo(expected.left)

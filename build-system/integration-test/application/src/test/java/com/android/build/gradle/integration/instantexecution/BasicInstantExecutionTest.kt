@@ -77,7 +77,7 @@ class BasicInstantExecutionTest {
 
     @Test
     fun testCleanBuild() {
-        executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false).run("assemble")
+        executor().run("assemble")
         executor().run("clean")
         executor().run("assemble")
     }
@@ -86,7 +86,6 @@ class BasicInstantExecutionTest {
     fun testWhenInvokedFromTheIde() {
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .run("assemble")
 
         assertThat(project.testDir.resolve(".gradle/configuration-cache")).isDirectory()
@@ -108,9 +107,17 @@ class BasicInstantExecutionTest {
         executor().run(":app:mergeDebugJniLibFolders")
     }
 
+    @Test
+    fun testAndroidTestBuild() {
+        executor().run(":app:assembleDebugAndroidTest")
+        executor().run("clean")
+        executor().run(":app:assembleDebugAndroidTest")
+    }
+
     private fun executor(): GradleTaskExecutor =
         project.executor()
             // until b/154742527 is fixed we need to disable this
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
             .withLoggingLevel(LoggingLevel.LIFECYCLE)
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 }
