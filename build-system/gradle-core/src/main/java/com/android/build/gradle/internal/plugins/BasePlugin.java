@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
-import com.android.build.gradle.internal.dependency.ConstraintHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -76,6 +75,7 @@ import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
 import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
@@ -298,12 +298,11 @@ public abstract class BasePlugin<
     private void configureProject() {
         final Gradle gradle = project.getGradle();
 
-        Provider<ConstraintHandler.CachedStringBuildService> cachedStringBuildServiceProvider =
-                new ConstraintHandler.CachedStringBuildService.RegistrationAction(project)
-                        .execute();
+        Provider<StringCachingBuildService> stringCachingService =
+                new StringCachingBuildService.RegistrationAction(project).execute();
         Provider<MavenCoordinatesCacheBuildService> mavenCoordinatesCacheBuildService =
                 new MavenCoordinatesCacheBuildService.RegistrationAction(
-                                project, cachedStringBuildServiceProvider)
+                                project, stringCachingService)
                         .execute();
 
         new LibraryDependencyCacheBuildService.RegistrationAction(

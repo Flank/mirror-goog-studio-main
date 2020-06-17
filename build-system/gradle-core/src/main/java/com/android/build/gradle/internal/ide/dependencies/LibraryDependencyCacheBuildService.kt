@@ -125,11 +125,10 @@ abstract class LibraryDependencyCacheBuildService
     class RegistrationAction(
         project: Project,
         private val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>
-    ) :
-        ServiceRegistrationAction<LibraryDependencyCacheBuildService, Parameters>(
-            project,
-            LibraryDependencyCacheBuildService::class.java
-        ) {
+    ) : ServiceRegistrationAction<LibraryDependencyCacheBuildService, Parameters>(
+        project,
+        LibraryDependencyCacheBuildService::class.java
+    ) {
         override fun configure(parameters: Parameters) {
             parameters.mavenCoordinatesCache.set(mavenCoordinatesCache)
         }

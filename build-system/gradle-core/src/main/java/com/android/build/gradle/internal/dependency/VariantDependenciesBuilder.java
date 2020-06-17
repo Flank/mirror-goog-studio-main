@@ -39,10 +39,10 @@ import com.android.build.api.attributes.VariantAttr;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.dependency.ConstraintHandler.CachedStringBuildService;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
+import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
@@ -255,8 +255,8 @@ public class VariantDependenciesBuilder {
         runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
 
         if (projectOptions.get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
-            Provider<CachedStringBuildService> cachedStringBuildServiceProvider =
-                    new CachedStringBuildService.RegistrationAction(project).execute();
+            Provider<StringCachingBuildService> stringCachingService =
+                    new StringCachingBuildService.RegistrationAction(project).execute();
             // make compileClasspath match runtimeClasspath
             compileClasspath
                     .getIncoming()
@@ -265,7 +265,7 @@ public class VariantDependenciesBuilder {
                                     runtimeClasspath,
                                     project.getDependencies(),
                                     false,
-                                    cachedStringBuildServiceProvider));
+                                    stringCachingService));
 
             // if this is a test App, then also synchronize the 2 runtime classpaths
             if (variantType.isApk() && testedVariant != null) {
@@ -278,7 +278,7 @@ public class VariantDependenciesBuilder {
                                         testedRuntimeClasspath,
                                         project.getDependencies(),
                                         true,
-                                        cachedStringBuildServiceProvider));
+                                        stringCachingService));
             }
         }
 

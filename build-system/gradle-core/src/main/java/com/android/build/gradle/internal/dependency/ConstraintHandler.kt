@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.services.ServiceRegistrationAction
-import com.android.builder.internal.StringCachingService
+import com.android.build.gradle.internal.services.StringCachingBuildService
 import org.gradle.api.Action
-import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -28,8 +26,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.provider.Provider
-import org.gradle.api.services.BuildService
-import org.gradle.api.services.BuildServiceParameters
 
 /**
  * An Action to synchronize a dependency with a runtimeClasspath.
@@ -40,13 +36,13 @@ class ConstraintHandler(
     private val srcConfiguration: Configuration,
     private val dependencyHandler: DependencyHandler,
     private val isTest: Boolean,
-    private val cachedStringBuildService: Provider<CachedStringBuildService>
+    private val cachedStringBuildService: Provider<StringCachingBuildService>
 ) : Action<ResolvableDependencies> {
     override fun execute(resolvableDependencies: ResolvableDependencies) {
         val srcConfigName = srcConfiguration.name
 
         val configName = resolvableDependencies.name
-        val cachedStrings = cachedStringBuildService.get()
+        val stringCachingService = cachedStringBuildService.get()
 
         srcConfiguration.incoming.resolutionResult.allDependencies { dependency ->
             if (dependency is ResolvedDependencyResult) {
@@ -60,7 +56,7 @@ class ConstraintHandler(
                                 configName,
                                 "${id.group}:${id.module}:${id.version}"
                             ) { constraint ->
-                                constraint.because(cachedStrings.cacheString("$srcConfigName uses version ${id.version}"))
+                                constraint.because(stringCachingService.cacheString("$srcConfigName uses version ${id.version}"))
                                 constraint.version { versionConstraint ->
                                     versionConstraint.strictly(id.version)
                                 }
@@ -81,40 +77,6 @@ class ConstraintHandler(
                         dependencyHandler.project(mapOf("path" to id.projectPath))
                     )
                 }
-            }
-        }
-    }
-
-    /** Build service used to cache strings used to specify why versions of dependencies change.  */
-    abstract class CachedStringBuildService : BuildService<BuildServiceParameters.None>,
-        AutoCloseable, StringCachingService {
-        private val strings = mutableMapOf<String, String>()
-
-        override fun cacheString(string: String): String {
-            synchronized(strings) {
-                val existingString = strings[string]
-                return if (existingString == null) {
-                    strings[string] = string
-                    string
-                } else {
-                    existingString
-                }
-            }
-        }
-
-        override fun close() {
-            synchronized(strings) {
-                strings.clear()
-            }
-        }
-
-        class RegistrationAction(project: Project) :
-            ServiceRegistrationAction<CachedStringBuildService, BuildServiceParameters.None>(
-                project,
-                CachedStringBuildService::class.java
-            ) {
-            override fun configure(parameters: BuildServiceParameters.None) {
-                // do nothing
             }
         }
     }

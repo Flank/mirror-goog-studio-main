@@ -20,6 +20,7 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.dependency.ConstraintHandler
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
+import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.builder.dependency.MavenCoordinatesImpl
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
@@ -37,7 +38,7 @@ abstract class MavenCoordinatesCacheBuildService :
     BuildService<MavenCoordinatesCacheBuildService.Parameters>, AutoCloseable {
 
     interface Parameters: BuildServiceParameters {
-        val stringCache: Property<ConstraintHandler.CachedStringBuildService>
+        val stringCache: Property<StringCachingBuildService>
     }
 
     val cache =
@@ -65,7 +66,7 @@ abstract class MavenCoordinatesCacheBuildService :
 
     class RegistrationAction(
         project: Project,
-        private val stringCache: Provider<ConstraintHandler.CachedStringBuildService>
+        private val stringCache: Provider<StringCachingBuildService>
     ) : ServiceRegistrationAction<MavenCoordinatesCacheBuildService, Parameters>(
         project,
         MavenCoordinatesCacheBuildService::class.java
