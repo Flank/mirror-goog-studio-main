@@ -55,6 +55,41 @@ class XmlStringBuilderTest {
       .getFlattenedXml()
     Truth.assertThat(stringBuilder.error).isEmpty()
     Truth.assertThat(basicString.styleString.str).isEqualTo(" \tHey there.  ")
+
+    stringBuilder.clear()
+    basicString =
+      stringBuilder.append("""   before Quote " inside quote " after Quote   """).getFlattenedXml()
+    Truth.assertThat(stringBuilder.error).isEmpty()
+    Truth.assertThat(basicString.styleString.str)
+      .isEqualTo(" before Quote  inside quote  after Quote ")
+
+    stringBuilder.clear()
+    basicString =
+      stringBuilder.append("""a"b"c""").getFlattenedXml()
+    Truth.assertThat(stringBuilder.error).isEmpty()
+    Truth.assertThat(basicString.styleString.str)
+      .isEqualTo("abc")
+
+    stringBuilder.clear()
+    basicString =
+      stringBuilder.append("""a"bc""").getFlattenedXml()
+    Truth.assertThat(stringBuilder.error).isEmpty()
+    Truth.assertThat(basicString.styleString.str)
+      .isEqualTo("abc")
+
+    stringBuilder.clear()
+    basicString =
+      stringBuilder.append("""ab"c""").getFlattenedXml()
+    Truth.assertThat(stringBuilder.error).isEmpty()
+    Truth.assertThat(basicString.styleString.str)
+      .isEqualTo("abc")
+
+    stringBuilder.clear()
+    basicString =
+      stringBuilder.append("""""""").getFlattenedXml()
+    Truth.assertThat(stringBuilder.error).isEmpty()
+    Truth.assertThat(basicString.styleString.str)
+      .isEqualTo("")
   }
 
   @Test
