@@ -45,6 +45,12 @@ open class VariantApiBaseTest(
 
     companion object {
         /**
+         * AGP version which can be overridden when invoking the test execution.
+         */
+        val agpVersion = System.getenv("API_TESTS_VERSION")
+            ?: com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+
+        /**
          * If running within a build system, make sure to use the expected version when generating
          * build.gradle.kts files.
          */
@@ -56,7 +62,7 @@ open class VariantApiBaseTest(
 
         val generalRepos= listOf(
             "google()",
-            "mavenCentral()")
+            "jcenter()")
 
         /**
          * List of custom repositories where all projects dependencies can be satisfied.
@@ -110,9 +116,12 @@ open class VariantApiBaseTest(
 buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
-        classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+        classpath("com.android.tools.build:gradle:${agpVersion}")
         classpath(kotlin("gradle-plugin", version = "$kotlinVersion"))
     }
+}
+allprojects {
+    ${addGlobalRepositories(generalRepos).prependIndent("    ")}
 }
 """
 
@@ -127,7 +136,9 @@ ${addRepositories(localRepos)}
 ${addGlobalRepositories(globalRepos)}
 
 dependencies {
-    implementation("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+    implementation("com.android.tools.build:gradle-api:${agpVersion}")
+    implementation(kotlin("stdlib"))
+    gradleApi()
 }
 """
 
@@ -162,8 +173,11 @@ allprojects {
 buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
-        classpath("com.android.tools.build:gradle:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
+        classpath("com.android.tools.build:gradle:${agpVersion}")
     }
+}
+allprojects {
+    ${addGlobalRepositories(generalRepos).prependIndent("    ")}
 }
 """
 
@@ -171,18 +185,18 @@ ${addGlobalRepositories(repositories).prependIndent("    ")}
 """
 """
 
-            override fun configureInitScript(localRepos: List<String>): String =
+            override fun configureInitScript(repositories: List<String>): String =
 """
 allprojects {
     buildscript {
-${addRepositories(localRepos).prependIndent("        ")}
+${addRepositories(repositories).prependIndent("        ")}
     }
-${addRepositories(localRepos).prependIndent("    ")}
+${addRepositories(repositories).prependIndent("    ")}
 }
 """
 
             override fun makeScriptFileName(root: String): String {
-                return root;
+                return root
             }
 
             private fun addRepositories(repositories: List<String>) =
@@ -228,8 +242,6 @@ ${repositories.joinToString(
         /**
          * Configure the init script file for the [scriptingLanguage]
          *
-         * @param globalRepos the list of global repositories where project dependencies will be
-         * downloaded from.
          * @param repositories the list of local repositories where project dependencies will be
          * obtained from
          */
@@ -365,7 +377,6 @@ ${repositories.joinToString(
 
         fun writeModule(folder: File, sdkLocation: String) {
             val settingsFile = File(folder, scriptingLanguage.settingsFileName)
-            val localProperties = File(folder, "local.properties")
 
             val includeList = modulesPath().joinToString(
                 separator = "\")\ninclude(\"",
@@ -378,8 +389,6 @@ ${repositories.joinToString(
             $includeList
             rootProject.name = "${javaClass.simpleName}"
             """.trimIndent())
-
-            localProperties.writeText("sdk.dir=$sdkLocation")
 
             super.writeModule(folder)
 
@@ -402,7 +411,7 @@ ${repositories.joinToString(
         var index: String? = null
     }
 
-    var docs=  DocumentationBuilder()
+    private var docs=  DocumentationBuilder()
 
     fun withDocs(docs: DocumentationBuilder.()-> Unit) {
         docs.invoke(this.docs)
@@ -436,9 +445,10 @@ ${repositories.joinToString(
             .withArguments(
                 "-Dorg.gradle.jvmargs=-Xmx2G",
                 "-Dandroid.enableJvmResourceCompiler=true",
-               "--init-script", "${initScript.absolutePath}",
+               "--init-script", initScript.absolutePath,
                 *given.tasksToInvoke.toTypedArray(),
                 "--stacktrace")
+            .withEnvironment(mapOf("ANDROID_SDK_ROOT" to sdkLocation()))
             .forwardOutput()
 
         // if running within Intellij, we must set the Gradle Distribution when invoking the

@@ -79,15 +79,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 }
                 """.trimIndent()
                 )
-                buildFile =
-                    """
-                dependencies {
-                    implementation(kotlin("stdlib"))
-                    implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                    implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
-                    gradleApi()
-                }
-                """.trimIndent()
             }
             addModule(":app") {
                 addCommonBuildFile(this)
@@ -153,15 +144,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 }
                 """.trimIndent()
                 )
-                buildFile =
-                    """
-                dependencies {
-                    implementation(kotlin("stdlib"))
-                    implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                    implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
-                    gradleApi()
-                }
-                """.trimIndent()
             }
             addModule(":app") {
                 addCommonBuildFile(this)
@@ -229,15 +211,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 }
                 """.trimIndent()
                 )
-                buildFile =
-                    """
-                dependencies {
-                    implementation(kotlin("stdlib"))
-                    implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                    implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
-                    gradleApi()
-                }
-                """.trimIndent()
             }
             addModule(":app") {
                 addCommonBuildFile(this)
