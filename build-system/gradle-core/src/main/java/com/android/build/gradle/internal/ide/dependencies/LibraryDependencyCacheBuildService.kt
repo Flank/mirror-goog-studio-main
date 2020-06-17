@@ -39,13 +39,15 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Maps
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 
 /** Build service used to cache library dependencies used in the model builder. */
-abstract class LibraryDependencyCacheBuildService : BuildService<BuildServiceParameters.None>,
-    AutoCloseable {
+abstract class LibraryDependencyCacheBuildService
+    : BuildService<BuildServiceParameters.None>, AutoCloseable {
 
     val libraryCache =
         CreatingCache(CreatingCache.ValueFactory<ResolvedArtifact, Library> {
@@ -179,7 +181,8 @@ abstract class LibraryDependencyCacheBuildService : BuildService<BuildServicePar
         } else file
     }
 
-    class RegistrationAction(project: Project) :
+    class RegistrationAction(
+        project: Project) :
         ServiceRegistrationAction<LibraryDependencyCacheBuildService, BuildServiceParameters.None>(
             project,
             LibraryDependencyCacheBuildService::class.java

@@ -26,9 +26,12 @@ public class MavenCoordinatesImplTest {
     @Test
     public void equals() throws Exception {
         EqualsVerifier.forClass(MavenCoordinatesImpl.class)
-                .withCachedHashCode("hashCode", "computeHashCode",
-                        new MavenCoordinatesImpl("foo", "bar", "1.2", "jar", "jar"))
-                .withIgnoredFields("toString", "versionLessId")
+                .withCachedHashCode(
+                        "hashCode",
+                        "computeHashCode",
+                        MavenCoordinatesImpl.create(
+                                string -> string, "foo", "bar", "1.2", "jar", "jar"))
+                .withIgnoredFields("toString", "versionlessId")
                 .verify();
     }
 
@@ -48,7 +51,15 @@ public class MavenCoordinatesImplTest {
             String classifier,
             String packaging) {
 
-        assertThat(new MavenCoordinatesImpl(groupId, artifactId, version, packaging, classifier).toString())
+        assertThat(
+                        MavenCoordinatesImpl.create(
+                                        string -> string,
+                                        groupId,
+                                        artifactId,
+                                        version,
+                                        packaging,
+                                        classifier)
+                                .toString())
                 .named(expected)
                 .isEqualTo(expected);
     }
