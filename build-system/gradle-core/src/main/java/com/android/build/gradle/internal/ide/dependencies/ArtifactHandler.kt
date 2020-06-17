@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.services.BuildServiceRegistry
 import java.io.File
 
 /**
@@ -34,7 +32,8 @@ import java.io.File
  * [handleAndroidModule], [handleJavaLibrary] and [handleJavaModule].
  */
 abstract class ArtifactHandler<DependencyItemT> protected constructor(
-    private val localJarCache: CreatingCache<File, List<File>>
+    private val localJarCache: CreatingCache<File, List<File>>,
+    private val mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>
 ) {
 
     /**
@@ -50,6 +49,11 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
     ) : DependencyItemT {
         val id = artifact.componentIdentifier
 
+        val coordinatesSupplier = {
+            mavenCoordinatesCache.get(artifact)
+                ?: throw RuntimeException("unable to compute coordinates for $artifact")
+        }
+
         return if (id !is ProjectComponentIdentifier || artifact.isWrappedModule) {
             if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
                 val extractedFolder = artifact.extractedFolder
@@ -61,14 +65,14 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     localJarCache.get(extractedFolder) ?: listOf(),
                     isProvided,
                     artifact.variantName,
-                    artifact::computeMavenCoordinates,
+                    coordinatesSupplier,
                     artifact::computeModelAddress
                 )
             } else {
                 handleJavaLibrary(
                     artifact.artifactFile,
                     isProvided,
-                    artifact::computeMavenCoordinates,
+                    coordinatesSupplier,
                     artifact::computeModelAddress
                 )
             }
@@ -86,7 +90,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     artifact.artifactFile,
                     lintJar,
                     isProvided,
-                    artifact::computeMavenCoordinates,
+                    coordinatesSupplier,
                     artifact::computeModelAddress
                 )
             } else {

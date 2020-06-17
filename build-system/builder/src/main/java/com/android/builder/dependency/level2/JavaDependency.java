@@ -106,7 +106,12 @@ public final class JavaDependency extends Dependency {
 
     @NonNull
     public static MavenCoordinatesImpl getCoordForLocalJar(@NonNull File jarFile) {
-        return new MavenCoordinatesImpl(LOCAL_JAR_GROUPID, jarFile.getPath(), "unspecified");
+        return MavenCoordinatesImpl.create(
+                // no-op impl of CachedStringService
+                string -> string,
+                LOCAL_JAR_GROUPID,
+                jarFile.getPath(),
+                "unspecified");
     }
 
     @Override

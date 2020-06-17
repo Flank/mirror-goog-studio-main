@@ -73,7 +73,7 @@ public class MavenCoordinatesStub extends BaseStub implements MavenCoordinates {
     }
 
     @Override
-    @Nullable
+    @NonNull
     public String getVersionlessId() {
         throw new UnusedModelMethodException("getVersionlessId");
     }

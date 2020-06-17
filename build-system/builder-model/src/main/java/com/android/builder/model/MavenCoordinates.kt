@@ -49,5 +49,5 @@ interface MavenCoordinates {
      * Returns this coordinates Id without the version attribute.
      * Since 2.3
      */
-    val versionlessId: String?
+    val versionlessId: String
 }
