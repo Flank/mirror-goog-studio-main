@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.api.apiTest
+package com.android.build.api.apiTest.kotlin
 
+import com.android.build.api.apiTest.VariantApiBaseTest
 import com.google.common.truth.Truth
 import kotlin.test.assertNotNull
 import org.junit.Test
@@ -24,10 +25,8 @@ import org.junit.runners.Parameterized
 
 
 @RunWith(Parameterized::class)
-class KotlinScriptApiTransformTests(private val artifact: String, private val plugin: String):
+class TransformApiTest(private val artifact: String, private val plugin: String):
     VariantApiBaseTest(TestType.Script) {
-    private val testingElements = TestingElements(scriptingLanguage)
-
     companion object {
 
         @Parameterized.Parameters(name = "artifact_{0}")

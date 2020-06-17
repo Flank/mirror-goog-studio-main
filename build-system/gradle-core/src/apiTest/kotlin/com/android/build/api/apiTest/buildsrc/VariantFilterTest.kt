@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.api.apiTest
+package com.android.build.api.apiTest.buildsrc
 
+import com.android.build.api.apiTest.VariantApiBaseTest
 import com.google.common.truth.Truth
 import org.junit.Test
 import kotlin.test.assertNotNull
 
-class BuildSrcVariantFilterTests:  VariantApiBaseTest(
-TestType.BuildSrc
+class VariantFilterTest:  VariantApiBaseTest(
+    TestType.BuildSrc
 ) {
-    private val testingElements = TestingElements(scriptingLanguage)
-
     @Test
     fun testVariantFilteringOnBuildType() {
         given {
@@ -75,7 +74,7 @@ TestType.BuildSrc
                 buildFile =
                     """
                     dependencies {
-                        implementation("com.android.tools.build:gradle:${agpVersion}")
+                        implementation("com.android.tools.build:gradle:$agpVersion")
                     }
                     """.trimIndent()
             }

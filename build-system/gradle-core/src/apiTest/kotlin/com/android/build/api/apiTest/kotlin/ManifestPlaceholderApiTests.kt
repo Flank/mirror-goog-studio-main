@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.api.apiTest
+package com.android.build.api.apiTest.kotlin
 
+import com.android.build.api.apiTest.VariantApiBaseTest
 import com.google.common.truth.Truth
 import org.junit.Test
 import kotlin.test.assertNotNull
 
-class ManifestPlaceholderApiTests: VariantApiBaseTest(TestType.Script) {
-    private val testingElements= TestingElements(scriptingLanguage)
-
+class ManifestPlaceholderApiTests: VariantApiBaseTest(
+    TestType.Script
+) {
     @Test
     fun addCustomManifestPlaceholder() {
         given {

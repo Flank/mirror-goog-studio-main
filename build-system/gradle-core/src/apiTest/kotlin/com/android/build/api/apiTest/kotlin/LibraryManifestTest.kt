@@ -36,9 +36,7 @@ import java.io.PrintStream
 import java.util.Locale
 import kotlin.test.assertNotNull
 
-class LibraryManifestTests: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Kotlin) {
-    private val testingElements= TestingElements(scriptingLanguage)
-
+class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Kotlin) {
     @Test
     fun libraryManifestTransformerTest() {
         given {

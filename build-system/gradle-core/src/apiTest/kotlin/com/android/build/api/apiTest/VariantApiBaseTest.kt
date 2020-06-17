@@ -266,6 +266,8 @@ ${repositories.joinToString(
     @Rule
     @JvmField val testBuildDir = TemporaryFolder()
 
+    val testingElements= TestingElements(scriptingLanguage)
+
     open fun sdkLocation(): String = TestUtils.getSdk().absolutePath
 
     open class ModuleGivenBuilder(val scriptingLanguage: ScriptingLanguage) {

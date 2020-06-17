@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.apiTest
+package com.android.build.api.apiTest.buildsrc
 
+import com.android.build.api.apiTest.VariantApiBaseTest
 import com.google.common.truth.Truth
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -22,11 +23,9 @@ import kotlin.test.assertNotNull
 /**
  * Tests related to accessing [com.android.build.api.variant.VariantProperties]
  */
-class BuildSrcVariantPropertiesTests: VariantApiBaseTest(
-TestType.BuildSrc
+class VariantPropertiesTest: VariantApiBaseTest(
+    TestType.BuildSrc
 ) {
-    private val testingElements = TestingElements(scriptingLanguage)
-
     @Test
     fun setVersionsFromTask() {
         given {
@@ -146,7 +145,7 @@ TestType.BuildSrc
                 buildFile =
                     """
                 dependencies {
-                    implementation("com.android.tools.build:gradle:${agpVersion}")
+                    implementation("com.android.tools.build:gradle:$agpVersion")
                 }
                 """.trimIndent()
             }
