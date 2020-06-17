@@ -39,6 +39,7 @@ fun RecipeExecutor.blankWearActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
+  addDependency("com.google.android.support:wearable:+")
   addDependency("com.google.android.wearable:wearable:+", "provided")
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
