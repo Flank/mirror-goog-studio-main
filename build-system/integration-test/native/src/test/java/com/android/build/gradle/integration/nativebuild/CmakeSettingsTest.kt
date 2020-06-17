@@ -47,6 +47,7 @@ class CmakeSettingsTest(cmakeVersionInDsl: String) {
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
+        // TODO(159233213) Turn to ON when release configuration is cacheable
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setCmakeVersion(cmakeVersionInDsl)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

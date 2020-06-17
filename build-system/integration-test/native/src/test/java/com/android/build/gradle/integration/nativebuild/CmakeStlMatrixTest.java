@@ -59,6 +59,7 @@ public class CmakeStlMatrixTest {
             GradleTestProject.builder()
                     .fromTestApp(
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
+                    // TODO(159233213) Turn to ON when release configuration is cacheable
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
                     .setCmakeVersion("3.10.4819442")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

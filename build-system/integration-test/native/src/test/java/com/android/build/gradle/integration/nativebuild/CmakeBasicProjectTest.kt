@@ -31,6 +31,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeVariantAbi
+import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
@@ -57,7 +58,8 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
     val project = GradleTestProject.builder()
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        // TODO(159233213) Turn to ON when release configuration is cacheable
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 
@@ -101,6 +103,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
                 version "$cmakeVersionInDsl"
               }
             }
+            
           // -----------------------------------------------------------------------
           // See b/131857476
           // -----------------------------------------------------------------------
@@ -110,6 +113,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
                 println("externalNativeBuild soFolder = " + task.soFolder)
             }
           }
+          
           // ------------------------------------------------------------------------
         }
     """.trimIndent())
@@ -310,8 +314,8 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         project.executor()
             .with(BooleanOption.ENABLE_PROFILE_JSON, true)
             .run("clean", "assembleDebug")
-        val traceFile = join(project.testDir, "build", "android-profile").listFiles()!!
-            .first { it.name.endsWith("json.gz") }
+        val traceFolder = join(project.testDir, "build", "android-profile", ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
+        val traceFile = traceFolder.listFiles()!!.first { it.name.endsWith("json.gz") }
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")
     }
