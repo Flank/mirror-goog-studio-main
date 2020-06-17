@@ -17,6 +17,7 @@
 package com.android.build.api.apiTest
 
 import com.android.SdkConstants
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.AbstractBuildGivenBuildCheckTest
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth
@@ -409,14 +410,21 @@ ${repositories.joinToString(
         }
     }
 
+    private var docs = DocumentationBuilder()
+
+    private val parameters: MutableMap<BooleanOption, Any> =
+        mutableMapOf(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER to true)
+
     open class DocumentationBuilder {
         var index: String? = null
     }
 
-    private var docs=  DocumentationBuilder()
-
     fun withDocs(docs: DocumentationBuilder.()-> Unit) {
         docs.invoke(this.docs)
+    }
+
+    fun withOptions(parameters: Map<BooleanOption, Any>) {
+        this.parameters.putAll(parameters)
     }
 
     override fun defaultWhen(given: GivenBuilder): BuildResult? {
@@ -442,14 +450,18 @@ ${repositories.joinToString(
             ${scriptingLanguage.configureInitScript(mavenRepos)}""".trim()
         )
 
+        val runnerParameters = mutableListOf<String>()
+        parameters.map { "-P${it.key.propertyName}=${it.value}" }.toCollection(runnerParameters)
+        runnerParameters.addAll(listOf(
+            "-Dorg.gradle.jvmargs=-Xmx2G",
+            "--init-script",
+            initScript.absolutePath,
+            *given.tasksToInvoke.toTypedArray(),
+            "--stacktrace"
+        ))
         val gradleRunner = GradleRunner.create()
             .withProjectDir(projectDir)
-            .withArguments(
-                "-Dorg.gradle.jvmargs=-Xmx2G",
-                "-Dandroid.enableJvmResourceCompiler=true",
-               "--init-script", initScript.absolutePath,
-                *given.tasksToInvoke.toTypedArray(),
-                "--stacktrace")
+            .withArguments(runnerParameters)
             .withEnvironment(mapOf("ANDROID_SDK_ROOT" to sdkLocation()))
             .forwardOutput()
 
