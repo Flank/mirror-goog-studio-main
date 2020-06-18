@@ -93,7 +93,6 @@ public class LayoutInspectorService {
             startLayoutInspector(root);
         }
         mDetectRootChange = new DetectRootViewChange(this);
-        mDetectRootChange.start(roots);
     }
 
     public void startLayoutInspector(@NonNull View root) {
@@ -167,9 +166,9 @@ public class LayoutInspectorService {
     /** Stops the capture from sending more messages. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStopLayoutInspectorCommand() {
-        stopCapturing();
-        mDetectRootChange.cancel(true);
+        mDetectRootChange.cancel();
         mDetectRootChange = null;
+        stopCapturing();
     }
 
     private void stopCapturing() {
