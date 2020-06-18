@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addSupportWearableDependency
 import com.android.tools.idea.wizard.template.impl.other.watchFaceService.res.values.colorsXml
 import com.android.tools.idea.wizard.template.impl.other.watchFaceService.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.other.watchFaceService.res.values.stringsXml
@@ -43,8 +44,7 @@ fun RecipeExecutor.watchFaceServiceRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.google.android.support:wearable:+")
-  addDependency(mavenCoordinate = "com.google.android.wearable:wearable:+", configuration = "provided")
+  addSupportWearableDependency()
   addDependency("com.google.android.gms:play-services-base:+")
 
   mergeXml(androidManifestXml(packageName, serviceClass, watchFaceStyle), manifestOut.resolve("AndroidManifest.xml"))
