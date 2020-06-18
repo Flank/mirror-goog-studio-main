@@ -84,6 +84,12 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
             return;
         }
 
+        if (context.getMainProject().getMinSdk() >= 23) {
+            // This is not a problem as of Android 6.0:
+            // https://issuetracker.google.com/36950033
+            return;
+        }
+
         Element element = attribute.getOwnerElement();
         Attr lines = element.getAttributeNodeNS(ANDROID_URI, ATTR_LINES);
         Attr maxLines = element.getAttributeNodeNS(ANDROID_URI, ATTR_MAX_LINES);

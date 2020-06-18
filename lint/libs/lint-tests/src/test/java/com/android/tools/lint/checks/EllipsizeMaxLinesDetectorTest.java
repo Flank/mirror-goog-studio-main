@@ -19,37 +19,39 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
+    TestFile testFile =
+            xml(
+                    "res/layout/sample.xml",
+                    ""
+                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"wrap_content\"\n"
+                            + "    android:layout_height=\"wrap_content\" >\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:ellipsize=\"start\"\n" // ERROR
+                            + "        android:lines=\"1\"\n"
+                            + "        android:text=\"Really long text that needs to be ellipsized here - 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\" />\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:ellipsize=\"start\"\n" // ERROR
+                            + "        android:maxLines=\"1\"\n"
+                            + "        android:text=\"long text\" />\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\"\n"
+                            + "        android:ellipsize=\"end\"\n" // ok
+                            + "        android:lines=\"1\"\n"
+                            + "        android:text=\"long text\" />\n"
+                            + "\n"
+                            + "</RelativeLayout>\n");
+
     public void testSimple() {
-        lint().files(
-                        xml(
-                                "res/layout/sample.xml",
-                                ""
-                                        + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    android:layout_width=\"wrap_content\"\n"
-                                        + "    android:layout_height=\"wrap_content\" >\n"
-                                        + "\n"
-                                        + "    <TextView\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:ellipsize=\"start\"\n" // ERROR
-                                        + "        android:lines=\"1\"\n"
-                                        + "        android:text=\"Really long text that needs to be ellipsized here - 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\" />\n"
-                                        + "\n"
-                                        + "    <TextView\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:ellipsize=\"start\"\n" // ERROR
-                                        + "        android:maxLines=\"1\"\n"
-                                        + "        android:text=\"long text\" />\n"
-                                        + "\n"
-                                        + "    <TextView\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:ellipsize=\"end\"\n" // ok
-                                        + "        android:lines=\"1\"\n"
-                                        + "        android:text=\"long text\" />\n"
-                                        + "\n"
-                                        + "</RelativeLayout>\n"))
+        lint().files(testFile)
                 .run()
                 .expect(
                         ""
@@ -72,6 +74,10 @@ public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
                                 + "@@ -17 +17\n"
                                 + "-         android:maxLines=\"1\"\n"
                                 + "+         android:singleLine=\"true\"\n");
+    }
+
+    public void testOkOn23() {
+        lint().files(manifest().minSdk(23), testFile).run().expectClean();
     }
 
     @Override
