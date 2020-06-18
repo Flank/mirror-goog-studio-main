@@ -42,7 +42,7 @@ class VersionCheckPlugin: Plugin<Project> {
 
         val currentVersion = project.gradle.gradleVersion
         if (GRADLE_MIN_VERSION > currentVersion) {
-            val file = File("gradle${separator}wrapper${separator}gradle-wrapper.properties")
+            val file = File(project.rootProject.projectDir, "gradle${separator}wrapper${separator}gradle-wrapper.properties")
 
             val errorMessage = String.format(
                 "Minimum supported Gradle version is $GRADLE_MIN_VERSION. Current version is $currentVersion. "
@@ -61,12 +61,11 @@ class VersionCheckPlugin: Plugin<Project> {
     // Version check override property is not compatible with new pipeline of accessing gradle
     // properties because providerFactory.gradleProperty API doesn't exist in lower Gradle versions
     private fun getVersionCheckOverridePropertyValue(project: Project) : Boolean {
-        val value = project.extensions.extraProperties.properties
-            .get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.propertyName)
+        val value = project.extensions.extraProperties.properties[BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.propertyName]
         return if (value == null) {
-            BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.defaultValue;
+            BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.defaultValue
         } else {
-             BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.parse(value);
+             BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.parse(value)
         }
     }
 }
