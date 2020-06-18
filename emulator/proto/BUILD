@@ -4,6 +4,7 @@ android_java_proto_library(
     name = "emulator_java_proto",
     srcs = [
         "emulator_controller.proto",
+        "rtc_service.proto",
         "snapshot.proto",
         "snapshot_service.proto",
     ],
