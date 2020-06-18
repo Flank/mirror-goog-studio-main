@@ -65,7 +65,7 @@ public class ZipSource {
             throw new IllegalStateException(
                     String.format("Cannot find '%s' in archive '%s'", entryName, map.getFile()));
         }
-        Source entrySource = newZipSourceEntryFor(newName, entry, this, compressionLevel);
+        Source entrySource = newZipSourceEntryFor(newName, entry, compressionLevel);
         selectedEntries.add(entrySource);
         return entrySource;
     }
@@ -100,8 +100,7 @@ public class ZipSource {
         return selectedEntries;
     }
 
-    Source newZipSourceEntryFor(
-            String newName, Entry entry, ZipSource zipSource, int compressionLevel) {
+    private Source newZipSourceEntryFor(String newName, Entry entry, int compressionLevel) {
         // No change case.
         if (compressionLevel == COMPRESSION_NO_CHANGE
                 || (compressionLevel == Deflater.NO_COMPRESSION && !entry.isCompressed())
@@ -111,11 +110,11 @@ public class ZipSource {
 
         // The entry needs to be inflated.
         if (compressionLevel == Deflater.NO_COMPRESSION) {
-            return new ZipSourceEntryInflater(newName, entry, zipSource);
+            return new ZipSourceEntryInflater(newName, entry, this);
         }
 
         // The entry needs to be deflated.
-        return new ZipSourceEntryDeflater(newName, entry, zipSource, compressionLevel);
+        return new ZipSourceEntryDeflater(newName, entry, this, compressionLevel);
     }
 
     String getName() {
