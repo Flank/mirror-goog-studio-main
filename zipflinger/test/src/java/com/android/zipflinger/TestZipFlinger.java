@@ -282,8 +282,8 @@ public class TestZipFlinger extends TestBase {
         Path dst = getTestPath("testZipSourceAlignment-" + alignment + ".zip");
 
         ZipSource source = new ZipSource(getFile("4-5files.zip"));
-        source.select("file4.txt", "file4.txt").align(alignment);
-        source.select("file5.txt", "file5.txt").align(alignment);
+        source.select("file4.txt", "file4.txt", ZipSource.COMPRESSION_NO_CHANGE, alignment);
+        source.select("file5.txt", "file5.txt", ZipSource.COMPRESSION_NO_CHANGE, alignment);
 
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
             zipArchive.add(source);
@@ -544,10 +544,12 @@ public class TestZipFlinger extends TestBase {
 
         try (ZipArchive archive = new ZipArchive(dst.toFile())) {
             ZipSource zipSource = new ZipSource(src.toFile());
-            zipSource.select("uncompressed.random", "a", Deflater.NO_COMPRESSION);
-            zipSource.select("uncompressed.random", "b", Deflater.BEST_SPEED);
-            zipSource.select("compressed.random", "c", Deflater.NO_COMPRESSION);
-            zipSource.select("compressed.random", "d", Deflater.BEST_SPEED);
+            zipSource.select(
+                    "uncompressed.random", "a", Deflater.NO_COMPRESSION, Source.NO_ALIGNMENT);
+            zipSource.select("uncompressed.random", "b", Deflater.BEST_SPEED, Source.NO_ALIGNMENT);
+            zipSource.select(
+                    "compressed.random", "c", Deflater.NO_COMPRESSION, Source.NO_ALIGNMENT);
+            zipSource.select("compressed.random", "d", Deflater.BEST_SPEED, Source.NO_ALIGNMENT);
             archive.add(zipSource);
         }
         verifyArchive(dst.toFile());

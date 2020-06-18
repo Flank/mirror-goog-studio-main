@@ -23,7 +23,9 @@ import java.nio.charset.StandardCharsets;
 public abstract class Source {
     private final String name;
     private final byte[] nameBytes;
-    private long alignment = 0;
+
+    public static final long NO_ALIGNMENT = 0;
+    private long alignment = NO_ALIGNMENT;
 
     protected long compressedSize;
     protected long uncompressedSize;
@@ -46,7 +48,7 @@ public abstract class Source {
     }
 
     boolean isAligned() {
-        return alignment != 0;
+        return alignment != NO_ALIGNMENT;
     }
 
     public void align(long alignment) {

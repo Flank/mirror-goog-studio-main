@@ -41,8 +41,8 @@ public class ZipSource {
     }
 
     @NonNull
-    public Source select(@NonNull String entryName, @NonNull String newName) {
-        return select(entryName, newName, COMPRESSION_NO_CHANGE);
+    public void select(@NonNull String entryName, @NonNull String newName) {
+        select(entryName, newName, COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT);
     }
 
     /**
@@ -61,15 +61,19 @@ public class ZipSource {
      * @return
      */
     @NonNull
-    public Source select(@NonNull String entryName, @NonNull String newName, int compressionLevel) {
+    public void select(
+            @NonNull String entryName,
+            @NonNull String newName,
+            int compressionLevel,
+            long alignment) {
         Entry entry = map.getEntries().get(entryName);
         if (entry == null) {
             throw new IllegalStateException(
                     String.format("Cannot find '%s' in archive '%s'", entryName, map.getFile()));
         }
         Source entrySource = newZipSourceEntryFor(newName, entry, compressionLevel);
+        entrySource.align(alignment);
         selectedEntries.add(entrySource);
-        return entrySource;
     }
 
     public Map<String, Entry> entries() {
@@ -79,7 +83,7 @@ public class ZipSource {
     public static ZipSource selectAll(@NonNull File file) throws IOException {
         ZipSource source = new ZipSource(file);
         for (Entry e : source.entries().values()) {
-            source.select(e.getName(), e.getName(), COMPRESSION_NO_CHANGE);
+            source.select(e.getName(), e.getName(), COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT);
         }
         return source;
     }
