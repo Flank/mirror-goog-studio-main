@@ -34,7 +34,12 @@ public class Location implements Comparable<Location> {
         return last - first + 1;
     }
 
+    public boolean isValid() {
+        return !this.equals(INVALID);
+    }
+
     @NonNull
+    @Override
     public String toString() {
         return "(offset="
                 + NumberFormat.getInstance().format(first)
@@ -54,6 +59,11 @@ public class Location implements Comparable<Location> {
         }
         Location other = (Location) obj;
         return first == other.first && last == other.last;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(first);
     }
 
     @Override

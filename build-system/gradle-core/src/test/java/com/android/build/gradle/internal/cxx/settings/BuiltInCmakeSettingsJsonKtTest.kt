@@ -18,59 +18,29 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
-import com.android.build.gradle.internal.cxx.model.EmptyGlobalMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 
 import org.junit.Test
 
 class BuiltInCmakeSettingsJsonKtTest {
 
-    //@Test
-    fun `NDK-level CMakeSettings is completely lazy`() {
-        EmptyGlobalMock().let {
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
-            val variant = createCxxVariantModel(
-                module,
-                it.componentProperties)
-            val abi = createCxxAbiModel(
-                variant,
-                Abi.X86,
-                it.global,
-                it.componentProperties)
-            abi.getNdkMetaCmakeSettingsJson()
-        }
-    }
-
-    //@Test
-    fun `Gradle-level CMakeSettings is completely lazy`() {
-        EmptyGlobalMock().let {
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
-            val variant = createCxxVariantModel(
-                module,
-                it.componentProperties)
-            val abi = createCxxAbiModel(
-                variant,
-                Abi.X86,
-                it.global,
-                it.componentProperties)
-            abi.getAndroidGradleCmakeSettings()
-        }
-    }
 
     @Test
     fun `NDK-level CMakeSettings does not throw exception when evaluated`() {
         BasicCmakeMock().let {
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel)
             val variant = createCxxVariantModel(
-                module,
-                it.componentProperties)
+                it.configurationModel,
+                module)
             val abi = createCxxAbiModel(
+                it.sdkComponents,
+                it.configurationModel,
                 variant,
-                Abi.X86,
-                it.global,
-                it.componentProperties)
+                Abi.X86)
             abi.getNdkMetaCmakeSettingsJson().toJsonString()
         }
     }

@@ -107,9 +107,6 @@ TEST(TraceProcessorServiceImplTest, LoadTrace) {
   EXPECT_TRUE(rs.ok());
   EXPECT_TRUE(response.ok());
   EXPECT_EQ(response.error(), "");
-
-  // tank.trace has 240 process, but we discard the process with pid = 0.
-  EXPECT_EQ(response.process_metadata().process_size(), 239);
 }
 
 TEST(TraceProcessorServiceImplTest, BatchQuery) {

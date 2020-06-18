@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.ATTR_IGNORE
 import com.android.SdkConstants.CLASS_CONSTRUCTOR
 import com.android.SdkConstants.CONSTRUCTOR_NAME
@@ -1635,16 +1636,9 @@ class LintDriver
         else
             emptyList<File>()
 
-        val generatedFolders = if (checkGeneratedSources)
-            project.generatedSourceFolders
-        else emptyList<File>()
-
         // Gather all Java source files in a single pass; more efficient.
         val sources = ArrayList<File>(100)
         for (folder in sourceFolders) {
-            gatherJavaFiles(folder, sources)
-        }
-        for (folder in generatedFolders) {
             gatherJavaFiles(folder, sources)
         }
 
@@ -1652,6 +1646,19 @@ class LintDriver
         for (file in sources) {
             val context = JavaContext(this, project, main, file)
             contexts.add(context)
+        }
+
+        // Even if checkGeneratedSources == false, we must include generated sources
+        // in our context list such that the source files are found by the Kotin analyzer
+        sources.clear()
+        for (folder in project.generatedSourceFolders) {
+            gatherJavaFiles(folder, sources)
+        }
+        val generatedContexts = ArrayList<JavaContext>(sources.size)
+        for (file in sources) {
+            val context = JavaContext(this, project, main, file)
+            context.isGeneratedSource = true
+            generatedContexts.add(context)
         }
 
         // Test sources
@@ -1673,31 +1680,28 @@ class LintDriver
             }
         }
 
-        return findUastSources(checks, contexts, testContexts)
+        return findUastSources(checks, contexts, testContexts, generatedContexts)
     }
 
     private fun findUastSources(
         checks: List<Detector>,
         contexts: List<JavaContext>,
-        testContexts: List<JavaContext>
+        testContexts: List<JavaContext>,
+        generatedContexts: List<JavaContext>
     ): UastSourceList {
         val allContexts: List<JavaContext>
-        if (testContexts.isEmpty()) {
+        if (testContexts.isEmpty() && generatedContexts.isEmpty()) {
             allContexts = contexts
         } else {
-            allContexts = ArrayList(contexts.size + testContexts.size)
+            val capacity = contexts.size + testContexts.size + generatedContexts.size
+            allContexts = ArrayList(capacity)
             allContexts.addAll(contexts)
             allContexts.addAll(testContexts)
+            allContexts.addAll(generatedContexts)
         }
 
         val parser = client.getUastParser(currentProject)
-
-        // Force all test sources into the normal source check (where all checks apply) ?
-        return if (checkTestSources) {
-            UastSourceList(parser, checks, allContexts, allContexts, emptyList())
-        } else {
-            UastSourceList(parser, checks, allContexts, contexts, testContexts)
-        }
+        return UastSourceList(parser, checks, allContexts, contexts, testContexts, generatedContexts)
     }
 
     private fun prepareUast(sourceList: UastSourceList) {
@@ -1715,7 +1719,8 @@ class LintDriver
         val checks: List<Detector>,
         val allContexts: List<JavaContext>,
         val srcContexts: List<JavaContext>,
-        val testContexts: List<JavaContext>
+        val testContexts: List<JavaContext>,
+        val generatedContexts: List<JavaContext>
     )
 
     private fun visitUast(
@@ -1725,56 +1730,65 @@ class LintDriver
     ) {
         val parser = sourceList.parser
         val uastScanners = sourceList.checks
+        if (uastScanners.isEmpty()) {
+            return
+        }
         val allContexts = sourceList.allContexts
         val srcContexts = sourceList.srcContexts
         val testContexts = sourceList.testContexts
+        val generatedContexts = sourceList.generatedContexts
+        val uElementVisitor = UElementVisitor(parser, uastScanners)
 
-        assert(uastScanners.isNotEmpty())
+        if (visitUastDetectors(srcContexts, uElementVisitor)) {
+            return
+        }
 
-        if (uastScanners.isNotEmpty()) {
-            val uElementVisitor = UElementVisitor(parser, uastScanners)
+        val projectContext = Context(this, project, main, project.dir)
+        uElementVisitor.visitGroups(projectContext, allContexts)
 
-            for (context in srcContexts) {
-                fireEvent(EventType.SCANNING_FILE, context)
-                // TODO: Don't hold read lock around the entire process?
-                client.runReadAction(Runnable { uElementVisitor.visitFile(context) })
-                fileCount++
-                if (context.file.name.endsWith(DOT_JAVA)) {
-                    javaFileCount++
-                } else {
-                    kotlinFileCount++
-                }
-                if (isCanceled) {
-                    return
-                }
-            }
-
-            val projectContext = Context(this, project, main, project.dir)
-            uElementVisitor.visitGroups(projectContext, allContexts)
-
-            if (testContexts.isNotEmpty()) {
-                val testScanners = filterTestScanners(uastScanners)
-                if (testScanners.isNotEmpty()) {
-                    val uTestVisitor = UElementVisitor(parser, testScanners)
-
-                    for (context in testContexts) {
-                        fireEvent(EventType.SCANNING_FILE, context)
-                        // TODO: Don't hold read lock around the entire process?
-                        client.runReadAction(Runnable { uTestVisitor.visitFile(context) })
-                        fileCount++
-                        testSourceCount++
-                        if (context.file.name.endsWith(DOT_JAVA)) {
-                            javaFileCount++
-                        } else {
-                            kotlinFileCount++
-                        }
-                        if (isCanceled) {
-                            return
-                        }
-                    }
-                }
+        if (checkGeneratedSources) {
+            if (visitUastDetectors(generatedContexts, uElementVisitor)) {
+                return
             }
         }
+
+        if (testContexts.isNotEmpty()) {
+            // Normally we only run test-specific lint checks on sources in test folders,
+            // but with checkTestSources you can turn on running all checks on these
+            val testScanners = if (checkTestSources)
+                uastScanners
+            else
+                filterTestScanners(uastScanners)
+            if (testScanners.isNotEmpty()) {
+                val uTestVisitor = UElementVisitor(parser, testScanners)
+                if (visitUastDetectors(testContexts, uTestVisitor)) {
+                    return
+                }
+                testSourceCount += testContexts.size
+            }
+        }
+    }
+
+    private fun visitUastDetectors(
+        srcContexts: List<JavaContext>,
+        uElementVisitor: UElementVisitor
+    ): Boolean {
+        for (context in srcContexts) {
+            fireEvent(EventType.SCANNING_FILE, context)
+            // TODO: Don't hold read lock around the entire process?
+            client.runReadAction(Runnable { uElementVisitor.visitFile(context) })
+            fileCount++
+            if (context.file.name.endsWith(DOT_JAVA)) {
+                javaFileCount++
+            } else {
+                kotlinFileCount++
+            }
+            if (isCanceled) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun filterTestScanners(scanners: List<Detector>): List<Detector> {
@@ -1801,26 +1815,28 @@ class LintDriver
     ): UastSourceList {
         val contexts = ArrayList<JavaContext>(files.size)
         val testContexts = ArrayList<JavaContext>(files.size)
+        val generatedContexts = ArrayList<JavaContext>(files.size)
         val testFolders = project.testSourceFolders
         val generatedFolders = project.generatedSourceFolders
         for (file in files) {
             val path = file.path
             if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
-                // Figure out if this is a generated test context
-                if (!checkGeneratedSources &&
-                    generatedFolders.asSequence().any { FileUtil.isAncestor(it, file, false) }
-                ) {
-                    continue
-                }
-
                 val context = JavaContext(this, project, main, file)
 
-                // Figure out if this file is a test context
-                if (testFolders.asSequence().any { FileUtil.isAncestor(it, file, false) }) {
-                    context.isTestSource = true
-                    testContexts.add(context)
-                } else {
-                    contexts.add(context)
+                when {
+                    // Figure out if this file is a test context
+                    testFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        context.isTestSource = true
+                        testContexts.add(context)
+                    }
+                    // or a generated context
+                    generatedFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        context.isGeneratedSource = true
+                        generatedContexts.add(context)
+                    }
+                    else -> {
+                        contexts.add(context)
+                    }
                 }
             }
         }
@@ -1829,7 +1845,7 @@ class LintDriver
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        return findUastSources(checks, contexts, testContexts)
+        return findUastSources(checks, contexts, testContexts, generatedContexts)
     }
 
     private var currentFolderType: ResourceFolderType? = null
@@ -2032,7 +2048,7 @@ class LintDriver
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
                 }
-            } else if (file.isFile && isXmlFile(file)) {
+            } else if (file.isFile && isXmlFile(file) && file.name != ANDROID_MANIFEST_XML) {
                 // Yes, find out its resource type
                 val folderName = file.parentFile.name
                 val type = ResourceFolderType.getFolderType(folderName)

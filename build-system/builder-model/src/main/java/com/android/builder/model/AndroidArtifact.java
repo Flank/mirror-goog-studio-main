@@ -58,8 +58,11 @@ public interface AndroidArtifact extends BaseArtifact {
     /**
      * Returns the application id of this artifact.
      *
+     * <p>Deprecated as of 4.2. Application ID is now only provided post-build.
+     *
      * @return the application id.
      */
+    @Deprecated
     @NonNull
     String getApplicationId();
 

@@ -108,7 +108,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
 import kotlin.jvm.functions.Function3;
-import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
@@ -934,7 +933,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     public abstract static class CreationAction<TaskT extends PackageAndroidArtifact>
             extends VariantTaskCreationAction<TaskT, ApkCreationConfig> {
 
-        protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
         protected boolean useResourceShrinker;
         @NonNull private final Artifact<Directory> manifestType;
@@ -947,7 +945,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull Artifact<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
             super(creationConfig);
-            this.project = creationConfig.getGlobalScope().getProject();
             this.useResourceShrinker = useResourceShrinker;
             this.manifests = manifests;
             this.manifestType = manifestType;
@@ -965,7 +962,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getMinSdkVersion()
                     .set(
-                            globalScope
+                            packageAndroidArtifact
                                     .getProject()
                                     .provider(
                                             () -> creationConfig.getMinSdkVersion().getApiLevel()));
@@ -997,7 +994,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.getManifests().set(manifests);
 
             packageAndroidArtifact.getDexFolders().from(getDexFolders(creationConfig));
-            @Nullable FileCollection featureDexFolder = getFeatureDexFolder(creationConfig);
+            @Nullable
+            FileCollection featureDexFolder =
+                    getFeatureDexFolder(
+                            creationConfig, packageAndroidArtifact.getProject().getPath());
             if (featureDexFolder != null) {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
@@ -1069,7 +1069,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 packageAndroidArtifact.getDependencyDataFile());
             }
 
-            packageAndroidArtifact.getProjectPath().set(project.getPath());
+            packageAndroidArtifact
+                    .getProjectPath()
+                    .set(packageAndroidArtifact.getProject().getPath());
 
             finalConfigure(packageAndroidArtifact);
         }
@@ -1088,12 +1090,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
             if (creationConfig.getVariantScope().consumesFeatureJars()) {
                 return creationConfig
-                        .getGlobalScope()
-                        .getProject()
-                        .files(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))
+                        .getServices()
+                        .fileCollection(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
-                return project.files(artifacts.getAll(InternalMultipleArtifactType.DEX.INSTANCE))
+                return creationConfig
+                        .getServices()
+                        .fileCollection(artifacts.getAll(InternalMultipleArtifactType.DEX.INSTANCE))
                         .plus(getDesugarLibDexIfExists(creationConfig));
             }
         }
@@ -1105,7 +1108,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
                 Provider<RegularFile> mergedJavaResProvider =
                         artifacts.get(SHRUNK_JAVA_RES.INSTANCE);
-                return project.getLayout().files(mergedJavaResProvider);
+                return creationConfig.getServices().fileCollection(mergedJavaResProvider);
             } else if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
                 return creationConfig
                         .getTransformManager()
@@ -1113,12 +1116,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             } else {
                 Provider<RegularFile> mergedJavaResProvider =
                         artifacts.get(MERGED_JAVA_RES.INSTANCE);
-                return project.getLayout().files(mergedJavaResProvider);
+                return creationConfig.getServices().fileCollection(mergedJavaResProvider);
             }
         }
 
         @Nullable
-        public FileCollection getFeatureDexFolder(@NonNull ApkCreationConfig creationConfig) {
+        public FileCollection getFeatureDexFolder(
+                @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
             if (!creationConfig.getVariantType().isDynamicFeature()) {
                 return null;
             }
@@ -1128,7 +1132,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                            ImmutableMap.of(MODULE_PATH, project.getPath()));
+                            ImmutableMap.of(MODULE_PATH, projectPath));
         }
 
         @NonNull
@@ -1148,14 +1152,16 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         private FileCollection getDesugarLibDexIfExists(@NonNull ApkCreationConfig creationConfig) {
-            if (creationConfig.getVariantType().isDynamicFeature()) {
-                return creationConfig.getGlobalScope().getProject().files();
+            if (!creationConfig.getShouldPackageDesugarLibDex()) {
+                return creationConfig.getServices().fileCollection();
             }
             if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
-                return project.files(
-                        creationConfig
-                                .getArtifacts()
-                                .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
+                return creationConfig
+                        .getServices()
+                        .fileCollection(
+                                creationConfig
+                                        .getArtifacts()
+                                        .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
                 return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);
             }

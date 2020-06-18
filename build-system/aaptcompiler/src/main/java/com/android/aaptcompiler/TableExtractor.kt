@@ -366,7 +366,7 @@ class TableExtractor(
         item is BasicString && item.ref.value().isEmpty() ->
           // If no inner element exists, represent a unique identifier
           parsedResource.value = Id()
-        item is Reference && item.id != null ->
+        item is Reference && item.id == null ->
           // A null reference also means there is no inner element when ids are in the form:
           //    <id name="name"/>
           parsedResource.value = Id()

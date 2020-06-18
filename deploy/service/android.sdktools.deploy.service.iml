@@ -12,7 +12,7 @@
     <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
-    <orderEntry type="module-library" >
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/deploy/service/deploy-service-proto.jar!/" />
@@ -26,5 +26,6 @@
     <orderEntry type="library" scope="TEST" name="easymock" level="project" />
     <orderEntry type="library" scope="TEST" name="Objenesis" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.deployer" />
   </component>
 </module>

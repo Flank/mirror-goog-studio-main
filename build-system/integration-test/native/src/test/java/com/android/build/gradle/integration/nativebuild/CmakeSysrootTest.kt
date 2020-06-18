@@ -45,7 +45,7 @@ class CmakeSysrootTest {
                 .useCppSource(true)
                 .build()
         )
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
         .setCmakeVersion("3.10.4819442")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)

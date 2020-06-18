@@ -37,7 +37,7 @@ class InjectedAbiNativeLibraryTest {
     @Rule @JvmField
     val project = GradleTestProject.builder().fromTestApp(testapp)
         .setCmakeVersion("3.10.4819442")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .create()

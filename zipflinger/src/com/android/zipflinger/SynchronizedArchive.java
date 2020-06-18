@@ -23,7 +23,7 @@ public class SynchronizedArchive implements Archive {
 
     private final Archive archive;
 
-    public SynchronizedArchive(Archive archive) throws IOException {
+    public SynchronizedArchive(Archive archive) {
         this.archive = archive;
     }
 

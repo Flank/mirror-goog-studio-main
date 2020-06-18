@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
+import com.android.builder.internal.aapt.AaptConvertConfig;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.resources.CompileResourceRequest;
@@ -43,6 +44,11 @@ public class Aapt2DaemonUtil {
             throw new IOException("Unable to make AAPT link command.", e);
         }
         request(writer, "l", args);
+    }
+
+    public static void requestConvert(@NonNull Writer writer, @NonNull AaptConvertConfig command)
+            throws IOException {
+        request(writer, "convert", AaptV2CommandBuilder.makeConvertCommand(command));
     }
 
     public static void requestShutdown(@NonNull Writer writer) throws IOException {

@@ -492,7 +492,22 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 }
 
                 // Filter out any other arguments that aren't files.
-                val libraryPath = Paths.get(library)
+                // We don't actually care about the normalization here except that it makes it
+                // possible to write a test for https://issuetracker.google.com/158317988. Without
+                // it, the runtimeFile is sometimes a path that includes .. that resolves to the
+                // same place as the destination, but sometimes isn't (within bazel's sandbox it is,
+                // outside it isn't, could be related to the path lengths since CMake tries to keep
+                // those short when possible). If the paths passed to Files.copy are equal the
+                // operation will throw IllegalArgumentException, but only if they are exactly equal
+                // (without normalization). Users were encountering this but it was being hidden
+                // from tests because of the lack of normalization.
+                val libraryPath = Paths.get(library).let {
+                    if (!it.isAbsolute) {
+                        Paths.get(target.buildDirectory).resolve(it)
+                    } else {
+                        it
+                    }
+                }.normalize()
                 if (!Files.exists(libraryPath)) {
                     continue
                 }

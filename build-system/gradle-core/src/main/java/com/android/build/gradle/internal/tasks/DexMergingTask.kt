@@ -250,7 +250,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                                 attributes
                             )
                         } else {
-                            component.globalScope.project.files(
+                            component.services.fileCollection(
                                 component.artifacts.get(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE),
                                 component.artifacts.get(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
                             )
@@ -265,13 +265,13 @@ abstract class DexMergingTask : NewIncrementalTask() {
                                 attributes
                             )
                         } else {
-                            component.globalScope.project.files(
+                            component.services.fileCollection(
                                 component.artifacts.get(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE))
                         }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
                         val files =
-                            component.globalScope.project.files(
+                            component.services.fileCollection(
                                 component.artifacts.get(InternalArtifactType.PROJECT_DEX_ARCHIVE),
                                 component.artifacts.get(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
@@ -294,7 +294,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                         // technically, the Provider<> may not be needed, but the code would
                         // then assume that EXTERNAL_LIBS_DEX has already been registered by a
                         // Producer. Better to execute as late as possible.
-                        return component.globalScope.project.files(
+                        return component.services.fileCollection(
                             forAction(DexMergingAction.MERGE_PROJECT),
                             forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
                             if (dexingType == DexingType.LEGACY_MULTIDEX) {

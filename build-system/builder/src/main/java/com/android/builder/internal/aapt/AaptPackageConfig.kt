@@ -326,5 +326,10 @@ data class AaptPackageConfig(
             this.consumeStableIdsFile = value
             return this
         }
+
+        fun setGenerateProtos(value: Boolean): Builder {
+            this.isGenerateProtos = value
+            return this
+        }
     }
 }

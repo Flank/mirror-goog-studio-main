@@ -29,11 +29,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -52,6 +54,7 @@ import javax.inject.Inject
  *
  * Enabled when android.experimental.enableNewResourceShrinker=true.
  */
+@CacheableTask
 abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile
@@ -63,6 +66,9 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
     @get:Input
     abstract val basePackageName: Property<String>
+
+    @get:Input
+    abstract val usePreciseShrinking: Property<Boolean>
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -77,6 +83,7 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
             it.shrunkBundle.set(shrunkBundle)
             it.report.set(shrunkBundle.get().asFile.resolveSibling("resources.txt"))
             it.modules.set(modules)
+            it.usePreciseShrinking.set(usePreciseShrinking)
         }
     }
 
@@ -99,7 +106,8 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
         override fun configure(task: ShrinkAppBundleResourcesTask) {
             super.configure(task)
-
+            task.usePreciseShrinking.set(creationConfig.services.projectOptions.get(
+              BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER_PRECISE))
             task.basePackageName.set(creationConfig.packageName)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
@@ -115,13 +123,14 @@ interface ResourceShrinkerParams : WorkParameters {
     val shrunkBundle: RegularFileProperty
     val report: RegularFileProperty
     val modules: MapProperty<String, String>
+    val usePreciseShrinking: Property<Boolean>
 }
 
 private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
     WorkAction<ResourceShrinkerParams> {
 
     override fun execute() {
-        val logger = Logging.getLogger(LegacyShrinkBundleModuleResourcesTask::class.java)
+        val logger = Logging.getLogger(ShrinkAppBundleResourcesTask::class.java)
         val allModules = parameters.modules.get()
         FileUtils.createZipFilesystem(originalBundleFile.toPath()).use { fs ->
             val proguardMappings = fs.getPath(
@@ -159,12 +168,13 @@ private abstract class ShrinkAppBundleResourcesAction @Inject constructor() :
             }
 
             ResourceShrinkerImpl(
-                resourcesGatherers,
-                obfuscationMappingsRecorder,
-                usageRecorders,
-                graphBuilders,
-                debugReporter = LoggerAndFileDebugReporter(logger, reportFile),
-                supportMultipackages = true
+              resourcesGatherers,
+              obfuscationMappingsRecorder,
+              usageRecorders,
+              graphBuilders,
+              debugReporter = LoggerAndFileDebugReporter(logger, reportFile),
+              supportMultipackages = true,
+              usePreciseShrinking = parameters.usePreciseShrinking.get()
             ).use { shrinker ->
                 shrinker.analyze()
 

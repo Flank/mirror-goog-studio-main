@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.tasks.ExtractAnnotations
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.ManifestProcessorTask
@@ -32,7 +32,6 @@ import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
@@ -91,7 +90,7 @@ class MutableTaskContainer : TaskContainer {
     lateinit var assetGenTask: TaskProvider<Task>
     var connectedTask: TaskProvider<out Task>? = null
     var microApkTask: TaskProvider<out Task>? = null
-    var cxxMetadataGenerator: Provider<CxxMetadataGenerator>? = null
+    var cxxConfigurationModel: CxxConfigurationModel? = null
     var packageSplitResourcesTask: TaskProvider<out Task>? = null
     var packageSplitAbiTask: TaskProvider<out Task>? = null
     var generateResValuesTask: TaskProvider<out Task>? = null

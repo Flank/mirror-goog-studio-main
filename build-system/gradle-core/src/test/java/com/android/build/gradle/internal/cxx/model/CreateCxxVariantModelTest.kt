@@ -26,10 +26,13 @@ class CreateCxxVariantModelTest {
     @Test
     fun `simple variant does not throw exception`() {
         BasicCmakeMock().let {
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel
+            )
             createCxxVariantModel(
-                module,
-                it.componentProperties
+                it.configurationModel,
+                module
             )
         }
     }
@@ -38,8 +41,13 @@ class CreateCxxVariantModelTest {
     fun `fully exercise variant model and check invariants`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
-            val variant = createCxxVariantModel(module, it.componentProperties)
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel
+            )
+            val variant = createCxxVariantModel(
+                it.configurationModel,
+                module)
             CxxVariantModel::class.java.methods.toList().onEach { method ->
                 val result = method.invoke(variant)
                 if (result is File) {

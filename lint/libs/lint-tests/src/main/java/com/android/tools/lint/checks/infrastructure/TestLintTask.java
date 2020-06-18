@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
@@ -1174,7 +1174,7 @@ public class TestLintTask {
      */
     @Deprecated
     public interface GradleMockModifier {
-        void modify(@NonNull IdeAndroidProject project, @NonNull Variant variant);
+        void modify(@NonNull IdeAndroidProject project, @NonNull IdeVariant variant);
     }
 
     /**

@@ -87,7 +87,7 @@ public class TransformTaskTest extends TaskTestUtils {
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(QualifiedContent.DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(testFileFC)
@@ -215,7 +215,7 @@ public class TransformTaskTest extends TaskTestUtils {
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(QualifiedContent.DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(testFileFC)
@@ -343,7 +343,7 @@ public class TransformTaskTest extends TaskTestUtils {
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(testFolderFC)
@@ -470,7 +470,7 @@ public class TransformTaskTest extends TaskTestUtils {
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(testFolderFC)
@@ -598,7 +598,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File jarFile = temporaryFolder.newFile("input file");
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(jarFile).builtBy("my dependency"))
@@ -722,7 +722,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder("root folder");
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(rootFolder).builtBy("my dependency"))
@@ -855,14 +855,15 @@ public class TransformTaskTest extends TaskTestUtils {
                 addedFile, Status.ADDED,
                 changedFile, Status.CHANGED);
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(
                                 project.files(
                                                 (Callable<Collection<File>>)
                                                         () -> {
-                                                            // this should not contain the removed jar files.
+                                                            // this should not contain the removed
+                                                            // jar files.
                                                             return ImmutableList.of(
                                                                     addedFile, changedFile);
                                                         })
@@ -1224,7 +1225,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(rootFolder).builtBy("my dependency"))
@@ -1560,7 +1561,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File jarFile = temporaryFolder.newFile("jar file");
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(jarFile).builtBy("my dependency"))
@@ -1700,7 +1701,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(rootFolder).builtBy("my dependency"))
@@ -1847,7 +1848,7 @@ public class TransformTaskTest extends TaskTestUtils {
         File scope3RootFolder = temporaryFolder.newFolder("folder file2");
 
         OriginalStream scope1 =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(
@@ -1878,7 +1879,7 @@ public class TransformTaskTest extends TaskTestUtils {
         scope2.save();
 
         OriginalStream scope3 =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.SUB_PROJECTS)
                         .setFileCollection(
@@ -2038,7 +2039,7 @@ public class TransformTaskTest extends TaskTestUtils {
     public void testSecondaryInputs() {
         // create a stream and add it to the pipeline
         OriginalStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(QualifiedContent.DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files())
@@ -2083,7 +2084,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File jarFile = temporaryFolder.newFile();
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(jarFile).builtBy("my dependency"))
@@ -2143,7 +2144,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(rootFolder).builtBy("my dependency"))
@@ -2205,7 +2206,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(jarFile).builtBy("my dependency"))
@@ -2255,7 +2256,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(jarFile).builtBy("my dependency"))
@@ -2332,7 +2333,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
         TransformStream projectClass =
-                OriginalStream.builder(project, "")
+                OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
                         .setFileCollection(project.files(jarFile).builtBy("my dependency"))

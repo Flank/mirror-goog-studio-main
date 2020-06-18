@@ -44,9 +44,6 @@ public abstract class AbstractAppPlugin<
     }
 
     @NonNull
-    protected abstract Class<? extends AppExtension> getExtensionClass();
-
-    @NonNull
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
         return GradleBuildProject.PluginType.APPLICATION;

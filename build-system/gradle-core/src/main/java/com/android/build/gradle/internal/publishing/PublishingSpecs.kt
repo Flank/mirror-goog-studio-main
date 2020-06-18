@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.publishing
 
 import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.ArtifactType.APK
+import com.android.build.api.artifact.ArtifactType.LIBRARY_MANIFEST
+import com.android.build.api.artifact.ArtifactType.OBFUSCATION_MAPPING_FILE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION
@@ -30,12 +33,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAR_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELABLE
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_ZIP
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_METADATA
-import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
@@ -56,7 +56,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
-import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL_DEPENDENCIES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL_MODULE
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
@@ -134,7 +133,7 @@ class PublishingSpecs {
                 api(APP_CLASSES, ArtifactType.JAR)
                 output(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 output(JAVA_RES, ArtifactType.JAVA_RES)
-                api(APK_MAPPING, ArtifactType.APK_MAPPING)
+                api(OBFUSCATION_MAPPING_FILE, ArtifactType.APK_MAPPING)
 
                 api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -150,7 +149,7 @@ class PublishingSpecs {
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
-                publish(BUNDLE, ArtifactType.BUNDLE)
+                publish(com.android.build.api.artifact.ArtifactType.BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
@@ -167,7 +166,7 @@ class PublishingSpecs {
                 api(APP_CLASSES, ArtifactType.JAR)
                 output(APP_CLASSES, ArtifactType.CLASSES_JAR)
                 output(JAVA_RES, ArtifactType.JAVA_RES)
-                api(APK_MAPPING, ArtifactType.APK_MAPPING)
+                api(OBFUSCATION_MAPPING_FILE, ArtifactType.APK_MAPPING)
 
                 api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -205,7 +204,7 @@ class PublishingSpecs {
 
 
             variantSpec(VariantTypeImpl.LIBRARY) {
-                publish(InternalArtifactType.AAR, ArtifactType.AAR)
+                publish(com.android.build.api.artifact.ArtifactType.AAR, ArtifactType.AAR)
 
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)

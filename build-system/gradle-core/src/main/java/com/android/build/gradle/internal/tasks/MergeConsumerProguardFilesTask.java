@@ -21,13 +21,11 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.GENER
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
-import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.CacheableTask;
@@ -113,9 +111,6 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
         public void configure(
                 @NonNull MergeConsumerProguardFilesTask task) {
             super.configure(task);
-            GlobalScope globalScope = creationConfig.getGlobalScope();
-            Project project = globalScope.getProject();
-
             task.isBaseModule = creationConfig.getVariantType().isBaseModule();
             task.isDynamicFeature = creationConfig.getVariantType().isDynamicFeature();
 
@@ -123,9 +118,13 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                     .from(creationConfig.getVariantScope().getConsumerProguardFilesForFeatures());
 
             ConfigurableFileCollection inputFiles =
-                    project.files(
-                            task.getConsumerProguardFiles(),
-                            creationConfig.getArtifacts().get(GENERATED_PROGUARD_FILE.INSTANCE));
+                    creationConfig
+                            .getServices()
+                            .fileCollection(
+                                    task.getConsumerProguardFiles(),
+                                    creationConfig
+                                            .getArtifacts()
+                                            .get(GENERATED_PROGUARD_FILE.INSTANCE));
             task.setInputFiles(inputFiles);
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getBuildDirectory(), task.getProject().getLayout().getBuildDirectory());

@@ -46,7 +46,7 @@ public class CmakeTargetsTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cpp").build())
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .addFile(HelloWorldJniApp.cmakeListsMultiModule("."))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))

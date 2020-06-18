@@ -82,4 +82,27 @@ public class RClassTest extends AgentBasedClassRedefinerTestBase {
 
         // No need to verify the content of the id because those are inlined.
     }
+
+    @Test
+    public void testRClassUnstableId() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+        Deploy.ClassDef.FieldReInitState state =
+                Deploy.ClassDef.FieldReInitState.newBuilder()
+                        .setName("a")
+                        .setType("I")
+                        .setStaticVar(true)
+                        .setValue("10")
+                        .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                        .build();
+        Deploy.SwapRequest request =
+                createRequest("app.R$UnstableId", "app/R$UnstableId.dex", true, state);
+        redefiner.redefine(request);
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_R_CLASS_VALUE_MODIFIED,
+                response.getStatus());
+    }
 }

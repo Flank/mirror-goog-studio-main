@@ -27,8 +27,13 @@ import java.io.File
 /**
  * Implementation of [ArtifactHandler] for Level2 Dependency model, for sync.
  */
-class Level2ArtifactHandler(localJarCache: CreatingCache<File, List<File>>) :
-    ArtifactHandler<Library>(localJarCache) {
+class Level2ArtifactHandler(
+    localJarCache: CreatingCache<File, List<File>>,
+    mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>
+) : ArtifactHandler<Library>(
+    localJarCache,
+    mavenCoordinatesCache
+) {
 
     override fun handleAndroidLibrary(
         aarFile: File,

@@ -1229,7 +1229,6 @@ com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.getTargets: jav
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.getcFlags: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setAbiFilters: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setArguments: void (java.util.List<java.lang.String>)
-com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setCFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setCppFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setcFlags: void (java.util.List<java.lang.String>)

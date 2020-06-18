@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
@@ -93,8 +92,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
                 @NonNull FeatureSplitDeclarationWriterTask task) {
             super.configure(task);
 
-            final Project project = creationConfig.getGlobalScope().getProject();
-            task.uniqueIdentifier = project.getPath();
+            task.uniqueIdentifier = task.getProject().getPath();
             // rename this as packageName since this is really what this is
             // TODO b/152002064
             task.getApplicationId().set(creationConfig.getPackageName());

@@ -135,6 +135,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
         })
     }
 
+    override val shouldPackageDesugarLibDex: Boolean = false
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

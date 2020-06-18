@@ -109,11 +109,11 @@ class CxxModuleModelTest {
         }
     }
 
-    private fun checkTopLevelMethodParameterOrReturnType(type: Type) {
+    private fun checkTopLevelMethodParameterOrReturnType(name: String, type: Type) {
         when(type) {
             is ParameterizedType -> {
-                checkTopLevelMethodParameterOrReturnType(type.rawType)
-                type.actualTypeArguments.map { checkTopLevelMethodParameterOrReturnType(it) }
+                checkTopLevelMethodParameterOrReturnType(name, type.rawType)
+                type.actualTypeArguments.map { checkTopLevelMethodParameterOrReturnType(name, it) }
             }
             else -> {
                 if (ALLOWED_MODEL_INTERFACES.contains(type)) {
@@ -135,7 +135,7 @@ class CxxModuleModelTest {
                         return
                     }
                 }
-                fail("Unrecognized type: ${type.javaClass} ${type.typeName}")
+                fail("Unrecognized type: $name ${type.javaClass} ${type.typeName}")
             }
         }
     }
@@ -207,7 +207,7 @@ class CxxModuleModelTest {
             .isEqualTo("public abstract")
 
         checkMethodName(method)
-        checkTopLevelMethodParameterOrReturnType(method.genericReturnType)
+        checkTopLevelMethodParameterOrReturnType(method.name, method.genericReturnType)
     }
 
     private fun checkMethodName(method: Method) {
@@ -273,7 +273,7 @@ class CxxModuleModelTest {
         }
 
         // Parameters are not checked and anything is allowed
-        checkTopLevelMethodParameterOrReturnType(method.genericReturnType)
+        checkTopLevelMethodParameterOrReturnType(method.name, method.genericReturnType)
     }
 
     private fun checkFunctionClass(type : Class<*>) {

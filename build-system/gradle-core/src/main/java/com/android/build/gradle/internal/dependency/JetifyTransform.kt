@@ -23,7 +23,6 @@ import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor
 import com.android.tools.build.jetifier.processor.transform.bytecode.AmbiguousStringJetifierException
 import com.android.tools.build.jetifier.processor.transform.bytecode.InvalidByteCodeException
-import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -93,11 +92,17 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
     }
 
     override fun transform(transformOutputs: TransformOutputs) {
-        val aarOrJarFile = inputArtifact.get().asFile
-        Preconditions.checkArgument(
-            aarOrJarFile.name.endsWith(".aar", ignoreCase = true)
-                    || aarOrJarFile.name.endsWith(".jar", ignoreCase = true)
-        )
+        val inputFile = inputArtifact.get().asFile
+        check(
+            inputFile.name.endsWith(".aar", ignoreCase = true)
+                    || inputFile.name.endsWith(".jar", ignoreCase = true)
+        ) {
+            "Transform's input file is not .aar or .jar: ${inputFile.path}"
+        }
+        check(inputFile.isFile) {
+            "Transform's input file does not exist: ${inputFile.path}." +
+                    " (See https://issuetracker.google.com/issues/158753935)"
+        }
 
         /*
          * The aars or jars can be categorized into 4 types:
@@ -108,8 +113,8 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
          * In the following, we handle these cases accordingly.
          */
         // Case 1: If this is an AndroidX library, no need to jetify it
-        if (jetifierProcessor.isNewDependencyFile(aarOrJarFile)) {
-            transformOutputs.file(aarOrJarFile)
+        if (jetifierProcessor.isNewDependencyFile(inputFile)) {
+            transformOutputs.file(inputFile)
             return
         }
 
@@ -117,30 +122,30 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
         // dependency substitution earlier, either because it does not yet have an AndroidX version,
         // or because its AndroidX version is not yet available on remote repositories. Again, no
         // need to jetify it.
-        if (jetifierProcessor.isOldDependencyFile(aarOrJarFile)) {
-            transformOutputs.file(aarOrJarFile)
+        if (jetifierProcessor.isOldDependencyFile(inputFile)) {
+            transformOutputs.file(inputFile)
             return
         }
 
         val jetifierIgnoreList: List<Regex> = getJetifierIgnoreList(parameters.ignoreListOption.get())
 
         // Case 3: If the library is ignored, do not jetify it
-        if (jetifierIgnoreList.any { it.containsMatchIn(aarOrJarFile.absolutePath) }) {
-            transformOutputs.file(aarOrJarFile)
+        if (jetifierIgnoreList.any { it.containsMatchIn(inputFile.absolutePath) }) {
+            transformOutputs.file(inputFile)
             return
         }
 
         // Case 4: For the remaining libraries, let's jetify them
-        val outputFile = transformOutputs.file("jetified-${aarOrJarFile.name}")
+        val outputFile = transformOutputs.file("jetified-${inputFile.name}")
         val result = try {
             jetifierProcessor.transform2(
-                input = setOf(FileMapping(aarOrJarFile, outputFile)),
+                input = setOf(FileMapping(inputFile, outputFile)),
                 copyUnmodifiedLibsAlso = true,
                 skipLibsWithAndroidXReferences = parameters.skipIfPossible.get()
             )
         } catch (exception: Exception) {
             var message =
-                "Failed to transform '$aarOrJarFile' using Jetifier." +
+                "Failed to transform '$inputFile' using Jetifier." +
                         " Reason: ${exception.javaClass.simpleName}, message: ${exception.message}." +
                         " (Run with --stacktrace for more details.)"
             message += if (exception is InvalidByteCodeException /* Bug 140747218 */
@@ -149,24 +154,30 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
                         "Suggestions:\n" +
                         " - If you believe this library doesn't need to be jetified (e.g., if it" +
                         " already supports AndroidX, or if it doesn't use support" +
-                        " libraries/AndroidX at all), please add" +
+                        " libraries/AndroidX at all), add" +
                         " ${StringOption.JETIFIER_IGNORE_LIST.propertyName} = {comma-separated list" +
                         " of regular expressions (or simply names) of the libraries that you" +
                         " don't want to be jetified} to the gradle.properties file.\n" +
                         " - If you believe this library needs to be jetified (e.g., if it uses" +
-                        " old support libraries and breaks your app if it isn't jetified), please" +
+                        " old support libraries and breaks your app if it isn't jetified)," +
                         " contact the library's authors to update this library to support" +
                         " AndroidX and use the supported version once it is released.\n" +
-                        "If you need further help, please file a bug at" +
-                        " http://issuetracker.google.com/issues/new?component=460323."
+                        "If you need further help, please leave a comment at" +
+                        " https://issuetracker.google.com/issues/140747218."
             } else {
-                "\nPlease file a bug at http://issuetracker.google.com/issues/new?component=460323."
+                "\nSuggestions:\n" +
+                        " - Check out existing issues at" +
+                        " https://issuetracker.google.com/issues?q=componentid:460323&s=modified_time:desc," +
+                        " it's possible that this issue has already been filed there.\n" +
+                        " - If this issue has not been filed, please report it at" +
+                        " https://issuetracker.google.com/issues/new?component=460323 (run with" +
+                        " --stacktrace and provide a stack trace if possible)."
             }
             throw RuntimeException(message, exception)
         }
 
         check(result.librariesMap.size == 1)
-        check(result.librariesMap[aarOrJarFile] == outputFile)
+        check(result.librariesMap[inputFile] == outputFile)
         check(outputFile.exists())
     }
 }

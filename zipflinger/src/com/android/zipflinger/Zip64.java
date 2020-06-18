@@ -35,4 +35,6 @@ public class Zip64 {
         ALLOW,
         FORBID
     };
+
+    private Zip64() {}
 }

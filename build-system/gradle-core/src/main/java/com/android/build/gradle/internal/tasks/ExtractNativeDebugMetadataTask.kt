@@ -88,7 +88,8 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputFiles: Property<FileTree>
+    val inputFiles: FileTree
+        get() = inputDir.asFileTree
 
     override fun doTaskAction() {
         getWorkerFacadeWithThreads(useGradleExecutor = false).use { workers ->
@@ -116,11 +117,6 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
-            task.inputFiles.setDisallowChanges(
-                creationConfig.globalScope.project.provider {
-                    creationConfig.globalScope.project.layout.files(task.inputDir).asFileTree
-                }
-            )
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )

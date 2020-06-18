@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
@@ -137,13 +137,11 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             testedVariant
                     .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                            InternalArtifactType.APK.INSTANCE, task.getTestedApks());
+                    .setTaskInputToFinalProduct(ArtifactType.APK.INSTANCE, task.getTestedApks());
 
             creationConfig
                     .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                            InternalArtifactType.APK.INSTANCE, task.getTestApks());
+                    .setTaskInputToFinalProduct(ArtifactType.APK.INSTANCE, task.getTestApks());
 
             if (!testServer.isConfigured()) {
                 task.setEnabled(false);

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.res.shrinker
 import com.android.SdkConstants.DOT_9PNG
 import com.android.SdkConstants.DOT_PNG
 import com.android.SdkConstants.DOT_XML
+import com.android.aapt.Resources
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_9PNG
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_9PNG_CRC
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_BINARY_XML
@@ -46,6 +47,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
+import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -71,7 +73,8 @@ class ResourceShrinkerImpl(
     private val usageRecorders: List<ResourceUsageRecorder>,
     private val graphBuilders: List<ResourcesGraphBuilder>,
     private val debugReporter: ShrinkerDebugReporter,
-    val supportMultipackages: Boolean
+    val supportMultipackages: Boolean,
+    private val usePreciseShrinking: Boolean
 ) : ResourceShrinker {
     val model = ResourceShrinkerModel(debugReporter, supportMultipackages)
     private lateinit var unused: List<Resource>
@@ -89,7 +92,7 @@ class ResourceShrinkerImpl(
 
         unused = findUnusedResources(model.resourceStore.resources) { roots ->
             debugReporter.debug { "The root reachable resources are:" }
-            debugReporter.debug { roots.joinToString("\n", transform = { " $it"}) }
+            debugReporter.debug { roots.joinToString("\n", transform = { " $it" }) }
         }
     }
 
@@ -125,16 +128,21 @@ class ResourceShrinkerImpl(
         if (dest.exists() && !dest.delete()) {
             throw IOException("Could not delete $dest")
         }
-        ZipFile(source).use { zip ->
-            JarOutputStream(BufferedOutputStream(FileOutputStream(dest))).use { zos ->
+        JarOutputStream(BufferedOutputStream(FileOutputStream(dest))).use { zos ->
+            ZipFile(source).use { zip ->
                 // Rather than using Deflater.DEFAULT_COMPRESSION we use 9 here,  since that seems
                 // to match the compressed sizes we observe in source .ap_ files encountered by the
                 // resource shrinker:
                 zos.setLevel(9)
-
                 zip.entries().asSequence().forEach {
-                    if (format.shouldEntryBeReplacedWithDummyContent(it)) {
-                        replaceWithDummyEntry(zos, it, format.resourcesFormat)
+                    if (format.fileIsNotReachable(it)) {
+                        // If we don't use precise shrinking we don't remove the files, see:
+                        // https://b.corp.google.com/issues/37010152
+                        if (!usePreciseShrinking) {
+                            replaceWithDummyEntry(zos, it, format.resourcesFormat)
+                        }
+                    } else if (it.name.endsWith("resources.pb") && usePreciseShrinking) {
+                            removeResourceUnusedTableEntries(zip.getInputStream(it), zos, it)
                     } else {
                         copyToOutput(zip.getInputStream(it), zos, it)
                     }
@@ -151,10 +159,34 @@ class ResourceShrinkerImpl(
         if (after > before) {
             debugReporter.info {
                 "Resource shrinking did not work (grew from $before to $after); using original " +
-                        "instead"
+                "instead"
             }
             Files.copy(source, dest)
         }
+    }
+
+    private fun removeResourceUnusedTableEntries(zis: InputStream,
+                                                 zos: JarOutputStream,
+                                                 srcEntry: ZipEntry) {
+        val resourceIdsToRemove =
+            model.resourceStore.resources.filter { !it.isReachable }.map { it.value }.toList()
+        val shrunkenResourceTable = Resources.ResourceTable.parseFrom(zis)
+                .nullOutEntriesWithIds(resourceIdsToRemove)
+        val bytes = shrunkenResourceTable.toByteArray()
+        val outEntry = JarEntry(srcEntry.name)
+        if (srcEntry.time != -1L) {
+            outEntry.time = srcEntry.time
+        }
+        if (srcEntry.method == JarEntry.STORED) {
+            outEntry.method = JarEntry.STORED
+            outEntry.size = bytes.size.toLong()
+            val crc = CRC32()
+            crc.update(bytes, 0, bytes.size)
+            outEntry.crc = crc.getValue()
+        }
+        zos.putNextEntry(outEntry)
+        zos.write(bytes)
+        zos.closeEntry()
     }
 
     /** Replaces the given entry with a minimal valid file of that type.  */
@@ -190,7 +222,7 @@ class ResourceShrinkerImpl(
         zos.closeEntry()
         debugReporter.info {
             "Skipped unused resource $name: ${entry.size} bytes (replaced with small dummy file " +
-                    "of size ${bytes.size} bytes)"
+            "of size ${bytes.size} bytes)"
         }
     }
 
@@ -216,7 +248,7 @@ class ResourceShrinkerImpl(
 
 private interface ArchiveFormat {
     val resourcesFormat: LinkedResourcesFormat
-    fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean
+    fun fileIsNotReachable(entry: ZipEntry): Boolean
 }
 
 private class ApkArchiveFormat(
@@ -224,7 +256,7 @@ private class ApkArchiveFormat(
     override val resourcesFormat: LinkedResourcesFormat
 ) : ArchiveFormat {
 
-    override fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean {
+    override fun fileIsNotReachable(entry: ZipEntry): Boolean {
         if (entry.isDirectory || !entry.name.startsWith("res/")) {
             return false
         }
@@ -240,7 +272,7 @@ private class BundleArchiveFormat(
 
     override val resourcesFormat = LinkedResourcesFormat.PROTO
 
-    override fun shouldEntryBeReplacedWithDummyContent(entry: ZipEntry): Boolean {
+    override fun fileIsNotReachable(entry: ZipEntry): Boolean {
         val module = entry.name.substringBefore('/')
         val packageName = moduleNameToPackageName[module]
         if (entry.isDirectory || packageName == null || !entry.name.startsWith("$module/res/")) {
@@ -264,4 +296,18 @@ private fun ResourceStore.isJarPathReachable(
         .filterNot { it == ResourceType.ID }
         .flatMap { getResources(it, resourceName) }
         .any { it.isReachable }
+}
+
+private fun ResourceStore.getResourceId(
+    folder: String,
+    name: String
+): Int {
+    val folderType = ResourceFolderType.getFolderType(folder) ?: return -1
+    val resourceName = name.substringBefore('.')
+    return FolderTypeRelationship.getRelatedResourceTypes(folderType)
+        .filterNot { it == ResourceType.ID }
+        .flatMap { getResources(it, resourceName) }
+        .map { it.value }
+        .getOrElse(0) { -1 }
+
 }

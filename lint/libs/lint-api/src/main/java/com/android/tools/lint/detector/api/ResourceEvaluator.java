@@ -726,7 +726,7 @@ public class ResourceEvaluator {
     @Nullable
     public static ResourceUrl getResourceConstant(@NonNull UElement node) {
         ResourceReference reference = ResourceReference.get(node);
-        if (reference == null) {
+        if (reference == null || reference.getHeuristic()) {
             return null;
         }
 

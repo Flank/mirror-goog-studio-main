@@ -239,10 +239,10 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toTransf
               ArtifactTypeT : Artifact.Transformable {
     val artifactContainer = artifacts.getArtifactContainer(type)
     val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
-    val fileName = when (type.kind) {
-        is ArtifactKind.FILE -> DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
-        else -> ""
-    }
+    val fileName = if (type.kind is ArtifactKind.FILE
+        && type.getFileSystemLocationName().isNullOrEmpty()) {
+        DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
+    } else ""
     taskProvider.configure {
         from(it).set(currentProvider)
         // since the task will now execute, resolve its output path.

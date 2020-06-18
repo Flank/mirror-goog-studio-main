@@ -346,17 +346,17 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
             val desugaringClasspathScopes: MutableSet<ScopeType> = mutableSetOf(Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
-                subProjectsClasses = componentProperties.globalScope.project.files()
-                externalLibraryClasses = componentProperties.globalScope.project.files()
-                mixedScopeClasses = componentProperties.globalScope.project.files()
+                subProjectsClasses = componentProperties.services.fileCollection()
+                externalLibraryClasses = componentProperties.services.fileCollection()
+                mixedScopeClasses = componentProperties.services.fileCollection()
                 dexExternalLibsInArtifactTransform = false
 
                 desugaringClasspathScopes.add(Scope.EXTERNAL_LIBRARIES)
                 desugaringClasspathScopes.add(Scope.TESTED_CODE)
                 desugaringClasspathScopes.add(Scope.SUB_PROJECTS)
             } else if (componentProperties.variantScope.consumesFeatureJars()) {
-                subProjectsClasses = componentProperties.globalScope.project.files()
-                externalLibraryClasses = componentProperties.globalScope.project.files()
+                subProjectsClasses = componentProperties.services.fileCollection()
+                externalLibraryClasses = componentProperties.services.fileCollection()
                 dexExternalLibsInArtifactTransform = false
 
                 // Get all classes from the scopes we are interested in.
@@ -401,7 +401,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                         ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.CLASSES_JAR
                     ).artifactFiles
-                } ?: componentProperties.globalScope.project.files()
+                } ?: componentProperties.services.fileCollection()
 
                 // Before b/115334911 was fixed, provided classpath did not contain the tested project.
                 // Because we do not want tested variant classes in the desugaring classpath for
@@ -412,12 +412,12 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                             AndroidArtifacts.ArtifactType.CLASSES_JAR,
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
                         )!!.outputType
-                    componentProperties.globalScope.project.files(
+                    componentProperties.services.fileCollection(
                         it.artifacts.get(artifactType)
                     )
-                } ?: componentProperties.globalScope.project.files()
+                } ?: componentProperties.services.fileCollection()
 
-                componentProperties.globalScope.project.files(
+                componentProperties.services.fileCollection(
                     componentProperties.transformManager.getPipelineOutputAsFileCollection(
                         StreamFilter { _, scopes ->
                             scopes.subtract(desugaringClasspathScopes).isEmpty()
@@ -426,7 +426,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ), testedExternalLibs, externalLibraryClasses
                 ).minus(testedProject)
             } else {
-                componentProperties.globalScope.project.files()
+                componentProperties.services.fileCollection()
             }
 
             desugaringClasspathClasses =
@@ -515,7 +515,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.mixedScopeClasses.from(mixedScopeClasses)
 
             task.incrementalDexingTaskV2.setDisallowChanges(
-                creationConfig.globalScope.project.provider {
+                task.project.providers.provider {
                     projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2)
                 })
 
@@ -564,7 +564,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 creationConfig.variantDslInfo.isDebuggable
             )
             task.projectVariant.set(
-                "${creationConfig.globalScope.project.name}:${creationConfig.name}"
+                "${task.project.name}:${creationConfig.name}"
             )
             task.numberOfBuckets.set(
                 task.project.providers.provider {

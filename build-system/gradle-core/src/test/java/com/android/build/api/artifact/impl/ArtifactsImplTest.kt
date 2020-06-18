@@ -65,7 +65,7 @@ class ArtifactsImplTest {
     @Suppress("ClassName")
     sealed class TestSingleArtifactType<T : FileSystemLocation>(
         kind: ArtifactKind<T>
-    ) : Artifact.SingleArtifact<T>(kind) {
+    ) : Artifact.SingleArtifact<T>(kind, Category.INTERMEDIATES) {
 
         object TEST_FILE : TestSingleArtifactType<RegularFile>(FILE)
         object TEST_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY)
@@ -79,7 +79,7 @@ class ArtifactsImplTest {
 
     sealed class TestMultipleArtifactType<T : FileSystemLocation>(
         kind: ArtifactKind<T>
-    ) : Artifact.MultipleArtifact<T>(kind){
+    ) : Artifact.MultipleArtifact<T>(kind, Category.INTERMEDIATES){
 
         object TEST_FILES : TestMultipleArtifactType<RegularFile>(FILE)
         object TEST_DIRECTORIES : TestMultipleArtifactType<Directory>(DIRECTORY)
@@ -125,7 +125,7 @@ class ArtifactsImplTest {
         // now get it.
         Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
             FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
+                Artifact.Category.INTERMEDIATES.name.toLowerCase(),
                 TEST_FILE.name().toLowerCase(),
                 "debug",
                 "out"))
@@ -150,7 +150,7 @@ class ArtifactsImplTest {
         // now get it.
         Truth.assertThat(finalVersion.get().asFile.relativeTo(project.buildDir).path).isEqualTo(
             FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
+                Artifact.Category.INTERMEDIATES.name.toLowerCase(),
                 TEST_DIRECTORY.name().toLowerCase(),
                 "debug"))
     }

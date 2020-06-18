@@ -44,7 +44,7 @@ public class IdeDependenciesImpl implements IdeDependencies, Serializable {
         myHashCode = 0;
     }
 
-    IdeDependenciesImpl(
+    public IdeDependenciesImpl(
             @NonNull ImmutableList<IdeLibrary> androidLibraries,
             @NonNull ImmutableList<IdeLibrary> javaLibraries,
             @NonNull ImmutableList<IdeLibrary> moduleDependencies,

@@ -284,6 +284,12 @@ public class DeployerException extends Exception {
                 "Added variable(s) does not support value initialization: %s",
                 "", "Reinstall and restart app", ResolutionAction.RUN_APP),
 
+        UNSUPPORTED_R_REASSIGNMENT(
+                "Existing ID values of R.class has been changed.",
+                "%s",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE);
 
         private final String message;
@@ -419,6 +425,12 @@ public class DeployerException extends Exception {
     public static DeployerException unsupportedVariableReinit(
             Deploy.AgentSwapResponse.Status status, String msg) {
         return new DeployerException(Error.UNSUPPORTED_REINIT, status, new String[] {msg}, NO_ARGS);
+    }
+
+    public static DeployerException unsupportedRClassReassignment(
+            Deploy.AgentSwapResponse.Status status, String msg) {
+        return new DeployerException(
+                Error.UNSUPPORTED_R_REASSIGNMENT, status, NO_ARGS, new String[] {msg});
     }
 
     // JVMTI error codes for which we have specific error messages.

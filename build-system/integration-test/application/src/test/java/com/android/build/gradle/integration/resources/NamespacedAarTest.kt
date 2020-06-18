@@ -123,7 +123,7 @@ class NamespacedAarTest {
         run {
             // Check model level 3
             val models =
-                project.model().level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                project.model().level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD).ignoreSyncIssues(1)
                     .fetchAndroidProjects().onlyModelMap
             val libraries = models[":lib"]!!.getDebugVariant().mainArtifact.dependencies.libraries
             assertThat(libraries).hasSize(1)
@@ -134,7 +134,7 @@ class NamespacedAarTest {
         run {
             // Check model level 4
             val models =
-                project.model().level(AndroidProject.MODEL_LEVEL_LATEST).fetchAndroidProjects()
+                project.model().level(AndroidProject.MODEL_LEVEL_LATEST).ignoreSyncIssues(1).fetchAndroidProjects()
             val libraries =
                 models.onlyModelMap[":lib"]!!.getDebugVariant().mainArtifact.dependencyGraphs.compileDependencies
             assertThat(libraries).hasSize(1)

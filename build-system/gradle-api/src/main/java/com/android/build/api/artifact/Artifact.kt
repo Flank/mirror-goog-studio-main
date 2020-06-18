@@ -20,6 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
+import java.io.File
 import java.util.Locale
 import java.io.Serializable
 
@@ -37,7 +38,10 @@ import java.io.Serializable
  * ArtifactKind also defines the specific [FileSystemLocation] subclass used.
  */
 @Incubating
-abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Serializable {
+abstract class Artifact<T: FileSystemLocation>(
+    val kind: ArtifactKind<T>,
+    val category: Category
+) : Serializable {
 
     /**
      * Provide a unique name for the artifact type. For external plugins defining new types,
@@ -46,7 +50,7 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
     fun name(): String = javaClass.simpleName
 
     /**
-     * @return the folder name under which the artifact files or folders should be stored.
+     * @return The folder name under which the artifact files or folders should be stored.
      */
     open fun getFolderName(): String = name().toLowerCase(Locale.US)
 
@@ -75,14 +79,31 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
     }
 
     /**
+     * Defines the kind of artifact type. this will be used to determine the output file location
+     * for instance.
+     */
+    @Incubating
+    enum class Category {
+        /* Source artifacts */
+        SOURCES,
+        /* Generated files that are meant to be visible to users from the IDE */
+        GENERATED,
+        /* Intermediates files produced by tasks. */
+        INTERMEDIATES,
+        /* output files going into the outputs folder. This is the result of the build. */
+        OUTPUTS;
+    }
+
+    /**
      * Denotes possible multiple [FileSystemLocation] instances for this artifact type.
      * Consumers of artifact types with multiple instances must consume a collection of
      * [FileSystemLocation]
      */
     @Incubating
     abstract class MultipleArtifact<FileTypeT: FileSystemLocation>(
-        kind: ArtifactKind<FileTypeT>
-    ) : Artifact<FileTypeT>(kind)
+        kind: ArtifactKind<FileTypeT>,
+        category: Category
+    ) : Artifact<FileTypeT>(kind, category)
 
 
     /**
@@ -91,8 +112,9 @@ abstract class Artifact<T: FileSystemLocation>(val kind: ArtifactKind<T>): Seria
      */
     @Incubating
     abstract class SingleArtifact<FileTypeT: FileSystemLocation>(
-        kind: ArtifactKind<FileTypeT>
-    ) : Artifact<FileTypeT>(kind)
+        kind: ArtifactKind<FileTypeT>,
+        category: Category
+    ) : Artifact<FileTypeT>(kind, category)
 
     /**
      * Denotes a single [DIRECTORY] that may contain zero to many

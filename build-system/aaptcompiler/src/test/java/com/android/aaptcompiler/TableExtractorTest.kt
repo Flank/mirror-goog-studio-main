@@ -167,8 +167,13 @@ class TableExtractorTest {
   @Test
   fun testParseId() {
     Truth.assertThat(testParse("""<item name="foo" type="id"/>""")).isTrue()
-
     Truth.assertThat(getValue("id/foo") as? Id).isNotNull()
+  }
+
+  @Test
+  fun testParsingNonItemId() {
+      Truth.assertThat(testParse("""<id name="foo"/>""")).isTrue()
+      Truth.assertThat(getValue("id/foo") as? Id).isNotNull()
   }
 
   @Test

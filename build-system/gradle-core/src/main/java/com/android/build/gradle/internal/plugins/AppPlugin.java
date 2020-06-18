@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.plugins;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
-import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.profile.Recorder;
 import java.util.List;
 import javax.inject.Inject;
@@ -77,16 +78,9 @@ public class AppPlugin
                         getProjectType()));
     }
 
-
-    @Override
-    @NonNull
-    protected Class<? extends AppExtension> getExtensionClass() {
-        return BaseAppModuleExtension.class;
-    }
-
     @NonNull
     @Override
-    protected AppExtension createExtension(
+    protected BaseExtension createExtension(
             @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull
@@ -94,10 +88,24 @@ public class AppPlugin
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            return (BaseExtension)
+                    project.getExtensions()
+                            .create(
+                                    ApplicationExtension.class,
+                                    "android",
+                                    BaseAppModuleExtension.class,
+                                    dslServices,
+                                    globalScope,
+                                    buildOutputs,
+                                    dslContainers.getSourceSetManager(),
+                                    extraModelInfo,
+                                    new ApplicationExtensionImpl(dslServices, dslContainers));
+        }
         return project.getExtensions()
                 .create(
                         "android",
-                        getExtensionClass(),
+                        BaseAppModuleExtension.class,
                         dslServices,
                         globalScope,
                         buildOutputs,

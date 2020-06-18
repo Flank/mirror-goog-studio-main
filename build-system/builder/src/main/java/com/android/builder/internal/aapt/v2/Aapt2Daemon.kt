@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.SdkConstants
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.ILogger
@@ -138,6 +139,28 @@ abstract class Aapt2Daemon(
      */
     @Throws(TimeoutException::class, Aapt2InternalException::class, Aapt2Exception::class)
     protected abstract fun doLink(request: AaptPackageConfig, logger: ILogger)
+
+    override fun convert(request: AaptConvertConfig, logger: ILogger) {
+        checkStarted()
+        try {
+            doConvert(request, logger)
+        } catch (e: Aapt2Exception) {
+            // Propagate errors in the users sources directly.
+            throw e
+        } catch (e: TimeoutException) {
+            handleError("Convert timed out", e)
+        } catch (e: Exception) {
+            handleError("Unexpected error during convert", e)
+        }
+    }
+
+    /**
+     * Implementors must perform the convert operation given.
+     *
+     * This will only be called after [startProcess] is called and before [stopProcess] is called.
+     */
+    @Throws(TimeoutException::class, Aapt2InternalException::class, Aapt2Exception::class)
+    protected abstract fun doConvert(request: AaptConvertConfig, logger: ILogger)
 
     fun shutDown() {
         state = when (state) {

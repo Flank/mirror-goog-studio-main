@@ -56,7 +56,7 @@ class CentralDirectory {
     }
 
     long getNumEntries() {
-        return entries.size() + addedEntries.size();
+        return (long) entries.size() + addedEntries.size();
     }
 
     void write(@NonNull ZipWriter writer) throws IOException {

@@ -203,7 +203,7 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
 
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getResultsDir(),
-                    scope.getProject()
+                    task.getProject()
                             .provider(
                                     () -> {
                                         String dir =
@@ -222,7 +222,7 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
 
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getReportsDir(),
-                    scope.getProject()
+                    task.getProject()
                             .provider(
                                     () -> {
                                         String dir =

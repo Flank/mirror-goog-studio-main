@@ -141,7 +141,7 @@ public class ZipArchive implements Archive {
                     String.format("Cannot delete '%s' from closed archive %s", name, file));
         }
         Location loc = cd.delete(name);
-        if (loc != Location.INVALID) {
+        if (loc.isValid()) {
             freestore.free(loc);
             modified = true;
         }
@@ -184,7 +184,7 @@ public class ZipArchive implements Archive {
     private void writeArchive(@NonNull ZipWriter writer) throws IOException {
         // There is no need to fill space and write footers if an already existing archive
         // has not been modified.
-        if (zipInfo.eocd != Location.INVALID && !modified) {
+        if (zipInfo.eocd.isValid() && !modified) {
             return;
         }
 

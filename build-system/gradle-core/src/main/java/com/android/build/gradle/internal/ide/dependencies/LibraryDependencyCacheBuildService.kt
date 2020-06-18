@@ -34,13 +34,19 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Maps
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 
 /** Build service used to cache library dependencies used in the model builder. */
 abstract class LibraryDependencyCacheBuildService
-    : BuildService<BuildServiceParameters.None>, AutoCloseable {
+    : BuildService<LibraryDependencyCacheBuildService.Parameters>, AutoCloseable {
+
+    interface Parameters: BuildServiceParameters {
+        val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
+    }
 
     val libraryCache =
         CreatingCache(CreatingCache.ValueFactory<ResolvedArtifact, Library> {
@@ -70,7 +76,8 @@ abstract class LibraryDependencyCacheBuildService
         }
     })
 
-    private val artifactHandler = Level2ArtifactHandler(localJarCache)
+    private val artifactHandler =
+        Level2ArtifactHandler(localJarCache, parameters.mavenCoordinatesCache.get().cache)
 
     fun getGlobalLibMap(): Map<String, Library> {
         return ImmutableMap.copyOf(globalLibrary)
@@ -115,13 +122,16 @@ abstract class LibraryDependencyCacheBuildService
         localJarCache.clear()
     }
 
-    class RegistrationAction(project: Project) :
-        ServiceRegistrationAction<LibraryDependencyCacheBuildService, BuildServiceParameters.None>(
+    class RegistrationAction(
+        project: Project,
+        private val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>
+    ) :
+        ServiceRegistrationAction<LibraryDependencyCacheBuildService, Parameters>(
             project,
             LibraryDependencyCacheBuildService::class.java
         ) {
-        override fun configure(parameters: BuildServiceParameters.None) {
-            // do nothing
+        override fun configure(parameters: Parameters) {
+            parameters.mavenCoordinatesCache.set(mavenCoordinatesCache)
         }
     }
 }

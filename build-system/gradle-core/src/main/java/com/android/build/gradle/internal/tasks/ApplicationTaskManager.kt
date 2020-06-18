@@ -281,12 +281,6 @@ class ApplicationTaskManager(
                     taskFactory.register(SdkDependencyDataGeneratorTask.CreationAction(variantProperties))
                 }
             }
-
-            if (variantProperties.variantScope.useResourceShrinker()
-                && globalScope.projectOptions.get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
-                taskFactory.register(ShrinkAppBundleResourcesTask.CreationAction(variantProperties))
-            }
-
             taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
             taskFactory.register(BundleToApkTask.CreationAction(variantProperties))
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variantProperties))

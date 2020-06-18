@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
@@ -252,6 +253,9 @@ class Aapt2DaemonManagerTest {
 
         override fun doLink(request: AaptPackageConfig, logger: ILogger) {
             linkRequests.add(request)
+        }
+
+        override fun doConvert(request: AaptConvertConfig, logger: ILogger) {
         }
 
         override fun stopProcess() {

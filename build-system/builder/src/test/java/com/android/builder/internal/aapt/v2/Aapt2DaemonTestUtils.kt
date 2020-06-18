@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.testutils.NoErrorsOrWarningsLogger
@@ -33,6 +34,10 @@ class CompileLinkTimeoutAapt2Daemon(name: String = "Test") :
 
     override fun doLink(request: AaptPackageConfig, logger: ILogger) {
         throw TimeoutException("Link timed out")
+    }
+
+    override fun doConvert(request: AaptConvertConfig, logger: ILogger) {
+        throw TimeoutException("Convert timed out")
     }
 
     override fun stopProcess() {
@@ -53,6 +58,10 @@ class StartupTimeoutAapt2Daemon(name: String = "Test") :
         throw UnsupportedOperationException()
     }
 
+    override fun doConvert(request: AaptConvertConfig, logger: ILogger) {
+        throw UnsupportedOperationException()
+    }
+
     override fun stopProcess() {
         throw UnsupportedOperationException()
     }
@@ -68,6 +77,10 @@ class ShutdownTimeoutAapt2Daemon(name: String = "Test", logger: ILogger) :
     }
 
     override fun doLink(request: AaptPackageConfig, logger: ILogger) {
+        throw UnsupportedOperationException()
+    }
+
+    override fun doConvert(request: AaptConvertConfig, logger: ILogger) {
         throw UnsupportedOperationException()
     }
 

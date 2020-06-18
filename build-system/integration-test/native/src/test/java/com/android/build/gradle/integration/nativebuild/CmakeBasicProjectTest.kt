@@ -31,6 +31,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeVariantAbi
+import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
@@ -47,6 +48,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
+import kotlin.test.fail
 
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
@@ -56,7 +58,8 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
     val project = GradleTestProject.builder()
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        // TODO(159233213) Turn to ON when release configuration is cacheable
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 
@@ -100,6 +103,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
                 version "$cmakeVersionInDsl"
               }
             }
+            
           // -----------------------------------------------------------------------
           // See b/131857476
           // -----------------------------------------------------------------------
@@ -109,6 +113,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
                 println("externalNativeBuild soFolder = " + task.soFolder)
             }
           }
+          
           // ------------------------------------------------------------------------
         }
     """.trimIndent())
@@ -136,6 +141,42 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
 
         // Assemble again
         project.execute("assemble")
+    }
+
+    @Test
+    fun `check that duplicate runtimeFiles does not cause a build failure`() {
+        // https://issuetracker.google.com/158317988
+        project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
+        project.buildFile.resolveSibling("bar.cpp").writeText("void bar() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.4.1)
+
+            add_library(foo SHARED foo.cpp)
+            add_library(bar SHARED bar.cpp)
+
+            find_library(log-lib log)
+
+            target_link_libraries(foo ${'$'}{log-lib})
+            target_link_libraries(bar foo)
+            """.trimIndent())
+
+        // The bug being tested was caused by the bad ordering between handling runtimeFiles and
+        // performing the build. The JSON model was being generated from a clean build directory the
+        // libraries would not be present when the CMake response was handled and we would skip any
+        // linkLibraries that had not been built yet.
+        //
+        // If the build directory *wasn't* cleaned before regenerating the JSON model the libraries
+        // would be included in runtimeFiles and the install task could fail when trying to install
+        // a file to itself.
+        //
+        // To recreate those conditions, build the project twice, purging only the .cxx directory
+        // between runs.
+        project.execute("assembleDebug")
+        project.testDir.resolve(".cxx").deleteRecursively()
+        assertThat(project.buildDir.resolve("intermediates/cmake/debug/obj/armeabi-v7a/libfoo.so")).isFile()
+        project.execute("assembleDebug")
     }
 
     // See b/131857476
@@ -273,8 +314,8 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         project.executor()
             .with(BooleanOption.ENABLE_PROFILE_JSON, true)
             .run("clean", "assembleDebug")
-        val traceFile = join(project.testDir, "build", "android-profile").listFiles()!!
-            .first { it.name.endsWith("json.gz") }
+        val traceFolder = join(project.testDir, "build", "android-profile", ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
+        val traceFile = traceFolder.listFiles()!!.first { it.name.endsWith("json.gz") }
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")
     }

@@ -50,6 +50,7 @@ interface DeprecationReporter {
          */
         private val additionalMessage: String? = null
     ) {
+        VERSION_4_2(Version.VERSION_4_2),
         VERSION_5_0(Version.VERSION_5_0),
 
         // deprecation of compile in favor of api/implementation

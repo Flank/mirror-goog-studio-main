@@ -23,34 +23,22 @@ import org.junit.Test
 import java.io.File
 
 class CreateCxxAbiModelTest {
-
-    // This test is designed to throw an exception if any unexpected gradle object model functions
-    // are called during construction. Everything is supposed to be lazy except for what's
-    // defined here.
-    //@Test
-    fun `abi, variant, and model are completely lazy`() {
-        EmptyGlobalMock().let {
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
-            val variant = createCxxVariantModel(
-                module,
-                it.componentProperties)
-            createCxxAbiModel(variant, Abi.X86, it.global, it.componentProperties)
-        }
-    }
-
     @Test
     fun `fully exercise model and check invariants`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel
+            )
             val variant = createCxxVariantModel(
-                module,
-                it.componentProperties)
+                it.configurationModel,
+                module)
             val abi = createCxxAbiModel(
+                it.sdkComponents,
+                it.configurationModel,
                 variant,
-                Abi.X86,
-                it.global,
-                it.componentProperties)
+                Abi.X86)
             CxxAbiModel::class.java.methods.toList().onEach { method ->
                 val result = method.invoke(abi)
                 if (result is File) {
@@ -69,11 +57,17 @@ class CreateCxxAbiModelTest {
     @Test
     fun `repeated cmake bug`() {
         BasicCmakeMock().let {
-            val module = tryCreateCxxModuleModel(it.componentProperties)!!
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel
+            )
             val variant = createCxxVariantModel(
-                module,
-                it.componentProperties)
-            val abi = createCxxAbiModel(variant, Abi.X86, it.global, it.componentProperties)
+                it.configurationModel,
+                module)
+            val abi = createCxxAbiModel(
+                it.sdkComponents,
+                it.configurationModel,
+                variant, Abi.X86)
             assertThat(abi.cxxBuildFolder.path
                     .replace("\\", "/"))
                 .endsWith(".cxx/cmake/debug/x86")
@@ -81,11 +75,11 @@ class CreateCxxAbiModelTest {
                     .replace("\\", "/"))
                 .doesNotContain("cmake/debug/cxx/debug")
             assertThat(
-                abi.cmake!!.buildGenerationStateFile.path!!
+                abi.cmake!!.buildGenerationStateFile.path
                     .replace("\\", "/"))
                 .doesNotContain("cmake/cxx/x86")
             assertThat(
-                abi.cmake!!.cmakeListsWrapperFile.path!!
+                abi.cmake!!.cmakeListsWrapperFile.path
                     .replace("\\", "/"))
                 .endsWith(".cxx/cxx/debug/x86/CMakeLists.txt")
         }

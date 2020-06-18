@@ -60,6 +60,10 @@ class VariableReinitializer {
   SwapResult::Status ReinitializeVariables(std::string* error_msg);
 
  private:
+  int initialValuesAltered(jclass clz, const proto::ClassDef& def,
+                           proto::ClassDef::FieldReInitState& state,
+                           jfieldID fid, std::ostringstream& msg);
+
   bool var_reinit;
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;

@@ -934,18 +934,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                             testOptionsDsl.getExecutionEnum());
         }
 
-        // FIXME: Remove appId from the model
-        String applicationId;
-        try {
-            // This can throw an exception if no package name can be found.
-            // Normally, this is fine to throw an exception, but we don't want to crash in sync.
-            applicationId = variantDslInfo.getApplicationId().get();
-        } catch (RuntimeException e) {
-            // don't crash. just throw a sync error.
-            applicationId = "";
-            syncIssueReporter.reportError(Type.GENERIC, e);
-        }
-
         MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         ArtifactsImpl artifacts = componentProperties.getArtifacts();
 
@@ -957,7 +945,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantDslInfo.isSigningReady()
                         || componentProperties.getVariantData().outputsAreSigned,
                 signingConfigName,
-                applicationId,
                 taskContainer.getSourceGenTask().getName(),
                 taskContainer.getCompileTask().getName(),
                 getGeneratedSourceFolders(componentProperties),

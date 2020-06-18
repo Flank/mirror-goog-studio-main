@@ -101,7 +101,8 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputFiles: Property<FileTree>
+    val inputFiles: FileTree
+        get() = inputDir.asFileTree
 
     @get:Internal
     abstract val sdkBuildService: Property<SdkComponentsBuildService>
@@ -170,11 +171,6 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
                 creationConfig.globalScope.extension.packagingOptions.doNotStrip.sorted()
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
-            )
-            task.inputFiles.setDisallowChanges(
-                creationConfig.globalScope.project.provider {
-                    creationConfig.globalScope.project.layout.files(task.inputDir).asFileTree
-                }
             )
         }
     }

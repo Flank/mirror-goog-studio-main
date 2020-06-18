@@ -75,7 +75,7 @@ fun getDesugarLibJarFromMaven(project: Project): FileCollection {
  */
 fun getDesugarLibDexFromTransform(creationConfig: BaseCreationConfig): FileCollection {
     if (!creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
-        return creationConfig.globalScope.project.files()
+        return creationConfig.services.fileCollection()
     }
 
     val configuration = getDesugarLibConfiguration(creationConfig.globalScope.project)

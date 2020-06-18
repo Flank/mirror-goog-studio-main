@@ -59,7 +59,8 @@ class ResourceReference(
     // getPackage() can be empty if not a package-qualified import (e.g. android.R.id.name).
     val `package`: String,
     val type: ResourceType,
-    val name: String
+    val name: String,
+    val heuristic: Boolean = false
 ) {
 
     internal val isFramework: Boolean
@@ -185,7 +186,8 @@ class ResourceReference(
                                 element,
                                 "",
                                 ResourceType.ID,
-                                element.identifier
+                                element.identifier,
+                                heuristic = true
                             )
                         }
                     }

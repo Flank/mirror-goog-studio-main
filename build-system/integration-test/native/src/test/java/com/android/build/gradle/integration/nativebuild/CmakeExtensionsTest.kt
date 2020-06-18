@@ -95,7 +95,7 @@ class CmakeExtensionsTest(
                 .useCppSource(true)
                 .build()
         )
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 

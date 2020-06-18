@@ -16,14 +16,17 @@
 
 package com.android.build.gradle.internal.ide
 
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
@@ -33,7 +36,6 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecSpec
 import org.gradle.process.JavaExecSpec
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
-import java.util.ArrayList
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
@@ -60,8 +62,15 @@ class NativeModelBuilder(
         projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)
     private val scopes
         get() = (variantModel.variants + variantModel.testComponents)
-        .filter { it.taskContainer.cxxMetadataGenerator != null }
-    private val generators get() = scopes.map { it.taskContainer.cxxMetadataGenerator!!.get() }
+        .filter { it.taskContainer.cxxConfigurationModel != null }
+    private val generators get() = scopes.map { scope ->
+        IssueReporterLoggingEnvironment(issueReporter).use {
+            createCxxMetadataGenerator(
+                getBuildService<SdkComponentsBuildService>(globalScope.project.gradle.sharedServices).get(),
+                scope.taskContainer.cxxConfigurationModel!!
+            )
+        }
+    }
 
     /**
      * Indicates which model classes that buildAll can support.
@@ -194,24 +203,18 @@ class NativeModelBuilder(
      * generation on multiple threads but it will block until all threads complete.
      */
     private fun regenerateNativeJson() {
+        val buildSteps = generators.map { generator ->
+            // This will generate any out-of-date or non-existent JSONs.
+            // When refreshExternalNativeModel() is true it will also
+            // force update all JSONs.
+            generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel)
+        }.flatten()
+
         if (enableParallelNativeJsonGen) {
             val cpuCores = Runtime.getRuntime().availableProcessors()
             val threadNumber = cpuCores.coerceAtMost(8)
             val nativeJsonGenExecutor = Executors.newFixedThreadPool(threadNumber)
-            val buildSteps = ArrayList<Callable<Unit>>()
-            for (component in (variantModel.variants + variantModel.testComponents)) {
-                val generator = component
-                    .taskContainer
-                    .cxxMetadataGenerator?.orNull
-                if (generator != null) {
-                    // This will generate any out-of-date or non-existent JSONs.
-                    // When refreshExternalNativeModel() is true it will also
-                    // force update all JSONs.
-                    buildSteps.addAll(
-                        generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel)
-                    )
-                }
-            }
+
             try {
                 // Need to get each result even if we're not using the output because that's how we
                 // propagate exceptions.
@@ -232,11 +235,7 @@ class NativeModelBuilder(
             }
 
         } else {
-            for (generator in generators) {
-                generator.getMetadataGenerators(ops, ideRefreshExternalNativeModel).forEach {
-                    it.call()
-                }
-            }
+            buildSteps.forEach { buildStep -> buildStep.call() }
         }
     }
 }

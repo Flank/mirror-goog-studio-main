@@ -39,4 +39,7 @@ interface ApkCreationConfig: BaseCreationConfig {
     val resValues: MapProperty<ResValue.Key, ResValue>
 
     val minifiedEnabled: Boolean
+
+    /** If this variant should package desugar_lib DEX in the final APK. */
+    val shouldPackageDesugarLibDex: Boolean
 }

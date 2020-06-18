@@ -20,8 +20,8 @@ import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static org.mockito.Mockito.when;
 
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.Dependencies;
+import com.android.ide.common.gradle.model.level2.IdeDependencies;
+import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
@@ -40,8 +40,8 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
 
     public static TestLintTask.GradleMockModifier mockModifier =
             (project, variant) -> {
-                Dependencies dependencies = variant.getMainArtifact().getDependencies();
-                AndroidLibrary library = dependencies.getLibraries().iterator().next();
+                IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
+                IdeLibrary library = dependencies.getAndroidLibraries().iterator().next();
 
                 final File tempDir = TestUtils.createTempDirDeletedOnExit();
 
@@ -65,8 +65,8 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
 
                     File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
                     Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
-                    when(library.getPublicResources()).thenReturn(publicTxtFile);
-                    when(library.getSymbolFile()).thenReturn(rFile);
+                    when(library.getPublicResources()).thenReturn(publicTxtFile.getPath());
+                    when(library.getSymbolFile()).thenReturn(rFile.getPath());
                 } catch (IOException ioe) {
                     fail(ioe.getMessage());
                 }

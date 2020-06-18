@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
-import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -38,6 +37,7 @@ import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -74,13 +74,7 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
-    protected Class<? extends AppExtension> getExtensionClass() {
-        return DynamicFeatureExtension.class;
-    }
-
-    @NonNull
-    @Override
-    protected AppExtension createExtension(
+    protected BaseExtension createExtension(
             @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull
@@ -88,10 +82,24 @@ public class DynamicFeaturePlugin
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            return (BaseExtension)
+                    project.getExtensions()
+                            .create(
+                                    com.android.build.api.dsl.DynamicFeatureExtension.class,
+                                    "android",
+                                    DynamicFeatureExtension.class,
+                                    dslServices,
+                                    globalScope,
+                                    buildOutputs,
+                                    dslContainers.getSourceSetManager(),
+                                    extraModelInfo,
+                                    new DynamicFeatureExtensionImpl(dslServices, dslContainers));
+        }
         return project.getExtensions()
                 .create(
                         "android",
-                        getExtensionClass(),
+                        DynamicFeatureExtension.class,
                         dslServices,
                         globalScope,
                         buildOutputs,

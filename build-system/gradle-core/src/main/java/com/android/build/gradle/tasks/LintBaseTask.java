@@ -20,13 +20,13 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifact;
@@ -315,7 +315,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             Provider<? extends FileSystemLocation> tmpMergedManifest =
                     artifacts.get(PACKAGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
-                tmpMergedManifest = artifacts.get(LIBRARY_MANIFEST.INSTANCE);
+                tmpMergedManifest = artifacts.get(ArtifactType.LIBRARY_MANIFEST.INSTANCE);
             }
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(

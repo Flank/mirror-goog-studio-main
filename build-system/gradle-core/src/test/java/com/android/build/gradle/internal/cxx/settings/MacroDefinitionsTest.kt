@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -89,18 +89,20 @@ class MacroDefinitionsTest {
     fun `ensure examples are accurate`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(
-                it.componentProperties, it.cmakeFinder
-            )!!
+            val module = createCxxModuleModel(
+                it.sdkComponents,
+                it.configurationModel,
+                it.cmakeFinder
+            )
             val variant = createCxxVariantModel(
-                module,
-                it.componentProperties
+                it.configurationModel,
+                module
             )
             val abi = createCxxAbiModel(
+                it.sdkComponents,
+                it.configurationModel,
                 variant,
-                Abi.X86_64,
-                it.global,
-                it.componentProperties
+                Abi.X86_64
             )
             Macro.values()
                 .toList()
@@ -109,7 +111,7 @@ class MacroDefinitionsTest {
                     val resolved = abi.resolveMacroValue(macro)
 
                     // Every macro must be resolvable
-                    Truth.assertThat(resolved).named(macro.ref).isNotEmpty()
+                    assertThat(resolved).named(macro.ref).isNotEmpty()
 
                     // Example string, when expanded, must equal the true value from the model
                     val example = StringBuilder()

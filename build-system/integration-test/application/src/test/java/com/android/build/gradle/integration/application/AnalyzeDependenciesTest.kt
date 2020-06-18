@@ -62,6 +62,23 @@ class AnalyzeDependenciesTest {
                 implementation 'com.analyzedependenciesTest:usedResAar:1'
                  }
             """.trimIndent()
+            ).withFile(
+                    "src/main/AndroidManifest.xml",
+                    //language=XML
+                    """
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                                  xmlns:tools="http://schemas.android.com/tools"
+                                  package="com.example.app">
+                            <application>
+                                <receiver android:name=".MyReceiver"
+                                          android:label="app">
+                                    <meta-data
+                                            android:name="com.example.sdk.ApplicationId"
+                                            android:value="1"/>
+                                </receiver>
+                            </application>
+                        </manifest>
+                    """.trimIndent()
             )
             .withFile("src/main/java/com/example/app/MyClass.java",
                     // language=JAVA
@@ -81,6 +98,7 @@ class AnalyzeDependenciesTest {
                     }
                 }
             """.trimIndent())
+        // used_text is declared in com.analyzedependenciesTest.usedResAar .
         .withFile("src/main/res/layout/main_activity.xml",
             // language=XML
             """<?xml version="1.0" encoding="utf-8"?>

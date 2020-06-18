@@ -196,6 +196,13 @@ public class D8DexSplitterTest {
 
         state = findVariableState(splittedTarget.variableStates, "notFound");
         Assert.assertNull(state);
+
+        state = findVariableState(splittedTarget.variableStates, "invokedFunction");
+        Assert.assertNotNull(state);
+        Assert.assertTrue(state.getStaticVar());
+        Assert.assertEquals(
+                Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT, state.getState());
+        Assert.assertEquals(0, Integer.parseInt(state.getValue()));
     }
 
     /** Return the first varaible state with a given variable name. */

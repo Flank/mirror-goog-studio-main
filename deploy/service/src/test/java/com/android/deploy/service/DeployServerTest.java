@@ -17,6 +17,7 @@
 package com.android.deploy.service;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,18 +27,21 @@ import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Deploy;
+import com.android.tools.deployer.DeployMetric;
+import com.android.tools.deployer.DeployerRunner;
 import io.grpc.stub.StreamObserver;
+import java.util.ArrayList;
 import java.util.Collections;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 public class DeployServerTest {
-
     @Test
     public void getDevices() {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
-        DeployServer server = new DeployServer(bridge);
+        DeployServer server = new DeployServer(bridge, null);
         FakeStreamObserver<Deploy.DeviceResponse> response = new FakeStreamObserver<>();
         server.getDevices(Deploy.DeviceRequest.getDefaultInstance(), response);
         assertThat(response.getResponse()).isNotNull();
@@ -51,7 +55,7 @@ public class DeployServerTest {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
-        DeployServer server = new DeployServer(bridge);
+        DeployServer server = new DeployServer(bridge, null);
         FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
         Deploy.ClientRequest request =
                 Deploy.ClientRequest.newBuilder().setDeviceId("1234").build();
@@ -66,13 +70,66 @@ public class DeployServerTest {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
-        DeployServer server = new DeployServer(bridge);
+        DeployServer server = new DeployServer(bridge, null);
         FakeStreamObserver<Deploy.DebugPortResponse> response = new FakeStreamObserver<>();
         Deploy.DebugPortRequest request =
                 Deploy.DebugPortRequest.newBuilder().setDeviceId("1234").setPid(1234).build();
         server.getDebugPort(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getPort()).isEqualTo(4321);
+    }
+
+    @Test
+    public void installApkNoDevice() {
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployServer server = new DeployServer(bridge, null);
+        FakeStreamObserver<Deploy.InstallApkResponse> response = new FakeStreamObserver<>();
+        Deploy.InstallApkRequest request =
+                Deploy.InstallApkRequest.newBuilder().setDeviceId("4321").build();
+        server.installApk(request, response);
+        assertThat(response.getResponse()).isNotNull();
+        assertThat(response.getResponse().getExitStatus()).isEqualTo(-1);
+        assertThat(response.getResponse().getMessageCount()).isEqualTo(1);
+        assertThat(response.getResponse().getMessage(0)).isNotEmpty();
+    }
+
+    @Test
+    public void installApk() {
+        String apkPath = "/fake/path.apk";
+        String packageName = "com.example.app";
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployerRunner runner = mock(DeployerRunner.class);
+        ArgumentCaptor<IDevice> deviceCaptor = ArgumentCaptor.forClass(IDevice.class);
+        ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
+        when(runner.run(deviceCaptor.capture(), argsCaptor.capture(), any())).thenReturn(0);
+        ArrayList<DeployMetric> metrics = new ArrayList<>();
+        metrics.add(new DeployMetric("Test", 1, 2));
+        when(runner.getMetrics()).thenReturn(metrics);
+        DeployServer server = new DeployServer(bridge, runner);
+        FakeStreamObserver<Deploy.InstallApkResponse> response = new FakeStreamObserver<>();
+        Deploy.InstallApkRequest request =
+                Deploy.InstallApkRequest.newBuilder()
+                        .setDeviceId("1234")
+                        .addApk(apkPath)
+                        .setPackageName(packageName)
+                        .build();
+        server.installApk(request, response);
+        assertThat(response.getResponse()).isNotNull();
+        assertThat(response.getResponse().getExitStatus()).isEqualTo(0);
+        assertThat(deviceCaptor.getValue()).isEqualTo(devices[0]);
+        String[] args = argsCaptor.getValue();
+        assertThat(args[0]).isEqualTo("install");
+        assertThat(args[1]).isEqualTo(packageName);
+        assertThat(args[2]).isEqualTo(apkPath);
+        assertThat(response.getResponse().getMetricCount()).isEqualTo(1);
+        Deploy.DeployMetric actualMetric = response.getResponse().getMetric(0);
+        assertThat(actualMetric.getName()).isEqualTo(metrics.get(0).getName());
+        assertThat(actualMetric.getStartNs()).isEqualTo(metrics.get(0).getStartTimeNs());
+        assertThat(actualMetric.getEndNs()).isEqualTo(metrics.get(0).getEndTimeNs());
     }
 
     private IDevice mockDevice(@NonNull String serial, @NonNull IDevice.DeviceState state) {

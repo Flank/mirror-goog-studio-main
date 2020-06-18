@@ -231,7 +231,6 @@ class BuiltArtifactsImplTest {
             File(outputFolder, BuiltArtifactsImpl.METADATA_FILE_NAME),
             NullLogger()
         )
-
         Truth.assertThat(builtArtifacts).isNotNull()
         Truth.assertThat(builtArtifacts!!.version).isEqualTo(
             BuiltArtifacts.METADATA_FILE_VERSION

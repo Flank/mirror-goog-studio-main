@@ -27,7 +27,7 @@ class VulkanTest {
     @get:Rule
     val project = GradleTestProject.builder()
         .setCmakeVersion("3.10.4819442")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .fromTestProject("vulkan").create()

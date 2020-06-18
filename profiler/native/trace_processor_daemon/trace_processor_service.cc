@@ -81,12 +81,6 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
   }
 
   loaded_trace_id = trace_id;
-
-  // Default query, not restricted to any process.
-  proto::QueryParameters::ProcessMetadataParameters metadata_params;
-  ProcessMetadataRequestHandler handler(tp_.get());
-  handler.PopulateMetadata(metadata_params,
-                           response->mutable_process_metadata());
   return grpc::Status::OK;
 }
 

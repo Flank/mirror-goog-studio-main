@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -112,10 +113,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         get() = bundleFile.get().asFile.name
 
     @get:Input
-    var debuggable: Boolean = false
-        private set
-
-    @get:Input
     abstract val bundleNeedsFusedStandaloneConfig: Property<Boolean>
 
     companion object {
@@ -139,9 +136,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     bundleFlags = bundleFlags,
                     bundleFile = bundleFile.get().asFile,
                     bundleDeps = if (bundleDeps.isPresent) bundleDeps.get().asFile else null,
-                    // do not compress the bundle in debug builds where it will be only used as an
-                    // intermediate artifact
-                    uncompressBundle = debuggable,
                     bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig.get()
                 )
             )
@@ -161,7 +155,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val bundleFlags: BundleFlags,
         val bundleFile: File,
         val bundleDeps: File?,
-        val uncompressBundle: Boolean,
         val bundleNeedsFusedStandaloneConfig: Boolean
     ) : Serializable
 
@@ -245,7 +238,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     .setOptimizations(bundleOptimizations)
 
             val command = BuildBundleCommand.builder()
-                .setUncompressedBundle(params.uncompressBundle)
+                // The bundle will be compressed if needed by FinalizeBundleTask
+                .setUncompressedBundle(true)
                 .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
@@ -378,8 +372,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 task.integrityConfigFile
             )
 
-            task.debuggable = creationConfig.variantDslInfo.isDebuggable
-
             task.nativeDebugMetadataFiles.fromDisallowChanges(
                 MergeNativeDebugMetadataTask.getNativeDebugMetadataFiles(creationConfig)
             )
@@ -404,12 +396,12 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.APK_MAPPING,
+                ArtifactType.OBFUSCATION_MAPPING_FILE,
                 task.obsfuscationMappingFile
             )
 
             task.bundleNeedsFusedStandaloneConfig.set(
-                creationConfig.globalScope.project.provider {
+                task.project.providers.provider {
                     creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
                             && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }

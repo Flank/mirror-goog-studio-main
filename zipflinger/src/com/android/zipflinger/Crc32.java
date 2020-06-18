@@ -30,4 +30,6 @@ class Crc32 {
         crc.update(bytes, offset, size);
         return Ints.longToUint(crc.getValue());
     }
+
+    private Crc32() {}
 }

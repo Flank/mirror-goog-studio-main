@@ -20,8 +20,18 @@ public class R {
         public static final int FIELD_A = 0;
         public static final int FIELD_B = 1;
     }
+
     public static class id {
         public static final int custom_action_0 = 0;
         public static final int custom_action_1 = 1;
+    }
+
+    public static class UnstableId {
+        public static int a = 0;
+        public static int b = 1;
+        public static int c = 2;
+        public static int d = 3;
+        public static int e = 4;
+        public static int f = 5;
     }
 }

@@ -151,9 +151,9 @@ class CustomRuleTest {
             .issueIds("UnitTestAppCompatMethod")
             .allowObsoleteLintChecks(true)
             .modifyGradleMocks { _, variant ->
-                val dependencies = variant.mainArtifact.dependencies
-                val library = dependencies.libraries.iterator().next()
-                Mockito.`when`(library.lintJar).thenReturn(lintJar)
+                val dependencies = variant.mainArtifact.level2Dependencies
+                val library = dependencies.androidLibraries.iterator().next()
+                Mockito.`when`(library.lintJar).thenReturn(lintJar.path)
             }.allowMissingSdk().run().expect(expected)
     }
 

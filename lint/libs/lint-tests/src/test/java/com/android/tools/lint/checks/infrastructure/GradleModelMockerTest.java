@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
@@ -31,23 +30,20 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.DependencyGraphs;
-import com.android.builder.model.level2.GlobalLibraryMap;
-import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeVariant;
+import com.android.ide.common.gradle.model.level2.IdeDependencies;
+import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.tools.lint.LintCliFlags;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -56,7 +52,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import org.intellij.lang.annotations.Language;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -136,19 +134,16 @@ public class GradleModelMockerTest {
                                 + "dependencies {\n"
                                 + "    compile 'my.group.id:mylib:25.0.0-SNAPSHOT'\n"
                                 + "}");
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
-        Collection<AndroidLibrary> libraries =
-                variant.getMainArtifact().getDependencies().getLibraries();
+        Collection<IdeLibrary> libraries =
+                variant.getMainArtifact().getLevel2Dependencies().getAndroidLibraries();
         assertThat(libraries).hasSize(1);
-        AndroidLibrary library = libraries.iterator().next();
-        MavenCoordinates resolvedCoordinates = library.getResolvedCoordinates();
-        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
-        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("mylib");
-        assertThat(resolvedCoordinates.getVersion()).isEqualTo("25.0.0-SNAPSHOT");
+        IdeLibrary library = libraries.iterator().next();
+        assertThat(library.getArtifactAddress()).isEqualTo("my.group.id:mylib:25.0.0-SNAPSHOT@aar");
     }
 
     @Test
@@ -162,41 +157,33 @@ public class GradleModelMockerTest {
                                 + "    testCompile 'my.group.id:mylib1:1.2.3-rc4'\n"
                                 + "    androidTestImplementation 'my.group.id:mylib2:4.5.6-SNAPSHOT'\n"
                                 + "}");
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull();
 
-        Collection<AndroidLibrary> testLibraries =
-                variant.getExtraJavaArtifacts()
-                        .stream()
+        Collection<IdeLibrary> testLibraries =
+                variant.getExtraJavaArtifacts().stream()
                         .filter(a -> a.getName().equals(ARTIFACT_NAME_UNIT_TEST))
                         .findFirst()
                         .get()
-                        .getDependencies()
-                        .getLibraries();
+                        .getLevel2Dependencies()
+                        .getAndroidLibraries();
         assertThat(testLibraries).hasSize(1);
-        AndroidLibrary testLibrary = testLibraries.iterator().next();
-        MavenCoordinates testResolvedCoordinates = testLibrary.getResolvedCoordinates();
-        assertThat(testResolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
-        assertThat(testResolvedCoordinates.getArtifactId()).isEqualTo("mylib1");
-        assertThat(testResolvedCoordinates.getVersion()).isEqualTo("1.2.3-rc4");
+        IdeLibrary testLibrary = testLibraries.iterator().next();
+        assertThat(testLibrary.getArtifactAddress()).isEqualTo("my.group.id:mylib1:1.2.3-rc4@aar");
 
-        Collection<AndroidLibrary> androidTestLibraries =
-                variant.getExtraAndroidArtifacts()
-                        .stream()
+        Collection<IdeLibrary> androidTestLibraries =
+                variant.getExtraAndroidArtifacts().stream()
                         .filter(a -> a.getName().equals(ARTIFACT_NAME_ANDROID_TEST))
                         .findFirst()
                         .get()
-                        .getDependencies()
-                        .getLibraries();
+                        .getLevel2Dependencies()
+                        .getAndroidLibraries();
         assertThat(androidTestLibraries).hasSize(1);
-        AndroidLibrary library = androidTestLibraries.iterator().next();
-        MavenCoordinates androidTestResolvedCoordinates = library.getResolvedCoordinates();
-        assertThat(androidTestResolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
-        assertThat(androidTestResolvedCoordinates.getArtifactId()).isEqualTo("mylib2");
-        assertThat(androidTestResolvedCoordinates.getVersion()).isEqualTo("4.5.6-SNAPSHOT");
+        IdeLibrary library = androidTestLibraries.iterator().next();
+        assertThat(library.getArtifactAddress()).isEqualTo("my.group.id:mylib2:4.5.6-SNAPSHOT@aar");
     }
 
     @Test
@@ -209,25 +196,24 @@ public class GradleModelMockerTest {
                                 + "dependencies {\n"
                                 + "    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n"
                                 + "}");
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
-        Collection<JavaLibrary> libraries =
-                variant.getMainArtifact().getDependencies().getJavaLibraries();
-        assertThat(libraries).hasSize(3);
-        JavaLibrary library = libraries.iterator().next();
-        MavenCoordinates resolvedCoordinates = library.getResolvedCoordinates();
-        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
-        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib-jdk7");
-        assertThat(resolvedCoordinates.getVersion()).isEqualTo("$kotlin_version");
-
-        library = Iterators.get(libraries.iterator(), 1);
-        resolvedCoordinates = library.getResolvedCoordinates();
-        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
-        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib");
-        assertThat(resolvedCoordinates.getVersion()).isEqualTo("$kotlin_version");
+        Collection<String> javaLibraries =
+                variant.getMainArtifact().getLevel2Dependencies().getJavaLibraries().stream()
+                        .map(it -> it.getArtifactAddress())
+                        .collect(toList());
+        Collection<String> androidLibraries =
+                variant.getMainArtifact().getLevel2Dependencies().getAndroidLibraries().stream()
+                        .map(it -> it.getArtifactAddress())
+                        .collect(toList());
+        assertThat(javaLibraries)
+                .containsAtLeast(
+                        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version@jar",
+                        "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version@jar",
+                        "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version@jar");
     }
 
     @Test
@@ -244,25 +230,21 @@ public class GradleModelMockerTest {
                                 + "dependencies {\n"
                                 + "    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n"
                                 + "}");
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
-        Collection<JavaLibrary> libraries =
-                variant.getMainArtifact().getDependencies().getJavaLibraries();
-        assertThat(libraries).hasSize(3);
-        JavaLibrary library = libraries.iterator().next();
-        MavenCoordinates resolvedCoordinates = library.getResolvedCoordinates();
-        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
-        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib-jdk7");
-        assertThat(resolvedCoordinates.getVersion()).isEqualTo("1.3.21");
+        Collection<IdeLibrary> libraries =
+                variant.getMainArtifact().getLevel2Dependencies().getJavaLibraries();
+        assertThat(libraries).hasSize(4);
 
-        library = Iterators.get(libraries.iterator(), 1);
-        resolvedCoordinates = library.getResolvedCoordinates();
-        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
-        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib");
-        assertThat(resolvedCoordinates.getVersion()).isEqualTo("1.3.21");
+        assertThat(libraries.stream().map(it -> it.getArtifactAddress()).collect(toList()))
+                .containsExactly(
+                        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.21@jar",
+                        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.21@jar",
+                        "org.jetbrains.kotlin:kotlin-stdlib:1.3.21@jar",
+                        "org.jetbrains:annotations:13.0@jar");
     }
 
     @Test
@@ -390,14 +372,15 @@ public class GradleModelMockerTest {
                                 + "    provided \"com.google.android.wearable:wearable:2.0.0-alpha4\"\n"
                                 + "}\n");
 
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
-        Dependencies dependencies = variant.getMainArtifact().getDependencies();
-        Collection<JavaLibrary> libraries = dependencies.getJavaLibraries();
+        IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
+        Collection<IdeLibrary> libraries = dependencies.getJavaLibraries();
         assertThat(libraries.size()).isEqualTo(1);
-        JavaLibrary library = libraries.iterator().next();
-        assertThat(library.getResolvedCoordinates().getArtifactId()).isEqualTo("wearable");
+        IdeLibrary library = libraries.iterator().next();
+        assertThat(library.getArtifactAddress())
+                .isEqualTo("com.google.android.wearable:wearable:2.0.0-alpha4@jar");
         assertThat(library.isProvided()).isTrue();
     }
 
@@ -413,15 +396,15 @@ public class GradleModelMockerTest {
                                 + "            name: \"support-v4\", version: '19.0'\n"
                                 + "}\n");
 
-        Variant variant = mocker.getVariant();
-        Dependencies dependencies = variant.getMainArtifact().getDependencies();
-        Collection<JavaLibrary> libraries = dependencies.getJavaLibraries();
-        assertThat(libraries.size()).isEqualTo(1);
-        JavaLibrary library = libraries.iterator().next();
-        MavenCoordinates coordinates = library.getResolvedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("com.android.support");
-        assertThat(coordinates.getArtifactId()).isEqualTo("support-v4");
-        assertThat(coordinates.getVersion()).isEqualTo("19.0");
+        IdeVariant variant = mocker.getVariant();
+        IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
+        Collection<IdeLibrary> libraries = dependencies.getJavaLibraries();
+        assertThat(libraries.size()).isEqualTo(2);
+
+        assertThat(libraries.stream().map(it -> it.getArtifactAddress()).collect(toList()))
+                .containsExactly(
+                        "com.android.support:support-v4:19.0@jar",
+                        "com.android.support:support-annotations:19.0@jar");
     }
 
     @Test
@@ -776,8 +759,12 @@ public class GradleModelMockerTest {
                         Pair.of("ABI", "armeabi"));
     }
 
-    @Test
+    // @Test
+    // TODO(b/158654131): Re-implement when possible.
+    @Ignore
     public void testNestedDependencies() {
+        // Nested dependencies are not supported in the IDE right now.
+        /*
         GradleModelMocker mocker =
                 createMocker(
                                 ""
@@ -863,6 +850,7 @@ public class GradleModelMockerTest {
         //assertThat(coordinates.getArtifactId()).isEqualTo("support-annotations");
         //assertThat(coordinates.getVersion()).isEqualTo("25.0.1");
         //assertThat(coordinates.getPackaging()).isEqualTo("jar");
+        */
     }
 
     @Test
@@ -877,7 +865,7 @@ public class GradleModelMockerTest {
                                 + "    compile \"com.android.support.constraint:constraint-layout:1.0.0-beta3\"\n"
                                 + "}");
 
-        Dependencies dependencies =
+        IdeDependencies dependencies =
                 mocker.createDependencies(
                         ""
                                 + "+--- com.android.support:appcompat-v7:25.0.1\n"
@@ -903,68 +891,47 @@ public class GradleModelMockerTest {
                                 + "|    \\--- com.android.support.constraint:constraint-layout-solver:1.0.0-beta3\n"
                                 + "\\--- project :mylibrary\n"
                                 + "     \\--- com.android.support:appcompat-v7:25.0.1 (*)");
-        List<JavaLibrary> javaLibraries;
-        List<AndroidLibrary> androidLibraries;
+        List<String> javaLibraries;
+        List<String> androidLibraries;
         List<String> projects;
-        javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
-        androidLibraries = Lists.newArrayList(dependencies.getLibraries());
-        //noinspection deprecation
-        projects = Lists.newArrayList(dependencies.getProjects());
+        javaLibraries =
+                Lists.newArrayList(
+                        dependencies.getJavaLibraries().stream()
+                                .map(it -> it.getArtifactAddress())
+                                .collect(toList()));
+        androidLibraries =
+                Lists.newArrayList(
+                        dependencies.getAndroidLibraries().stream()
+                                .map(it -> it.getArtifactAddress())
+                                .collect(toList()));
+        projects =
+                Lists.newArrayList(
+                        dependencies.getModuleDependencies().stream()
+                                .map(it -> it.getArtifactAddress())
+                                .collect(toList()));
 
-        assertThat(projects).containsExactly(":mylibrary");
-        assertThat(javaLibraries).hasSize(0);
-        assertThat(androidLibraries).hasSize(3);
-
-        AndroidLibrary library;
-        MavenCoordinates coordinates;
-
-        library = androidLibraries.get(0);
-        coordinates = library.getResolvedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("com.android.support");
-        assertThat(coordinates.getArtifactId()).isEqualTo("appcompat-v7");
-        assertThat(coordinates.getVersion()).isEqualTo("25.0.1");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
-
-        library = androidLibraries.get(1);
-        coordinates = library.getResolvedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("com.android.support.constraint");
-        assertThat(coordinates.getArtifactId()).isEqualTo("constraint-layout");
-        assertThat(coordinates.getVersion()).isEqualTo("1.0.0-beta3");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
-
-        library = androidLibraries.get(2);
-        assertThat(library.getProject()).isEqualTo(":mylibrary");
-        assertThat(library.getName()).isEqualTo(":mylibrary");
-
-        // Check recursive dependencies
-        library = androidLibraries.get(0);
-        androidLibraries = Lists.newArrayList(library.getLibraryDependencies());
-        androidLibraries.sort(LIBRARY_COMPARATOR);
-        library = androidLibraries.get(1);
-        coordinates = library.getResolvedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("com.android.support");
-        assertThat(coordinates.getArtifactId()).isEqualTo("support-v4");
-        assertThat(coordinates.getVersion()).isEqualTo("25.0.1");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
-
-        androidLibraries = Lists.newArrayList(library.getLibraryDependencies());
-        androidLibraries.sort(LIBRARY_COMPARATOR);
-        library = androidLibraries.get(0);
-        coordinates = library.getResolvedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("com.android.support");
-        assertThat(coordinates.getArtifactId()).isEqualTo("support-compat");
-        assertThat(coordinates.getVersion()).isEqualTo("25.0.1");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
-
-        //JavaLibrary javaLibrary = library.getJavaDependencies().iterator().next();
-        //coordinates = javaLibrary.getResolvedCoordinates();
-        //assertThat(coordinates.getGroupId()).isEqualTo("com.android.support");
-        //assertThat(coordinates.getArtifactId()).isEqualTo("support-annotations");
-        //assertThat(coordinates.getVersion()).isEqualTo("25.0.1");
-        //assertThat(coordinates.getPackaging()).isEqualTo("jar");
+        assertThat(projects).containsExactly("artifacts::mylibrary");
+        assertThat(javaLibraries)
+                .containsExactly(
+                        "com.android.support:support-annotations:25.0.1@jar",
+                        "com.android.support.constraint:constraint-layout-solver:1.0.0-beta3@jar");
+        assertThat(androidLibraries)
+                .containsExactly(
+                        "com.android.support:appcompat-v7:25.0.1@aar",
+                        "com.android.support:support-v4:25.0.1@aar",
+                        "com.android.support:support-compat:25.0.1@aar",
+                        "com.android.support:support-media-compat:25.0.1@aar",
+                        "com.android.support:support-core-utils:25.0.1@aar",
+                        "com.android.support:support-core-ui:25.0.1@aar",
+                        "com.android.support:support-fragment:25.0.1@aar",
+                        "com.android.support:support-vector-drawable:25.0.1@aar",
+                        "com.android.support:animated-vector-drawable:25.0.1@aar",
+                        "com.android.support.constraint:constraint-layout:1.0.0-beta3@aar");
     }
 
-    @Test
+    // @Test
+    // TODO(b/158649269): Review whether this test is needed.
+    @Ignore
     public void testPromotedDependencies() {
         GradleModelMocker mocker =
                 createMocker(
@@ -1014,28 +981,20 @@ public class GradleModelMockerTest {
                                         + "|         \\--- org.powermock:powermock-reflect:1.6.4 (*)\n"
                                         + "\\--- org.json:json:20090211");
 
-        List<JavaLibrary> javaLibraries;
-        List<AndroidLibrary> androidLibraries;
-        Dependencies dependencies = mocker.getVariant().getMainArtifact().getDependencies();
+        List<IdeLibrary> javaLibraries;
+        List<IdeLibrary> androidLibraries;
+        IdeDependencies dependencies =
+                mocker.getVariant().getMainArtifact().getLevel2Dependencies();
         javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
-        androidLibraries = Lists.newArrayList(dependencies.getLibraries());
+        androidLibraries = Lists.newArrayList(dependencies.getAndroidLibraries());
 
         assertThat(javaLibraries).hasSize(1);
         assertThat(androidLibraries).hasSize(7);
 
         // org.mockito:mockito-core:1.10.8 -> 1.10.19
-        AndroidLibrary library = androidLibraries.get(1);
-        MavenCoordinates coordinates = library.getResolvedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("org.mockito");
-        assertThat(coordinates.getArtifactId()).isEqualTo("mockito-core");
-        assertThat(coordinates.getVersion()).isEqualTo("1.10.19");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
-
-        coordinates = library.getRequestedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("org.mockito");
-        assertThat(coordinates.getArtifactId()).isEqualTo("mockito-core");
-        assertThat(coordinates.getVersion()).isEqualTo("1.10.8");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
+        IdeLibrary library = androidLibraries.get(1);
+        assertThat(library.getArtifactAddress()).isEqualTo("org.mockito:mockito-core:1.10.19");
+        fail("IdeDependencies do not support the concept of promoted versions");
     }
 
     @Test
@@ -1095,15 +1054,16 @@ public class GradleModelMockerTest {
                                         + "\\--- org.json:json:20090211")
                         .withFullDependencies(false);
 
-        DependencyGraphs graph = mocker.getVariant().getMainArtifact().getDependencyGraphs();
-        List<GraphItem> compileDependencies = graph.getCompileDependencies();
-        List<String> names = Lists.newArrayList();
-        for (GraphItem item : compileDependencies) {
-            names.add(item.getArtifactAddress());
-            assertThat(item.getDependencies()).isEmpty(); // Because we asked for flat deps above
-        }
+        IdeDependencies graph = mocker.getVariant().getMainArtifact().getLevel2Dependencies();
+
+        List<String> names =
+                Streams.concat(
+                                graph.getAndroidLibraries().stream(),
+                                graph.getJavaLibraries().stream())
+                        .map(it -> it.getArtifactAddress())
+                        .distinct()
+                        .collect(Collectors.toList());
         Collections.sort(names);
-        System.out.println(names);
         assertThat(names)
                 .containsExactly(
                         "junit:junit:4.12@jar",
@@ -1122,12 +1082,6 @@ public class GradleModelMockerTest {
                         "org.powermock:powermock-module-junit4-rule:1.6.4@aar",
                         "org.powermock:powermock-module-junit4:1.6.4@aar",
                         "org.powermock:powermock-reflect:1.6.4@aar");
-
-        GlobalLibraryMap libraryMap = mocker.getGlobalLibraryMap();
-        assertThat(libraryMap).isNotNull();
-        Library library = libraryMap.getLibraries().get("org.hamcrest:hamcrest-core:1.3@aar");
-        assertThat(library.getArtifactAddress()).isEqualTo("org.hamcrest:hamcrest-core:1.3@aar");
-        assertThat(library.getJarFile()).isNotNull();
     }
 
     @Test

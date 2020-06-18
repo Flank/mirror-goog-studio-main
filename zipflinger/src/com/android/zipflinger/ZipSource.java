@@ -53,9 +53,9 @@ public class ZipSource {
      * <p>Otherwise, the entry is deflated/inflated accordingly via transfer to memory, crc
      * calculation , and written to the target archive.
      *
-     * @param Name of the entry in the source zip.
-     * @param Name of the entry in the destination zip.
-     * @param The desired compression level.
+     * @param entryName Name of the entry in the source zip.
+     * @param newName Name of the entry in the destination zip.
+     * @param compressionLevel The desired compression level.
      * @return
      */
     @NonNull
@@ -104,8 +104,8 @@ public class ZipSource {
             String newName, Entry entry, ZipSource zipSource, int compressionLevel) {
         // No change case.
         if (compressionLevel == COMPRESSION_NO_CHANGE
-                || compressionLevel == Deflater.NO_COMPRESSION && !entry.isCompressed()
-                || compressionLevel != Deflater.NO_COMPRESSION && entry.isCompressed()) {
+                || (compressionLevel == Deflater.NO_COMPRESSION && !entry.isCompressed())
+                || (compressionLevel != Deflater.NO_COMPRESSION && entry.isCompressed())) {
             return new ZipSourceEntry(newName, entry, this);
         }
 

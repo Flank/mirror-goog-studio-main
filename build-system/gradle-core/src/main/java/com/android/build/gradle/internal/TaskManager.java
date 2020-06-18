@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
+import static com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModelKt.tryCreateCxxConfigurationModel;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
@@ -77,8 +77,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -137,7 +136,7 @@ import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.ProguardTask;
 import com.android.build.gradle.internal.tasks.R8Task;
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
-import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
+import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -162,6 +161,8 @@ import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask;
+import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask;
+import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -175,7 +176,6 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateManifestJarTask;
 import com.android.build.gradle.tasks.GenerateResValues;
@@ -840,7 +840,7 @@ public abstract class TaskManager<
 
         // This might be consumed by RecalculateFixedStackFrames if that's created
         transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-classes")
+                OriginalStream.builder("ext-libs-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
@@ -855,7 +855,7 @@ public abstract class TaskManager<
         if (!getJavaResMergingScopes(componentProperties, RESOURCES)
                 .contains(Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-java-res")
+                    OriginalStream.builder("ext-libs-java-res")
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
@@ -868,7 +868,7 @@ public abstract class TaskManager<
 
         // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-classes")
+                OriginalStream.builder("sub-projects-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
@@ -881,7 +881,7 @@ public abstract class TaskManager<
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
         if (!getJavaResMergingScopes(componentProperties, RESOURCES).contains(Scope.SUB_PROJECTS)) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "sub-projects-java-res")
+                    OriginalStream.builder("sub-projects-java-res")
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
@@ -900,7 +900,7 @@ public abstract class TaskManager<
         // only
         if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "metadata-classes")
+                    OriginalStream.builder("metadata-classes")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
@@ -915,7 +915,7 @@ public abstract class TaskManager<
 
         // provided only scopes.
         transformManager.addStream(
-                OriginalStream.builder(project, "provided-classes")
+                OriginalStream.builder("provided-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.PROVIDED_ONLY)
                         .setFileCollection(variantScope.getProvidedOnlyClasspath())
@@ -924,7 +924,7 @@ public abstract class TaskManager<
         componentProperties.onTestedConfig(
                 testedConfig -> {
                     transformManager.addStream(
-                            OriginalStream.builder(project, "tested-code-deps")
+                            OriginalStream.builder("tested-code-deps")
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.TESTED_CODE)
                                     .setArtifactCollection(
@@ -1291,7 +1291,7 @@ public abstract class TaskManager<
             creationConfig
                     .getTransformManager()
                     .addStream(
-                            OriginalStream.builder(project, "final-r-classes")
+                            OriginalStream.builder("final-r-classes")
                                     .addContentTypes(
                                             scope.getNeedsJavaResStreams()
                                                     ? TransformManager.CONTENT_JARS
@@ -1433,7 +1433,7 @@ public abstract class TaskManager<
             componentProperties
                     .getTransformManager()
                     .addStream(
-                            OriginalStream.builder(project, "processed-java-res")
+                            OriginalStream.builder("processed-java-res")
                                     .addContentType(RESOURCES)
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
@@ -1469,7 +1469,7 @@ public abstract class TaskManager<
             Provider<RegularFile> mergedJavaResProvider =
                     componentProperties.getArtifacts().get(MERGED_JAVA_RES.INSTANCE);
             transformManager.addStream(
-                    OriginalStream.builder(project, "merged-java-res")
+                    OriginalStream.builder("merged-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
                             .addScopes(mergeScopes)
                             .setFileCollection(project.getLayout().files(mergedJavaResProvider))
@@ -1543,7 +1543,7 @@ public abstract class TaskManager<
                 componentProperties.getVariantScope().getNeedsJavaResStreams();
 
         transformManager.addStream(
-                OriginalStream.builder(project, "javac-output")
+                OriginalStream.builder("javac-output")
                         // Need both classes and resources because some annotation
                         // processors generate resources
                         .addContentTypes(
@@ -1556,7 +1556,7 @@ public abstract class TaskManager<
 
         BaseVariantData variantData = componentProperties.getVariantData();
         transformManager.addStream(
-                OriginalStream.builder(project, "pre-javac-generated-bytecode")
+                OriginalStream.builder("pre-javac-generated-bytecode")
                         .addContentTypes(
                                 needsJavaResStreams
                                         ? TransformManager.CONTENT_JARS
@@ -1566,7 +1566,7 @@ public abstract class TaskManager<
                         .build());
 
         transformManager.addStream(
-                OriginalStream.builder(project, "post-javac-generated-bytecode")
+                OriginalStream.builder("post-javac-generated-bytecode")
                         .addContentTypes(
                                 needsJavaResStreams
                                         ? TransformManager.CONTENT_JARS
@@ -1586,52 +1586,47 @@ public abstract class TaskManager<
 
     public void createExternalNativeBuildJsonGenerators(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
+        CxxConfigurationModel configurationModel =
+                tryCreateCxxConfigurationModel(componentProperties, false);
 
-        if (module == null) {
+        if (configurationModel == null) {
             return;
         }
 
-        componentProperties
-                .getTaskContainer()
-                .setCxxMetadataGenerator(
-                        project.provider(
-                                () ->
-                                        ExternalNativeJsonGenerator.create(
-                                                module, componentProperties)));
+        componentProperties.getTaskContainer().setCxxConfigurationModel(configurationModel);
     }
 
     public void createExternalNativeBuildTasks(
             @NonNull ComponentPropertiesImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
-        Provider<CxxMetadataGenerator> generator = taskContainer.getCxxMetadataGenerator();
-        if (generator == null) {
+        CxxConfigurationModel configurationModel = taskContainer.getCxxConfigurationModel();
+        if (configurationModel == null) {
             return;
         }
 
         // Set up JSON generation tasks
         TaskProvider<? extends Task> generateTask =
                 taskFactory.register(
-                        ExternalNativeBuildJsonTask.createTaskConfigAction(
-                                generator, componentProperties));
+                        new ExternalNativeBuildJsonTask.CreationAction(
+                                configurationModel, componentProperties));
 
         // Set up build tasks
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.register(
                         new ExternalNativeBuildTask.CreationAction(
-                                generator, generateTask, componentProperties));
+                                configurationModel, componentProperties, generateTask));
 
         TaskFactoryUtils.dependsOn(taskContainer.getCompileTask(), buildTask);
 
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
-
-        if (module != null) {
+        CxxConfigurationModel allAbisModel =
+                tryCreateCxxConfigurationModel(componentProperties, true);
+        if (allAbisModel != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
                     taskFactory.register(
                             new ExternalNativeCleanTask.CreationAction(
-                                    module, componentProperties));
+                                    allAbisModel, componentProperties));
             TaskFactoryUtils.dependsOn(cleanTask, externalNativeCleanTask);
         }
     }
@@ -1780,7 +1775,7 @@ public abstract class TaskManager<
         componentProperties
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "compile-and-runtime-light-r-classes")
+                        OriginalStream.builder("compile-and-runtime-light-r-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(QualifiedContent.Scope.PROJECT)
                                 .setFileCollection(project.files(rClassJar))
@@ -2030,9 +2025,7 @@ public abstract class TaskManager<
             testData =
                     new BundleTestDataImpl(
                             androidTestProperties,
-                            androidTestProperties
-                                    .getArtifacts()
-                                    .get(InternalArtifactType.APK.INSTANCE),
+                            androidTestProperties.getArtifacts().get(ArtifactType.APK.INSTANCE),
                             FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             testedVariant
                                     .getVariantDependencies()
@@ -2040,15 +2033,12 @@ public abstract class TaskManager<
                                             RUNTIME_CLASSPATH, PROJECT, APKS_FROM_BUNDLE));
         } else {
             ConfigurableFileCollection testedApkFileCollection =
-                    project.files(
-                            testedVariant.getArtifacts().get(InternalArtifactType.APK.INSTANCE));
+                    project.files(testedVariant.getArtifacts().get(ArtifactType.APK.INSTANCE));
 
             testData =
                     new TestDataImpl(
                             androidTestProperties,
-                            androidTestProperties
-                                    .getArtifacts()
-                                    .get(InternalArtifactType.APK.INSTANCE),
+                            androidTestProperties.getArtifacts().get(ArtifactType.APK.INSTANCE),
                             isLibrary ? null : testedApkFileCollection);
         }
 
@@ -2306,7 +2296,7 @@ public abstract class TaskManager<
                                     componentProperties));
             variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
             transformManager.addStream(
-                    OriginalStream.builder(project, "runtime-deps-try-with-resources")
+                    OriginalStream.builder("runtime-deps-try-with-resources")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(scopeType)
                             .setFileCollection(variantScope.getTryWithResourceRuntimeSupportJar())
@@ -2536,7 +2526,7 @@ public abstract class TaskManager<
         componentProperties
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "jacoco-instrumented-classes")
+                        OriginalStream.builder("jacoco-instrumented-classes")
                                 .addContentTypes(DefaultContentType.CLASSES)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(instumentedClasses)
@@ -2661,11 +2651,6 @@ public abstract class TaskManager<
                         null);
 
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
-
-        // republish APK to the external world.
-        creationConfig
-                .getArtifacts()
-                .republish(InternalArtifactType.APK.INSTANCE, ArtifactType.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
@@ -2872,16 +2857,9 @@ public abstract class TaskManager<
                     task.setDescription(
                             "Assembles bundle for variant " + componentProperties.getName());
                     task.dependsOn(
-                            componentProperties
-                                    .getArtifacts()
-                                    .get(InternalArtifactType.BUNDLE.INSTANCE));
+                            componentProperties.getArtifacts().get(ArtifactType.BUNDLE.INSTANCE));
                 },
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
-
-        // republish Bundle to the external world.
-        componentProperties
-                .getArtifacts()
-                .republish(InternalArtifactType.BUNDLE.INSTANCE, ArtifactType.BUNDLE.INSTANCE);
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(
@@ -3021,7 +2999,7 @@ public abstract class TaskManager<
     }
 
     /**
-     * Checks if {@link ShrinkResourcesTask} and {@link LegacyShrinkBundleModuleResourcesTask} should be added
+     * Checks if {@link ShrinkResourcesOldShrinkerTask} and {@link LegacyShrinkBundleModuleResourcesTask} should be added
      * to the build pipeline and creates the tasks
      */
     protected void maybeCreateResourcesShrinkerTasks(
@@ -3030,13 +3008,24 @@ public abstract class TaskManager<
             return;
         }
 
-        // if resources are shrink, create task per variant output
-        // to transform the res package into a stripped res package
+        if (componentProperties.getVariantType().isDynamicFeature()) {
+            // For bundles resources are shrunk once bundle is packaged so the task is applicable
+            // for base module only.
+            return;
+        }
 
-        taskFactory.register(new ShrinkResourcesTask.CreationAction(componentProperties));
-
-        // And for the bundle
-        if (!globalScope.getProjectOptions().get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
+            // Shrink resources in APK with a new resource shrinker and produce stripped res package.
+            taskFactory.register(
+                    new ShrinkResourcesNewShrinkerTask.CreationAction(componentProperties));
+            // Shrink resources in bundles with new resource shrinker.
+            taskFactory.register(
+                    new ShrinkAppBundleResourcesTask.CreationAction(componentProperties));
+        } else {
+            // Shrink resources in APK with old resource shrinker and produce stripped res package.
+            taskFactory.register(
+                    new ShrinkResourcesOldShrinkerTask.CreationAction(componentProperties));
+            // Shrink base module resources in proto format to be packaged to bundle.
             taskFactory.register(
                     new LegacyShrinkBundleModuleResourcesTask.CreationAction(componentProperties));
         }

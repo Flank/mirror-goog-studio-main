@@ -278,7 +278,9 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
         val artifactContainer = artifactsImpl.getArtifactContainer(type)
         taskProvider.configure {
             // Regular-file artifacts require a file name (see bug 151076862)
-            if (type.kind is ArtifactKind.FILE && fileName == null) {
+            if (type.kind is ArtifactKind.FILE
+                && fileName.isNullOrEmpty()
+                && type.getFileSystemLocationName().isNullOrEmpty()) {
                 fileName = DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
             }
             val outputAbsolutePath = when {
