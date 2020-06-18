@@ -47,6 +47,11 @@ public class ZipMap {
     }
 
     @NonNull
+    public static ZipMap from(@NonNull File zipFile) throws IOException {
+        return from(zipFile, false);
+    }
+
+    @NonNull
     public static ZipMap from(@NonNull File zipFile, boolean accountDataDescriptors)
             throws IOException {
         return from(zipFile, accountDataDescriptors, Zip64.Policy.ALLOW);

@@ -32,8 +32,12 @@ public class ZipSource {
 
     private final List<Source> selectedEntries = new ArrayList<>();
 
+    public ZipSource(ZipMap map) {
+        this.map = map;
+    }
+
     public ZipSource(@NonNull File file) throws IOException {
-        this.map = ZipMap.from(file, false);
+        this(ZipMap.from(file, false));
     }
 
     @NonNull

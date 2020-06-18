@@ -70,3 +70,27 @@ for(Entry entry : map.getEntries().values()) {
  zip.add(zipSource);
  zip.close();
 ```
+
+## Generate multiple zips from one zip source
+Creating a ZipSource is not an I/O free operation since the CD of the source archive has to be parsed.
+In the case where one source zip is to be used to generate multiple destination zips, parsing
+can be done only once by providing the same ZipMap to each ZipSource.
+
+``` 
+ // The source zip is parsed only once.
+ ZipMap map = ZipMap.from(new File("source.zip"));
+
+ ZipSource zipSource1 = new ZipSource(map):
+ zipSource1.select("a", "a");
+ try(ZipArchive archive = new ZipArchive("dest1.zip")) {
+   archive.add(zipSource1);
+ }
+
+
+ ZipSource zipSource2 = new ZipSource(map):
+ zipSource2.select("b", "b");
+ try(ZipArchive archive = new ZipArchive("dest2.zip")) {
+   archive.add(zipSource2);
+ }
+
+``` 
