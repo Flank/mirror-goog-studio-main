@@ -480,7 +480,9 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
                         fix);
             }
 
-            if (hosts == null && (paths != null || ports != null)) {
+            if (hosts == null
+                    && (paths != null || ports != null)
+                    && (!hasScheme || schemes.contains("http") || schemes.contains("https"))) {
                 LintFix fix = LintFix.create().set().todo(ANDROID_URI, ATTR_HOST).build();
                 reportUrlError(
                         context,
