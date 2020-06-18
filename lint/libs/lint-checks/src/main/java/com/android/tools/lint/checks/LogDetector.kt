@@ -258,6 +258,13 @@ class LogDetector : Detector(), SourceCodeScanner {
                     }
                 }
 
+                if (condition is ULiteralExpression) {
+                    val value = condition.value
+                    if (value == true) {
+                        return false
+                    }
+                }
+
                 return true
             } else if (curr is UCallExpression ||
                 curr is UMethod ||
