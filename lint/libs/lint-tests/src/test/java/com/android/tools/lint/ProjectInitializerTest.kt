@@ -483,6 +483,58 @@ class ProjectInitializerTest {
     }
 
     @Test
+    fun testPaths() {
+        // Regression test for https://issuetracker.google.com/159169803
+        val root = temp.newFolder()
+        val projects = lint().files(
+            xml(
+                "layout/AndroidManifest.xml", """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.tools.lint.test"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                    <uses-sdk
+                        android:minSdkVersion="15"
+                        android:targetSdkVersion="29" />
+
+                </manifest>"""
+            ).indented()
+        ).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor = """
+            <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir" />
+            <module name="M" android="true" library="true">
+                <manifest file="layout/AndroidManifest.xml" />
+            </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "project.xml")
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            "No issues found.",
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "RequiredSize",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
+    @Test
     fun testGradleDetectorsFiring() { // Regression test for b/132992488
         val root = temp.newFolder()
         val projects = lint().files(

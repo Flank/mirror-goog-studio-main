@@ -37,17 +37,17 @@ public class DependencyNodeTest {
 
     private static DependencyNode getRedValue() {
         return new DependencyNode(
-                new MavenCoordinatesImpl("red", "",""),
+                MavenCoordinatesImpl.create(string -> string, "red", "", ""),
                 DependencyNode.NodeType.ANDROID,
                 ImmutableList.of(),
-                new MavenCoordinatesImpl("", "", ""));
+                MavenCoordinatesImpl.create(string -> string, "", "", ""));
     }
 
     private static DependencyNode getBlackValue() {
         return new DependencyNode(
-                new MavenCoordinatesImpl("black", "", ""),
+                MavenCoordinatesImpl.create(string -> string, "black", "", ""),
                 DependencyNode.NodeType.ANDROID,
                 ImmutableList.of(),
-                new MavenCoordinatesImpl("", "", ""));
+                MavenCoordinatesImpl.create(string -> string, "", "", ""));
     }
 }

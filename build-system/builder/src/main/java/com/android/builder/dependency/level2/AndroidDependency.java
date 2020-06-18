@@ -33,7 +33,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.dependency.HashCodeUtils;
-import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;

@@ -96,7 +96,7 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
     }
 
     @Override
-    @Nullable
+    @NonNull
     public String getVersionlessId() {
         throw new UnusedModelMethodException("getVersionlessId");
     }

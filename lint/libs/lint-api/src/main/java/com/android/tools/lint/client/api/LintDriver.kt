@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.ATTR_IGNORE
 import com.android.SdkConstants.CLASS_CONSTRUCTOR
 import com.android.SdkConstants.CONSTRUCTOR_NAME
@@ -2047,7 +2048,7 @@ class LintDriver
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
                 }
-            } else if (file.isFile && isXmlFile(file)) {
+            } else if (file.isFile && isXmlFile(file) && file.name != ANDROID_MANIFEST_XML) {
                 // Yes, find out its resource type
                 val folderName = file.parentFile.name
                 val type = ResourceFolderType.getFolderType(folderName)

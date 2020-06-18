@@ -28,10 +28,12 @@ public class AndroidDependencyTest {
     public void equals() throws Exception {
         EqualsVerifier.forClass(AndroidDependency.class)
                 .withRedefinedSuperclass()
-                .withCachedHashCode("hashCode", "computeHashCode",
+                .withCachedHashCode(
+                        "hashCode",
+                        "computeHashCode",
                         AndroidDependency.createExplodedAarLibrary(
                                 new File("red"),
-                                new MavenCoordinatesImpl("", "", ""),
+                                MavenCoordinatesImpl.create(string -> string, "", "", ""),
                                 "",
                                 null,
                                 new File("")))

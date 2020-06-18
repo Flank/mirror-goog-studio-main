@@ -36,7 +36,8 @@ public class AndroidLibraryImplTest {
                         "hashcode",
                         "computeHashCode",
                         new AndroidLibraryImpl(
-                                new MavenCoordinatesImpl("g", "a", "unspecified"),
+                                MavenCoordinatesImpl.create(
+                                        string -> string, "g", "a", "unspecified"),
                                 null,
                                 "",
                                 tmpFolder.newFolder("bundle"),
