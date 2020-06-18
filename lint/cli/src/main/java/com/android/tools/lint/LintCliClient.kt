@@ -966,14 +966,28 @@ open class LintCliClient : LintClient {
         val disabledCategories = flags.disabledCategories
         if (disabledCategories != null) {
             val category = issue.category
-            if (disabledCategories.contains(category) || category.parent != null && disabledCategories.contains(
-                    category.parent
-                )
+            if (disabledCategories.contains(category) || category.parent != null
+                && disabledCategories.contains(category.parent)
             ) {
                 return true
             }
         }
         return flags.suppressedIds.contains(issue.id)
+    }
+
+    /** Returns true if the given issue has been explicitly enabled  */
+    fun isExplicitlyEnabled(issue: Issue): Boolean {
+        val enabledCategories = flags.enabledCategories
+        if (enabledCategories != null) {
+            val category = issue.category
+            if (enabledCategories.contains(category) || category.parent != null
+                && enabledCategories.contains(category.parent)
+            ) {
+                return true
+            }
+        }
+
+        return flags.enabledIds.contains(issue.id)
     }
 
     fun createConfigurationFromFile(file: File): DefaultConfiguration {

@@ -24,6 +24,7 @@ import org.junit.Assert.assertTrue
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
+import com.android.tools.lint.checks.LogDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
@@ -35,6 +36,7 @@ class HtmlReporterTest {
     @Test
     fun testBasic() {
         val client = TestLintClient()
+        client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
         val transformer = TestResultTransformer { output ->
             var report: String
             // Replace the timestamp to make golden file comparison work
@@ -90,7 +92,9 @@ class HtmlReporterTest {
                 HardcodedValuesDetector.ISSUE,
                 IconDetector.DUPLICATES_NAMES,
                 // Not reported, but for the disabled-list
-                ManifestDetector.MOCK_LOCATION
+                ManifestDetector.MOCK_LOCATION,
+                // Not reported, but disabled by default and enabled via flags (b/111035260)
+                LogDetector.CONDITIONAL
             )
             .client(client)
             .run()
