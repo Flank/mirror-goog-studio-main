@@ -35,7 +35,24 @@ public final class TodoActivity extends TransportTestActivity {
 
     @NonNull
     public TodoGroup newGroup() {
-        TodoGroup group = new TodoGroup("Group #" + (groups.size() + 1));
+        return newGroupInternal("Group #" + (groups.size() + 1));
+    }
+
+    @NonNull
+    public TodoGroup newHighPriorityGroup() {
+        return newGroup("High Priority Group");
+    }
+
+    @NonNull
+    public TodoGroup newGroup(@NonNull String name) {
+        return newGroupInternal(name);
+    }
+
+    // this method is a bit artificial, because we could have inlined it
+    // but then we add hooks to methods that call each other
+    // and it makes harder to read and follow tests.
+    private TodoGroup newGroupInternal(@NonNull String name) {
+        TodoGroup group = new TodoGroup(name);
         groups.add(group);
         activeGroup = group;
         return group;
