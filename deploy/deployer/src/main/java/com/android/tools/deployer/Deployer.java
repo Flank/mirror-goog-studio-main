@@ -28,7 +28,6 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,7 @@ public class Deployer {
     private final Installer installer;
     private final TaskRunner runner;
     private final UIService service;
-    private final Collection<DeployMetric> metrics;
+    private final MetricsRecorder metrics;
     private final ILogger logger;
 
     // Temp flag.
@@ -61,7 +60,7 @@ public class Deployer {
             TaskRunner runner,
             Installer installer,
             UIService service,
-            Collection<DeployMetric> metrics,
+            MetricsRecorder metrics,
             ILogger logger,
             boolean useOptimisticSwap,
             boolean useOptimisticResourceSwap,
@@ -142,7 +141,12 @@ public class Deployer {
                     installMode = InstallMode.DELTA_NO_SKIP;
                 }
                 result.skippedInstall =
-                        !apkInstaller.install(packageName, apks, options, installMode, metrics);
+                        !apkInstaller.install(
+                                packageName,
+                                apks,
+                                options,
+                                installMode,
+                                metrics.getDeployMetrics());
 
                 List<Apk> apkList = new ApkParser().parsePaths(apks);
                 Task<List<Apk>> apkListTask = runner.create(apkList);
@@ -162,7 +166,12 @@ public class Deployer {
                         runner.create(oid));
             } else {
                 result.skippedInstall =
-                        !apkInstaller.install(packageName, apks, options, installMode, metrics);
+                        !apkInstaller.install(
+                                packageName,
+                                apks,
+                                options,
+                                installMode,
+                                metrics.getDeployMetrics());
 
                 // Parse the apks
                 Task<List<Apk>> apkList =
@@ -330,6 +339,7 @@ public class Deployer {
                         argRestart,
                         useStructuralRedefinition,
                         useVariableReinitialization,
+                        metrics,
                         adb,
                         logger);
         Task<OptimisticApkSwapper.OverlayUpdate> overlayUpdate =

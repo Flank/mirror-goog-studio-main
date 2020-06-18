@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +39,7 @@ public class DeployerRunner {
 
     private final DeploymentCacheDatabase cacheDb;
     private final SqlApkFileDatabase dexDb;
-    private final ArrayList<DeployMetric> metrics;
+    private final MetricsRecorder metrics;
     private final UIService service;
 
     // Run it from bazel with the following command:
@@ -74,7 +75,7 @@ public class DeployerRunner {
         this.cacheDb = cacheDb;
         this.dexDb = dexDb;
         this.service = service;
-        this.metrics = new ArrayList<>();
+        this.metrics = new MetricsRecorder();
     }
 
     public int run(String[] args, ILogger logger) {
@@ -108,10 +109,11 @@ public class DeployerRunner {
             apks.add(parameters.get(i));
         }
 
-        metrics.clear();
+        metrics.getDeployMetrics().clear();
         AdbClient adb = new AdbClient(device, logger);
         Installer installer =
-                new AdbInstaller(parameters.getInstallersPath(), adb, metrics, logger);
+                new AdbInstaller(
+                        parameters.getInstallersPath(), adb, metrics.getDeployMetrics(), logger);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
         Deployer deployer =
@@ -159,8 +161,8 @@ public class DeployerRunner {
         return 0;
     }
 
-    public ArrayList<DeployMetric> getMetrics() {
-        return metrics;
+    public List<DeployMetric> getMetrics() {
+        return metrics.getDeployMetrics();
     }
 
     private IDevice getDevice(AndroidDebugBridge bridge) {

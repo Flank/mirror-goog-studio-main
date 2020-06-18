@@ -30,15 +30,10 @@ import static org.junit.Assert.fail;
 import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.fakeadbserver.FakeAdbServer;
-import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.testutils.AssumeUtil;
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.devices.DeviceId;
 import com.android.tools.deployer.devices.FakeDevice;
-import com.android.tools.deployer.devices.FakeDeviceHandler;
-import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.shell.FailingMkdir;
 import com.android.tools.deployer.rules.ApiLevel;
 import com.android.tools.deployer.rules.FakeDeviceConnection;
@@ -64,7 +59,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -1742,7 +1736,7 @@ public class DeployerRunnerTest {
         }
     }
 
-    private void assertMetrics(ArrayList<DeployMetric> metrics, String... expected) {
+    private void assertMetrics(List<DeployMetric> metrics, String... expected) {
         String[] actual =
                 metrics.stream()
                         .map(m -> m.getName() + (m.hasStatus() ? ":" + m.getStatus() : ""))

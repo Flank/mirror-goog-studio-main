@@ -45,6 +45,7 @@ public class OptimisticApkSwapper {
     private final Installer installer;
     private final boolean restart;
     private final Map<Integer, ClassRedefiner> redefiners;
+    private final MetricsRecorder metrics;
     private final AdbClient adb;
     private final ILogger logger;
 
@@ -64,6 +65,7 @@ public class OptimisticApkSwapper {
             boolean restart,
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
+            MetricsRecorder metrics,
             AdbClient adb,
             ILogger logger) {
         this.installer = installer;
@@ -71,6 +73,7 @@ public class OptimisticApkSwapper {
         this.restart = restart;
         this.useStructuralRedefinition = useStructuralRedefinition;
         this.useVariableReinitialization = useVariableReinitialization;
+        this.metrics = metrics;
         this.adb = adb;
         this.logger = logger;
     }
@@ -187,10 +190,7 @@ public class OptimisticApkSwapper {
     private void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
-        for (Deploy.AgentExceptionLog log : swapResponse.getAgentLogsList()) {
-            // TODO: Report these as metrics somehow
-            logger.info("Agent log: %s", log.toString());
-        }
+        metrics.add(swapResponse.getAgentLogsList());
         new InstallerResponseHandler().handle(swapResponse);
     }
 }
