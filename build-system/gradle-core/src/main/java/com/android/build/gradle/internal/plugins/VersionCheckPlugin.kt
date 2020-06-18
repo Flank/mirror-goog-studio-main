@@ -44,7 +44,7 @@ class VersionCheckPlugin: Plugin<Project> {
 
         val currentVersion = project.gradle.gradleVersion
         if (GRADLE_MIN_VERSION > currentVersion) {
-            val file = File("gradle${separator}wrapper${separator}gradle-wrapper.properties")
+            val file = File(project.rootProject.projectDir, "gradle${separator}wrapper${separator}gradle-wrapper.properties")
 
             val errorMessage = String.format(
                 "Minimum supported Gradle version is $GRADLE_MIN_VERSION. Current version is $currentVersion. "
