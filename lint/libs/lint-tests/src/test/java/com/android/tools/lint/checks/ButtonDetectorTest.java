@@ -519,6 +519,57 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                         mButtonbar_values));
     }
 
+    public void testButtonStyleFix() throws Exception {
+        sTestIssue = ButtonDetector.STYLE;
+        lint().files(
+                        manifest().minSdk(14),
+                        xml(
+                                "res/layout/buttonbar.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "\n"
+                                        + "    <!-- Hardcoded strings, wrong order -->\n"
+                                        + "    <LinearLayout\n"
+                                        + "        android:layout_width=\"match_parent\"\n"
+                                        + "        android:layout_height=\"wrap_content\" >\n"
+                                        + "\n"
+                                        + "        <Button\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"OK\" />\n"
+                                        + "\n"
+                                        + "        <Button\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Cancel\" />\n"
+                                        + "    </LinearLayout>\n"
+                                        + "</merge>\n"))
+                .issues(ButtonDetector.STYLE)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/buttonbar.xml:9: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:14: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 2 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for res/layout/buttonbar.xml line 9: Make borderless:\n"
+                                + "@@ -7 +7\n"
+                                + "+         style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "@@ -11 +12\n"
+                                + "+             style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "Fix for res/layout/buttonbar.xml line 14: Make borderless:\n"
+                                + "@@ -7 +7\n"
+                                + "+         style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "@@ -11 +12\n"
+                                + "+             style=\"?android:attr/buttonBarButtonStyle\"");
+    }
+
     public void testButtonStyleOldMinSdk() throws Exception {
         sTestIssue = ButtonDetector.STYLE;
         //noinspection all // Sample code
