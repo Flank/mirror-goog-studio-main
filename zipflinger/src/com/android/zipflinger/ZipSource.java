@@ -102,21 +102,23 @@ public class ZipSource {
         return selectedEntries;
     }
 
+    @NonNull
     private Source newZipSourceEntryFor(String newName, Entry entry, int compressionLevel) {
-        // No change case.
+
+        //    Source       Destination
+        //    ========================
+        //     X           NO_CHANGE   -> No changes
+        //     INFLATED    INFLATED    -> No changes
+        //     INFLATED    DEFLATED    -> Deflate
+        //     DEFLATED    INFLATED    -> Inflate
+        //     DEFLATED    DEFLATED    -> Inflate then Deflate
+
         if (compressionLevel == COMPRESSION_NO_CHANGE
-                || (compressionLevel == Deflater.NO_COMPRESSION && !entry.isCompressed())
-                || (compressionLevel != Deflater.NO_COMPRESSION && entry.isCompressed())) {
+                || (!entry.isCompressed() && compressionLevel == Deflater.NO_COMPRESSION)) {
             return new ZipSourceEntry(newName, entry, this);
         }
 
-        // The entry needs to be inflated.
-        if (compressionLevel == Deflater.NO_COMPRESSION) {
-            return new ZipSourceEntryInflater(newName, entry, this);
-        }
-
-        // The entry needs to be deflated.
-        return new ZipSourceEntryDeflater(newName, entry, this, compressionLevel);
+        return new ZipSourceEntryPipe(newName, entry, this, compressionLevel);
     }
 
     String getName() {

@@ -134,6 +134,22 @@ ZipSourceEntry is returned. The handle is only used if alignment needs to be req
 All sources can be requested to be aligned via the Source.align() method. All sources except for the
 ZipSourceEntry can be requested to be uncompressed/re-compressed.
 
+## Performance considerations when using ZipSource
+
+Zipflinger excels at moving zip entries between zip archives thanks to zero-copy transfer. However
+using zero-copy is not always possible.
+
+Best case: If no compression change is requested or if both the source and the destination are inflated,
+then zero copy transfer will be used and max speed is achieved.
+
+Ok case: If the src is inflated and the dst is deflated, zipflinger cannot zero-copy since the payload
+ must be deflated.
+
+Worse case: If both the src and the dst are deflated, there is no way for Zipflinger to know what level
+of compression was used to generate the src (this is not part of Deflate specs or Zip container format).
+In order to guarantee the deflate level, Zipflinger has not choice but to inflate the
+payload and then deflate it at the requested level, even if the compression level are identical.
+
 ## Zip64 Support
 Zipflinger has full support for zip64 archives. It is able to handle zip64EOCD (more than 65536
 entries) with zip64Locator and zip64 extra fields containing 64-bit compressed, uncompressed, and
