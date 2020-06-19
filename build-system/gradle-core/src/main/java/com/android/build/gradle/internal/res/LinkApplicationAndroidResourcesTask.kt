@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.SymbolTableBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.use
@@ -234,6 +235,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Nested
     abstract val aapt2: Aapt2Input
 
+    @get:Internal
+    abstract val symbolTableBuildService: Property<SymbolTableBuildService>
+
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
@@ -270,6 +274,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             parameters.androidJarInput.set(androidJarInput)
             parameters.aapt2.set(aapt2)
+            parameters.symbolTableBuildService.set(symbolTableBuildService)
 
             parameters.aaptOptions.set(AaptOptions(noCompress.orNull, aaptAdditionalParameters.orNull))
             parameters.applicationId.set(applicationId)
@@ -315,6 +320,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
         @get:Nested abstract val androidJarInput: Property<AndroidJarInput>
         @get:Nested abstract val aapt2: Property<Aapt2Input>
+        abstract val symbolTableBuildService: Property<SymbolTableBuildService>
         abstract val aaptOptions: Property<AaptOptions>
         abstract val applicationId: Property<String>
         abstract val buildTargetDensity: Property<String?>
@@ -536,6 +542,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
+            task.symbolTableBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
@@ -845,7 +852,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         aaptConfig = configBuilder.build(),
                         rJar = if(generateRClass) parameters.rClassOutputJar.orNull?.asFile else null,
                         logger = logger,
-                        errorFormatMode = parameters.aapt2.get().getErrorFormatMode()
+                        errorFormatMode = parameters.aapt2.get().getErrorFormatMode(),
+                        symbolTableLoader = parameters.symbolTableBuildService.get()::loadClasspath
                     )
 
                     if (LOG.isInfoEnabled) {
