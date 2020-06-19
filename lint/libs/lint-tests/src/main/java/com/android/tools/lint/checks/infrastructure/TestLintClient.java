@@ -148,6 +148,9 @@ public class TestLintClient extends LintCliClient {
     /** Used to test PSI read lock issues. */
     private boolean insideReadAction = false;
 
+    /** Records the first throwable reported as an error during this test */
+    @Nullable Throwable firstThrowable;
+
     public TestLintClient() {
         this(CLIENT_UNIT_TESTS);
     }
@@ -762,6 +765,13 @@ public class TestLintClient extends LintCliClient {
             @Nullable LintFix fix) {
         assertNotNull(location);
 
+        if (fix != null && !task.allowExceptions) {
+            Throwable throwable = LintFix.getData(fix, Throwable.class);
+            if (throwable != null && this.firstThrowable == null) {
+                this.firstThrowable = throwable;
+            }
+        }
+
         // Ensure that we're inside a read action if we might need access to PSI.
         // This is one heuristic; we could add more assertions elsewhere as needed.
         if (context instanceof JavaContext
@@ -889,6 +899,9 @@ public class TestLintClient extends LintCliClient {
     @Override
     public void log(Throwable exception, String format, Object... args) {
         if (exception != null) {
+            if (firstThrowable == null) {
+                firstThrowable = exception;
+            }
             exception.printStackTrace();
         }
         StringBuilder sb = new StringBuilder();

@@ -61,7 +61,7 @@ import javax.swing.text.PlainDocument
 class TestLintResult internal constructor(
     private val task: TestLintTask,
     private val output: String?,
-    private val exception: Exception?,
+    private val throwable: Throwable?,
     private val warnings: List<Warning>
 ) {
     private var maxLineLength: Int = 0
@@ -91,6 +91,10 @@ class TestLintResult internal constructor(
         expectedException: Class<out Exception>? = null,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
+        if (expectedException == null && !task.allowExceptions && throwable != null) {
+            throw throwable
+        }
+
         val actual = transformer.transform(describeOutput(expectedException))
         val expected = expectedText.replace('$', '＄')
 
@@ -114,11 +118,11 @@ class TestLintResult internal constructor(
         return this
     }
 
-    private fun describeOutput(expectedException: Class<out Exception>? = null): String {
+    private fun describeOutput(expectedException: Class<out Throwable>? = null): String {
         return formatOutput(this.output, expectedException)
     }
 
-    private fun formatOutput(outputOrNull: String?, expectedException: Class<out Exception>?): String {
+    private fun formatOutput(outputOrNull: String?, expectedThrowable: Class<out Throwable>?): String {
         var output = outputOrNull
         if (output == null) {
             output = ""
@@ -140,12 +144,12 @@ class TestLintResult internal constructor(
             }
         }
 
-        return if (exception != null) {
+        return if (throwable != null) {
             val writer = StringWriter()
-            if (expectedException != null && expectedException.isInstance(exception)) {
-                writer.write("${exception.message}\n")
+            if (expectedThrowable != null && expectedThrowable.isInstance(throwable)) {
+                writer.write("${throwable.message}\n")
             } else {
-                exception.printStackTrace(PrintWriter(writer))
+                throwable.printStackTrace(PrintWriter(writer))
             }
 
             if (output.isNotEmpty()) {
@@ -446,8 +450,12 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         return checkReport(
-            true, false, false, false,
-            transformer, *checkers
+            html = true,
+            includeFixes = false,
+            fullPaths = false,
+            intendedForBaseline = false,
+            transformer = transformer,
+            checkers = *checkers
         )
     }
 
@@ -477,7 +485,14 @@ class TestLintResult internal constructor(
         vararg checkers: TestResultChecker,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        return checkReport(false, false, false, false, transformer, *checkers)
+        return checkReport(
+            html = false,
+            includeFixes = false,
+            fullPaths = false,
+            intendedForBaseline = false,
+            transformer = transformer,
+            checkers = *checkers
+        )
     }
 
     /**

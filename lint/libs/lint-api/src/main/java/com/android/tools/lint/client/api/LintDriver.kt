@@ -3137,7 +3137,8 @@ class LintDriver
                 context != null -> context.report(
                     IssueRegistry.LINT_ERROR,
                     Location.create(context.file),
-                    message
+                    message,
+                    LintFix.create().map().put(Throwable::class.java, throwable).build()
                 )
                 project != null -> {
                     val projectDir = project.dir
@@ -3145,7 +3146,8 @@ class LintDriver
                     projectContext.report(
                         IssueRegistry.LINT_ERROR,
                         Location.create(project.dir),
-                        message
+                        message,
+                        LintFix.create().map().put(Throwable::class.java, throwable).build()
                     )
                 }
                 else -> driver.client.log(throwable, message)
