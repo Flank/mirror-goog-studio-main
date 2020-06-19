@@ -149,6 +149,8 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
         if (isV2SigningEnabled != that.isV2SigningEnabled) return false
         if (isV1SigningConfigured != that.isV1SigningConfigured) return false
         if (isV2SigningConfigured != that.isV2SigningConfigured) return false
+        if (enableV3Signing != that.enableV3Signing) return false
+        if (enableV4Signing != that.enableV4Signing) return false
 
         return true
     }
@@ -164,6 +166,8 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
         result = 31 * result + (if (isV2SigningEnabled) 17 else 0)
         result = 31 * result + (if (isV1SigningConfigured) 17 else 0)
         result = 31 * result + (if (isV2SigningConfigured) 17 else 0)
+        result = 31 * result + (enableV3Signing?.hashCode() ?: 0)
+        result = 31 * result + (enableV4Signing?.hashCode() ?: 0)
         return result
     }
 
@@ -178,6 +182,8 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
             .add("v2SigningEnabled", isV2SigningEnabled)
             .add("v1SigningConfigured", isV1SigningConfigured)
             .add("v2SigningConfigured", isV2SigningConfigured)
+            .add("enableV3Signing", enableV3Signing)
+            .add("enableV4Signing", enableV4Signing)
             .toString()
     }
 }
