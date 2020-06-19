@@ -16,22 +16,19 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.res.Aapt2CompileRunnable
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.services.getErrorFormatMode
-import com.android.build.gradle.internal.services.registerAaptService
+import com.android.build.gradle.internal.services.use
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -55,12 +52,15 @@ abstract class CompileSourceSetResources : IncrementalTask() {
     @get:SkipWhenEmpty
     lateinit var inputDirectories: FileCollection
         private set
+
     @get:Input
     var isPngCrunching: Boolean = false
         private set
+
     @get:Input
     var isPseudoLocalize: Boolean = false
         private set
+
     @get:Nested
     abstract val aapt2: Aapt2Input
 
@@ -91,10 +91,10 @@ abstract class CompileSourceSetResources : IncrementalTask() {
                                     val relativePath = inputDirectory.toPath().relativize(resFile)
                                     if (addedFiles.contains(relativePath)) {
                                         throw RuntimeException(
-                                                "Duplicated resource '$relativePath' found in a " +
-                                                        "source set:\n" +
-                                                        "    - ${addedFiles[relativePath]}\n" +
-                                                        "    - $resFile"
+                                            "Duplicated resource '$relativePath' found in a " +
+                                                    "source set:\n" +
+                                                    "    - ${addedFiles[relativePath]}\n" +
+                                                    "    - $resFile"
                                         )
                                     }
                                     requests.add(compileRequest(resFile.toFile()))
@@ -106,15 +106,18 @@ abstract class CompileSourceSetResources : IncrementalTask() {
                 }
             }
         }
-
-        getWorkerFacadeWithWorkers().use {
-            submit(requests, it)
+        workerExecutor.noIsolation().submit(WorkAction::class.java) { parameters ->
+            parameters.initializeFromAndroidVariantTask(this)
+            parameters.aapt2.set(aapt2)
+            parameters.compileRequests.set(requests)
         }
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
         val requests = mutableListOf<CompileResourceRequest>()
         val deletes = mutableListOf<File>()
+        val outDirectory = outputDirectory.get().asFile
+        val partialRDirectory = partialRDirectory.get().asFile
         /** Only consider at files in first level subdirectories of the input directory */
         changedInputs.forEach { file, status ->
             if (willCompile(file) && (inputDirectories.any { it == file.parentFile.parentFile })) {
@@ -123,54 +126,60 @@ abstract class CompileSourceSetResources : IncrementalTask() {
                         requests.add(compileRequest(file))
                     }
                     FileStatus.REMOVED -> {
-                        deletes.add(file)
+                        val compiledName = Aapt2RenamingConventions.compilationRename(file)
+                        deletes.add(outDirectory.resolve(compiledName))
+                        deletes.add(partialRDirectory.resolve("$compiledName-R.txt"))
                     }
                 }
             }
         }
-        getWorkerFacadeWithWorkers().use {
-            if (!deletes.isEmpty()) {
-                it.submit(
-                    Aapt2CompileDeleteRunnable::class.java,
-                    Aapt2CompileDeleteRunnable.Params(
-                        outputDirectory = outputDirectory.get().asFile,
-                        deletedInputs = deletes,
-                        partialRDirectory = partialRDirectory.get().asFile
-                    )
-                )
+        workerExecutor.noIsolation().submit(WorkAction::class.java) { parameters ->
+            parameters.initializeFromAndroidVariantTask(this)
+            parameters.aapt2.set(aapt2)
+            parameters.compileRequests.set(requests)
+            parameters.deleteRequests.set(deletes)
+        }
+    }
+
+    protected abstract class CompileParameters : ProfileAwareWorkAction.Parameters() {
+        @get:Nested
+        abstract val aapt2: Property<Aapt2Input>
+        abstract val compileRequests: ListProperty<CompileResourceRequest>
+        abstract val deleteRequests: ListProperty<File>
+    }
+
+    protected abstract class WorkAction : ProfileAwareWorkAction<CompileParameters>() {
+        override fun run() {
+            parameters.aapt2.get().use(parameters) { processor ->
+                for (request in parameters.compileRequests.get()) {
+                    processor.submit { aapt2 ->
+                        aapt2.compile(request, processor.iLogger)
+                    }
+                }
+                if (parameters.deleteRequests.isPresent) {
+                    for (toDelete in parameters.deleteRequests.get()) {
+                        Files.delete(toDelete.toPath())
+                    }
+                }
             }
-            submit(requests, it)
         }
     }
 
     private fun compileRequest(file: File, inputDirectoryName: String = file.parentFile.name) =
-            CompileResourceRequest(
-                    inputFile = file,
-                    outputDirectory = outputDirectory.get().asFile,
-                    inputDirectoryName = inputDirectoryName,
-                    isPseudoLocalize = isPseudoLocalize,
-                    isPngCrunching = isPngCrunching,
-                    partialRFile = getPartialR(file))
+        CompileResourceRequest(
+            inputFile = file,
+            outputDirectory = outputDirectory.get().asFile,
+            inputDirectoryName = inputDirectoryName,
+            isPseudoLocalize = isPseudoLocalize,
+            isPngCrunching = isPngCrunching,
+            partialRFile = getPartialR(file)
+        )
 
     private fun getPartialR(file: File) =
-        File(partialRDirectory.get().asFile, "${Aapt2RenamingConventions.compilationRename(file)}-R.txt")
-
-    private fun submit(requests: List<CompileResourceRequest>, workerFacade: WorkerExecutorFacade) {
-        if (requests.isEmpty()) {
-            return
-        }
-        val aapt2ServiceKey = aapt2.registerAaptService()
-        for (request in requests) {
-            workerFacade.submit(
-                Aapt2CompileRunnable::class.java,
-                Aapt2CompileRunnable.Params(
-                    aapt2ServiceKey,
-                    listOf(request),
-                    aapt2.getErrorFormatMode()
-                )
-            )
-        }
-    }
+        File(
+            partialRDirectory.get().asFile,
+            "${Aapt2RenamingConventions.compilationRename(file)}-R.txt"
+        )
 
     // TODO: filtering using same logic as DataSet.isIgnored.
     private fun willCompile(file: File) = !file.name.startsWith(".") && !file.isDirectory
@@ -208,7 +217,7 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             task.inputDirectories = inputDirectories
             task.isPngCrunching = creationConfig.variantScope.isCrunchPngs
             task.isPseudoLocalize =
-                    creationConfig.variantDslInfo.isPseudoLocalesEnabled
+                creationConfig.variantDslInfo.isPseudoLocalesEnabled
 
             task.dependsOn(creationConfig.taskContainer.resourceGenTask)
 
