@@ -113,7 +113,7 @@ TEST(TraceProcessorServiceImplTest, BatchQuery) {
   TraceProcessorServiceImpl svc;
 
   proto::LoadTraceRequest load_request;
-  load_request.set_trace_id(42);
+  load_request.set_trace_id(7468186607525719778L);
   load_request.set_trace_path(TESTDATA_DIR + "tank.trace");
 
   proto::LoadTraceResponse load_response;
@@ -121,7 +121,7 @@ TEST(TraceProcessorServiceImplTest, BatchQuery) {
 
   proto::QueryBatchRequest batch_request;
   auto query_params = batch_request.add_query();
-  query_params->set_trace_id(42);
+  query_params->set_trace_id(7468186607525719778L);
   auto query = query_params->mutable_process_metadata_request();
   query->set_process_id(0);  // Returns all the info
 
