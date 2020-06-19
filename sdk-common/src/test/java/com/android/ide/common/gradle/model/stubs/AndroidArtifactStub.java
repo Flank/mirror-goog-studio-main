@@ -34,7 +34,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Nullable private final TestOptions myTestOptions;
     @Nullable private final String mySigningConfigName;
     @Nullable private final Set<String> myAbiFilters;
-    @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final String myInstrumentedTestTaskName;
     @Nullable private final String myBundleTaskName;
     @Nullable private final File myPostBundleTaskModelFile;
@@ -50,7 +49,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myInstantRun = new InstantRunStub();
         mySigningConfigName = "signingConfigName";
         myAbiFilters = Sets.newHashSet("filter");
-        myNativeLibraries = Lists.newArrayList(new NativeLibraryStub());
         myAdditionalRuntimeApks = Collections.emptyList();
         myTestOptions = new TestOptionsStub();
         myInstrumentedTestTaskName = "instrumentedTestsTaskName";
@@ -85,7 +83,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
             @NonNull InstantRun run,
             @Nullable String signingConfigName,
             @Nullable Set<String> filters,
-            @Nullable Collection<NativeLibrary> libraries,
             @NonNull Collection<File> apks,
             @Nullable TestOptions testOptions,
             @Nullable String instrumentedTestTaskName,
@@ -116,7 +113,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myInstantRun = run;
         mySigningConfigName = signingConfigName;
         myAbiFilters = filters;
-        myNativeLibraries = libraries;
         myAdditionalRuntimeApks = apks;
         myTestOptions = testOptions;
         myInstrumentedTestTaskName = instrumentedTestTaskName;
@@ -229,7 +225,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Override
     @Nullable
     public Collection<NativeLibrary> getNativeLibraries() {
-        return myNativeLibraries;
+        return null;
     }
 
     @Override
@@ -335,8 +331,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 + '\''
                 + ", myAbiFilters="
                 + myAbiFilters
-                + ", myNativeLibraries="
-                + myNativeLibraries
                 + ", mySigned="
                 + mySigned
                 + ", myInstrumentedTestTaskName="

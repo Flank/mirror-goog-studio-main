@@ -51,7 +51,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @Nullable private final IdeInstantRun myInstantRun;
     @Nullable private final String mySigningConfigName;
     @NonNull private final Set<String> myAbiFilters;
-    @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final IdeTestOptions myTestOptions;
     @Nullable private final String myInstrumentedTestTaskName;
     @Nullable private final String myBundleTaskName;
@@ -74,7 +73,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myInstantRun = null;
         mySigningConfigName = null;
         myAbiFilters = Collections.emptySet();
-        myNativeLibraries = null;
         myTestOptions = null;
         myInstrumentedTestTaskName = null;
         myBundleTaskName = null;
@@ -105,7 +103,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myAbiFilters =
                 ImmutableSet.copyOf(
                         MoreObjects.firstNonNull(artifact.getAbiFilters(), ImmutableSet.of()));
-        myNativeLibraries = copy(modelCache, artifact.getNativeLibraries());
         mySigned = artifact.isSigned();
         myAdditionalRuntimeApks =
                 IdeModel.copyNewPropertyNonNull(
@@ -164,12 +161,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
             // See http://b/64305584
             return Collections.emptyList();
         }
-    }
-
-    @Nullable
-    private static Collection<NativeLibrary> copy(
-            @NonNull ModelCache modelCache, @Nullable Collection<NativeLibrary> original) {
-        return original != null ? IdeModel.copy(original, modelCache, IdeNativeLibrary::new) : null;
     }
 
     @Override
@@ -274,8 +265,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @Nullable
+    @Deprecated // This is for ndk-compile, which has long been deprecated
     public Collection<NativeLibrary> getNativeLibraries() {
-        return myNativeLibraries;
+        return null;
     }
 
     @Override
@@ -305,7 +297,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 && Objects.equals(mySigningConfigName, artifact.mySigningConfigName)
                 && Objects.equals(myAbiFilters, artifact.myAbiFilters)
                 && Objects.equals(myAdditionalRuntimeApks, artifact.myAdditionalRuntimeApks)
-                && Objects.equals(myNativeLibraries, artifact.myNativeLibraries)
                 && Objects.equals(myTestOptions, artifact.myTestOptions)
                 && Objects.equals(myInstrumentedTestTaskName, artifact.myInstrumentedTestTaskName)
                 && Objects.equals(myBundleTaskName, artifact.myBundleTaskName)
@@ -338,7 +329,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 myInstantRun,
                 mySigningConfigName,
                 myAbiFilters,
-                myNativeLibraries,
                 mySigned,
                 myAdditionalRuntimeApks,
                 myTestOptions,
@@ -371,8 +361,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + '\''
                 + ", myAbiFilters="
                 + myAbiFilters
-                + ", myNativeLibraries="
-                + myNativeLibraries
                 + ", mySigned="
                 + mySigned
                 + ", myTestOptions="
