@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.signing
 
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.hash.Hashing
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -69,28 +70,20 @@ data class SigningConfigData(
     val keyPassword: String?,
 
     /**
-     * The value from the DSL object.
+     * The resolved value of whether V1 signing is enabled, based on either (1) a value injected by
+     * the IDE or (2) the DSL's enableV1Signing value along with the minSdk and the injected target
+     * API.
      */
     @get:Input
-    val v1SigningEnabled: Boolean,
+    val enableV1Signing: Boolean,
 
     /**
-     * The value from the DSL object.
+     * The resolved value of whether V2 signing is enabled, based on either (1) a value injected by
+     * the IDE or (2) the DSL's enableV2Signing value along with the DSL's enableV3Signing value and
+     * the injected target API.
      */
     @get:Input
-    val v2SigningEnabled: Boolean,
-
-    /**
-     * Whether [v1SigningEnabled] is specified explicitly in the DSL.
-     */
-    @get:Input
-    val v1SigningConfigured: Boolean,
-
-    /**
-     * Whether [v2SigningEnabled] is specified explicitly in the DSL.
-     */
-    @get:Input
-    val v2SigningConfigured: Boolean,
+    val enableV2Signing: Boolean,
 
     /**
      * The value from the DSL object, or a default value if the DSL object's value is null or
@@ -122,7 +115,14 @@ data class SigningConfigData(
 
         private const val serialVersionUID = 1L
 
-        fun fromSigningConfig(signingConfig: SigningConfig): SigningConfigData {
+        // The lowest API with v2 signing support
+        private const val MIN_V2_SDK = 24
+
+        fun fromSigningConfig(
+            signingConfig: SigningConfig,
+            minSdk: Int,
+            targetApi: Int?
+        ): SigningConfigData {
             return SigningConfigData(
                 name = signingConfig.name,
                 storeType = signingConfig.storeType,
@@ -130,13 +130,53 @@ data class SigningConfigData(
                 storePassword = signingConfig.storePassword,
                 keyAlias = signingConfig.keyAlias,
                 keyPassword = signingConfig.keyPassword,
-                v1SigningEnabled = signingConfig.isV1SigningEnabled,
-                v2SigningEnabled = signingConfig.isV2SigningEnabled,
-                v1SigningConfigured = signingConfig.isV1SigningConfigured,
-                v2SigningConfigured = signingConfig.isV2SigningConfigured,
-                enableV3Signing = signingConfig.enableV3Signing ?: false,
-                enableV4Signing = signingConfig.enableV4Signing ?: false
+                enableV1Signing = enableV1Signing(signingConfig, minSdk, targetApi),
+                enableV2Signing = enableV2Signing(signingConfig, targetApi),
+                enableV3Signing = enableV3Signing(signingConfig),
+                enableV4Signing = enableV4Signing(signingConfig)
             )
         }
+
+        /**
+         * This method returns whether to sign with v1 signature.
+         *
+         * @param signingConfig the DSL signingConfig object
+         * @param minSdk the minimum SDK
+         * @param targetApi optional injected target Api
+         * @return if we actually sign with v1 signature
+         */
+        @VisibleForTesting
+        fun enableV1Signing(
+            signingConfig: SigningConfig,
+            minSdk: Int,
+            targetApi: Int?
+        ): Boolean {
+            // If signingConfig.enableV1Signing is null, default to true if minSdk and targetApi
+            // imply that v1 signature is needed.
+            return signingConfig.enableV1Signing
+                    ?: (minSdk < MIN_V2_SDK && (targetApi == null || targetApi < MIN_V2_SDK))
+        }
+
+        /**
+         * This method returns whether to sign with v2 signature.
+         *
+         * @param signingConfig the DSL signingConfig object
+         * @param targetApi optional injected target Api
+         * @return if we actually sign with v2 signature
+         */
+        @VisibleForTesting
+        fun enableV2Signing(signingConfig: SigningConfig, targetApi: Int?): Boolean {
+            // If signingConfig.enableV2Signing is null, default to true if there's no v3 signature
+            // and targetApi is high enough.
+            return signingConfig.enableV2Signing
+                ?: (!enableV3Signing(signingConfig)
+                        && (targetApi == null || targetApi >= MIN_V2_SDK))
+        }
+
+        private fun enableV3Signing(signingConfig: SigningConfig): Boolean =
+            signingConfig.enableV3Signing ?: false
+
+        private fun enableV4Signing(signingConfig: SigningConfig): Boolean =
+            signingConfig.enableV4Signing ?: false
     }
 }

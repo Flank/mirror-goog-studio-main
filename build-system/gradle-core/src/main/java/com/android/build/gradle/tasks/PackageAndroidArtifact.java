@@ -450,7 +450,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             parameter.getIsDebuggableBuild().set(getDebugBuild().get());
             parameter.getIsJniDebuggableBuild().set(getJniDebugBuild());
-            parameter.getTargetApi().set(getTargetApi());
             parameter.getDependencyDataFile().set(getDependencyDataFile());
             parameter
                     .getPackagerMode()
@@ -573,9 +572,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public abstract Property<Boolean> getIsJniDebuggableBuild();
 
-        @Optional
-        public abstract Property<Integer> getTargetApi();
-
         @NonNull
         public abstract Property<IncrementalPackagerBuilder.BuildType> getPackagerMode();
 
@@ -685,7 +681,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withSigning(
                                 params.getSigningConfig().get().resolve(),
                                 params.getMinSdkVersion().get(),
-                                params.getTargetApi().getOrNull(),
                                 dependencyData)
                         .withCreatedBy(params.getCreatedBy().get())
                         // TODO: allow extra metadata to be saved in the split scope to avoid

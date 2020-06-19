@@ -56,7 +56,12 @@ class SigningConfigWriterTaskTest {
         val signingConfig = SigningConfig("signingConfig_name")
         signingConfig.storePassword = "foobar"
         signingConfig.isV1SigningEnabled = true
-        task.signingConfigData = SigningConfigData.fromSigningConfig(signingConfig)
+        task.signingConfigData =
+            SigningConfigData.fromSigningConfig(
+                signingConfig = signingConfig,
+                minSdk = 1,
+                targetApi = null
+            )
 
         task.doTaskAction()
         val files = outputDirectory.listFiles()

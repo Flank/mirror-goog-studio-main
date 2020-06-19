@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -95,7 +96,13 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
             task.signingConfigData = creationConfig.variantDslInfo.signingConfig?.let {
                 task.storeFilePath = it.storeFile?.path
-                SigningConfigData.fromSigningConfig(it)
+                SigningConfigData.fromSigningConfig(
+                    it,
+                    creationConfig.minSdkVersion.apiLevel,
+                    creationConfig.globalScope
+                        .projectOptions
+                        .get(IntegerOption.IDE_TARGET_DEVICE_API)
+                )
             }
         }
     }

@@ -30,8 +30,6 @@ public class SigningConfigTest {
                     // Manually call getters that are not called by _initWith:
                     original.getName();
                     original.isSigningReady();
-                    original.isV1SigningConfigured();
-                    original.isV2SigningConfigured();
 
                     new SigningConfig("copy").initWith(original);
                 });

@@ -58,10 +58,8 @@ class SigningConfigUtilsTest {
             storePassword = "sampleStorePassword",
             keyAlias = "sampleKeyAlias",
             keyPassword = "sampleKeyPassword",
-            v1SigningEnabled = false,
-            v2SigningEnabled = true,
-            v1SigningConfigured = false,
-            v2SigningConfigured = false,
+            enableV1Signing = false,
+            enableV2Signing = true,
             enableV3Signing = false,
             enableV4Signing = false
         )
@@ -84,10 +82,8 @@ class SigningConfigUtilsTest {
             storePassword = "sampleStorePassword",
             keyAlias = "sampleKeyAlias",
             keyPassword = "sampleKeyPassword",
-            v1SigningEnabled = false,
-            v2SigningEnabled = true,
-            v1SigningConfigured = false,
-            v2SigningConfigured = false,
+            enableV1Signing = false,
+            enableV2Signing = true,
             enableV3Signing = false,
             enableV4Signing = false
         )

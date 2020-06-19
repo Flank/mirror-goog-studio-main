@@ -43,9 +43,11 @@ interface SigningConfig {
     val storeType: String?
 
     /** Signing using JAR Signature Scheme (aka v1 signing) is enabled. */
+    @Deprecated("This property is deprecated")
     val isV1SigningEnabled: Boolean
 
     /** Signing using APK Signature Scheme v2 (aka v2 signing) is enabled. */
+    @Deprecated("This property is deprecated")
     val isV2SigningEnabled: Boolean
 
     /**
