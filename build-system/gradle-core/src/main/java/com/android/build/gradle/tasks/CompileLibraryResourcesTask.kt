@@ -18,43 +18,32 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationService
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
-import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.services.getErrorFormatMode
-import com.android.build.gradle.internal.services.registerAaptService
+import com.android.build.gradle.internal.services.AsyncResourceProcessor
+import com.android.build.gradle.internal.services.use
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.SyncOptions
+import com.android.builder.files.SerializableInputChanges
+import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
+import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileType
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.work.ChangeType
-import org.gradle.work.FileChange
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 @CacheableTask
 abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
@@ -75,129 +64,114 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
-    @get:Input
-    var useJvmResourceCompiler: Boolean = false
-        private set
-
-    @get:Internal
-    abstract val aapt2WorkersBuildService: Property<Aapt2WorkersBuildService>
-
     @get:Nested
     abstract val aapt2: Aapt2Input
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        val aapt2ServiceKey = aapt2.registerAaptService()
-
-        getWorkerFacadeWithWorkers().use { workers ->
-            val requests = ImmutableList.builder<CompileResourceRequest>()
-
-            if (inputChanges.isIncremental) {
-                doIncrementalTaskAction(
-                    inputChanges.getFileChanges(mergedLibraryResourcesDir),
-                    requests
-                )
-            } else {
-                // do full task action
-                FileUtils.deleteDirectoryContents(outputDir.asFile.get())
-
-                // filter out the values files as they have to go through the resources merging
-                // pipeline.
-                mergedLibraryResourcesDir.asFile.get().listFiles()!!
-                    .filter { it.isDirectory && !it.name.startsWith(FD_RES_VALUES) }
-                    .forEach { dir ->
-                        dir.listFiles()!!.forEach { file ->
-                            submitFileToBeCompiled(file, requests)
-                        }
+        workerExecutor.noIsolation()
+            .submit(CompileLibraryResourcesAction::class.java) { parameters ->
+                parameters.initializeFromAndroidVariantTask(this)
+                parameters.outputDirectory.set(outputDir)
+                parameters.aapt2.set(aapt2)
+                parameters.incremental.set(inputChanges.isIncremental)
+                parameters.incrementalChanges.set(
+                    if (inputChanges.isIncremental) {
+                        inputChanges.getChangesInSerializableForm(mergedLibraryResourcesDir)
+                    } else {
+                        null
                     }
-            }
-
-            workers.submit(
-                CompileLibraryResourcesRunnable::class.java,
-                CompileLibraryResourcesParams(
-                    projectName,
-                    path,
-                    aapt2ServiceKey,
-                    aapt2WorkersBuildService.get().getWorkersServiceKey(),
-                    aapt2.getErrorFormatMode(),
-                    requests.build(),
-                    useJvmResourceCompiler
                 )
-            )
-        }
-    }
-
-    private fun submitFileToBeCompiled(
-        file: File,
-        requests: ImmutableList.Builder<CompileResourceRequest>
-    ) {
-        requests.add(
-            CompileResourceRequest(
-                file,
-                outputDir.asFile.get(),
-                isPseudoLocalize = pseudoLocalesEnabled,
-                isPngCrunching = crunchPng
-            )
-        )
-    }
-
-    private fun handleModifiedFile(
-        file: File,
-        changeType: ChangeType,
-        requests: ImmutableList.Builder<CompileResourceRequest>
-    ) {
-        if (changeType == ChangeType.MODIFIED || changeType == ChangeType.REMOVED) {
-            FileUtils.deleteIfExists(
-                File(
-                    outputDir.asFile.get(),
-                    Aapt2RenamingConventions.compilationRename(file)
-                )
-            )
-        }
-        if (changeType == ChangeType.ADDED || changeType == ChangeType.MODIFIED) {
-            submitFileToBeCompiled(file, requests)
-        }
-    }
-
-    private fun doIncrementalTaskAction(
-        fileChanges: Iterable<FileChange>,
-        requests: ImmutableList.Builder<CompileResourceRequest>
-    ) {
-        fileChanges.filter {
-            it.fileType == FileType.FILE &&
-                    !it.file.parentFile.name.startsWith(FD_RES_VALUES)
-        }
-            .forEach { fileChange ->
-                handleModifiedFile(
-                    fileChange.file,
-                    fileChange.changeType,
-                    requests
-                )
+                parameters.mergedLibraryResourceDirectory.set(mergedLibraryResourcesDir)
+                parameters.pseudoLocalize.set(pseudoLocalesEnabled)
+                parameters.crunchPng.set(crunchPng)
             }
     }
 
-    private data class CompileLibraryResourcesParams(
-        val projectName: String,
-        val owner: String,
-        val aapt2ServiceKey: Aapt2DaemonServiceKey,
-        val aapt2WorkersBuildServiceKey: WorkerActionServiceRegistry.ServiceKey<Aapt2WorkersBuildService>,
-        val errorFormatMode: SyncOptions.ErrorFormatMode,
-        val requests: List<CompileResourceRequest>,
-        val useJvmResourceCompiler: Boolean
-    ) : Serializable
+    protected abstract class CompileLibraryResourcesParams : ProfileAwareWorkAction.Parameters() {
+        abstract val outputDirectory: DirectoryProperty
 
-    private class CompileLibraryResourcesRunnable
-    @Inject constructor(private val params: CompileLibraryResourcesParams) : Runnable {
+        @get:Nested
+        abstract val aapt2: Property<Aapt2Input>
+        abstract val incremental: Property<Boolean>
+        abstract val incrementalChanges: Property<SerializableInputChanges>
+        abstract val mergedLibraryResourceDirectory: DirectoryProperty
+        abstract val pseudoLocalize: Property<Boolean>
+        abstract val crunchPng: Property<Boolean>
+    }
+
+    protected abstract class CompileLibraryResourcesAction :
+        ProfileAwareWorkAction<CompileLibraryResourcesParams>() {
         override fun run() {
-            SharedExecutorResourceCompilationService(
-                params.projectName,
-                params.owner,
-                params.aapt2WorkersBuildServiceKey,
-                params.aapt2ServiceKey,
-                params.errorFormatMode,
-                params.useJvmResourceCompiler
-            ).use {
-                it.submitCompile(params.requests)
+
+            parameters.aapt2.get().use(parameters) { processor ->
+                if (parameters.incremental.get()) {
+                    handleIncrementalChanges(parameters.incrementalChanges.get(), processor)
+                } else {
+                    handleFullRun(processor)
+                }
             }
+        }
+
+        private fun handleFullRun(processor: AsyncResourceProcessor<Aapt2>) {
+            FileUtils.deleteDirectoryContents(parameters.outputDirectory.asFile.get())
+            // filter out the values files as they have to go through the resources merging
+            // pipeline.
+            parameters.mergedLibraryResourceDirectory.asFile.get().listFiles()!!
+                .filter { it.isDirectory && !it.name.startsWith(FD_RES_VALUES) }
+                .forEach { dir ->
+                    dir.listFiles()!!.forEach { file ->
+                        submitFileToBeCompiled(file, processor)
+                    }
+                }
+        }
+
+        private fun submitFileToBeCompiled(
+            file: File,
+            processor: AsyncResourceProcessor<Aapt2>
+        ) {
+            val request = CompileResourceRequest(
+                file,
+                parameters.outputDirectory.asFile.get(),
+                isPseudoLocalize = parameters.pseudoLocalize.get(),
+                isPngCrunching = parameters.crunchPng.get()
+            )
+            processor.submit { aapt2 ->
+                aapt2.compile(request, processor.iLogger)
+            }
+        }
+
+        private fun handleModifiedFile(
+            file: File,
+            changeType: FileStatus,
+            processor: AsyncResourceProcessor<Aapt2>
+        ) {
+            if (changeType == FileStatus.CHANGED || changeType == FileStatus.REMOVED) {
+                FileUtils.deleteIfExists(
+                    File(
+                        parameters.outputDirectory.asFile.get(),
+                        Aapt2RenamingConventions.compilationRename(file)
+                    )
+                )
+            }
+            if (changeType == FileStatus.NEW || changeType == FileStatus.CHANGED) {
+                submitFileToBeCompiled(file, processor)
+            }
+        }
+
+        private fun handleIncrementalChanges(
+            fileChanges: SerializableInputChanges,
+            processor: AsyncResourceProcessor<Aapt2>
+        ) {
+            fileChanges.changes.filter {
+                !it.file.parentFile.name.startsWith(FD_RES_VALUES)
+            }
+                .forEach { fileChange ->
+                    handleModifiedFile(
+                        fileChange.file,
+                        fileChange.fileStatus,
+                        processor
+                    )
+                }
         }
     }
 
@@ -238,11 +212,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             task.crunchPng = creationConfig.variantScope.isCrunchPngs
 
-            task.useJvmResourceCompiler =
-              creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
-            task.aapt2WorkersBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
             creationConfig.services.initializeAapt2Input(task.aapt2)
 
         }
