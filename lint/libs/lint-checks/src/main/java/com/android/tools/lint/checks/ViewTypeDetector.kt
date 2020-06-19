@@ -74,7 +74,6 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.util.ArrayList
-import java.util.Arrays
 import java.util.EnumSet
 import java.util.HashMap
 
@@ -92,7 +91,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
     }
 
     override fun getApplicableAttributes(): Collection<String>? {
-        return Arrays.asList(ATTR_ID, ATTR_TAG)
+        return listOf(ATTR_ID, ATTR_TAG)
     }
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
@@ -153,7 +152,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
     // ---- Implements SourceCodeScanner ----
 
     override fun getApplicableMethodNames(): List<String>? {
-        return Arrays.asList(
+        return listOf(
             FIND_VIEW_BY_ID,
             REQUIRE_VIEW_BY_ID,
             FIND_FRAGMENT_BY_TAG
@@ -257,11 +256,15 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                 // We can't search for tags in the resource repository incrementally
                 if (id != null && client.supportsProjectResources()) {
                     val resources =
-                        client.getResourceRepository(context.mainProject, true, false) ?: return
+                        client.getResourceRepository(
+                            context.mainProject,
+                            includeModuleDependencies = true,
+                            includeLibraries = false
+                        ) ?: return
 
                     val items =
                         resources.getResources(ResourceNamespace.TODO(), ResourceType.ID, id)
-                    if (!items.isEmpty()) {
+                    if (items.isNotEmpty()) {
                         val compatible = HashSet<String>()
                         for (item in items) {
                             val tags = getViewTags(context, item)
@@ -269,7 +272,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                                 compatible.addAll(tags)
                             }
                         }
-                        if (!compatible.isEmpty()) {
+                        if (compatible.isNotEmpty()) {
                             val layoutTypes = ArrayList(compatible)
                             checkCompatible(
                                 context,
@@ -285,7 +288,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                         }
                     }
                 } else {
-                    val types = idToViewTag[if (id != null) id else tag]
+                    val types = idToViewTag[id ?: tag]
                     if (types is String) {
                         checkCompatible(
                             context,
@@ -329,7 +332,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             return
         }
 
-        surroundingCall.uastParent as? UQualifiedReferenceExpression ?: return
+        if (surroundingCall.uastParent !is UQualifiedReferenceExpression) return
 
         val valueArguments = surroundingCall.valueArguments
         var parameterIndex = -1
@@ -352,7 +355,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         }
 
         val parameterType = parameters[parameterIndex].type as? PsiClassType ?: return
-        parameterType.resolve() as? PsiTypeParameter ?: return
+        if (parameterType.resolve() !is PsiTypeParameter) return
         val erasure = TypeConversionUtil.erasure(parameterType)
         if (erasure == null || erasure.canonicalText == CLASS_VIEW) {
             return
@@ -421,7 +424,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             val event = parser.next()
             if (event == XmlPullParser.START_TAG) {
                 var id: String? = parser.getAttributeValue(ANDROID_URI, ATTR_ID)
-                if (id != null && !id.isEmpty()) {
+                if (id != null && id.isNotEmpty()) {
                     id = stripIdPrefix(id)
                     var tag = parser.name ?: continue
                     if (tag == VIEW_TAG || tag == VIEW_FRAGMENT) {
@@ -527,11 +530,10 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         val incompatibleTag = castTypeClass.substring(castTypeClass.lastIndexOf('.') + 1)
 
-        val message: String
-        val location: Location
         val type = if (findView) "layout" else "fragment"
         val verb = if (findView) "was" else "referenced"
         if (node !is UBinaryExpressionWithType) {
+            val location: Location
             if (node is UVariable && node.typeReference != null) {
                 location = context.getLocation(node.typeReference!!)
                 location.secondary =
@@ -539,17 +541,41 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             } else {
                 location = context.getLocation(node)
             }
-            message =
+            val message =
                 "Unexpected implicit cast to `$incompatibleTag`: $type tag $verb `$displayTag`"
+            context.report(WRONG_VIEW_CAST, node, location, message)
         } else {
-            location = context.getLocation(node)
+            val location = context.getLocation(node)
             if (sampleLayout != null) {
                 location.secondary =
                     createSecondary(context, displayTag, resourceReference, sampleLayout)
             }
-            message = "Unexpected cast to `$incompatibleTag`: $type tag $verb `$displayTag`"
+            val message = "Unexpected cast to `$incompatibleTag`: $type tag $verb `$displayTag`"
+            val fix = createCastFix(node, displayTag, context)
+            context.report(WRONG_VIEW_CAST, node, location, message, fix)
         }
-        context.report(WRONG_VIEW_CAST, node, location, message)
+    }
+
+    private fun createCastFix(
+        node: UBinaryExpressionWithType,
+        displayTag: String,
+        context: JavaContext
+    ): LintFix? {
+        val typeReference = node.typeReference ?: return null
+        val className =
+            if (displayTag.contains('.'))
+                displayTag.replace('$', '.')
+            else
+                findViewForTag(displayTag, context)?.qualifiedName ?: return null
+        return fix()
+            .replace()
+            .all()
+            .with(className)
+            .name("Cast to $displayTag")
+            .range(context.getLocation(typeReference))
+            .reformat(true)
+            .shortenNames()
+            .build()
     }
 
     private fun createSecondary(
@@ -577,6 +603,15 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         castClass: PsiClass,
         tag: String
     ): Boolean {
+        return findViewForTag(tag, context)?.isInheritor(castClass, true)
+            // If can't find class, just assume it's compatible since we don't want false positives
+            ?: true
+    }
+
+    private fun findViewForTag(
+        tag: String,
+        context: JavaContext
+    ): PsiClass? {
         var cls: PsiClass? = null
         if (tag.indexOf('.') == -1) {
             for (prefix in arrayOf(
@@ -593,12 +628,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         } else {
             cls = context.evaluator.findClass(tag)
         }
-
-        return if (cls != null) {
-            cls.isInheritor(castClass, true)
-        } else true
-
-        // Didn't find class - just assume it's compatible since we don't want false positives
+        return cls
     }
 
     companion object {
