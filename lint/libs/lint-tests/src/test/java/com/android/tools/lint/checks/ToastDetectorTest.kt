@@ -22,7 +22,8 @@ class ToastDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = ToastDetector()
 
     fun testJava() {
-        val expected = """
+        val expected =
+            """
         src/test/pkg/ToastTest.java:32: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG);
                 ~~~~~~~~~~~~~~
@@ -35,7 +36,10 @@ class ToastDetectorTest : AbstractCheckTest() {
         src/test/pkg/ToastTest.java:39: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG);
                 ~~~~~~~~~~~~~~
-        0 errors, 4 warnings
+        src/test/pkg/ToastTest.java:54: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+                Toast toast2 = Toast.makeText(context, "foo", Toast.LENGTH_LONG); // not shown
+                               ~~~~~~~~~~~~~~
+        0 errors, 5 warnings
         """
 
         lint().files(
@@ -92,6 +96,12 @@ class ToastDetectorTest : AbstractCheckTest() {
                         Toast toast = Toast.makeText(this, "MyToast", Toast.LENGTH_LONG);
                     }
 
+                    private void showToastWrongInstance(Context context) {
+                        Toast toast1 = Toast.makeText(context, "foo", Toast.LENGTH_LONG); // OK
+                        Toast toast2 = Toast.makeText(context, "foo", Toast.LENGTH_LONG); // not shown
+                        toast1.show();
+                    }
+
                     public static final class R {
                         public static final class string {
                             public static final int app_name = 0x7f0a0000;
@@ -99,11 +109,12 @@ class ToastDetectorTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented()
-        ).run().expect(expected.trimIndent())
+        ).run().expect(expected)
     }
 
     fun testKotlin() {
-        val expected = """
+        val expected =
+            """
         src/test/pkg/ToastTest.kt:34: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG)
                 ~~~~~~~~~~~~~~
@@ -181,6 +192,73 @@ class ToastDetectorTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented()
-        ).run().expect(expected.trimIndent())
+        ).run().expect(expected)
     }
+
+    fun testSnackbar() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.view.View
+                import com.google.android.material.snackbar.Snackbar
+
+                class Test {
+                    fun test1(parent: View) {
+                        Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE) // ERROR
+                    }
+                    fun test2(parent: View) {
+                        val sb = Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE) // OK
+                        sb.show()
+                    }
+                    fun test3(parent: View, sb2: Snackbar) {
+                        val sb = Snackbar.make(parent, "Message", 500) // ERROR
+                        sb2.show()
+                    }
+                }"""
+            ).indented(),
+            *snackbarStubs
+        ).run().expect(
+            """
+            src/test/pkg/Test.kt:8: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                    Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE) // ERROR
+                    ~~~~~~~~~~~~~
+            src/test/pkg/Test.kt:15: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                    val sb = Snackbar.make(parent, "Message", 500) // ERROR
+                             ~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    val snackbarStubs = arrayOf(
+        java(
+            """
+            package com.google.android.material.snackbar;
+            public abstract class BaseTransientBottomBar {
+              public void show() { }
+            }
+            """
+        ).indented(),
+        java(
+            """
+            package com.google.android.material.snackbar;
+            import android.view.View;
+            public class Snackbar extends BaseTransientBottomBar {
+                public void show() { }
+                public static final int LENGTH_INDEFINITE = -2;
+                public static final int LENGTH_SHORT = -1;
+                public static final int LENGTH_LONG = 0;
+
+                public static Snackbar make(View view, CharSequence text, int duration) {
+                    return null;
+                }
+                public static Snackbar make(View view, int resId, int duration) {
+                   return null;
+                }
+            }
+            """
+        )
+    )
 }

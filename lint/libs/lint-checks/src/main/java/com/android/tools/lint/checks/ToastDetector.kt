@@ -25,20 +25,18 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
 import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.isUastChildOf
-import org.jetbrains.uast.visitor.AbstractUastVisitor
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Detector looking for Toast.makeText() without a corresponding show() call */
 class ToastDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String>? {
-        return listOf("makeText")
+        return listOf("makeText", "make")
     }
 
     override fun visitMethodCall(
@@ -46,89 +44,84 @@ class ToastDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         method: PsiMethod
     ) {
-        if (!context.evaluator.isMemberInClass(method, "android.widget.Toast")) {
-            return
-        }
+        val containingClass = method.containingClass ?: return
+        val className = containingClass.qualifiedName
+        val name = method.name
+        if (className == "android.widget.Toast" && name == "makeText") {
+            // Make sure you pass the right kind of duration: it's not a delay, it's
+            //  LENGTH_SHORT or LENGTH_LONG
+            // (see http://code.google.com/p/android/issues/detail?id=3655)
+            // (Note that this *is* allowed for Snackbars)
+            val args = node.valueArguments
+            if (args.size == 3) {
+                val duration = args[2]
+                if (duration is ULiteralExpression) {
+                    context.report(
+                        ISSUE,
+                        duration,
+                        context.getLocation(duration),
+                        "Expected duration `Toast.LENGTH_SHORT` or `Toast.LENGTH_LONG`, a custom " +
+                            "duration value is not supported"
+                    )
+                }
+            }
 
-        // Make sure you pass the right kind of duration: it's not a delay, it's
-        //  LENGTH_SHORT or LENGTH_LONG
-        // (see http://code.google.com/p/android/issues/detail?id=3655)
-        val args = node.valueArguments
-        if (args.size == 3) {
-            val duration = args[2]
-            if (duration is ULiteralExpression) {
-                context.report(
-                    ISSUE,
-                    duration,
-                    context.getLocation(duration),
-                    "Expected duration `Toast.LENGTH_SHORT` or `Toast.LENGTH_LONG`, a custom " +
-                        "duration value is not supported"
+            checkShown(context, node, "Toast")
+        } else if (
+            name == "make" &&
+            (
+                className == "com.google.android.material.snackbar.Snackbar" ||
+                    className == "android.support.design.widget.Snackbar"
                 )
+        ) {
+            checkShown(context, node, "Snackbar")
+        }
+    }
+
+    private fun checkShown(
+        context: JavaContext,
+        node: UCallExpression,
+        toastName: String
+    ) {
+        val method = node.getParentOfType<UMethod>(UMethod::class.java) ?: return
+        val shown = AtomicBoolean(false)
+        val escapes = AtomicBoolean(false)
+        val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
+            override fun receiver(call: UCallExpression) {
+                if (isShowCall(call)) {
+                    shown.set(true)
+                }
+                super.receiver(call)
+            }
+
+            private fun isShowCall(call: UCallExpression): Boolean {
+                val methodName = getMethodName(call)
+                if (methodName == "show") {
+                    return true
+                }
+                return false
+            }
+
+            override fun field(field: UElement) {
+                escapes.set(true)
+            }
+
+            override fun argument(call: UCallExpression, reference: UElement) {
+                escapes.set(true)
+            }
+
+            override fun returns(expression: UReturnExpression) {
+                escapes.set(true)
             }
         }
-        val surroundingDeclaration = node.getParentOfType(
-            true,
-            UMethod::class.java,
-            UBlockExpression::class.java,
-            ULambdaExpression::class.java
-        )
-            ?: return
-
-        val parent = node.uastParent
-        if (parent is UMethod ||
-            parent is UReferenceExpression &&
-            parent.uastParent is UMethod
-        ) {
-            // Kotlin expression body
-            return
-        }
-
-        val finder = ShowFinder(node)
-        surroundingDeclaration.accept(finder)
-        if (!finder.isShowCalled) {
+        method.accept(visitor)
+        if (!shown.get() && !escapes.get()) {
             context.report(
                 ISSUE,
                 node,
                 context.getCallLocation(node, includeReceiver = true, includeArguments = false),
-                "Toast created but not shown: did you forget to call `show()` ?"
+                "$toastName created but not shown: did you forget to call `show()` ?"
             )
-        }
-    }
-
-    private class ShowFinder(
-        /** The target makeText call  */
-        private val target: UCallExpression
-    ) : AbstractUastVisitor() {
-
-        /** Whether we've found the show method  */
-        var isShowCalled = false
-            private set
-
-        /** Whether we've seen the target makeText node yet  */
-        private var seenTarget = false
-        override fun visitCallExpression(node: UCallExpression): Boolean {
-            if (node === target ||
-                node.sourcePsi != null && node.sourcePsi === target.psi
-            ) {
-                seenTarget = true
-            } else {
-                if ((seenTarget || target == node.receiver) &&
-                    "show" == getMethodName(node)
-                ) {
-                    // TODO: Do more flow analysis to see whether we're really calling show
-                    // on the right type of object?
-                    isShowCalled = true
-                }
-            }
-            return super.visitCallExpression(node)
-        }
-
-        override fun visitReturnExpression(node: UReturnExpression): Boolean {
-            if (target.isUastChildOf(node.returnExpression, true)) {
-                // If you just do "return Toast.makeText(...) don't warn
-                isShowCalled = true
-            }
-            return super.visitReturnExpression(node)
         }
     }
 
