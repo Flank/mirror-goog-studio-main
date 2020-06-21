@@ -33,6 +33,7 @@ import java.io.FileOutputStream
 import java.nio.charset.Charset
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
+import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
 class PerModuleBundleTaskTest {
@@ -114,6 +115,39 @@ class PerModuleBundleTaskTest {
 
         // verify classes.dex has not been renamed.
         verifyOutputZip(task.outputDir.get().asFileTree.singleFile, 3)
+    }
+
+    @Test
+    fun testExcludeJarManifest() {
+        val metadata = "META-INF/MANIFEST.MF"
+        val dexFolder = testFolder.newFolder("0")
+        task.dexFiles.from(
+            setOf(
+                createDex(dexFolder, "classes.dex"),
+                createDex(dexFolder,metadata)
+            )
+        )
+        val resFile = testFolder.newFile("res2").also {
+            JarOutputStream(BufferedOutputStream(FileOutputStream(it))).use {
+                it.putNextEntry(JarEntry(metadata))
+                it.closeEntry()
+
+                it.putNextEntry(JarEntry("bar"))
+                it.writer(Charsets.UTF_8).append("bar")
+                it.closeEntry()
+
+            }
+        }
+        task.resFiles.set(resFile)
+        task.doTaskAction()
+        val zipFile = task.outputDir.get().asFileTree.singleFile
+        val pattern: Pattern = Pattern.compile("MANIFEST.MF$")
+        Zip(zipFile).use {
+            assertThat(it).contains("dex/classes.dex")
+            assertThat(it).contains("bar")
+            assertThat(it.entries.filter { file -> pattern.matcher(file.fileName.toString()).matches() }).hasSize(0)
+        }
+
     }
 
     private fun verifyOutputZip(zipFile: File, expectedNumberOfDexFiles: Int) {

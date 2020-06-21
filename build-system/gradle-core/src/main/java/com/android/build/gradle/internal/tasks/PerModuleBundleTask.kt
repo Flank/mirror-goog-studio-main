@@ -54,6 +54,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
@@ -126,6 +127,12 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
         val abiFilter = filters?.let { NativeLibraryAbiPredicate(it, false) }
 
+        // https://b.corp.google.com/issues/140219742
+        val excludeJarManifest =
+            Predicate { path: String ->
+                !path.toUpperCase(Locale.US).endsWith("MANIFEST.MF")
+            }
+
         jarCreator.use {
             it.addDirectory(
                 assetsFiles.get().asFile.toPath(),
@@ -134,16 +141,16 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 Relocator(FD_ASSETS)
             )
 
-            it.addJar(resFiles.get().asFile.toPath(), null, ResRelocator())
+            it.addJar(resFiles.get().asFile.toPath(), excludeJarManifest, ResRelocator())
 
             // dex files
             val dexFilesSet = if (hasFeatureDexFiles()) featureDexFiles.files else dexFiles.files
             if (dexFilesSet.size == 1) {
                 // Don't rename if there is only one input folder
                 // as this might be the legacy multidex case.
-                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, Relocator(FD_DEX), null)
+                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, Relocator(FD_DEX), excludeJarManifest)
             } else {
-                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, DexRelocator(FD_DEX), null)
+                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, DexRelocator(FD_DEX), excludeJarManifest)
             }
 
             val javaResFilesSet = if (hasFeatureDexFiles()) setOf<File>() else javaResFiles.files
