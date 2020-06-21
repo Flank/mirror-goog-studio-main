@@ -195,6 +195,7 @@ TEST_DATA = [
 AUTOMATIC_TEST_DATA = TEST_DATA + [
     #keep sorted
     "//prebuilts/studio/sdk:cmake",
+    "//prebuilts/studio/sdk:ndk",
     "//prebuilts/studio/sdk:ndk-bundle",
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
 ]

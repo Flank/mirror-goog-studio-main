@@ -110,7 +110,6 @@ public class CheckAll {
 
                     // NDK + Renderscript is currently broken, see http://b.android.com/191791.
                     "ndkRsHelloCompute",
-                    "renderscriptNdk",
 
                     // Don't work with the version of the NDK that's in ndk-bundle. Enable after
                     // moving all test projects off ndk-bundle and onto ndk.
