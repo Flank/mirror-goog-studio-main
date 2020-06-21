@@ -162,71 +162,71 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
     }
 
-    private fun isExpressionValueUnused(element: UElement): Boolean {
-        var prev = element.getParentOfType<UExpression>(
-            UExpression::class.java, false
-        ) ?: return true
+    companion object {
+        fun isExpressionValueUnused(element: UElement): Boolean {
+            var prev = element.getParentOfType<UExpression>(
+                UExpression::class.java, false
+            ) ?: return true
 
-        var curr = prev.uastParent ?: return true
-        while (curr is UQualifiedReferenceExpression && curr.selector === prev) {
-            prev = curr
-            curr = curr.uastParent ?: return true
-        }
+            var curr = prev.uastParent ?: return true
+            while (curr is UQualifiedReferenceExpression && curr.selector === prev) {
+                prev = curr
+                curr = curr.uastParent ?: return true
+            }
 
-        @Suppress("RedundantIf")
-        if (curr is UBlockExpression) {
-            if (curr.uastParent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
-                // Lambda block: for now assume used (e.g. parameter
-                // in call. Later consider recursing here to
-                // detect if the lambda itself is unused.
+            @Suppress("RedundantIf")
+            if (curr is UBlockExpression) {
+                if (curr.uastParent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
+                    // Lambda block: for now assume used (e.g. parameter
+                    // in call. Later consider recursing here to
+                    // detect if the lambda itself is unused.
+                    return false
+                }
+
+                // In Java, it's apparent when an expression is unused:
+                // the parent is a block expression. However, in Kotlin it's
+                // much trickier: values can flow through blocks and up through
+                // if statements, try statements.
+                //
+                // In Kotlin, we consider an expression unused if its parent
+                // is not a block, OR, the expression is not the last statement
+                // in the block, OR, recursively the parent expression is not
+                // used (e.g. you're in an if, but that if statement is itself
+                // not doing anything with the value.)
+                val block = curr
+                val expression = prev
+                val index = block.expressions.indexOf(expression)
+                if (index == -1) {
+                    return true
+                }
+
+                if (index < block.expressions.size - 1) {
+                    // Not last child
+                    return true
+                }
+
+                if (isJava(curr.sourcePsi)) {
+                    // In Java there's no implicit passing to the parent
+                    return true
+                }
+
+                // It's the last child: see if the parent is unused
+                val parent = curr.uastParent ?: return true
+                if (parent is UMethod || parent is UClassInitializer) {
+                    return true
+                }
+                return isExpressionValueUnused(parent)
+            } else if (curr is UMethod && curr.isConstructor) {
+                return true
+            } else {
+                // Some other non block node type, such as assignment,
+                // method declaration etc: not unused
+                // TODO: Make sure that a void/unit method inline declaration
+                // works correctly
                 return false
             }
-
-            // In Java, it's apparent when an expression is unused:
-            // the parent is a block expression. However, in Kotlin it's
-            // much trickier: values can flow through blocks and up through
-            // if statements, try statements.
-            //
-            // In Kotlin, we consider an expression unused if its parent
-            // is not a block, OR, the expression is not the last statement
-            // in the block, OR, recursively the parent expression is not
-            // used (e.g. you're in an if, but that if statement is itself
-            // not doing anything with the value.)
-            val block = curr
-            val expression = prev
-            val index = block.expressions.indexOf(expression)
-            if (index == -1) {
-                return true
-            }
-
-            if (index < block.expressions.size - 1) {
-                // Not last child
-                return true
-            }
-
-            if (isJava(curr.sourcePsi)) {
-                // In Java there's no implicit passing to the parent
-                return true
-            }
-
-            // It's the last child: see if the parent is unused
-            val parent = curr.uastParent ?: return true
-            if (parent is UMethod || parent is UClassInitializer) {
-                return true
-            }
-            return isExpressionValueUnused(parent)
-        } else if (curr is UMethod && curr.isConstructor) {
-            return true
-        } else {
-            // Some other non block node type, such as assignment,
-            // method declaration etc: not unused
-            // TODO: Make sure that a void/unit method inline declaration
-            // works correctly
-            return false
         }
-    }
 
-    companion object {
         private val IMPLEMENTATION = Implementation(
             CheckResultDetector::class.java,
             Scope.JAVA_FILE_SCOPE

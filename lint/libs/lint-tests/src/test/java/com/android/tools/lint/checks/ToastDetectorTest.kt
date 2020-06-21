@@ -109,7 +109,20 @@ class ToastDetectorTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented()
-        ).run().expect(expected)
+        ).run()
+            .expect(expected)
+            .expectFixDiffs(
+                """
+            Fix for src/test/pkg/ToastTest.java line 32: Call show():
+            @@ -32 +32
+            -         Toast.makeText(context, "foo", Toast.LENGTH_LONG);
+            +         Toast.makeText(context, "foo", Toast.LENGTH_LONG).show();
+            Fix for src/test/pkg/ToastTest.java line 39: Call show():
+            @@ -39 +39
+            -         Toast.makeText(context, "foo", Toast.LENGTH_LONG);
+            +         Toast.makeText(context, "foo", Toast.LENGTH_LONG).show();
+            """
+            )
     }
 
     fun testKotlin() {
@@ -192,7 +205,20 @@ class ToastDetectorTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented()
-        ).run().expect(expected)
+        ).run()
+            .expect(expected)
+            .expectFixDiffs(
+                """
+            Fix for src/test/pkg/ToastTest.kt line 34: Call show():
+            @@ -34 +34
+            -         Toast.makeText(context, "foo", Toast.LENGTH_LONG)
+            +         Toast.makeText(context, "foo", Toast.LENGTH_LONG).show()
+            Fix for src/test/pkg/ToastTest.kt line 40: Call show():
+            @@ -40 +40
+            -         Toast.makeText(context, "foo", Toast.LENGTH_LONG)
+            +         Toast.makeText(context, "foo", Toast.LENGTH_LONG).show()
+            """
+            )
     }
 
     fun testSnackbar() {
@@ -228,6 +254,13 @@ class ToastDetectorTest : AbstractCheckTest() {
                     val sb = Snackbar.make(parent, "Message", 500) // ERROR
                              ~~~~~~~~~~~~~
             0 errors, 2 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/Test.kt line 8: Call show():
+            @@ -8 +8
+            -         Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE) // ERROR
+            +         Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE).show() // ERROR
             """
         )
     }
