@@ -43,6 +43,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UEnumConstant
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
@@ -327,6 +328,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 method.accept(object : AbstractUastVisitor() {
                     // Don't visit inner classes
                     override fun visitClass(node: UClass): Boolean {
+                        return true
+                    }
+
+                    override fun visitLambdaExpression(node: ULambdaExpression): Boolean {
+                        // Return statements inside the lambda may not refer to this method;
+                        // see for example 140626689
                         return true
                     }
 

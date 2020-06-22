@@ -1400,4 +1400,51 @@ class TypedefDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testReturnWithinLambda() {
+        // Regression test for https://issuetracker.google.com/140626689
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("UNUSED_PARAMETER")
+                package test.pkg
+                import android.app.Service
+                import android.content.Intent
+                import android.os.Parcelable
+                abstract class UpdateService : Service() {
+                    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+                        val config = intent.getParcelableExtra<UpdateConfig>(KEY_CONFIG)
+                        if (config == null) {
+                            Timber.warn { "No config present in intent." }
+                            return START_NOT_STICKY
+                        }
+                        return START_REDELIVER_INTENT
+                    }
+                }
+                // Stubs
+                abstract class UpdateConfig: Parcelable
+                const val KEY_CONFIG = "config"
+                class Timber {
+                    companion object {
+                        fun isLoggable(priority: Int, throwable: Throwable? = null): Boolean = false
+                        fun rawLog(priority: Int, throwable: Throwable? = null, throwable2: Throwable? = null, message: String) {
+                        }
+                        inline fun warn(throwable: Throwable? = null, message: () -> String) {
+                            log(0, throwable, message)
+                        }
+                        inline fun log(priority: Int, throwable: Throwable? = null, message: () -> String) {
+                            if (isLoggable(priority, null)) {
+                                rawLog(priority, null, throwable, message())
+                            }
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .checkUInjectionHost(false)
+            .run().expectClean()
+    }
 }
