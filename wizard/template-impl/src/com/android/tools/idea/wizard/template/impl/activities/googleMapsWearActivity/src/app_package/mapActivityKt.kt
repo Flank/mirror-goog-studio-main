@@ -34,15 +34,15 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
+import android.app.Activity
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrameLayout", useAndroidX)}
-import android.support.wearable.activity.WearableActivity
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
+import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrameLayout", useAndroidX)}
 
-class ${activityClass} : WearableActivity(), OnMapReadyCallback {
+class ${activityClass} : Activity(), OnMapReadyCallback {
 
     /**
      * Map is initialized when it"s fully loaded and ready to be used.
@@ -53,9 +53,6 @@ class ${activityClass} : WearableActivity(), OnMapReadyCallback {
 
     public override fun onCreate(savedState: Bundle?) {
         super.onCreate(savedState)
-
-        // Enables always on.
-        setAmbientEnabled()
 
         setContentView(R.layout.${layoutName})
 
