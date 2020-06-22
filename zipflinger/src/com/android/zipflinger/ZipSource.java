@@ -27,7 +27,6 @@ import java.util.zip.Deflater;
 
 public class ZipSource {
     public static final int COMPRESSION_NO_CHANGE = -2;
-    private final File file;
     private FileChannel channel;
     private ZipMap map;
 
@@ -35,7 +34,6 @@ public class ZipSource {
 
     public ZipSource(@NonNull File file) throws IOException {
         this.map = ZipMap.from(file, false);
-        this.file = file;
     }
 
     @NonNull
@@ -83,7 +81,7 @@ public class ZipSource {
     }
 
     void open() throws IOException {
-        channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+        channel = FileChannel.open(map.getFile().toPath(), StandardOpenOption.READ);
     }
 
     void close() throws IOException {
@@ -118,6 +116,6 @@ public class ZipSource {
     }
 
     String getName() {
-        return file.getAbsolutePath();
+        return map.getFile().getAbsolutePath();
     }
 }
