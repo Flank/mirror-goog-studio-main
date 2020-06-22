@@ -856,17 +856,17 @@ public class DefaultConfiguration extends Configuration {
 
         if (driver != null) {
             Location location = Location.create(project.getDir());
-            if (getSeverity(IssueRegistry.LINT_ERROR) != Severity.IGNORE) {
+            if (getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID) != Severity.IGNORE) {
                 client.report(
                         new Context(driver, project, project, project.getDir(), null),
-                        IssueRegistry.LINT_ERROR,
-                        project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
+                        IssueRegistry.UNKNOWN_ISSUE_ID,
+                        project.getConfiguration(driver).getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID),
                         location,
                         message,
                         TextFormat.RAW,
                         null);
             } else {
-                client.log(Severity.ERROR, null, "Lint: %1$s", message);
+                client.log(Severity.WARNING, null, "Lint: %1$s", message);
             }
         }
     }

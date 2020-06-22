@@ -842,10 +842,10 @@ open class LintCliClient : LintClient {
                 // reports where lint has reported some well known builtin issues
                 // to not exist:
                 //
-                //   Error: Unknown issue id "DuplicateDefinition" [LintError]
-                //   Error: Unknown issue id "GradleIdeError" [LintError]
-                //   Error: Unknown issue id "InvalidPackage" [LintError]
-                //   Error: Unknown issue id "JavascriptInterface" [LintError]
+                //   Warning: Unknown issue id "DuplicateDefinition" [UnknownIssueId]
+                //   Warning: Unknown issue id "GradleIdeError" [UnknownIssueId]
+                //   Warning: Unknown issue id "InvalidPackage" [UnknownIssueId]
+                //   Warning: Unknown issue id "JavascriptInterface" [UnknownIssueId]
                 //   ...
                 //
                 // It's not clear how this can happen, though it's probably related
@@ -888,11 +888,11 @@ open class LintCliClient : LintClient {
             return
         }
         val message = "Unknown issue id \"$id\""
-        if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.LINT_ERROR)) {
+        if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.UNKNOWN_ISSUE_ID)) {
             val location = guessGradleLocation(this, project.dir, id)
             report(
                 this,
-                IssueRegistry.LINT_ERROR,
+                IssueRegistry.UNKNOWN_ISSUE_ID,
                 message,
                 driver,
                 project,
@@ -900,7 +900,7 @@ open class LintCliClient : LintClient {
                 LintFix.create().data(id)
             )
         } else {
-            log(Severity.ERROR, null, "Lint: %1\$s", message)
+            log(Severity.WARNING, null, "Lint: %1\$s", message)
         }
     }
 

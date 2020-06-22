@@ -46,9 +46,14 @@ public class LintCustomLocalAndPublishTest {
         project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
         project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
         String appexpected =
-                "build.gradle:15: Error: Unknown issue id \"UnitTestLintCheck2\" [LintError]\n"
+                "build.gradle:15: Warning: Unknown issue id \"UnitTestLintCheck2\" [UnknownIssueId]\n"
                         + "        checkOnly 'UnitTestLintCheck2'\n"
                         + "                   ~~~~~~~~~~~~~~~~~~\n"
+                        + "\n"
+                        + "   Explanation for issues of type \"UnknownIssueId\":\n"
+                        + "   Lint will report this issue if it is configured with an issue id it does\n"
+                        + "   not recognize in for example Gradle files or lint.xml configuration files.\n"
+                        + "\n"
                         + "src"
                         + File.separator
                         + "main"
@@ -68,11 +73,16 @@ public class LintCustomLocalAndPublishTest {
                         + "   Explanation for issues of type \"UnitTestLintCheck3\":\n"
                         + "   This app should not implement java.util.Set.\n"
                         + "\n"
-                        + "3 errors, 0 warnings";
+                        + "2 errors, 1 warnings";
         String libexpected =
-                "build.gradle:16: Error: Unknown issue id \"UnitTestLintCheck\" [LintError]\n"
+                "build.gradle:16: Warning: Unknown issue id \"UnitTestLintCheck\" [UnknownIssueId]\n"
                         + "        checkOnly 'UnitTestLintCheck'\n"
                         + "                   ~~~~~~~~~~~~~~~~~\n"
+                        + "\n"
+                        + "   Explanation for issues of type \"UnknownIssueId\":\n"
+                        + "   Lint will report this issue if it is configured with an issue id it does\n"
+                        + "   not recognize in for example Gradle files or lint.xml configuration files.\n"
+                        + "\n"
                         + "src"
                         + File.separator
                         + "main"
@@ -92,7 +102,7 @@ public class LintCustomLocalAndPublishTest {
                         + "   Explanation for issues of type \"UnitTestLintCheck2\":\n"
                         + "   This app should not have implement java.util.List.\n"
                         + "\n"
-                        + "2 errors, 0 warnings";
+                        + "1 errors, 1 warnings";
         File applintfile = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
         File liblintfile =
                 new File(project.getSubproject("library").getTestDir(), "library-lint-results.txt");

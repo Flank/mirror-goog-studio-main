@@ -285,6 +285,7 @@ protected constructor() {
         map[PARSER_ERROR.id] = PARSER_ERROR
         map[LINT_ERROR.id] = LINT_ERROR
         map[BASELINE.id] = BASELINE
+        map[UNKNOWN_ISSUE_ID.id] = UNKNOWN_ISSUE_ID
         map[OBSOLETE_LINT_CHECK.id] = OBSOLETE_LINT_CHECK
         return map
     }
@@ -369,6 +370,24 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
+            implementation = DUMMY_IMPLEMENTATION
+        )
+
+        /**
+         * Lint is configured with references to an issue id that it does not recognize.
+         */
+        @JvmField
+        val UNKNOWN_ISSUE_ID = Issue.create(
+            id = "UnknownIssueId",
+            briefDescription = "Unknown Lint Issue Id",
+            explanation =
+                """
+                Lint will report this issue if it is configured with an issue id it does \
+                not recognize in for example Gradle files or `lint.xml` configuration files.
+                """,
+            category = Category.LINT,
+            priority = 1,
+            severity = Severity.WARNING,
             implementation = DUMMY_IMPLEMENTATION
         )
 
