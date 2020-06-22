@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -402,7 +403,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.bundleNeedsFusedStandaloneConfig.set(
                 task.project.providers.provider {
-                    creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
+                    creationConfig.minSdkVersion.getFeatureLevel() < MIN_SDK_FOR_SPLITS
                             && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }
             )

@@ -64,7 +64,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
-import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
@@ -85,7 +84,7 @@ import java.io.File
 import java.util.concurrent.Callable
 
 abstract class ComponentPropertiesImpl(
-    componentIdentity: ComponentIdentity,
+    open val variant: ComponentImpl<out ComponentPropertiesImpl>,
     override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo,
     override val variantDependencies: VariantDependencies,
@@ -99,7 +98,7 @@ abstract class ComponentPropertiesImpl(
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
+): ComponentProperties, BaseCreationConfig, ComponentIdentity by variant {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -120,9 +119,6 @@ abstract class ComponentPropertiesImpl(
 
     override val variantType: VariantType
         get() = variantDslInfo.variantType
-
-    override val minSdkVersion: AndroidVersion
-        get() = variantDslInfo.minSdkVersion
 
     override val maxSdkVersion: Int?
         get() = variantDslInfo.maxSdkVersion

@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.component.impl.UnitTestPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.LintOptions
@@ -436,7 +437,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
 
                 variantInput.packageName.setDisallowChanges(properties.packageName)
 
-                variantInput.minSdkVersion.setDisallowChanges(properties.variantDslInfo.minSdkVersion.convert())
+                variantInput.minSdkVersion.setDisallowChanges(properties.variant.minSdkVersion.convert())
                 variantInput.targetSdkVersion.setDisallowChanges(properties.variantDslInfo.targetSdkVersion.convert())
 
                 // FIXME resvalue
@@ -490,7 +491,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
                 it.additionalClasses.disallowChanges()
             }
 
-        private fun AndroidVersion.convert(): SdkVersion = globalScope.dslServices.newInstance(
+        private fun com.android.build.api.variant.AndroidVersion.convert(): SdkVersion = globalScope.dslServices.newInstance(
             SdkVersion::class.java
         ).also {
             it.apiLevel.setDisallowChanges(apiLevel)

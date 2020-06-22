@@ -66,6 +66,8 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.AndroidVersion;
+import com.android.build.api.variant.impl.VariantApiExtensionsKt;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -207,20 +209,19 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.dexing.DexingTypeKt;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
-import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -461,7 +462,7 @@ public abstract class TaskManager<
 
         VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
 
-        if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()
+        if (DexingTypeKt.isLegacyMultiDexMode(variantProperties.getVariantDslInfo().getDexingType())
                 && variantProperties.getVariantType().isApk()) {
             String multiDexDependency =
                     variantProperties
@@ -540,7 +541,7 @@ public abstract class TaskManager<
         }
 
         if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
-            if (variantDslInfo.isLegacyMultiDexMode()) {
+            if (DexingTypeKt.isLegacyMultiDexMode(variantDslInfo.getDexingType())) {
                 String multiDexInstrumentationDep =
                         componentProperties
                                         .getServices()
@@ -1585,19 +1586,20 @@ public abstract class TaskManager<
     }
 
     public void createExternalNativeBuildJsonGenerators(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull VariantT variant, @NonNull VariantPropertiesT variantProperties) {
         CxxConfigurationModel configurationModel =
-                tryCreateCxxConfigurationModel(componentProperties, false);
+                tryCreateCxxConfigurationModel(
+                        (VariantImpl<VariantPropertiesImpl>) variant, variantProperties, false);
 
         if (configurationModel == null) {
             return;
         }
 
-        componentProperties.getTaskContainer().setCxxConfigurationModel(configurationModel);
+        variantProperties.getTaskContainer().setCxxConfigurationModel(configurationModel);
     }
 
     public void createExternalNativeBuildTasks(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull VariantT component, @NonNull VariantPropertiesImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         CxxConfigurationModel configurationModel = taskContainer.getCxxConfigurationModel();
         if (configurationModel == null) {
@@ -1621,7 +1623,8 @@ public abstract class TaskManager<
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
         CxxConfigurationModel allAbisModel =
-                tryCreateCxxConfigurationModel(componentProperties, true);
+                tryCreateCxxConfigurationModel(
+                        (VariantImpl<VariantPropertiesImpl>) component, componentProperties, true);
         if (allAbisModel != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
                     taskFactory.register(
@@ -2255,7 +2258,7 @@ public abstract class TaskManager<
 
             taskFactory.register(new DesugarTask.CreationAction(componentProperties));
 
-            if (minSdk.getFeatureLevel()
+            if (VariantApiExtensionsKt.getFeatureLevel(minSdk)
                     >= DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
                 return;
             }

@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
@@ -102,7 +104,8 @@ data class CxxConfigurationModel(
  * was deserialized from the task graph.
  */
 fun tryCreateCxxConfigurationModel(
-    componentProperties: ComponentPropertiesImpl,
+    variant: VariantImpl<VariantPropertiesImpl>,
+    componentProperties: VariantPropertiesImpl,
     allDefaultAbis: Boolean = true
 ) : CxxConfigurationModel? {
     val global = componentProperties.globalScope
@@ -181,7 +184,7 @@ fun tryCreateCxxConfigurationModel(
         rootDir = global.project.rootDir,
         buildFile = global.project.buildFile,
         isDebuggable = componentProperties.variantDslInfo.isDebuggable,
-        minSdkVersion = componentProperties.minSdkVersion,
+        minSdkVersion = variant.minSdkVersion.toSharedAndroidVersion(),
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,

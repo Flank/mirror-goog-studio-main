@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.pipeline.OriginalStream
@@ -180,7 +181,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.configure(task)
             val variantScope = creationConfig.variantScope
-            task.minSdk.set(creationConfig.minSdkVersion.featureLevel)
+            task.minSdk.set(creationConfig.minSdkVersion.getFeatureLevel())
 
             /**
              * If a fix in Desugar should be enabled to handle broken bytecode produced by older

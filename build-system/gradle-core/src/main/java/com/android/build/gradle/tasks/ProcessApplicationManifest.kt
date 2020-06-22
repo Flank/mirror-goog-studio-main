@@ -17,6 +17,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -365,7 +366,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.variantType.set(creationConfig.variantType.toString())
             task.variantType.disallowChanges()
             task.minSdkVersion
-                .set(project.provider { creationConfig.minSdkVersion.apiString })
+                .set(project.provider { creationConfig.minSdkVersion.getApiString() })
             task.minSdkVersion.disallowChanges()
             task.targetSdkVersion
                 .set(

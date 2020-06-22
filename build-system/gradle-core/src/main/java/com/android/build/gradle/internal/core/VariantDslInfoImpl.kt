@@ -40,6 +40,7 @@ import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
+import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
@@ -501,7 +502,7 @@ open class VariantDslInfoImpl internal constructor(
             // else return the value from the Manifest
             return dataProvider.manifestData.map {
                 it.instrumentationRunner
-                    ?: if (isLegacyMultiDexMode) {
+                    ?: if (dexingType.isLegacyMultiDexMode()) {
                         MULTIDEX_TEST_RUNNER
                     } else {
                         DEFAULT_TEST_RUNNER
@@ -837,9 +838,6 @@ open class VariantDslInfoImpl internal constructor(
             value = mergedFlavor.multiDexKeepProguard
             return value
         }
-
-    override val isLegacyMultiDexMode: Boolean
-        get() = dexingType === DexingType.LEGACY_MULTIDEX
 
     // dynamic features can always be build in native multidex mode
     override val dexingType: DexingType

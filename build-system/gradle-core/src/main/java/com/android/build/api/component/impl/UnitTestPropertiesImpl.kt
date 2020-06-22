@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -38,7 +39,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class UnitTestPropertiesImpl @Inject constructor(
-    componentIdentity: ComponentIdentity,
+    componentIdentity: UnitTestImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -102,4 +103,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
 
     override fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
+
+    override val minSdkVersion: AndroidVersion
+        get() = testedVariant.variant.minSdkVersion
 }

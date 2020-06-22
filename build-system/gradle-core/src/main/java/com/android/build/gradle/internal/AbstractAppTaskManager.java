@@ -143,8 +143,8 @@ public abstract class AbstractAppTaskManager<
         createAidlTask(appVariantProperties);
 
         // Add external native build tasks
-        createExternalNativeBuildJsonGenerators(appVariantProperties);
-        createExternalNativeBuildTasks(appVariantProperties);
+        createExternalNativeBuildJsonGenerators(variant.getVariant(), appVariantProperties);
+        createExternalNativeBuildTasks(variant.getVariant(), appVariantProperties);
 
         // Add a task to merge the jni libs folders
         createMergeJniLibFoldersTasks(appVariantProperties);

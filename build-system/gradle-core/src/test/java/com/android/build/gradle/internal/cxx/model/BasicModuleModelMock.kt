@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
@@ -49,7 +51,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.repository.Revision
-import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
@@ -125,8 +126,13 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val componentProperties: ComponentPropertiesImpl = mock(
-        ComponentPropertiesImpl::class.java,
+    val component: VariantImpl<VariantPropertiesImpl> = mock(
+        VariantImpl::class.java,
+        throwUnmocked
+    ) as VariantImpl<VariantPropertiesImpl>
+
+    val componentProperties: VariantPropertiesImpl = mock(
+        VariantPropertiesImpl::class.java,
         throwUnmocked
     )
 
@@ -183,7 +189,7 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val minSdkVersion = AndroidVersion(19)
+    val minSdkVersion = AndroidVersionImpl(19)
     val cmakeFinder = mock(
         CmakeLocator::class.java,
         throwUnmocked
@@ -202,6 +208,7 @@ open class BasicModuleModelMock {
 
     val configurationModel by lazy {
         tryCreateCxxConfigurationModel(
+            component,
             componentProperties
         )!!
     }
@@ -281,7 +288,7 @@ open class BasicModuleModelMock {
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(minSdkVersion).`when`(componentProperties).minSdkVersion
+        doReturn(minSdkVersion).`when`(component).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }

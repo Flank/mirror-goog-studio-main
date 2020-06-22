@@ -213,8 +213,8 @@ public class LibraryTaskManager
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libVariantProperties));
 
         // External native build
-        createExternalNativeBuildJsonGenerators(libVariantProperties);
-        createExternalNativeBuildTasks(libVariantProperties);
+        createExternalNativeBuildJsonGenerators(variant.getVariant(), libVariantProperties);
+        createExternalNativeBuildTasks(variant.getVariant(), libVariantProperties);
 
         createMergeJniLibFoldersTasks(libVariantProperties);
 

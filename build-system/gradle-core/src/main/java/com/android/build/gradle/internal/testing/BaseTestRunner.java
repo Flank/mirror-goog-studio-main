@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.impl.VariantApiExtensionsKt;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
@@ -136,7 +137,11 @@ public abstract class BaseTestRunner implements TestRunner {
         for (DeviceConnector device : deviceList) {
             if (device.getState() != IDevice.DeviceState.UNAUTHORIZED) {
                 if (InstallUtils.checkDeviceApiLevel(
-                        device, testData.getMinSdkVersion(), logger, projectName, variantName)) {
+                        device,
+                        VariantApiExtensionsKt.toSharedAndroidVersion(testData.getMinSdkVersion()),
+                        logger,
+                        projectName,
+                        variantName)) {
 
                     DeviceConfigProvider deviceConfigProvider;
                     try {

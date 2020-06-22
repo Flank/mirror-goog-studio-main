@@ -105,7 +105,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull ComponentIdentity componentIdentity,
+            @NonNull UnitTestImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -147,7 +147,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull ComponentIdentity componentIdentity,
+            @NonNull AndroidTestImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

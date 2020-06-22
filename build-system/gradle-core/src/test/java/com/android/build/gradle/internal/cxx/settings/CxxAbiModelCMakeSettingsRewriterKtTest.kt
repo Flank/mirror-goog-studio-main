@@ -284,7 +284,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             setup(this, 1)
 
-            val configurationModel1 = tryCreateCxxConfigurationModel(componentProperties)!!
+            val configurationModel1 = tryCreateCxxConfigurationModel(
+                component,
+                componentProperties)!!
             val variant1 = createCxxVariantModel(configurationModel1, module)
             val result1 = createCxxAbiModel(
                 sdkComponents, configurationModel1,
@@ -292,7 +294,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             result1.toJsonString() // Force all lazy values
 
             setup(this, 2)
-            val configurationModel2 = tryCreateCxxConfigurationModel(componentProperties)!!
+            val configurationModel2 = tryCreateCxxConfigurationModel(
+                component,
+                componentProperties)!!
             val variant2 = createCxxVariantModel(configurationModel2, module)
             val result2 = createCxxAbiModel(
                 sdkComponents, configurationModel2,

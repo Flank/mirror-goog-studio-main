@@ -15,9 +15,9 @@
  */
 package com.android.build.gradle.internal.testing
 
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
 import com.google.common.base.Joiner
 import org.gradle.api.file.ConfigurableFileCollection

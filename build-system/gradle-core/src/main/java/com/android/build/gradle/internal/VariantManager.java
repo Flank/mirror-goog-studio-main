@@ -81,6 +81,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.builder.core.VariantType;
+import com.android.builder.dexing.DexingTypeKt;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -708,7 +709,7 @@ public class VariantManager<
         if (variantType.isApk()) {
             AndroidTestPropertiesImpl androidTestProperties =
                     variantFactory.createAndroidTestProperties(
-                            componentIdentity,
+                            (AndroidTestImpl) component,
                             buildFeatureValues,
                             variantDslInfo,
                             variantDependencies,
@@ -733,7 +734,7 @@ public class VariantManager<
             // this is UNIT_TEST
             UnitTestPropertiesImpl unitTestProperties =
                     variantFactory.createUnitTestProperties(
-                            componentIdentity,
+                            (UnitTestImpl) component,
                             buildFeatureValues,
                             variantDslInfo,
                             variantDependencies,
@@ -832,7 +833,7 @@ public class VariantManager<
                 VariantDslInfo variantDslInfo = variantProperties.getVariantDslInfo();
                 VariantScope variantScope = variantProperties.getVariantScope();
 
-                int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();
+                int minSdkVersion = variantInfo.getVariant().getMinSdkVersion().getApiLevel();
                 int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
                 if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
                     projectServices
@@ -855,10 +856,13 @@ public class VariantManager<
                                         project.getPath(), variantProperties.getName())
                                 .setIsDebug(buildType.isDebuggable())
                                 .setMinSdkVersion(
-                                        AnalyticsUtil.toProto(variantDslInfo.getMinSdkVersion()))
+                                        AnalyticsUtil.toProto(
+                                                variantInfo.getVariant().getMinSdkVersion()))
                                 .setMinifyEnabled(variantScope.getCodeShrinker() != null)
                                 .setUseMultidex(variantDslInfo.isMultiDexEnabled())
-                                .setUseLegacyMultidex(variantDslInfo.isLegacyMultiDexMode())
+                                .setUseLegacyMultidex(
+                                        DexingTypeKt.isLegacyMultiDexMode(
+                                                variantDslInfo.getDexingType()))
                                 .setVariantType(
                                         variantProperties
                                                 .getVariantType()

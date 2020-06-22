@@ -98,7 +98,7 @@ public interface VariantFactory<
 
     @NonNull
     UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull ComponentIdentity componentIdentity,
+            @NonNull UnitTestImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -114,7 +114,7 @@ public interface VariantFactory<
 
     @NonNull
     AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull ComponentIdentity componentIdentity,
+            @NonNull AndroidTestImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

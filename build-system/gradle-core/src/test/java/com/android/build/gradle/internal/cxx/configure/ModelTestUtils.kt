@@ -17,7 +17,10 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.impl.AndroidVersionImpl
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
@@ -43,7 +46,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
-import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
 import org.junit.rules.TemporaryFolder
@@ -63,14 +65,15 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
-    val componentPropertiesImpl = Mockito.mock(ComponentPropertiesImpl::class.java)
+    val variantImpl: VariantImpl<VariantPropertiesImpl> = Mockito.mock(VariantImpl::class.java) as VariantImpl<VariantPropertiesImpl>
+    val componentPropertiesImpl = Mockito.mock(VariantPropertiesImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
     val buildFeatures = Mockito.mock(BuildFeatureValues::class.java)
     val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
     val splits = Mockito.mock(Splits::class.java)
     val mergedNdkConfig = Mockito.mock(MergedNdkConfig::class.java)
-    val minSdkVersion = AndroidVersion(19)
+    val minSdkVersion = AndroidVersionImpl(19)
     Mockito.doReturn(global).`when`(componentPropertiesImpl).globalScope
     Mockito.doReturn(variantScope).`when`(componentPropertiesImpl).variantScope
     Mockito.doReturn(baseVariantData).`when`(componentPropertiesImpl).variantData
@@ -121,10 +124,11 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(listOf<String>()).`when`(externalNativeCmakeOptions).cppFlags
     Mockito.doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
     Mockito.doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
-    Mockito.doReturn(minSdkVersion).`when`(componentPropertiesImpl).minSdkVersion
+    Mockito.doReturn(minSdkVersion).`when`(variantImpl).minSdkVersion
     val componentModel = tryCreateCxxConfigurationModel(
-            componentPropertiesImpl
-        )!!
+        variantImpl,
+        componentPropertiesImpl
+    )!!
     val module = createCxxModuleModel(sdkComponents, componentModel)
     val variant = createCxxVariantModel(componentModel, module)
     return createCxxAbiModel(

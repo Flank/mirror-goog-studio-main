@@ -102,7 +102,7 @@ public class LibraryVariantFactory
                         .getObjectFactory()
                         .newInstance(
                                 LibraryVariantPropertiesImpl.class,
-                                componentIdentity,
+                                variant,
                                 buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,

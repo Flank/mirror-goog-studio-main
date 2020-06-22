@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -35,7 +36,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
-import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider

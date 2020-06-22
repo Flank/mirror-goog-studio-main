@@ -21,6 +21,7 @@ import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
+import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -312,7 +313,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             val variantSources = creationConfig.variantSources
             val project = creationConfig.globalScope.project
             task.minSdkVersion
-                .set(project.provider { creationConfig.minSdkVersion.apiString })
+                .set(project.provider { creationConfig.minSdkVersion.getApiString() })
             task.minSdkVersion.disallowChanges()
             task.targetSdkVersion
                 .set(

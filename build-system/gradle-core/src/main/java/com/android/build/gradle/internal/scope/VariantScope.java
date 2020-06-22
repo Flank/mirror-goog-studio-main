@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
@@ -92,7 +93,7 @@ public interface VariantScope {
 
     boolean getNeedsMainDexListForBundle();
 
-    boolean isTestOnly();
+    boolean isTestOnly(VariantPropertiesImpl variantProperties);
 
     boolean isCoreLibraryDesugaringEnabled();
 

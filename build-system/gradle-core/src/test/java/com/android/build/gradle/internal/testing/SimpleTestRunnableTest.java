@@ -33,12 +33,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.AndroidVersion;
+import com.android.build.api.variant.impl.AndroidVersionImpl;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-import com.android.sdklib.AndroidVersion;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
@@ -89,7 +90,7 @@ public class SimpleTestRunnableTest {
         testDirectories = new ArrayList<>();
         testedApks = new ArrayList<>();
         instrumentationRunnerArguments = new HashMap<>();
-        minSdkVersion = new AndroidVersion(AndroidVersion.VersionCodes.BASE, null);
+        minSdkVersion = new AndroidVersionImpl(1, null);
 
         instrumentationRunnerArguments.put("numShards", "10");
         instrumentationRunnerArguments.put("shardIndex", "2");
