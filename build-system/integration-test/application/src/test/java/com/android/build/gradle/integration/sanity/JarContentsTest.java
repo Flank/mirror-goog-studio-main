@@ -374,6 +374,7 @@ public class JarContentsTest {
                 "com/android/build/api/artifact/",
                 "com/android/build/api/artifact/impl/",
                 "com/android/build/api/component/",
+                "com/android/build/api/component/analytics/",
                 "com/android/build/api/component/impl/",
                 "com/android/build/api/variant/",
                 "com/android/build/api/variant/impl/",

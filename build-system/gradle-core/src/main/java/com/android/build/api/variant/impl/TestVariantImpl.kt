@@ -17,9 +17,14 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.variant.TestVariant
+import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class TestVariantImpl @Inject constructor(
@@ -28,4 +33,13 @@ open class TestVariantImpl @Inject constructor(
     variantApiServices: VariantApiServices
 ) : VariantImpl<TestVariantPropertiesImpl>(variantDslInfo, variantConfiguration, variantApiServices),
     TestVariant<TestVariantPropertiesImpl> {
+    override fun createUserVisibleVariantObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariant<in TestVariantProperties> =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledTestVariant::class.java,
+            this,
+            stats
+        ) as AnalyticsEnabledVariant<in TestVariantProperties>
 }

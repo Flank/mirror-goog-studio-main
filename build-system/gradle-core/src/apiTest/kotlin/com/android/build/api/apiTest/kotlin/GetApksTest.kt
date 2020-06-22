@@ -44,16 +44,13 @@ class GetApksTest: VariantApiBaseTest(TestType.Script) {
             import org.gradle.api.file.DirectoryProperty
             import org.gradle.api.tasks.InputFiles
             import org.gradle.api.tasks.TaskAction
-
             import com.android.build.api.variant.BuiltArtifactsLoader
             import com.android.build.api.artifact.ArtifactType
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
-
             ${testingElements.getDisplayApksTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
                 onVariantProperties {
                     project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
                         apkFolder.set(artifacts.get(ArtifactType.APK))
@@ -71,7 +68,6 @@ class GetApksTest: VariantApiBaseTest(TestType.Script) {
                     // language=markdown
                 """
 # artifacts.get in Kotlin
-
 This sample show how to obtain a built artifact from the AGP. The built artifact is identified by
 its [ArtifactType] and in this case, it's [ArtifactType.APK].
 The [onVariantProperties] block will wire the [DisplayApksTask] input property (apkFolder) by using

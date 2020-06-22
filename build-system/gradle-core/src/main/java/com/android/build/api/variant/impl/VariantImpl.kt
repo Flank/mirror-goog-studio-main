@@ -21,12 +21,13 @@ import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestProperties
-import com.android.build.api.component.impl.AndroidTestImpl
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
 
 abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
@@ -37,65 +38,39 @@ abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
     ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity, variantApiServices),
     Variant<PropertiesT> {
 
-    private val unitTestActions = DelayedActionExecutor<UnitTest<UnitTestProperties>>()
-    private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTestProperties>()
-
-    private val androidTestActions = DelayedActionExecutor<AndroidTest<AndroidTestProperties>>()
-    private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTestProperties>()
-
     override var minSdkVersion = variantDslInfo.minSdkVersion.apiLevel
 
     override fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit) {
-        unitTestActions.registerAction(Action { action(it) })
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     fun unitTest(action: Action<UnitTest<UnitTestProperties>>) {
-        unitTestActions.registerAction(action)
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     override fun unitTestProperties(action: UnitTestProperties.() -> Unit) {
-        unitTestPropertiesOperations.registerAction(Action { action(it) })
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     fun unitTestProperties(action: Action<UnitTestProperties>) {
-        unitTestPropertiesOperations.registerAction(action)
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     override fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit) {
-        androidTestActions.registerAction(Action { action(it) })
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     fun androidTest(action: Action<AndroidTest<AndroidTestProperties>>) {
-        androidTestActions.registerAction(action)
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     override fun androidTestProperties(action: AndroidTestProperties.() -> Unit) {
-        androidTestPropertiesOperations.registerAction(Action { action(it) })
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
     fun androidTestProperties(action: Action<AndroidTestProperties>) {
-        androidTestPropertiesOperations.registerAction(action)
+        throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    // FIXME should be internal
-    fun executeUnitTestActions(target: UnitTestImpl) {
-        @Suppress("UNCHECKED_CAST")
-        unitTestActions.executeActions(target as UnitTest<UnitTestProperties>)
-    }
-
-    // FIXME should be internal
-    fun executeUnitTestPropertiesActions(target: UnitTestProperties) {
-        unitTestPropertiesOperations.executeActions(target)
-    }
-
-    // FIXME should be internal
-    fun executeAndroidTestActions(target: AndroidTestImpl) {
-        @Suppress("UNCHECKED_CAST")
-        androidTestActions.executeActions(target as AndroidTest<AndroidTestProperties>)
-    }
-
-    // FIXME should be internal
-    fun executeAndroidTestPropertiesActions(target: AndroidTestProperties) {
-        androidTestPropertiesOperations.executeActions(target)
-    }
+    abstract fun createUserVisibleVariantObject(projectServices: ProjectServices, stats: GradleBuildVariant.Builder): AnalyticsEnabledVariant<in PropertiesT>
 }

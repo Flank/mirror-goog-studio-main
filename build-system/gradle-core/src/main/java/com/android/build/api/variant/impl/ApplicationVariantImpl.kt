@@ -16,10 +16,14 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
 import javax.inject.Inject
 
@@ -58,4 +62,14 @@ open class ApplicationVariantImpl @Inject constructor(
     fun dependenciesInfo(action: Action<DependenciesInfo>) {
         action.execute(dependenciesInfo)
     }
+
+    override fun createUserVisibleVariantObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariant<in ApplicationVariantPropertiesImpl> =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledApplicationVariant::class.java,
+            this,
+            stats
+        )
 }

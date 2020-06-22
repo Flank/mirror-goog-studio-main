@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.variant
+package com.android.build.api.component.analytics
 
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.TestVariant
+import com.android.build.api.variant.TestVariantProperties
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import javax.inject.Inject
 
-class ComponentInfo<
-        ComponentT : ComponentImpl<out ComponentPropertiesT>,
-        ComponentPropertiesT : ComponentPropertiesImpl>(
-    val variant: ComponentT,
-    val properties: ComponentPropertiesT,
-    val userVisibleVariant: AnalyticsEnabledVariant<in VariantProperties>?
-)
+/**
+ * Shim object for [AnalyticsEnabledVariant] that records all mutating accesses to the analytics.
+ */
+open class AnalyticsEnabledTestVariant<PropertiesT: TestVariantProperties> @Inject constructor(
+    delegate: TestVariant<PropertiesT>,
+    stats: GradleBuildVariant.Builder
+) : AnalyticsEnabledVariant<PropertiesT>(delegate, stats),
+    TestVariant<PropertiesT>
