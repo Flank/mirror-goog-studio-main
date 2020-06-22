@@ -43,6 +43,7 @@ fun CxxAbiModel.resolveMacroValue(macro : Macro) : String {
         Macro.NDK_C_FLAGS -> Joiner.on(" ").join(variant.cFlagsList)
         Macro.NDK_CPP_FLAGS -> Joiner.on(" ").join(variant.cppFlagsList)
         Macro.NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY -> soFolder.absolutePath
+        Macro.NDK_DEFAULT_RUNTIME_OUTPUT_DIRECTORY -> soFolder.absolutePath
         Macro.NDK_CMAKE_TOOLCHAIN -> getToolchainFile()
         Macro.NDK_PLATFORM -> "android-$abiPlatformVersion"
         Macro.NDK_PLATFORM_CODE -> platformCode()

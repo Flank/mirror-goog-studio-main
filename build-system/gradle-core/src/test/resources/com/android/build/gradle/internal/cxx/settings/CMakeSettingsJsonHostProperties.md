@@ -90,6 +90,11 @@ The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.
 - example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
 - environment: android-gradle
 
+## ${ndk.defaultRuntimeOutputDirectory}
+The default CMake CMAKE_RUNTIME_OUTPUT_DIRECTORY that gradle uses.
+- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
+- environment: android-gradle
+
 ## ${ndk.dir}
 Folder of the current Android NDK.
 - example: ${ndk.sdkDir}/ndk/21.2.6472646

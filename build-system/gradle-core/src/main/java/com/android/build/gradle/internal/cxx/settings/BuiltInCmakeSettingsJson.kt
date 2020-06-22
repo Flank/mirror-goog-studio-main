@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_F
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_MAKE_PROGRAM
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_FIND_ROOT_PATH
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_NAME
@@ -59,6 +60,10 @@ fun CxxAbiModel.getCmakeServerDefaultEnvironment(): CMakeSettings {
         CMakeSettingsVariable(
             CMAKE_LIBRARY_OUTPUT_DIRECTORY.name,
             NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY.ref
+        ),
+        CMakeSettingsVariable(
+            CMAKE_RUNTIME_OUTPUT_DIRECTORY.name,
+            NDK_DEFAULT_RUNTIME_OUTPUT_DIRECTORY.ref
         ),
         CMakeSettingsVariable(CMAKE_MAKE_PROGRAM.name, NDK_NINJA_EXECUTABLE.ref),
         CMakeSettingsVariable(CMAKE_SYSTEM_NAME.name, "Android"),
@@ -181,6 +186,9 @@ fun CxxAbiModel.getAndroidGradleCmakeSettings() : CMakeSettings {
     nameTable[NDK_BUILD_ROOT] = LookupPropertyValue { this.resolveMacroValue(NDK_BUILD_ROOT) }
     nameTable[NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY] = LookupPropertyValue {
         this.resolveMacroValue(NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY)
+    }
+    nameTable[NDK_DEFAULT_RUNTIME_OUTPUT_DIRECTORY] = LookupPropertyValue {
+        this.resolveMacroValue(NDK_DEFAULT_RUNTIME_OUTPUT_DIRECTORY)
     }
     nameTable[NDK_DEFAULT_BUILD_TYPE] = LookupPropertyValue { resolveMacroValue(NDK_DEFAULT_BUILD_TYPE) }
     nameTable[ENV_THIS_FILE_DIR] = LookupPropertyValue { this.resolveMacroValue(

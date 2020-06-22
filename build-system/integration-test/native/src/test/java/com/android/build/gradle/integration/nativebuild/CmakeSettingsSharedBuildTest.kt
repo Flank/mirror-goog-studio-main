@@ -75,7 +75,8 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
                     "inheritEnvironments": ["ndk"],
                     "buildRoot": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/build/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}",
                     "variables": [
-                        {"name": "$CMAKE_LIBRARY_OUTPUT_DIRECTORY", "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/lib/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"}
+                        {"name": "$CMAKE_LIBRARY_OUTPUT_DIRECTORY", "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/lib/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"},
+                        {"name": "$CMAKE_RUNTIME_OUTPUT_DIRECTORY", "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/runtime/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"}
                     ]
                 }]
             }""".trimIndent())

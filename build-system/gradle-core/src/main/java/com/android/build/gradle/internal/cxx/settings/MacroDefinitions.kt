@@ -177,6 +177,11 @@ enum class Macro(
         environment = GRADLE,
         tag = "defaultLibraryOutputDirectory",
         example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
+    NDK_DEFAULT_RUNTIME_OUTPUT_DIRECTORY(
+        description = "The default CMake CMAKE_RUNTIME_OUTPUT_DIRECTORY that gradle uses.",
+        environment = GRADLE,
+        tag = "defaultRuntimeOutputDirectory",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
     NDK_DEFAULT_BUILD_TYPE(
         description = "The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. " +
                 "May be Debug, Release, RelWithDebInfo, or MinSizeRel.",

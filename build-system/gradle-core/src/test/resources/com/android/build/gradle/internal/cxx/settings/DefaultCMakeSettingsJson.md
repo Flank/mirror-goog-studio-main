@@ -56,6 +56,10 @@ Any changes here will affect most C/C++ users.
           "value": "${ndk.defaultLibraryOutputDirectory}"
         },
         {
+          "name": "CMAKE_RUNTIME_OUTPUT_DIRECTORY",
+          "value": "${ndk.defaultRuntimeOutputDirectory}"
+        },
+        {
           "name": "CMAKE_MAKE_PROGRAM",
           "value": "${ndk.ninjaExecutable}"
         },
