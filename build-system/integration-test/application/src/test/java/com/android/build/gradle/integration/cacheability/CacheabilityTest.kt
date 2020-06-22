@@ -58,6 +58,7 @@ class CacheabilityTest {
                     ":app:generateDebugBuildConfig",
                     ":app:generateDebugResValues",
                     ":app:generateDebugUnitTestConfig",
+                    ":app:jacocoDebug",
                     ":app:javaPreCompileDebug",
                     ":app:javaPreCompileDebugUnitTest",
                     ":app:mergeDebugAssets",
@@ -132,6 +133,10 @@ class CacheabilityTest {
             TestFileUtils.appendToFile(
                 project.getSubproject("app").buildFile,
                 "android { testOptions { unitTests { includeAndroidResources = true } } }"
+            )
+            TestFileUtils.appendToFile(
+                project.getSubproject("app").buildFile,
+                "android { buildTypes { debug { testCoverageEnabled = true } } }"
             )
         }
     }

@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.testutils.FileSnapshot
 import com.google.common.truth.Expect
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -79,6 +80,18 @@ class DeterministicTaskOutputsTest {
 
     @get:Rule
     val expect: Expect = Expect.create()
+
+    @Before
+    fun setUpProjects() {
+        project1.getSubproject("app").buildFile.appendText("""
+            
+            android.buildTypes.debug.testCoverageEnabled true
+        """.trimIndent())
+        project2.getSubproject("app").buildFile.appendText("""
+            
+            android.buildTypes.debug.testCoverageEnabled true
+        """.trimIndent())
+    }
 
     @Test
     fun `check consistent outputs after building two identical projects`() {

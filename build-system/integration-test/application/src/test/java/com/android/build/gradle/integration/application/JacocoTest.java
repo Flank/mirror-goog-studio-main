@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -158,21 +157,51 @@ public class JacocoTest {
 
         GradleBuildResult result =
                 project.executor().withEnableInfoLogging(true).run("assembleDebug");
-        int numberOfDirsProcessed = 0;
         int numberOfFilesProcessed = 0;
         try (Scanner scanner = result.getStdout()) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                if (line.contains("Processing entries from input dir: ")) {
-                    numberOfDirsProcessed++;
+                if (line.contains("Instrumenting file: ")) {
+                    numberOfFilesProcessed++;
+                }
+            }
+        }
+        assertThat(numberOfFilesProcessed).named("number of files with Jacoco").isEqualTo(2);
+    }
+
+    @Test
+    public void testChangedJars() throws Exception {
+        project.executor().run("assembleDebug");
+
+        File strings = new File(project.getTestDir(), "src/main/res/values/strings.xml");
+        FileUtils.mkdirs(strings.getParentFile());
+        String dataSrcContent =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <string name=\"app_name\">HelloWorld</string>\n"
+                        + "    <string name=\"app_name2\">HelloWorld2</string>\n"
+                        + "</resources>\n";
+        java.nio.file.Files.write(strings.toPath(), dataSrcContent.getBytes(Charsets.UTF_8));
+
+        GradleBuildResult result =
+                project.executor().withEnableInfoLogging(true).run("assembleDebug");
+        int numberOfJarsProcessed = 0;
+        int numberOfFilesProcessed = 0;
+        try (Scanner scanner = result.getStdout()) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.contains("Instrumenting jar: ")) {
+                    numberOfJarsProcessed++;
                 } else if (line.contains("Instrumenting file: ")) {
                     numberOfFilesProcessed++;
                 }
             }
         }
-        assertThat(numberOfDirsProcessed)
-                .named("number of base directories processed with Jacoco")
+        assertThat(numberOfJarsProcessed)
+                .named("number of jars processed with Jacoco")
                 .isEqualTo(1);
-        assertThat(numberOfFilesProcessed).named("number of files with Jacoco").isEqualTo(2);
+        assertThat(numberOfFilesProcessed)
+                .named("number of files processed with Jacoco")
+                .isEqualTo(0);
     }
 }

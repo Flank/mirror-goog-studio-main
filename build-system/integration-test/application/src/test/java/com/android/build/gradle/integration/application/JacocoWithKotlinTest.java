@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.utils.FileUtils;
-import com.google.common.truth.Truth;
-import java.io.File;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
-import java.nio.file.Files;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,16 +54,16 @@ public class JacocoWithKotlinTest {
 
     @Test
     public void build() throws IOException, InterruptedException {
-        project.execute("jacocoDebug");
+        project.executor()
+                .with(BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS, true)
+                .run("assembleDebug");
 
-        File outputDir =
-                FileUtils.join(project.getIntermediatesDir(), "jacoco_instrumented_classes/debug");
-
-        // check HelloWorld class is in the Jacoco task output.
-        Truth.assertThat(
-                        Files.walk(outputDir.toPath())
-                                .filter(f -> f.getFileName().toString().equals("HelloWorld.class"))
-                                .count())
-                .isEqualTo(1);
+        // check HelloWorld class is instrumented
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
+                .that()
+                .hasField("$jacocoData");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsJavaResource("META-INF/project_debug.kotlin_module");
     }
 }
