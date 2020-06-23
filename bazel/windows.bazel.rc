@@ -4,6 +4,8 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 # required for dynamic scheduling.
 startup --windows_enable_symlinks
 
+build --enable_runfiles
+
 build:remote --config=remote_common
 build:remote --jobs=150
 

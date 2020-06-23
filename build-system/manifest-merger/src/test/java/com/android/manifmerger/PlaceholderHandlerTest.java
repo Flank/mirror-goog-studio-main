@@ -17,7 +17,6 @@
 package com.android.manifmerger;
 
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.testutils.BazelRunfilesManifestProcessor.logger;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -28,6 +27,8 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.testutils.MockLog;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import java.io.IOException;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,6 +39,7 @@ import org.xml.sax.SAXException;
 
 /** Tests for the {@link PlaceholderHandler} */
 public class PlaceholderHandlerTest extends TestCase {
+    private static final ILogger logger = new StdLogger(StdLogger.Level.INFO);
 
     private final ManifestModel mModel = new ManifestModel();
 
