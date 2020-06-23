@@ -271,7 +271,20 @@ def _impl(ctx):
         enabled = True,
     )
 
-    if ctx.attr.cpu == "x64_windows":
+    if ctx.attr.cpu == "darwin":
+        macos_target_min_requirement_feature = feature(
+            name = "macos_target_min_requirement",
+            enabled = True,
+            env_sets = [
+                env_set(
+                    actions = all_compile_actions +
+                              all_link_actions +
+                              [ACTION_NAMES.cpp_link_static_library],
+                    env_entries = [env_entry(key = "MACOSX_DEPLOYMENT_TARGET", value = "10.13")],
+                ),
+            ],
+        )
+    elif ctx.attr.cpu == "x64_windows":
         msvc_link_env_feature = feature(
             name = "msvc_link_env",
             env_sets = [
@@ -1899,6 +1912,7 @@ def _impl(ctx):
             #lld_feature,
             unfiltered_compile_flags_feature,
             archiver_flags_feature,
+            macos_target_min_requirement_feature,
         ]
     elif ctx.attr.cpu == "x64_windows":
         features = [
