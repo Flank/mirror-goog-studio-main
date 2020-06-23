@@ -29,6 +29,7 @@ import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessag
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
 import com.android.build.gradle.internal.cxx.cmake.parseLinkLibraries
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
 import com.android.build.gradle.internal.cxx.configure.getBuildRootFolder
 import com.android.build.gradle.internal.cxx.configure.getGenerator
@@ -51,21 +52,23 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessException
+import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Strings
 import com.google.common.collect.Maps
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
+import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
 import java.io.IOException
 import java.io.PrintWriter
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.ArrayList
 import java.util.HashMap
@@ -77,9 +80,38 @@ import java.util.HashMap
 internal class CmakeServerExternalNativeJsonGenerator(
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>
-) : CmakeExternalNativeJsonGenerator(variant, abis) {
-    @Throws(ProcessException::class, IOException::class)
-    override fun executeProcessAndGetOutput(ops: ExecOperations, abi: CxxAbiModel): String {
+) : ExternalNativeJsonGenerator(variant, abis) {
+    init {
+        variant.statsBuilder.nativeBuildSystemType = CMAKE
+        cmakeMakefileChecks(variant)
+    }
+
+    private val cmake get() = variant.module.cmake!!
+
+    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String {
+        val output = executeProcessAndGetOutput(abi)
+        return makeCmakeMessagePathsAbsolute(output, variant.module.makeFile.parentFile.parentFile)
+    }
+
+    override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {}
+
+    override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
+        val builder = ProcessInfoBuilder()
+
+        builder.setExecutable(cmake.cmakeExe)
+        val arguments = mutableListOf<CommandLineArgument>()
+        arguments.addAll(abi.getFinalCmakeCommandLineArguments())
+        builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())
+        return builder
+    }
+
+    /**
+     * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
+     * the process.
+     *
+     * @return Returns the combination of STDIO and STDERR from running the process.
+     */
+    private fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         // Once a Cmake server object is created
         // - connect to the server
         // - perform a handshake
