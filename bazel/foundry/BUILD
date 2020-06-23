@@ -32,7 +32,7 @@ platform(
         "@bazel_tools//platforms:windows",
     ],
     exec_properties = create_rbe_exec_properties_dict(
-        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows2019-as@sha256:ca96765c4a627b3531b8ccae8f1cc666dec3db143a5baed7670156a15df39dbc",
+        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows2019-as@sha256:6a99be7d42fd7ee64abf0cae518b68671aaff87213b1589fc79ae92e1ccdc6d1",
         os_family = "Windows",
         pool = "windows-2019",
     ),

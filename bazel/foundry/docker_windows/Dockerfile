@@ -10,22 +10,16 @@
 # - Has Bazel installed.
 
 # Use the latest Windows Server Core image.
-#
-# WARNING: What's the `:ltsc2019` about?
-# There are two versions of Windows Server 2019:
-# 1. A "regular" one (corresponding to `mcr.microsoft.com/windows/servercore:ltsc2019`)
-# is on a slow release cadence and is the Long-Term Servicing Channel.
-# Mainstream support for this image will end on 1/9/2024.
-# 2. A "fast" release cadence one (corresponding to
-# `mcr.microsoft.com/windows/servercore:1909`) is the Semi-Annual Channel.
-# Mainstream support for this image will end on 5/11/2021.
+# Originally this was supposed to be :ltsc2019, but it seems like there was an issue with that build at the time (6/2020),
+# where MSVC silently fails to install.
+# This build is a little more recent. Once ltsc2019 is updated, probably we could start using it again.
 
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM mcr.microsoft.com/windows/servercore:10.0.17763.1040
 
 SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; $VerbosePreference = 'Continue';"]
 
 # TODO(b/112379377): Workaround until bug is fixed.
-RUN netsh interface ipv4 set subinterface \"vEthernet (Ethernet)\" mtu=1460 store=persistent
+RUN netsh interface ipv4 set subinterface \"vEthernet (Ethernet) 2\" mtu=1460 store=persistent
 
 # Install Visual Studio 2015 Build Tools.
 RUN Invoke-WebRequest "https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe" \
@@ -48,8 +42,7 @@ RUN $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\Curr
   $newpath = \"$oldpath;C:\tools\msys64;C:\tools\msys64\usr\bin\"; \
   Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 # Install additional mysys2 binaries
-RUN Start-Process msys2 -ArgumentList 'pacman -noconfirm -Syuu git curl zip unzip' -Wait
-
+RUN Start-Process msys2 -ArgumentList 'pacman -noconfirm -Syuu curl zip unzip' -Wait
 # Install Visual C++ Redistributable for Visual Studio 2015:
 ADD https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vc_redist.x64.exe C:\\TEMP\\vc_redist.x64.exe
 RUN C:\TEMP\vc_redist.x64.exe /quiet /install
@@ -61,35 +54,11 @@ RUN $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\Curr
   $newpath = \"$oldpath;C:\Python27\"; \
   Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 
-# Install Bazel. Note that this step is probably not required, as we bundle Bazel with Studio, however we will include it for now.
 RUN Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name BAZEL_SH -Value \"C:\tools\msys64\usr\bin\bash.exe\"
 RUN Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name BAZEL_VC -Value \"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\"
-RUN [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
-ADD https://github.com/bazelbuild/bazel/releases/download/0.11.1/bazel-0.11.1-windows-x86_64.exe C:\\bin\\bazel.exe
-RUN $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path; \
-  $newpath = \"$oldpath;C:\bin\"; \
-  Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 
 # TODO: This requires entropy so may be problematic on a headless machine: https://wiki.archlinux.org/index.php/Pacman/Package_signing#Initializing_the_keyring
 RUN Start-Process msys2 -ArgumentList 'pacman-key --init' -Wait
-
-# TODO: If you don't run this then the next command can't succeed since it needs to prompt to remove catgets.
-RUN pacman --noconfirm -R libcatgets catgets
-
-RUN \
-  Add-Type -AssemblyName \"System.IO.Compression.FileSystem\"; \
-  $zulu_url = \"https://cdn.azul.com/zulu/bin/zulu8.28.0.1-jdk8.0.163-win_x64.zip\"; \
-  $zulu_zip = \"c:\\temp\\zulu8.28.0.1-jdk8.0.163-win_x64.zip\"; \
-  $zulu_extracted_path = \"c:\\temp\\\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip); \
-  $zulu_root = \"c:\\openjdk\"; \
-  (New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip); \
-  [System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, \"c:\\temp\"); \
-  Move-Item $zulu_extracted_path -Destination $zulu_root; \
-  Remove-Item $zulu_zip; \
-  $env:PATH = [Environment]::GetEnvironmentVariable(\"PATH\", \"Machine\") + \";${zulu_root}\\bin\"; \
-  [Environment]::SetEnvironmentVariable(\"PATH\", $env:PATH, \"Machine\"); \
-  $env:JAVA_HOME = $zulu_root; \
-  [Environment]::SetEnvironmentVariable(\"JAVA_HOME\", $env:JAVA_HOME, \"Machine\")
 
 # Set Android Studio Custom environment Variable
 ENV STUDIO_IMAGE=true
@@ -99,6 +68,3 @@ run reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem /t RE
 
 # Restore default shell for Windows containers.
 SHELL ["cmd.exe", "/s", "/c"]
-
-# Default to PowerShell if no other command specified.
-CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
