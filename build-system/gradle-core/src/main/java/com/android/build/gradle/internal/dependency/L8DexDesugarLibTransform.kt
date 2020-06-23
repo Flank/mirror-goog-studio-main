@@ -65,7 +65,8 @@ abstract class L8DexDesugarLibTransform : TransformAction<L8DexDesugarLibTransfo
             parameters.libConfiguration.get(),
             parameters.bootClasspath.map { it.toPath() },
             parameters.minSdkVersion.get(),
-            KeepRulesConfig(null, null)
+            KeepRulesConfig(null, null),
+            true
             )
     }
 }

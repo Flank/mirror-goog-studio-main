@@ -71,6 +71,9 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     @get:Input
     abstract val keepRulesConfigurations: ListProperty<String>
 
+    @get:Input
+    abstract val debuggable: Property<Boolean>
+
     @get:Nested
     abstract val androidJarInput: AndroidJarInput
 
@@ -88,7 +91,8 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                     androidJarInput.getAndroidJar().get(),
                     minSdkVersion.get(),
                     keepRulesFiles.files,
-                    keepRulesConfigurations.orNull
+                    keepRulesConfigurations.orNull,
+                    debuggable.get()
                 )
             )
         }
@@ -224,6 +228,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             if (nonMinified) {
                 task.keepRulesConfigurations.set(listOf("-dontobfuscate"))
             }
+            task.debuggable.set(creationConfig.variantDslInfo.isDebuggable)
         }
     }
 }
@@ -236,7 +241,8 @@ class L8DexParams(
     val androidJar: File,
     val minSdkVersion: Int,
     val keepRulesFiles: Set<File>,
-    val keepRulesConfigurations: List<String>?
+    val keepRulesConfigurations: List<String>?,
+    val debuggable: Boolean
 ) : Serializable
 
 @VisibleForTesting
@@ -251,7 +257,9 @@ class L8DexRunnable @Inject constructor(val params: L8DexParams) : Runnable {
             params.libConfiguration,
             listOf(params.androidJar.toPath()),
             params.minSdkVersion,
-            keepRulesConfig)
+            keepRulesConfig,
+            params.debuggable
+        )
     }
 
     private fun getAllFilesUnderDirectories(dirs: Set<File>) : List<Path> {
