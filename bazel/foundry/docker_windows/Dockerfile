@@ -16,16 +16,21 @@
 
 FROM mcr.microsoft.com/windows/servercore:10.0.17763.1040
 
-SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; $VerbosePreference = 'Continue';"]
+SHELL ["cmd", "/S", "/C"]
 
 # TODO(b/112379377): Workaround until bug is fixed.
 RUN netsh interface ipv4 set subinterface \"vEthernet (Ethernet) 2\" mtu=1460 store=persistent
 
-# Install Visual Studio 2015 Build Tools.
-RUN Invoke-WebRequest "https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe" \
-                -OutFile visualcppbuildtools_full.exe -UseBasicParsing ; \
-        Start-Process -FilePath 'visualcppbuildtools_full.exe' -ArgumentList '/quiet', '/NoRestart' -Wait ; \
-        Remove-Item .\visualcppbuildtools_full.exe;
+# Install windows 10 build tools
+ADD https://aka.ms/vs/16/release/vs_buildtools.exe "C:\TEMP\vs_buildtools.exe"
+RUN c:\temp\vs_buildtools.exe --wait --quiet --norestart --nocache \
+    --add Microsoft.VisualStudio.Workload.VCTools \
+    --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \
+    --add Microsoft.VisualStudio.Component.Windows10SDK.18362 \
+    --add Microsoft.Component.VC.Runtime.UCRTSDK \
+    --add Microsoft.VisualStudio.Component.VC.CLI.Support
+
+SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; $VerbosePreference = 'Continue';"]
 
 # Install 7-Zip and add it to the path.
 ADD https://www.7-zip.org/a/7z1801-x64.msi C:\\TEMP\\7z.msi
