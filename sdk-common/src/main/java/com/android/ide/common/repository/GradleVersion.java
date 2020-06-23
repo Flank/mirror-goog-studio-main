@@ -548,4 +548,15 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
             return null;
         }
     }
+
+    @NonNull
+    public static GradleVersion parseAndroidGradlePluginVersion(@NonNull String value) {
+        GradleVersion version = tryParseAndroidGradlePluginVersion(value);
+        if (version == null) {
+            throw new IllegalArgumentException(
+                    value + " is not a valid Android Gradle plugin version");
+        } else {
+            return version;
+        }
+    }
 }

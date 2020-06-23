@@ -26,7 +26,7 @@ interface Option<out T> {
 
         object STABLE : Status()
 
-        class Deprecated(private val deprecationTarget: DeprecationReporter.DeprecationTarget) :
+        class Deprecated(val deprecationTarget: DeprecationReporter.DeprecationTarget) :
             Status() {
 
             fun getDeprecationTargetMessage(): String {
@@ -36,10 +36,13 @@ interface Option<out T> {
 
         class Removed(
 
-            // Mark these properties as private to prevent external usages from constructing
-            // inconsistent messages from these values. They should use methods like
-            // getRemovedVersionMessage() instead.
-            private val removedVersion: Version,
+            /**
+             * The version when an element was removed.
+             *
+             * Usage note: Do not use this field to construct a removal message, use
+             * getRemovedVersionMessage() instead to ensure consistent message format.
+             */
+            val removedVersion: Version,
 
             /**
              * Additional message to be shown below the pre-formatted error/warning message.

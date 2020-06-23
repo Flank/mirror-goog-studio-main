@@ -22,7 +22,6 @@ import com.android.build.gradle.options.Version
 /**
  * Reporter for issues during evaluation.
  *
- *
  * This handles dealing with errors differently if the project is being run from the command line
  * or from the IDE, in particular during Sync when we don't want to throw any exception
  */
@@ -31,10 +30,13 @@ interface DeprecationReporter {
     /** Enum for deprecated element removal target.  */
     enum class DeprecationTarget constructor(
 
-        // Mark these properties as private to prevent external usages from constructing
-        // inconsistent messages from these values. They should use methods like
-        // getDeprecationTargetMessage() instead.
-        private val removalTarget: Version,
+        /**
+         * The target version when a deprecated element will be removed.
+         *
+         * Usage note: Do not use this field to construct a deprecation message, use
+         * getDeprecationTargetMessage() instead to ensure consistent message format.
+         */
+        val removalTarget: Version,
 
         /**
          * Additional message to be shown below the pre-formatted error/warning message.
