@@ -44,6 +44,7 @@ import com.android.testutils.truth.DexClassSubject
 import com.android.testutils.truth.DexSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import org.jf.dexlib2.immutable.debug.ImmutableStartLocal
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -182,6 +183,8 @@ class CoreLibraryDesugarTest {
             ?: fail("Failed to find the dex with class name $programClass")
         DexClassSubject.assertThat(dex.classes[programClass])
             .hasMethodThatInvokes("getText", "Lj$/util/stream/Stream;->findFirst()Lj$/util/Optional;")
+        val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)!!
+        assertThat(getAllStartLocals(desugarLibDex)).named("debug locals info").isNotEmpty()
     }
 
     @Test
@@ -297,6 +300,7 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
         // check non minified release builds are not obfuscated.
         DexSubject.assertThat(desugarLibDex).containsClass(unObfuscatedClass)
+        assertThat(getAllStartLocals(desugarLibDex)).named("debug locals info").isEmpty()
         DexSubject.assertThat(desugarLibDex).doesNotContainClasses(obfuscatedClass)
     }
 
@@ -599,6 +603,16 @@ class CoreLibraryDesugarTest {
         val file = File(library.mainSrcDir, "${LIBRARY_PACKAGE.replace('.', '/')}/Calendar.java")
         file.parentFile.mkdirs()
         file.writeText(source)
+    }
+
+    private fun getAllStartLocals(desugarLibDex: Dex): Collection<ImmutableStartLocal> {
+        return desugarLibDex.classes.values.flatMap { dexClass ->
+            dexClass.methods.flatMap { method ->
+                method.implementation?.debugItems?.let { debugItems ->
+                    debugItems.mapNotNull { it as? ImmutableStartLocal }
+                } ?: emptyList()
+            }
+        }
     }
 
     companion object {
