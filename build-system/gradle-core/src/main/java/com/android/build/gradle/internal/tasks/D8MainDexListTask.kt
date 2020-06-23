@@ -25,6 +25,7 @@ import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -45,8 +46,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * Calculate the main dex list using D8.
@@ -84,64 +83,64 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
     abstract val output: RegularFileProperty
 
     override fun doTaskAction() {
-
-        // Javac output may be missing if there are no .java sources, so filter missing b/152759930.
-        val programClasses = inputClasses.files.filter { it.exists() }
-        val libraryFilesNotInInputs =
-            libraryClasses.files.filter { !programClasses.contains(it) } + bootClasspath.files
-
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MainDexListRunnable::class.java,
-                MainDexListRunnable.Params(
-                    listOfNotNull(
-                        aaptGeneratedRules.get().asFile,
-                        userMultidexProguardRules.orNull?.asFile),
-                    programClasses,
-                    libraryFilesNotInInputs,
-                    userMultidexKeepFile.orNull?.asFile,
-                    output.get().asFile,
-                    errorFormat.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(
+            MainDexListWorkerAction::class.java
+        ) { params ->
+            params.initializeFromAndroidVariantTask(this)
+            params.proguardRules.from(aaptGeneratedRules)
+            userMultidexProguardRules.orNull?.let { userRules ->
+                params.proguardRules.from(userRules)
+            }
+            params.programClasses.from(inputClasses)
+            params.libraryClasses.from(libraryClasses)
+            params.bootClasspath.from(bootClasspath)
+            params.userMultidexKeepFile.set(userMultidexKeepFile.orNull?.asFile)
+            params.output.set(output.asFile)
+            params.errorFormat.set(errorFormat)
         }
     }
 
-    class MainDexListRunnable @Inject constructor(val params: Params) : Runnable {
+    abstract class MainDexListWorkerAction : ProfileAwareWorkAction<MainDexListWorkerAction.Params>() {
 
-        class Params(
-            val proguardRules: Collection<File>,
-            val programFiles: Collection<File>,
-            val libraryFiles: Collection<File>,
-            val userMultidexKeepFile: File?,
-            val output: File,
-            val errorFormat: SyncOptions.ErrorFormatMode
-        ) : Serializable
+        abstract class Params: ProfileAwareWorkAction.Parameters() {
+            abstract val proguardRules: ConfigurableFileCollection
+            abstract val programClasses: ConfigurableFileCollection
+            abstract val libraryClasses: ConfigurableFileCollection
+            abstract val bootClasspath: ConfigurableFileCollection
+            abstract val userMultidexKeepFile: Property<File>
+            abstract val output: Property<File>
+            abstract val errorFormat: Property<SyncOptions.ErrorFormatMode>
+        }
 
         override fun run() {
+            // Javac output may be missing if there are no .java sources, so filter missing b/152759930.
+            val programClasses = parameters.programClasses.files.filter { it.exists() }
+            val libraryFilesNotInInputs =
+                parameters.libraryClasses.files.filter { !programClasses.contains(it) } + parameters.bootClasspath.files
             val logger = Logging.getLogger(D8MainDexListTask::class.java)
+
             logger.debug("Generating the main dex list using D8.")
-            logger.debug("Program files: %s", params.programFiles.joinToString())
-            logger.debug("Library files: %s", params.libraryFiles.joinToString())
-            logger.debug("Proguard rule files: %s", params.proguardRules.joinToString())
+            logger.debug("Program files: %s", programClasses.joinToString())
+            logger.debug("Library files: %s", libraryFilesNotInInputs.joinToString())
+            logger.debug("Proguard rule files: %s", parameters.proguardRules.joinToString())
 
             val mainDexClasses = mutableSetOf<String>()
 
             mainDexClasses.addAll(
                 D8MainDexList.generate(
                     getPlatformRules(),
-                    params.proguardRules.map { it.toPath() },
-                    params.programFiles.map { it.toPath() },
-                    params.libraryFiles.map { it.toPath() },
-                    MessageReceiverImpl(params.errorFormat, logger)
+                    parameters.proguardRules.map { it.toPath() },
+                    programClasses.map { it.toPath() },
+                    libraryFilesNotInInputs.map { it.toPath() },
+                    MessageReceiverImpl(parameters.errorFormat.get(), logger)
                 )
             )
 
-            params.userMultidexKeepFile?.let {
+            parameters.userMultidexKeepFile.orNull?.let {
                 mainDexClasses.addAll(it.readLines())
             }
 
-            params.output.writeText(mainDexClasses.joinToString(separator = System.lineSeparator()))
+            parameters.output.get().writeText(mainDexClasses.joinToString(separator = System.lineSeparator()))
         }
     }
 

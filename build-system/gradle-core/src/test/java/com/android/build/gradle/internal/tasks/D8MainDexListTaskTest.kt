@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ERROR_DUPLICATE_HELP_PAGE
 import com.android.builder.multidex.D8MainDexList
@@ -50,16 +52,22 @@ class D8MainDexListTaskTest {
         val proguardRules = tmpDir.root.resolve("proguard_rules")
         proguardRules.writeText("-keep class test.A")
 
-        D8MainDexListTask.MainDexListRunnable(
-            D8MainDexListTask.MainDexListRunnable.Params(
-                listOf(proguardRules),
-                listOf(inputJar),
-                getBootClasspath(),
-                null,
-                output,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE
-            )
-        ).run()
+        object: D8MainDexListTask.MainDexListWorkerAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val proguardRules = FakeConfigurableFileCollection(proguardRules)
+                    override val programClasses = FakeConfigurableFileCollection(inputJar)
+                    override val libraryClasses = FakeConfigurableFileCollection()
+                    override val bootClasspath = getBootClasspath()
+                    override val userMultidexKeepFile = FakeGradleProperty(null as File?)
+                    override val output = FakeGradleProperty(output)
+                    override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThat(output.readLines()).containsExactly("test/A.class")
     }
@@ -77,16 +85,22 @@ class D8MainDexListTaskTest {
         val userProguardRules = tmpDir.root.resolve("user_proguard_rules")
         userProguardRules.writeText("-keep class test.B")
 
-        D8MainDexListTask.MainDexListRunnable(
-            D8MainDexListTask.MainDexListRunnable.Params(
-                listOf(proguardRules, userProguardRules),
-                listOf(inputJar),
-                getBootClasspath(),
-                null,
-                output,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE
-            )
-        ).run()
+        object: D8MainDexListTask.MainDexListWorkerAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val proguardRules = FakeConfigurableFileCollection(proguardRules, userProguardRules)
+                    override val programClasses = FakeConfigurableFileCollection(inputJar)
+                    override val libraryClasses = FakeConfigurableFileCollection()
+                    override val bootClasspath = getBootClasspath()
+                    override val userMultidexKeepFile = FakeGradleProperty(null as File?)
+                    override val output = FakeGradleProperty(output)
+                    override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThat(output.readLines()).containsExactly("test/A.class", "test/B.class")
     }
@@ -107,16 +121,22 @@ class D8MainDexListTaskTest {
             ).joinToString(separator = System.lineSeparator())
         )
 
-        D8MainDexListTask.MainDexListRunnable(
-            D8MainDexListTask.MainDexListRunnable.Params(
-                listOf(),
-                listOf(inputJar),
-                getBootClasspath(),
-                userClasses,
-                output,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE
-            )
-        ).run()
+        object: D8MainDexListTask.MainDexListWorkerAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val proguardRules = FakeConfigurableFileCollection()
+                    override val programClasses = FakeConfigurableFileCollection(inputJar)
+                    override val libraryClasses = FakeConfigurableFileCollection()
+                    override val bootClasspath = getBootClasspath()
+                    override val userMultidexKeepFile = FakeGradleProperty(userClasses)
+                    override val output = FakeGradleProperty(output)
+                    override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThat(output.readLines()).containsExactly("test/User1.class", "test/User2.class")
     }
@@ -128,16 +148,22 @@ class D8MainDexListTaskTest {
         val inputJar = tmpDir.root.resolve("input.jar")
         TestInputsGenerator.jarWithEmptyClasses(inputJar.toPath(), listOf("test/A"))
 
-        D8MainDexListTask.MainDexListRunnable(
-            D8MainDexListTask.MainDexListRunnable.Params(
-                listOf(),
-                listOf(inputJar),
-                getBootClasspath(),
-                null,
-                output,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE
-            )
-        ).run()
+        object: D8MainDexListTask.MainDexListWorkerAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val proguardRules = FakeConfigurableFileCollection()
+                    override val programClasses = FakeConfigurableFileCollection(inputJar)
+                    override val libraryClasses = FakeConfigurableFileCollection()
+                    override val bootClasspath = getBootClasspath()
+                    override val userMultidexKeepFile = FakeGradleProperty(null as File?)
+                    override val output = FakeGradleProperty(output)
+                    override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThat(output.readLines()).isEmpty()
     }
@@ -153,16 +179,22 @@ class D8MainDexListTaskTest {
         TestInputsGenerator.jarWithEmptyClasses(inputJar2.toPath(), listOf("test/A"))
 
         val exception = assertFailsWith(D8MainDexList.MainDexListException::class) {
-            D8MainDexListTask.MainDexListRunnable(
-                D8MainDexListTask.MainDexListRunnable.Params(
-                    listOf(),
-                    listOf(inputJar1, inputJar2),
-                    getBootClasspath(),
-                    null,
-                    output,
-                    SyncOptions.ErrorFormatMode.HUMAN_READABLE
-                )
-            ).run()
+            object: D8MainDexListTask.MainDexListWorkerAction() {
+                override fun getParameters(): Params {
+                    return object: Params() {
+                        override val proguardRules = FakeConfigurableFileCollection()
+                        override val programClasses = FakeConfigurableFileCollection(inputJar1, inputJar2)
+                        override val libraryClasses = FakeConfigurableFileCollection()
+                        override val bootClasspath = getBootClasspath()
+                        override val userMultidexKeepFile = FakeGradleProperty(null as File?)
+                        override val output = FakeGradleProperty(output)
+                        override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                        override val projectName = FakeGradleProperty("project")
+                        override val taskOwner = FakeGradleProperty("task")
+                        override val workerKey = FakeGradleProperty("workerKey")
+                    }
+                }
+            }.execute()
         }
 
         assertThat(exception.message).contains("is defined multiple times")
@@ -180,16 +212,22 @@ class D8MainDexListTaskTest {
             it.createNewFile()
         }
 
-        D8MainDexListTask.MainDexListRunnable(
-            D8MainDexListTask.MainDexListRunnable.Params(
-                listOf(),
-                listOf(inputDir),
-                getBootClasspath(),
-                null,
-                output,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE
-            )
-        ).run()
+        object: D8MainDexListTask.MainDexListWorkerAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val proguardRules = FakeConfigurableFileCollection()
+                    override val programClasses = FakeConfigurableFileCollection(inputDir)
+                    override val libraryClasses = FakeConfigurableFileCollection()
+                    override val bootClasspath = getBootClasspath()
+                    override val userMultidexKeepFile = FakeGradleProperty(null as File?)
+                    override val output = FakeGradleProperty(output)
+                    override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThat(output.readLines()).isEmpty()
     }
@@ -208,21 +246,27 @@ class D8MainDexListTaskTest {
             }
         }
 
-        D8MainDexListTask.MainDexListRunnable(
-            D8MainDexListTask.MainDexListRunnable.Params(
-                listOf(),
-                listOf(inputJar),
-                getBootClasspath(),
-                null,
-                output,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE
-            )
-        ).run()
+        object: D8MainDexListTask.MainDexListWorkerAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val proguardRules = FakeConfigurableFileCollection()
+                    override val programClasses = FakeConfigurableFileCollection(inputJar)
+                    override val libraryClasses = FakeConfigurableFileCollection()
+                    override val bootClasspath = getBootClasspath()
+                    override val userMultidexKeepFile = FakeGradleProperty(null as File?)
+                    override val output = FakeGradleProperty(output)
+                    override val errorFormat = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThat(output.readLines()).isEmpty()
     }
 
-    private fun getBootClasspath(): Collection<File> {
-        return listOf(TestUtils.getPlatformFile("android.jar"))
+    private fun getBootClasspath(): FakeConfigurableFileCollection {
+        return FakeConfigurableFileCollection(TestUtils.getPlatformFile("android.jar"))
     }
 }
