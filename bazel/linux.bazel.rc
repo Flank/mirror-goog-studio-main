@@ -12,9 +12,9 @@ build:remote_common --remote_instance_name=projects/google.com:android-studio-al
 build --crosstool_top=@native_toolchain//:toolchain
 
 build:remote --extra_toolchains=@native_toolchain//:cc-toolchain-x64_linux
-build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_ubuntu16
-build:remote --host_platform=//tools/base/bazel/foundry:rbe_ubuntu16
-build:remote --platforms=//tools/base/bazel/foundry:rbe_ubuntu16
+build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_ubuntu18
+build:remote --host_platform=//tools/base/bazel/foundry:rbe_ubuntu18
+build:remote --platforms=//tools/base/bazel/foundry:rbe_ubuntu18
 
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections

@@ -6,7 +6,7 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 platform(
-    name = "rbe_ubuntu16",
+    name = "rbe_ubuntu18",
     constraint_values = [
         "@bazel_tools//platforms:x86_64",
         "@bazel_tools//platforms:linux",
@@ -26,7 +26,7 @@ platform(
 )
 
 platform(
-    name = "rbe_windows1803_as",
+    name = "rbe_windows2019_as",
     constraint_values = [
         "@bazel_tools//platforms:x86_64",
         "@bazel_tools//platforms:windows",

@@ -14,8 +14,8 @@ build --crosstool_top=@native_toolchain//:toolchain
 
 build --extra_toolchains=@native_toolchain//:cc-toolchain-x64_windows-clang-cl
 
-build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows1803_as
-build:remote --host_platform=//tools/base/bazel/foundry:rbe_windows1803_as
-build:remote --platforms=//tools/base/bazel/foundry:rbe_windows1803_as
+build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows2019_as
+build:remote --host_platform=//tools/base/bazel/foundry:rbe_windows2019_as
+build:remote --platforms=//tools/base/bazel/foundry:rbe_windows2019_as
 
 build --compiler=clang-cl
