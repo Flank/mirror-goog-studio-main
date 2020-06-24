@@ -216,7 +216,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             task.allDirectDependencies = creationConfig
                 .variantDependencies
-                .incomingRuntimeDependencies
+                .getIncomingRuntimeDependencies()
 
             task.isVariantLibrary = (creationConfig.variantType == VariantTypeImpl.LIBRARY)
 
