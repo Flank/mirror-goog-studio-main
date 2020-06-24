@@ -6,7 +6,7 @@ config_setting(
 
 cc_library(
     name = "skia_includes",
-    hdrs = ["SkUserConfig.h"] + select({
+    hdrs = ["StudioConfig.h"] + select({
         "windows": ["win/dlfcn.h"],
         "//conditions:default": [],
     }),
