@@ -875,19 +875,19 @@ open class LintCliClient : LintClient {
         if (ids != null) {
             for (id in ids) {
                 if (registry.getIssue(id) == null) {
-                    reportNonExistingIssueId(project, id)
+                    reportNonExistingIssueId(project, registry, id)
                 }
             }
         }
     }
 
-    private fun reportNonExistingIssueId(project: Project?, id: String) {
+    private fun reportNonExistingIssueId(project: Project?, registry: IssueRegistry, id: String) {
         if (id == "MissingRegistered") {
             // Recently renamed to MissingClass, but avoid complaining about leftover
             // configuration
             return
         }
-        val message = "Unknown issue id \"$id\""
+        val message = DefaultConfiguration.getUnknownIssueIdErrorMessage(id, registry)
         if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.UNKNOWN_ISSUE_ID)) {
             val location = guessGradleLocation(this, project.dir, id)
             report(

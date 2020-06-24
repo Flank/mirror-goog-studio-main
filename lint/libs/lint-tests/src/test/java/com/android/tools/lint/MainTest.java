@@ -665,7 +665,7 @@ public class MainTest extends AbstractCheckTest {
         checkDriver(
                 ""
                         + "Scanning MainTest_testInvalidLintXmlId: \n"
-                        + "MainTest_testInvalidLintXmlId: Error: Unknown issue id \"SomeUnknownId\", found in /TESTROOT/lint.xml [UnknownIssueId]\n"
+                        + "lint.xml: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
                         + "1 errors, 0 warnings",
                 "",
 

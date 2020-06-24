@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.editDistance
 import com.google.common.annotations.Beta
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
@@ -273,6 +274,46 @@ protected constructor() {
         }
 
         return map[id]
+    }
+
+    /**
+     * Given an issue id for an unknown issue, return any issues that appear to be
+     * spelled similarly.
+     */
+    fun getIdSpellingSuggestions(id: String): List<String> {
+        val maxDistance = if (id.length >= 4) 2 else 1
+
+        val matches = mutableSetOf<String>()
+
+        // Look for case insensitive matches
+
+        for (issue in issues) {
+            val matchWith = issue.id
+            val distance = editDistance(id, matchWith, maxDistance)
+            if (distance <= maxDistance) {
+                matches.add(matchWith)
+            }
+            if (matchWith.equals(id, ignoreCase = true)) {
+                matches.add(matchWith)
+            }
+        }
+
+        // If no matches, look for containment. This will catch cases where for example
+        // an id is namespaced and you didn't supply that namespace or vice versa.
+        if (matches.isEmpty()) {
+            for (issue in issues) {
+                val matchWith = issue.id
+                if (matchWith.contains(id) || id.contains(matchWith)) {
+                    matches.add(matchWith)
+                }
+            }
+        }
+
+        if (matches.isEmpty()) {
+            return emptyList()
+        }
+
+        return matches.asSequence().sorted().toList()
     }
 
     private fun createIdToIssueMap(): Map<String, Issue> {
