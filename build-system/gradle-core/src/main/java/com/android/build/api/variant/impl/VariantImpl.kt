@@ -77,4 +77,16 @@ abstract class VariantImpl<PropertiesT: VariantProperties>(
     }
 
     abstract fun createUserVisibleVariantObject(projectServices: ProjectServices, stats: GradleBuildVariant.Builder): AnalyticsEnabledVariant<in PropertiesT>
+
+
+    override var renderscriptTargetApi: Int = -1
+        get() {
+            // if the field has been set, always use  that value, otherwise, calculate it each
+            // time in case minSdkVersion changes.
+            if (field != -1) return field
+            val targetApi = variantDslInfo.renderscriptTarget
+            // default to -1 if not in build.gradle file.
+            val minSdk = minSdkVersion.getFeatureLevel()
+            return if (targetApi > minSdk) targetApi else minSdk
+        }
 }

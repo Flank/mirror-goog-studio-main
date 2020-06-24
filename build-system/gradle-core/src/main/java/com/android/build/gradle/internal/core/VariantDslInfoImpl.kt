@@ -637,15 +637,7 @@ open class VariantDslInfoImpl internal constructor(
                 ?: DefaultApiVersion.create(Integer.valueOf(-1))
         }
 
-    override val renderscriptTarget: Int
-        get() {
-            val targetApi = mergedFlavor.renderscriptTargetApi ?: -1
-
-            // default to -1 if not in build.gradle file.
-            val minSdk = minSdkVersion.featureLevel
-
-            return if (targetApi > minSdk) targetApi else minSdk
-        }
+    override val renderscriptTarget: Int = mergedFlavor.renderscriptTargetApi ?: -1
 
     override val isWearAppUnbundled: Boolean?
         get() = mergedFlavor.wearAppUnbundled

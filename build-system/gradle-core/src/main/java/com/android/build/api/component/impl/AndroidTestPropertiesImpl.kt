@@ -26,6 +26,7 @@ import com.android.build.api.variant.impl.ResValue
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -45,7 +46,7 @@ import java.lang.RuntimeException
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
-    componentIdentity: AndroidTestImpl,
+    override val variant: AndroidTestImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -60,7 +61,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : TestComponentPropertiesImpl(
-    componentIdentity,
+    variant,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -191,6 +192,9 @@ open class AndroidTestPropertiesImpl @Inject constructor(
             "$name:resValues"
         )
     }
+
+    override val renderscriptTargetApi: Int
+        get() = testedVariant.variant.renderscriptTargetApi
 
     /**
      * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk

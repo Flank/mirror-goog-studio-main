@@ -79,6 +79,7 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
@@ -1013,7 +1014,7 @@ public abstract class TaskManager<
         taskFactory.register(new ProcessTestManifest.CreationAction(creationConfig));
     }
 
-    public void createRenderscriptTask(@NonNull VariantCreationConfig creationConfig) {
+    public void createRenderscriptTask(@NonNull ConsumableCreationConfig creationConfig) {
         if (creationConfig.getBuildFeatures().getRenderScript()) {
             final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant
 
-import org.gradle.api.Incubating
+package com.android.build.gradle.internal.component
 
 /**
- * [Variant] type for library projects
+ * CreationConfig for variants that produces an artifact that is directly install-able to devices
+ * like APKs or AABs or used by other projects as a versioned reusable logic like AARs.
  */
-@Incubating
-interface LibraryVariant<PropertiesT: LibraryVariantProperties> : Variant<PropertiesT>
+interface ConsumableCreationConfig: VariantCreationConfig {
+    val renderscriptTargetApi: Int
+}

@@ -49,6 +49,14 @@ abstract class AnalyticsEnabledVariant<PropertiesT: VariantProperties>(
                 VariantMethodType.MIN_SDK_VERSION_VALUE_VALUE
             delegate.minSdkVersion = value}
 
+    override var renderscriptTargetApi: Int
+        get() = delegate.renderscriptTargetApi
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder()
+                .type = VariantMethodType.RENDERSCRIPT_TARGET_API_VALUE
+            delegate.renderscriptTargetApi = value
+        }
+
     override fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit) {
         unitTestActions.registerAction(Action { action(it) })
     }

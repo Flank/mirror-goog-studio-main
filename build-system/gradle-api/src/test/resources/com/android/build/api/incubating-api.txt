@@ -837,7 +837,9 @@ com.android.build.api.variant.Variant implements com.android.build.api.component
 com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest<com.android.build.api.component.AndroidTestProperties>, kotlin.Unit>)
 com.android.build.api.variant.Variant.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestProperties, kotlin.Unit>)
 com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
+com.android.build.api.variant.Variant.getRenderscriptTargetApi: int ()
 com.android.build.api.variant.Variant.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
+com.android.build.api.variant.Variant.setRenderscriptTargetApi: void (int)
 com.android.build.api.variant.Variant.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest<com.android.build.api.component.UnitTestProperties>, kotlin.Unit>)
 com.android.build.api.variant.Variant.unitTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestProperties, kotlin.Unit>)
 com.android.build.api.variant.VariantInfo

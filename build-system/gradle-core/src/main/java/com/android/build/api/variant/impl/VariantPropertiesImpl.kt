@@ -23,6 +23,7 @@ import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.VariantProperties
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -69,7 +70,7 @@ abstract class VariantPropertiesImpl(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), VariantProperties, VariantCreationConfig {
+), VariantProperties, ConsumableCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -148,6 +149,9 @@ abstract class VariantPropertiesImpl(
             "$name:resValues"
         )
     }
+
+    override val renderscriptTargetApi: Int
+        get() =  variant.renderscriptTargetApi
 
     override val minSdkVersion: AndroidVersion
         get() = variant.minSdkVersion
