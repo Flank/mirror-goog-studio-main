@@ -101,7 +101,7 @@ class CoreLibraryDesugarGeneralizationTest {
                "group_id": "com.example",
                "required_compilation_api_level": 26,
                "synthesized_library_classes_package_prefix": "foo$.",
-                "library_flags": [
+               "library_flags": [
                     {
                         "api_level_below_or_equal": 25,
                         "rewrite_prefix": {
@@ -110,7 +110,8 @@ class CoreLibraryDesugarGeneralizationTest {
                     }
                 ],
                 "program_flags": [],
-                "version": "0.11.2"
+                "common_flags": [],
+                "version": "1.0.9"
             }
         """
     }
