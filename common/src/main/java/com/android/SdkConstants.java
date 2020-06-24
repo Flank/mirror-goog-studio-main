@@ -780,6 +780,9 @@ public final class SdkConstants {
     public static final AndroidxName CLASS_SUPPORT_PREFERENCE_SCREEN =
             AndroidxName.of("android.support.v7.preference.", "PreferenceScreen");
 
+    public static final String CLASS_FRAGMENT_CONTAINER_VIEW =
+            "androidx.fragment.app.FragmentContainerView";
+
     public static final String CLASS_AD_VIEW = "com.google.android.gms.ads.AdView"; //$NON-NLS-1$
     public static final String CLASS_MAP_FRAGMENT =
             "com.google.android.gms.maps.MapFragment"; //$NON-NLS-1$
@@ -1252,6 +1255,7 @@ public final class SdkConstants {
     public static final AndroidxName RECYCLER_VIEW = CLASS_RECYCLER_VIEW_V7;
     public static final AndroidxName CARD_VIEW = CLASS_CARD_VIEW;
     public static final AndroidxName ACTION_MENU_VIEW = CLASS_ACTION_MENU_VIEW;
+    public static final String FRAGMENT_CONTAINER_VIEW = CLASS_FRAGMENT_CONTAINER_VIEW;
     public static final String AD_VIEW = CLASS_AD_VIEW;
     public static final String MAP_FRAGMENT = CLASS_MAP_FRAGMENT;
     public static final String MAP_VIEW = CLASS_MAP_VIEW;
@@ -2788,6 +2792,7 @@ public final class SdkConstants {
     public static final String CARD_VIEW_LIB_ARTIFACT = "com.android.support:cardview-v7";
     public static final String GRID_LAYOUT_LIB_ARTIFACT = "com.android.support:gridlayout-v7";
     public static final String RECYCLER_VIEW_LIB_ARTIFACT = "com.android.support:recyclerview-v7";
+    public static final String FRAGMENT_LIB_ARTIFACT = "androidx.fragment:fragment";
     public static final String MAPS_ARTIFACT = "com.google.android.gms:play-services-maps";
     public static final String ADS_ARTIFACT = "com.google.android.gms:play-services-ads";
     public static final String LEANBACK_V17_ARTIFACT = "com.android.support:leanback-v17";
