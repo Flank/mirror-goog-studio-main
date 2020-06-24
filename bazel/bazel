@@ -52,10 +52,6 @@ def main():
         'Make sure to change the path to C:\\tools\\msys64\n' +
         '\n' +
         'See also: https://github.com/bazelbuild/bazel/issues/2447')
-    define_env(env, 'BAZEL_VS', 'C:\\Program Files (x86)\\Microsoft Visual Studio 14.0',
-        'Please install VC++ build tools for bazel to work. For a consistent version\n' +
-        'use Visual C++ 2015 Build Tools which you can find at:\n' +
-        'http://landinghub.visualstudio.com/visual-cpp-build-tools')
     python_path = 'C:\\python27\\python.exe'
     if not os.path.exists(python_path):
         # Use path from Windows 2016 images.
