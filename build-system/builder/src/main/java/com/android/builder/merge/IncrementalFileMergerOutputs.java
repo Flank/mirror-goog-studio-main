@@ -89,6 +89,8 @@ public final class IncrementalFileMergerOutputs {
                     writer.create(path, mergedStream, compress);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
+                } catch (DuplicateRelativeFileException e) {
+                    throw new DuplicateRelativeFileException(inputs, e);
                 }
             }
 

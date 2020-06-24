@@ -18,19 +18,23 @@ package com.android.testutils;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.utils.Pair;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import kotlin.Pair;
+import kotlin.collections.MapsKt;
 import org.objectweb.asm.Type;
 
 /** Utility methods for generating inputs to be used in tests. */
@@ -119,11 +123,42 @@ public final class TestInputsGenerator {
     }
 
     public static void writeJarWithTextEntries(
-            @NonNull Path jar, @NonNull Pair<String, String>... entries) throws Exception {
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(jar))) {
-            for (Pair<String, String> pair : entries) {
-                zipOutputStream.putNextEntry(new ZipEntry(pair.getFirst()));
-                zipOutputStream.write(pair.getSecond().getBytes(Charset.forName("UTF-8")));
+            @NonNull Path jar, @NonNull com.android.utils.Pair<String, String>... entries)
+            throws Exception {
+        writeJarWithTextEntries(
+                jar,
+                Arrays.stream(entries)
+                        .collect(
+                                Collectors.toMap(
+                                        com.android.utils.Pair::getFirst,
+                                        com.android.utils.Pair::getSecond)));
+    }
+
+    public static void writeJarWithTextEntries(
+            @NonNull Path jar, @NonNull Map<String, String> entries) throws Exception {
+        try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(jar))) {
+            writeJarWithTextEntries(outputStream, entries);
+        }
+    }
+
+    public static byte[] jarWithTextEntries(@NonNull Pair<String, String>... entries)
+            throws Exception {
+        return jarWithTextEntries(MapsKt.mapOf(entries));
+    }
+
+    public static byte[] jarWithTextEntries(@NonNull Map<String, String> entries) throws Exception {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            writeJarWithTextEntries(outputStream, entries);
+            return outputStream.toByteArray();
+        }
+    }
+
+    private static void writeJarWithTextEntries(
+            @NonNull OutputStream jar, @NonNull Map<String, String> entries) throws Exception {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(jar)) {
+            for (Map.Entry<String, String> pair : entries.entrySet()) {
+                zipOutputStream.putNextEntry(new ZipEntry(pair.getKey()));
+                zipOutputStream.write(pair.getValue().getBytes(StandardCharsets.UTF_8));
                 zipOutputStream.closeEntry();
             }
         }
