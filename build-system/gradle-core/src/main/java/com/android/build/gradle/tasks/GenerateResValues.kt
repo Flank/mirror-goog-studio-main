@@ -15,12 +15,12 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.ResValue
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.utils.FileUtils
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.CacheableTask
@@ -54,9 +54,9 @@ abstract class GenerateResValues : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<GenerateResValues, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<GenerateResValues, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val name = computeTaskName("generate", "ResValues")

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
@@ -90,15 +90,15 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleLibraryJavaRes, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<BundleLibraryJavaRes, VariantCreationConfig>(
+        creationConfig
     ) {
 
-        private val projectJavaResFromStreams = if (componentProperties.variantScope.needsJavaResStreams) {
+        private val projectJavaResFromStreams = if (creationConfig.variantScope.needsJavaResStreams) {
             // Because ordering matters for TransformAPI, we need to fetch java res from the
             // transform pipeline as soon as this creation action is instantiated, in needed.
-            componentProperties.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
+            creationConfig.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
         } else {
             null
         }

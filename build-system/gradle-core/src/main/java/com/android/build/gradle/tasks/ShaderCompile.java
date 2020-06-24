@@ -20,9 +20,9 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.utils.HasConfigurableValuesKt.setDisallowChanges;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
@@ -252,10 +252,10 @@ public abstract class ShaderCompile extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ShaderCompile, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<ShaderCompile, VariantCreationConfig> {
 
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @Override

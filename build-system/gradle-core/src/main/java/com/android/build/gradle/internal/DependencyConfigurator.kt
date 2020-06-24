@@ -18,11 +18,11 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
@@ -522,8 +522,8 @@ class DependencyConfigurator(
         variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
         testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentPropertiesImpl>, TestComponentPropertiesImpl>>
     ): DependencyConfigurator {
-        val allComponents: List<ComponentPropertiesImpl> =
-            (variants + testComponents).map { it.properties }
+        val allComponents: List<BaseCreationConfig> =
+            (variants + testComponents).map { it.properties as BaseCreationConfig }
 
         val dependencies = project.dependencies
         if (globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {

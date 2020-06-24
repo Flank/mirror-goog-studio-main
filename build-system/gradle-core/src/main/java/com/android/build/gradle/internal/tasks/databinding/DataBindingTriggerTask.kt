@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -72,9 +72,9 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
         outputFile.writeText(fileContents)
     }
 
-    class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DataBindingTriggerTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<DataBindingTriggerTask, BaseCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String = computeTaskName("dataBindingTrigger")
@@ -93,7 +93,7 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
         override fun configure(task: DataBindingTriggerTask) {
             super.configure(task)
-            task.applicationId.setDisallowChanges(componentProperties.packageName)
+            task.applicationId.setDisallowChanges(creationConfig.packageName)
             task.useAndroidX.setDisallowChanges(
                 creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]
             )

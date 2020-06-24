@@ -21,6 +21,7 @@ import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -121,8 +122,8 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
         }
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<ProcessManifestForInstantAppTask, BaseCreationConfig>(
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<ProcessManifestForInstantAppTask, VariantCreationConfig>(
             creationConfig = creationConfig
         ) {
         override val name: String

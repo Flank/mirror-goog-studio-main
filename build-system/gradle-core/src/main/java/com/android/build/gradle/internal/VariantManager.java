@@ -166,7 +166,8 @@ public class VariantManager<
 
         variantApiServices = new VariantApiServicesImpl(projectServices);
         variantPropertiesApiServices = new VariantPropertiesApiServicesImpl(projectServices);
-        taskCreationServices = new TaskCreationServicesImpl(projectServices);
+        taskCreationServices =
+                new TaskCreationServicesImpl(variantPropertiesApiServices, projectServices);
     }
 
     /**

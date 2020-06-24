@@ -26,18 +26,22 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 
 /**
@@ -118,4 +122,21 @@ interface BaseCreationConfig : ComponentIdentity {
      * if there is no tested variant this does nothing and returns null.
      */
     fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T?
+
+    // TODO : Remove BaseVariantData.
+    val variantData: BaseVariantData
+
+    /**
+     * Get the compile classpath for compiling sources in this component
+     */
+    fun getJavaClasspath(
+        configType: AndroidArtifacts.ConsumedConfigType,
+        classesType: AndroidArtifacts.ArtifactType,
+        generatedBytecodeKey: Any? = null
+    ): FileCollection
+
+    /**
+     * Get the list of folders containing compilable source files.
+     */
+    val javaSources: List<ConfigurableFileTree>
 }

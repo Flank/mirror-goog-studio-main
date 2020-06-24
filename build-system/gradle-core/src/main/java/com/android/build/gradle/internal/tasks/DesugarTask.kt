@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -107,9 +107,9 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ).doProcess()
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DesugarTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<DesugarTask, VariantCreationConfig>(
+            creationConfig
         ) {
         override val name: String = computeTaskName("desugar")
         override val type: Class<DesugarTask> = DesugarTask::class.java
@@ -118,11 +118,11 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
         init {
             projectClasses =
-                componentProperties.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     QualifiedContent.DefaultContentType.CLASSES in types &&
                             scopes == setOf(QualifiedContent.Scope.PROJECT)
                 }
-            componentProperties.transformManager.consumeStreams(
+            creationConfig.transformManager.consumeStreams(
                 mutableSetOf(
                     QualifiedContent.Scope.PROJECT,
                     QualifiedContent.Scope.SUB_PROJECTS,
@@ -137,11 +137,11 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES to QualifiedContent.Scope.SUB_PROJECTS,
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
-                val processedClasses = componentProperties.services.fileCollection(
-                    componentProperties.artifacts.get(output)
+                val processedClasses = creationConfig.services.fileCollection(
+                    creationConfig.artifacts.get(output)
                 )
                     .asFileTree
-                componentProperties
+                creationConfig
                     .transformManager
                     .addStream(
                         OriginalStream.builder("desugared-classes-${scope.name}")

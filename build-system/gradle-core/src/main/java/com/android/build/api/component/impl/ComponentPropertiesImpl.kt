@@ -70,7 +70,6 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.Named
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
@@ -92,7 +91,7 @@ abstract class ComponentPropertiesImpl(
     override val paths: VariantPathHelper,
     override val artifacts: ArtifactsImpl,
     override val variantScope: VariantScope,
-    val variantData: BaseVariantData,
+    override val variantData: BaseVariantData,
     override val transformManager: TransformManager,
     protected val internalServices: VariantPropertiesApiServices,
     override val services: TaskCreationServices,
@@ -246,10 +245,10 @@ abstract class ComponentPropertiesImpl(
 
     // Precomputed file paths.
     @JvmOverloads
-    fun getJavaClasspath(
+    override fun getJavaClasspath(
         configType: ConsumedConfigType,
         classesType: AndroidArtifacts.ArtifactType,
-        generatedBytecodeKey: Any? = null
+        generatedBytecodeKey: Any?
     ): FileCollection {
         var mainCollection = variantDependencies
             .getArtifactFileCollection(configType, ArtifactScope.ALL, classesType)
@@ -364,7 +363,7 @@ abstract class ComponentPropertiesImpl(
      *
      * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
-    val javaSources: List<ConfigurableFileTree>
+    override val javaSources: List<ConfigurableFileTree>
         get() {
             // Shortcut for the common cases, otherwise we build the full list below.
             if (variantData.extraGeneratedSourceFileTrees == null
@@ -600,7 +599,4 @@ abstract class ComponentPropertiesImpl(
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
-
-    internal fun <T : Named> named(type: Class<T>, name: String): T =
-        internalServices.named(type, name)
 }

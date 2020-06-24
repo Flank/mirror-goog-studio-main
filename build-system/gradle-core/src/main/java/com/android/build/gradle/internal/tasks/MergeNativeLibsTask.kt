@@ -16,11 +16,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
@@ -133,9 +133,9 @@ abstract class MergeNativeLibsTask
 
     class CreationAction(
         private val mergeScopes: Collection<ScopeType>,
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<MergeNativeLibsTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<MergeNativeLibsTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String
@@ -213,10 +213,10 @@ abstract class MergeNativeLibsTask
     }
 }
 
-fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
-    val artifacts = componentProperties.artifacts
-    val taskContainer = componentProperties.taskContainer
-    val nativeLibs = componentProperties.services.fileCollection()
+fun getProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection {
+    val artifacts = creationConfig.artifacts
+    val taskContainer = creationConfig.taskContainer
+    val nativeLibs = creationConfig.services.fileCollection()
 
     // add merged project native libs
     nativeLibs.from(
@@ -224,7 +224,7 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     )
 
     val sdkComponents =
-        getBuildService<SdkComponentsBuildService>(componentProperties.services.buildServiceRegistry).get()
+        getBuildService<SdkComponentsBuildService>(creationConfig.services.buildServiceRegistry).get()
 
     // add content of the local external native build
     if (taskContainer.cxxConfigurationModel != null) {
@@ -234,20 +234,20 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
                 taskContainer.cxxConfigurationModel!!
             )
         nativeLibs.from(
-            componentProperties.services.fileCollection(
+            creationConfig.services.fileCollection(
                 generator.variant.objFolder
             ).builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }
     // add renderscript compilation output if support mode is enabled.
-    if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
+    if (creationConfig.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
-                componentProperties.services.fileCollection(artifacts.get(RENDERSCRIPT_LIB))
+                creationConfig.services.fileCollection(artifacts.get(RENDERSCRIPT_LIB))
         val rsLibs = sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)
         }
-        if (componentProperties.variantDslInfo.renderscriptSupportModeBlasEnabled) {
+        if (creationConfig.variantDslInfo.renderscriptSupportModeBlasEnabled) {
             val rsBlasLib = sdkComponents.supportBlasLibFolderProvider.orNull
             if (rsBlasLib == null || !rsBlasLib.isDirectory) {
                 throw GradleException(
@@ -262,18 +262,18 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     return nativeLibs
 }
 
-fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
-    val nativeLibs = componentProperties.services.fileCollection()
+fun getSubProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection {
+    val nativeLibs = creationConfig.services.fileCollection()
     // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
-        componentProperties.variantDependencies.getArtifactFileCollection(
+        creationConfig.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
-        componentProperties.variantDependencies.getArtifactFileCollection(
+        creationConfig.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JNI
@@ -282,18 +282,18 @@ fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileC
     return nativeLibs
 }
 
-fun getExternalNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
-    val nativeLibs = componentProperties.services.fileCollection()
+fun getExternalNativeLibs(creationConfig: VariantCreationConfig): FileCollection {
+    val nativeLibs = creationConfig.services.fileCollection()
     // TODO (bug 154984238) extract native libs from java res jar before this task
     nativeLibs.from(
-        componentProperties.variantDependencies.getArtifactFileCollection(
+        creationConfig.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.EXTERNAL,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
-        componentProperties.variantDependencies.getArtifactFileCollection(
+        creationConfig.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.EXTERNAL,
             AndroidArtifacts.ArtifactType.JNI

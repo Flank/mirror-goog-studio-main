@@ -15,8 +15,8 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -104,9 +104,9 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

@@ -16,11 +16,10 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.builder.core.BuilderConstants
@@ -157,16 +156,16 @@ class DependencyResourcesComputer {
         return builder.build()
     }
 
-    fun initFromVariantScope(componentProperties: ComponentPropertiesImpl, includeDependencies: Boolean) {
-        val globalScope = componentProperties.globalScope
-        val variantData = componentProperties.variantData
+    fun initFromVariantScope(creationConfig: BaseCreationConfig, includeDependencies: Boolean) {
+        val globalScope = creationConfig.globalScope
+        val variantData = creationConfig.variantData
         val project = globalScope.project
-        val paths = componentProperties.paths
+        val paths = creationConfig.paths
 
         validateEnabled = !globalScope.projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
 
         if (includeDependencies) {
-            this.libraries = componentProperties.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+            this.libraries = creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
         }
 
         resources = variantData.androidResources
@@ -176,8 +175,8 @@ class DependencyResourcesComputer {
 
         generatedResOutputDir = project.files(paths.generatedResOutputDir)
 
-        if (componentProperties.taskContainer.microApkTask != null &&
-            componentProperties.variantDslInfo.isEmbedMicroApp) {
+        if (creationConfig.taskContainer.microApkTask != null &&
+            creationConfig.variantDslInfo.isEmbedMicroApp) {
             microApkResDirectory = project.files(paths.microApkResDirectory)
         }
     }

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ENUMERATED_RUNTIME_CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -56,14 +56,14 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl)
-        : VariantTaskCreationAction<CheckDuplicateClassesTask, ComponentPropertiesImpl>(
-        componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig)
+        : VariantTaskCreationAction<CheckDuplicateClassesTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val type = CheckDuplicateClassesTask::class.java
 
-        override val name = componentProperties.computeTaskName("check", "DuplicateClasses")
+        override val name = creationConfig.computeTaskName("check", "DuplicateClasses")
 
         override fun handleProvider(
             taskProvider: TaskProvider<CheckDuplicateClassesTask>

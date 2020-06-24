@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
@@ -107,9 +107,9 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     }
 
     abstract class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ExtractNativeDebugMetadataTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<ExtractNativeDebugMetadataTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val type: Class<ExtractNativeDebugMetadataTask>
@@ -126,8 +126,8 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     }
 
     class FullCreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : CreationAction(componentProperties) {
+        creationConfig: VariantCreationConfig
+    ) : CreationAction(creationConfig) {
 
         override val name: String
             get() = computeTaskName("extract", "NativeDebugMetadata")
@@ -149,8 +149,8 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     }
 
     class SymbolTableCreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : CreationAction(componentProperties) {
+        creationConfig: VariantCreationConfig
+    ) : CreationAction(creationConfig) {
 
         override val name: String
             get() = computeTaskName("extract", "NativeSymbolTables")

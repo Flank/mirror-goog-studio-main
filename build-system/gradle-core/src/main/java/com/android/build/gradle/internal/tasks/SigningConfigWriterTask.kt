@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -63,9 +63,9 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
         SigningConfigUtils.save(outputDirectory.get().asFile, signingConfigData)
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<SigningConfigWriterTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<SigningConfigWriterTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

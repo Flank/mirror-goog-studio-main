@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_AAR
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -123,10 +123,10 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     }
 
     abstract class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         val artifactType: InternalArtifactType<Directory>
-    ) : VariantTaskCreationAction<LibraryJniLibsTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<LibraryJniLibsTask, VariantCreationConfig>(
+        creationConfig
     ) {
         override val type = LibraryJniLibsTask::class.java
 
@@ -150,9 +150,9 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     }
 
     class ProjectOnlyCreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         artifactType: InternalArtifactType<Directory>
-    ): CreationAction(componentProperties, artifactType) {
+    ): CreationAction(creationConfig, artifactType) {
         override val name: String = computeTaskName("copy", "JniLibsProjectOnly")
 
         override fun configure(
@@ -164,9 +164,9 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     }
 
     class ProjectAndLocalJarsCreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         artifactType: InternalArtifactType<Directory>
-    ) : CreationAction(componentProperties, artifactType) {
+    ) : CreationAction(creationConfig, artifactType) {
         override val name: String = computeTaskName("copy", "JniLibsProjectAndLocalJars")
 
         override fun configure(

@@ -17,7 +17,6 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -74,12 +73,9 @@ open class UnitTestPropertiesImpl @Inject constructor(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-
-
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
-
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 

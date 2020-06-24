@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -60,10 +60,10 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         private val isTestCoverageEnabled: Boolean) :
-        VariantTaskCreationAction<RecalculateStackFramesTask, ComponentPropertiesImpl>(
-            componentProperties
+        VariantTaskCreationAction<RecalculateStackFramesTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name = computeTaskName("fixStackFrames")

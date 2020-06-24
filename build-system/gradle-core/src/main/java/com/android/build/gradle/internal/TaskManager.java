@@ -77,6 +77,9 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.TestCreationConfig;
+import com.android.build.gradle.internal.component.UnitTestCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -332,7 +335,7 @@ public abstract class TaskManager<
     @NonNull protected final TaskFactory taskFactory;
     @NonNull protected final ImmutableList<VariantPropertiesT> variantPropertiesList;
     @NonNull private final ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList;
-    @NonNull private final ImmutableList<ComponentPropertiesImpl> allPropertiesList;
+    @NonNull private final ImmutableList<BaseCreationConfig> allPropertiesList;
 
     /**
      * Creates the TaskManager
@@ -379,7 +382,7 @@ public abstract class TaskManager<
                         .map(ComponentInfo::getProperties)
                         .collect(ImmutableList.toImmutableList());
         allPropertiesList =
-                ImmutableList.<ComponentPropertiesImpl>builder()
+                ImmutableList.<BaseCreationConfig>builder()
                         .addAll(variantPropertiesList)
                         .addAll(testComponentPropertiesList)
                         .build();
@@ -732,18 +735,18 @@ public abstract class TaskManager<
                 "Configuration for Compose related kotlin compiler extension");
 
         // register for all variant the prepareKotlinCompileTask if necessary.
-        for (ComponentPropertiesImpl component : allPropertiesList) {
+        for (BaseCreationConfig creationConfig : allPropertiesList) {
             try {
                 TaskProvider<Task> compileKotlin =
                         globalScope
                                 .getProject()
                                 .getTasks()
-                                .named(component.computeTaskName("compile", "Kotlin"));
+                                .named(creationConfig.computeTaskName("compile", "Kotlin"));
 
                 TaskProvider<PrepareKotlinCompileTask> prepareKotlinCompileTaskTaskProvider =
                         taskFactory.register(
                                 new PrepareKotlinCompileTask.CreationAction(
-                                        component, compileKotlin, kotlinExtension));
+                                        creationConfig, compileKotlin, kotlinExtension));
                 // make the dependency !
                 compileKotlin.configure(
                         task -> task.dependsOn(prepareKotlinCompileTaskTaskProvider));
@@ -829,12 +832,12 @@ public abstract class TaskManager<
         }
     }
 
-    protected void createDependencyStreams(@NonNull ComponentPropertiesImpl componentProperties) {
+    protected void createDependencyStreams(@NonNull BaseCreationConfig creationConfig) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
-        handleJacocoDependencies(componentProperties);
+        handleJacocoDependencies(creationConfig);
 
-        TransformManager transformManager = componentProperties.getTransformManager();
+        TransformManager transformManager = creationConfig.getTransformManager();
 
         // This might be consumed by RecalculateFixedStackFrames if that's created
         transformManager.addStream(
@@ -842,7 +845,7 @@ public abstract class TaskManager<
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
-                                componentProperties
+                                creationConfig
                                         .getVariantDependencies()
                                         .getArtifactCollection(
                                                 RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR))
@@ -850,14 +853,14 @@ public abstract class TaskManager<
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
         // merging scopes.
-        if (!getJavaResMergingScopes(componentProperties, RESOURCES)
+        if (!getJavaResMergingScopes(creationConfig, RESOURCES)
                 .contains(Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
                     OriginalStream.builder("ext-libs-java-res")
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
-                                    componentProperties
+                                    creationConfig
                                             .getVariantDependencies()
                                             .getArtifactCollection(
                                                     RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
@@ -870,27 +873,27 @@ public abstract class TaskManager<
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
-                                componentProperties
+                                creationConfig
                                         .getVariantDependencies()
                                         .getArtifactCollection(
                                                 RUNTIME_CLASSPATH, PROJECT, CLASSES_JAR))
                         .build());
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
-        if (!getJavaResMergingScopes(componentProperties, RESOURCES).contains(Scope.SUB_PROJECTS)) {
+        if (!getJavaResMergingScopes(creationConfig, RESOURCES).contains(Scope.SUB_PROJECTS)) {
             transformManager.addStream(
                     OriginalStream.builder("sub-projects-java-res")
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
-                                    componentProperties
+                                    creationConfig
                                             .getVariantDependencies()
                                             .getArtifactCollection(
                                                     RUNTIME_CLASSPATH, PROJECT, JAVA_RES))
                             .build());
         }
 
-        VariantScope variantScope = componentProperties.getVariantScope();
+        VariantScope variantScope = creationConfig.getVariantScope();
 
         // if variantScope.consumesFeatureJars(), add streams of classes from features or
         // dynamic-features.
@@ -902,7 +905,7 @@ public abstract class TaskManager<
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
-                                    componentProperties
+                                    creationConfig
                                             .getVariantDependencies()
                                             .getArtifactCollection(
                                                     REVERSE_METADATA_VALUES,
@@ -919,7 +922,7 @@ public abstract class TaskManager<
                         .setFileCollection(variantScope.getProvidedOnlyClasspath())
                         .build());
 
-        componentProperties.onTestedConfig(
+        creationConfig.onTestedConfig(
                 testedConfig -> {
                     transformManager.addStream(
                             OriginalStream.builder("tested-code-deps")
@@ -1005,20 +1008,18 @@ public abstract class TaskManager<
                 new ProcessMultiApkApplicationManifest.CreationAction(creationConfig));
     }
 
-    protected void createProcessTestManifestTask(
-            @NonNull TestComponentPropertiesImpl componentProperties) {
-        taskFactory.register(new ProcessTestManifest.CreationAction(componentProperties));
+    protected void createProcessTestManifestTask(@NonNull TestCreationConfig creationConfig) {
+        taskFactory.register(new ProcessTestManifest.CreationAction(creationConfig));
     }
 
-    public void createRenderscriptTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getBuildFeatures().getRenderScript()) {
-            final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+    public void createRenderscriptTask(@NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig.getBuildFeatures().getRenderScript()) {
+            final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
 
             TaskProvider<RenderscriptCompile> rsTask =
-                    taskFactory.register(
-                            new RenderscriptCompile.CreationAction(componentProperties));
+                    taskFactory.register(new RenderscriptCompile.CreationAction(creationConfig));
 
-            VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
+            VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
             TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
             // only put this dependency if rs will generate Java code
@@ -1029,17 +1030,17 @@ public abstract class TaskManager<
     }
 
     public void createMergeResourcesTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             boolean processResources,
             ImmutableSet<MergeResources.Flag> flags) {
 
         boolean alsoOutputNotCompiledResources =
-                componentProperties.getVariantType().isApk()
-                        && !componentProperties.getVariantType().isForTesting()
-                        && componentProperties.getVariantScope().useResourceShrinker();
+                creationConfig.getVariantType().isApk()
+                        && !creationConfig.getVariantType().isForTesting()
+                        && creationConfig.getVariantScope().useResourceShrinker();
 
         basicCreateMergeResourcesTask(
-                componentProperties,
+                creationConfig,
                 MergeType.MERGE,
                 null /*outputLocation*/,
                 true /*includeDependencies*/,
@@ -1072,7 +1073,7 @@ public abstract class TaskManager<
     }
 
     public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             @NonNull MergeType mergeType,
             @Nullable File outputLocation,
             final boolean includeDependencies,
@@ -1088,13 +1089,13 @@ public abstract class TaskManager<
                         ? new File(
                                 globalScope.getIntermediatesDir()
                                         + "/merged-not-compiled-resources/"
-                                        + componentProperties.getDirName())
+                                        + creationConfig.getDirName())
                         : null;
 
         TaskProvider<MergeResources> mergeResourcesTask =
                 taskFactory.register(
                         new MergeResources.CreationAction(
-                                componentProperties,
+                                creationConfig,
                                 mergeType,
                                 taskNamePrefix,
                                 mergedNotCompiledDir,
@@ -1106,20 +1107,20 @@ public abstract class TaskManager<
                         null,
                         taskProviderCallback);
 
-        componentProperties
+        creationConfig
                 .getArtifacts()
                 .setInitialProvider(mergeResourcesTask, MergeResources::getOutputDir)
                 .atLocation(
                         MoreObjects.firstNonNull(
                                         outputLocation,
-                                        componentProperties
+                                        creationConfig
                                                 .getPaths()
                                                 .getDefaultMergeResourcesOutputDir())
                                 .getAbsolutePath())
                 .on(mergeType.getOutputType());
 
         if (alsoOutputNotCompiledResources) {
-            componentProperties
+            creationConfig
                     .getArtifacts()
                     .setInitialProvider(
                             mergeResourcesTask,
@@ -1130,123 +1131,113 @@ public abstract class TaskManager<
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
             TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getCompileTask(), mergeResourcesTask);
+                    creationConfig.getTaskContainer().getCompileTask(), mergeResourcesTask);
         }
 
         return mergeResourcesTask;
     }
 
-    public void createMergeAssetsTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(
-                new MergeSourceSetFolders.MergeAppAssetCreationAction(componentProperties));
+    public void createMergeAssetsTask(@NonNull BaseCreationConfig creationConfig) {
+        taskFactory.register(new MergeSourceSetFolders.MergeAppAssetCreationAction(creationConfig));
     }
 
-    public void createMergeJniLibFoldersTasks(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+    public void createMergeJniLibFoldersTasks(@NonNull VariantCreationConfig creationConfig) {
         // merge the source folders together using the proper priority.
         taskFactory.register(
-                new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(componentProperties));
+                new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(creationConfig));
 
         // Compute the scopes that need to be merged.
-        Set<ScopeType> mergeScopes = getJavaResMergingScopes(componentProperties, NATIVE_LIBS);
+        Set<ScopeType> mergeScopes = getJavaResMergingScopes(creationConfig, NATIVE_LIBS);
 
-        taskFactory.register(
-                new MergeNativeLibsTask.CreationAction(mergeScopes, componentProperties));
+        taskFactory.register(new MergeNativeLibsTask.CreationAction(mergeScopes, creationConfig));
     }
 
-    public void createBuildConfigTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getBuildFeatures().getBuildConfig()) {
-            TaskProvider<GenerateBuildConfig> generateBuildConfigTask = taskFactory.register(
-                    new GenerateBuildConfig.CreationAction(componentProperties));
+    public void createBuildConfigTask(@NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig.getBuildFeatures().getBuildConfig()) {
+            TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
+                    taskFactory.register(new GenerateBuildConfig.CreationAction(creationConfig));
             boolean isBuildConfigBytecodeEnabled =
-                    componentProperties
+                    creationConfig
                             .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE);
 
             if (!isBuildConfigBytecodeEnabled
-                    || !componentProperties.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
+                    || !creationConfig.getVariantDslInfo().getBuildConfigFields().isEmpty()) {
                 TaskFactoryUtils.dependsOn(
-                        componentProperties.getTaskContainer().getSourceGenTask(),
+                        creationConfig.getTaskContainer().getSourceGenTask(),
                         generateBuildConfigTask);
             }
         }
     }
 
-    public void createGenerateResValuesTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getBuildFeatures().getResValues()) {
+    public void createGenerateResValuesTask(@NonNull BaseCreationConfig creationConfig) {
+        if (creationConfig.getBuildFeatures().getResValues()) {
             TaskProvider<GenerateResValues> generateResValuesTask =
-                    taskFactory.register(new GenerateResValues.CreationAction(componentProperties));
+                    taskFactory.register(new GenerateResValues.CreationAction(creationConfig));
             TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getResourceGenTask(),
-                    generateResValuesTask);
+                    creationConfig.getTaskContainer().getResourceGenTask(), generateResValuesTask);
         }
     }
 
-    public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getBuildFeatures().getMlModelBinding()) {
+    public void createMlkitTask(@NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig.getBuildFeatures().getMlModelBinding()) {
             taskFactory.register(
                     new MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction(
-                            componentProperties));
+                            creationConfig));
             TaskProvider<GenerateMlModelClass> generateMlModelClassTask =
-                    taskFactory.register(
-                            new GenerateMlModelClass.CreationAction(componentProperties));
+                    taskFactory.register(new GenerateMlModelClass.CreationAction(creationConfig));
             TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getSourceGenTask(),
-                    generateMlModelClassTask);
+                    creationConfig.getTaskContainer().getSourceGenTask(), generateMlModelClassTask);
         }
     }
 
-    public void createApkProcessResTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        VariantType variantType = componentProperties.getVariantType();
+    public void createApkProcessResTask(@NonNull VariantCreationConfig creationConfig) {
+        VariantType variantType = creationConfig.getVariantType();
         InternalArtifactType<Directory> packageOutputType =
                 (variantType.isApk() && !variantType.isForTesting())
                         ? FEATURE_RESOURCE_PKG.INSTANCE
                         : null;
 
-        createApkProcessResTask(componentProperties, packageOutputType);
+        createApkProcessResTask(creationConfig, packageOutputType);
 
-        if (componentProperties.getVariantScope().consumesFeatureJars()) {
-            taskFactory.register(new MergeAaptProguardFilesCreationAction(componentProperties));
+        if (creationConfig.getVariantScope().consumesFeatureJars()) {
+            taskFactory.register(new MergeAaptProguardFilesCreationAction(creationConfig));
         }
     }
 
     private void createApkProcessResTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             @Nullable SingleArtifact<Directory> packageOutputType) {
-        final GlobalScope globalScope = componentProperties.getGlobalScope();
+        final GlobalScope globalScope = creationConfig.getGlobalScope();
 
         // Check AAR metadata files
-        taskFactory.register(new CheckAarMetadataTask.CreationAction(componentProperties));
+        taskFactory.register(new CheckAarMetadataTask.CreationAction(creationConfig));
 
         // Create the APK_ file with processed resources and manifest. Generate the R class.
         createProcessResTask(
-                componentProperties,
+                creationConfig,
                 packageOutputType,
                 MergeType.MERGE,
                 globalScope.getProjectBaseName());
 
-        ProjectOptions projectOptions = componentProperties.getServices().getProjectOptions();
+        ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
         // TODO(b/156339511): get rid of separate flag for app modules.
         boolean nonTransitiveR =
                 projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS)
                         && projectOptions.get(BooleanOption.NON_TRANSITIVE_APP_R_CLASS);
         boolean namespaced =
-                componentProperties
-                        .getGlobalScope()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getNamespaced();
+                creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)
-                && !componentProperties.getVariantType().isForTesting()
+                && !creationConfig.getVariantType().isForTesting()
                 && !namespaced) {
             // Generate the COMPILE TIME only R class using the local resources instead of waiting
             // for the above full link to finish. Linking will still output the RUN TIME R class.
             // Since we're gonna use AAPT2 to generate the keep rules, do not generate them here.
             createProcessResTask(
-                    componentProperties,
+                    creationConfig,
                     packageOutputType,
                     MergeType.PACKAGE,
                     globalScope.getProjectBaseName());
@@ -1263,9 +1254,7 @@ public abstract class TaskManager<
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         VariantScope scope = creationConfig.getVariantScope();
-        // FIXME
-        ComponentPropertiesImpl componentPropertiesImpl = (ComponentPropertiesImpl) creationConfig;
-        BaseVariantData variantData = componentPropertiesImpl.getVariantData();
+        BaseVariantData variantData = creationConfig.getVariantData();
 
         variantData.calculateFilters(creationConfig.getGlobalScope().getExtension().getSplits());
 
@@ -1276,7 +1265,7 @@ public abstract class TaskManager<
 
         if (creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
-            new NamespacedResourcesTaskManager(globalScope, taskFactory, componentPropertiesImpl)
+            new NamespacedResourcesTaskManager(taskFactory, creationConfig)
                     .createNamespacedResourceTasks(
                             packageOutputType,
                             baseName,
@@ -1302,7 +1291,7 @@ public abstract class TaskManager<
             return;
         }
         createNonNamespacedResourceTasks(
-                componentPropertiesImpl,
+                creationConfig,
                 packageOutputType,
                 mergeType,
                 baseName,
@@ -1310,14 +1299,14 @@ public abstract class TaskManager<
     }
 
     private void createNonNamespacedResourceTasks(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             SingleArtifact<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
 
-        ArtifactsImpl artifacts = componentProperties.getArtifacts();
-        ProjectOptions projectOptions = componentProperties.getServices().getProjectOptions();
+        ArtifactsImpl artifacts = creationConfig.getArtifacts();
+        ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
 
         if (mergeType == MergeType.PACKAGE) {
             // MergeType.PACKAGE means we will only merged the resources from our current module
@@ -1327,13 +1316,13 @@ public abstract class TaskManager<
             // dependencies.
 
             // First collect symbols from this module.
-            taskFactory.register(new ParseLibraryResourcesTask.CreateAction(componentProperties));
+            taskFactory.register(new ParseLibraryResourcesTask.CreateAction(creationConfig));
 
             // Only generate the keep rules when we need them. We don't need to generate them here
             // for non-library modules since AAPT2 will generate them from MergeType.MERGE.
-            if (generatesProguardOutputFile(componentProperties) && isLibrary()) {
+            if (generatesProguardOutputFile(creationConfig) && isLibrary()) {
                 taskFactory.register(
-                        new GenerateLibraryProguardRulesTask.CreationAction(componentProperties));
+                        new GenerateLibraryProguardRulesTask.CreationAction(creationConfig));
             }
 
             boolean nonTransitiveRClassInApp =
@@ -1344,35 +1333,32 @@ public abstract class TaskManager<
             // TODO: double check this (what about dynamic features?)
             if (!nonTransitiveRClassInApp || isLibrary()) {
                 taskFactory.register(
-                        new GenerateLibraryRFileTask.CreationAction(
-                                componentProperties, isLibrary()));
+                        new GenerateLibraryRFileTask.CreationAction(creationConfig, isLibrary()));
             }
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
                     new LinkApplicationAndroidResourcesTask.CreationAction(
-                            componentProperties,
+                            creationConfig,
                             useAaptToGenerateLegacyMultidexMainDexProguardRules,
                             mergeType,
                             baseName,
                             isLibrary()));
 
             if (packageOutputType != null) {
-                componentProperties
-                        .getArtifacts()
-                        .republish(PROCESSED_RES.INSTANCE, packageOutputType);
+                creationConfig.getArtifacts().republish(PROCESSED_RES.INSTANCE, packageOutputType);
             }
 
             // TODO: also support stable IDs for the bundle (does it matter?)
             // create the task that creates the aapt output for the bundle.
-            if (componentProperties instanceof ApkCreationConfig
-                    && !componentProperties.getVariantType().isForTesting()) {
+            if (creationConfig instanceof ApkCreationConfig
+                    && !creationConfig.getVariantType().isForTesting()) {
                 taskFactory.register(
                         new LinkAndroidResForBundleTask.CreationAction(
-                                (ApkCreationConfig) componentProperties));
+                                (ApkCreationConfig) creationConfig));
             }
 
-            componentProperties
+            creationConfig
                     .getArtifacts()
                     .appendToAllClasses(
                             project.files(
@@ -1380,29 +1366,28 @@ public abstract class TaskManager<
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                                     .INSTANCE)));
 
-            if (!componentProperties.getVariantDslInfo().isDebuggable()
+            if (!creationConfig.getVariantDslInfo().isDebuggable()
                     && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
-                taskFactory.register(new OptimizeResourcesTask.CreateAction(componentProperties));
+                taskFactory.register(new OptimizeResourcesTask.CreateAction(creationConfig));
             }
         }
     }
 
-    private static boolean generatesProguardOutputFile(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        return componentProperties.getVariantScope().getCodeShrinker() != null
-                || componentProperties.getVariantType().isDynamicFeature();
+    private static boolean generatesProguardOutputFile(@NonNull BaseCreationConfig creationConfig) {
+        return creationConfig.getVariantScope().getCodeShrinker() != null
+                || creationConfig.getVariantType().isDynamicFeature();
     }
 
     /**
      * Returns the scopes for which the java resources should be merged.
      *
-     * @param componentProperties the scope of the variant being processed.
+     * @param creationConfig the scope of the variant being processed.
      * @param contentType the contentType of java resources, must be RESOURCES or NATIVE_LIBS
      * @return the list of scopes for which to merge the java resources.
      */
     @NonNull
     protected abstract Set<ScopeType> getJavaResMergingScopes(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType);
 
     /**
@@ -1418,27 +1403,27 @@ public abstract class TaskManager<
      * </ul>
      *
      * This sets up only the Sync part. The java res merging is setup via {@link
-     * #createMergeJavaResTask(ComponentPropertiesImpl)}
+     * #createMergeJavaResTask(VariantCreationConfig)}
      */
-    public void createProcessJavaResTask(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void createProcessJavaResTask(@NonNull BaseCreationConfig creationConfig) {
         // Copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
-        taskFactory.register(new ProcessJavaResTask.CreationAction(componentProperties));
+        taskFactory.register(new ProcessJavaResTask.CreationAction(creationConfig));
 
         // create the stream generated from this task, but only if a library with custom transforms,
         // in which case the custom transforms must be applied before java res merging.
-        if (componentProperties.getVariantScope().getNeedsJavaResStreams()) {
-            componentProperties
+        if (creationConfig.getVariantScope().getNeedsJavaResStreams()) {
+            creationConfig
                     .getTransformManager()
                     .addStream(
                             OriginalStream.builder("processed-java-res")
                                     .addContentType(RESOURCES)
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
-                                            componentProperties
+                                            creationConfig
                                                     .getServices()
                                                     .fileCollection(
-                                                            componentProperties
+                                                            creationConfig
                                                                     .getArtifacts()
                                                                     .get(
                                                                             InternalArtifactType
@@ -1451,21 +1436,20 @@ public abstract class TaskManager<
     /**
      * Sets up the Merge Java Res task.
      *
-     * @see #createProcessJavaResTask(ComponentPropertiesImpl)
+     * @see #createProcessJavaResTask(BaseCreationConfig)
      */
-    public void createMergeJavaResTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        TransformManager transformManager = componentProperties.getTransformManager();
+    public void createMergeJavaResTask(@NonNull VariantCreationConfig creationConfig) {
+        TransformManager transformManager = creationConfig.getTransformManager();
 
         // Compute the scopes that need to be merged.
-        Set<ScopeType> mergeScopes = getJavaResMergingScopes(componentProperties, RESOURCES);
+        Set<ScopeType> mergeScopes = getJavaResMergingScopes(creationConfig, RESOURCES);
 
-        taskFactory.register(
-                new MergeJavaResourceTask.CreationAction(mergeScopes, componentProperties));
+        taskFactory.register(new MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig));
 
         // also add a new merged java res stream if needed.
-        if (componentProperties.getVariantScope().getNeedsMergedJavaResStream()) {
+        if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
             Provider<RegularFile> mergedJavaResProvider =
-                    componentProperties.getArtifacts().get(MERGED_JAVA_RES.INSTANCE);
+                    creationConfig.getArtifacts().get(MERGED_JAVA_RES.INSTANCE);
             transformManager.addStream(
                     OriginalStream.builder("merged-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
@@ -1477,34 +1461,34 @@ public abstract class TaskManager<
 
     }
 
-    public void createAidlTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getBuildFeatures().getAidl()) {
-            MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+    public void createAidlTask(@NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig.getBuildFeatures().getAidl()) {
+            MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
 
             TaskProvider<AidlCompile> aidlCompileTask =
-                    taskFactory.register(new AidlCompile.CreationAction(componentProperties));
+                    taskFactory.register(new AidlCompile.CreationAction(creationConfig));
 
             TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
         }
     }
 
-    public void createShaderTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getBuildFeatures().getShaders()) {
+    public void createShaderTask(@NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig.getBuildFeatures().getShaders()) {
             // merge the shader folders together using the proper priority.
             taskFactory.register(
                     new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(
-                            componentProperties));
+                            creationConfig));
 
             // compile the shaders
             TaskProvider<ShaderCompile> shaderCompileTask =
-                    taskFactory.register(new ShaderCompile.CreationAction(componentProperties));
+                    taskFactory.register(new ShaderCompile.CreationAction(creationConfig));
 
             TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getAssetGenTask(), shaderCompileTask);
+                    creationConfig.getTaskContainer().getAssetGenTask(), shaderCompileTask);
         }
     }
 
-    protected abstract void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties);
+    protected abstract void postJavacCreation(@NonNull BaseCreationConfig creationConfig);
 
     /**
      * Creates the task for creating *.class files using javac. These tasks are created regardless
@@ -1512,16 +1496,16 @@ public abstract class TaskManager<
      * always used when running unit tests.
      */
     public TaskProvider<? extends JavaCompile> createJavacTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(new JavaPreCompileTask.CreationAction(componentProperties));
+            @NonNull BaseCreationConfig creationConfig) {
+        taskFactory.register(new JavaPreCompileTask.CreationAction(creationConfig));
 
         final TaskProvider<? extends JavaCompile> javacTask =
                 taskFactory.register(
                         new JavaCompileCreationAction(
-                                componentProperties,
+                                creationConfig,
                                 project.getPluginManager().hasPlugin(KOTLIN_KAPT_PLUGIN_ID)));
 
-        postJavacCreation(componentProperties);
+        postJavacCreation(creationConfig);
 
         return javacTask;
     }
@@ -1531,17 +1515,16 @@ public abstract class TaskManager<
      *
      * <p>This should not be called for classes that will also be compiled from source by jack.
      */
-    protected void addJavacClassesStream(@NonNull ComponentPropertiesImpl componentProperties) {
-        ArtifactsImpl artifacts = componentProperties.getArtifacts();
+    protected void addJavacClassesStream(@NonNull BaseCreationConfig creationConfig) {
+        ArtifactsImpl artifacts = creationConfig.getArtifacts();
         Provider<Directory> javaOutputs = artifacts.get(JAVAC.INSTANCE);
         Preconditions.checkNotNull(javaOutputs);
 
         // create separate streams for the output of JAVAC and for the pre/post javac
         // bytecode hooks
 
-        TransformManager transformManager = componentProperties.getTransformManager();
-        boolean needsJavaResStreams =
-                componentProperties.getVariantScope().getNeedsJavaResStreams();
+        TransformManager transformManager = creationConfig.getTransformManager();
+        boolean needsJavaResStreams = creationConfig.getVariantScope().getNeedsJavaResStreams();
 
         transformManager.addStream(
                 OriginalStream.builder("javac-output")
@@ -1555,7 +1538,7 @@ public abstract class TaskManager<
                         .setFileCollection(project.getLayout().files(javaOutputs))
                         .build());
 
-        BaseVariantData variantData = componentProperties.getVariantData();
+        BaseVariantData variantData = creationConfig.getVariantData();
         transformManager.addStream(
                 OriginalStream.builder("pre-javac-generated-bytecode")
                         .addContentTypes(
@@ -1580,9 +1563,9 @@ public abstract class TaskManager<
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(
             @NonNull TaskProvider<? extends JavaCompile> javaCompilerTask,
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull BaseCreationConfig creationConfig) {
         TaskFactoryUtils.dependsOn(
-                componentProperties.getTaskContainer().getCompileTask(), javaCompilerTask);
+                creationConfig.getTaskContainer().getCompileTask(), javaCompilerTask);
     }
 
     public void createExternalNativeBuildJsonGenerators(
@@ -1635,51 +1618,52 @@ public abstract class TaskManager<
     }
 
     /** Creates the tasks to build unit tests. */
-    private void createUnitTestVariantTasks(@NonNull UnitTestPropertiesImpl unitTestProperties) {
-        final MutableTaskContainer taskContainer = unitTestProperties.getTaskContainer();
+    private void createUnitTestVariantTasks(
+            @NonNull UnitTestCreationConfig unitTestCreationConfig) {
+        final MutableTaskContainer taskContainer = unitTestCreationConfig.getTaskContainer();
 
-        VariantPropertiesImpl testedVariant = unitTestProperties.getTestedVariant();
+        VariantCreationConfig testedVariant = unitTestCreationConfig.getTestedConfig();
 
         boolean includeAndroidResources = extension.getTestOptions().getUnitTests()
                 .isIncludeAndroidResources();
 
-        createAnchorTasks(unitTestProperties);
+        createAnchorTasks(unitTestCreationConfig);
 
         // Create all current streams (dependencies mostly at this point)
-        createDependencyStreams(unitTestProperties);
+        createDependencyStreams(unitTestCreationConfig);
 
         // process java resources
-        createProcessJavaResTask(unitTestProperties);
+        createProcessJavaResTask(unitTestCreationConfig);
 
         if (includeAndroidResources) {
             if (testedVariant.getVariantType().isAar()) {
                 // Add a task to process the manifest
-                createProcessTestManifestTask(unitTestProperties);
+                createProcessTestManifestTask(unitTestCreationConfig);
 
                 // Add a task to create the res values
-                createGenerateResValuesTask(unitTestProperties);
+                createGenerateResValuesTask(unitTestCreationConfig);
 
                 // Add a task to merge the assets folders
-                createMergeAssetsTask(unitTestProperties);
+                createMergeAssetsTask(unitTestCreationConfig);
 
-                createMergeResourcesTask(unitTestProperties, true, ImmutableSet.of());
+                createMergeResourcesTask(unitTestCreationConfig, true, ImmutableSet.of());
                 // Add a task to process the Android Resources and generate source files
-                createApkProcessResTask(unitTestProperties, FEATURE_RESOURCE_PKG.INSTANCE);
-                taskFactory.register(new PackageForUnitTest.CreationAction(unitTestProperties));
+                createApkProcessResTask(unitTestCreationConfig, FEATURE_RESOURCE_PKG.INSTANCE);
+                taskFactory.register(new PackageForUnitTest.CreationAction(unitTestCreationConfig));
 
                 // Add data binding tasks if enabled
-                createDataBindingTasksIfNecessary(unitTestProperties);
+                createDataBindingTasksIfNecessary(unitTestCreationConfig);
             } else if (testedVariant.getVariantType().isApk()) {
                 // The IDs will have been inlined for an non-namespaced application
                 // so just re-export the artifacts here.
-                unitTestProperties
+                unitTestCreationConfig
                         .getArtifacts()
                         .copy(PROCESSED_RES.INSTANCE, testedVariant.getArtifacts());
-                unitTestProperties
+                unitTestCreationConfig
                         .getArtifacts()
                         .copy(MERGED_ASSETS.INSTANCE, testedVariant.getArtifacts());
 
-                taskFactory.register(new PackageForUnitTest.CreationAction(unitTestProperties));
+                taskFactory.register(new PackageForUnitTest.CreationAction(unitTestCreationConfig));
             } else {
                 throw new IllegalStateException(
                         "Tested variant "
@@ -1690,7 +1674,8 @@ public abstract class TaskManager<
             }
 
             TaskProvider<GenerateTestConfig> generateTestConfig =
-                    taskFactory.register(new GenerateTestConfig.CreationAction(unitTestProperties));
+                    taskFactory.register(
+                            new GenerateTestConfig.CreationAction(unitTestCreationConfig));
             TaskProvider<? extends Task> compileTask = taskContainer.getCompileTask();
             TaskFactoryUtils.dependsOn(compileTask, generateTestConfig);
             // The GenerateTestConfig task has 2 types of inputs: direct inputs and indirect inputs.
@@ -1704,7 +1689,7 @@ public abstract class TaskManager<
             compileTask.configure(
                     task -> {
                         GenerateTestConfig.TestConfigInputs testConfigInputs =
-                                new GenerateTestConfig.TestConfigInputs(unitTestProperties);
+                                new GenerateTestConfig.TestConfigInputs(unitTestCreationConfig);
                         TaskInputs taskInputs = task.getInputs();
                         taskInputs.property(
                                 "isUseRelativePathEnabled",
@@ -1730,11 +1715,12 @@ public abstract class TaskManager<
                     });
         } else {
             if (testedVariant.getVariantType().isAar()) {
-                // With compile classpath R classes, we need to generate a dummy R class for unit tests
+                // With compile classpath R classes, we need to generate a dummy R class for unit
+                // tests
                 // See https://issuetracker.google.com/143762955 for more context.
                 taskFactory.register(
                         new GenerateLibraryRFileTask.TestRuntimeStubRClassCreationAction(
-                                unitTestProperties));
+                                unitTestCreationConfig));
             }
         }
 
@@ -1747,15 +1733,16 @@ public abstract class TaskManager<
                 taskContainer.getProcessJavaResourcesTask(),
                 testedVariant.getTaskContainer().getProcessJavaResourcesTask());
 
-        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(unitTestProperties);
-        addJavacClassesStream(unitTestProperties);
-        setJavaCompilerTask(javacTask, unitTestProperties);
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(unitTestCreationConfig);
+        addJavacClassesStream(unitTestCreationConfig);
+        setJavaCompilerTask(javacTask, unitTestCreationConfig);
         // This should be done automatically by the classpath
-        //        TaskFactoryUtils.dependsOn(javacTask, testedVariantScope.getTaskContainer().getJavacTask());
+        //        TaskFactoryUtils.dependsOn(javacTask,
+        // testedVariantScope.getTaskContainer().getJavacTask());
 
         // TODO: use merged java res for unit tests (bug 118690729)
 
-        createRunUnitTestTask(unitTestProperties);
+        createRunUnitTestTask(unitTestCreationConfig);
 
         // This hides the assemble unit test task from the task list.
 
@@ -1914,9 +1901,9 @@ public abstract class TaskManager<
                         });
     }
 
-    private void createRunUnitTestTask(@NonNull UnitTestPropertiesImpl unitTestProperties) {
+    private void createRunUnitTestTask(@NonNull UnitTestCreationConfig unitTestCreationConfig) {
         TaskProvider<AndroidUnitTest> runTestsTask =
-                taskFactory.register(new AndroidUnitTest.CreationAction(unitTestProperties));
+                taskFactory.register(new AndroidUnitTest.CreationAction(unitTestCreationConfig));
 
         taskFactory.configure(JavaPlugin.TEST_TASK_NAME, test -> test.dependsOn(runTestsTask));
     }
@@ -2112,36 +2099,33 @@ public abstract class TaskManager<
      * like proguard and jacoco
      */
     public void createPostCompilationTasks(@NonNull ApkCreationConfig creationConfig) {
-        // FIXME we need to remove this but this has large impact in the code
-        ComponentPropertiesImpl componentProperties = (ComponentPropertiesImpl) creationConfig;
+        checkNotNull(creationConfig.getTaskContainer().getJavacTask());
 
-        checkNotNull(componentProperties.getTaskContainer().getJavacTask());
+        VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
+        VariantScope variantScope = creationConfig.getVariantScope();
 
-        VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
-        VariantScope variantScope = componentProperties.getVariantScope();
+        TransformManager transformManager = creationConfig.getTransformManager();
 
-        TransformManager transformManager = componentProperties.getTransformManager();
-
-        taskFactory.register(new MergeGeneratedProguardFilesCreationAction(componentProperties));
+        taskFactory.register(new MergeGeneratedProguardFilesCreationAction(creationConfig));
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled =
                 variantDslInfo.isTestCoverageEnabled()
-                        && !componentProperties.getVariantType().isForTesting();
+                        && !creationConfig.getVariantType().isForTesting();
         if (isTestCoverageEnabled) {
-            createJacocoTask(componentProperties);
+            createJacocoTask(creationConfig);
         }
 
         maybeCreateDesugarTask(
-                componentProperties,
-                componentProperties.getMinSdkVersion(),
+                creationConfig,
+                creationConfig.getMinSdkVersion(),
                 transformManager,
                 isTestCoverageEnabled);
 
-        BaseExtension extension = componentProperties.getGlobalScope().getExtension();
+        BaseExtension extension = creationConfig.getGlobalScope().getExtension();
 
         // Merge Java Resources.
-        createMergeJavaResTask(componentProperties);
+        createMergeJavaResTask(creationConfig);
 
         // ----- External Transforms -----
         // apply all the external transforms.
@@ -2157,7 +2141,7 @@ public abstract class TaskManager<
                     transformManager
                             .addTransform(
                                     taskFactory,
-                                    componentProperties,
+                                    creationConfig,
                                     transform,
                                     null,
                                     task -> {
@@ -2166,10 +2150,11 @@ public abstract class TaskManager<
                                         }
                                     },
                                     taskProvider -> {
-                                        // if the task is a no-op then we make assemble task depend on it.
+                                        // if the task is a no-op then we make assemble task depend
+                                        // on it.
                                         if (transform.getScopes().isEmpty()) {
                                             TaskFactoryUtils.dependsOn(
-                                                    componentProperties
+                                                    creationConfig
                                                             .getTaskContainer()
                                                             .getAssembleTask(),
                                                     taskProvider);
@@ -2181,33 +2166,33 @@ public abstract class TaskManager<
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
         // minification is enabled in a project with features or dynamic-features.
-        if (componentProperties.getVariantType().isDynamicFeature()
+        if (creationConfig.getVariantType().isDynamicFeature()
                 || variantScope.consumesFeatureJars()) {
-            taskFactory.register(new MergeClassesTask.CreationAction(componentProperties));
+            taskFactory.register(new MergeClassesTask.CreationAction(creationConfig));
         }
 
         // ----- Android studio profiling transforms
 
-        if (appliesCustomClassTransforms(componentProperties)) {
+        if (appliesCustomClassTransforms(creationConfig)) {
             for (String jar :
                     getAdvancedProfilingTransforms(
-                            componentProperties.getServices().getProjectOptions())) {
+                            creationConfig.getServices().getProjectOptions())) {
                 if (jar != null) {
                     transformManager.addTransform(
                             taskFactory,
-                            componentProperties,
+                            creationConfig,
                             new CustomClassTransform(
-                                    jar, packagesCustomClassDependencies(componentProperties)));
+                                    jar, packagesCustomClassDependencies(creationConfig)));
                 }
             }
         }
 
         // ----- Minify next -----
-        maybeCreateCheckDuplicateClassesTask(componentProperties);
-        maybeCreateJavaCodeShrinkerTask(componentProperties);
-        if (componentProperties.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
-            maybeCreateResourcesShrinkerTasks(componentProperties);
-            maybeCreateDexDesugarLibTask(creationConfig, componentProperties, false);
+        maybeCreateCheckDuplicateClassesTask(creationConfig);
+        maybeCreateJavaCodeShrinkerTask(creationConfig);
+        if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
+            maybeCreateResourcesShrinkerTasks(creationConfig);
+            maybeCreateDexDesugarLibTask(creationConfig, false);
             return;
         }
 
@@ -2223,30 +2208,29 @@ public abstract class TaskManager<
             }
         }
 
-        if (componentProperties.getNeedsMainDexList()) {
-            taskFactory.register(new D8MainDexListTask.CreationAction(componentProperties, false));
+        if (creationConfig.getNeedsMainDexList()) {
+            taskFactory.register(new D8MainDexListTask.CreationAction(creationConfig, false));
         }
 
         if (variantScope.getNeedsMainDexListForBundle()) {
-            taskFactory.register(new D8MainDexListTask.CreationAction(componentProperties, true));
+            taskFactory.register(new D8MainDexListTask.CreationAction(creationConfig, true));
         }
 
-        createDexTasks(
-                creationConfig, componentProperties, dexingType, registeredExternalTransform);
+        createDexTasks(creationConfig, dexingType, registeredExternalTransform);
 
-        maybeCreateResourcesShrinkerTasks(componentProperties);
+        maybeCreateResourcesShrinkerTasks(creationConfig);
 
         maybeCreateDexSplitterTask(creationConfig);
     }
 
     private void maybeCreateDesugarTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull VariantCreationConfig creationConfig,
             @NonNull AndroidVersion minSdk,
             @NonNull TransformManager transformManager,
             boolean isTestCoverageEnabled) {
-        VariantScope variantScope = componentProperties.getVariantScope();
+        VariantScope variantScope = creationConfig.getVariantScope();
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
-            componentProperties
+            creationConfig
                     .getTransformManager()
                     .consumeStreams(
                             ImmutableSet.of(Scope.EXTERNAL_LIBRARIES),
@@ -2254,9 +2238,9 @@ public abstract class TaskManager<
 
             taskFactory.register(
                     new RecalculateStackFramesTask.CreationAction(
-                            componentProperties, isTestCoverageEnabled));
+                            creationConfig, isTestCoverageEnabled));
 
-            taskFactory.register(new DesugarTask.CreationAction(componentProperties));
+            taskFactory.register(new DesugarTask.CreationAction(creationConfig));
 
             if (VariantApiExtensionsKt.getFeatureLevel(minSdk)
                     >= DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
@@ -2264,7 +2248,7 @@ public abstract class TaskManager<
             }
 
             ScopeType testedType =
-                    componentProperties.onTestedConfig(
+                    creationConfig.onTestedConfig(
                             testedConfig -> {
                                 if (!testedConfig.getVariantType().isAar()) {
                                     // test variants, except for library, should not package
@@ -2282,8 +2266,7 @@ public abstract class TaskManager<
             // add runtime classes for try-with-resources support
             TaskProvider<ExtractTryWithResourcesSupportJar> extractTryWithResources =
                     taskFactory.register(
-                            new ExtractTryWithResourcesSupportJar.CreationAction(
-                                    componentProperties));
+                            new ExtractTryWithResourcesSupportJar.CreationAction(creationConfig));
             variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
             transformManager.addStream(
                     OriginalStream.builder("runtime-deps-try-with-resources")
@@ -2299,12 +2282,11 @@ public abstract class TaskManager<
      * archives in order to enable incremental dexing support.
      */
     private void createDexTasks(
-            @NonNull ApkCreationConfig apkCreationConfig,
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ApkCreationConfig creationConfig,
             @NonNull DexingType dexingType,
             boolean registeredExternalTransform) {
         DefaultDexOptions dexOptions;
-        final VariantType variantType = componentProperties.getVariantType();
+        final VariantType variantType = creationConfig.getVariantType();
         if (variantType.isTestComponent()) {
             // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
             // like --minimal-main-dex.
@@ -2315,37 +2297,34 @@ public abstract class TaskManager<
         }
 
         Java8LangSupport java8SLangSupport =
-                componentProperties.getVariantScope().getJava8LangSupportType();
-        boolean minified = componentProperties.getVariantScope().getCodeShrinker() != null;
+                creationConfig.getVariantScope().getJava8LangSupportType();
+        boolean minified = creationConfig.getVariantScope().getCodeShrinker() != null;
         boolean supportsDesugaring =
                 java8SLangSupport == Java8LangSupport.UNUSED
                         || (java8SLangSupport == Java8LangSupport.D8
-                                && componentProperties
+                                && creationConfig
                                         .getServices()
                                         .getProjectOptions()
                                         .get(
                                                 BooleanOption
                                                         .ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM));
         boolean enableDexingArtifactTransform =
-                componentProperties
+                creationConfig
                                 .getServices()
                                 .getProjectOptions()
                                 .get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
                         && !registeredExternalTransform
                         && !minified
                         && supportsDesugaring
-                        && !appliesCustomClassTransforms(componentProperties);
+                        && !appliesCustomClassTransforms(creationConfig);
 
         taskFactory.register(
                 new DexArchiveBuilderTask.CreationAction(
-                        dexOptions,
-                        enableDexingArtifactTransform,
-                        componentProperties));
+                        dexOptions, enableDexingArtifactTransform, creationConfig));
 
-        maybeCreateDexDesugarLibTask(
-                apkCreationConfig, componentProperties, enableDexingArtifactTransform);
+        maybeCreateDexDesugarLibTask(creationConfig, enableDexingArtifactTransform);
 
-        createDexMergingTasks(componentProperties, dexingType, enableDexingArtifactTransform);
+        createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform);
     }
 
     /**
@@ -2367,7 +2346,7 @@ public abstract class TaskManager<
      * will be merged in a single task.
      */
     private void createDexMergingTasks(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull VariantCreationConfig creationConfig,
             @NonNull DexingType dexingType,
             boolean dexingUsingArtifactTransforms) {
 
@@ -2375,28 +2354,27 @@ public abstract class TaskManager<
         // remote classpath present, as they lack dependency information to desugar
         // them correctly in an artifact transform.
         boolean separateFileDependenciesDexingTask =
-                componentProperties.getVariantScope().getJava8LangSupportType()
-                                == Java8LangSupport.D8
+                creationConfig.getVariantScope().getJava8LangSupportType() == Java8LangSupport.D8
                         && dexingUsingArtifactTransforms;
         if (separateFileDependenciesDexingTask) {
             DexFileDependenciesTask.CreationAction desugarFileDeps =
-                    new DexFileDependenciesTask.CreationAction(componentProperties);
+                    new DexFileDependenciesTask.CreationAction(creationConfig);
             taskFactory.register(desugarFileDeps);
         }
 
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
-                            componentProperties,
+                            creationConfig,
                             DexMergingAction.MERGE_ALL,
                             dexingType,
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask);
             taskFactory.register(configAction);
-        } else if (componentProperties.getVariantScope().getCodeShrinker() != null) {
+        } else if (creationConfig.getVariantScope().getCodeShrinker() != null) {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
-                            componentProperties,
+                            creationConfig,
                             DexMergingAction.MERGE_ALL,
                             dexingType,
                             dexingUsingArtifactTransforms);
@@ -2404,11 +2382,11 @@ public abstract class TaskManager<
         } else {
             boolean produceSeparateOutputs =
                     dexingType == DexingType.NATIVE_MULTIDEX
-                            && componentProperties.getVariantDslInfo().isDebuggable();
+                            && creationConfig.getVariantDslInfo().isDebuggable();
 
             taskFactory.register(
                     new DexMergingTask.CreationAction(
-                            componentProperties,
+                            creationConfig,
                             DexMergingAction.MERGE_EXTERNAL_LIBS,
                             DexingType.NATIVE_MULTIDEX,
                             dexingUsingArtifactTransforms,
@@ -2420,7 +2398,7 @@ public abstract class TaskManager<
             if (produceSeparateOutputs) {
                 DexMergingTask.CreationAction mergeProject =
                         new DexMergingTask.CreationAction(
-                                componentProperties,
+                                creationConfig,
                                 DexMergingAction.MERGE_PROJECT,
                                 dexingType,
                                 dexingUsingArtifactTransforms);
@@ -2428,7 +2406,7 @@ public abstract class TaskManager<
 
                 DexMergingTask.CreationAction mergeLibraries =
                         new DexMergingTask.CreationAction(
-                                componentProperties,
+                                creationConfig,
                                 DexMergingAction.MERGE_LIBRARY_PROJECTS,
                                 dexingType,
                                 dexingUsingArtifactTransforms);
@@ -2436,7 +2414,7 @@ public abstract class TaskManager<
             } else {
                 DexMergingTask.CreationAction configAction =
                         new DexMergingTask.CreationAction(
-                                componentProperties,
+                                creationConfig,
                                 DexMergingAction.MERGE_ALL,
                                 dexingType,
                                 dexingUsingArtifactTransforms);
@@ -2445,23 +2423,23 @@ public abstract class TaskManager<
         }
     }
 
-    protected void handleJacocoDependencies(@NonNull ComponentPropertiesImpl componentProperties) {
-        VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
+    protected void handleJacocoDependencies(@NonNull BaseCreationConfig creationConfig) {
+        VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
         // we add the jacoco jar if coverage is enabled, but we don't add it
         // for test apps as it's already part of the tested app.
         // For library project, since we cannot use the local jars of the library,
         // we add it as well.
         boolean isTestCoverageEnabled =
                 variantDslInfo.isTestCoverageEnabled()
-                        && (!componentProperties.getVariantType().isTestComponent()
+                        && (!creationConfig.getVariantType().isTestComponent()
                                 || (variantDslInfo.getTestedVariant() != null
                                         && variantDslInfo
                                                 .getTestedVariant()
                                                 .getVariantType()
                                                 .isAar()));
         if (isTestCoverageEnabled) {
-            if (componentProperties.getVariantScope().getDexer() == DexerTool.DX) {
-                componentProperties
+            if (creationConfig.getVariantScope().getDexer() == DexerTool.DX) {
+                creationConfig
                         .getServices()
                         .getIssueReporter()
                         .reportWarning(
@@ -2477,45 +2455,42 @@ public abstract class TaskManager<
 
             String jacocoAgentRuntimeDependency =
                     JacocoConfigurations.getAgentRuntimeDependency(
-                            JacocoTask.getJacocoVersion(componentProperties));
+                            JacocoTask.getJacocoVersion(creationConfig));
             project.getDependencies()
                     .add(
-                            componentProperties
-                                    .getVariantDependencies()
-                                    .getRuntimeClasspath()
-                                    .getName(),
+                            creationConfig.getVariantDependencies().getRuntimeClasspath().getName(),
                             jacocoAgentRuntimeDependency);
 
             // we need to force the same version of Jacoco we use for instrumentation
-            componentProperties
+            creationConfig
                     .getVariantDependencies()
                     .getRuntimeClasspath()
                     .resolutionStrategy(r -> r.force(jacocoAgentRuntimeDependency));
         }
     }
 
-    public void createJacocoTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        componentProperties
+    public void createJacocoTask(@NonNull VariantCreationConfig creationConfig) {
+        creationConfig
                 .getTransformManager()
                 .consumeStreams(
                         ImmutableSet.of(Scope.PROJECT),
                         ImmutableSet.of(DefaultContentType.CLASSES));
-        taskFactory.register(new JacocoTask.CreationAction(componentProperties));
+        taskFactory.register(new JacocoTask.CreationAction(creationConfig));
 
         FileCollection instumentedClasses =
                 project.files(
-                        componentProperties
+                        creationConfig
                                 .getArtifacts()
                                 .get(InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE),
                         project.files(
-                                        componentProperties
+                                        creationConfig
                                                 .getArtifacts()
                                                 .get(
                                                         InternalArtifactType
                                                                 .JACOCO_INSTRUMENTED_JARS
                                                                 .INSTANCE))
                                 .getAsFileTree());
-        componentProperties
+        creationConfig
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder("jacoco-instrumented-classes")
@@ -2525,34 +2500,32 @@ public abstract class TaskManager<
                                 .build());
     }
 
-    protected void createDataBindingTasksIfNecessary(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        boolean dataBindingEnabled = componentProperties.getBuildFeatures().getDataBinding();
-        boolean viewBindingEnabled = componentProperties.getBuildFeatures().getViewBinding();
+    protected void createDataBindingTasksIfNecessary(@NonNull BaseCreationConfig creationConfig) {
+        boolean dataBindingEnabled = creationConfig.getBuildFeatures().getDataBinding();
+        boolean viewBindingEnabled = creationConfig.getBuildFeatures().getViewBinding();
         if (!dataBindingEnabled && !viewBindingEnabled) {
             return;
         }
 
-        taskFactory.register(
-                new DataBindingMergeBaseClassLogTask.CreationAction(componentProperties));
+        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(creationConfig));
 
         taskFactory.register(
-                new DataBindingMergeDependencyArtifactsTask.CreationAction(componentProperties));
+                new DataBindingMergeDependencyArtifactsTask.CreationAction(creationConfig));
 
         DataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
-        taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(componentProperties));
+        taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(creationConfig));
 
         // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
         if (dataBindingEnabled) {
-            taskFactory.register(new DataBindingTriggerTask.CreationAction(componentProperties));
-            setDataBindingAnnotationProcessorParams(componentProperties);
+            taskFactory.register(new DataBindingTriggerTask.CreationAction(creationConfig));
+            setDataBindingAnnotationProcessorParams(creationConfig);
         }
     }
 
     private void setDataBindingAnnotationProcessorParams(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
+            @NonNull BaseCreationConfig creationConfig) {
+        VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
         JavaCompileOptions javaCompileOptions = variantDslInfo.getJavaCompileOptions();
         AnnotationProcessorOptions processorOptions =
                 javaCompileOptions.getAnnotationProcessorOptions();
@@ -2573,7 +2546,7 @@ public abstract class TaskManager<
 
             DataBindingCompilerArguments dataBindingArgs =
                     DataBindingCompilerArguments.createArguments(
-                            componentProperties,
+                            creationConfig,
                             getLogger().isDebugEnabled(),
                             DataBindingBuilder.getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
@@ -2662,17 +2635,17 @@ public abstract class TaskManager<
         taskFactory.register(new InstallVariantTask.CreationAction(creationConfig));
     }
 
-    protected void createValidateSigningTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getVariantDslInfo().getSigningConfig() == null) {
+    protected void createValidateSigningTask(@NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig.getVariantDslInfo().getSigningConfig() == null) {
             return;
         }
 
         // FIXME create one per signing config instead of one per variant.
         taskFactory.register(
                 new ValidateSigningTask.CreationAction(
-                        componentProperties,
+                        creationConfig,
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
-                                componentProperties.getServices().getGradleEnvironmentProvider())));
+                                creationConfig.getServices().getGradleEnvironmentProvider())));
     }
 
     /**
@@ -2706,12 +2679,12 @@ public abstract class TaskManager<
             ListMultimap<String, TaskProvider<? extends Task>> bundleMap =
                     ArrayListMultimap.create();
 
-            for (ComponentPropertiesImpl component : allPropertiesList) {
-                final VariantType variantType = component.getVariantType();
+            for (BaseCreationConfig creationConfig : allPropertiesList) {
+                final VariantType variantType = creationConfig.getVariantType();
                 if (!variantType.isTestComponent()) {
-                    final MutableTaskContainer taskContainer = component.getTaskContainer();
-                    final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
-                    final String buildType = component.getBuildType();
+                    final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
+                    final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
+                    final String buildType = creationConfig.getBuildType();
 
                     final TaskProvider<? extends Task> assembleTask =
                             taskContainer.getAssembleTask();
@@ -2725,7 +2698,7 @@ public abstract class TaskManager<
 
                     // if 2+ flavor dimensions, then make an assemble for the flavor combo
                     if (flavorDimensionCount > 1) {
-                        assembleMap.put(component.getFlavorName(), assembleTask);
+                        assembleMap.put(creationConfig.getFlavorName(), assembleTask);
                     }
 
                     // fill the bundle map only if the variant supports bundles.
@@ -2742,7 +2715,7 @@ public abstract class TaskManager<
 
                         // if 2+ flavor dimensions, then make an assemble for the flavor combo
                         if (flavorDimensionCount > 1) {
-                            bundleMap.put(component.getFlavorName(), bundleTask);
+                            bundleMap.put(creationConfig.getFlavorName(), bundleTask);
                         }
                     }
                 }
@@ -2788,10 +2761,10 @@ public abstract class TaskManager<
             }
         } else {
             // Case #2
-            for (ComponentPropertiesImpl component : allPropertiesList) {
-                final VariantType variantType = component.getVariantType();
+            for (BaseCreationConfig creationConfig : allPropertiesList) {
+                final VariantType variantType = creationConfig.getVariantType();
                 if (!variantType.isTestComponent()) {
-                    final MutableTaskContainer taskContainer = component.getTaskContainer();
+                    final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
 
                     subAssembleTasks.add(taskContainer.getAssembleTask());
 
@@ -2854,13 +2827,12 @@ public abstract class TaskManager<
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
     }
 
-    protected void maybeCreateJavaCodeShrinkerTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        CodeShrinker codeShrinker = componentProperties.getVariantScope().getCodeShrinker();
+    protected void maybeCreateJavaCodeShrinkerTask(@NonNull VariantCreationConfig creationConfig) {
+        CodeShrinker codeShrinker = creationConfig.getVariantScope().getCodeShrinker();
 
         if (codeShrinker != null) {
             doCreateJavaCodeShrinkerTask(
-                    componentProperties,
+                    creationConfig,
                     // No mapping in non-test modules.
                     codeShrinker);
         }
@@ -2871,30 +2843,28 @@ public abstract class TaskManager<
      * only used by test-only modules.
      */
     protected final void doCreateJavaCodeShrinkerTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull CodeShrinker codeShrinker) {
-        doCreateJavaCodeShrinkerTask(componentProperties, codeShrinker, false);
+            @NonNull VariantCreationConfig creationConfig, @NonNull CodeShrinker codeShrinker) {
+        doCreateJavaCodeShrinkerTask(creationConfig, codeShrinker, false);
     }
 
     protected final void doCreateJavaCodeShrinkerTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull VariantCreationConfig creationConfig,
             @NonNull CodeShrinker codeShrinker,
             Boolean isTestApplication) {
         @NonNull TaskProvider<? extends Task> task;
         switch (codeShrinker) {
             case PROGUARD:
-                task = createProguardTask(componentProperties, isTestApplication);
+                task = createProguardTask(creationConfig, isTestApplication);
                 break;
             case R8:
-                task = createR8Task(componentProperties, isTestApplication);
+                task = createR8Task(creationConfig, isTestApplication);
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
         }
-        if (componentProperties.getVariantScope().getPostprocessingFeatures() != null) {
+        if (creationConfig.getVariantScope().getPostprocessingFeatures() != null) {
             TaskProvider<CheckProguardFiles> checkFilesTask =
-                    taskFactory.register(
-                            new CheckProguardFiles.CreationAction(componentProperties));
+                    taskFactory.register(new CheckProguardFiles.CreationAction(creationConfig));
 
             TaskFactoryUtils.dependsOn(task, checkFilesTask);
         }
@@ -2902,14 +2872,14 @@ public abstract class TaskManager<
 
     @NonNull
     private TaskProvider<ProguardTask> createProguardTask(
-            @NonNull ComponentPropertiesImpl componentProperties, boolean isTestApplication) {
+            @NonNull VariantCreationConfig creationConfig, boolean isTestApplication) {
         return taskFactory.register(
-                new ProguardTask.CreationAction(componentProperties, isTestApplication));
+                new ProguardTask.CreationAction(creationConfig, isTestApplication));
     }
 
     @NonNull
     private TaskProvider<R8Task> createR8Task(
-            @NonNull BaseCreationConfig creationConfig, Boolean isTestApplication) {
+            @NonNull VariantCreationConfig creationConfig, Boolean isTestApplication) {
         if (creationConfig instanceof ApplicationCreationConfig) {
             publishFeatureDex((ApplicationCreationConfig) creationConfig);
         }
@@ -2989,35 +2959,34 @@ public abstract class TaskManager<
     }
 
     /**
-     * Checks if {@link ShrinkResourcesOldShrinkerTask} and {@link LegacyShrinkBundleModuleResourcesTask} should be added
-     * to the build pipeline and creates the tasks
+     * Checks if {@link ShrinkResourcesOldShrinkerTask} and {@link
+     * LegacyShrinkBundleModuleResourcesTask} should be added to the build pipeline and creates the
+     * tasks
      */
     protected void maybeCreateResourcesShrinkerTasks(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        if (!componentProperties.getVariantScope().useResourceShrinker()) {
+            @NonNull VariantCreationConfig creationConfig) {
+        if (!creationConfig.getVariantScope().useResourceShrinker()) {
             return;
         }
 
-        if (componentProperties.getVariantType().isDynamicFeature()) {
+        if (creationConfig.getVariantType().isDynamicFeature()) {
             // For bundles resources are shrunk once bundle is packaged so the task is applicable
             // for base module only.
             return;
         }
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER)) {
-            // Shrink resources in APK with a new resource shrinker and produce stripped res package.
-            taskFactory.register(
-                    new ShrinkResourcesNewShrinkerTask.CreationAction(componentProperties));
+            // Shrink resources in APK with a new resource shrinker and produce stripped res
+            // package.
+            taskFactory.register(new ShrinkResourcesNewShrinkerTask.CreationAction(creationConfig));
             // Shrink resources in bundles with new resource shrinker.
-            taskFactory.register(
-                    new ShrinkAppBundleResourcesTask.CreationAction(componentProperties));
+            taskFactory.register(new ShrinkAppBundleResourcesTask.CreationAction(creationConfig));
         } else {
             // Shrink resources in APK with old resource shrinker and produce stripped res package.
-            taskFactory.register(
-                    new ShrinkResourcesOldShrinkerTask.CreationAction(componentProperties));
+            taskFactory.register(new ShrinkResourcesOldShrinkerTask.CreationAction(creationConfig));
             // Shrink base module resources in proto format to be packaged to bundle.
             taskFactory.register(
-                    new LegacyShrinkBundleModuleResourcesTask.CreationAction(componentProperties));
+                    new LegacyShrinkBundleModuleResourcesTask.CreationAction(creationConfig));
         }
     }
 
@@ -3033,7 +3002,7 @@ public abstract class TaskManager<
                     task.setGroup(ANDROID_GROUP);
                 });
 
-        List<ComponentPropertiesImpl> signingReportComponents =
+        List<BaseCreationConfig> signingReportComponents =
                 allPropertiesList.stream()
                         .filter(
                                 component ->
@@ -3066,67 +3035,66 @@ public abstract class TaskManager<
         }
     }
 
-    public void createAnchorTasks(@NonNull ComponentPropertiesImpl componentProperties) {
-        createVariantPreBuildTask(componentProperties);
+    public void createAnchorTasks(@NonNull BaseCreationConfig creationConfig) {
+        createVariantPreBuildTask(creationConfig);
 
         // also create sourceGenTask
-        final BaseVariantData variantData = componentProperties.getVariantData();
-        componentProperties
+        final BaseVariantData variantData = creationConfig.getVariantData();
+        creationConfig
                 .getTaskContainer()
                 .setSourceGenTask(
                         taskFactory.register(
-                                componentProperties.computeTaskName("generate", "Sources"),
+                                creationConfig.computeTaskName("generate", "Sources"),
                                 task -> {
                                     task.dependsOn(COMPILE_LINT_CHECKS_TASK);
-                                    if (componentProperties.getVariantType().isAar()) {
+                                    if (creationConfig.getVariantType().isAar()) {
                                         task.dependsOn(PrepareLintJarForPublish.NAME);
                                     }
                                     task.dependsOn(variantData.getExtraGeneratedResFolders());
                                 }));
         // and resGenTask
-        componentProperties
+        creationConfig
                 .getTaskContainer()
                 .setResourceGenTask(
                         taskFactory.register(
-                                componentProperties.computeTaskName("generate", "Resources")));
+                                creationConfig.computeTaskName("generate", "Resources")));
 
-        componentProperties
+        creationConfig
                 .getTaskContainer()
                 .setAssetGenTask(
-                        taskFactory.register(
-                                componentProperties.computeTaskName("generate", "Assets")));
+                        taskFactory.register(creationConfig.computeTaskName("generate", "Assets")));
 
-        if (!componentProperties.getVariantType().isForTesting()
-                && componentProperties.getVariantDslInfo().isTestCoverageEnabled()) {
-            componentProperties
+        if (!creationConfig.getVariantType().isForTesting()
+                && creationConfig.getVariantDslInfo().isTestCoverageEnabled()) {
+            creationConfig
                     .getTaskContainer()
                     .setCoverageReportTask(
                             taskFactory.register(
-                                    componentProperties.computeTaskName("create", "CoverageReport"),
+                                    creationConfig.computeTaskName("create", "CoverageReport"),
                                     task -> {
                                         task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
                                         task.setDescription(
                                                 String.format(
                                                         "Creates test coverage reports for the %s variant.",
-                                                        componentProperties.getName()));
+                                                        creationConfig.getName()));
                                     }));
         }
 
         // and compile task
-        createCompileAnchorTask(componentProperties);
+        createCompileAnchorTask(creationConfig);
     }
 
-    protected void createVariantPreBuildTask(@NonNull ComponentPropertiesImpl componentProperties) {
+    protected void createVariantPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
         // default pre-built task.
-        createDefaultPreBuildTask(componentProperties);
+        createDefaultPreBuildTask(creationConfig);
     }
 
-    protected void createDefaultPreBuildTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(new PreBuildCreationAction(componentProperties));
+    protected void createDefaultPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
+        taskFactory.register(new PreBuildCreationAction(creationConfig));
     }
 
     public abstract static class AbstractPreBuildCreationAction<TaskT extends AndroidVariantTask>
-            extends VariantTaskCreationAction<TaskT, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<TaskT, BaseCreationConfig> {
 
         @NonNull
         @Override
@@ -3134,9 +3102,8 @@ public abstract class TaskManager<
             return computeTaskName("pre", "Build");
         }
 
-        public AbstractPreBuildCreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties, false);
+        public AbstractPreBuildCreationAction(@NonNull BaseCreationConfig creationConfig) {
+            super(creationConfig, false);
         }
 
         @Override
@@ -3158,8 +3125,8 @@ public abstract class TaskManager<
 
     private static class PreBuildCreationAction
             extends AbstractPreBuildCreationAction<AndroidVariantTask> {
-        public PreBuildCreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public PreBuildCreationAction(@NonNull BaseCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull
@@ -3169,11 +3136,11 @@ public abstract class TaskManager<
         }
     }
 
-    private void createCompileAnchorTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+    private void createCompileAnchorTask(@NonNull BaseCreationConfig creationConfig) {
+        final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
         taskContainer.setCompileTask(
                 taskFactory.register(
-                        componentProperties.computeTaskName("compile", "Sources"),
+                        creationConfig.computeTaskName("compile", "Sources"),
                         task -> task.setGroup(BUILD_GROUP)));
 
         // FIXME is that really needed?
@@ -3324,7 +3291,7 @@ public abstract class TaskManager<
             return;
         }
         // create a map from kapt task name to variant scope
-        Map<String, ComponentPropertiesImpl> kaptTaskLookup =
+        Map<String, BaseCreationConfig> kaptTaskLookup =
                 allPropertiesList.stream()
                         .collect(
                                 Collectors.toMap(
@@ -3336,7 +3303,7 @@ public abstract class TaskManager<
                         (Action<Task>)
                                 kaptTask -> {
                                     // find matching scope.
-                                    ComponentPropertiesImpl matchingComponent =
+                                    BaseCreationConfig matchingComponent =
                                             kaptTaskLookup.get(kaptTask.getName());
                                     if (matchingComponent != null) {
                                         configureKaptTaskInScopeForDataBinding(
@@ -3346,27 +3313,27 @@ public abstract class TaskManager<
     }
 
     private void configureKaptTaskInScopeForDataBinding(
-            @NonNull ComponentPropertiesImpl componentProperties, @NonNull Task kaptTask) {
+            @NonNull BaseCreationConfig creationConfig, @NonNull Task kaptTask) {
         DirectoryProperty dataBindingArtifactDir =
-                componentProperties.getGlobalScope().getProject().getObjects().directoryProperty();
+                creationConfig.getGlobalScope().getProject().getObjects().directoryProperty();
         RegularFileProperty exportClassListFile =
-                componentProperties.getGlobalScope().getProject().getObjects().fileProperty();
+                creationConfig.getGlobalScope().getProject().getObjects().fileProperty();
         TaskProvider<Task> kaptTaskProvider = taskFactory.named(kaptTask.getName());
 
         // Data binding artifacts are part of the annotation processing outputs
         JavaCompileKt.registerDataBindingOutputs(
                 dataBindingArtifactDir,
                 exportClassListFile,
-                componentProperties.getVariantType().isExportDataBindingClassList(),
+                creationConfig.getVariantType().isExportDataBindingClassList(),
                 kaptTaskProvider,
-                componentProperties.getArtifacts());
+                creationConfig.getArtifacts());
 
         // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
         kaptTask.getOutputs()
                 .dir(dataBindingArtifactDir)
                 .withPropertyName("dataBindingArtifactDir");
-        if (componentProperties.getVariantType().isExportDataBindingClassList()) {
+        if (creationConfig.getVariantType().isExportDataBindingClassList()) {
             kaptTask.getOutputs()
                     .file(exportClassListFile)
                     .withPropertyName("dataBindingExportClassListFile");
@@ -3374,41 +3341,38 @@ public abstract class TaskManager<
     }
 
     protected void configureTestData(
-            @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull AbstractTestDataImpl testData) {
+            @NonNull VariantCreationConfig creationConfig, @NonNull AbstractTestDataImpl testData) {
         testData.setAnimationsDisabled(
-                componentProperties
+                creationConfig
                         .getServices()
                         .provider(extension.getTestOptions()::getAnimationsDisabled));
         testData.setExtraInstrumentationTestRunnerArgs(
-                componentProperties
+                creationConfig
                         .getServices()
                         .getProjectOptions()
                         .getExtraInstrumentationTestRunnerArgs());
     }
 
     private void maybeCreateCheckDuplicateClassesTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties
+            @NonNull VariantCreationConfig creationConfig) {
+        if (creationConfig
                 .getServices()
                 .getProjectOptions()
                 .get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
-            taskFactory.register(new CheckDuplicateClassesTask.CreationAction(componentProperties));
+            taskFactory.register(new CheckDuplicateClassesTask.CreationAction(creationConfig));
         }
     }
 
     private void maybeCreateDexDesugarLibTask(
             @NonNull ApkCreationConfig apkCreationConfig,
-            @NonNull ComponentPropertiesImpl componentProperties,
             boolean enableDexingArtifactTransform) {
         boolean separateFileDependenciesDexingTask =
-                componentProperties.getVariantScope().getJava8LangSupportType()
-                                == Java8LangSupport.D8
+                apkCreationConfig.getVariantScope().getJava8LangSupportType() == Java8LangSupport.D8
                         && enableDexingArtifactTransform;
         if (apkCreationConfig.getShouldPackageDesugarLibDex()) {
             taskFactory.register(
                     new L8DexDesugarLibTask.CreationAction(
-                            componentProperties,
+                            apkCreationConfig,
                             enableDexingArtifactTransform,
                             separateFileDependenciesDexingTask));
         }

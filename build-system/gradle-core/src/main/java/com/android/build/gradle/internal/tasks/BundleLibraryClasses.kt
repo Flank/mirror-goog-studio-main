@@ -17,8 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_CLASSES_JAR
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.dependency.getClassesDirFormat
@@ -83,19 +84,19 @@ interface BundleLibraryClassesInputs {
 }
 
 private fun BundleLibraryClassesInputs.configure(
-    component: ComponentPropertiesImpl,
+    creationConfig: BaseCreationConfig,
     inputs: FileCollection,
     packageRClass: Boolean
 ) {
-    packageName.setDisallowChanges(component.packageName)
+    packageName.setDisallowChanges(creationConfig.packageName)
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {
-        classes.from(component.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR))
+        classes.from(creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR))
     }
-    jarCreatorType.set(component.variantScope.jarCreatorType)
+    jarCreatorType.set(creationConfig.variantScope.jarCreatorType)
 
-    dataBindingExcludeDelegate.configureFrom(component)
+    dataBindingExcludeDelegate.configureFrom(creationConfig)
 }
 
 private fun BundleLibraryClassesInputs.configureWorkerActionParams(
@@ -142,9 +143,9 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleLibraryClassesDir, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<BundleLibraryClassesDir, VariantCreationConfig>(
+        creationConfig
     ) {
 
         private val inputs: FileCollection
@@ -153,13 +154,13 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
             inputs =
-                componentProperties.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     types.contains(QualifiedContent.DefaultContentType.CLASSES)
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
         }
 
-        override val name: String = componentProperties.computeTaskName("bundleLibRuntimeToDir")
+        override val name: String = creationConfig.computeTaskName("bundleLibRuntimeToDir")
 
         override val type: Class<BundleLibraryClassesDir> = BundleLibraryClassesDir::class.java
 
@@ -194,10 +195,10 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: BaseCreationConfig,
         private val publishedType: PublishedConfigType
-    ) : VariantTaskCreationAction<BundleLibraryClassesJar, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<BundleLibraryClassesJar, BaseCreationConfig>(
+        creationConfig
     ) {
 
         private val inputs: FileCollection
@@ -210,16 +211,16 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
             inputs = if (publishedType == PublishedConfigType.RUNTIME_ELEMENTS) {
-                componentProperties.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     types.contains(QualifiedContent.DefaultContentType.CLASSES)
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
             } else {
-                componentProperties.artifacts.getAllClasses()
+                creationConfig.artifacts.getAllClasses()
             }
         }
 
-        override val name: String = componentProperties.computeTaskName(
+        override val name: String = creationConfig.computeTaskName(
             if (publishedType == PublishedConfigType.API_ELEMENTS) {
                 "bundleLibCompileToJar"
             } else {

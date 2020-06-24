@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
@@ -89,9 +89,9 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<LinkManifestForAssetPackTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<LinkManifestForAssetPackTask, VariantCreationConfig>(
+        creationConfig
     ) {
         override val type = LinkManifestForAssetPackTask::class.java
         override val name = computeTaskName("link", "ManifestForAssetPacks")

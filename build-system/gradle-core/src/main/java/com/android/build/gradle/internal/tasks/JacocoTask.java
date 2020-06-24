@@ -17,8 +17,9 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -93,11 +94,11 @@ public abstract class JacocoTask extends NewIncrementalTask {
 
     /** Returns which Jacoco version to use. */
     @NonNull
-    public static String getJacocoVersion(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getVariantScope().getDexer() == DexerTool.DX) {
+    public static String getJacocoVersion(@NonNull BaseCreationConfig creationConfig) {
+        if (creationConfig.getVariantScope().getDexer() == DexerTool.DX) {
             return JacocoConfigurations.VERSION_FOR_DX;
         } else {
-            return componentProperties.getGlobalScope().getExtension().getJacoco().getVersion();
+            return creationConfig.getGlobalScope().getExtension().getJacoco().getVersion();
         }
     }
 
@@ -365,10 +366,10 @@ public abstract class JacocoTask extends NewIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<JacocoTask, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<JacocoTask, VariantCreationConfig> {
 
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull

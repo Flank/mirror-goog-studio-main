@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -131,9 +131,9 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
     }
 
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask, BaseCreationConfig>(
+            creationConfig
         ) {
         override val name: String get() = computeTaskName("generate", "RFile")
 

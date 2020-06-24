@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
@@ -164,9 +164,9 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<BundleToStandaloneApkTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<BundleToStandaloneApkTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

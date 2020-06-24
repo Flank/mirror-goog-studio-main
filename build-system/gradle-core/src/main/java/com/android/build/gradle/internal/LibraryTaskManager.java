@@ -27,7 +27,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.PrefabPackagingOptions;
@@ -40,6 +39,7 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
@@ -431,21 +431,19 @@ public class LibraryTaskManager
     }
 
     @Override
-    protected void createDependencyStreams(@NonNull ComponentPropertiesImpl componentProperties) {
-        super.createDependencyStreams(componentProperties);
+    protected void createDependencyStreams(@NonNull BaseCreationConfig creationConfig) {
+        super.createDependencyStreams(creationConfig);
 
         // add the same jars twice in the same stream as the EXTERNAL_LIB in the task manager
         // so that filtering of duplicates in proguard can work.
-        componentProperties
+        creationConfig
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder("local-deps-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(InternalScope.LOCAL_DEPS)
                                 .setFileCollection(
-                                        componentProperties
-                                                .getVariantScope()
-                                                .getLocalPackagedJars())
+                                        creationConfig.getVariantScope().getLocalPackagedJars())
                                 .build());
     }
 
@@ -512,25 +510,21 @@ public class LibraryTaskManager
     }
 
     @Override
-    protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
+    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
-                componentProperties
+                creationConfig
                         .getServices()
                         .fileCollection(
-                                componentProperties.getArtifacts().get(JAVAC.INSTANCE),
-                                componentProperties
-                                        .getVariantData()
-                                        .getAllPreJavacGeneratedBytecode(),
-                                componentProperties
-                                        .getVariantData()
-                                        .getAllPostJavacGeneratedBytecode());
-        componentProperties.getArtifacts().appendToAllClasses(files);
+                                creationConfig.getArtifacts().get(JAVAC.INSTANCE),
+                                creationConfig.getVariantData().getAllPreJavacGeneratedBytecode(),
+                                creationConfig.getVariantData().getAllPostJavacGeneratedBytecode());
+        creationConfig.getArtifacts().appendToAllClasses(files);
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
                 new BundleLibraryClassesJar.CreationAction(
-                        componentProperties, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
+                        creationConfig, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
     }
 
     public void createLibraryAssetsTask(@NonNull VariantPropertiesImpl variantProperties) {
@@ -591,12 +585,12 @@ public class LibraryTaskManager
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
         Preconditions.checkArgument(
                 contentType == RESOURCES || contentType == NATIVE_LIBS,
                 "contentType must be RESOURCES or NATIVE_LIBS");
-        if (componentProperties.getVariantType().isTestComponent()) {
+        if (creationConfig.getVariantType().isTestComponent()) {
             if (contentType == RESOURCES) {
                 return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
             }

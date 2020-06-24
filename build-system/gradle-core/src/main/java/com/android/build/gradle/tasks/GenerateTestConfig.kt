@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.component.impl.UnitTestPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -97,9 +96,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         abstract val outputDirectory: DirectoryProperty
     }
 
-    class CreationAction(private val unitTestProperties: UnitTestPropertiesImpl) :
-        VariantTaskCreationAction<GenerateTestConfig, ComponentPropertiesImpl>(
-            unitTestProperties
+    class CreationAction(private val unitTestCreationConfig: UnitTestCreationConfig) :
+        VariantTaskCreationAction<GenerateTestConfig, UnitTestCreationConfig>(
+            unitTestCreationConfig
         ) {
 
         override val name: String
@@ -123,13 +122,13 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             task: GenerateTestConfig
         ) {
             super.configure(task)
-            task.testConfigInputs = TestConfigInputs(unitTestProperties)
+            task.testConfigInputs = TestConfigInputs(unitTestCreationConfig)
             task.projectDir.set(task.project.projectDir)
             task.projectDir.disallowChanges()
         }
     }
 
-    class TestConfigInputs(unitTestProperties: UnitTestPropertiesImpl) {
+    class TestConfigInputs(creationConfig: UnitTestCreationConfig) {
         @get:Input
         val isUseRelativePathEnabled: Boolean
 
@@ -156,20 +155,20 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         val packageNameOfFinalRClass: Provider<String>
 
         init {
-            val testedVariant = unitTestProperties.testedVariant
+            val testedVariant = creationConfig.testedConfig
 
-            isUseRelativePathEnabled = unitTestProperties.services.projectOptions.get(
+            isUseRelativePathEnabled = creationConfig.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = unitTestProperties.artifacts.get(APK_FOR_LOCAL_TEST)
+            resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
             mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS)
             mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.packageName
             buildDirectoryPath = FileUtils.toSystemIndependentPath(
                 FileUtils.relativePossiblyNonExistingPath(
-                    unitTestProperties.globalScope.project.buildDir,
-                    unitTestProperties.globalScope.project.projectDir)
+                    creationConfig.globalScope.project.buildDir,
+                    creationConfig.globalScope.project.projectDir)
             )
         }
 

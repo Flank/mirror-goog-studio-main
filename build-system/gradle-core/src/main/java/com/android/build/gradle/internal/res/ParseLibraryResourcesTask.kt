@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -141,9 +141,9 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
     }
 
     class CreateAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

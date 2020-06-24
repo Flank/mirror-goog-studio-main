@@ -17,7 +17,6 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl

@@ -22,13 +22,13 @@ import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NAT
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
@@ -150,7 +150,7 @@ public class TransformManager extends FilterableStreamCollection {
      * dependencies of the consumed streams.
      *
      * @param taskFactory the task factory
-     * @param componentProperties the current scope
+     * @param creationConfig the current scope
      * @param transform the transform to add
      * @param <T> the type of the transform
      * @return {@code Optional<AndroidTask<Transform>>} containing the AndroidTask if it was able to
@@ -159,9 +159,9 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull VariantCreationConfig creationConfig,
             @NonNull T transform) {
-        return addTransform(taskFactory, componentProperties, transform, null, null, null);
+        return addTransform(taskFactory, creationConfig, transform, null, null, null);
     }
 
     /**
@@ -174,7 +174,7 @@ public class TransformManager extends FilterableStreamCollection {
      * dependencies of the consumed streams.
      *
      * @param taskFactory the task factory
-     * @param componentProperties the current scope
+     * @param creationConfig the current scope
      * @param transform the transform to add
      * @param <T> the type of the transform
      * @return {@code Optional<AndroidTask<TaskProvider<TransformTask>>>} containing the AndroidTask
@@ -183,7 +183,7 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull
     public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull VariantCreationConfig creationConfig,
             @NonNull T transform,
             @Nullable PreConfigAction preConfigAction,
             @Nullable TaskConfigAction<TransformTask> configAction,
@@ -195,12 +195,12 @@ public class TransformManager extends FilterableStreamCollection {
             return Optional.empty();
         }
 
-        if (!transform.applyToVariant(new VariantInfoImpl(componentProperties))) {
+        if (!transform.applyToVariant(new VariantInfoImpl(creationConfig))) {
             return Optional.empty();
         }
 
         List<TransformStream> inputStreams = Lists.newArrayList();
-        String taskName = componentProperties.computeTaskName(getTaskNamePrefix(transform));
+        String taskName = creationConfig.computeTaskName(getTaskNamePrefix(transform), "");
 
         // get referenced-only streams
         List<TransformStream> referencedStreams = grabReferencedStreams(transform);
@@ -209,10 +209,10 @@ public class TransformManager extends FilterableStreamCollection {
         IntermediateStream outputStream =
                 findTransformStreams(
                         transform,
-                        componentProperties,
+                        creationConfig,
                         inputStreams,
                         taskName,
-                        componentProperties.getGlobalScope().getBuildDir());
+                        creationConfig.getGlobalScope().getBuildDir());
 
         if (inputStreams.isEmpty() && referencedStreams.isEmpty()) {
             // didn't find any match. Means there is a broken order somewhere in the streams.
@@ -221,7 +221,7 @@ public class TransformManager extends FilterableStreamCollection {
                     String.format(
                             "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
                             transform.getName(),
-                            componentProperties.getName(),
+                            creationConfig.getName(),
                             transform.getScopes(),
                             transform.getReferencedScopes(),
                             transform.getInputTypes()));
@@ -230,7 +230,7 @@ public class TransformManager extends FilterableStreamCollection {
 
         //noinspection PointlessBooleanExpression
         if (DEBUG && logger.isEnabled(LogLevel.DEBUG)) {
-            logger.debug("ADDED TRANSFORM(" + componentProperties.getName() + "):");
+            logger.debug("ADDED TRANSFORM(" + creationConfig.getName() + "):");
             logger.debug("\tName: " + transform.getName());
             logger.debug("\tTask: " + taskName);
             for (TransformStream sd : inputStreams) {
@@ -249,7 +249,7 @@ public class TransformManager extends FilterableStreamCollection {
                 t -> {
                     t.getEnableGradleWorkers()
                             .set(
-                                    componentProperties
+                                    creationConfig
                                             .getGlobalScope()
                                             .getProjectOptions()
                                             .get(BooleanOption.ENABLE_GRADLE_WORKERS));
@@ -261,7 +261,7 @@ public class TransformManager extends FilterableStreamCollection {
         return Optional.of(
                 taskFactory.register(
                         new TransformTask.CreationAction<>(
-                                componentProperties.getName(),
+                                creationConfig.getName(),
                                 taskName,
                                 transform,
                                 inputStreams,
@@ -311,7 +311,7 @@ public class TransformManager extends FilterableStreamCollection {
      * <p>This returns an optional output stream.
      *
      * @param transform the transform.
-     * @param componentProperties the scope the transform is applied to.
+     * @param creationConfig the scope the transform is applied to.
      * @param inputStreams the out list of input streams for the transform.
      * @param taskName the name of the task that will run the transform
      * @param buildDir the build dir of the project.
@@ -320,7 +320,7 @@ public class TransformManager extends FilterableStreamCollection {
     @Nullable
     private IntermediateStream findTransformStreams(
             @NonNull Transform transform,
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull VariantCreationConfig creationConfig,
             @NonNull List<TransformStream> inputStreams,
             @NonNull String taskName,
             @NonNull File buildDir) {
@@ -345,13 +345,13 @@ public class TransformManager extends FilterableStreamCollection {
                                 AndroidProject.FD_INTERMEDIATES,
                                 FD_TRANSFORMS,
                                 transform.getName(),
-                                componentProperties.getVariantDslInfo().getDirectorySegments()));
+                                creationConfig.getVariantDslInfo().getDirectorySegments()));
 
         // create the output
         IntermediateStream outputStream =
                 IntermediateStream.builder(
                                 project,
-                                transform.getName() + "-" + componentProperties.getName(),
+                                transform.getName() + "-" + creationConfig.getName(),
                                 taskName)
                         .addContentTypes(outputTypes)
                         .addScopes(requestedScopes)

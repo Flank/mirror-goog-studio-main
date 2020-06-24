@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
@@ -127,11 +127,11 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
     fun forceRerun() = signingConfig.storeFile?.isFile != true
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         private val defaultDebugKeystoreLocation: File
     ) :
-        VariantTaskCreationAction<ValidateSigningTask, ComponentPropertiesImpl>(
-            componentProperties
+        VariantTaskCreationAction<ValidateSigningTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

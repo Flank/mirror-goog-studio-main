@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.FeatureInfoList
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -62,10 +62,10 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
+        creationConfig: VariantCreationConfig
     ) :
-        VariantTaskCreationAction<DataBindingExportFeatureApplicationIdsTask, ComponentPropertiesImpl>(
-            componentProperties
+        VariantTaskCreationAction<DataBindingExportFeatureApplicationIdsTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

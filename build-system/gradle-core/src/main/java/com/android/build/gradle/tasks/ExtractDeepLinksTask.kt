@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_NAVIGATION
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -75,9 +75,9 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ExtractDeepLinksTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<ExtractDeepLinksTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

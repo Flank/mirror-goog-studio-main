@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.process.GradleProcessExecutor
@@ -133,9 +133,9 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<StripDebugSymbolsTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<StripDebugSymbolsTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

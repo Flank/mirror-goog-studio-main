@@ -27,10 +27,10 @@ import android.databinding.tool.util.RelativizableFile;
 import android.databinding.tool.writer.JavaFileWriter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.databinding.MergingFileLookup;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
@@ -774,7 +774,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<MergeResources, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<MergeResources, BaseCreationConfig> {
         @NonNull private final TaskManager.MergeType mergeType;
         @NonNull
         private final String taskNamePrefix;
@@ -786,7 +786,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         private boolean isLibrary;
 
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull BaseCreationConfig creationConfig,
                 @NonNull TaskManager.MergeType mergeType,
                 @NonNull String taskNamePrefix,
                 @Nullable File mergedNotCompiledOutputDirectory,
@@ -794,7 +794,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 boolean processResources,
                 @NonNull ImmutableSet<Flag> flags,
                 boolean isLibrary) {
-            super(componentProperties);
+            super(creationConfig);
             this.mergeType = mergeType;
             this.taskNamePrefix = taskNamePrefix;
             this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;

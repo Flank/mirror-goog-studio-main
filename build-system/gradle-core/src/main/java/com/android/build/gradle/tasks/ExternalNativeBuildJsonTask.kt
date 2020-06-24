@@ -15,9 +15,9 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
@@ -64,8 +64,8 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: 
 
     class CreationAction(
         private val configurationModel : CxxConfigurationModel,
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ExternalNativeBuildJsonTask, ComponentPropertiesImpl>(componentProperties) {
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<ExternalNativeBuildJsonTask, VariantCreationConfig>(creationConfig) {
         override val name
             get() = computeTaskName("generateJsonModel")
 
