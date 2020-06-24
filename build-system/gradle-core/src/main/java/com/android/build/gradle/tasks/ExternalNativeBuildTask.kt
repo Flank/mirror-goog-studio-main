@@ -47,7 +47,8 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessInfoBuilder
-import com.android.utils.FileUtils
+import com.android.utils.FileUtils.isSameFile
+import com.android.utils.FileUtils.join
 import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.common.base.Joiner
 import com.google.common.base.Preconditions.checkElementIndex
@@ -65,6 +66,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files.createLink
 import java.time.Clock
 import javax.inject.Inject
 import kotlin.streams.toList
@@ -163,7 +165,6 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
         }
     }
 
-    @Throws(BuildCommandException::class, IOException::class)
     private fun buildImpl() {
         infoln("starting build")
         checkNotNull(variantName)
@@ -198,12 +199,9 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
             if (!Strings.isNullOrEmpty(config.buildTargetsCommand)) {
                 // Build all libraries together in one step, using the names of the artifacts.
                 val artifactNames = librariesToBuild
-                    .stream()
-                    .filter { library -> library.artifactName != null }
-                    .map<String> { library -> library.artifactName }
-                    .sorted()
+                    .mapNotNull { library -> library.artifactName }
                     .distinct()
-                    .toList()
+                    .sorted()
                 val buildTargetsCommand =
                     substituteBuildTargetsCommand(config.buildTargetsCommand!!, artifactNames)
                 buildSteps.add(
@@ -253,43 +251,40 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
                 }
 
                 // If the build chose to write the library output somewhere besides objFolder
-                // then copy to objFolder (reference b.android.com/256515)
+                // then link or copy to objFolder (reference b.android.com/256515)
                 //
-                // Since there is now a .so file outside of the standard build/ folder we have to
-                // consider clean. Here's how the two files are covered.
+                // Since there is now a hard link outside of the standard build/ folder we have to
+                // make sure `clean` deletes both the original .so file and the hard link to so
+                // that the ref count on the inode goes down from two to zero. Here's how the two
+                // files are covered.
                 // (1) Gradle plugin deletes the build/ folder. This covers the destination of the
                 //     copy.
                 // (2) ExternalNativeCleanTask calls the individual clean targets for everything
-                //     that was built. This should cover the source of the copy but it is up to the
+                //     that was built. This is expected to delete the .so file but it is up to the
                 //     CMakeLists.txt or Android.mk author to ensure this.
                 val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
                     "Unknown ABI seen ${library.abi}"
                 )
-                val expectedOutputFile = FileUtils.join(
+                val expectedOutputFile = join(
                     variant.objFolder,
                     abi.tag,
                     output.name
                 )
-                if (!FileUtils.isSameFile(output, expectedOutputFile)) {
+                if (!isSameFile(output, expectedOutputFile)) {
                     infoln("external build set its own library output location for " +
-                            "'${output.name}', copy to expected location")
+                            "'${output.name}', hard link or copy to expected location")
 
                     if (expectedOutputFile.parentFile.mkdirs()) {
                         infoln("created folder ${expectedOutputFile.parentFile}")
                     }
-                    infoln("copy file $output to $expectedOutputFile")
-                    Files.copy(output, expectedOutputFile)
+                    hardLinkOrCopy(output, expectedOutputFile)
                 }
 
                 for (runtimeFile in library.runtimeFiles) {
-                    val dest =
-                        FileUtils.join(variant.objFolder, abi.tag, runtimeFile.name)
+                    val dest = join(variant.objFolder, abi.tag, runtimeFile.name)
                     // Dependencies within the same project will also show up as runtimeFiles, and
                     // will have the same source and destination. Can skip those.
-                    if (!FileUtils.isSameFile(runtimeFile, dest)) {
-                        infoln("copying runtime file $runtimeFile to $dest")
-                        Files.copy(runtimeFile, dest)
-                    }
+                    hardLinkOrCopy(runtimeFile, dest)
                 }
             }
         }
@@ -299,7 +294,7 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
             infoln("copy STL shared object files")
             for (abi in stlSharedObjectFiles.keys) {
                 val stlSharedObjectFile = stlSharedObjectFiles.getValue(abi)
-                val objAbi = FileUtils.join(
+                val objAbi = join(
                     variant.objFolder,
                     abi.tag,
                     stlSharedObjectFile.name
@@ -309,13 +304,38 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
                     // and continue without copying STL.
                     infoln("didn't copy STL file to ${objAbi.parentFile} because that folder wasn't created by the build ")
                 } else {
-                    infoln("copy file $stlSharedObjectFile to $objAbi")
-                    Files.copy(stlSharedObjectFile, objAbi)
+                    hardLinkOrCopy(stlSharedObjectFile, objAbi)
                 }
             }
         }
 
         infoln("build complete")
+    }
+
+    /**
+     * Hard link [source] to [destination].
+     */
+    private fun hardLinkOrCopy(source:File, destination:File) {
+        if (isSameFile(source, destination)) {
+            // This happens if source and destination are lexically the same
+            // --or-- if one is a hard link to the other.
+            // Either way, no work to do.
+            return
+        }
+
+        if(destination.exists()) {
+            destination.delete()
+        }
+        
+        try {
+            createLink(destination.toPath(), source.toPath().toRealPath())
+            infoln("linked $source to $destination")
+        } catch (e: IOException) {
+            // This can happen when hard linking from one drive to another on Windows
+            // In this case, copy the file instead.
+            Files.copy(source, destination)
+            infoln("copied $source to $destination")
+        }
     }
 
     /**
