@@ -20,9 +20,9 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.res.layout.fragmentMapXml
-import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.src.app_package.mapFragmentJava
 import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.src.app_package.mapFragmentKt
 
