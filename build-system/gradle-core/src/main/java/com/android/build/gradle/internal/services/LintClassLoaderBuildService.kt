@@ -22,14 +22,18 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 
+// Cache class loader across builds. Recreating it on every build introduces huge performance
+// regression. See http://b/159760367 for details. Tracked in http://b/159781509.
+// It is enough to synchronize on build service methods when accessing this field, as there is
+// a single build service in the same class loader as this property during the build.
+private var cachedClassLoader: ClassLoader? = null
+
 /**
  * A build service that extends [LintClassLoaderProvider] so that a single class loaders is shared
  * between all tasks in the build.
  */
 abstract class LintClassLoaderBuildService : LintClassLoaderProvider(),
     BuildService<BuildServiceParameters.None>, AutoCloseable {
-
-    private var cachedClassLoader: ClassLoader? = null
 
     @Synchronized
     override fun getClassLoader(lintClassPath: Set<File>): ClassLoader {
