@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -1171,14 +1170,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (!creationConfig.getShouldPackageDesugarLibDex()) {
                 return creationConfig.getServices().fileCollection();
             }
-            if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
-                return project.files(
-                        creationConfig
-                                .getArtifacts()
-                                .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
-            } else {
-                return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);
-            }
+            return creationConfig
+                    .getServices()
+                    .fileCollection(
+                            creationConfig
+                                    .getArtifacts()
+                                    .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
         }
     }
 }

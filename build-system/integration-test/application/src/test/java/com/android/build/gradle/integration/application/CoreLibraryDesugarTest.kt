@@ -185,6 +185,7 @@ class CoreLibraryDesugarTest {
             .hasMethodThatInvokes("getText", "Lj$/util/stream/Stream;->findFirst()Lj$/util/Optional;")
         val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)!!
         assertThat(getAllStartLocals(desugarLibDex)).named("debug locals info").isNotEmpty()
+        assertThat(getAllDexWithJDollarTypes(apk.allDexes)).named("all dex files with desugar jdk lib classes").hasSize(1)
     }
 
     @Test
@@ -302,6 +303,8 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).containsClass(unObfuscatedClass)
         assertThat(getAllStartLocals(desugarLibDex)).named("debug locals info").isEmpty()
         DexSubject.assertThat(desugarLibDex).doesNotContainClasses(obfuscatedClass)
+        assertThat(getAllDexWithJDollarTypes(apk.allDexes)).named("all dex files with desugar jdk lib classes")
+            .hasSize(1)
     }
 
     @Test
@@ -614,6 +617,11 @@ class CoreLibraryDesugarTest {
             }
         }
     }
+
+    private fun getAllDexWithJDollarTypes(dexes: Collection<Dex>): List<Dex> =
+        dexes.filter {
+            it.classes.keys.any { it.startsWith("Lj$/") }
+        }
 
     companion object {
         private const val APP_MODULE = ":app"
