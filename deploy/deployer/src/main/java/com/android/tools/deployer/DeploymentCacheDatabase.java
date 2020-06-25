@@ -91,8 +91,7 @@ public class DeploymentCacheDatabase {
             return;
         }
 
-        try {
-            ObjectInputStream in = new ObjectInputStream(new FileInputStream(persistFile));
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(persistFile))) {
             HashMap<String, Entry> entries = (HashMap<String, Entry>) in.readObject();
             for (Map.Entry<String, Entry> e : entries.entrySet()) {
                 db.put(e.getKey(), e.getValue());
@@ -128,12 +127,10 @@ public class DeploymentCacheDatabase {
             persistFile.delete();
         }
 
-        try {
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(persistFile));
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(persistFile))) {
             HashMap<String, Entry> entries = Maps.newHashMap(db.asMap());
             out.writeObject(entries);
             out.flush();
-            out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
