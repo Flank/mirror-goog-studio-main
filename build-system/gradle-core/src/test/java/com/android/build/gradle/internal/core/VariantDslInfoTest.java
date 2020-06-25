@@ -269,6 +269,17 @@ public class VariantDslInfoTest {
         assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(20);
     }
 
+    @Test
+    public void testEmptyApplicationIdSuffix() {
+        initNoDeviceApiInjection();
+
+        defaultConfig.setApplicationId("com.example.mapp");
+        buildType.setApplicationIdSuffix("");
+
+        VariantDslInfo variant = getVariant();
+        assertThat(variant.getApplicationId().get()).isEqualTo("com.example.mapp");
+    }
+
     private VariantDslInfo getVariant() {
         return createVariant(null /*signingOverride*/);
     }
