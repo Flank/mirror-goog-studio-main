@@ -24,7 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.ILayoutLog;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.ResourceValueImpl;
@@ -226,8 +226,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 nonNamespacedResolver(projectResources, frameworkResources, "MyTheme");
         assertNotNull(resolver);
 
-        LayoutLog logger =
-                new LayoutLog() {
+        ILayoutLog logger =
+                new ILayoutLog() {
                     @Override
                     public void warning(
                             String tag, String message, Object viewCookie, Object data) {
@@ -486,8 +486,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "MyTheme");
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
-        LayoutLog logger =
-                new LayoutLog() {
+        ILayoutLog logger =
+                new ILayoutLog() {
                     @Override
                     public void warning(
                             String tag, String message, Object viewCookie, Object data) {
@@ -533,8 +533,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(resolver);
 
         AtomicBoolean wasWarned = new AtomicBoolean(false);
-        LayoutLog logger =
-                new LayoutLog() {
+        ILayoutLog logger =
+                new ILayoutLog() {
                     @Override
                     public void error(
                             @Nullable String tag,
@@ -612,8 +612,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(resolver);
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
-        LayoutLog logger =
-                new LayoutLog() {
+        ILayoutLog logger =
+                new ILayoutLog() {
                     @Override
                     public void error(
                             @Nullable String tag,
@@ -625,7 +625,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                 "Cyclic style parent definitions: \"ButtonStyle\" specifies "
                                         + "parent \"ButtonStyle.Base\" implies parent \"ButtonStyle\"",
                                 message);
-                        assertEquals(LayoutLog.TAG_BROKEN, tag);
+                        assertEquals(ILayoutLog.TAG_BROKEN, tag);
                         wasWarned.set(true);
                     }
                 };
@@ -803,8 +803,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 nonNamespacedResolver(projectResources, frameworkResources, "AppTheme");
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
-        LayoutLog logger =
-                new LayoutLog() {
+        ILayoutLog logger =
+                new ILayoutLog() {
                     @Override
                     public void error(
                             @Nullable String tag,

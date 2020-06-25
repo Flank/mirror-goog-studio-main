@@ -26,27 +26,28 @@ public class DrawableParams extends RenderParams {
     private final ResourceValue mDrawable;
 
     /**
-    * Builds a param object with all the necessary parameters to render a drawable with
-    * {@link Bridge#renderDrawable(DrawableParams)}
-    *
-    * @param drawable the {@link ResourceValue} identifying the drawable.
-    * @param projectKey An Object identifying the project. This is used for the cache mechanism.
-    * @param hardwareConfig the {@link HardwareConfig}.
-    * @param renderResources a {@link RenderResources} object providing access to the resources.
-    * @param layoutlibCallback The {@link LayoutlibCallback} object to get information from
-    * the project.
-    * @param minSdkVersion the minSdkVersion of the project
-    * @param targetSdkVersion the targetSdkVersion of the project
-    * @param log the object responsible for displaying warning/errors to the user.
-    */
+     * Builds a param object with all the necessary parameters to render a drawable with {@link
+     * Bridge#renderDrawable(DrawableParams)}
+     *
+     * @param drawable the {@link ResourceValue} identifying the drawable.
+     * @param projectKey An Object identifying the project. This is used for the cache mechanism.
+     * @param hardwareConfig the {@link HardwareConfig}.
+     * @param renderResources a {@link RenderResources} object providing access to the resources.
+     * @param layoutlibCallback The {@link LayoutlibCallback} object to get information from the
+     *     project.
+     * @param minSdkVersion the minSdkVersion of the project
+     * @param targetSdkVersion the targetSdkVersion of the project
+     * @param log the object responsible for displaying warning/errors to the user.
+     */
     public DrawableParams(
             ResourceValue drawable,
             Object projectKey,
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
             LayoutlibCallback layoutlibCallback,
-            int minSdkVersion, int targetSdkVersion,
-            LayoutLog log) {
+            int minSdkVersion,
+            int targetSdkVersion,
+            ILayoutLog log) {
         super(projectKey, hardwareConfig,
                 renderResources, layoutlibCallback, minSdkVersion, targetSdkVersion, log);
         mDrawable = drawable;

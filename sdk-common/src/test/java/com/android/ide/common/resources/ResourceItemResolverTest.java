@@ -18,7 +18,7 @@ package com.android.ide.common.resources;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.ILayoutLog;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -151,8 +151,8 @@ public class ResourceItemResolverTest extends TestCase {
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
 
-        LayoutLog logger =
-                new LayoutLog() {
+        ILayoutLog logger =
+                new ILayoutLog() {
                     @Override
                     public void warning(
                             String tag, @NonNull String message, Object viewCookie, Object data) {
@@ -171,10 +171,7 @@ public class ResourceItemResolverTest extends TestCase {
 
                     @Override
                     public void error(
-                            String tag,
-                            @NonNull String message,
-                            Object viewCookie,
-                            Object data) {
+                            String tag, @NonNull String message, Object viewCookie, Object data) {
                         fail(message);
                     }
 

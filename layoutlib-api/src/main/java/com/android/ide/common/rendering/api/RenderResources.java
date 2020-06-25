@@ -33,8 +33,7 @@ public class RenderResources {
     public static final String REFERENCE_EMPTY = "@empty";
     public static final String REFERENCE_UNDEFINED = "@undefined";
 
-    public void setLogger(LayoutLog logger) {
-    }
+    public void setLogger(ILayoutLog logger) {}
 
     /** Returns the {@link StyleResourceValue} representing the default theme. */
     @Nullable
