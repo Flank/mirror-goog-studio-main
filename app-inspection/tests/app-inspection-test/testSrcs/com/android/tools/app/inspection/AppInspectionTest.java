@@ -174,15 +174,23 @@ public final class AppInspectionTest {
                         createInspector(inspectorId, injectInspectorDex(), "project.A")),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex(), "project.B"));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage())
-                .isEqualTo(
+                .startsWith(
                         "Inspector with the given id "
                                 + inspectorId
                                 + " already exists. It was launched by project: project.A");
+
+        // If creation by force is requested, an exception will not be thrown
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex(), "project.A", true)),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
     }
 
     @Test
@@ -698,6 +706,13 @@ public final class AppInspectionTest {
     @NonNull
     private static AppInspectionCommand createInspector(
             String inspectorId, String dexPath, String project) {
+        return createInspector(inspectorId, dexPath, project, false);
+    }
+
+    @NonNull
+    private static AppInspectionCommand createInspector(
+            String inspectorId, String dexPath, String project, boolean force) {
+
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setCreateInspectorCommand(
@@ -706,6 +721,7 @@ public final class AppInspectionTest {
                                 .setLaunchMetadata(
                                         LaunchMetadata.newBuilder()
                                                 .setLaunchedByName(project)
+                                                .setForce(force)
                                                 .build())
                                 .build())
                 .build();
