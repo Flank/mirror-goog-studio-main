@@ -83,6 +83,8 @@ object AndroidXDependencySubstitution {
             }
         }
 
+        val becauseJetifierIsOn ="${BooleanOption.ENABLE_JETIFIER.propertyName}=true"
+
         project.configurations.all { config ->
             // Only consider resolvable configurations
             if (!config.isCanBeResolved) {
@@ -99,7 +101,7 @@ object AndroidXDependencySubstitution {
                     // entry.key is in the form of "group:module" (without a version), and Gradle
                     // accepts that form.
                     it.substitute(it.module(entry.key))
-                        .because("${BooleanOption.ENABLE_JETIFIER.propertyName}=true")
+                        .because(becauseJetifierIsOn)
                         .with(it.module(entry.value))
                 }
             }
