@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker.Companion.of
-import com.android.build.gradle.internal.dependency.getDesugarLibConfigurations
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
 import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
 import com.android.build.gradle.internal.dsl.BaseFlavor
@@ -700,9 +699,6 @@ class DependencyConfigurator(
             }
         }
 
-        for (configuration in getDesugarLibConfigurations(allComponents)) {
-            configuration.registerTransform(dependencies)
-        }
         registerDexingOutputSplitTransform(dependencies)
 
         return this

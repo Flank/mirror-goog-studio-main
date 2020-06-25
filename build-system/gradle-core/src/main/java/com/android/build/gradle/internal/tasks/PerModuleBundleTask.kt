@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIV
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.getDesugarLibDexFromTransform
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.model.CodeShrinker
@@ -244,11 +243,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
             if (creationConfig.shouldPackageDesugarLibDex) {
                 task.dexFiles.from(
-                    if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                        artifacts.get(InternalArtifactType.DESUGAR_LIB_DEX)
-                    } else {
-                        getDesugarLibDexFromTransform(creationConfig)
-                    }
+                    artifacts.get(InternalArtifactType.DESUGAR_LIB_DEX)
                 )
             }
 

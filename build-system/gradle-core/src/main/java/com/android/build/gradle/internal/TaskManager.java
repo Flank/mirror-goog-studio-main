@@ -2212,7 +2212,7 @@ public abstract class TaskManager<
         maybeCreateJavaCodeShrinkerTask(componentProperties);
         if (componentProperties.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(componentProperties);
-            maybeCreateDexDesugarLibTask(componentProperties, false);
+            maybeCreateDexDesugarLibTask(creationConfig, componentProperties, false);
             return;
         }
 
@@ -2236,7 +2236,8 @@ public abstract class TaskManager<
             taskFactory.register(new D8MainDexListTask.CreationAction(componentProperties, true));
         }
 
-        createDexTasks(componentProperties, dexingType, registeredExternalTransform);
+        createDexTasks(
+                creationConfig, componentProperties, dexingType, registeredExternalTransform);
 
         maybeCreateResourcesShrinkerTasks(componentProperties);
 
@@ -2303,6 +2304,7 @@ public abstract class TaskManager<
      * archives in order to enable incremental dexing support.
      */
     private void createDexTasks(
+            @NonNull ApkCreationConfig apkCreationConfig,
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull DexingType dexingType,
             boolean registeredExternalTransform) {
@@ -2345,7 +2347,8 @@ public abstract class TaskManager<
                         enableDexingArtifactTransform,
                         componentProperties));
 
-        maybeCreateDexDesugarLibTask(componentProperties, enableDexingArtifactTransform);
+        maybeCreateDexDesugarLibTask(
+                apkCreationConfig, componentProperties, enableDexingArtifactTransform);
 
         createDexMergingTasks(componentProperties, dexingType, enableDexingArtifactTransform);
     }
@@ -3402,13 +3405,14 @@ public abstract class TaskManager<
     }
 
     private void maybeCreateDexDesugarLibTask(
+            @NonNull ApkCreationConfig apkCreationConfig,
             @NonNull ComponentPropertiesImpl componentProperties,
             boolean enableDexingArtifactTransform) {
         boolean separateFileDependenciesDexingTask =
                 componentProperties.getVariantScope().getJava8LangSupportType()
                                 == Java8LangSupport.D8
                         && enableDexingArtifactTransform;
-        if (componentProperties.getVariantScope().getNeedsShrinkDesugarLibrary()) {
+        if (apkCreationConfig.getShouldPackageDesugarLibDex()) {
             taskFactory.register(
                     new L8DexDesugarLibTask.CreationAction(
                             componentProperties,
