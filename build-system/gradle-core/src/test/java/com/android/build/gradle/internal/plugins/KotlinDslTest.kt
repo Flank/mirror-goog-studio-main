@@ -21,7 +21,10 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.builder.errors.EvalIssueException
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Iterables
+import com.google.common.collect.Sets
 import com.google.common.truth.StringSubject
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -222,6 +225,47 @@ class KotlinDslTest {
             assertThat(checkOnly).containsExactly("c")
         }
     }
+
+    @Test
+    fun `matchingFallbacks source compatibility`() {
+        (android as BaseAppModuleExtension).productFlavors.create("example").apply {
+            // Check the list can be mutated
+            matchingFallbacks += "a"
+            matchingFallbacks.add("b")
+            assertThat(matchingFallbacks).containsExactly("a", "b")
+            // Check the single value setter
+            setMatchingFallbacks("c")
+            assertThat(matchingFallbacks).containsExactly( "c")
+            // Check the vararg setter
+            setMatchingFallbacks("d", "e")
+            assertThat(matchingFallbacks).containsExactly("d", "e")
+            // Check the list setter
+            setMatchingFallbacks(ImmutableList.of("f"))
+            assertThat(matchingFallbacks).containsExactly("f")
+            // Check the setter copies before clearing
+            setMatchingFallbacks(matchingFallbacks)
+            assertThat(matchingFallbacks).containsExactly("f")
+        }
+        (android as BaseAppModuleExtension).buildTypes.create("qa").apply {
+            // Check the list can be mutated
+            matchingFallbacks += "a"
+            matchingFallbacks.add("b")
+            assertThat(matchingFallbacks).containsExactly("a", "b")
+            // Check the single value setter
+            setMatchingFallbacks("c")
+            assertThat(matchingFallbacks).containsExactly( "c")
+            // Check the vararg setter
+            setMatchingFallbacks("d", "e")
+            assertThat(matchingFallbacks).containsExactly("d", "e")
+            // Check the list setter
+            setMatchingFallbacks(ImmutableList.of("f"))
+            assertThat(matchingFallbacks).containsExactly("f")
+            // Check the setter copies before clearing
+            setMatchingFallbacks(matchingFallbacks)
+            assertThat(matchingFallbacks).containsExactly("f")
+        }
+    }
+
 
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)
