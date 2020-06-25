@@ -117,6 +117,13 @@ public class DeploymentCacheDatabase {
         return true;
     }
 
+    public boolean invalidate(String serial, String appId) {
+        String key = String.format("%s:%s", serial, appId);
+        db.invalidate(key);
+        writeToFile();
+        return true;
+    }
+
     /** Write to persistent file should the cache database be created with a targeted file. */
     public boolean writeToFile() {
         if (persistFile == null) {
