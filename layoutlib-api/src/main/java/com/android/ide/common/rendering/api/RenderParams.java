@@ -35,6 +35,9 @@ public abstract class RenderParams {
     private final LayoutlibCallback mLayoutlibCallback;
     private final int mMinSdkVersion;
     private final int mTargetSdkVersion;
+    /** The configuration uiMode, see {@link android.content.res.Configuration#uiMode}. */
+    private int mUiMode = 0;
+
     private float mFontScale = 1f;
     private final LayoutLog mLog;
 
@@ -97,6 +100,7 @@ public abstract class RenderParams {
         mLayoutlibCallback = params.mLayoutlibCallback;
         mMinSdkVersion = params.mMinSdkVersion;
         mTargetSdkVersion = params.mTargetSdkVersion;
+        mUiMode = params.mUiMode;
         mLog = params.mLog;
         mSetTransparentBackground = params.mSetTransparentBackground;
         mTimeout = params.mTimeout;
@@ -181,6 +185,16 @@ public abstract class RenderParams {
      */
     public float getFontScale() {
         return mFontScale;
+    }
+
+    /** Sets the uiMode. See {@link android.content.res.Configuration#uiMode} */
+    public void setUiMode(int uiMode) {
+        mUiMode = uiMode;
+    }
+
+    /** Returns the uiMode. See {@link android.content.res.Configuration#uiMode} */
+    public int getUiMode() {
+        return mUiMode;
     }
 
     public Object getProjectKey() {
