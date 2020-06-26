@@ -74,7 +74,7 @@ class UtpTestRunner @JvmOverloads constructor(
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
         return apksForDevice.map { (deviceConnector, apks) ->
-            val utpOutputDir = Files.createTempDir()
+            val utpOutputDir = resultsDir
             val utpTmpDir = Files.createTempDir()
             val utpTestLogDir = Files.createTempDir()
             val utpTestRunLogDir = Files.createTempDir()
@@ -118,7 +118,6 @@ class UtpTestRunner @JvmOverloads constructor(
             val resultsProto = getResultsProto(utpOutputDir)
 
             try {
-                FileUtils.deleteRecursivelyIfExists(utpOutputDir)
                 FileUtils.deleteRecursivelyIfExists(utpTestLogDir)
                 FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
                 FileUtils.deleteRecursivelyIfExists(utpTmpDir)
