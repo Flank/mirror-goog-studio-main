@@ -29,12 +29,10 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
-import com.android.ide.common.repository.ResourceVisibilityLookup.SymbolProvider;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -213,15 +211,13 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         + "int string hello_world 0x7f040002",
                 ""
         );
-        AndroidLibrary library2 = createMockLibrary(
-                "com.android.tools:test-library2:1.0.0",
-                ""
-                        + "int layout foo 0x7f030001\n"
-                        + "int layout bar 0x7f060000\n",
-                ""
-                        + "layout foo\n",
-                Collections.singletonList(library1)
-        );
+        AndroidLibrary library2 =
+                createMockLibrary(
+                        "com.android.tools:test-library2:1.0.0",
+                        "" + "int layout foo 0x7f030001\n" + "int layout bar 0x7f060000\n",
+                        ""
+                                + "layout foo\n" /*,
+                                                 Collections.singletonList(library1)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
         List<AndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
         ResourceVisibilityLookup visibility = ResourceVisibilityLookup
@@ -280,27 +276,31 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         + "dimen public_library1_resource2\n"
         );
 
-        AndroidLibrary library2 = createMockLibrary(
-                "com.android.tools:test-library2:1.0.0",
-                ""
-                        + "int dimen public_library2_resource1 0x7f030000\n"
-                        + "int dimen public_library2_resource2 0x7f030001\n",
-                null // nothing marked as private: everything exposed
-        );
-        AndroidLibrary library3 = createMockLibrary(
-                "com.android.tools:test-library3:1.0.0",
-                ""
-                        + "int dimen public_library1_resource1 0x7f030000\n" // merged from library1
-                        + "int dimen public_library1_resource2 0x7f030001\n"
-                        + "int dimen private_library1_resource 0x7f030002\n"
-                        + "int dimen public_library2_resource1 0x7f030003\n" // merged from library2
-                        + "int dimen public_library2_resource2 0x7f030004\n"
-                        + "int dimen public_library3_resource1 0x7f030005\n" // unique to library3
-                        + "int dimen private_library3_resource 0x7f030006\n",
-                ""
-                        + "dimen public_library2_resource1\n",
-                Arrays.asList(library1, library2)
-        );
+        AndroidLibrary library2 =
+                createMockLibrary(
+                        "com.android.tools:test-library2:1.0.0",
+                        ""
+                                + "int dimen public_library2_resource1 0x7f030000\n"
+                                + "int dimen public_library2_resource2 0x7f030001\n",
+                        null // nothing marked as private: everything exposed
+                        );
+        AndroidLibrary library3 =
+                createMockLibrary(
+                        "com.android.tools:test-library3:1.0.0",
+                        ""
+                                + "int dimen public_library1_resource1 0x7f030000\n" // merged from
+                                // library1
+                                + "int dimen public_library1_resource2 0x7f030001\n"
+                                + "int dimen private_library1_resource 0x7f030002\n"
+                                + "int dimen public_library2_resource1 0x7f030003\n" // merged from
+                                // library2
+                                + "int dimen public_library2_resource2 0x7f030004\n"
+                                + "int dimen public_library3_resource1 0x7f030005\n" // unique to
+                                // library3
+                                + "int dimen private_library3_resource 0x7f030006\n",
+                        ""
+                                + "dimen public_library2_resource1\n" /*,
+                                                                      Arrays.asList(library1, library2)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
         List<AndroidLibrary> androidLibraries = Arrays.asList(library1, library2, library3);
         ResourceVisibilityLookup visibility = ResourceVisibilityLookup.create(androidLibraries,
@@ -310,50 +310,54 @@ public class ResourceVisibilityLookupTest extends TestCase {
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library1_resource1"));
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library1_resource2"));
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library2_resource1"));
-        assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library2_resource2"));
+        assertTrue(
+                visibility.isPrivate(
+                        ResourceType.DIMEN, "public_library2_resource2")); // private in one library
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library3_resource"));
     }
 
-    public void testSymbolProvider() throws Exception {
-        AndroidLibrary library1 = createMockLibrary(
-          "com.android.tools:test-library:1.0.0",
-          ""
-            + "int dimen public_library1_resource1 0x7f030000\n"
-            + "int dimen public_library1_resource2 0x7f030001\n"
-            + "int dimen private_library1_resource 0x7f030002\n",
-          ""
-            + "dimen public_library1_resource1\n"
-            + "dimen public_library1_resource2\n"
-        );
-
-        AndroidLibrary library3 = createMockLibrary(
-          "com.android.tools:test-library3:1.0.0",
-          ""
-            + "int dimen public_library1_resource1 0x7f030000\n" // merged from library1
-            + "int dimen public_library1_resource2 0x7f030001\n"
-            + "int dimen private_library1_resource 0x7f030002\n"
-            + "int dimen public_library2_resource1 0x7f030003\n" // merged from library2
-            + "int dimen public_library2_resource2 0x7f030004\n"
-            + "int dimen public_library3_resource1 0x7f030005\n" // unique to library3
-            + "int dimen private_library3_resource 0x7f030006\n",
-          ""
-            + "dimen public_library2_resource1\n",
-          Collections.singletonList(library1)
-        );
-
-        SymbolProvider provider = new SymbolProvider();
-        Multimap<String, ResourceType> symbols = provider.getSymbols(library3);
-
-        // Exclude imported symbols
-        assertFalse(symbols.get("public_library1_resource1").iterator().hasNext());
-
-        // Make sure non-imported symbols are there
-        assertSame(ResourceType.DIMEN, symbols.get("public_library3_resource1").iterator().next());
-
-        // Make sure we're actually caching results
-        Multimap<String, ResourceType> symbols2 = provider.getSymbols(library3);
-        assertSame(symbols, symbols2);
-    }
+    // TODO(b/158836360): Review when the dependency hierarchy is available.
+    // public void testSymbolProvider() throws Exception {
+    //    AndroidLibrary library1 = createMockLibrary(
+    //      "com.android.tools:test-library:1.0.0",
+    //      ""
+    //        + "int dimen public_library1_resource1 0x7f030000\n"
+    //        + "int dimen public_library1_resource2 0x7f030001\n"
+    //        + "int dimen private_library1_resource 0x7f030002\n",
+    //      ""
+    //        + "dimen public_library1_resource1\n"
+    //        + "dimen public_library1_resource2\n"
+    //    );
+    //
+    //    AndroidLibrary library3 = createMockLibrary(
+    //      "com.android.tools:test-library3:1.0.0",
+    //      ""
+    //        + "int dimen public_library1_resource1 0x7f030000\n" // merged from library1
+    //        + "int dimen public_library1_resource2 0x7f030001\n"
+    //        + "int dimen private_library1_resource 0x7f030002\n"
+    //        + "int dimen public_library2_resource1 0x7f030003\n" // merged from library2
+    //        + "int dimen public_library2_resource2 0x7f030004\n"
+    //        + "int dimen public_library3_resource1 0x7f030005\n" // unique to library3
+    //        + "int dimen private_library3_resource 0x7f030006\n",
+    //      ""
+    //        + "dimen public_library2_resource1\n",
+    //      Collections.singletonList(library1)
+    //    );
+    //
+    //    SymbolProvider provider = new SymbolProvider();
+    //    Multimap<String, ResourceType> symbols = provider.getSymbols(library3);
+    //
+    //    // Exclude imported symbols
+    //    assertFalse(symbols.get("public_library1_resource1").iterator().hasNext());
+    //
+    //    // Make sure non-imported symbols are there
+    //    assertSame(ResourceType.DIMEN,
+    // symbols.get("public_library3_resource1").iterator().next());
+    //
+    //    // Make sure we're actually caching results
+    //    Multimap<String, ResourceType> symbols2 = provider.getSymbols(library3);
+    //    assertSame(symbols, symbols2);
+    // }
 
     public static IdeAndroidProject createMockProject(String modelVersion, int apiVersion) {
         IdeAndroidProject project = createNiceMock(IdeAndroidProject.class);
@@ -384,17 +388,8 @@ public class ResourceVisibilityLookupTest extends TestCase {
         return artifact;
     }
 
-    public static AndroidLibrary createMockLibrary(String name, String allResources,
-            String publicResources)
-            throws IOException {
-        return createMockLibrary(name, allResources, publicResources, Collections.emptyList());
-    }
-
-
-    public static AndroidLibrary createMockLibrary(String name,
-            String allResources, String publicResources,
-            List<AndroidLibrary> dependencies)
-            throws IOException {
+    public static AndroidLibrary createMockLibrary(
+            String name, String allResources, String publicResources) throws IOException {
         // Identical to PrivateResourceDetectorTest, but these are in test modules that
         // can't access each other
         final File tempDir = TestUtils.createTempDirDeletedOnExit();
@@ -420,10 +415,10 @@ public class ResourceVisibilityLookupTest extends TestCase {
                 "exploded-aar" + File.separator + name));
 
         // Work around wildcard capture
-        //when(library.getLibraryDependencies()).thenReturn(dependencies);
+        // when(library.getLibraryDependencies()).thenReturn(dependencies);
         List libraryDependencies = library.getLibraryDependencies();
         OngoingStubbing<List> setter = when(libraryDependencies);
-        setter.thenReturn(dependencies);
+        setter.thenReturn(Collections.emptyList());
         return library;
     }
 }
