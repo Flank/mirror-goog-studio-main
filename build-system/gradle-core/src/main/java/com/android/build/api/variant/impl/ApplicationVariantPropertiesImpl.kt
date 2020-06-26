@@ -20,7 +20,6 @@ import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -64,7 +63,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), ApplicationVariantProperties, ApplicationCreationConfig, ConsumableCreationConfig {
+), ApplicationVariantProperties, ApplicationCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
