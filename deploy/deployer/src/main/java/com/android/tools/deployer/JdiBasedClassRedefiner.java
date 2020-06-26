@@ -15,11 +15,9 @@
  */
 package com.android.tools.deployer;
 
-import com.android.ddmlib.internal.Debugger;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.Lists;
 import com.sun.jdi.ArrayReference;
-import com.sun.jdi.Bootstrap;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.Method;
@@ -27,12 +25,6 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.VirtualMachineManager;
-import com.sun.jdi.connect.AttachingConnector;
-import com.sun.jdi.connect.Connector;
-import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-import com.sun.tools.jdi.SocketAttachingConnector;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -179,25 +171,9 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
     }
 
     private static String getAgentName(Deploy.Arch appArch, boolean deviceIs64Bit) {
-        switch (appArch) {
-            case ARCH_32_BIT:
-                if (deviceIs64Bit) {
-                    return "agent-alt";
-                } else {
-                    return "agent";
-                }
-            case ARCH_64_BIT:
-                if (deviceIs64Bit) {
-                    return "agent";
-                } else {
-                    // A 64-bit application can't be running on a 32-bit phone, but maybe our ABI
-                    // detection was wrong. Try to attach and report any error via the
-                    // attachAgentException() handler.
-                    return "agent";
-                }
-            default:
-                // If the ABI is unrecognizeable, just try to attach the regular agent.
-                return "agent";
+        if (appArch == Deploy.Arch.ARCH_32_BIT && deviceIs64Bit) {
+            return "agent-alt";
         }
+        return "agent";
     }
 }
