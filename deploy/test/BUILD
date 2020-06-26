@@ -45,11 +45,6 @@ swap_test(
 )
 
 swap_test(
-    name = "JdiBasedClassRedefinerTest",
-    srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
-)
-
-swap_test(
     name = "CrashLogTest",
     srcs = ["java/com/android/tools/deployer/CrashLogTest.java"],
 )
