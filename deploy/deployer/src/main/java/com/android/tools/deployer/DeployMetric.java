@@ -19,7 +19,7 @@ import java.util.Collection;
 
 public class DeployMetric {
 
-    public static long UNFINISHED = -1;
+    public static final long UNFINISHED = -1;
 
     private final String name;
     private String status = null;
