@@ -45,7 +45,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull private final String myPostAssembleModelFile;
     @NonNull private final String myAssembleTaskName;
     @NonNull private final File myClassesFolder;
-    @NonNull private final IdeDependencies myDependencies;
     @NonNull private final Set<String> myIdeSetupTaskNames;
     @NonNull private final Set<File> myGeneratedSourceFolders;
     @NonNull private final Set<File> myAdditionalClassFolders;
@@ -53,7 +52,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull
     private final com.android.ide.common.gradle.model.level2.IdeDependencies myLevel2Dependencies;
 
-    @Nullable private final IdeDependencies myCompileDependencies;
     @Nullable private final File myJavaResourcesFolder;
     @Nullable private final DependencyGraphs myDependencyGraphs;
     @Nullable private final IdeSourceProvider myVariantSourceProvider;
@@ -68,14 +66,12 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myPostAssembleModelFile = "";
         //noinspection ConstantConditions
         myClassesFolder = null;
-        myDependencies = new IdeDependenciesImpl();
         myIdeSetupTaskNames = Collections.emptySet();
         myGeneratedSourceFolders = Collections.emptySet();
         myAdditionalClassFolders = Collections.emptySet();
 
         myLevel2Dependencies = new com.android.ide.common.gradle.model.level2.IdeDependenciesImpl();
 
-        myCompileDependencies = null;
         myJavaResourcesFolder = null;
         myDependencyGraphs = null;
         myVariantSourceProvider = null;
@@ -96,13 +92,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 IdeModel.copyNewProperty(artifact::getAssembleTaskOutputListingFile, "");
         myClassesFolder = artifact.getClassesFolder();
         myJavaResourcesFolder = IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null);
-        myDependencies = copy(artifact.getDependencies(), modelCache);
-        myCompileDependencies =
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getCompileDependencies,
-                        dependencies -> new IdeDependenciesImpl(dependencies, modelCache),
-                        null);
 
         myDependencyGraphs = null;
 
@@ -117,13 +106,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                         artifact::getAdditionalClassesFolders, Collections.emptySet());
         myLevel2Dependencies = dependenciesFactory.create(artifact);
         hashCode = calculateHashCode();
-    }
-
-    @NonNull
-    private static IdeDependencies copy(
-            @NonNull Dependencies original, @NonNull ModelCache modelCache) {
-        return modelCache.computeIfAbsent(
-                original, dependencies -> new IdeDependenciesImpl(dependencies, modelCache));
     }
 
     @NonNull
@@ -203,16 +185,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @Override
     @NonNull
-    public IdeDependencies getDependencies() {
-        return myDependencies;
-    }
-
-    @Override
-    @NonNull
     public Dependencies getCompileDependencies() {
-        if (myCompileDependencies != null) {
-            return myCompileDependencies;
-        }
         throw new UnsupportedOperationException(
                 "Unsupported method: BaseArtifact.getCompileDependencies()");
     }
@@ -291,9 +264,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 && Objects.equals(myClassesFolder, artifact.myClassesFolder)
                 && Objects.equals(myAdditionalClassFolders, artifact.myAdditionalClassFolders)
                 && Objects.equals(myJavaResourcesFolder, artifact.myJavaResourcesFolder)
-                && Objects.equals(myDependencies, artifact.myDependencies)
                 && Objects.equals(myLevel2Dependencies, artifact.myLevel2Dependencies)
-                && Objects.equals(myCompileDependencies, artifact.myCompileDependencies)
                 && Objects.equals(myDependencyGraphs, artifact.myDependencyGraphs)
                 && Objects.equals(myIdeSetupTaskNames, artifact.myIdeSetupTaskNames)
                 && Objects.equals(myGeneratedSourceFolders, artifact.myGeneratedSourceFolders)
@@ -319,9 +290,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 myPostAssembleModelFile,
                 myClassesFolder,
                 myJavaResourcesFolder,
-                myDependencies,
                 myLevel2Dependencies,
-                myCompileDependencies,
                 myDependencyGraphs,
                 myIdeSetupTaskNames,
                 myGeneratedSourceFolders,
@@ -345,12 +314,8 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 + myClassesFolder
                 + ", myJavaResourcesFolder="
                 + myJavaResourcesFolder
-                + ", myDependencies="
-                + myDependencies
                 + ", myLevel2Dependencies"
                 + myLevel2Dependencies
-                + ", myCompileDependencies="
-                + myCompileDependencies
                 + ", myDependencyGraphs="
                 + myDependencyGraphs
                 + ", myIdeSetupTaskNames="
