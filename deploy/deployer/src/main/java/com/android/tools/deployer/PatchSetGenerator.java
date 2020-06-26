@@ -146,26 +146,25 @@ public class PatchSetGenerator {
 
     private Deploy.PatchInstruction buildPatchInstruction(
             long size, String remotePath, ByteBuffer instruction, ByteBuffer data) {
-        Deploy.PatchInstruction.Builder patchInstructionBuidler =
+        Deploy.PatchInstruction.Builder patchInstructionBuilder =
                 Deploy.PatchInstruction.newBuilder();
-        patchInstructionBuidler.setSrcAbsolutePath(remotePath);
-        patchInstructionBuidler.setPatches(ByteString.copyFrom(data));
-        patchInstructionBuidler.setInstructions(ByteString.copyFrom(instruction));
-        patchInstructionBuidler.setDstFilesize(size);
+        patchInstructionBuilder.setSrcAbsolutePath(remotePath);
+        patchInstructionBuilder.setPatches(ByteString.copyFrom(data));
+        patchInstructionBuilder.setInstructions(ByteString.copyFrom(instruction));
+        patchInstructionBuilder.setDstFilesize(size);
 
-        Deploy.PatchInstruction patch = patchInstructionBuidler.build();
-        return patch;
+        return patchInstructionBuilder.build();
     }
 
     private Deploy.PatchInstruction generateCleanPatch(Apk remoteApk, Apk localApk)
             throws IOException {
-        Deploy.PatchInstruction.Builder patchInstructionBuidler =
+        Deploy.PatchInstruction.Builder patchInstructionBuilder =
                 Deploy.PatchInstruction.newBuilder();
 
         PatchGenerator.Patch patch =
                 new PatchGenerator(logger).generateCleanPatch(remoteApk, localApk);
-        patchInstructionBuidler.setSrcAbsolutePath(patch.sourcePath);
-        patchInstructionBuidler.setDstFilesize(patch.destinationSize);
-        return patchInstructionBuidler.build();
+        patchInstructionBuilder.setSrcAbsolutePath(patch.sourcePath);
+        patchInstructionBuilder.setDstFilesize(patch.destinationSize);
+        return patchInstructionBuilder.build();
     }
 }

@@ -105,8 +105,7 @@ public class DeploymentCacheDatabase {
 
     public Entry get(String serial, String appId) {
         String key = String.format("%s:%s", serial, appId);
-        Entry e = db.getIfPresent(key);
-        return e;
+        return db.getIfPresent(key);
     }
 
     public boolean store(
