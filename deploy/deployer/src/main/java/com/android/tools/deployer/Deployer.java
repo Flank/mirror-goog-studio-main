@@ -337,9 +337,7 @@ public class Deployer {
                         useStructuralRedefinition,
                         useVariableReinitialization,
                         fastRestartOnSwapFail,
-                        metrics,
-                        adb,
-                        logger);
+                        metrics);
         Task<OptimisticApkSwapper.OverlayUpdate> overlayUpdate =
                 runner.create(
                         Tasks.COLLECT_SWAP_DATA,

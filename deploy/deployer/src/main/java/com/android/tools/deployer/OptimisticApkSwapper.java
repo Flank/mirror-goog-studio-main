@@ -20,7 +20,6 @@ import com.android.tools.deployer.InstallerResponseHandler.SuccessStatus;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.idea.protobuf.ByteString;
-import com.android.utils.ILogger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +47,6 @@ public class OptimisticApkSwapper {
     private final boolean alwaysUpdateOverlay;
     private final Map<Integer, ClassRedefiner> redefiners;
     private final MetricsRecorder metrics;
-    private final AdbClient adb;
-    private final ILogger logger;
 
     // Temp flag.
     private final boolean useStructuralRedefinition;
@@ -68,9 +65,7 @@ public class OptimisticApkSwapper {
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
             boolean alwaysUpdateOverlay,
-            MetricsRecorder metrics,
-            AdbClient adb,
-            ILogger logger) {
+            MetricsRecorder metrics) {
         this.installer = installer;
         this.redefiners = redefiners;
         this.restart = restart;
@@ -78,8 +73,6 @@ public class OptimisticApkSwapper {
         this.useVariableReinitialization = useVariableReinitialization;
         this.alwaysUpdateOverlay = alwaysUpdateOverlay;
         this.metrics = metrics;
-        this.adb = adb;
-        this.logger = logger;
     }
 
     /**
@@ -215,10 +208,6 @@ public class OptimisticApkSwapper {
             Deploy.OverlaySwapRequest request, ClassRedefiner redefiner) throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         metrics.add(swapResponse.getAgentLogsList());
-        for (Deploy.AgentExceptionLog log : swapResponse.getAgentLogsList()) {
-            // TODO: Report these as metrics somehow
-            logger.info("Agent log: %s", log.toString());
-        }
         return new InstallerResponseHandler().handle(swapResponse);
     }
 
