@@ -97,10 +97,7 @@ cc_library(
         "-DSK_USER_CONFIG_HEADER=\\\"StudioConfig.h\\\"",
     ] + select({
         "windows": ["/DSK_BUILD_FOR_WIN"],  # TODO: anything else needed here?
-        "mac": [
-            "-DSK_BUILD_FOR_MAC",
-            "-std=c++17",
-        ],  # TODO: anything else needed here?
+        "mac": ["-DSK_BUILD_FOR_MAC"],  # TODO: anything else needed here?
         "//conditions:default": [
             "-DSK_BUILD_FOR_UNIX",
             "-mssse3",
