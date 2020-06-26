@@ -158,7 +158,6 @@ cc_toolchain_config(
         clang_latest_darwin + "/lib64/clang/9.0.4/include",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
-        "/usr/include",
     ],
     tool_paths = {
         "ar": "studio-extra/wrapped_ar.darwin",
@@ -282,7 +281,7 @@ toolchain(
         "@platforms//os:osx",
     ],
     toolchain = ":cc-compiler-darwin",
-    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    toolchain_type = ":toolchain_type",
 )
 
 toolchain(

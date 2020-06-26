@@ -1,6 +1,6 @@
 # A trick to allow invoking this script in multiple contexts.
 MY_LOCATION="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT=$(dirname ${MY_LOCATION})
+ROOT=$(dirname $(dirname ${MY_LOCATION}) )
 CLANG_LOC=$1
 shift
 
