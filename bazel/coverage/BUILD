@@ -663,6 +663,6 @@ coverage_report(
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/vendor/google/android-apk:android-apk_tests",
-        "//tools/vendor/google/android-ndk:android-ndk_tests",
+        "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
     ],
 )
