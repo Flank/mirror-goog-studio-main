@@ -12,11 +12,11 @@ done
 # Prevents timestamp metadata being present in the archive contents.
 export ZERO_AR_DATE=1
 
-"${ROOT}/native_toolchain/${CLANG_LOC}"/bin/llvm-ar "$@"
+"${ROOT}/${CLANG_LOC}"/bin/llvm-ar "$@"
 
 # To silence the "has no symbols" warnings when generating the symbol table,
 # call ar with the -S flag and then call ranlib explicitly.
-"${ROOT}/native_toolchain/${CLANG_LOC}"/bin/llvm-ranlib "$ARCHIVE_NAME"
+"${ROOT}/${CLANG_LOC}"/bin/llvm-ranlib "$ARCHIVE_NAME"
 
 # Setting ZERO_AR_DATE for the above invocations may mean the output will have
 # zero timestamp, which, as an input, would break ld. Thus, update timestamp.

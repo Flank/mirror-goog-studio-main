@@ -281,7 +281,7 @@ toolchain(
         "@platforms//os:osx",
     ],
     toolchain = ":cc-compiler-darwin",
-    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    toolchain_type = ":toolchain_type",
 )
 
 toolchain(
