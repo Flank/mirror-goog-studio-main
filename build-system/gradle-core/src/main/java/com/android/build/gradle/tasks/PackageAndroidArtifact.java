@@ -1113,11 +1113,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
 
-            if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
+            if (creationConfig.getCodeShrinker() == CodeShrinker.R8) {
                 Provider<RegularFile> mergedJavaResProvider =
                         artifacts.get(SHRUNK_JAVA_RES.INSTANCE);
                 return creationConfig.getServices().fileCollection(mergedJavaResProvider);
-            } else if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
+            } else if (creationConfig.getNeedsMergedJavaResStream()) {
                 return creationConfig
                         .getTransformManager()
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);

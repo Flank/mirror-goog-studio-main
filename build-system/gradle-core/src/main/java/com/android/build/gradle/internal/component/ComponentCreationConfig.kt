@@ -38,10 +38,8 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
-import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -83,6 +81,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     // TODO figure out whether these properties are needed by all
     // ---------------------------------------------------------------------------------------------
 
+    // TODO : remove as it is now in Variant.
     val minSdkVersion: AndroidVersion
     val maxSdkVersion: Int?
     val targetSdkVersion: ApiVersion
@@ -102,6 +101,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val transformManager: TransformManager
     val paths: VariantPathHelper
     val services: TaskCreationServices
+
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     val globalScope: GlobalScope
 
@@ -146,6 +146,11 @@ interface ComponentCreationConfig : ComponentIdentity {
      * Get the list of folders containing compilable source files.
      */
     val javaSources: List<ConfigurableFileTree>
+
+    val needsMainDexListForBundle: Boolean
+        get() = false
+
+    fun useResourceShrinker(): Boolean
 
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
 

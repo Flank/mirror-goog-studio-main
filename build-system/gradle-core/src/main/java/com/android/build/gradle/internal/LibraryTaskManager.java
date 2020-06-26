@@ -355,7 +355,7 @@ public class LibraryTaskManager
         }
 
         QualifiedContent.ScopeType scopeType;
-        if (variantProperties.getVariantScope().getCodeShrinker() != null) {
+        if (variantProperties.getCodeShrinker() != null) {
             // Add the R class classes as production classes. They are then removed by the library
             // jar transform.
             // TODO(b/115974418): Can we stop adding the compilation-only R class as a local classes?
@@ -500,7 +500,7 @@ public class LibraryTaskManager
 
     private void createCompileLibraryResourcesTask(
             @NonNull VariantPropertiesImpl variantProperties) {
-        if (variantProperties.getVariantScope().isPrecompileDependenciesResourcesEnabled()) {
+        if (variantProperties.isPrecompileDependenciesResourcesEnabled()) {
             taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variantProperties));
         }
     }

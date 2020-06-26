@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImplKt;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
@@ -86,7 +87,8 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
 
     protected static boolean generatesProguardOutputFile(
             @NonNull ComponentCreationConfig creationConfig) {
-        return creationConfig.getVariantScope().getCodeShrinker() != null
+        return (creationConfig instanceof ConsumableCreationConfig
+                        && ((ConsumableCreationConfig) creationConfig).getCodeShrinker() != null)
                 || creationConfig.getVariantType().isDynamicFeature();
     }
 }

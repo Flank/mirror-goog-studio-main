@@ -454,7 +454,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.testApplicationId.setDisallowChanges(creationConfig.applicationId)
             task.testedApplicationId.setDisallowChanges(creationConfig.testedApplicationId)
 
-            task.instrumentationRunner.setDisallowChanges(variantDslInfo.instrumentationRunner)
+            task.instrumentationRunner.setDisallowChanges(creationConfig.instrumentationRunner)
             task.handleProfiling.setDisallowChanges(variantDslInfo.handleProfiling)
             task.functionalTest.setDisallowChanges(variantDslInfo.functionalTest)
             task.testLabel.setDisallowChanges(variantDslInfo.testLabel)

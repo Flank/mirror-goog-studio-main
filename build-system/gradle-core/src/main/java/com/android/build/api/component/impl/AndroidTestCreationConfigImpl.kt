@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.component.impl
 
-package com.android.build.gradle.internal.component
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.GlobalScope
 
-import org.gradle.api.provider.Property
-
-interface ApplicationCreationConfig: ApkCreationConfig {
-    val needAssetPackTasks: Property<Boolean>
-}
+class AndroidTestCreationConfigImpl(
+    override val config: AndroidTestCreationConfig,
+    globalScope: GlobalScope,
+    variantDslInfo: VariantDslInfo
+) : AbstractApkTestCreationConfigImpl(config, globalScope, variantDslInfo)

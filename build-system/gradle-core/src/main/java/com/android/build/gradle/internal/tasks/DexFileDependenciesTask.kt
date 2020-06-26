@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.impl.getFeatureLevel
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -153,8 +155,8 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<DexFileDependenciesTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ConsumableCreationConfig) :
+        VariantTaskCreationAction<DexFileDependenciesTask, ConsumableCreationConfig>(
             creationConfig
         ) {
         override val name: String = computeTaskName("desugar", "FileDependencies")
@@ -169,7 +171,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 DexFileDependenciesTask::outputDirectory
             ).on(InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES)
 
-            if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
+            if (creationConfig.needsShrinkDesugarLibrary) {
                 creationConfig.artifacts
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
@@ -190,7 +192,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 )
             ).disallowChanges()
             val minSdkVersion =
-                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
+                creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
             task.minSdkVersion.setDisallowChanges(minSdkVersion)
             if (minSdkVersion < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(
@@ -209,7 +211,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
 
-            if (creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
+            if (creationConfig.isCoreLibraryDesugaringEnabled) {
                 task.libConfiguration.set(getDesugarLibConfig(creationConfig.globalScope.project))
             }
             task.libConfiguration.disallowChanges()

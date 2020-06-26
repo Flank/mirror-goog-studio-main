@@ -918,7 +918,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.precompileDependenciesResources =
                     mergeType.equals(MERGE)
                             && !isLibrary
-                            && variantScope.isPrecompileDependenciesResourcesEnabled();
+                            && creationConfig.isPrecompileDependenciesResourcesEnabled();
 
             task.getResourceDirsOutsideRootProjectDir()
                     .set(

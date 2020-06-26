@@ -325,7 +325,9 @@ public class VariantManager<
                     productFlavorData.getProductFlavor(), productFlavorData.getSourceSet());
         }
 
-        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantDslInfoImpl variantDslInfo =
+                variantBuilder.createVariantDslInfo(project.getLayout().getBuildDirectory());
+
         ComponentIdentity componentIdentity = variantDslInfo.getComponentIdentity();
 
         // create the Variant object so that we can run the action which may interrupt the creation
@@ -563,7 +565,8 @@ public class VariantManager<
                     data.getProductFlavor(), data.getTestSourceSet(variantType));
         }
 
-        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantDslInfoImpl variantDslInfo =
+                variantBuilder.createVariantDslInfo(project.getLayout().getBuildDirectory());
 
         TestComponentImpl<? extends TestComponentProperties> component;
 
@@ -871,38 +874,38 @@ public class VariantManager<
                 GradleBuildVariant.Builder variantBuilder =
                         configuratorService
                                 .getVariantBuilder(project.getPath(), variantProperties.getName())
-                        .setIsDebug(buildType.isDebuggable())
-                        .setMinSdkVersion(
-                                AnalyticsUtil.toProto(
-                                        variantInfo.getVariant().getMinSdkVersion()))
-                        .setMinifyEnabled(variantScope.getCodeShrinker() != null)
-                        .setUseMultidex(variantDslInfo.isMultiDexEnabled())
-                        .setUseLegacyMultidex(
-                                DexingTypeKt.isLegacyMultiDexMode(
-                                        variantProperties.getDexingType()))
-                        .setVariantType(
-                                variantProperties
-                                        .getVariantType()
-                                        .getAnalyticsVariantType())
-                        .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
-                        .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
-                        .setCoreLibraryDesugaringEnabled(
-                                variantScope.isCoreLibraryDesugaringEnabled())
-                        .setTestExecution(
-                                AnalyticsUtil.toProto(
-                                        globalScope
-                                                .getExtension()
-                                                .getTestOptions()
-                                                .getExecutionEnum()))
-                        .setVariantApiAccess(
-                                variantInfo
-                                        .getUserVisibleVariant()
-                                        .getStats()
-                                        .getVariantApiAccess());
+                                .setIsDebug(buildType.isDebuggable())
+                                .setMinSdkVersion(
+                                        AnalyticsUtil.toProto(
+                                                variantInfo.getVariant().getMinSdkVersion()))
+                                .setMinifyEnabled(variantProperties.getCodeShrinker() != null)
+                                .setUseMultidex(variantProperties.isMultiDexEnabled())
+                                .setUseLegacyMultidex(
+                                        DexingTypeKt.isLegacyMultiDexMode(
+                                                variantProperties.getDexingType()))
+                                .setVariantType(
+                                        variantProperties
+                                                .getVariantType()
+                                                .getAnalyticsVariantType())
+                                .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
+                                .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
+                                .setCoreLibraryDesugaringEnabled(
+                                        variantProperties.isCoreLibraryDesugaringEnabled())
+                                .setTestExecution(
+                                        AnalyticsUtil.toProto(
+                                                globalScope
+                                                        .getExtension()
+                                                        .getTestOptions()
+                                                        .getExecutionEnum()))
+                                .setVariantApiAccess(
+                                        variantInfo
+                                                .getUserVisibleVariant()
+                                                .getStats()
+                                                .getVariantApiAccess());
 
-                if (variantScope.getCodeShrinker() != null) {
+                if (variantProperties.getCodeShrinker() != null) {
                     variantBuilder.setCodeShrinker(
-                            AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
+                            AnalyticsUtil.toProto(variantProperties.getCodeShrinker()));
                 }
 
                 if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
@@ -914,7 +917,8 @@ public class VariantManager<
                             ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
                 }
 
-                VariantScope.Java8LangSupport supportType = variantScope.getJava8LangSupportType();
+                VariantScope.Java8LangSupport supportType =
+                        variantProperties.getJava8LangSupportType();
                 if (supportType != VariantScope.Java8LangSupport.INVALID
                         && supportType != VariantScope.Java8LangSupport.UNUSED) {
                     variantBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));

@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
-import kotlin.math.min
 
 abstract class VariantImpl<PropertiesT: VariantProperties>(
     variantDslInfo: VariantDslInfo,

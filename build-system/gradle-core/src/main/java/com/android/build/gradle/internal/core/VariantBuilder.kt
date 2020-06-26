@@ -33,6 +33,8 @@ import com.android.builder.core.VariantType
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
+import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 
 /** Builder for [VariantDslInfo].
  *
@@ -268,7 +270,7 @@ class VariantBuilder private constructor(
     }
 
     /** Creates a variant configuration  */
-    fun createVariantDslInfo(): VariantDslInfoImpl {
+    fun createVariantDslInfo(buildDirectory: DirectoryProperty): VariantDslInfoImpl {
         val flavorList = flavors.map { it.first }
 
         return VariantDslInfoImpl(
@@ -287,7 +289,8 @@ class VariantBuilder private constructor(
             testedVariant,
             manifestDataProvider,
             dslServices,
-            variantPropertiesApiServices
+            variantPropertiesApiServices,
+            buildDirectory
         )
     }
 

@@ -198,7 +198,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
-            if (creationConfig.variantScope.isPrecompileDependenciesResourcesEnabled) {
+            if (creationConfig.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources.fromDisallowChanges(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

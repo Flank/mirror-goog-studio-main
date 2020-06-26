@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.dexing.DexingType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
@@ -89,7 +90,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val instrumentationRunner: Provider<String>
-        get() = variantDslInfo.instrumentationRunner
+        get() = variantDslInfo.getInstrumentationRunner(testedVariant.dexingType)
     override val handleProfiling: Provider<Boolean>
         get() = variantDslInfo.handleProfiling
     override val functionalTest: Provider<Boolean>

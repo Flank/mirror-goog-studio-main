@@ -18,7 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.transform.TransformException
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -163,13 +165,13 @@ abstract class DexMergingTask : NewIncrementalTask() {
     }
 
     class CreationAction @JvmOverloads constructor(
-        creationConfig: VariantCreationConfig,
+        creationConfig: ApkCreationConfig,
         private val action: DexMergingAction,
         private val dexingType: DexingType,
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
         private val outputType: InternalMultipleArtifactType = InternalMultipleArtifactType.DEX
-    ) : VariantTaskCreationAction<DexMergingTask, VariantCreationConfig>(creationConfig) {
+    ) : VariantTaskCreationAction<DexMergingTask, ApkCreationConfig>(creationConfig) {
 
         private val internalName: String = when (action) {
             DexMergingAction.MERGE_LIBRARY_PROJECTS -> creationConfig.computeTaskName("mergeLibDex")
@@ -206,7 +208,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                 SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions))
             task.dexMerger.setDisallowChanges(creationConfig.variantScope.dexMerger)
             task.minSdkVersion.setDisallowChanges(
-                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
+                creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel())
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
             if (creationConfig.services
                     .projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
@@ -226,8 +228,8 @@ abstract class DexMergingTask : NewIncrementalTask() {
         }
 
         private fun getDexDirs(
-            creationConfig: VariantCreationConfig,
-            action: DexMergingAction
+                creationConfig: ApkCreationConfig,
+                action: DexMergingAction
         ): FileCollection {
             val attributes = getDexingArtifactConfiguration(creationConfig).getAttributes()
 
@@ -334,7 +336,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
             return when (action) {
                 DexMergingAction.MERGE_LIBRARY_PROJECTS ->
                     when {
-                        creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel < 23 ->
+                        creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel() < 23 ->
                             LIBRARIES_MERGING_THRESHOLD
                         else -> LIBRARIES_M_PLUS_MAX_THRESHOLD
                     }

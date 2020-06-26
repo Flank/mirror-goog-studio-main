@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -97,10 +99,10 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
-        private val enableDexingArtifactTransform: Boolean,
-        private val separateFileDependenciesDexingTask: Boolean
-    ) : VariantTaskCreationAction<L8DexDesugarLibTask, VariantCreationConfig>(
+            creationConfig: ApkCreationConfig,
+            private val enableDexingArtifactTransform: Boolean,
+            private val separateFileDependenciesDexingTask: Boolean
+    ) : VariantTaskCreationAction<L8DexDesugarLibTask, ApkCreationConfig>(
         creationConfig
     ) {
         override val name = computeTaskName("l8DexDesugarLib")
@@ -124,7 +126,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.androidJarInput.sdkBuildService.set(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            task.minSdkVersion.set(creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
+            task.minSdkVersion.set(creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel())
 
             setKeepRules(task)
 
@@ -132,7 +134,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
         }
 
         private fun setKeepRules(task: L8DexDesugarLibTask) {
-            if (!creationConfig.variantScope.needsShrinkDesugarLibrary) {
+            if (!creationConfig.needsShrinkDesugarLibrary) {
                 return;
             }
 
@@ -161,7 +163,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                         attributes
                     ).artifactFiles
                 )
-            } else if (creationConfig.variantScope.codeShrinker != CodeShrinker.R8) {
+            } else if (creationConfig.codeShrinker != CodeShrinker.R8) {
                 task.keepRulesFiles.from(
                     creationConfig.artifacts.get(
                         InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES
@@ -190,7 +192,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
 
-            val nonMinified = creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+            val nonMinified = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8
             if (creationConfig.globalScope.hasDynamicFeatures() && nonMinified) {
                 task.keepRulesFiles.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(

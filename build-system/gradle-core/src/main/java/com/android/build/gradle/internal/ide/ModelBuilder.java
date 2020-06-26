@@ -38,6 +38,8 @@ import com.android.build.gradle.internal.DefaultConfigData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -697,7 +699,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 clonedExtraJavaArtifacts,
                 testTargetVariants,
                 inspectManifestForInstantTag(componentProperties),
-                getDesugaredMethods(componentProperties));
+                componentProperties instanceof VariantCreationConfig
+                        ? getDesugaredMethods((VariantCreationConfig) componentProperties)
+                        : ImmutableList.of());
     }
 
     private void checkProguardFiles(@NonNull ComponentPropertiesImpl componentProperties) {
@@ -959,7 +963,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
                 ExtractApksTask.Companion.getTaskName(componentProperties),
                 artifacts.get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
-                variantScope.getCodeShrinker());
+                componentProperties instanceof ConsumableCreationConfig
+                        ? ((ConsumableCreationConfig) componentProperties).getCodeShrinker()
+                        : null);
     }
 
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
@@ -1131,13 +1137,13 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private List<String> getDesugaredMethods(@NonNull ComponentPropertiesImpl componentProperties) {
+    private List<String> getDesugaredMethods(@NonNull VariantCreationConfig creationConfig) {
         List<String> desugaredMethodsFromDesugarLib =
                 DesugarLibUtils.getDesugaredMethods(
-                        componentProperties.getGlobalScope().getProject(),
-                        componentProperties.getVariantScope().isCoreLibraryDesugaringEnabled(),
-                        componentProperties.getMinSdkVersion(),
-                        componentProperties.getGlobalScope().getExtension().getCompileSdkVersion());
+                        creationConfig.getGlobalScope().getProject(),
+                        creationConfig.isCoreLibraryDesugaringEnabled(),
+                        creationConfig.getMinSdkVersion(),
+                        creationConfig.getGlobalScope().getExtension().getCompileSdkVersion());
 
         List<String> desugaredMethodsFromD8 = D8DesugaredMethodsGenerator.INSTANCE.generate();
 

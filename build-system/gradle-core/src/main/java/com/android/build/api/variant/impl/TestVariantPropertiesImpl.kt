@@ -19,8 +19,9 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariantProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
-import com.android.build.api.component.impl.ConsumableCreationConfigImpl
+import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
@@ -38,6 +39,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
+import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -73,14 +75,11 @@ open class TestVariantPropertiesImpl @Inject constructor(
     globalScope
 ), TestVariantProperties, TestVariantCreationConfig {
 
-    private val delegate = ConsumableCreationConfigImpl(variantDslInfo)
+    private val delegate by lazy { TestVariantCreationConfigImpl(this, globalScope, variantDslInfo) }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
-
-    override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
 
     override val applicationId: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
@@ -102,7 +101,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
         get() = variantDslInfo.isMinifyEnabled
 
     override val instrumentationRunner: Property<String> =
-        internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
+        internalServices.propertyOf(String::class.java, variantDslInfo.getInstrumentationRunner(dexingType))
 
     override val handleProfiling: Property<Boolean> =
         internalServices.propertyOf(Boolean::class.java, variantDslInfo.handleProfiling)
@@ -139,7 +138,9 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 
-    override val shouldPackageDesugarLibDex: Boolean = variantScope.isCoreLibraryDesugaringEnabled
+    override val shouldPackageDesugarLibDex: Boolean = delegate.isCoreLibraryDesugaringEnabled(this)
+    override val debuggable: Boolean
+        get() = delegate.isDebuggable
 
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()
@@ -178,4 +179,16 @@ open class TestVariantPropertiesImpl @Inject constructor(
             this,
             stats
         )
+    override val minSdkVersionWithTargetDeviceApi: AndroidVersion
+        get() = delegate.minSdkVersionWithTargetDeviceApi
+
+    override val codeShrinker: CodeShrinker?
+        get() = delegate.getCodeShrinker()
+
+    override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
+
+    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override val needsShrinkDesugarLibrary: Boolean
+        get() = delegate.needsShrinkDesugarLibrary
+
 }

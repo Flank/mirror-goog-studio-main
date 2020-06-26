@@ -230,7 +230,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             creationConfig.artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
 
-            val legacyShrinkerEnabled = creationConfig.variantScope.useResourceShrinker() &&
+            val legacyShrinkerEnabled = creationConfig.useResourceShrinker() &&
                 !creationConfig.services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
             task.resFiles.set(
                 if (legacyShrinkerEnabled){
@@ -263,11 +263,11 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 )
             )
             task.javaResFiles.from(
-                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
+                if (creationConfig.codeShrinker == CodeShrinker.R8) {
                     creationConfig.services.fileCollection(
                         artifacts.get(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
-                } else if (creationConfig.variantScope.needsMergedJavaResStream) {
+                } else if (creationConfig.getNeedsMergedJavaResStream()) {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {

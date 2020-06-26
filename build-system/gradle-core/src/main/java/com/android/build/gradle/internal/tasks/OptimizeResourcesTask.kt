@@ -126,7 +126,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<OptimizeResourcesTask>) {
             super.handleProvider(taskProvider)
-            val resourceShrinkingEnabled = creationConfig.variantScope.useResourceShrinker()
+            val resourceShrinkingEnabled = creationConfig.useResourceShrinker()
             val operationRequest = creationConfig.artifacts.use(taskProvider).wiredWithDirectories(
                     OptimizeResourcesTask::inputProcessedRes,
                     OptimizeResourcesTask::optimizedProcessedRes)
