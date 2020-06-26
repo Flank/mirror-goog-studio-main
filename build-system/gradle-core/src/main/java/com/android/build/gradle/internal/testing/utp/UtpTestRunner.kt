@@ -116,6 +116,7 @@ class UtpTestRunner @JvmOverloads constructor(
 
             javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger))
             val resultsProto = getResultsProto(utpOutputDir)
+            resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
             try {
                 FileUtils.deleteRecursivelyIfExists(utpTestLogDir)
