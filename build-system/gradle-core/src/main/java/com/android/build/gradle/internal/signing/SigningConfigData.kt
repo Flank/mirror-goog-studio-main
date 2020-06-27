@@ -116,8 +116,13 @@ data class SigningConfigData(
         private const val serialVersionUID = 1L
 
         // The lowest API with v2 signing support
-        private const val MIN_V2_SDK = 24
+        const val MIN_V2_SDK = 24
+        // The lowest API with v3 signing support
+        const val MIN_V3_SDK = 28
+        // The lowest API with v4 signing support
+        const val MIN_V4_SDK = 28
 
+        // TODO - targetApi should be non-null only for optimized builds (b/160002908)
         fun fromSigningConfig(
             signingConfig: SigningConfig,
             minSdk: Int,
@@ -131,9 +136,9 @@ data class SigningConfigData(
                 keyAlias = signingConfig.keyAlias,
                 keyPassword = signingConfig.keyPassword,
                 enableV1Signing = enableV1Signing(signingConfig, minSdk, targetApi),
-                enableV2Signing = enableV2Signing(signingConfig, targetApi),
-                enableV3Signing = enableV3Signing(signingConfig),
-                enableV4Signing = enableV4Signing(signingConfig)
+                enableV2Signing = enableV2Signing(signingConfig, minSdk, targetApi),
+                enableV3Signing = enableV3Signing(signingConfig, targetApi),
+                enableV4Signing = enableV4Signing(signingConfig, targetApi)
             )
         }
 
@@ -151,32 +156,82 @@ data class SigningConfigData(
             minSdk: Int,
             targetApi: Int?
         ): Boolean {
-            // If signingConfig.enableV1Signing is null, default to true if minSdk and targetApi
-            // imply that v1 signature is needed.
-            return signingConfig.enableV1Signing
-                    ?: (minSdk < MIN_V2_SDK && (targetApi == null || targetApi < MIN_V2_SDK))
+            val enableV1Signing = signingConfig.enableV1Signing
+            val effectiveMinSdk = targetApi ?: minSdk
+            return when {
+                // Sign with v1 if it's enabled explicitly.
+                enableV1Signing != null -> enableV1Signing
+                // We need v1 if minSdk < MIN_V2_SDK.
+                effectiveMinSdk < MIN_V2_SDK -> true
+                // We don't need v1 if minSdk >= MIN_V2_SDK and we're signing with v2.
+                enableV2Signing(signingConfig, minSdk, targetApi) -> false
+                // We need v1 if we're not signing with v2 and minSdk < MIN_V3_SDK.
+                effectiveMinSdk < MIN_V3_SDK -> true
+                // If minSdk >= MIN_V3_SDK, sign with v1 only if we're not signing with v3.
+                else -> !enableV3Signing(signingConfig, targetApi)
+            }
         }
 
         /**
          * This method returns whether to sign with v2 signature.
          *
          * @param signingConfig the DSL signingConfig object
+         * @param minSdk the minimum SDK
          * @param targetApi optional injected target Api
          * @return if we actually sign with v2 signature
          */
         @VisibleForTesting
-        fun enableV2Signing(signingConfig: SigningConfig, targetApi: Int?): Boolean {
-            // If signingConfig.enableV2Signing is null, default to true if there's no v3 signature
-            // and targetApi is high enough.
-            return signingConfig.enableV2Signing
-                ?: (!enableV3Signing(signingConfig)
-                        && (targetApi == null || targetApi >= MIN_V2_SDK))
+        fun enableV2Signing(
+            signingConfig: SigningConfig,
+            minSdk: Int,
+            targetApi: Int?
+        ): Boolean {
+            val enableV2Signing = signingConfig.enableV2Signing
+            val effectiveMinSdk = targetApi ?: minSdk
+            return when {
+                // Don't sign with v2 if we're installing on a device that doesn't support it.
+                targetApi != null && targetApi < MIN_V2_SDK -> false
+                // Otherwise, sign with v2 if it's enabled explicitly.
+                enableV2Signing != null -> enableV2Signing
+                // We sign with v2 if minSdk < MIN_V3_SDK, even if we're also signing with v1,
+                // because v2 signatures can be verified faster than v1 signatures.
+                effectiveMinSdk < MIN_V3_SDK -> true
+                // If minSdk >= MIN_V3_SDK, sign with v2 only if we're not signing with v3.
+                else -> !enableV3Signing(signingConfig, targetApi)
+            }
         }
 
-        private fun enableV3Signing(signingConfig: SigningConfig): Boolean =
-            signingConfig.enableV3Signing ?: false
+        /**
+         * This method returns whether to sign with v3 signature.
+         *
+         * @param signingConfig the DSL signingConfig object
+         * @param targetApi optional injected target Api
+         * @return if we actually sign with v3 signature
+         */
+        @VisibleForTesting
+        fun enableV3Signing(signingConfig: SigningConfig, targetApi: Int?): Boolean {
+            return when {
+                // Don't sign with v3 if we're installing on a device that doesn't support it.
+                targetApi != null && targetApi < MIN_V3_SDK -> false
+                // Otherwise, sign with v3 if it's enabled explicitly.
+                else -> signingConfig.enableV3Signing ?: false
+            }
+        }
 
-        private fun enableV4Signing(signingConfig: SigningConfig): Boolean =
-            signingConfig.enableV4Signing ?: false
+        /**
+         * This method returns whether to sign with v4 signature.
+         *
+         * @param signingConfig the DSL signingConfig object
+         * @param targetApi optional injected target Api
+         * @return if we actually sign with v4 signature
+         */
+        private fun enableV4Signing(signingConfig: SigningConfig, targetApi: Int?): Boolean {
+            return when {
+                // Don't sign with v4 if we're installing on a device that doesn't support it.
+                targetApi != null && targetApi < MIN_V4_SDK -> false
+                // Otherwise, sign with v4 if it's enabled explicitly.
+                else -> signingConfig.enableV4Signing ?: false
+            }
+        }
     }
 }
