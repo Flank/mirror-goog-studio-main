@@ -78,15 +78,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 }
                 """.trimIndent()
                 )
-                buildFile =
-                    """
-                dependencies {
-                    implementation(kotlin("stdlib"))
-                    implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                    implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
-                    gradleApi()
-                }
-                """.trimIndent()
             }
             addModule(":app") {
                 addCommonBuildFile(this)
@@ -152,15 +143,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 }
                 """.trimIndent()
                 )
-                buildFile =
-                    """
-                dependencies {
-                    implementation(kotlin("stdlib"))
-                    implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                    implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
-                    gradleApi()
-                }
-                """.trimIndent()
             }
             addModule(":app") {
                 addCommonBuildFile(this)
@@ -228,15 +210,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
                 }
                 """.trimIndent()
                 )
-                buildFile =
-                    """
-                dependencies {
-                    implementation(kotlin("stdlib"))
-                    implementation("com.android.tools.build:gradle-api:${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                    implementation("com.android.tools.apkparser:apkanalyzer-cli:${com.android.Version.ANDROID_TOOLS_BASE_VERSION}")
-                    gradleApi()
-                }
-                """.trimIndent()
             }
             addModule(":app") {
                 addCommonBuildFile(this)
@@ -269,23 +242,6 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
 
             addBuildSrc() {
                 testingElements.addCopyApksTask(this)
-                addSource("src/main/kotlin/AcmeArtifactType.kt",
-                    """
-                    import org.gradle.api.file.Directory
-                    import org.gradle.api.file.FileSystemLocation
-
-                    import com.android.build.api.artifact.ArtifactKind
-                    import com.android.build.api.artifact.Artifact.SingleArtifact
-                    import com.android.build.api.artifact.Artifact.Replaceable
-                    import com.android.build.api.artifact.Artifact.ContainsMany
-
-                    sealed class AcmeArtifactType<T : FileSystemLocation>(
-                        kind: ArtifactKind<T>
-                    ) : SingleArtifact<T>(kind) {
-
-                        object ACME_APK: AcmeArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
-                    }
-                    """.trimIndent())
                 addSource(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
@@ -336,7 +292,7 @@ class BuildSrcScriptApiTests: VariantApiBaseTest(
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
-                "app-debug.apk", "output.json"
+                "app-debug.apk", "output-metadata.json"
             )
         }
     }

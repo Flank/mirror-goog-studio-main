@@ -211,6 +211,7 @@ expected result : "Got an APK...." message.
         given {
             tasksToInvoke.add(":app:copyDebugApks")
             addModule(":app") {
+                // language=kotlin
                 buildFile = """
             plugins {
                     id("com.android.application")
@@ -228,18 +229,6 @@ expected result : "Got an APK...." message.
             import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
-
-            import com.android.build.api.artifact.ArtifactKind
-            import com.android.build.api.artifact.Artifact.SingleArtifact
-            import com.android.build.api.artifact.Artifact.Replaceable
-            import com.android.build.api.artifact.Artifact.ContainsMany
-
-            sealed class AcmeArtifactType<T : FileSystemLocation>(
-                kind: ArtifactKind<T>
-            ) : SingleArtifact<T>(kind) {
-
-                object ACME_APK: AcmeArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
-            }
 
             ${testingElements.getCopyApksTask()}
 
@@ -273,7 +262,7 @@ expected result : "Got an APK...." message.
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
-                "app-debug.apk", "output.json"
+                "app-debug.apk", "output-metadata.json"
             )
         }
     }

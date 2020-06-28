@@ -75,7 +75,6 @@ configure([test, testPrebuilts]) {
     systemProperties['java.io.tmpdir'] = tempFile.absolutePath
     environment = testEnvironment
 
-    // Always run the task, when requested.
     outputs.upToDateWhen { false }
 
     maxParallelForks = Runtime.runtime.availableProcessors() / 1.5

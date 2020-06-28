@@ -72,6 +72,12 @@ TestType.BuildSrc
                             }
                         }
                     """.trimIndent())
+                buildFile =
+                    """
+                    dependencies {
+                        implementation("com.android.tools.build:gradle:${agpVersion}")
+                    }
+                    """.trimIndent()
             }
             addModule(":app") {
                 buildFile =

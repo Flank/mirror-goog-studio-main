@@ -45,7 +45,9 @@ class L8ToolTest {
             desugarConfig,
             bootClasspath,
             20,
-            KeepRulesConfig(null, null))
+            KeepRulesConfig(null, null),
+            true
+        )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThat(output.toFile().resolve("classes1000.dex")).exists()
     }
@@ -55,7 +57,7 @@ class L8ToolTest {
 
     companion object {
         val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar").toPath())
-        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.5"))
-        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("0.11.1")
+        val desugarJar = listOf(TestUtils.getDesugarLibJarWithVersion("1.0.9"))
+        val desugarConfig = TestUtils.getDesugarLibConfigContentWithVersion("1.0.9")
     }
 }

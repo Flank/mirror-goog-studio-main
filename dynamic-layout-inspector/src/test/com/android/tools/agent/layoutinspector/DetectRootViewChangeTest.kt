@@ -15,109 +15,87 @@
  */
 package com.android.tools.agent.layoutinspector
 
-import android.os.AsyncTask
 import android.view.View
+import com.android.testutils.MockitoKt.eq
 import com.android.testutils.MockitoKt.mock
+import com.google.common.truth.Truth.assertThat
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.any
-import org.mockito.Mockito.timeout
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 class DetectRootViewChangeTest {
-    private val myService: LayoutInspectorService = mock()
-    private var myChangeDetector: DetectRootViewChange = DetectRootViewChange(myService)
-
-    @Before
-    fun setUp() {
-        myChangeDetector.myCheckInterval = 1
-    }
+    private val step = TimeUnit.SECONDS.toMillis(1)
+    private var myService: LayoutInspectorService? = mock()
 
     @After
     fun tearDown() {
-        myChangeDetector.cancel(true)
-        waitForState(AsyncTask.Status.FINISHED)
+        myService = null
     }
 
     @Test
     fun testAddRemove() {
-        val startSem = Semaphore(0)
-        val stopSem = Semaphore(0)
-        `when`(myService.startLayoutInspector(any())).thenAnswer { startSem.release() }
-        `when`(myService.stopCapturing(any())).thenAnswer { stopSem.release() }
-        val (v1, v1Sem) = createView()
+        val v1 = createView()
         val views = mutableListOf(v1)
-        `when`(myService.rootViews).thenReturn(views)
-        myChangeDetector.start(mutableListOf(v1))
-        waitForState(AsyncTask.Status.RUNNING)
+        `when`(myService!!.rootViews).thenReturn(views)
+
+        val changeDetector = DetectRootViewChange(myService!!)
+        var startCount = 0
+        var stopCount = 0
+        `when`(myService!!.startLayoutInspector(any())).thenAnswer { startCount++ }
+        `when`(myService!!.stopCapturing(any())).thenAnswer { stopCount++ }
+
         // Verify nothing has happened yet
-        verify(myService, times(0)).startLayoutInspector(any())
-        verify(myService, times(0)).stopCapturing(any())
+        assertThat(startCount).isEqualTo(0)
+        assertThat(stopCount).isEqualTo(0)
         verifyZeroInteractions(v1)
 
         // Add a view and verify that it's added and nothing is removed
-        val (v2, _) = createView()
-        views.add(v2)
-        startSem.acquire()
-        assertEquals(0, startSem.availablePermits())
-        assertEquals(0, stopSem.availablePermits())
-        verify(myService).startLayoutInspector(v2)
-        verify(myService, times(0)).stopCapturing(any())
+        val v2 = createView().also { views.add(it) }
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(1)
+        assertThat(stopCount).isEqualTo(0)
+        verify(myService!!).startLayoutInspector(v2)
+        verify(myService!!).startLayoutInspector(eq(v2))
         verifyZeroInteractions(v1)
         verifyZeroInteractions(v2)
 
         // Add a view and remove the previous one
-        val (v3, _) = createView()
-        views.remove(v2)
-        views.add(v3)
-        startSem.acquire()
-        stopSem.acquire()
-        assertEquals(0, startSem.availablePermits())
-        assertEquals(0, stopSem.availablePermits())
-        verify(myService).startLayoutInspector(v3)
-        verify(myService).stopCapturing(v2)
+        val v3 = createView().also { views.add(it) }.also { views.remove(v2) }
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(2)
+        assertThat(stopCount).isEqualTo(1)
+        verify(myService!!).startLayoutInspector(v3)
+        verify(myService!!).stopCapturing(v2)
         verifyZeroInteractions(v1)
         verifyZeroInteractions(v2)
         verifyZeroInteractions(v3)
 
         // Remove a view
         views.remove(v3)
-        stopSem.acquire()
-        assertEquals(0, startSem.availablePermits())
-        assertEquals(0, stopSem.availablePermits())
-        verify(myService).stopCapturing(v3)
-        v1Sem.acquire()
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(2)
+        assertThat(stopCount).isEqualTo(2)
+        verify(myService!!).stopCapturing(v3)
         verify(v1).invalidate()
         verifyZeroInteractions(v2)
         verifyZeroInteractions(v3)
+
+        // Stop the change detector
+        assertThat(changeDetector.handler.waitingMessages()).isGreaterThan(0)
+        changeDetector.cancel()
+        assertThat(changeDetector.handler.waitingMessages()).isEqualTo(0)
     }
 
-    private fun createView(): Pair<View, Semaphore> {
+    private fun createView(): View {
         val view: View = mock()
-        val postSemaphore = Semaphore(0)
         `when`(view.post(any())).thenAnswer { invocation ->
             invocation.getArgument<Runnable>(0).run()
-            postSemaphore.release()
             true
         }
-        return view to postSemaphore
-    }
-
-    private fun waitForState(state: AsyncTask.Status) {
-        val start = System.currentTimeMillis()
-        while (myChangeDetector.status != state) {
-            if (System.currentTimeMillis() - start > TimeUnit.SECONDS.toMillis(1)) {
-                fail("Timeout waiting for root view change detector reach state $state.")
-            }
-            Thread.sleep(10)
-        }
+        return view
     }
 }

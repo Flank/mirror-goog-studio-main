@@ -239,13 +239,15 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     artifacts.getAll(InternalMultipleArtifactType.DEX)
                 }
             )
-            task.dexFiles.from(
-                if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
-                    artifacts.get(InternalArtifactType.DESUGAR_LIB_DEX)
-                } else {
-                    getDesugarLibDexFromTransform(creationConfig)
-                }
-            )
+            if (creationConfig.shouldPackageDesugarLibDex) {
+                task.dexFiles.from(
+                    if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
+                        artifacts.get(InternalArtifactType.DESUGAR_LIB_DEX)
+                    } else {
+                        getDesugarLibDexFromTransform(creationConfig)
+                    }
+                )
+            }
 
             task.featureDexFiles.from(
                 creationConfig.variantDependencies.getArtifactFileCollection(

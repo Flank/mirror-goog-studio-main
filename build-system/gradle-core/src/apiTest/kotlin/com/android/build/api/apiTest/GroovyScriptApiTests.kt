@@ -155,13 +155,11 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
                     }
-                    System.out.println("JEDO is here : " + it.getName())
                     it.artifacts.use(manifestUpdater)
                         .wiredWithFiles(
                             { it.mergedManifest },
                             { it.updatedManifest })
                         .toTransform(ArtifactType.MERGED_MANIFEST.INSTANCE)
-                    System.out.println("JEDO was here : " + it.getName()) 
                 }
             }
             """.trimIndent()
@@ -196,31 +194,21 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
                 id 'com.android.application'
             }
             import java.io.Serializable
+            import java.nio.file.Files
             import javax.inject.Inject
-            import org.gradle.api.DefaultTask
+            
+            import org.gradle.api.file.Directory
+            import org.gradle.api.file.DirectoryProperty
             import org.gradle.api.file.RegularFileProperty
-            import org.gradle.api.tasks.InputFile
-            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.Internal
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
+            
             import com.android.build.api.artifact.ArtifactType 
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
-
-            import com.android.build.api.artifact.ArtifactKind
-            import com.android.build.api.artifact.Artifact.SingleArtifact
-            import com.android.build.api.artifact.Artifact.Replaceable
-            import com.android.build.api.artifact.Artifact.ContainsMany
-            import com.android.build.api.artifact.ArtifactTransformationRequest
-
-            class ACME_APK extends SingleArtifact<Directory> implements Replaceable, ContainsMany {
-                    ACME_APK() {
-                        super(ArtifactKind.DIRECTORY.INSTANCE)
-                    }
-            }
-
-            ACME_APK acme_apk_instance = new ACME_APK()
-
 
             ${testingElements.getCopyApksTask()}
 
@@ -254,7 +242,7 @@ class GroovyScriptApiTests : VariantApiBaseTest(TestType.Script, ScriptingLangua
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
             Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
-                "app-debug.apk", "output.json"
+                "app-debug.apk", "output-metadata.json"
             )
         }
     }

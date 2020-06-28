@@ -101,6 +101,9 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val needAssetPackTasks: Property<Boolean> =
         internalServices.propertyOf(Boolean::class.java, false)
 
+    override val shouldPackageDesugarLibDex: Boolean
+        get() = variantScope.isCoreLibraryDesugaringEnabled
+
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------

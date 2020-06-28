@@ -297,11 +297,6 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     }
   }
 
-  // We make the JVMTI verifier verbose. If verification fails, at least
-  // we can ask the user for logcats.
-  jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER,
-                         true);  // Best Effort, ignore erros.
-
   jvmtiError error_num = JVMTI_ERROR_NONE;
 
   if (extension == nullptr) {
@@ -343,8 +338,6 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
       Log::E("%s", suspend_error.c_str());
     }
   }
-
-  jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
 
   if (error_num == JVMTI_ERROR_NONE) {
     // If there was no error, we're done.

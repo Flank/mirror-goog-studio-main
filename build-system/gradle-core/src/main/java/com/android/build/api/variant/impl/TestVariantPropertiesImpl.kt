@@ -120,6 +120,8 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 
+    override val shouldPackageDesugarLibDex: Boolean = variantScope.isCoreLibraryDesugaringEnabled
+
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------

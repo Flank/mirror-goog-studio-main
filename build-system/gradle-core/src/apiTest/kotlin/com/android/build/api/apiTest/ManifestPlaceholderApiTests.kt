@@ -157,7 +157,7 @@ known at configuration time.
                 fun taskAction() {
                     val manifest = mergedManifest.asFile.get().readText()
                     // ensure that merged manifest contains the right activity name. 
-                    if (!manifest.contains("activity android:name=\"com.android.build.example.minimal.NameWithGit-"))
+                    if (!manifest.contains("activity android:name=\"com.android.build.example.minimal.NameWithGit"))
                         throw RuntimeException("Manifest Placeholder not replaced successfully")
                 }
             }
@@ -170,7 +170,7 @@ known at configuration time.
                         mergedManifest.set(artifacts.get(ArtifactType.MERGED_MANIFEST))
                     }
                     manifestPlaceholders.put("MyName", gitVersionProvider.map { task ->
-                        "NameWithGit-" + task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
+                        "NameWithGit" + task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
                     })
                 }
             }""".trimIndent()
