@@ -19,9 +19,10 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.SdkConstants.FN_R_DEF_TXT
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.builder.packaging.JarCreator
 import com.android.ide.common.resources.CompileResourceRequest
@@ -195,17 +196,14 @@ abstract class AutoNamespacePreProcessTransform : TransformAction<AutoNamespaceP
     }
 
     private fun compileResources(requestList: MutableList<CompileResourceRequest>) {
-        val aapt2ServiceKey =  parameters.aapt2DaemonBuildService.get().registerAaptService(
-            parameters.aapt2FromMaven.singleFile,
-            LoggerWrapper.getLogger(this::class.java)
-        )
+        val aapt2ServiceKey =  parameters.aapt2.registerAaptService()
 
         // TODO: Performance: Investigate if this should be multi-threaded?
         Aapt2CompileRunnable(
             Aapt2CompileRunnable.Params(
                 aapt2ServiceKey,
                 requestList,
-                parameters.errorFormatMode.get()
+                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
             )
         ).run()
     }

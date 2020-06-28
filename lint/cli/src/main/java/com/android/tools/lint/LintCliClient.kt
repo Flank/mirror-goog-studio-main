@@ -842,10 +842,10 @@ open class LintCliClient : LintClient {
                 // reports where lint has reported some well known builtin issues
                 // to not exist:
                 //
-                //   Error: Unknown issue id "DuplicateDefinition" [LintError]
-                //   Error: Unknown issue id "GradleIdeError" [LintError]
-                //   Error: Unknown issue id "InvalidPackage" [LintError]
-                //   Error: Unknown issue id "JavascriptInterface" [LintError]
+                //   Warning: Unknown issue id "DuplicateDefinition" [UnknownIssueId]
+                //   Warning: Unknown issue id "GradleIdeError" [UnknownIssueId]
+                //   Warning: Unknown issue id "InvalidPackage" [UnknownIssueId]
+                //   Warning: Unknown issue id "JavascriptInterface" [UnknownIssueId]
                 //   ...
                 //
                 // It's not clear how this can happen, though it's probably related
@@ -875,24 +875,24 @@ open class LintCliClient : LintClient {
         if (ids != null) {
             for (id in ids) {
                 if (registry.getIssue(id) == null) {
-                    reportNonExistingIssueId(project, id)
+                    reportNonExistingIssueId(project, registry, id)
                 }
             }
         }
     }
 
-    private fun reportNonExistingIssueId(project: Project?, id: String) {
+    private fun reportNonExistingIssueId(project: Project?, registry: IssueRegistry, id: String) {
         if (id == "MissingRegistered") {
             // Recently renamed to MissingClass, but avoid complaining about leftover
             // configuration
             return
         }
-        val message = "Unknown issue id \"$id\""
-        if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.LINT_ERROR)) {
+        val message = DefaultConfiguration.getUnknownIssueIdErrorMessage(id, registry)
+        if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.UNKNOWN_ISSUE_ID)) {
             val location = guessGradleLocation(this, project.dir, id)
             report(
                 this,
-                IssueRegistry.LINT_ERROR,
+                IssueRegistry.UNKNOWN_ISSUE_ID,
                 message,
                 driver,
                 project,
@@ -900,7 +900,7 @@ open class LintCliClient : LintClient {
                 LintFix.create().data(id)
             )
         } else {
-            log(Severity.ERROR, null, "Lint: %1\$s", message)
+            log(Severity.WARNING, null, "Lint: %1\$s", message)
         }
     }
 
@@ -966,14 +966,28 @@ open class LintCliClient : LintClient {
         val disabledCategories = flags.disabledCategories
         if (disabledCategories != null) {
             val category = issue.category
-            if (disabledCategories.contains(category) || category.parent != null && disabledCategories.contains(
-                    category.parent
-                )
+            if (disabledCategories.contains(category) || category.parent != null
+                && disabledCategories.contains(category.parent)
             ) {
                 return true
             }
         }
         return flags.suppressedIds.contains(issue.id)
+    }
+
+    /** Returns true if the given issue has been explicitly enabled  */
+    fun isExplicitlyEnabled(issue: Issue): Boolean {
+        val enabledCategories = flags.enabledCategories
+        if (enabledCategories != null) {
+            val category = issue.category
+            if (enabledCategories.contains(category) || category.parent != null
+                && enabledCategories.contains(category.parent)
+            ) {
+                return true
+            }
+        }
+
+        return flags.enabledIds.contains(issue.id)
     }
 
     fun createConfigurationFromFile(file: File): DefaultConfiguration {

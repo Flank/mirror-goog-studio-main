@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.profile;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
@@ -28,6 +29,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
+import com.android.tools.build.gradle.internal.profile.VariantApiArtifactType;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
@@ -142,6 +144,48 @@ public class AnalyticsUtilTest {
         }
     }
 
+    @Test
+    public void checkAllArtifactTypesHaveEnumValues() {
+        List<String> missingArtifactTypes =
+                kotlin.jvm.JvmClassMappingKt.getKotlinClass(ArtifactType.class).getNestedClasses()
+                        .stream()
+                        .map(kClazz -> kotlin.jvm.JvmClassMappingKt.getJavaClass(kClazz))
+                        .filter(
+                                clazz ->
+                                        mapsToUnknownProtoValue(
+                                                clazz, AnalyticsUtil::getVariantApiArtifactType))
+                        .map(clazz -> clazz.getSimpleName())
+                        .sorted()
+                        .collect(Collectors.toList());
+
+        if (missingArtifactTypes.isEmpty()) return;
+
+        displayMissingEnumValues(
+                ArtifactType.class, VariantApiArtifactType.getDescriptor(), missingArtifactTypes);
+    }
+
+    private <T, U extends ProtocolMessageEnum> void displayMissingEnumValues(
+            Class<T> itemClass, Descriptors.EnumDescriptor protoEnum, List<String> missingItems) {
+        int maxNumber = getMaxEnumNumber(protoEnum);
+
+        StringBuilder error =
+                new StringBuilder()
+                        .append("Some ")
+                        .append(itemClass.getSimpleName())
+                        .append(
+                                "s do not have corresponding logging proto enum values.\n"
+                                        + "See tools/analytics-library/protos/src/main/proto/"
+                                        + "analytics_enums.proto[")
+                        .append(protoEnum.getFullName())
+                        .append("].\n");
+
+        for (String className : missingItems) {
+            maxNumber++;
+            error.append("    ").append(className).append(" = ").append(maxNumber).append(";\n");
+        }
+        throw new AssertionError(error.toString());
+    }
+
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
             @NonNull Class<T> itemClass,
             @NonNull Function<Class<T>, U> mappingFunction,
@@ -172,19 +216,6 @@ public class AnalyticsUtilTest {
 
         Descriptors.EnumDescriptor protoEnum =
                 mappingFunction.apply(missingTasks.get(0)).getDescriptorForType();
-
-        int maxNumber = getMaxEnumNumber(protoEnum);
-
-        StringBuilder error =
-                new StringBuilder()
-                        .append("Some ")
-                        .append(itemClass.getSimpleName())
-                        .append(
-                                "s do not have corresponding logging proto enum values.\n"
-                                        + "See tools/analytics-library/protos/src/main/proto/"
-                                        + "analytics_enums.proto[")
-                        .append(protoEnum.getFullName())
-                        .append("].\n");
         List<String> suggestions =
                 missingTasks
                         .stream()
@@ -192,11 +223,7 @@ public class AnalyticsUtilTest {
                         .sorted()
                         .collect(Collectors.toList());
 
-        for (String className : suggestions) {
-            maxNumber++;
-            error.append("    ").append(className).append(" = ").append(maxNumber).append(";\n");
-        }
-        throw new AssertionError(error.toString());
+        displayMissingEnumValues(itemClass, protoEnum, suggestions);
     }
 
 

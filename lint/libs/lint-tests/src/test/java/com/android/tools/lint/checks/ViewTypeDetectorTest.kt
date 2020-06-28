@@ -270,6 +270,52 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
             .incremental("src/test/pkg/WrongCastActivity.java")
             .run()
             .expect(expected)
+            .expectFixDiffs("""
+                Fix for src/test/pkg/WrongCastActivity.java line 13: Cast to Button:
+                @@ -13 +13
+                -         ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                +         ToggleButton toggleButton = (Button) findViewById(R.id.button);
+                """
+            )
+    }
+
+    fun testQuickFix() {
+        lint().files(
+            casts,
+            rClass,
+            java("" +
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import android.app.Activity;\n" +
+                    "import android.os.Bundle;\n" +
+                    "import android.widget.ToggleButton;\n" +
+                    "\n" +
+                    "public class WrongCastActivity extends Activity {\n" +
+                    "    @Override\n" +
+                    "    public void onCreate(Bundle savedInstanceState) {\n" +
+                    "        super.onCreate(savedInstanceState);\n" +
+                    "        setContentView(R.layout.casts);\n" +
+                    "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
+                    "    }\n" +
+                    "}\n"))
+            .incremental("src/test/pkg/WrongCastActivity.java")
+            .run()
+            .expect(
+                """
+                src/test/pkg/WrongCastActivity.java:12: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]
+                        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    src/test/pkg/WrongCastActivity.java:12: Id bound to a Button in casts.xml
+                1 errors, 0 warnings
+                """
+            )
+            .expectFixDiffs("""
+                Fix for src/test/pkg/WrongCastActivity.java line 12: Cast to Button:
+                @@ -12 +12
+                -         ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                +         ToggleButton toggleButton = (android.widget.Button) findViewById(R.id.button);
+                """
+            )
     }
 
     fun test34968488() {

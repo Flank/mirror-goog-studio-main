@@ -1353,6 +1353,30 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
+    public void test62810553() {
+        // Regression test for https://issuetracker.google.com/62810553
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
+                                        + "    package=\"test.pkg\" >\n"
+                                        + "\n"
+                                        + "    <application>\n"
+                                        + "        <activity>\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <data android:scheme=\"myscheme\" android:pathPrefix=\"/path/to/there\"/> <!-- OK -->\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void test68322249() {
         // Regression test for https://issuetracker.google.com/issues/68322249
 

@@ -133,7 +133,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         sourceType: ArtifactTypeT,
         targetType: ArtifactTypeU,
         atLocation: String? = null
-    ): ArtifactTransformationRequest<TaskT>
+    ): ArtifactTransformationRequestImpl<TaskT>
             where
             ArtifactTypeT : SingleArtifact<Directory>,
             ArtifactTypeT : Artifact.ContainsMany,
@@ -153,7 +153,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         targetType: ArtifactTypeU,
         inputLocation: (TaskT) -> DirectoryProperty,
         outputLocation: (TaskT) -> DirectoryProperty
-    ): ArtifactTransformationRequestImpl<ArtifactTypeU, TaskT>
+    ): ArtifactTransformationRequestImpl<TaskT>
             where ArtifactTypeT : SingleArtifact<Directory>,
                   ArtifactTypeT : Artifact.ContainsMany,
                   ArtifactTypeU : SingleArtifact<Directory>,

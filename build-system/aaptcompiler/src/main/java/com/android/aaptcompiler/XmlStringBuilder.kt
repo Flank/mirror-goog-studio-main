@@ -242,33 +242,13 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     var untranslatables: List<UntranslatableSection> = untranslatableSections
     var text = textBuilder.toString()
     if (spans.isEmpty()) {
-      // If there were no spans, we treat this string a little differently (according to AAPT).
-      // We must strip the leading and trailing whitespace.
-      var firstChar = when (firstQuote) {
-        -1 -> {
-          var index = 0
-          val iterator = textBuilder.codePoints().iterator()
-          while (iterator.hasNext() && Character.isWhitespace(iterator.nextInt())) {
-            ++index
-          }
-          index
-        }
-        else -> firstQuote
-      }
+
+      var firstChar = getFirstChar()
       if (untranslatableSections.isNotEmpty()) {
         firstChar = min(firstChar, untranslatableSections.first().startIndex)
       }
 
-      var lastChar = when (lastQuote) {
-        -1 -> {
-          var index = text.length - 1
-          while (index > 0 && Character.isWhitespace(text.codePointAt(index))) {
-            --index
-          }
-          index+1
-        }
-        else -> lastQuote
-      }
+      var lastChar = getLastChar(text)
       if (untranslatableSections.isNotEmpty()) {
         lastChar = max(lastChar, untranslatableSections.last().endIndex)
       }
@@ -281,6 +261,52 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     val raw = rawStringBuilder.toString()
     return FlattenedXml(
         raw, StyleString(text, spans.toList()), untranslatables.toList(), error.isEmpty())
+  }
+
+  private fun getFirstChar(): Int {
+    // If there were no spans, we treat this string a little differently (according to AAPT).
+    // We must strip the leading and trailing whitespace.
+    if (firstQuote == -1) {
+      // If there are no quotes, just delete the whitespaces at the beginning of the string.
+      var index = 0
+      val iterator = textBuilder.codePoints().iterator()
+      while (iterator.hasNext() && Character.isWhitespace(iterator.nextInt())) {
+        ++index
+      }
+      return index
+    }
+    // If there are quotes we need to check if there are any non-whitespace characters before
+    // the quote. If there are any, the string should be preserved.
+    var index = 0
+    val iterator = textBuilder.codePoints().iterator()
+    while (iterator.hasNext() && index < firstQuote) {
+      if (!Character.isWhitespace(iterator.nextInt())) {
+        return 0
+      }
+      ++index
+    }
+    return firstQuote
+  }
+
+  private fun getLastChar(text: String): Int {
+    if (lastQuote == -1) {
+      // If we had no quotes then just trim the whitespace at the end of the string.
+      var index = text.length - 1
+      while (index > 0 && Character.isWhitespace(text.codePointAt(index))) {
+        --index
+      }
+      return index+1
+    }
+    // If we had quotes, only trim the string if there are exclusively whitespaces after the
+    // last quote.
+    var index = text.length -1
+    while (index >= lastQuote) {
+      if (!Character.isWhitespace(text.codePointAt(index))) {
+        return text.length
+      }
+      --index
+    }
+    return lastQuote
   }
 
   private fun appendUnicodeEscapeSequence(iter : Iterator<Int>, text: StringBuilder) : Boolean {

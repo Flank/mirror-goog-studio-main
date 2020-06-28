@@ -55,7 +55,8 @@ class L8DexDesugarLibTaskTest {
             bootClasspath,
             20,
             setOf(keepRulesFile1, keepRulesFile2),
-            null
+            null,
+            true
         )
         L8DexRunnable(params).run()
 

@@ -367,7 +367,7 @@ public class TestUtils {
     @NonNull
     public static Path getDesugarLibJar() {
         // the default version is the latest version
-        return getDesugarLibJarWithVersion("1.0.5");
+        return getDesugarLibJarWithVersion("1.0.9");
     }
 
     @NonNull
@@ -395,7 +395,7 @@ public class TestUtils {
     @NonNull
     public static String getDesugarLibConfigContent() throws IOException {
         // the default version is the latest version
-        return getDesugarLibConfigContentWithVersion("0.11.1");
+        return getDesugarLibConfigContentWithVersion("1.0.9");
     }
 
     @NonNull

@@ -19,6 +19,10 @@ package com.android.build.gradle.internal.cxx.settings
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.getBuildRootFolder
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getGenerator
@@ -36,7 +40,11 @@ import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFi
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.toJsonString
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 
@@ -105,9 +113,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 .getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getGenerator()).isEqualTo("Ninja")
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY)).isEqualTo(abi.soFolder.absolutePath)
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_CXX_FLAGS)).isEqualTo("-DCPP_FLAG_DEFINED")
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("Debug")
+            assertThat(variables.getCmakeProperty(CMAKE_LIBRARY_OUTPUT_DIRECTORY)).isEqualTo(abi.soFolder.absolutePath)
+            assertThat(variables.getCmakeProperty(CMAKE_CXX_FLAGS)).isEqualTo("-DCPP_FLAG_DEFINED")
+            assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("Debug")
         }
     }
 
@@ -125,10 +133,10 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getGenerator()).isEqualTo("some other generator")
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY)?.replace('\\', '/'))
+            assertThat(variables.getCmakeProperty(CMAKE_LIBRARY_OUTPUT_DIRECTORY)?.replace('\\', '/'))
                 .endsWith("MyProject/Source/Android/build/android/lib/Debug/x86")
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_CXX_FLAGS)).isEqualTo("-DTEST_CPP_FLAG")
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("MyCustomBuildType")
+            assertThat(variables.getCmakeProperty(CMAKE_CXX_FLAGS)).isEqualTo("-DTEST_CPP_FLAG")
+            assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("MyCustomBuildType")
         }
     }
 
@@ -145,7 +153,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("MinSizeRel")
+            assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("MinSizeRel")
         }
     }
 
@@ -155,7 +163,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             val variant = object : CxxVariantModel by variant {
                 override val buildSystemArgumentList =
                     listOf("-GPrecedenceCheckingGenerator",
-                        "-D${CmakeProperty.CMAKE_BUILD_TYPE}=PrecedenceCheckingBuildType",
+                        "-D$CMAKE_BUILD_TYPE=PrecedenceCheckingBuildType",
                         "-D${CmakeProperty.CMAKE_TOOLCHAIN_FILE}=PrecedenceCheckingToolchainFile")
             }
             val abi = createCxxAbiModel(
@@ -165,7 +173,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_BUILD_TYPE)).isEqualTo("PrecedenceCheckingBuildType")
+            assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("PrecedenceCheckingBuildType")
             assertThat(variables.getGenerator()).isEqualTo("PrecedenceCheckingGenerator")
             assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_TOOLCHAIN_FILE)).isEqualTo("PrecedenceCheckingToolchainFile")
         }
@@ -182,7 +190,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
         assertThat(commands2.getBuildRootFolder()).isNotNull()
 
         assertThat(File(commands1.getBuildRootFolder())).isNotEqualTo(File(commands2.getBuildRootFolder()))
-        assertThat(File(commands1.getBuildRootFolder()).parentFile).isEqualTo(File(commands2.getBuildRootFolder()).parentFile)
+        assertThat(File(commands1.getBuildRootFolder()).parentFile)
+            .named("Comparing parent folders of ${commands1.getBuildRootFolder()} and ${commands1.getBuildRootFolder()}")
+            .isEqualTo(File(commands2.getBuildRootFolder()).parentFile)
     }
 
     @Test
@@ -264,8 +274,10 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                     "buildRoot": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/build/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}",
                     "cmakeCommandArgs": "-DFULL_HASH=${NDK_FULL_CONFIGURATION_HASH.ref}",
                     "variables": [
-                        {"name": "${CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY}",
-                        "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/lib/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"}
+                        {"name": "$CMAKE_LIBRARY_OUTPUT_DIRECTORY",
+                         "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/lib/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"},
+                        {"name": "$CMAKE_RUNTIME_OUTPUT_DIRECTORY",
+                         "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/runtime/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"}
                     ]
                 }]
                 }""".trimIndent()

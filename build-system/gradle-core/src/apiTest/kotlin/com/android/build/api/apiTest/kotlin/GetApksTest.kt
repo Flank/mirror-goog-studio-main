@@ -17,8 +17,12 @@
 package com.android.build.api.apiTest.kotlin
 
 import com.android.build.api.apiTest.VariantApiBaseTest
+import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth
 import org.junit.Test
+import java.io.File
+import java.io.FileInputStream
+import java.util.zip.GZIPInputStream
 import kotlin.test.assertNotNull
 
 class GetApksTest: VariantApiBaseTest(TestType.Script) {
@@ -61,6 +65,7 @@ class GetApksTest: VariantApiBaseTest(TestType.Script) {
                 testingElements.addManifest( this)
             }
         }
+        withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
         withDocs {
             index =
                     // language=markdown
@@ -86,6 +91,13 @@ expected result : "Got an APK...." message.
             assertNotNull(this)
             Truth.assertThat(output).contains("Got an APK")
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            val androidProfile = File(super.testProjectDir.root, "${testName.methodName}/build/android-profile")
+            Truth.assertThat(androidProfile.exists()).isTrue()
+            val listFiles = androidProfile.listFiles().filter { it.name.endsWith(".json.gz") }
+            Truth.assertThat(listFiles.size).isEqualTo(1)
+            FileInputStream(listFiles[0]).use {
+                Truth.assertThat(String(GZIPInputStream(it).readBytes())).contains("traceEvents")
+            }
         }
     }
 }

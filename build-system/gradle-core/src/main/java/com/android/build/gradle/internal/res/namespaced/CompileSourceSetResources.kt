@@ -16,12 +16,12 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -30,13 +30,11 @@ import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -52,12 +50,6 @@ import java.nio.file.Path
  * The link step handles resource overlays.
  */
 abstract class CompileSourceSetResources : IncrementalTask() {
-    @get:Input
-    lateinit var aapt2Version: String
-        private set
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:SkipWhenEmpty
@@ -69,16 +61,14 @@ abstract class CompileSourceSetResources : IncrementalTask() {
     @get:Input
     var isPseudoLocalize: Boolean = false
         private set
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
     @get:OutputDirectory
     abstract val partialRDirectory: DirectoryProperty
-
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override val incremental: Boolean
         get() = true
@@ -169,17 +159,14 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         if (requests.isEmpty()) {
             return
         }
-        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven = aapt2FromMaven.singleFile,
-            logger = LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = aapt2.registerAaptService()
         for (request in requests) {
             workerFacade.submit(
                 Aapt2CompileRunnable::class.java,
                 Aapt2CompileRunnable.Params(
                     aapt2ServiceKey,
                     listOf(request),
-                    errorFormatMode
+                    aapt2.getErrorFormatMode()
                 )
             )
         }
@@ -223,18 +210,10 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             task.isPseudoLocalize =
                     creationConfig.variantDslInfo.isPseudoLocalesEnabled
 
-            val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
-
             task.dependsOn(creationConfig.taskContainer.resourceGenTask)
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.services.projectOptions
-            )
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
+
         }
     }
 }

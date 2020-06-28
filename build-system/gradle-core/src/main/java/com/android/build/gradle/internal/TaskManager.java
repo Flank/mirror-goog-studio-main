@@ -89,7 +89,6 @@ import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
@@ -642,11 +641,6 @@ public abstract class TaskManager<
                 "resolveConfigAttr", ConfigAttrTask.class, task -> task.resolvable = true);
         taskFactory.register(
                 "consumeConfigAttr", ConfigAttrTask.class, task -> task.consumable = true);
-
-        // This needs to be resolved before tasks evaluation since it does some configuration inside
-        // By resolving it here we avoid configuration problems. The value returned will be cached
-        // and returned immediately later when this method is invoked.
-        Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);
 
         createCoreLibraryDesugaringConfig(project);
     }

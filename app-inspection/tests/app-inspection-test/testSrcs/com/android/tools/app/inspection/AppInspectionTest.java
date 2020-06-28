@@ -270,6 +270,39 @@ public final class AppInspectionTest {
         }
     }
 
+    // TODO: b/159250979; Expand tests once it is correctly supported
+    @Test
+    public void exitHooksOverloadWork() throws Exception {
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group #1
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newHighPriorityGroup"); // High Priority Group
+
+        { // Group #1 enter
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
+        }
+
+        { // Group #1 exit
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
+        }
+
+        { // Group #2 exit
+            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
+        }
+
+        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
+    }
+
     @Test
     public void enterAndExitHooksWork() throws Exception {
         String inspectorId = "todo.inspector";

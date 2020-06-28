@@ -29,18 +29,18 @@ import com.android.SdkConstants.ATTR_SCHEME
 import com.android.SdkConstants.TAG_ACTION
 import com.android.SdkConstants.TAG_CATEGORY
 import com.android.SdkConstants.TAG_DATA
-import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.utils.XmlUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import org.w3c.dom.Element
 import org.w3c.dom.NamedNodeMap
+import java.util.TreeSet
 
 /**
  * Singleton with [expandNavGraphs] method, which returns an XmlDocument with the <nav-graph>
  * elements converted into the corresponding <intent-filter> elements
  */
-@VisibleForTesting
 object NavGraphExpander {
 
     /**
@@ -132,13 +132,21 @@ object NavGraphExpander {
             navigationXmlId: String,
             loadedNavigationMap: Map<String, NavigationXmlDocument>,
             mergingReportBuilder: MergingReport.Builder) {
+        val sourceFilePosition =
+            SourceFilePosition(xmlElement.document.sourceFile, xmlElement.position)
         val deepLinks = try {
-            findDeepLinks(navigationXmlId, loadedNavigationMap)
+            findDeepLinks(
+                navigationXmlId,
+                loadedNavigationMap,
+                mergingReportBuilder,
+                sourceFilePosition
+            )
         } catch (e: NavGraphException) {
             mergingReportBuilder.addMessage(
-                    SourceFilePosition(xmlElement.document.sourceFile, xmlElement.position),
-                    MergingReport.Record.Severity.ERROR,
-                    e.message ?: "Error finding deep links.")
+                sourceFilePosition,
+                MergingReport.Record.Severity.ERROR,
+                e.message ?: "Error finding deep links."
+            )
             return
         }
         val actionRecorder = mergingReportBuilder.actionRecorder
@@ -201,10 +209,19 @@ object NavGraphExpander {
     @VisibleForTesting
     @Throws(NavGraphException::class)
     fun findDeepLinks(
-            navigationXmlId: String,
-            loadedNavigationMap: Map<String, NavigationXmlDocument>): List<DeepLink> {
+        navigationXmlId: String,
+        loadedNavigationMap: Map<String, NavigationXmlDocument>,
+        mergingReportBuilder: MergingReport.Builder,
+        sourceFilePosition: SourceFilePosition
+    ): List<DeepLink> {
         val deepLinkList: MutableList<DeepLink> = mutableListOf()
-        findDeepLinks(navigationXmlId, loadedNavigationMap, deepLinkList, mutableMapOf(), hashSetOf())
+        findDeepLinks(
+            navigationXmlId,
+            loadedNavigationMap,
+            deepLinkList,
+            mergingReportBuilder,
+            sourceFilePosition
+        )
         return ImmutableList.copyOf(deepLinkList)
     }
 
@@ -216,17 +233,36 @@ object NavGraphExpander {
      */
     @Throws(NavGraphException::class)
     private fun findDeepLinks(
-            navigationXmlId: String,
-            loadedNavigationMap: Map<String, NavigationXmlDocument>,
-            deepLinkList: MutableList<DeepLink>,
-            deepLinkUriMap: MutableMap<String, DeepLink>,
-            visitedNavigationFiles: MutableSet<String>) {
-        // This method tracks visitedNavigationFiles to avoid an infinite loop caused by a
-        // circular reference among the navigation files.
-        if (!visitedNavigationFiles.add(navigationXmlId)) {
+        navigationXmlId: String,
+        loadedNavigationMap: Map<String, NavigationXmlDocument>,
+        deepLinkList: MutableList<DeepLink>,
+        mergingReportBuilder: MergingReport.Builder,
+        sourceFilePosition: SourceFilePosition,
+        deepLinkUriMap: MutableMap<String, DeepLink> = mutableMapOf(),
+        visitedNavigationFiles: MutableSet<String> = mutableSetOf(),
+        navigationFileAncestors: TreeSet<String> = sortedSetOf()
+    ) {
+        // Check for an infinite loop caused by a circular reference among the navigation files.
+        if (!navigationFileAncestors.add(navigationXmlId)) {
             throw NavGraphException(
-                    "Illegal circular reference among navigation files when traversing navigation" +
-                            " file references starting with navigationXmlId: $navigationXmlId")
+                "Illegal circular reference among navigation files when traversing navigation " +
+                        "file references: " +
+                        navigationFileAncestors.joinToString(separator = " > ") +
+                        " > $navigationXmlId."
+            )
+        }
+        // Warn if the same navigation file is added to the navigation graph multiple times.
+        if (!visitedNavigationFiles.add(navigationXmlId)) {
+            mergingReportBuilder.addMessage(
+                sourceFilePosition,
+                MergingReport.Record.Severity.WARNING,
+                "The navigation file with ID \"$navigationXmlId\" is included multiple times in " +
+                        "the navigation graph, but only deep links on the first instance will be " +
+                        "triggered at runtime. Consider consolidating these instances into a " +
+                        "single <include> at a higher level of your navigation graph hierarchy."
+            )
+            navigationFileAncestors.remove(navigationXmlId)
+            return
         }
         val navigationXmlDocument = loadedNavigationMap[navigationXmlId]
         navigationXmlDocument ?: throw NavGraphException(
@@ -243,12 +279,17 @@ object NavGraphExpander {
         }
         for (otherNavigationXmlId in navigationXmlDocument.navigationXmlIds) {
             findDeepLinks(
-                    otherNavigationXmlId,
-                    loadedNavigationMap,
-                    deepLinkList,
-                    deepLinkUriMap,
-                    visitedNavigationFiles)
+                otherNavigationXmlId,
+                loadedNavigationMap,
+                deepLinkList,
+                mergingReportBuilder,
+                sourceFilePosition,
+                deepLinkUriMap,
+                visitedNavigationFiles,
+                navigationFileAncestors
+            )
         }
+        navigationFileAncestors.remove(navigationXmlId)
     }
 
     private fun getDeepLinkUriBody(deepLink: DeepLink, includeQuery: Boolean): String {

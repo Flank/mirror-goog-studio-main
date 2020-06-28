@@ -186,14 +186,12 @@ public class CommentDetectorTest extends AbstractCheckTest {
     public void testXml() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=207168
         // StopShip doesn't work in XML
-        String expected =
-                ""
-                        + "res/layout/foo.xml:1: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
-                        + "<!-- STOPSHIP implement this first -->\n"
-                        + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
         lint().files(
+                        manifest(
+                                ""
+                                        + "<manifest>\n"
+                                        + "    <!-- STOPSHIP fail in manifest -->\n"
+                                        + "</manifest>"),
                         xml(
                                 "res/layout/foo.xml",
                                 ""
@@ -203,13 +201,25 @@ public class CommentDetectorTest extends AbstractCheckTest {
                                         + "    android:layout_height=\"0dip\"\n"
                                         + "    android:visibility=\"gone\" />"))
                 .run()
-                .expect(expected)
+                .expect(
+                        ""
+                                + "AndroidManifest.xml:2: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "    <!-- STOPSHIP fail in manifest -->\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/foo.xml:1: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "<!-- STOPSHIP implement this first -->\n"
+                                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings")
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/foo.xml line 0: Remove STOPSHIP:\n"
+                                + "Fix for AndroidManifest.xml line 2: Remove STOPSHIP:\n"
+                                + "@@ -2 +2\n"
+                                + "-     <!-- STOPSHIP fail in manifest -->\n"
+                                + "+     <!-- fail in manifest -->\n"
+                                + "Fix for res/layout/foo.xml line 1: Remove STOPSHIP:\n"
                                 + "@@ -1 +1\n"
                                 + "- <!-- STOPSHIP implement this first -->\n"
-                                + "+ <!-- implement this first -->\n");
+                                + "+ <!-- implement this first -->");
     }
 
     public void testNoStopShipInDebugVariant() {
@@ -301,5 +311,54 @@ public class CommentDetectorTest extends AbstractCheckTest {
                 .variant("release")
                 .run()
                 .expect(expected);
+    }
+
+    public void testGradle() {
+        // Test for
+        // 117485020: StopShip doesn't work in Gradle and AndroidManifest.xml
+        lint().files(
+                        gradle(
+                                        ""
+                                                + "dependencies {\n"
+                                                + "    // STOPSHIP replace this with stable version\n"
+                                                + "    implementation \"foo:bar:2.0-rc3\"\n"
+                                                + "}")
+                                .indented(),
+                        kts(""
+                                        + "plugins {\n"
+                                        + "    // STOPSHIP do something here\n"
+                                        + "  id(\"com.android.application\")\n"
+                                        + "  id(\"kotlin-android\")\n"
+                                        + "} // STOPSHIP")
+                                .indented())
+                .variant("release")
+                .run()
+                .expect(
+                        ""
+                                + "build.gradle:2: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "    // STOPSHIP replace this with stable version\n"
+                                + "       ~~~~~~~~\n"
+                                + "build.gradle.kts:2: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "    // STOPSHIP do something here\n"
+                                + "       ~~~~~~~~\n"
+                                + "build.gradle.kts:5: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "} // STOPSHIP\n"
+                                + "     ~~~~~~~~\n"
+                                + "3 errors, 0 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for build.gradle line 2: Remove STOPSHIP:\n"
+                                + "@@ -2 +2\n"
+                                + "-     // STOPSHIP replace this with stable version\n"
+                                + "+     //  replace this with stable version\n"
+                                + "Fix for build.gradle.kts line 2: Remove STOPSHIP:\n"
+                                + "@@ -2 +2\n"
+                                + "-     // STOPSHIP do something here\n"
+                                + "+     //  do something here\n"
+                                + "Fix for build.gradle.kts line 5: Remove STOPSHIP:\n"
+                                + "@@ -5 +5\n"
+                                + "- } // STOPSHIP\n"
+                                + "@@ -6 +5\n"
+                                + "+ } // ");
     }
 }

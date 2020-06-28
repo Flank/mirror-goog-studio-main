@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
@@ -111,11 +112,14 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
         return lintOptions;
     }
 
+    @Internal
+    public abstract Property<LintClassLoaderBuildService> getLintClassLoader();
+
     protected void runLint(LintBaseTaskDescriptor descriptor) {
         FileCollection lintClassPath = getLintClassPath();
         if (lintClassPath != null) {
-            new ReflectiveLintRunner().runLint(getProject().getGradle(),
-                    descriptor, lintClassPath.getFiles());
+            new ReflectiveLintRunner()
+                    .runLint(getLintClassLoader().get(), descriptor, lintClassPath.getFiles());
         }
     }
 
@@ -446,6 +450,11 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);
+            lintTask.getLintClassLoader()
+                    .set(
+                            BuildServicesKt.getBuildService(
+                                    lintTask.getProject().getGradle().getSharedServices(),
+                                    LintClassLoaderBuildService.class));
         }
     }
 }

@@ -56,6 +56,14 @@ public class AppInspectionService {
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
             new ConcurrentHashMap<>();
 
+    // TODO: b/159250979
+    // Special work around to support overloads and exit hooks
+    // currently our labels (keys in mExitTransforms)
+    // lose important information about parameters of methods.
+    // This set stores full information about instrumented methods
+    private final Set<String> mExitTransformsFullLabels =
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
+
     private CrashListener mCrashListener =
             new CrashListener() {
                 @Override
@@ -179,6 +187,10 @@ public class AppInspectionService {
         return origin.getCanonicalName() + method.substring(0, method.indexOf('('));
     }
 
+    private static String createFullLabel(Class origin, String method) {
+        return origin.getCanonicalName() + method;
+    }
+
     public static void addEntryHook(
             String inspectorId, Class origin, String method, EntryHook hook) {
         List<HookInfo<EntryHook>> hooks =
@@ -200,6 +212,10 @@ public class AppInspectionService {
             Class origin,
             String method,
             InspectorEnvironment.ExitHook<?> hook) {
+        if (sInstance.mExitTransformsFullLabels.add(createFullLabel(origin, method))) {
+            nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
+        }
+
         List<HookInfo<ExitHook>> hooks =
                 sInstance.mExitTransforms.computeIfAbsent(
                         createLabel(origin, method),
@@ -207,7 +223,6 @@ public class AppInspectionService {
 
                             @Override
                             public List<HookInfo<ExitHook>> apply(String key) {
-                                nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
                                 return new CopyOnWriteArrayList<>();
                             }
                         });
@@ -229,9 +244,16 @@ public class AppInspectionService {
         if (hooks == null) {
             return returnObject;
         }
+
+        // TODO: b/159250979, we currently do this deduplication, because
+        // hooks for different methods end up at the same place
+        // to avoid calling the same hook twice we add them to a set
+        Set<ExitHook> calledHooks = new HashSet<>();
         for (HookInfo<ExitHook> info : hooks) {
             //noinspection unchecked
-            returnObject = (T) info.hook.onExit(returnObject);
+            if (calledHooks.add(info.hook)) {
+                returnObject = (T) info.hook.onExit(returnObject);
+            }
         }
         return returnObject;
     }

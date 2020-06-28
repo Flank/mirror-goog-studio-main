@@ -27,7 +27,6 @@ import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
@@ -39,11 +38,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.SplitList
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAaptDaemon
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -55,7 +55,6 @@ import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.SymbolIo
@@ -75,6 +74,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -162,13 +162,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     private lateinit var type: VariantType
 
     @get:Input
-    lateinit var aapt2Version: String
-        private set
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
+    val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
 
     @get:Input
-    val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
+    abstract val resourceConfigs: SetProperty<String>
 
     @get:Input
     @get:Optional
@@ -219,11 +216,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var isNamespaced = false
         private set
 
-    @get:Nested
-    @get:Optional
-    lateinit var splitList: SplitList
-        private set
-
     @get:Input
     abstract val applicationId: Property<String>
 
@@ -256,15 +248,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val aarMetadataCheck: ConfigurableFileCollection
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private var compiledDependenciesResources: ArtifactCollection? = null
-
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override val incremental: Boolean
         get() = useStableIds
@@ -302,9 +292,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             sharedLibraryDependencies!!.files
         else
             emptySet()
-        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven.singleFile, LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = aapt2.registerAaptService()
 
         getWorkerFacadeWithWorkers().use {
             val variantOutputsList = variantOutputs.get()
@@ -327,7 +315,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     dependencies,
                     localResourcesFile.orNull?.asFile,
                     imports,
-                    splitList,
+                    resourceConfigs.get(),
                     featureResourcePackages,
                     true,
                     aapt2ServiceKey,
@@ -356,7 +344,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                             dependencies,
                             localResourcesFile.orNull?.asFile,
                             imports,
-                            splitList,
+                            resourceConfigs.get(),
                             featureResourcePackages,
                             false,
                             aapt2ServiceKey,
@@ -436,39 +424,17 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             preconditionsCheck(creationConfig)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
-
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
-            if (creationConfig.variantType.canHaveSplits) {
-                val splits = creationConfig.globalScope.extension.splits
 
-                val densitySet = if (splits.density.isEnable)
-                    ImmutableSet.copyOf(splits.densityFilters)
-                else
+            task.resourceConfigs.setDisallowChanges(
+                if (creationConfig.variantType.canHaveSplits) {
+                    creationConfig.resourceConfigurations
+                } else {
                     ImmutableSet.of()
-                val languageSet = if (splits.language.isEnable)
-                    ImmutableSet.copyOf(splits.languageFilters)
-                else
-                    ImmutableSet.of()
-                val abiSet = if (splits.abi.isEnable)
-                    ImmutableSet.copyOf(splits.abiFilters)
-                else
-                    ImmutableSet.of()
-                val resConfigSet = creationConfig.resourceConfigurations
-
-                task.splitList = SplitList(densitySet, languageSet, abiSet, resConfigSet)
-            } else {
-                task.splitList = SplitList(
-                    ImmutableSet.of(),
-                    ImmutableSet.of(),
-                    ImmutableSet.of(),
-                    ImmutableSet.of()
-                )
-            }
+                }
+            )
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
             task.packageName.setDisallowChanges(creationConfig.packageName)
@@ -521,16 +487,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.services.projectOptions
-            )
-
             task.manifestMergeBlameFile = creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
@@ -804,6 +764,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setEmitStableIdsFile(params.stableIdsOutputFile)
                         .setConsumeStableIdsFile(params.stableIdsInputFile)
                         .setLocalSymbolTableFile(params.localResourcesFile)
+                        .setMergeBlameDirectory(params.mergeBlameFolder)
+                        .setManifestMergeBlameFile(params.manifestMergeBlameFile)
 
                     if (params.isNamespaced) {
                         configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(params.dependencies))
@@ -819,23 +781,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         params.aapt2ServiceKey, "AAPT2 daemon manager service not initialized"
                     )
                     val logger = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
-                    try {
                         getAaptDaemon(params.aapt2ServiceKey!!).use { aaptDaemon ->
-
                             processResources(
-                                aaptDaemon,
-                                configBuilder.build(),
-                                params.rClassOutputJar,
-                                LoggerWrapper(logger)
-                            )
-                        }
-                    } catch (e: Aapt2Exception) {
-                        throw rewriteLinkException(
-                            e,
-                            params.errorFormatMode,
-                            params.mergeBlameFolder,
-                            params.manifestMergeBlameFile,
-                            logger
+                                aapt = aaptDaemon,
+                                aaptConfig = configBuilder.build(),
+                                rJar = params.rClassOutputJar,
+                                logger = logger,
+                                errorFormatMode = params.errorFormatMode
                         )
                     }
 
@@ -875,7 +827,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val dependencies: Set<File>,
         val localResourcesFile: File?,
         val imports: Set<File>,
-        splitList: SplitList,
+        val resourceConfigs: Set<String>,
         val featureResourcePackages: Set<File>,
         val generateCode: Boolean,
         val aapt2ServiceKey: Aapt2DaemonServiceKey?,
@@ -885,7 +837,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val stableIdsInputFile: File?,
         val aaptOptions: AaptOptions
     ) : Serializable {
-        val resourceConfigs: Set<String> = splitList.resourceConfigs
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
         val packageName: String = task.packageName.get()
@@ -907,7 +858,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
         val useMinimalKeepRules: Boolean = task.useMinimalKeepRules
         val useFinalIds: Boolean = task.useFinalIds
-        val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
+        val errorFormatMode: SyncOptions.ErrorFormatMode = task.aapt2.getErrorFormatMode()
         val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile
         val stableIdsOutputFile: File? = task.stableIdsOutputFileProperty.orNull?.asFile
     }
@@ -939,24 +890,5 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getCompiledDependenciesResources(): FileCollection? {
         return compiledDependenciesResources?.artifactFiles
-    }
-
-    /**
-     * Un-mangle a split name as created by the aapt tool to retrieve a split name as configured in
-     * the project's build.gradle.
-     *
-     *
-     * when dealing with several split language in a single split, each language (+ optional
-     * region) will be separated by an underscore.
-     *
-     *
-     * note that there is currently an aapt bug, remove the 'r' in the region so for instance,
-     * fr-rCA becomes fr-CA, temporarily put it back until it is fixed.
-     *
-     * @param splitWithOptionalSuffix the mangled split name.
-     */
-    private fun unMangleSplitName(splitWithOptionalSuffix: String): String {
-        val mangledName = splitWithOptionalSuffix.replace("_".toRegex(), ",")
-        return if (mangledName.contains("-r")) mangledName else mangledName.replace("-", "-r")
     }
 }

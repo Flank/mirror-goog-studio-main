@@ -47,6 +47,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -319,7 +320,8 @@ public class ButtonDetector extends ResourceXmlDetector {
                             context.getElementLocation(element),
                             "Buttons in button bars should be borderless; use "
                                     + "`style=\"?android:attr/buttonBarButtonStyle\"` (and "
-                                    + "`?android:attr/buttonBarStyle` on the parent)");
+                                    + "`?android:attr/buttonBarStyle` on the parent)",
+                            createBorderlessFix(context, element));
                 }
             }
 
@@ -670,6 +672,32 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
 
         return true;
+    }
+
+    private LintFix createBorderlessFix(XmlContext context, Element element) {
+        List<LintFix> fixes = new ArrayList<>();
+
+        Element parent = (Element) element.getParentNode();
+        String style = parent.getAttribute(ATTR_STYLE);
+        if (style.isEmpty()) {
+            fixes.add(
+                    fix().set(null, ATTR_STYLE, "?android:attr/buttonBarStyle")
+                            .range(context.getLocation(parent))
+                            .build());
+        }
+
+        // Ensure that all the children are buttons
+        for (Element button : Lint.getChildren(parent)) {
+            if (button.hasAttribute(ATTR_STYLE)) {
+                continue;
+            }
+            fixes.add(
+                    fix().set(null, ATTR_STYLE, "?android:attr/buttonBarButtonStyle")
+                            .range(context.getLocation(button))
+                            .build());
+        }
+
+        return fix().name("Make borderless").composite(fixes.toArray(new LintFix[0]));
     }
 
     /** Is the given button in the wrong position? */

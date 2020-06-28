@@ -175,10 +175,10 @@ coverage_report(
 coverage_report(
     name = "dsl",
     srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/gradle/dsl",
+        "tools/adt/idea/gradle-dsl/src/com/android/tools/idea/gradle/dsl",
     ],
     tests = [
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
     ],
 )
 
@@ -416,6 +416,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "upgrade-assistant",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/gradle/project/sync/setup/post/upgrade",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "validation",
     srcpath_exclude = [
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/analytics",
@@ -492,6 +502,7 @@ combine_report_definitions(
         "spliteditor",
         "systracev2",
         "templates",
+        "upgrade-assistant",
         "validation",
     ],
 )
@@ -528,6 +539,7 @@ coverage_report(
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
         "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
+        "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
         #TODO(b/116407505) too flaky for coverage runs
         #"//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",

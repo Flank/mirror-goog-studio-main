@@ -121,6 +121,7 @@ public class TestLintTask {
     EnumSet<Platform> platforms;
     boolean checkUInjectionHost = true;
     boolean useTestProject;
+    boolean allowExceptions;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -243,7 +244,8 @@ public class TestLintTask {
 
     /**
      * Sets whether the test task should silently ignore lint infrastructure errors (such as missing
-     * .class files etc)
+     * .class files etc). This does not include exceptions from lint detectors; for that, see {@link
+     * #allowExceptions}.
      *
      * @return this, for constructor chaining
      */
@@ -618,6 +620,16 @@ public class TestLintTask {
     }
 
     /**
+     * Normally lint unit tests will abort if an exception is found. You can allow exceptions (which
+     * will then be routed through lint's normal error trapping mechanism). This is primarily
+     * intended to test lint itself..
+     */
+    public TestLintTask allowExceptions(boolean allowExceptions) {
+        this.allowExceptions = allowExceptions;
+        return this;
+    }
+
+    /**
      * Normally resource repositories are only provided in incremental/single-file lint runs. This
      * method allows you to add support for this in the test.
      *
@@ -765,14 +777,16 @@ public class TestLintTask {
                 setForceUiInjection(false);
             }
 
-            Pair<String, List<Warning>> result = checkLint(rootDir, projectDirs);
+            TestLintClient lintClient = createClient();
+            Pair<String, List<Warning>> result = checkLint(lintClient, rootDir, projectDirs);
             String output = result.getFirst();
             List<Warning> warnings = result.getSecond();
 
             // Test both with and without UInjectionHost
             if (checkUInjectionHost && haveKotlinTestFiles()) {
                 setForceUiInjection(true);
-                Pair<String, List<Warning>> result2 = checkLint(rootDir, projectDirs);
+                Pair<String, List<Warning>> result2 =
+                        checkLint(createClient(), rootDir, projectDirs);
                 String output2 = result2.getFirst();
                 setForceUiInjection(false);
 
@@ -787,8 +801,8 @@ public class TestLintTask {
                         output2);
             }
 
-            return new TestLintResult(this, output, null, warnings);
-        } catch (Exception e) {
+            return new TestLintResult(this, output, lintClient.firstThrowable, warnings);
+        } catch (Throwable e) {
             return new TestLintResult(this, null, e, Collections.emptyList());
         } finally {
             if (rootDirectory == null) { // Only delete if we created it above
@@ -849,9 +863,9 @@ public class TestLintTask {
     }
 
     @NonNull
-    private Pair<String, List<Warning>> checkLint(@NonNull File rootDir, @NonNull List<File> files)
+    private Pair<String, List<Warning>> checkLint(
+            @NonNull TestLintClient lintClient, @NonNull File rootDir, @NonNull List<File> files)
             throws Exception {
-        TestLintClient lintClient = createClient();
         lintClient.addCleanupDir(rootDir);
         lintClient.setLintTask(this);
         try {

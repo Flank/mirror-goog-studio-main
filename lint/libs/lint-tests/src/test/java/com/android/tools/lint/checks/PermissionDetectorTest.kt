@@ -1232,4 +1232,146 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         "3 errors, 0 warnings"
             )
     }
+
+    fun testGms() {
+        // Regression test for some false positives found in g3 in the chromecast app sources
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="com.google.android.apps.chromecast.app"
+                    android:versionCode="990000002"
+                    android:versionName="DO.NOT.CHANGE" >
+                  <uses-sdk
+                      android:minSdkVersion="21"
+                      android:targetSdkVersion="28" />
+
+                  <permission android:name="com.google.android.apps.chromecast.app.permission.DISCOVER_DEVICES"
+                      android:protectionLevel="signature" />
+
+                  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+                  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+                  <uses-permission android:name="android.permission.CAMERA" />
+                  <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+                  <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+                  <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+                  <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+                  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+                  <uses-permission android:name="android.permission.INTERNET" />
+                  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+                  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+                  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                  <uses-permission android:name="android.permission.BLUETOOTH"/>
+                  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+                  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+                  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+                  <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+                  <uses-permission android:name="android.permission.CALL_PHONE" flag="e911_enabled_compile_time"/>
+                  <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+                </manifest>
+                """
+            ).indented(),
+            kotlin(
+                """
+                package com.google.android.apps.chromecast.app.widget.addressedit
+                import android.content.Context
+                import android.app.Fragment
+                import com.google.android.apps.chromecast.app.util.LocationUtil
+                import com.google.android.gms.maps.GoogleMap
+                class AddressMapFragment : Fragment() {
+                    private var googleMap: GoogleMap? = null
+                    fun requireContext(): Context {
+                        return this.context
+                            ?: throw IllegalStateException("Fragment $this not attached to a context.")
+                    }
+                    /** Enable my location if it is not already enabled. */
+                    fun enableMyLocation() {
+                        if (
+                            !LocationUtil.missingLocationPermissionOrServices(requireContext()) &&
+                            googleMap?.isMyLocationEnabled == false
+                        ) {
+                            try {
+                                googleMap?.isMyLocationEnabled = true
+                            } catch (exception: SecurityException) {
+                                //logger.at(Logger.WTF).withCause(exception).log("Unable to set my location enabled to true.")
+                            }
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.android.apps.chromecast.app.util;
+                import android.content.Context;
+                import android.location.LocationManager;
+                import android.os.Build;
+                import android.provider.Settings;
+                import android.Manifest.permission;
+                public class LocationUtil {
+                    public static boolean missingLocationPermissionOrServices(Context context) {
+                        return missingLocationPermission(context) || missingLocationServicesForScanning(context);
+                    }
+                    public static boolean missingLocationPermission(Context context) {
+                        return !PermissionUtil.permissionGranted(context, permission.ACCESS_FINE_LOCATION);
+                    }
+                    public static boolean missingLocationServicesForScanning(Context context) {
+                        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && missingLocationServices(context);
+                    }
+                    public static boolean missingLocationServices(Context context) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            LocationManager locationManager =
+                                    (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                            return locationManager == null || !locationManager.isLocationEnabled();
+                        } else {
+                            int locationMode = Settings.Secure.LOCATION_MODE_OFF;
+                            try {
+                                locationMode =
+                                        Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+                            } catch (Settings.SettingNotFoundException e) {
+                                //logger.atSevere().log("Location mode setting wasn't found");
+                            }
+                            return locationMode == Settings.Secure.LOCATION_MODE_OFF;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package com.google.android.apps.chromecast.app.util
+                import android.content.Context
+                import android.content.pm.PackageManager
+                object PermissionUtil {
+                    @JvmStatic fun permissionGranted(context: Context, permission: String): Boolean {
+                        //return androidx.core.content.ContextCompat.checkSelfPermission(context.applicationContext, permission) == PackageManager.PERMISSION_GRANTED
+                        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.android.gms.maps;
+                import android.Manifest;
+                import android.support.annotation.RequiresPermission;
+                public class GoogleMap {
+                    public final boolean isMyLocationEnabled() {
+                        return true;
+                    }
+                    @RequiresPermission(
+                            anyOf = {
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                            })
+                    public final void setMyLocationEnabled(boolean enabled) {
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

@@ -27,20 +27,22 @@ import java.util.zip.Deflater;
 
 public class ZipSource {
     public static final int COMPRESSION_NO_CHANGE = -2;
-    private final File file;
     private FileChannel channel;
     private ZipMap map;
 
     private final List<Source> selectedEntries = new ArrayList<>();
 
+    public ZipSource(ZipMap map) {
+        this.map = map;
+    }
+
     public ZipSource(@NonNull File file) throws IOException {
-        this.map = ZipMap.from(file, false);
-        this.file = file;
+        this(ZipMap.from(file, false));
     }
 
     @NonNull
-    public Source select(@NonNull String entryName, @NonNull String newName) {
-        return select(entryName, newName, COMPRESSION_NO_CHANGE);
+    public void select(@NonNull String entryName, @NonNull String newName) {
+        select(entryName, newName, COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT);
     }
 
     /**
@@ -59,15 +61,19 @@ public class ZipSource {
      * @return
      */
     @NonNull
-    public Source select(@NonNull String entryName, @NonNull String newName, int compressionLevel) {
+    public void select(
+            @NonNull String entryName,
+            @NonNull String newName,
+            int compressionLevel,
+            long alignment) {
         Entry entry = map.getEntries().get(entryName);
         if (entry == null) {
             throw new IllegalStateException(
                     String.format("Cannot find '%s' in archive '%s'", entryName, map.getFile()));
         }
-        Source entrySource = newZipSourceEntryFor(newName, entry, this, compressionLevel);
+        Source entrySource = newZipSourceEntryFor(newName, entry, compressionLevel);
+        entrySource.align(alignment);
         selectedEntries.add(entrySource);
-        return entrySource;
     }
 
     public Map<String, Entry> entries() {
@@ -77,13 +83,13 @@ public class ZipSource {
     public static ZipSource selectAll(@NonNull File file) throws IOException {
         ZipSource source = new ZipSource(file);
         for (Entry e : source.entries().values()) {
-            source.select(e.getName(), e.getName(), COMPRESSION_NO_CHANGE);
+            source.select(e.getName(), e.getName(), COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT);
         }
         return source;
     }
 
     void open() throws IOException {
-        channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+        channel = FileChannel.open(map.getFile().toPath(), StandardOpenOption.READ);
     }
 
     void close() throws IOException {
@@ -100,25 +106,26 @@ public class ZipSource {
         return selectedEntries;
     }
 
-    Source newZipSourceEntryFor(
-            String newName, Entry entry, ZipSource zipSource, int compressionLevel) {
-        // No change case.
+    @NonNull
+    private Source newZipSourceEntryFor(String newName, Entry entry, int compressionLevel) {
+
+        //    Source       Destination
+        //    ========================
+        //     X           NO_CHANGE   -> No changes
+        //     INFLATED    INFLATED    -> No changes
+        //     INFLATED    DEFLATED    -> Deflate
+        //     DEFLATED    INFLATED    -> Inflate
+        //     DEFLATED    DEFLATED    -> Inflate then Deflate
+
         if (compressionLevel == COMPRESSION_NO_CHANGE
-                || (compressionLevel == Deflater.NO_COMPRESSION && !entry.isCompressed())
-                || (compressionLevel != Deflater.NO_COMPRESSION && entry.isCompressed())) {
+                || (!entry.isCompressed() && compressionLevel == Deflater.NO_COMPRESSION)) {
             return new ZipSourceEntry(newName, entry, this);
         }
 
-        // The entry needs to be inflated.
-        if (compressionLevel == Deflater.NO_COMPRESSION) {
-            return new ZipSourceEntryInflater(newName, entry, zipSource);
-        }
-
-        // The entry needs to be deflated.
-        return new ZipSourceEntryDeflater(newName, entry, zipSource, compressionLevel);
+        return new ZipSourceEntryPipe(newName, entry, this, compressionLevel);
     }
 
     String getName() {
-        return file.getAbsolutePath();
+        return map.getFile().getAbsolutePath();
     }
 }

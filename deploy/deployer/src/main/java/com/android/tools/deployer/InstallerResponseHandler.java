@@ -24,9 +24,19 @@ import java.util.List;
 
 public class InstallerResponseHandler {
 
-    public void handle(SwapResponse response) throws DeployerException {
+    enum SuccessStatus {
+        OK, // Everything succeeded.
+        SWAP_FAILED_BUT_APP_UPDATED // Swap failed, but we're updating the app for a
+        // followup restart.
+    }
+
+    public SuccessStatus handle(SwapResponse response) throws DeployerException {
         if (response.getStatus() == SwapResponse.Status.OK) {
-            return;
+            return SuccessStatus.OK;
+        }
+
+        if (response.getStatus() == SwapResponse.Status.SWAP_FAILED_BUT_OVERLAY_UPDATED) {
+            return SuccessStatus.SWAP_FAILED_BUT_APP_UPDATED;
         }
 
         if (response.getStatus() == SwapResponse.Status.PROCESS_CRASHING) {
@@ -45,13 +55,13 @@ public class InstallerResponseHandler {
             throw DeployerException.swapFailed(response.getStatus());
         }
 
-        handleAgentFailures(response.getFailedAgentsList());
+        return handleAgentFailures(response.getFailedAgentsList());
     }
 
-    private void handleAgentFailures(List<AgentSwapResponse> failedAgents)
+    private SuccessStatus handleAgentFailures(List<AgentSwapResponse> failedAgents)
             throws DeployerException {
-        if (failedAgents.size() == 0) {
-            return;
+        if (failedAgents.isEmpty()) {
+            return SuccessStatus.OK;
         }
 
         // For now, just pick the first failed agent; multiple agent errors only occurs in multi-process apps.

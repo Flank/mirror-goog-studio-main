@@ -189,6 +189,21 @@ class Aapt2DaemonManager(
         }
     }
 
+    /** An AAPT2 daemon that uses this manager to lease a daemon on each invocation */
+    val leasingAapt2Daemon = object : Aapt2 {
+        override fun compile(request: CompileResourceRequest, logger: ILogger) {
+            leaseDaemon().use { it.compile(request, logger) }
+        }
+
+        override fun link(request: AaptPackageConfig, logger: ILogger) {
+            leaseDaemon().use { it.link(request, logger) }
+        }
+
+        override fun convert(request: AaptConvertConfig, logger: ILogger) {
+            leaseDaemon().use { it.convert(request, logger) }
+        }
+    }
+
     /**
      * This is intended to be used to schedule maintenance.
      *

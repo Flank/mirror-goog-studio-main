@@ -16,6 +16,9 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.ComponentProperties
+import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.InstrumentationParameters
+import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -25,7 +28,7 @@ import java.io.Serializable
  * Parent interface for all types of variants.
  */
 @Incubating
-interface VariantProperties: ComponentProperties {
+interface VariantProperties : ComponentProperties {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
@@ -81,4 +84,35 @@ interface VariantProperties: ComponentProperties {
      * @return the [MapProperty] with keys as [String]
      */
     val manifestPlaceholders: MapProperty<String, String>
+
+    /**
+     * Registers an asm class visitor to instrument the classes defined by the given scope.
+     * An instance of the factory will be instantiated and used to create visitors for each class.
+     *
+     * Example:
+     *
+     * ```
+     *  androidExtension.onVariantProperties {
+     *      transformClassesWith(AsmClassVisitorFactoryImpl.class,
+     *                           InstrumentationScope.Project) { params ->
+     *          params.x = "value"
+     *      }
+     *  }
+     * ```
+     *
+     * This API is experimental and subject to breaking change and we strongly suggest you don't publish
+     * plugins that depend on it yet.
+     *
+     * @param classVisitorFactoryImplClass the factory class implementing [AsmClassVisitorFactory]
+     * @param scope either instrumenting the classes of the current project or the project and its
+     * dependencies
+     * @param instrumentationParamsConfig the configuration function to be applied to the
+     * instantiated [InstrumentationParameters] object before passed to
+     * [AsmClassVisitorFactory.createClassVisitor].
+     */
+    fun <ParamT : InstrumentationParameters> transformClassesWith(
+        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
+        scope: InstrumentationScope,
+        instrumentationParamsConfig: (ParamT) -> Unit
+    )
 }

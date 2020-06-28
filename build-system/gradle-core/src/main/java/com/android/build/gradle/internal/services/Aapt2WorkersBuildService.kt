@@ -20,7 +20,6 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
-import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.Project
@@ -37,17 +36,17 @@ private const val AAPT2_WORKERS_BUILD_SERVICE_NAME = "aapt2-workers-build-servic
 
 val aapt2WorkersServiceRegistry = WorkerActionServiceRegistry()
 
-/** Build service used to access shared thread pool used for aapt2. */
+/** Build service used to access shared thread pool used for aapt2 using the worker facade. */
 abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.Params>,
     AutoCloseable {
     interface Params : BuildServiceParameters {
-        val aapt2ThreadPoolSize: Property<Int>
+        val aapt2ThreadPoolService: Property<Aapt2ThreadPoolBuildService>
     }
 
     /** Key to access the build service, and handle to close it when done. */
     private class WorkerServiceInfo(val key: Aapt2WorkersBuildServiceKey, val closeable: Closeable)
 
-    private val aapt2ThreadPool: ForkJoinPool = ForkJoinPool(parameters.aapt2ThreadPoolSize.get())
+    private val aapt2ThreadPool: ForkJoinPool = parameters.aapt2ThreadPoolService.get().aapt2ThreadPool
     private val serviceInfo = lazy { registerForWorkers() }
 
     @Synchronized
@@ -88,7 +87,6 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
 
     override fun close() {
         serviceInfo.value.closeable.close()
-        aapt2ThreadPool.shutdown()
     }
 
     class RegistrationAction(project: Project, projectOptions: ProjectOptions) :
@@ -96,14 +94,8 @@ abstract class Aapt2WorkersBuildService : BuildService<Aapt2WorkersBuildService.
             project,
             Aapt2WorkersBuildService::class.java
         ) {
-        private val aapt2ThreadPoolSize =
-            projectOptions.get(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?: Integer.min(
-                MAX_AAPT2_THREAD_POOL_SIZE,
-                ForkJoinPool.getCommonPoolParallelism()
-            )
-
         override fun configure(parameters: Params) {
-            parameters.aapt2ThreadPoolSize.set(aapt2ThreadPoolSize)
+            parameters.aapt2ThreadPoolService.set(getBuildService(project.gradle.sharedServices))
         }
     }
 }

@@ -652,7 +652,7 @@ public class MainTest extends AbstractCheckTest {
                                 ""
                                         + "<lint>\n"
                                         + "    <issue id=\"all\" severity=\"warning\" />\n"
-                                        + "    <issue id=\"LintError\" severity=\"error\" />\n"
+                                        + "    <issue id=\"UnknownIssueId\" severity=\"error\" />\n"
                                         + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
                                         + "    <issue id=\"IconLauncherFormat\">\n"
                                         + "        <ignore path=\"src/main/res/mipmap-anydpi-v26/ic_launcher.xml\" />\n"
@@ -665,7 +665,7 @@ public class MainTest extends AbstractCheckTest {
         checkDriver(
                 ""
                         + "Scanning MainTest_testInvalidLintXmlId: \n"
-                        + "MainTest_testInvalidLintXmlId: Error: Unknown issue id \"SomeUnknownId\", found in /TESTROOT/lint.xml [LintError]\n"
+                        + "lint.xml: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
                         + "1 errors, 0 warnings",
                 "",
 

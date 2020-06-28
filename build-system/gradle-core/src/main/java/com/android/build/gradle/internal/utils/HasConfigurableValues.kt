@@ -21,6 +21,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 
 fun ConfigurableFileCollection.fromDisallowChanges(vararg arg: Any) {
     from(*arg)
@@ -54,5 +55,15 @@ fun <K, V> MapProperty<K, V>.setDisallowChanges(map: Provider<Map<K,V>>?) {
 
 fun <K, V> MapProperty<K, V>.setDisallowChanges(map: Map<K,V>?) {
     set(map)
+    disallowChanges()
+}
+
+fun <T> SetProperty<T>.setDisallowChanges(value: Provider<out Iterable<T>>) {
+    set(value)
+    disallowChanges()
+}
+
+fun <T> SetProperty<T>.setDisallowChanges(value: Iterable<T>?) {
+    set(value)
     disallowChanges()
 }

@@ -65,13 +65,16 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.profile.RecordingBuildListener;
+import com.android.build.gradle.internal.res.Aapt2FromMaven;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
 import com.android.build.gradle.internal.utils.AgpVersionChecker;
@@ -306,14 +309,16 @@ public abstract class BasePlugin<
         new LibraryDependencyCacheBuildService.RegistrationAction(
                         project, mavenCoordinatesCacheBuildService)
                 .execute();
+        new LintClassLoaderBuildService.RegistrationAction(project).execute();
 
         extraModelInfo = new ExtraModelInfo(mavenCoordinatesCacheBuildService);
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
         IssueReporter issueReporter = projectServices.getIssueReporter();
 
+        new Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute();
         new Aapt2WorkersBuildService.RegistrationAction(project, projectOptions).execute();
-        new Aapt2DaemonBuildService.RegistrationAction(project).execute();
+        new Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute();
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
                         project, SyncOptions.getModelQueryMode(projectOptions))
                 .execute();
@@ -622,7 +627,8 @@ public abstract class BasePlugin<
 
         taskManager.createTasks(variantFactory.getVariantType(), buildFeatureValues);
 
-        new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
+        new DependencyConfigurator(
+                        project, project.getName(), globalScope, variantInputModel, projectServices)
                 .configureDependencySubstitutions()
                 .configureGeneralTransforms()
                 .configureVariantTransforms(variants, variantManager.getTestComponents());
@@ -837,6 +843,8 @@ public abstract class BasePlugin<
         DeprecationReporterImpl deprecationReporter =
                 new DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath);
 
+        Aapt2FromMaven aapt2FromMaven = Aapt2FromMaven.create(project, projectOptions);
+
         projectServices =
                 new ProjectServices(
                         syncIssueReporter,
@@ -847,6 +855,7 @@ public abstract class BasePlugin<
                         project.getLayout(),
                         projectOptions,
                         project.getGradle().getSharedServices(),
+                        aapt2FromMaven,
                         project::file);
     }
 }

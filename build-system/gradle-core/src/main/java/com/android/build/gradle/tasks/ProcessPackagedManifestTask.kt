@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.manifmerger.XmlDocument
 import com.android.utils.FileUtils
 import com.android.utils.PositionXmlParser
@@ -41,8 +43,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
 import java.io.File
@@ -79,8 +79,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
 
         transformationRequest.get().submit(this,
             workersProperty.get().noIsolation(),
-            WorkItem::class.java,
-            WorkItemParameters::class.java)
+            WorkItem::class.java)
             { builtArtifact: BuiltArtifact, directory: Directory, parameters: WorkItemParameters ->
                 parameters.inputXmlFile.set(File(builtArtifact.outputFile))
                 parameters.outputXmlFile.set(
@@ -92,14 +91,16 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
             }
     }
 
-    interface WorkItemParameters: WorkParameters, Serializable {
+    interface WorkItemParameters: DecoratedWorkParameters, Serializable {
         val inputXmlFile: RegularFileProperty
         val outputXmlFile: RegularFileProperty
     }
 
     abstract class WorkItem@Inject constructor(private val workItemParameters: WorkItemParameters)
-        : WorkAction<WorkItemParameters> {
-        override fun execute() {
+        : WorkActionAdapter<WorkItemParameters> {
+        override fun getParameters(): WorkItemParameters = workItemParameters
+
+        override fun doExecute() {
 
             val xmlDocument = BufferedInputStream(
                 FileInputStream(

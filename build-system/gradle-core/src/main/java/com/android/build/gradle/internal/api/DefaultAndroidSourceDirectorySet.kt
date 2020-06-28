@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.api
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import groovy.lang.Closure
@@ -81,14 +80,13 @@ class DefaultAndroidSourceDirectorySet(
 
     override fun getSourceDirectoryTrees(): List<ConfigurableFileTree> {
         return source.stream()
-                .map { sourceDir ->
-                    project.fileTree(
-                            ImmutableMap.of(
-                                    "dir", sourceDir,
-                                    "includes", includes,
-                                    "excludes", excludes))
+            .map { sourceDir ->
+                project.fileTree(sourceDir) {
+                    it.include(filter.asIncludeSpec)
+                    it.exclude(filter.asExcludeSpec)
                 }
-                .collect(ImmutableList.toImmutableList())
+            }
+            .collect(ImmutableList.toImmutableList())
     }
 
     override val srcDirs: Set<File>

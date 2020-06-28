@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.api.artifact.impl
+package com.android.build.api.instrumentation
 
-import org.gradle.workers.WorkQueue
+import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.objectweb.asm.ClassVisitor
+import java.io.Serializable
 
 /**
- * Facade object for a [WorkQueue] that remembers the task and project it was created in.
- *
- * The information will be used to provide task and work items profiling information.
+ * Instrumentation context data that will be injected to [AsmClassVisitorFactory] on instantiation.
  */
-class ProfilerEnabledWorkQueue(
-    val projectName: String,
-    val taskName: String,
-    private val workQueue: WorkQueue): WorkQueue by workQueue {
+@Incubating
+interface InstrumentationContext : Serializable {
+    /**
+     * The asm api version to be passed to the [ClassVisitor] constructor.
+     */
+    @get:Input
+    val apiVersion: Property<Int>
 }

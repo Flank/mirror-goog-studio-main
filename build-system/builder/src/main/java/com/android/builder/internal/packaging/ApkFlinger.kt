@@ -24,6 +24,7 @@ import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.android.zipflinger.BytesSource
+import com.android.zipflinger.Source
 import com.android.zipflinger.StableArchive
 import com.android.zipflinger.SynchronizedArchive
 import com.android.zipflinger.Zip64
@@ -162,15 +163,12 @@ class ApkFlinger(
             if (name.contains("../")) {
                 throw InvalidPathException(name, "Entry name contains invalid characters")
             }
-            val zipSourceEntry = zipSource.select(entry.name, name)
-            if (!entry.isCompressed) {
-                if (pageAlignPredicate.apply(name)) {
-                    zipSourceEntry.align(PAGE_ALIGNMENT)
-                } else {
-                    // by default all uncompressed entries are aligned at 4 byte boundaries.
-                    zipSourceEntry.align(DEFAULT_ALIGNMENT)
-                }
+            val alignment = when {
+                !entry.isCompressed && pageAlignPredicate.apply(name) -> PAGE_ALIGNMENT
+                !entry.isCompressed -> DEFAULT_ALIGNMENT
+                else -> Source.NO_ALIGNMENT
             }
+            zipSource.select(entry.name, name, ZipSource.COMPRESSION_NO_CHANGE, alignment)
         }
         archive.add(zipSource)
     }

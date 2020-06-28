@@ -20,11 +20,13 @@ import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.ide.common.process.BaseProcessOutputHandler
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.DefaultProcessExecutor
@@ -32,16 +34,13 @@ import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
 import com.android.utils.LineCollector
 import com.android.utils.StdLogger
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -49,11 +48,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.IOException
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -69,8 +64,8 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputProcessedRes: DirectoryProperty
 
-    @get:Internal
-    abstract val aapt2Executable: ConfigurableFileCollection
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     @get:Input
     abstract val enableResourceObfuscation: Property<Boolean>
@@ -89,8 +84,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         transformationRequest.get().submit(
                 this,
                 workerExecutor.noIsolation(),
-                Aapt2OptimizeWorkAction::class.java,
-                OptimizeResourcesParams::class.java
+                Aapt2OptimizeWorkAction::class.java
         ) { builtArtifact, outputLocation: Directory, parameters ->
             val variantOutput = variantOutputs.get().find {
                 it.variantOutputConfiguration.outputType == builtArtifact.outputType
@@ -98,7 +92,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
             } ?: throw java.lang.RuntimeException("Cannot find variant output for $builtArtifact")
 
             parameters.inputResFile.set(File(builtArtifact.outputFile))
-            parameters.aapt2Executable.set(aapt2Executable.singleFile)
+            parameters.aapt2Executable.set(aapt2.getAapt2Executable().toFile())
             parameters.enableResourceObfuscation.set(enableResourceObfuscation.get())
             parameters.outputResFile.set(File(outputLocation.asFile,
                     "resources-${variantOutput.baseName}-optimize${SdkConstants.DOT_RES}"))
@@ -107,7 +101,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         }
     }
 
-    interface OptimizeResourcesParams : WorkParameters, Serializable {
+    interface OptimizeResourcesParams : DecoratedWorkParameters, Serializable {
         val aapt2Executable: RegularFileProperty
         val inputResFile: RegularFileProperty
         val enableResourceObfuscation: Property<Boolean>
@@ -115,8 +109,8 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
     }
 
     abstract class Aapt2OptimizeWorkAction
-    @Inject constructor(private val params: OptimizeResourcesParams) : WorkAction<OptimizeResourcesParams> {
-        override fun execute() = doFullTaskAction(params)
+    @Inject constructor(private val params: OptimizeResourcesParams) : WorkActionAdapter<OptimizeResourcesParams> {
+        override fun doExecute() = doFullTaskAction(params)
     }
 
     class CreateAction(
@@ -152,8 +146,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
             super.configure(task)
             val enabledVariantOutputs = creationConfig.outputs.getEnabledVariantOutputs()
 
-            task.aapt2Executable.fromDisallowChanges(
-                    getAapt2FromMavenAndVersion(creationConfig.globalScope).first)
+            creationConfig.services.initializeAapt2Input(task.aapt2)
 
             task.enableResourceObfuscation.setDisallowChanges(false)
 
@@ -209,11 +202,7 @@ internal fun doFullTaskAction(params: OptimizeResourcesTask.OptimizeResourcesPar
     }
 }
 
-internal fun invokeAapt(aapt2Executable: File, vararg args: String): List<String> {
-    if (!aapt2Executable.isDirectory) {
-        throw IllegalArgumentException("aapt2Executable must be contained in a directory.")
-    }
-    val aapt2 = File(aapt2Executable, SdkConstants.FN_AAPT2)
+internal fun invokeAapt(aapt2: File, vararg args: String): List<String> {
     val processOutputHeader = CachedProcessOutputHandler()
     val processInfoBuilder = ProcessInfoBuilder()
             .setExecutable(aapt2)

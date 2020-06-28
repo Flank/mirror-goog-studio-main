@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.editDistance
 import com.google.common.annotations.Beta
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
@@ -275,6 +276,46 @@ protected constructor() {
         return map[id]
     }
 
+    /**
+     * Given an issue id for an unknown issue, return any issues that appear to be
+     * spelled similarly.
+     */
+    fun getIdSpellingSuggestions(id: String): List<String> {
+        val maxDistance = if (id.length >= 4) 2 else 1
+
+        val matches = mutableSetOf<String>()
+
+        // Look for case insensitive matches
+
+        for (issue in issues) {
+            val matchWith = issue.id
+            val distance = editDistance(id, matchWith, maxDistance)
+            if (distance <= maxDistance) {
+                matches.add(matchWith)
+            }
+            if (matchWith.equals(id, ignoreCase = true)) {
+                matches.add(matchWith)
+            }
+        }
+
+        // If no matches, look for containment. This will catch cases where for example
+        // an id is namespaced and you didn't supply that namespace or vice versa.
+        if (matches.isEmpty()) {
+            for (issue in issues) {
+                val matchWith = issue.id
+                if (matchWith.contains(id) || id.contains(matchWith)) {
+                    matches.add(matchWith)
+                }
+            }
+        }
+
+        if (matches.isEmpty()) {
+            return emptyList()
+        }
+
+        return matches.asSequence().sorted().toList()
+    }
+
     private fun createIdToIssueMap(): Map<String, Issue> {
         val issues = issues
         val map = Maps.newHashMapWithExpectedSize<String, Issue>(issues.size + 2)
@@ -285,6 +326,7 @@ protected constructor() {
         map[PARSER_ERROR.id] = PARSER_ERROR
         map[LINT_ERROR.id] = LINT_ERROR
         map[BASELINE.id] = BASELINE
+        map[UNKNOWN_ISSUE_ID.id] = UNKNOWN_ISSUE_ID
         map[OBSOLETE_LINT_CHECK.id] = OBSOLETE_LINT_CHECK
         return map
     }
@@ -369,6 +411,24 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
+            implementation = DUMMY_IMPLEMENTATION
+        )
+
+        /**
+         * Lint is configured with references to an issue id that it does not recognize.
+         */
+        @JvmField
+        val UNKNOWN_ISSUE_ID = Issue.create(
+            id = "UnknownIssueId",
+            briefDescription = "Unknown Lint Issue Id",
+            explanation =
+                """
+                Lint will report this issue if it is configured with an issue id it does \
+                not recognize in for example Gradle files or `lint.xml` configuration files.
+                """,
+            category = Category.LINT,
+            priority = 1,
+            severity = Severity.WARNING,
             implementation = DUMMY_IMPLEMENTATION
         )
 

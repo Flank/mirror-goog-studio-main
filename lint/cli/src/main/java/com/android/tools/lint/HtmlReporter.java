@@ -1051,7 +1051,9 @@ public class HtmlReporter extends Reporter {
                     continue;
                 }
 
-                if (!issue.isEnabledByDefault() && !client.isAllEnabled()) {
+                if (!issue.isEnabledByDefault()
+                        && !client.isAllEnabled()
+                        && !client.isExplicitlyEnabled(issue)) {
                     map.put(issue, "Default");
                     continue;
                 }

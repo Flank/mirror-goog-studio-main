@@ -35,9 +35,12 @@
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
+        <CLASSES />
+        <JAVADOC />
         <NATIVE>
           <root url="file://$MODULE_DIR$/../../../bazel-bin/tools/base/dynamic-layout-inspector" />
         </NATIVE>
+        <SOURCES />
       </library>
     </orderEntry>
   </component>

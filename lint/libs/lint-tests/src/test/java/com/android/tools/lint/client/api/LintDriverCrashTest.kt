@@ -53,6 +53,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             )
         )
             .allowSystemErrors(true)
+            .allowExceptions(true)
             .issues(CrashingDetector.CRASHING_ISSUE)
             .run()
             // Checking for manual substrings instead of doing an actual equals check
@@ -89,6 +90,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             )
         )
             .allowSystemErrors(true)
+            .allowExceptions(true)
             .issues(LinkageErrorDetector.LINKAGE_ERROR)
             .run()
             .expect(
@@ -108,6 +110,33 @@ class LintDriverCrashTest : AbstractCheckTest() {
                     1 errors, 0 warnings"""
             )
         LintDriver.clearCrashCount()
+    }
+
+    fun testUnitTestErrors() {
+        // Regression test for https://issuetracker.google.com/74058591
+        // Make sure the test itself fails with an error, not just an exception pretty printed
+        // into the output as used to be the case
+        try {
+            lint().files(
+                java(
+                    """
+                        package test.pkg;
+                        @SuppressWarnings("ALL") class Foo {
+                        }
+                        """
+                )
+            )
+                .allowSystemErrors(true)
+                .issues(LinkageErrorDetector.LINKAGE_ERROR)
+                .run()
+                .expect(
+                    "<doesn't matter, we shouldn't get this far>"
+                )
+            fail("Expected LinkageError to be thrown")
+        } catch (e: LinkageError) {
+            // OK
+            LintDriver.clearCrashCount()
+        }
     }
 
     override fun getIssues(): List<Issue> = listOf(

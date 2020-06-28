@@ -17,9 +17,10 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -143,10 +144,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             .also { Files.createDirectory(it) }
         val requestList = ArrayList<CompileResourceRequest>()
         val aapt2ServiceKey: Aapt2DaemonServiceKey =
-            parameters.aapt2DaemonBuildService.get().registerAaptService(
-                parameters.aapt2FromMaven.singleFile,
-                LoggerWrapper.getLogger(this::class.java)
-            )
+            parameters.aapt2.registerAaptService()
 
         // Read the symbol tables from this AAR and the dependencies to enable the namespaced
         // rewriter to resolve symbols.
@@ -245,7 +243,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             Aapt2CompileRunnable.Params(
                 aapt2ServiceKey,
                 requestList,
-                parameters.errorFormatMode.get()
+                parameters.aapt2.getErrorFormatMode()  // TODO(b/152323103) this should be implicit
             )
         ).run()
 
@@ -295,7 +293,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             Aapt2LinkRunnable.Params(
                 aapt2ServiceKey,
                 request,
-                parameters.errorFormatMode.get()
+                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
             )
         ).run()
 

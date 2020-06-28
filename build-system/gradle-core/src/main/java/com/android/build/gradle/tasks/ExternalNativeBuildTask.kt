@@ -287,6 +287,7 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
                     // Dependencies within the same project will also show up as runtimeFiles, and
                     // will have the same source and destination. Can skip those.
                     if (!FileUtils.isSameFile(runtimeFile, dest)) {
+                        infoln("copying runtime file $runtimeFile to $dest")
                         Files.copy(runtimeFile, dest)
                     }
                 }

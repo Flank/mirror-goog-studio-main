@@ -1,5 +1,5 @@
 # This file is a modified version of the default image provided by RBE team.
-# Please see https://foundry-windows-internal.googlesource.com/dev/+/93e4aeb5a2be7428e53e8beb60275737654d7ab1/docker/Dockerfile
+# Please see https://foundry-windows-internal.googlesource.com/dev/+/master/docker/Dockerfile
 # for original file.
 
 # This Dockerfile creates an image that:
@@ -11,13 +11,17 @@
 
 # Use the latest Windows Server Core image.
 #
-# WARNING: What's the `:1803` about? There are two versions of Windows Server
-# 2016: a "regular" one (corresponding to `microsoft/windowsservercore`) is on
-# a slow release cadence, and a fast release cadence one (corresponding to
-# `microsoft/windowsservercore:1803`). If you chose a different image than
-# described above, probably omit the `:1803` or change it to a different
-# number.
-FROM microsoft/windowsservercore:1803
+# WARNING: What's the `:ltsc2019` about?
+# There are two versions of Windows Server 2019:
+# 1. A "regular" one (corresponding to `mcr.microsoft.com/windows/servercore:ltsc2019`)
+# is on a slow release cadence and is the Long-Term Servicing Channel.
+# Mainstream support for this image will end on 1/9/2024.
+# 2. A "fast" release cadence one (corresponding to
+# `mcr.microsoft.com/windows/servercore:1909`) is the Semi-Annual Channel.
+# Mainstream support for this image will end on 5/11/2021.
+
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+
 SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; $VerbosePreference = 'Continue';"]
 
 # TODO(b/112379377): Workaround until bug is fixed.
@@ -72,9 +76,6 @@ RUN Start-Process msys2 -ArgumentList 'pacman-key --init' -Wait
 # TODO: If you don't run this then the next command can't succeed since it needs to prompt to remove catgets.
 RUN pacman --noconfirm -R libcatgets catgets
 
-# Bazel documentation says to use -Syuu but this doesn't work in Docker. See
-# http://g/foundry-windows/PDMVXbGew7Y
-RUN pacman --noconfirm -Syy git curl zip unzip
 RUN \
   Add-Type -AssemblyName \"System.IO.Compression.FileSystem\"; \
   $zulu_url = \"https://cdn.azul.com/zulu/bin/zulu8.28.0.1-jdk8.0.163-win_x64.zip\"; \
@@ -92,6 +93,9 @@ RUN \
 
 # Set Android Studio Custom environment Variable
 ENV STUDIO_IMAGE=true
+
+run reg add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1
+run reg add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem /t REG_DWORD /f /v LongPathsEnabled /d 1
 
 # Restore default shell for Windows containers.
 SHELL ["cmd.exe", "/s", "/c"]

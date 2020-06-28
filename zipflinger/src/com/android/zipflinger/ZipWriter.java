@@ -43,22 +43,22 @@ class ZipWriter implements Closeable {
         channel.close();
     }
 
-    public void truncate(long size) throws IOException {
+    void truncate(long size) throws IOException {
         ensureOpen();
         channel.truncate(size);
     }
 
-    public void position(long position) throws IOException {
+    void position(long position) throws IOException {
         ensureOpen();
         channel.position(position);
     }
 
-    public long position() throws IOException {
+    long position() throws IOException {
         ensureOpen();
         return channel.position();
     }
 
-    public int write(@NonNull ByteBuffer buffer, long position) throws IOException {
+    int write(@NonNull ByteBuffer buffer, long position) throws IOException {
         ensureOpen();
         return channel.write(buffer, position);
     }

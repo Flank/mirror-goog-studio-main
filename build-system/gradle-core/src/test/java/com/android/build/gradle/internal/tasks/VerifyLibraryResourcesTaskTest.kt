@@ -16,27 +16,26 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.res.ResourceCompilerRunnable
-import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.AsyncResourceProcessor
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
 import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableInputChanges
+import com.android.builder.internal.aapt.AaptConvertConfig
+import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
+import com.android.utils.ILogger
 import com.google.common.io.Files
-import com.google.common.truth.Truth.assertThat
+import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito.mock
 import java.io.File
-import java.io.Serializable
 
 /*
  * Unit tests for {@link VerifyLibraryResourcesTask}.
@@ -46,24 +45,19 @@ class VerifyLibraryResourcesTaskTest {
     @get: Rule
     val temporaryFolder = TemporaryFolder()
 
-    object Facade : WorkerExecutorFacade {
-        override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
-            assertThat(actionClass).isIn(
-              listOf(Aapt2CompileRunnable::class.java, ResourceCompilerRunnable::class.java))
-            if (actionClass == Aapt2CompileRunnable::class.java) {
-                parameter as Aapt2CompileRunnable.Params
-                for (request in parameter.requests) {
-                    Files.copy(request.inputFile, compileOutputFor(request))
-                }
-            } else {
-                parameter as ResourceCompilerRunnable.Params
-                Files.copy(parameter.request.inputFile, compileOutputFor(parameter.request))
-            }
+
+    object TestAapt2: Aapt2 {
+        override fun compile(request: CompileResourceRequest, logger: ILogger) {
+            Files.copy(request.inputFile, compileOutputFor(request))
         }
 
-        override fun await() {}
+        override fun link(request: AaptPackageConfig, logger: ILogger) {
+            throw UnsupportedOperationException()
+        }
 
-        override fun close() {}
+        override fun convert(request: AaptConvertConfig, logger: ILogger) {
+            throw UnsupportedOperationException()
+        }
 
         fun compileOutputFor(request: CompileResourceRequest): File {
             return File(request.outputDirectory, request.inputFile.name + "-c")
@@ -96,20 +90,25 @@ class VerifyLibraryResourcesTaskTest {
 
         val outputDir = temporaryFolder.newFolder("output")
 
-        VerifyLibraryResourcesTask.compileResources(
-            SerializableInputChanges(listOf(mergedDir), inputs),
-            outputDir,
-            Facade,
-            mock(Aapt2DaemonServiceKey::class.java),
-            SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-            temporaryFolder.newFolder(),
-            false
+        val processor = AsyncResourceProcessor<Aapt2>(
+            projectName = "testProject",
+            owner = "verifyTask",
+            executor = MoreExecutors.newDirectExecutorService(),
+            service = TestAapt2,
+            errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
         )
 
-        val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
+        VerifyLibraryResourcesTask.compileResources(
+            inputs = SerializableInputChanges(roots = listOf(mergedDir), changes = inputs),
+            outDirectory = outputDir,
+            asyncResourceProcessor = processor,
+            mergeBlameFolder = temporaryFolder.newFolder()
+        )
+
+        val fileOut = TestAapt2.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
         assertTrue(fileOut.exists())
 
-        val dirOut = Facade.compileOutputFor(
+        val dirOut = TestAapt2.compileOutputFor(
                 CompileResourceRequest(invalidFile, outputDir, mergedDir.name))
         assertFalse(dirOut.exists())
     }

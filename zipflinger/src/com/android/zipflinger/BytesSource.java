@@ -29,9 +29,6 @@ public class BytesSource extends Source {
     // Bytes to be written in the zip, after the Local File Header.
     private ByteBuffer zipEntryPayload;
 
-    // Bytes as there were provided to this class (before compression if any).
-    private ByteBuffer byteBuffer;
-
     /**
      * @param bytes
      * @param name
@@ -72,7 +69,6 @@ public class BytesSource extends Source {
     }
 
     private void build(byte[] bytes, int size, int compressionLevel) throws IOException {
-        byteBuffer = ByteBuffer.wrap(bytes, 0, size);
         crc = Crc32.crc32(bytes, 0, size);
         uncompressedSize = size;
         if (compressionLevel == Deflater.NO_COMPRESSION) {
@@ -84,11 +80,6 @@ public class BytesSource extends Source {
             compressedSize = zipEntryPayload.limit();
             compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
-    }
-
-    @NonNull
-    public ByteBuffer getBuffer() {
-        return byteBuffer;
     }
 
     @Override

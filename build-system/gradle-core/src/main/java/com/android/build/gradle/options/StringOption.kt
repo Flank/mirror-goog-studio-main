@@ -76,7 +76,8 @@ enum class StringOption(
     // Jetifier: List of regular expressions for libraries that should not be jetified
     @Suppress("WrongTerminology")
     @Deprecated(message = "Use JETIFIER_IGNORE_LIST instead", replaceWith = ReplaceWith("JETIFIER_IGNORE_LIST"))
-    JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
+    JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Deprecated(DeprecationReporter.DeprecationTarget.JETIFIER_IGNORE_LIST)),
+
     // Jetifier: List of regular expressions for libraries that should not be jetified
     JETIFIER_IGNORE_LIST("android.jetifier.ignorelist", ApiStage.Experimental),
 

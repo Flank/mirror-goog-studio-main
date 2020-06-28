@@ -496,7 +496,7 @@ public class DeployerException extends Exception {
         String suffix = code != Deploy.AgentSwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
         return new DeployerException(Error.AGENT_SWAP_FAILED, code, new String[] {suffix}, "");
     }
-    
+
     public static DeployerException appIdChanged(String before, String after) {
         return new DeployerException(
                 Error.PREINSTALL_APPID_CHANGED, new String[] {before, after}, "");

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.tasks.LintBaseTask.LINT_CLASS_PATH
 import com.android.repository.Revision
 import com.android.tools.lint.gradle.api.LintExecutionRequest
@@ -33,6 +34,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -47,7 +49,7 @@ import java.io.IOException
  * Task for running lint <b>without</b> the Android Gradle plugin, such as in a pure Kotlin
  * project.
  */
-open class LintStandaloneTask : DefaultTask() {
+abstract class LintStandaloneTask : DefaultTask() {
     @get:OutputDirectory
     var reportDir: File? = null
 
@@ -63,6 +65,9 @@ open class LintStandaloneTask : DefaultTask() {
 
     @get:Input
     var autoFix: Boolean = false
+
+    @get:Internal
+    abstract val lintClassLoader: Property<LintClassLoaderBuildService>
 
     /** This resolves the dependency of the lintChecks configuration */
     private fun computeLocalChecks(): FileCollection {
@@ -119,6 +124,6 @@ open class LintStandaloneTask : DefaultTask() {
             override val toolingRegistry: ToolingModelBuilderRegistry? = null
 
         }
-        ReflectiveLintRunner().runLint(project.gradle, request, lintClassPath.files)
+        ReflectiveLintRunner().runLint(lintClassLoader.get(), request, lintClassPath.files)
     }
 }

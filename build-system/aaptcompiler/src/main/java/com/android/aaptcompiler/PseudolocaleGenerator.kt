@@ -137,32 +137,36 @@ internal fun pseudolocalizeStyledString(
 
 internal fun pseudolocalizeBasicString(
   original: BasicString, method: Pseudolocalizer.Method, pool: StringPool): BasicString {
+  try {
+    val localizer = Pseudolocalizer(method)
 
-  val localizer = Pseudolocalizer(method)
+    val originalText = original.ref.value()
+    val newText = StringBuilder(localizer.start())
 
-  val originalText = original.ref.value()
-  val newText = StringBuilder(localizer.start())
+    // Pseudolocalize only the translatable sections.
+    var start = 0
+    for (section in original.untranslatables) {
+      // Pseudolocalize the content before the untranslatable section.
+      if (section.startIndex != start) {
+        newText.append(localizer.text(originalText.substring(start, section.startIndex)))
+      }
 
-  // Pseudolocalize only the translatable sections.
-  var start = 0
-  for (section in original.untranslatables) {
-    // Pseudolocalize the content before the untranslatable section.
-    if (section.startIndex != start) {
-      newText.append(localizer.text(originalText.substring(start, section.startIndex)))
+      // Copy in the untranslatable content.
+      newText.append(originalText.substring(section.startIndex, section.endIndex))
+      start = section.endIndex
     }
 
-    // Copy in the untranslatable content.
-    newText.append(originalText.substring(section.startIndex, section.endIndex))
-    start = section.endIndex
-  }
+    // Pseudolocalize the content after the last untranslatable section.
+    if (start != originalText.length) {
+      newText.append(localizer.text(originalText.substring(start)))
+    }
+    newText.append(localizer.end())
 
-  // Pseudolocalize the content after the last untranslatable section.
-  if (start != originalText.length) {
-    newText.append(localizer.text(originalText.substring(start)))
+    return BasicString(pool.makeRef(newText.toString()))
+  } catch (e: Exception) {
+    // TODO: add to list of errors
+    error("Failed to pseudo-localize string: $original")
   }
-  newText.append(localizer.end())
-
-  return BasicString(pool.makeRef(newText.toString()))
 }
 
 internal fun pseudolocalizePlural(

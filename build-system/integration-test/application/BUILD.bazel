@@ -195,6 +195,7 @@ TEST_DATA = [
 AUTOMATIC_TEST_DATA = TEST_DATA + [
     #keep sorted
     "//prebuilts/studio/sdk:cmake",
+    "//prebuilts/studio/sdk:ndk",
     "//prebuilts/studio/sdk:ndk-bundle",
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
 ]
@@ -422,8 +423,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/test/services/test-services/1.0.0:apk",
         "//prebuilts/tools/common/m2/repository/com/android/support/transition/27.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.5:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.11.1:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.9:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/artemzin/rxjava/proguard-rules/1.1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/com/braintreepayments/api/braintree/2.3.12:aar",
         "//prebuilts/tools/common/m2/repository/com/braintreepayments/api/core/2.3.12:aar",

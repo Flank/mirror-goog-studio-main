@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.workeractions
 
 import com.android.ide.common.workers.GradlePluginMBeans
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import java.io.Serializable
@@ -26,40 +27,31 @@ import javax.inject.Inject
 /**
  * Adapted version of the Gradle's [WorkAction] for handling BuiltArtifact instances.
  *
+ * This subclass of ][WorkAction] receives a subclass of [DecoratedWorkParameters] as parameters
+ * to the work item.
  *
+ * Subclasses must implement the [doExecute] method where the can access the parameters through the
+ * [WorkAction.getParameters] method.
  */
-open class WorkActionAdapter<TargetTypeT, WorkItemParametersT> @Inject constructor(
-    val objectFactory: ObjectFactory,
-    val params: WorkItemParametersT)
-    : WorkAction<WorkItemParametersT>
-        where TargetTypeT: WorkParameters, TargetTypeT: Serializable,
-              WorkItemParametersT : WorkActionAdapter.AdaptedWorkParameters<TargetTypeT>, WorkItemParametersT: Serializable {
+interface WorkActionAdapter<WorkItemParametersT>
+    : WorkAction<WorkItemParametersT>, Serializable
+        where WorkItemParametersT : DecoratedWorkParameters {
 
-    open class AdaptedWorkParameters<WorkParametersT>: WorkParameters, Serializable
-            where WorkParametersT : WorkParameters, WorkParametersT: Serializable {
-        var projectName: String = ""
-        var tastName: String = ""
-        var workerKey: String = ""
-        lateinit var adaptedParameters: WorkParametersT
-        lateinit var adaptedAction: String
-    }
-
-    override fun getParameters(): WorkItemParametersT {
-        return params
-    }
-
+    @JvmDefault
     override fun execute() {
-        if (params.projectName.isNotBlank()) {
-            GradlePluginMBeans.getProfileMBean(params.projectName)
-                ?.workerStarted(params.tastName, params.workerKey)
+        if (parameters.projectName.isPresent && parameters.projectName.get().isNotBlank()) {
+            GradlePluginMBeans.getProfileMBean(parameters.projectName.get())
+                ?.workerStarted(parameters.taskName.get(), parameters.workerKey.get())
         }
-        @Suppress("UNCHECKED_CAST")
-        val actionType = parameters.adaptedParameters.javaClass.classLoader.loadClass(parameters.adaptedAction) as Class<out WorkAction<*>>
-        val workAction = objectFactory.newInstance(actionType, parameters.adaptedParameters)
-        workAction.execute()
-        if (params.projectName.isNotBlank()) {
-            GradlePluginMBeans.getProfileMBean(params.projectName)
-                ?.workerFinished(params.tastName, params.workerKey)
+        doExecute()
+        if (parameters.projectName.isPresent && parameters.projectName.get().isNotBlank()) {
+            GradlePluginMBeans.getProfileMBean(parameters.projectName.get())
+                ?.workerFinished(parameters.taskName.get(), parameters.workerKey.get())
         }
     }
+
+    /**
+     * Actual implementation of the [WorkAction]
+     */
+    fun doExecute()
 }

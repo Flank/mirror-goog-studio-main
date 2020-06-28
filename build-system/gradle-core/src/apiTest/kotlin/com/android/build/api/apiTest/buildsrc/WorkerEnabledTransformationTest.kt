@@ -34,24 +34,6 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
 
             addBuildSrc() {
                 testingElements.addCopyApksTask(this)
-                addSource("src/main/kotlin/AcmeArtifactType.kt",
-                    """
-                    import org.gradle.api.file.Directory
-                    import org.gradle.api.file.FileSystemLocation
-
-                    import com.android.build.api.artifact.ArtifactKind
-                    import com.android.build.api.artifact.Artifact.Category
-                    import com.android.build.api.artifact.Artifact.SingleArtifact
-                    import com.android.build.api.artifact.Artifact.Replaceable
-                    import com.android.build.api.artifact.Artifact.ContainsMany
-
-                    sealed class AcmeArtifactType<T : FileSystemLocation>(
-                        kind: ArtifactKind<T>
-                    ) : SingleArtifact<T>(kind, Category.INTERMEDIATES) {
-
-                        object ACME_APK: AcmeArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable, ContainsMany
-                    }
-                    """.trimIndent())
                 addSource(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin

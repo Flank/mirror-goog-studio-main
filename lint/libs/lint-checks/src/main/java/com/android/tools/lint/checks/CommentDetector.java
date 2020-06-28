@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.GradleScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -38,6 +39,7 @@ import com.android.tools.lint.model.LintModelVariant;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UComment;
@@ -48,15 +50,24 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /** Looks for issues in Java or Kotlin comments */
-public class CommentDetector extends ResourceXmlDetector implements SourceCodeScanner {
+public class CommentDetector extends ResourceXmlDetector
+        implements SourceCodeScanner, GradleScanner {
     private static final String STOPSHIP_COMMENT = "STOPSHIP";
 
     private static final Implementation IMPLEMENTATION =
             new Implementation(
                     CommentDetector.class,
-                    Scope.JAVA_AND_RESOURCE_FILES,
+                    EnumSet.of(
+                            Scope.RESOURCE_FILE,
+                            Scope.JAVA_FILE,
+                            Scope.GRADLE_FILE,
+                            Scope.MANIFEST,
+                            Scope.PROPERTY_FILE),
                     Scope.JAVA_FILE_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE);
+                    Scope.RESOURCE_FILE_SCOPE,
+                    Scope.GRADLE_SCOPE,
+                    Scope.MANIFEST_SCOPE,
+                    Scope.PROPERTY_SCOPE);
 
     /** Looks for hidden code */
     public static final Issue EASTER_EGG =
@@ -120,7 +131,7 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     private static void checkXml(@NonNull XmlContext context, Node node) {
         if (node.getNodeType() == Node.COMMENT_NODE) {
             String source = node.getNodeValue();
-            checkComment(null, context, node, null, source, 0, 0, source.length());
+            checkComment(context, node, source, 0, 0, source.length());
         }
 
         NodeList children = node.getChildNodes();
@@ -130,18 +141,14 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     }
 
     private static void checkComment(
-            @Nullable JavaContext javaContext,
-            @Nullable XmlContext xmlContext,
-            @Nullable Node xmlNode,
-            @Nullable UComment javaNode,
+            @NonNull Context context,
+            @Nullable Object node,
             @NonNull CharSequence source,
             @SuppressWarnings("SameParameterValue") int offset,
             @SuppressWarnings("SameParameterValue") int start,
             int end) {
-        assert javaContext != null || xmlContext != null;
         char prev = 0;
         char c;
-        Context context = javaContext != null ? javaContext : xmlContext;
         for (int i = start; i < end - 2; i++, prev = c) {
             c = source.charAt(i);
             if (prev == '\\') {
@@ -151,15 +158,28 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                         String message =
                                 "Code might be hidden here; found unicode escape sequence "
                                         + "which is interpreted as comment end, compiled code follows";
-                        if (javaContext != null && javaNode != null) {
+                        if (context instanceof JavaContext && node instanceof UElement) {
+                            JavaContext javaContext = (JavaContext) context;
+                            UElement javaNode = (UElement) node;
                             Location location =
                                     javaContext.getRangeLocation(
                                             javaNode, offset + i - 1, ESCAPE_STRING.length());
                             javaContext.report(EASTER_EGG, javaNode, location, message);
-                        } else if (xmlContext != null && xmlNode != null) {
+                        } else if (context instanceof XmlContext && node instanceof Node) {
+                            XmlContext xmlContext = (XmlContext) context;
+                            Node xmlNode = (Node) node;
                             Location location =
                                     xmlContext.getLocation(xmlNode, i, i + ESCAPE_STRING.length());
                             xmlContext.report(EASTER_EGG, xmlNode, location, message);
+                        } else {
+                            // Plain location
+                            Location location =
+                                    Location.create(
+                                            context.file,
+                                            source,
+                                            i - 1,
+                                            i -1 + ESCAPE_STRING.length());
+                            context.report(STOP_SHIP, location, message);
                         }
                     }
                 } else {
@@ -181,17 +201,31 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                 String message =
                         "`STOPSHIP` comment found; points to code which must be fixed prior "
                                 + "to release";
-                if (javaContext != null && javaNode != null) {
+                if (context instanceof JavaContext && node instanceof UElement) {
+                    JavaContext javaContext = (JavaContext) context;
+                    UElement javaNode = (UElement) node;
                     Location location =
                             javaContext.getRangeLocation(
                                     javaNode, offset + i - 1, STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
                     javaContext.report(STOP_SHIP, javaNode, location, message, fix);
-                } else if (xmlContext != null && xmlNode != null) {
+                } else if (context instanceof XmlContext && node instanceof Node) {
+                    XmlContext xmlContext = (XmlContext) context;
+                    Node xmlNode = (Node) node;
                     Location location =
                             xmlContext.getLocation(xmlNode, i, i + STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
                     xmlContext.report(STOP_SHIP, xmlNode, location, message, fix);
+                } else {
+                    // Plain location
+                    Location location =
+                            Location.create(
+                                    context.file,
+                                    source,
+                                    i - 1,
+                                    i + -1 + STOPSHIP_COMMENT.length());
+                    LintFix fix = createRemoveStopShipFix();
+                    context.report(STOP_SHIP, location, message, fix);
                 }
             }
         }
@@ -222,7 +256,8 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
         String message =
                 "`TODO` call found; points to code which must be fixed prior " + "to release";
         PsiClass containingClass = method.getContainingClass();
-        if (containingClass == null ||
+        if (containingClass == null
+                ||
                 // See libraries/stdlib/jvm/build/stdlib-declarations.json
                 !"kotlin.StandardKt__StandardKt".equals(containingClass.getQualifiedName())) {
             return;
@@ -255,6 +290,95 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
         return null;
     }
 
+    // Gradle: Don't attempt to visit the file
+
+    @Override
+    public boolean getCustomVisitor() {
+        return true;
+    }
+
+    @Override
+    public void visitBuildScript(@NonNull Context context) {
+        if (context instanceof JavaContext) {
+            // Kts files
+            JavaContext javaContext = (JavaContext) context;
+            UFile file = javaContext.getUastFile();
+            if (file != null) {
+                new CommentChecker(javaContext).visitFile(file);
+            }
+        } else {
+            // Groovy: just do simple text scanning for block and line comments
+            CharSequence contents = context.getContents();
+            if (contents == null) {
+                return;
+            }
+            int length = contents.length();
+            final int STATE_INITIAL = 1;
+            final int STATE_SLASH = 2;
+            final int STATE_LINE_COMMENT = 3;
+            final int STATE_BLOCK_COMMENT = 4;
+            int state = STATE_INITIAL;
+            int offset = 0;
+            int startComment = 0;
+            while (offset < length) {
+                char c = contents.charAt(offset);
+                switch (state) {
+                    case STATE_INITIAL:
+                        {
+                            if (c == '/') {
+                                state = STATE_SLASH;
+                            }
+                            offset++;
+                            continue;
+                        }
+                    case STATE_SLASH:
+                        {
+                            if (c == '/') {
+                                startComment = offset + 1;
+                                state = STATE_LINE_COMMENT;
+                            } else if (c == '*') {
+                                startComment = offset + 1;
+                                state = STATE_BLOCK_COMMENT;
+                            } else {
+                                state = STATE_INITIAL;
+                                continue;
+                            }
+                            offset++;
+                            continue;
+                        }
+                    case STATE_LINE_COMMENT:
+                        {
+                            if (c == '\n') {
+                                checkComment(context, null, contents, 0, startComment, offset);
+                                state = STATE_INITIAL;
+                            }
+                            offset++;
+                            continue;
+                        }
+                    case STATE_BLOCK_COMMENT:
+                        {
+                            if (c == '*'
+                                    && offset < contents.length() - 1
+                                    && contents.charAt(offset + 1) == '/') {
+                                checkComment(context, null, contents, 0, startComment, offset);
+                                state = STATE_INITIAL;
+                                offset += 2;
+                                continue;
+                            }
+                            offset++;
+                            continue;
+                        }
+                    default:
+                        assert false : state;
+                }
+            }
+            if (state == STATE_LINE_COMMENT) {
+                // File ended with a line comment
+                checkComment(context, null, contents, 0, startComment, length);
+            }
+        }
+    }
+
     private static class CommentChecker extends UElementHandler {
         private final JavaContext mContext;
 
@@ -266,7 +390,7 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
         public void visitFile(@NonNull UFile node) {
             for (UComment comment : node.getAllCommentsInFile()) {
                 String contents = comment.getText();
-                checkComment(mContext, null, null, comment, contents, 0, 0, contents.length());
+                checkComment(mContext, comment, contents, 0, 0, contents.length());
             }
         }
     }

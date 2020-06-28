@@ -839,7 +839,7 @@ public class DefaultConfiguration extends Configuration {
                 continue;
             }
             if (registry.getIssue(id) == null) {
-                reportNonExistingIssueId(client, driver, project, id);
+                reportNonExistingIssueId(client, driver, registry, project, id);
             }
         }
     }
@@ -847,27 +847,66 @@ public class DefaultConfiguration extends Configuration {
     private void reportNonExistingIssueId(
             @NonNull LintClient client,
             @Nullable LintDriver driver,
+            @NonNull IssueRegistry issueRegistry,
             @NonNull Project project,
             @NonNull String id) {
-        String message = String.format("Unknown issue id \"%1$s\"", id);
-        if (configFile != null) {
-            message += String.format(", found in %1$s", configFile.getPath().replace("\\", "\\\\"));
-        }
-
+        String message = getUnknownIssueIdErrorMessage(id, issueRegistry);
         if (driver != null) {
-            Location location = Location.create(project.getDir());
-            if (getSeverity(IssueRegistry.LINT_ERROR) != Severity.IGNORE) {
+            Location location = Location.create(configFile != null ? configFile : project.getDir());
+            if (getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID) != Severity.IGNORE) {
                 client.report(
                         new Context(driver, project, project, project.getDir(), null),
-                        IssueRegistry.LINT_ERROR,
-                        project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
+                        IssueRegistry.UNKNOWN_ISSUE_ID,
+                        project.getConfiguration(driver)
+                                .getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID),
                         location,
                         message,
                         TextFormat.RAW,
                         null);
             } else {
-                client.log(Severity.ERROR, null, "Lint: %1$s", message);
+                client.log(
+                        Severity.WARNING,
+                        null,
+                        (configFile != null ? configFile.getPath() + ": " : "") + message);
             }
         }
+    }
+
+    private static void appendIssueDescription(
+            @NonNull StringBuilder message,
+            @NonNull String id,
+            @NonNull IssueRegistry issueRegistry) {
+       message.append("'").append(id).append("'");
+       Issue issue = issueRegistry.getIssue(id);
+       if (issue != null) {
+           message.append(" (");
+           message.append(issue.getBriefDescription(TextFormat.RAW));
+           message.append(")");
+       }
+    }
+
+    public static String getUnknownIssueIdErrorMessage(
+            @NonNull String id, @NonNull IssueRegistry issueRegistry) {
+        StringBuilder message = new StringBuilder(30);
+        message.append("Unknown issue id \"").append(id).append("\"");
+        List<String> suggestions = issueRegistry.getIdSpellingSuggestions(id);
+        if (!suggestions.isEmpty()) {
+            message.append(". Did you mean");
+            int size = suggestions.size();
+            if (size == 1) {
+                message.append(" ");
+                appendIssueDescription(message, suggestions.get(0), issueRegistry);
+                message.append(" ");
+            } else {
+                message.append(":\n");
+                for (String suggestion : suggestions) {
+                    appendIssueDescription(message, suggestion, issueRegistry);
+                    message.append("\n");
+                }
+            }
+            message.append("?");
+        }
+
+        return message.toString();
     }
 }

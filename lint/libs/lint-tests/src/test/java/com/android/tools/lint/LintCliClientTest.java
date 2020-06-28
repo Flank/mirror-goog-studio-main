@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
+import com.android.tools.lint.checks.SdCardDetector;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 import com.intellij.codeInsight.CustomExceptionHandler;
@@ -38,18 +39,44 @@ public class LintCliClientTest extends AbstractCheckTest {
                                         + "    lintOptions {\n"
                                         + "        // Let's disable UnknownLintId\n"
                                         + "        /* Let's disable UnknownLintId */\n"
+                                        + "        disable 'HardcodedText', 'UnknownLintId'\n"
+                                        + "        enable 'HardcodedTxt', 'sdcardpath'\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .issues(HardcodedValuesDetector.ISSUE, SdCardDetector.ISSUE)
+                .allowSystemErrors(true)
+                .run()
+                .expect(
+                        ""
+                                + "build.gradle:6: Warning: Unknown issue id \"UnknownLintId\" [UnknownIssueId]\n"
+                                + "        disable 'HardcodedText', 'UnknownLintId'\n"
+                                + "                                  ~~~~~~~~~~~~~\n"
+                                + "build.gradle:7: Warning: Unknown issue id \"HardcodedTxt\". Did you mean 'HardcodedText' (Hardcoded text) ? [UnknownIssueId]\n"
+                                + "        enable 'HardcodedTxt', 'sdcardpath'\n"
+                                + "                ~~~~~~~~~~~~\n"
+                                + "build.gradle:7: Warning: Unknown issue id \"sdcardpath\". Did you mean 'SdCardPath' (Hardcoded reference to /sdcard) ? [UnknownIssueId]\n"
+                                + "        enable 'HardcodedTxt', 'sdcardpath'\n"
+                                + "                                ~~~~~~~~~~\n"
+                                + "0 errors, 3 warnings");
+    }
+
+    public void testUnknownIdSuppressed() {
+        lint().files(
+                        gradle(
+                                ""
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    lintOptions {\n"
+                                        + "        // Let's disable UnknownLintId\n"
+                                        + "        /* Let's disable UnknownLintId */\n"
                                         + "        check 'HardcodedText', 'UnknownLintId'\n"
+                                        + "        disable 'UnknownIssueId'\n"
                                         + "    }\n"
                                         + "}\n"))
                 .issues(HardcodedValuesDetector.ISSUE)
                 .allowSystemErrors(true)
                 .run()
-                .expect(
-                        ""
-                                + "build.gradle:6: Error: Unknown issue id \"UnknownLintId\" [LintError]\n"
-                                + "        check 'HardcodedText', 'UnknownLintId'\n"
-                                + "                                ~~~~~~~~~~~~~\n"
-                                + "1 errors, 0 warnings\n");
+                .expectClean();
     }
 
     public void testMissingExtensionPoints() {

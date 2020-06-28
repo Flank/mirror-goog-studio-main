@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import java.io.File
 
@@ -29,4 +31,8 @@ class TaskCreationServicesImpl(projectServices: ProjectServices) :
 
     override fun fileCollection(vararg files: Any): ConfigurableFileCollection =
         projectServices.objectFactory.fileCollection().from(*files)
+
+    override fun initializeAapt2Input(aapt2Input: Aapt2Input) {
+        projectServices.initializeAapt2Input(aapt2Input)
+    }
 }

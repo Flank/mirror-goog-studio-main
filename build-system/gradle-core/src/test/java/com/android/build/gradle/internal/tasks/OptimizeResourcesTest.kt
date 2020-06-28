@@ -64,9 +64,9 @@ class OptimizeResourcesTest(private val enableResourceObfuscation: Boolean) {
             )
 
         if (enableResourceObfuscation) {
-            invokeAapt(testAapt2.parentFile, *flags.toTypedArray())
+            invokeAapt(testAapt2, *flags.toTypedArray())
         } else {
-            invokeAapt(testAapt2.parentFile,
+            invokeAapt(testAapt2,
                     *flags.minus(AAPT2OptimizeFlags.COLLAPSE_RESOURCE_NAMES.flag).toTypedArray())
         }
 

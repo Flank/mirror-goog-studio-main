@@ -28,6 +28,7 @@ kotlin_library(
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/third_party:org.ow2.asm_asm",
     ],
 )
 
@@ -61,5 +62,6 @@ kotlin_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/third_party:org.ow2.asm_asm",
     ],
 )

@@ -18,14 +18,13 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -35,18 +34,15 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -67,8 +63,6 @@ import java.io.File
 @CacheableTask
 abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
-    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
-
     @get:InputFiles @get:Optional @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var aaptFriendlyManifestFileDirectory: Provider<Directory> private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val thisSubProjectStaticLibrary: RegularFileProperty
@@ -76,18 +70,12 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
 
-    @get:Input
-    lateinit var aapt2Version: String
-        private set
-    @get:Internal
-    abstract val aapt2FromMaven: ConfigurableFileCollection
-
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory abstract val rClassSource: DirectoryProperty
     @get:OutputFile abstract val resourceApUnderscoreDirectory: DirectoryProperty
 
-    @get:Internal
-    abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+    @get:Nested
+    abstract val aapt2: Aapt2Input
 
     @get:Input
     @get:Optional
@@ -115,13 +103,11 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 variantType = VariantTypeImpl.LIBRARY,
                 intermediateDir = aaptIntermediateDir)
 
-        val aapt2ServiceKey = aapt2DaemonBuildService.get().registerAaptService(
-            aapt2FromMaven = aapt2FromMaven.singleFile, logger = LoggerWrapper(logger)
-        )
+        val aapt2ServiceKey = aapt2.registerAaptService()
         getWorkerFacadeWithWorkers().use {
             it.submit(
                 Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, config, errorFormatMode)
+                Aapt2LinkRunnable.Params(aapt2ServiceKey, config, aapt2.getErrorFormatMode())
             )
         }
     }
@@ -180,22 +166,16 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             task.aaptIntermediateDir =
                     FileUtils.join(
                             creationConfig.globalScope.intermediatesDir, "res-process-intermediate", creationConfig.dirName)
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
-            task.aapt2FromMaven.from(aapt2FromMaven)
-            task.aapt2Version = aapt2Version
+
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
-            )
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.services.projectOptions
             )
             if (creationConfig is ApkCreationConfig) {
                 task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             }
             task.noCompress.disallowChanges()
-            task.aapt2DaemonBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            creationConfig.services.initializeAapt2Input(task.aapt2)
+
         }
     }
 

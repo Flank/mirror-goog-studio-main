@@ -69,7 +69,10 @@ class LogDetectorTest : AbstractCheckTest() {
             src/test/pkg/LogTest.java:22: Warning: The log call Log.i(...) should be conditional: surround with if (Log.isLoggable(...)) or if (BuildConfig.DEBUG) { ... } [LogConditional]
                     Log.i(TAG1, toString()); // error: unconditional w/ computation
                     ~~~~~~~~~~~~~~~~~~~~~~~
-            11 errors, 2 warnings
+            src/test/pkg/LogTest.java:106: Warning: The log call Log.d(...) should be conditional: surround with if (Log.isLoggable(...)) or if (BuildConfig.DEBUG) { ... } [LogConditional]
+                        Log.d("Test", "Test" + getClass().toString()); // warn: unconditional
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            11 errors, 3 warnings
             """
 
         lint().files(
@@ -175,6 +178,16 @@ class LogDetectorTest : AbstractCheckTest() {
                     @SuppressLint("LogConditional")
                     public void suppressed2() {
                         Log.d(TAG1, "message"); // ok: suppressed
+                    }
+
+                    // Regression test for https://issuetracker.google.com/111063607
+                    public void notActuallyConditional() {
+                        if (true) {
+                            Log.d("Test", "Test" + getClass().toString()); // warn: unconditional
+                        }
+                        if (false) {
+                            Log.d("Test", "Test" + getClass().toString()); // ok: never called
+                        }
                     }
 
                     private static class Constants {

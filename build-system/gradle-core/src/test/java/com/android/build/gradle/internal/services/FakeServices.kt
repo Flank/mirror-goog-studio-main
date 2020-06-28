@@ -28,7 +28,9 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.fixtures.ProjectFactory
+import com.android.build.gradle.internal.res.Aapt2FromMaven
 import com.android.build.gradle.options.ProjectOptions
+import com.android.testutils.TestUtils
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
@@ -59,7 +61,8 @@ fun createProjectServices(
         projectLayout,
         projectOptions,
         buildServiceRegistry,
-        fileResolver
+        aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
+        fileResolver = fileResolver
     )
 
 @JvmOverloads

@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.dependency
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_RES
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
-import com.android.build.gradle.options.SyncOptions
+import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.getErrorFormatMode
+import com.android.build.gradle.internal.services.registerAaptService
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.xml.AndroidManifestParser
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -30,13 +30,10 @@ import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.artifacts.transform.TransformParameters
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileSystemLocation
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import java.io.BufferedInputStream
 import java.io.File
 import java.nio.file.Files
@@ -74,17 +71,13 @@ abstract class AarResourcesCompilerTransform :
             }
         }
 
-        val aapt2ServiceKey =
-            parameters.aapt2DaemonBuildService.get().registerAaptService(
-                parameters.aapt2FromMaven.singleFile,
-                LoggerWrapper.getLogger(this::class.java)
-            )
+        val aapt2ServiceKey = parameters.aapt2.registerAaptService()
 
         Aapt2CompileRunnable(
             Aapt2CompileRunnable.Params(
                 aapt2ServiceKey,
                 requestList,
-                parameters.errorFormatMode.getOrElse(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
             )
         ).run()
     }
@@ -95,13 +88,7 @@ abstract class AarResourcesCompilerTransform :
         }
 
     interface Parameters : TransformParameters {
-        @get:Input
-        val aapt2Version: Property<String>
-        @get:Internal
-        val aapt2FromMaven: ConfigurableFileCollection
-        @get:Internal
-        val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
-        @get:Internal
-        val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
+        @get:Nested
+        val aapt2: Aapt2Input
     }
 }

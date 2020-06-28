@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package.blankActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package.blankActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addSupportWearableDependency
 
 fun RecipeExecutor.blankWearActivityRecipe(
   moduleData: ModuleTemplateData,
@@ -39,7 +40,7 @@ fun RecipeExecutor.blankWearActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.google.android.wearable:wearable:+", "provided")
+  addSupportWearableDependency()
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))

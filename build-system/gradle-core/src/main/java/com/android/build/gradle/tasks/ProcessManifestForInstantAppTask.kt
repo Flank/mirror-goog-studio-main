@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.XmlDocument
 import com.android.utils.FileUtils
@@ -41,8 +43,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import org.w3c.dom.Document
 import java.io.BufferedInputStream
@@ -72,8 +72,7 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
 
         transformationRequest.get().submit(this,
             workers.noIsolation(),
-            WorkItem::class.java,
-            WorkItemParameters::class.java)
+            WorkItem::class.java)
         { builtArtifact: BuiltArtifact, directory: Directory, parameters: WorkItemParameters ->
             parameters.inputXmlFile.set(File(builtArtifact.outputFile))
             parameters.outputXmlFile.set(
@@ -85,22 +84,25 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
         }
     }
 
-    interface WorkItemParameters: WorkParameters, Serializable {
+    interface WorkItemParameters: DecoratedWorkParameters, Serializable {
         val inputXmlFile: RegularFileProperty
         val outputXmlFile: RegularFileProperty
     }
 
-    abstract class WorkItem@Inject constructor(private val workItemParameters: WorkItemParameters)
-        : WorkAction<WorkItemParameters> {
-        override fun execute() {
+    abstract class WorkItem@Inject constructor(private val parameters: WorkItemParameters)
+        : WorkActionAdapter<WorkItemParameters> {
+
+        override fun getParameters(): WorkItemParameters = parameters
+
+        override fun doExecute() {
             val xmlDocument = BufferedInputStream(
                 FileInputStream(
-                    workItemParameters.inputXmlFile.get().asFile)
+                    parameters.inputXmlFile.get().asFile)
             ).use {
                 PositionXmlParser.parse(it)
             }
             setTargetSandboxVersionAttribute(xmlDocument)
-            workItemParameters.outputXmlFile.get().asFile.writeText(
+            parameters.outputXmlFile.get().asFile.writeText(
                 XmlDocument.prettyPrint(xmlDocument))
         }
 

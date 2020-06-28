@@ -73,9 +73,7 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
-                classActivity,
-                "newGroup()" + SIGNATURE_TODO_GROUP,
+        InspectorEnvironment.ExitHook<Object> hook =
                 new InspectorEnvironment.ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
@@ -83,7 +81,12 @@ public final class TodoInspector extends TestInspector {
                                 .sendEvent(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
                         return returnValue;
                     }
-                });
+                };
+
+        environment.registerExitHook(classActivity, "newGroup()" + SIGNATURE_TODO_GROUP, hook);
+
+        environment.registerExitHook(
+                classActivity, "newGroup(" + SIGNATURE_STRING + ")" + SIGNATURE_TODO_GROUP, hook);
 
         environment.registerEntryHook(
                 classActivity,

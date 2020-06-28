@@ -18,10 +18,13 @@ package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 import java.util.zip.InflaterOutputStream;
 
 public class Compressor {
@@ -58,6 +61,29 @@ public class Compressor {
         }
 
         return out.getByteBuffer();
+    }
+
+    // Exhaust input content into output, inflate / deflate data as needed.
+    // Closes both streams once piping is done.
+    public static void pipe(
+            @NonNull InputStream in,
+            @NonNull OutputStream out,
+            boolean inDeflated,
+            int outputCompression)
+            throws IOException {
+
+        Inflater inflater = new Inflater(true);
+        Deflater deflater = new Deflater(outputCompression, true);
+        boolean outDeflated = outputCompression != Deflater.NO_COMPRESSION;
+
+        try (InputStream ins = inDeflated ? new InflaterInputStream(in, inflater) : in;
+                OutputStream outs = outDeflated ? new DeflaterOutputStream(out, deflater) : out) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = ins.read(buffer)) != -1) {
+                outs.write(buffer, 0, read);
+            }
+        }
     }
 
     private Compressor() {}
