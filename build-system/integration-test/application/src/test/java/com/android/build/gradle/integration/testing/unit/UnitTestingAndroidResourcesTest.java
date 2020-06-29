@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -120,8 +119,6 @@ public class UnitTestingAndroidResourcesTest {
     public void runUnitTests() throws Exception {
         GradleTaskExecutor runGradleTasks =
                 project.executor()
-                        // http://b/158205860
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true);
 
         runGradleTasks.run("testDebugUnitTest");
