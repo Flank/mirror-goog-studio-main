@@ -396,12 +396,14 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             )
         }
 
+        val client = context.client
+        val evaluator = context.evaluator
         when (restriction) {
             Restriction.DENY -> fatal()
             Restriction.MAYBE_MAX_O ->
                 if (targetSdk <= AndroidVersion.VersionCodes.O ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        context.evaluator, call, AndroidVersion.VersionCodes.O, false
+                        client, evaluator, call, AndroidVersion.VersionCodes.O, false
                     )
                 ) {
                     warning()
@@ -411,7 +413,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE_MAX_P ->
                 if (targetSdk <= AndroidVersion.VersionCodes.P ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        context.evaluator, call, AndroidVersion.VersionCodes.P, false
+                        client, evaluator, call, AndroidVersion.VersionCodes.P, false
                     )
                 ) {
                     warning()

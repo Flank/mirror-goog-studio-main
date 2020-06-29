@@ -235,6 +235,10 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             if (!isShrinking(context)) {
                 return
             }
+            val fix = fix()
+                .annotate(KEEP_ANNOTATION.newName())
+                .range(context.getLocation(bestMethod))
+                .build()
             report(
                 context,
                 MISSING_KEEP,
@@ -243,7 +247,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 "This method is accessed from an ObjectAnimator so it should be " +
                     "annotated with `@Keep` to ensure that it is not discarded or renamed " +
                     "in release builds",
-                fix().data(KEY_METHOD, bestMethod)
+                fix
             )
         }
     }
@@ -595,6 +599,9 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                                     "discarded or renamed in release builds",
                                 selfExplanatory = true
                             )
+                            // TODO: Add a quickfix here (which should be trivial except
+                            // that the lint fix verifier does not handle fixes in different
+                            // files.)
                             context.report(
                                 MISSING_KEEP, element, location,
                                 "" +
@@ -613,7 +620,6 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
 
     companion object {
         private const val MOTION_LAYOUT_URI = AUTO_URI
-        const val KEY_METHOD = "method"
 
         val KEEP_ANNOTATION = AndroidxName.of(
             SUPPORT_ANNOTATIONS_PREFIX,
