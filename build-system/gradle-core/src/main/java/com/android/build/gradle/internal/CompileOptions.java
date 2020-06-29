@@ -44,9 +44,7 @@ public class CompileOptions implements com.android.build.api.dsl.CompileOptions 
     @Nullable private Boolean coreLibraryDesugaringEnabled = null;
 
     /** @see #setDefaultJavaVersion(JavaVersion) */
-    @NonNull
-    @VisibleForTesting
-    JavaVersion defaultJavaVersion = JavaVersion.VERSION_1_6;
+    @NonNull @VisibleForTesting JavaVersion defaultJavaVersion = JavaVersion.VERSION_1_8;
 
     @Inject
     public CompileOptions() {}

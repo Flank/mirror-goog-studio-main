@@ -122,7 +122,8 @@ public class JacocoDependenciesTest {
         assertAgentMavenCoordinates(
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .with(BooleanOption.ENABLE_D8, false),
+                        .with(BooleanOption.ENABLE_D8, false)
+                        .with(BooleanOption.ENABLE_D8_DESUGARING, false),
                 "org.jacoco:org.jacoco.agent:"
                         + JacocoConfigurations.VERSION_FOR_DX
                         + ":runtime@jar");

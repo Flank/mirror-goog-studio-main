@@ -150,16 +150,19 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:processDebugResources", /* Bug 141301405 */
                     ":app:writeDebugModuleMetadata",
 
+                    ":feature1:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":feature1:featureDebugWriter",
                     ":feature1:mergeDebugResources",
                     ":feature1:packageDebug",
                     ":feature1:processDebugResources",
 
+                    ":feature2:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":feature2:featureDebugWriter",
                     ":feature2:mergeDebugResources",
                     ":feature2:packageDebug",

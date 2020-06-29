@@ -63,6 +63,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compressReleaseAssets",
                 ":createDebugCompatibleScreenManifests",
                 ":createReleaseCompatibleScreenManifests",
+                ":desugarDebugAndroidTestFileDependencies",
                 ":dexBuilderDebugAndroidTest",
                 ":extractDeepLinksDebug",
                 ":extractDeepLinksRelease",

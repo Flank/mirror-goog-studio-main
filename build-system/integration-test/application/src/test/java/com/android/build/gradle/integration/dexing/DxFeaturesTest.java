@@ -83,11 +83,16 @@ public class DxFeaturesTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
+                        + "android.compileOptions.sourceCompatibility 1.7\n"
+                        + "android.compileOptions.targetCompatibility 1.7\n"
                         + "android.defaultConfig.minSdkVersion 26\n"
                         + "dependencies {\n"
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
-        project.executor().with(BooleanOption.ENABLE_D8, false).run("assembleDebug");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8, false)
+                .with(BooleanOption.ENABLE_D8_DESUGARING, false)
+                .run("assembleDebug");
     }
 
     @Test
@@ -101,7 +106,10 @@ public class DxFeaturesTest {
                         + "dependencies {\n"
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
-        project.executor().with(BooleanOption.ENABLE_D8, false).run("assembleDebug");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8, false)
+                .with(BooleanOption.ENABLE_D8_DESUGARING, false)
+                .run("assembleDebug");
     }
 
     @NonNull

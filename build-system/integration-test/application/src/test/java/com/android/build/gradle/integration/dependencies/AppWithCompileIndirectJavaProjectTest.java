@@ -22,8 +22,8 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -57,9 +57,14 @@ import org.junit.Test;
 public class AppWithCompileIndirectJavaProjectTest {
 
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("projectWithModules")
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("projectWithModules")
+                    // b/157470515, http://b/146208910, http://b/149978740
+                    .withConfigurationCaching(
+                            BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+                    .setTargetGradleVersion("6.6-20200609220026+0000")
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {

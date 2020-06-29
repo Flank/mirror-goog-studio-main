@@ -82,6 +82,10 @@ public class DesugarAppWithDesugarToolTest {
 
     @Test
     public void noTaskIfNoJava8Set() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.compileOptions.sourceCompatibility 1.7\n"
+                        + "android.compileOptions.targetCompatibility 1.7");
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
         Truth.assertThat(result.findTask(":desugarDebug")).isNull();
     }

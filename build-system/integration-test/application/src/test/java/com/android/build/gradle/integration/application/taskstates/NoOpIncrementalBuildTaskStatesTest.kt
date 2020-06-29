@@ -51,6 +51,7 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:compileDebugUnitTestJavaWithJavac",
                 ":app:compressDebugAssets",
                 ":app:createDebugCompatibleScreenManifests",
+                ":app:desugarDebugFileDependencies",
                 ":app:dexBuilderDebug",
                 ":app:extractDeepLinksDebug",
                 ":app:generateDebugBuildConfig",

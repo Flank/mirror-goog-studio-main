@@ -109,6 +109,8 @@ class L8DexDesugarTest {
         project.buildFile.appendText("\n" +
             """
             android.defaultConfig.minSdkVersion = 21
+            android.compileOptions.sourceCompatibility 1.7
+            android.compileOptions.targetCompatibility 1.7
         """.trimIndent()
         )
         // check error message in debug build

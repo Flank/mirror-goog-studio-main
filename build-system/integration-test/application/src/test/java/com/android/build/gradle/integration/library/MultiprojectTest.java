@@ -28,7 +28,15 @@ import org.junit.Test;
 public class MultiprojectTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("multiproject").create();
+            GradleTestProject.builder()
+                    .fromTestProject("multiproject")
+                    // b/157470515, http://b/146208910, http://b/149978740
+                    .withConfigurationCaching(
+                            BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
+                    // Use 6.6 nightly until we migrate to 6.6, this is for assembleDebug to
+                    // succeed.
+                    .setTargetGradleVersion("6.6-20200609220026+0000")
+                    .create();
 
     @Before
     public void setUp() throws IOException, InterruptedException {
@@ -44,7 +52,7 @@ public class MultiprojectTest {
     public void lint() throws IOException, InterruptedException {
         // http://b/146208910
         project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
                 .run("lint");
     }
 }
