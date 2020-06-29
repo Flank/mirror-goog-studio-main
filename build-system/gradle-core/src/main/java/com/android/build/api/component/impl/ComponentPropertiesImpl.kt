@@ -30,8 +30,6 @@ import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
-import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -43,6 +41,8 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
+import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -73,6 +73,7 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -351,7 +352,10 @@ abstract class ComponentPropertiesImpl(
                     .publishIntermediateArtifact(
                         artifactProvider,
                         outputSpec.artifactType,
-                        outputSpec.publishedConfigTypes
+                        outputSpec.publishedConfigTypes,
+                        outputSpec.libraryElements?.let {
+                            internalServices.named(LibraryElements::class.java, it)
+                        }
                     )
             }
         }

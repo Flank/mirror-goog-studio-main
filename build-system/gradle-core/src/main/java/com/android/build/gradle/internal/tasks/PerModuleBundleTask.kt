@@ -22,6 +22,7 @@ import com.android.SdkConstants.FD_DEX
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -252,7 +253,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    mapOf(MODULE_PATH to creationConfig.globalScope.project.path)
+                    AndroidAttributes(MODULE_PATH to task.project.path)
                 )
             )
             task.javaResFiles.from(

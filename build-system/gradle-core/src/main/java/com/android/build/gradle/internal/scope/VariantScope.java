@@ -32,6 +32,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
+import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -46,7 +47,8 @@ public interface VariantScope {
     void publishIntermediateArtifact(
             @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
-            @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
+            @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes,
+            @Nullable LibraryElements libraryElements);
 
     @Nullable
     CodeShrinker getCodeShrinker();

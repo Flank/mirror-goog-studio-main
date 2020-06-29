@@ -389,9 +389,9 @@ data class DexingArtifactConfiguration(
                 spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)
             }
 
-            getAttributes().forEach { (attribute, value) ->
-                spec.from.attribute(attribute, value)
-                spec.to.attribute(attribute, value)
+            getAttributes().apply {
+                addAttributesToContainer(spec.from)
+                addAttributesToContainer(spec.to)
             }
         }
     }
@@ -404,12 +404,14 @@ data class DexingArtifactConfiguration(
         }
     }
 
-    fun getAttributes(): Map<Attribute<String>, String> {
-        return mapOf(
-            ATTR_MIN_SDK to minSdk.toString(),
-            ATTR_IS_DEBUGGABLE to isDebuggable.toString(),
-            ATTR_ENABLE_DESUGARING to enableDesugaring.toString(),
-            ATTR_INCREMENTAL_DEXING_TRANSFORM to incrementalDexingTransform.toString()
+    fun getAttributes(): AndroidAttributes {
+        return AndroidAttributes(
+            mapOf(
+                ATTR_MIN_SDK to minSdk.toString(),
+                ATTR_IS_DEBUGGABLE to isDebuggable.toString(),
+                ATTR_ENABLE_DESUGARING to enableDesugaring.toString(),
+                ATTR_INCREMENTAL_DEXING_TRANSFORM to incrementalDexingTransform.toString()
+            )
         )
     }
 }

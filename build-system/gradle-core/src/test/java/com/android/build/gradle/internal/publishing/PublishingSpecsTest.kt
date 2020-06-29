@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.internal.publishing
 
+import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantSpec
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.core.VariantTypeImpl
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
+import org.gradle.api.attributes.LibraryElements
 import org.junit.Test
 
 class PublishingSpecsTest {
@@ -25,7 +28,20 @@ class PublishingSpecsTest {
     @Test
     fun allVariantTypeExist() {
         for (type in VariantTypeImpl.values()) {
-            Truth.assertThat(PublishingSpecs.getVariantMap()).containsKey(type)
+            assertThat(PublishingSpecs.getVariantMap()).containsKey(type)
         }
+    }
+
+    @Test
+    fun `check output spec of CLASSES_DIR artifact type`() {
+        val outputSpec = getVariantSpec(VariantTypeImpl.LIBRARY).getSpec(
+            AndroidArtifacts.ArtifactType.CLASSES_DIR,
+            AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
+        )
+        checkNotNull(outputSpec)
+        assertThat(outputSpec.artifactType).isEqualTo(AndroidArtifacts.ArtifactType.CLASSES_DIR)
+        assertThat(outputSpec.publishedConfigTypes).containsExactly(AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS)
+        assertThat(outputSpec.outputType).isEqualTo(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR)
+        assertThat(outputSpec.libraryElements).isEqualTo(LibraryElements.CLASSES)
     }
 }

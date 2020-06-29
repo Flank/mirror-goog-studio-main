@@ -42,7 +42,6 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.specs.Spec
@@ -99,14 +98,14 @@ class VariantDependencies internal constructor(
         configType: ConsumedConfigType,
         scope: ArtifactScope,
         artifactType: AndroidArtifacts.ArtifactType,
-        attributeMap: Map<Attribute<String>, String>? = null
+        attributes: AndroidAttributes? = null
     ): FileCollection {
         if (configType.needsTestedComponents()) {
-            return getArtifactCollection(configType, scope, artifactType, attributeMap)
+            return getArtifactCollection(configType, scope, artifactType, attributes)
                 .artifactFiles
         }
 
-        val artifacts = computeArtifactCollection(configType, scope, artifactType, attributeMap)
+        val artifacts = computeArtifactCollection(configType, scope, artifactType, attributes)
 
         return if (configType == ConsumedConfigType.RUNTIME_CLASSPATH
             && isArtifactTypeExcluded(artifactType)
@@ -114,7 +113,7 @@ class VariantDependencies internal constructor(
             val excludedDirectories = computeArtifactCollection(
                 ConsumedConfigType.PROVIDED_CLASSPATH, ArtifactScope.PROJECT,
                 PACKAGED_DEPENDENCIES,
-                attributeMap
+                attributes
             ).artifactFiles
             FilteringSpec(artifacts, excludedDirectories, project.objects)
                 .getFilteredFileCollection()
@@ -128,16 +127,17 @@ class VariantDependencies internal constructor(
         configType: ConsumedConfigType,
         scope: ArtifactScope,
         artifactType: AndroidArtifacts.ArtifactType,
-        attributeMap: Map<Attribute<String>, String>? = null
+        attributes: AndroidAttributes? = null
     ): ArtifactCollection {
         var artifacts =
-            computeArtifactCollection(configType, scope, artifactType, attributeMap)
+            computeArtifactCollection(configType, scope, artifactType, attributes)
 
         if (configType == ConsumedConfigType.RUNTIME_CLASSPATH
             && isArtifactTypeExcluded(artifactType)
         ) {
             val excludedDirectories = computeArtifactCollection(
-                ConsumedConfigType.PROVIDED_CLASSPATH, ArtifactScope.PROJECT,
+                ConsumedConfigType.PROVIDED_CLASSPATH,
+                ArtifactScope.PROJECT,
                 PACKAGED_DEPENDENCIES,
                 null
             ).artifactFiles
@@ -185,7 +185,8 @@ class VariantDependencies internal constructor(
             val excludedDirectories = testedVariant
                 .variantDependencies
                 .computeArtifactCollection(
-                    ConsumedConfigType.PROVIDED_CLASSPATH, ArtifactScope.PROJECT,
+                    ConsumedConfigType.PROVIDED_CLASSPATH,
+                    ArtifactScope.PROJECT,
                     PACKAGED_DEPENDENCIES,
                     null
                 )
@@ -197,7 +198,7 @@ class VariantDependencies internal constructor(
 
         val testedArtifactCollection = testedVariant
             .variantDependencies
-            .getArtifactCollection(configType, scope, artifactType, attributeMap)
+            .getArtifactCollection(configType, scope, artifactType, attributes)
         artifacts =
             SubtractingArtifactCollection(artifacts, testedArtifactCollection, project.objects)
         return artifacts
@@ -241,19 +242,15 @@ class VariantDependencies internal constructor(
         configType: ConsumedConfigType,
         scope: ArtifactScope,
         artifactType: AndroidArtifacts.ArtifactType,
-        attributeMap: Map<Attribute<String>, String>?
+        attributes: AndroidAttributes?
     ): ArtifactCollection {
         checkComputeArtifactCollectionArguments(configType, scope, artifactType)
 
         val configuration = getConfiguration(configType)
-        val attributes =
+        val attributesAction =
             Action { container: AttributeContainer ->
                 container.attribute(AndroidArtifacts.ARTIFACT_TYPE, artifactType.type)
-                attributeMap?.let {
-                    for ((key, value) in it) {
-                        container.attribute(key, value)
-                    }
-                }
+                attributes?.addAttributesToContainer(container)
             }
         val filter = getComponentFilter(scope)
         val lenientMode = projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY]
@@ -261,7 +258,7 @@ class VariantDependencies internal constructor(
         return configuration
             .incoming
             .artifactView { config: ArtifactView.ViewConfiguration ->
-                config.attributes(attributes)
+                config.attributes(attributesAction)
                 filter?.let { config.componentFilter(it) }
                 // TODO somehow read the unresolved dependencies?
                 config.lenient(lenientMode)

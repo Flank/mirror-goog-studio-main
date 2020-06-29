@@ -37,7 +37,7 @@ fun publishArtifactToConfiguration(
     configuration: Configuration,
     file: Any,
     artifactType: AndroidArtifacts.ArtifactType,
-    attributeMap: Map<Attribute<String>, String>? = null
+    attributeMap: Map<out Attribute<out Any>, Any>? = null
 ) {
     val type = artifactType.type
     configuration
@@ -52,8 +52,10 @@ fun publishArtifactToConfiguration(
                     artifact.type = type
                 }
                 variant.attributes.let { container ->
-                    attributeMap?.keys?.forEach { key ->
-                        attributeMap[key]?.let { container.attribute(key, it) }
+                    attributeMap?.let { attributes ->
+                        for ((key, value) in attributes) {
+                            container.attribute(key as Attribute<Any>, value)
+                        }
                     }
                 }
             }
@@ -85,7 +87,7 @@ fun publishArtifactToDefaultVariant(
  */
 private fun getConfigurationVariantName(
     artifactType: AndroidArtifacts.ArtifactType,
-    attributeMap: Map<Attribute<String>, String>?
+    attributeMap: Map<out Attribute<out Any>, Any>?
 ) : String {
     val suffix: String? =
         attributeMap

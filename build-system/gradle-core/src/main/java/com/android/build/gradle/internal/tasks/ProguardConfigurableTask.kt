@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.FileNames
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
@@ -27,15 +26,9 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.core.VariantType
-import com.google.common.collect.Sets
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.TaskProvider
-
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
@@ -43,8 +36,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.builder.core.VariantType
 import com.google.common.base.Preconditions
-import org.gradle.api.attributes.Attribute
+import com.google.common.collect.Sets
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
@@ -54,6 +51,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -254,7 +252,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                             RUNTIME_CLASSPATH,
                             ALL,
                             FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttrMap(creationConfig)
+                            maybeGetCodeShrinkerAttributes(creationConfig)
                         )
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -270,7 +268,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                             RUNTIME_CLASSPATH,
                             ALL,
                             FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttrMap(creationConfig)
+                            maybeGetCodeShrinkerAttributes(creationConfig)
                         )
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -327,7 +325,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     RUNTIME_CLASSPATH,
                     ALL,
                     FILTERED_PROGUARD_RULES,
-                    maybeGetCodeShrinkerAttrMap(creationConfig)
+                    maybeGetCodeShrinkerAttributes(creationConfig)
                 )
             )
 
@@ -359,16 +357,16 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     REVERSE_METADATA_VALUES,
                     PROJECT,
                     FILTERED_PROGUARD_RULES,
-                    maybeGetCodeShrinkerAttrMap(creationConfig)
+                    maybeGetCodeShrinkerAttributes(creationConfig)
                 )
             )
         }
 
-        private fun maybeGetCodeShrinkerAttrMap(
+        private fun maybeGetCodeShrinkerAttributes(
             creationConfig: BaseCreationConfig
-        ): Map<Attribute<String>, String>? {
+        ): AndroidAttributes? {
             return if (creationConfig.variantScope.codeShrinker != null) {
-                mapOf(VariantManager.SHRINKER_ATTR to creationConfig.variantScope.codeShrinker.toString())
+                AndroidAttributes(VariantManager.SHRINKER_ATTR to creationConfig.variantScope.codeShrinker.toString())
             } else {
                 null
             }
