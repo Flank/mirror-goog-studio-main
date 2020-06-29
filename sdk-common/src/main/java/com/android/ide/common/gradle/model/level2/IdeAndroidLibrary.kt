@@ -15,12 +15,63 @@
  */
 package com.android.ide.common.gradle.model.level2
 
+import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
 /**
  * The implementation of IdeLibrary for Android libraries.
  **/
 data class IdeAndroidLibrary(
+  val core: IdeAndroidLibraryCore,
+  override val isProvided: Boolean
+) : IdeLibrary by core {
+  @VisibleForTesting
+  constructor(
+    artifactAddress: String,
+    folder: File,
+    manifest: String,
+    jarFile: String,
+    compileJarFile: String,
+    resFolder: String,
+    resStaticLibrary: File?,
+    assetsFolder: String,
+    localJars: Collection<String>,
+    jniFolder: String,
+    aidlFolder: String,
+    renderscriptFolder: String,
+    proguardRules: String,
+    lintJar: String,
+    externalAnnotations: String,
+    publicResources: String,
+    artifact: File,
+    symbolFile: String,
+    isProvided: Boolean
+  ) : this(
+    IdeAndroidLibraryCore(
+      artifactAddress,
+      folder,
+      manifest,
+      jarFile,
+      compileJarFile,
+      resFolder,
+      resStaticLibrary,
+      assetsFolder,
+      localJars,
+      jniFolder,
+      aidlFolder,
+      renderscriptFolder,
+      proguardRules,
+      lintJar,
+      externalAnnotations,
+      publicResources,
+      artifact,
+      symbolFile
+    ),
+    isProvided
+  )
+}
+
+data class IdeAndroidLibraryCore(
   override val artifactAddress: String,
   override val folder: File?,
   override val manifest: String,
@@ -38,8 +89,7 @@ data class IdeAndroidLibrary(
   override val externalAnnotations: String,
   override val publicResources: String,
   override val artifact: File,
-  override val symbolFile: String,
-  override val isProvided: Boolean
+  override val symbolFile: String
 ) : IdeLibrary {
 
   // Used for serialization by the IDE.
@@ -61,8 +111,7 @@ data class IdeAndroidLibrary(
     externalAnnotations = "",
     publicResources = "",
     artifact = File(""),
-    symbolFile = "",
-    isProvided = false
+    symbolFile = ""
   )
 
   override val type: IdeLibrary.LibraryType
@@ -76,6 +125,9 @@ data class IdeAndroidLibrary(
 
   override val projectPath: String
     get() = throw unsupportedMethodForAndroidLibrary("getProjectPath")
+
+  override val isProvided: Nothing
+    get() = error("abstract")
 }
 
 private fun unsupportedMethodForAndroidLibrary(methodName: String): UnsupportedOperationException =

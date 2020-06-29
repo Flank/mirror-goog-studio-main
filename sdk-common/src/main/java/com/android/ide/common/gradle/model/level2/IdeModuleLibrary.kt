@@ -22,13 +22,24 @@ import java.io.File
  * The implementation of IdeLibrary for modules.
  **/
 data class IdeModuleLibrary(
+  val core: IdeModuleLibraryCore,
+  override val isProvided: Boolean
+) : IdeLibrary by core {
+  @VisibleForTesting
+  constructor(
+    projectPath: String,
+    artifactAddress: String,
+    buildId: String?
+  ) : this(IdeModuleLibraryCore(projectPath, artifactAddress, buildId), isProvided = false)
+}
+
+data class IdeModuleLibraryCore(
   override val artifactAddress: String,
   override val buildId: String?,
   override val projectPath: String?,
   override val variant: String?,
   override val folder: File?,
-  override val lintJar: String?,
-  override val isProvided: Boolean
+  override val lintJar: String?
 
 ) : IdeLibrary {
 
@@ -39,8 +50,7 @@ data class IdeModuleLibrary(
     projectPath = null,
     variant = null,
     folder = null,
-    lintJar = null,
-    isProvided = false
+    lintJar = null
   )
 
   @VisibleForTesting
@@ -54,8 +64,7 @@ data class IdeModuleLibrary(
     projectPath = projectPath,
     variant = null,
     folder = null,
-    lintJar = null,
-    isProvided = false
+    lintJar = null
   )
 
   override val type: IdeLibrary.LibraryType
@@ -105,6 +114,9 @@ data class IdeModuleLibrary(
 
   override val symbolFile: String
     get() = throw unsupportedMethodForModuleLibrary("getSymbolFile")
+
+  override val isProvided: Nothing
+    get() = error("abstract")
 }
 
 private fun unsupportedMethodForModuleLibrary(methodName: String): UnsupportedOperationException {

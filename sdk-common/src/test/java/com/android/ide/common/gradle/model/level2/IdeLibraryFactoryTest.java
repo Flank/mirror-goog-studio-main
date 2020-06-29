@@ -52,7 +52,7 @@ public class IdeLibraryFactoryTest {
 
     @Test
     public void createFromString() {
-        assertThat(IdeLibraryFactory.create("lib", ":lib@@:", "/rootDir/lib"))
+        assertThat(myLibraryFactory.create("lib", ":lib@@:", "/rootDir/lib"))
                 .isInstanceOf(IdeModuleLibrary.class);
     }
 }

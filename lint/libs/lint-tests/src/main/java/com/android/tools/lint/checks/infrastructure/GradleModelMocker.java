@@ -65,12 +65,15 @@ import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
+import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesImpl;
 import com.android.ide.common.gradle.model.level2.IdeJavaLibrary;
+import com.android.ide.common.gradle.model.level2.IdeJavaLibraryCore;
 import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.ide.common.gradle.model.level2.IdeLibraryDelegate;
 import com.android.ide.common.gradle.model.level2.IdeModuleLibrary;
+import com.android.ide.common.gradle.model.level2.IdeModuleLibraryCore;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -2104,24 +2107,25 @@ public class GradleModelMocker {
         }
         return createLibraryMock(
                 new IdeAndroidLibrary(
-                        coordinate.toString(),
-                        dir,
-                        new File(dir, FN_ANDROID_MANIFEST_XML).getPath(),
-                        jar.getPath(),
-                        jar.getPath(),
-                        new File(dir, "res").getPath(),
-                        null,
-                        new File(dir, "assets").getPath(),
-                        Collections.emptyList(),
-                        new File(dir, "jni").getPath(),
-                        new File(dir, "aidl").getPath(),
-                        new File(dir, "rs").getPath(),
-                        new File(dir, "proguard.pro").getPath(),
-                        new File(dir, "lint.jar").getPath(),
-                        new File(dir, FN_ANNOTATIONS_ZIP).getPath(),
-                        new File(dir, "public.txt").getPath(),
-                        new File(dir, "../lib.aar"),
-                        new File(dir, "R.txt").getPath(),
+                        new IdeAndroidLibraryCore(
+                                coordinate.toString(),
+                                dir,
+                                new File(dir, FN_ANDROID_MANIFEST_XML).getPath(),
+                                jar.getPath(),
+                                jar.getPath(),
+                                new File(dir, "res").getPath(),
+                                null,
+                                new File(dir, "assets").getPath(),
+                                Collections.emptyList(),
+                                new File(dir, "jni").getPath(),
+                                new File(dir, "aidl").getPath(),
+                                new File(dir, "rs").getPath(),
+                                new File(dir, "proguard.pro").getPath(),
+                                new File(dir, "lint.jar").getPath(),
+                                new File(dir, FN_ANNOTATIONS_ZIP).getPath(),
+                                new File(dir, "public.txt").getPath(),
+                                new File(dir, "../lib.aar"),
+                                new File(dir, "R.txt").getPath()),
                         isProvided));
     }
 
@@ -2162,12 +2166,15 @@ public class GradleModelMocker {
             }
         }
 
-        return createLibraryMock(new IdeJavaLibrary(coordinate.toString(), jar, isProvided));
+        return createLibraryMock(
+                new IdeJavaLibrary(new IdeJavaLibraryCore(coordinate.toString(), jar), isProvided));
     }
 
     @NonNull
     private IdeLibrary createModuleLibrary(@NonNull String name) {
-        return createLibraryMock(new IdeModuleLibrary(name, "artifacts:" + name, null));
+        return createLibraryMock(
+                new IdeModuleLibrary(
+                        new IdeModuleLibraryCore(name, "artifacts:" + name, null), false));
     }
 
     @NonNull

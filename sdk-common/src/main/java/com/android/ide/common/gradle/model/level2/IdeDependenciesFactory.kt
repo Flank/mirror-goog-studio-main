@@ -104,7 +104,7 @@ class IdeDependenciesFactory {
     ) {
       if (!visited.contains(artifactAddress)) {
         visited.add(artifactAddress)
-        librariesById.computeIfAbsent(artifactAddress) { IdeLibraryFactory.create(projectPath, artifactAddress, buildId) }
+        librariesById.computeIfAbsent(artifactAddress) { libraryFactory.create(projectPath, artifactAddress, buildId) }
       }
     }
 

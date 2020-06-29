@@ -15,21 +15,32 @@
  */
 package com.android.ide.common.gradle.model.level2
 
+import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
 /**
  * The implementation of IdeLibrary for Java libraries.
  **/
 data class IdeJavaLibrary(
-  override val artifactAddress: String,
-  override val artifact: File,
+  val core: IdeJavaLibraryCore,
   override val isProvided: Boolean
+) : IdeLibrary by core {
+  @VisibleForTesting
+  constructor(
+    artifactAddress: String,
+    artifact: File,
+    isProvided: Boolean
+  ) : this(IdeJavaLibraryCore(artifactAddress, artifact), isProvided)
+}
+
+data class IdeJavaLibraryCore(
+  override val artifactAddress: String,
+  override val artifact: File
 ) : IdeLibrary {
   // Used for serialization by the IDE.
   internal constructor() : this(
     artifactAddress = "",
-    artifact = File(""),
-    isProvided = false
+    artifact = File("")
   )
 
   override val type: IdeLibrary.LibraryType
@@ -92,6 +103,8 @@ data class IdeJavaLibrary(
   override val symbolFile: String
     get() = throw unsupportedMethodForJavaLibrary("getSymbolFile")
 
+  override val isProvided: Nothing
+    get() = error("abstract")
 }
 
 private fun unsupportedMethodForJavaLibrary(methodName: String): UnsupportedOperationException {

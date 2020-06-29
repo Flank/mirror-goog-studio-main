@@ -27,6 +27,12 @@ import java.io.File
  * Creates instance of [IdeLibrary].
  **/
 class IdeLibraryFactory {
+  private val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
+  private val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
+  private val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
+
+  private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }
+
   /**
    * @param androidLibrary Instance of [AndroidLibrary] returned by android plugin.
    * @param moduleBuildDirs Instance of [BuildFolderPaths] that contains map from project
@@ -43,7 +49,7 @@ class IdeLibraryFactory {
       createIdeModuleLibrary(androidLibrary, IdeLibraries.computeAddress(androidLibrary))
     }
     else {
-      IdeAndroidLibrary(
+      val core = IdeAndroidLibraryCore(
         artifactAddress = IdeLibraries.computeAddress(androidLibrary),
         folder = androidLibrary.folder,
         manifest = androidLibrary.manifest.path,
@@ -61,9 +67,10 @@ class IdeLibraryFactory {
         externalAnnotations = androidLibrary.externalAnnotations.path,
         publicResources = androidLibrary.publicResources.path,
         artifact = androidLibrary.bundle,
-        symbolFile = getSymbolFilePath(androidLibrary),
-        isProvided = defaultValueIfNotPresent({ androidLibrary.isProvided }, false)
+        symbolFile = getSymbolFilePath(androidLibrary)
       )
+      val isProvided = defaultValueIfNotPresent({ androidLibrary.isProvided }, false)
+      IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
     }
   }
 
@@ -79,38 +86,44 @@ class IdeLibraryFactory {
       createIdeModuleLibrary(javaLibrary, IdeLibraries.computeAddress(javaLibrary))
     }
     else {
-      IdeJavaLibrary(
-        IdeLibraries.computeAddress(javaLibrary),
-        javaLibrary.jarFile,
-        defaultValueIfNotPresent({ javaLibrary.isProvided }, false)
+      val core = IdeJavaLibraryCore(
+        artifactAddress = IdeLibraries.computeAddress(javaLibrary),
+        artifact = javaLibrary.jarFile
       )
+      val isProvided = defaultValueIfNotPresent({ javaLibrary.isProvided }, false)
+      IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
     }
   }
 
-  fun createIdeModuleLibrary(
-    library: AndroidLibrary, artifactAddress: String): IdeLibrary {
-    return IdeModuleLibrary(
+  fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
+    val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
       buildId = IdeModel.copyNewProperty({ library.buildId }, null),
       projectPath = IdeModel.copyNewProperty({ library.project }, null),
       variant = IdeModel.copyNewProperty({ library.projectVariant }, null),
       folder = defaultValueIfNotPresent({ library.folder }, null),
-      lintJar = defaultValueIfNotPresent({ library.lintJar.path }, null),
-      isProvided = defaultValueIfNotPresent({ library.isProvided }, false)
+      lintJar = defaultValueIfNotPresent({ library.lintJar.path }, null)
     )
+    val isProvided = defaultValueIfNotPresent({ library.isProvided }, false)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 
-  fun createIdeModuleLibrary(
-    library: JavaLibrary, artifactAddress: String): IdeLibrary {
-    return IdeModuleLibrary(
+  fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
+    val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
       buildId = IdeModel.copyNewProperty({ library.buildId }, null),
       projectPath = IdeModel.copyNewProperty({ library.project }, null),
       variant = null,
       folder = null,
-      lintJar = null,
-      isProvided = defaultValueIfNotPresent({ library.isProvided }, false)
+      lintJar = null
     )
+    val isProvided = defaultValueIfNotPresent({ library.isProvided }, false)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+  }
+
+  fun create(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
+    val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
   }
 
   companion object {
@@ -130,15 +143,6 @@ class IdeLibraryFactory {
       catch (ignored: UnsupportedOperationException) {
         defaultValue
       }
-    }
-
-    /**
-     * @param projectPath Name of module dependencies.
-     * @return An instance of [Library] of type LIBRARY_MODULE.
-     */
-    @JvmStatic
-    fun create(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
-      return IdeModuleLibrary(projectPath, artifactAddress, buildId)
     }
   }
 }
