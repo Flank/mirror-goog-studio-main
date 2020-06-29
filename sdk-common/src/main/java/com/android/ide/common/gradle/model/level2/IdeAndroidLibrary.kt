@@ -47,7 +47,7 @@ data class IdeAndroidLibrary(
     symbolFile: String,
     isProvided: Boolean
   ) : this(
-    IdeAndroidLibraryCore(
+    IdeAndroidLibraryCore.create(
       artifactAddress,
       folder,
       manifest,
@@ -65,7 +65,8 @@ data class IdeAndroidLibrary(
       externalAnnotations,
       publicResources,
       artifact,
-      symbolFile
+      symbolFile,
+      deduplicate = { this }
     ),
     isProvided
   )
@@ -73,46 +74,65 @@ data class IdeAndroidLibrary(
 
 data class IdeAndroidLibraryCore(
   override val artifactAddress: String,
-  override val folder: File?,
-  override val manifest: String,
-  override val jarFile: String,
-  override val compileJarFile: String,
-  override val resFolder: String,
-  override val resStaticLibrary: File?,
-  override val assetsFolder: String,
-  override val localJars: Collection<String>,
-  override val jniFolder: String,
-  override val aidlFolder: String,
-  override val renderscriptFolder: String,
-  override val proguardRules: String,
-  override val lintJar: String,
-  override val externalAnnotations: String,
-  override val publicResources: String,
-  override val artifact: File,
-  override val symbolFile: String
+  override val folder: File,
+  private val _manifest: String,
+  private val _jarFile: String,
+  private val _compileJarFile: String,
+  private val _resFolder: String,
+  private val _resStaticLibrary: String?,
+  private val _assetsFolder: String,
+  private val _localJars: Collection<String>,
+  private val _jniFolder: String,
+  private val _aidlFolder: String,
+  private val _renderscriptFolder: String,
+  private val _proguardRules: String,
+  private val _lintJar: String,
+  private val _externalAnnotations: String,
+  private val _publicResources: String,
+  private val _artifact: String,
+  private val _symbolFile: String
 ) : IdeLibrary {
 
   // Used for serialization by the IDE.
   internal constructor() : this(
     artifactAddress = "",
-    folder = null,
-    manifest = "",
-    jarFile = "",
-    compileJarFile = "",
-    resFolder = "",
-    resStaticLibrary = null,
-    assetsFolder = "",
-    localJars = mutableListOf(),
-    jniFolder = "",
-    aidlFolder = "",
-    renderscriptFolder = "",
-    proguardRules = "",
-    lintJar = "",
-    externalAnnotations = "",
-    publicResources = "",
-    artifact = File(""),
-    symbolFile = ""
+    folder = File(""),
+    _manifest = "",
+    _jarFile = "",
+    _compileJarFile = "",
+    _resFolder = "",
+    _resStaticLibrary = null,
+    _assetsFolder = "",
+    _localJars = mutableListOf(),
+    _jniFolder = "",
+    _aidlFolder = "",
+    _renderscriptFolder = "",
+    _proguardRules = "",
+    _lintJar = "",
+    _externalAnnotations = "",
+    _publicResources = "",
+    _artifact = "",
+    _symbolFile = ""
   )
+
+  private fun String.translate(): String = folder.resolve(this).normalize().path
+
+  override val manifest: String get() = _manifest.translate()
+  override val jarFile: String get() = _jarFile.translate()
+  override val compileJarFile: String get() = _compileJarFile.translate()
+  override val resFolder: String get() = _resFolder.translate()
+  override val resStaticLibrary: File? get() = _resStaticLibrary?.translate()?.let(::File)
+  override val assetsFolder: String get() = _assetsFolder.translate()
+  override val localJars: Collection<String> get() = _localJars.map { it.translate() }
+  override val jniFolder: String get() = _jniFolder.translate()
+  override val aidlFolder: String get() = _aidlFolder.translate()
+  override val renderscriptFolder: String get() = _renderscriptFolder.translate()
+  override val proguardRules: String get() = _proguardRules.translate()
+  override val lintJar: String get() = _lintJar.translate()
+  override val externalAnnotations: String get() = _externalAnnotations.translate()
+  override val publicResources: String get() = _publicResources.translate()
+  override val artifact: File get() = File(_artifact.translate())
+  override val symbolFile: String get() = _symbolFile.translate()
 
   override val type: IdeLibrary.LibraryType
     get() = IdeLibrary.LibraryType.LIBRARY_ANDROID
@@ -128,6 +148,54 @@ data class IdeAndroidLibraryCore(
 
   override val isProvided: Nothing
     get() = error("abstract")
+
+  companion object {
+    fun create(
+      artifactAddress: String,
+      folder: File,
+      manifest: String,
+      jarFile: String,
+      compileJarFile: String,
+      resFolder: String,
+      resStaticLibrary: File?,
+      assetsFolder: String,
+      localJars: Collection<String>,
+      jniFolder: String,
+      aidlFolder: String,
+      renderscriptFolder: String,
+      proguardRules: String,
+      lintJar: String,
+      externalAnnotations: String,
+      publicResources: String,
+      artifact: File,
+      symbolFile: String,
+      deduplicate: String.() -> String
+    ): IdeAndroidLibraryCore {
+      fun String.makeRelative(): String = File(this).relativeToOrSelf(folder).path.deduplicate()
+      fun File.makeRelative(): String = this.relativeToOrSelf(folder).path.deduplicate()
+
+      return IdeAndroidLibraryCore(
+        artifactAddress = artifactAddress,
+        folder = folder,
+        _manifest = manifest.makeRelative(),
+        _jarFile = jarFile.makeRelative(),
+        _compileJarFile = compileJarFile.makeRelative(),
+        _resFolder = resFolder.makeRelative(),
+        _resStaticLibrary = resStaticLibrary?.makeRelative(),
+        _assetsFolder = assetsFolder.makeRelative(),
+        _localJars = localJars.map { it.makeRelative() },
+        _jniFolder = jniFolder.makeRelative(),
+        _aidlFolder = aidlFolder.makeRelative(),
+        _renderscriptFolder = renderscriptFolder.makeRelative(),
+        _proguardRules = proguardRules.makeRelative(),
+        _lintJar = lintJar.makeRelative(),
+        _externalAnnotations = externalAnnotations.makeRelative(),
+        _publicResources = publicResources.makeRelative(),
+        _artifact = artifact.makeRelative(),
+        _symbolFile = symbolFile.makeRelative()
+      )
+    }
+  }
 }
 
 private fun unsupportedMethodForAndroidLibrary(methodName: String): UnsupportedOperationException =

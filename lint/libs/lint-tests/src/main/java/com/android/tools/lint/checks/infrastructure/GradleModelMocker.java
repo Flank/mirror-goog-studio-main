@@ -2110,22 +2110,23 @@ public class GradleModelMocker {
                         new IdeAndroidLibraryCore(
                                 coordinate.toString(),
                                 dir,
-                                new File(dir, FN_ANDROID_MANIFEST_XML).getPath(),
-                                jar.getPath(),
-                                jar.getPath(),
-                                new File(dir, "res").getPath(),
+                                FN_ANDROID_MANIFEST_XML,
+                                jar.getPath(), // non relative path is fine here too.
+                                jar.getPath(), // non relative path is fine here too.
+                                "res",
                                 null,
-                                new File(dir, "assets").getPath(),
+                                "assets",
                                 Collections.emptyList(),
-                                new File(dir, "jni").getPath(),
-                                new File(dir, "aidl").getPath(),
-                                new File(dir, "rs").getPath(),
-                                new File(dir, "proguard.pro").getPath(),
-                                new File(dir, "lint.jar").getPath(),
-                                new File(dir, FN_ANNOTATIONS_ZIP).getPath(),
-                                new File(dir, "public.txt").getPath(),
-                                new File(dir, "../lib.aar"),
-                                new File(dir, "R.txt").getPath()),
+                                "jni",
+                                "aidl",
+                                "rs",
+                                "proguard.pro",
+                                "lint.jar",
+                                FN_ANNOTATIONS_ZIP,
+                                "public.txt",
+                                "../lib.aar",
+                                "R.txt"
+                        ),
                         isProvided));
     }
 

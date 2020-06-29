@@ -27,6 +27,7 @@ import java.io.File
  * Creates instance of [IdeLibrary].
  **/
 class IdeLibraryFactory {
+  private val strings = mutableMapOf<String, String>()
   private val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
   private val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
   private val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
@@ -49,7 +50,7 @@ class IdeLibraryFactory {
       createIdeModuleLibrary(androidLibrary, IdeLibraries.computeAddress(androidLibrary))
     }
     else {
-      val core = IdeAndroidLibraryCore(
+      val core = IdeAndroidLibraryCore.create(
         artifactAddress = IdeLibraries.computeAddress(androidLibrary),
         folder = androidLibrary.folder,
         manifest = androidLibrary.manifest.path,
@@ -67,7 +68,8 @@ class IdeLibraryFactory {
         externalAnnotations = androidLibrary.externalAnnotations.path,
         publicResources = androidLibrary.publicResources.path,
         artifact = androidLibrary.bundle,
-        symbolFile = getSymbolFilePath(androidLibrary)
+        symbolFile = getSymbolFilePath(androidLibrary),
+        deduplicate = { strings.getOrPut(this) { this } }
       )
       val isProvided = defaultValueIfNotPresent({ androidLibrary.isProvided }, false)
       IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
