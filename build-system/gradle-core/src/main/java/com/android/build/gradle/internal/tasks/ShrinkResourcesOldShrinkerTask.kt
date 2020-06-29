@@ -19,12 +19,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.pipeline.ExtendedContentType
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -157,13 +154,6 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
         override val type = ShrinkResourcesOldShrinkerTask::class.java
         override val name = computeTaskName("shrink", "Res")
 
-        private val classes = componentProperties.transformManager
-            .getPipelineOutputAsFileCollection { contentTypes, scopes ->
-                scopes.intersect(TransformManager.SCOPE_FULL_PROJECT).isNotEmpty()
-                        && (contentTypes.contains(DefaultContentType.CLASSES)
-                        || contentTypes.contains(ExtendedContentType.DEX))
-            }
-
         private lateinit var artifactTransformationRequest: ArtifactTransformationRequestImpl<ShrinkResourcesOldShrinkerTask>
 
         override fun handleProvider(
@@ -228,15 +218,15 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
             task.classes.from(
-                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8
-                    && creationConfig.variantType.isAar) {
-                    creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
+                if (creationConfig.variantScope.codeShrinker == CodeShrinker.PROGUARD) {
+                    creationConfig.artifacts.get(InternalArtifactType.SHRUNK_JAR)
                 } else {
-                    artifacts.getAll(InternalMultipleArtifactType.DEX)
-                        .map {
-                            if (it.isEmpty()) { classes } else {
-                                creationConfig.globalScope.project.files(it)
-                            }
+                    check(creationConfig.variantScope.codeShrinker == CodeShrinker.R8)
+                    { "Unexpected shrinker type: ${creationConfig.variantScope.codeShrinker}" }
+                    if (creationConfig.variantType.isAar) {
+                        creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
+                    } else {
+                        artifacts.getAll(InternalMultipleArtifactType.DEX)
                     }
                 }
             )
