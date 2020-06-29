@@ -397,7 +397,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
             Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
         }
         IdeLibrary library = mock(IdeLibrary.class);
-        when(library.getType()).thenReturn(IdeLibrary.LIBRARY_ANDROID);
+        when(library.getType()).thenReturn(IdeLibrary.LibraryType.LIBRARY_ANDROID);
         when(library.getPublicResources()).thenReturn(publicTxtFile.getPath());
         when(library.getSymbolFile()).thenReturn(rFile.getPath());
 

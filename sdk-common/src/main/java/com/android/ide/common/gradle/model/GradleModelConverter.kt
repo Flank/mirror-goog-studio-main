@@ -571,7 +571,7 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Ma
 fun convertLibrary(builderModelLibrary: IdeLibrary): Library? =
     with(builderModelLibrary) {
         when (type) {
-            IdeLibrary.LIBRARY_ANDROID -> ExternalLibrary(
+            IdeLibrary.LibraryType.LIBRARY_ANDROID -> ExternalLibrary(
                 address = artifactAddress,
                 location = artifact.toPathString(),
                 manifestFile = PathString(manifest),
@@ -581,11 +581,11 @@ fun convertLibrary(builderModelLibrary: IdeLibrary): Library? =
                 symbolFile = PathString(symbolFile),
                 resApkFile = resStaticLibrary?.let(::PathString)
             )
-            IdeLibrary.LIBRARY_JAVA -> ExternalLibrary(
+            IdeLibrary.LibraryType.LIBRARY_JAVA -> ExternalLibrary(
                 address = artifactAddress,
                 classJars = listOf(artifact.toPathString())
             )
-            IdeLibrary.LIBRARY_MODULE -> {
+            IdeLibrary.LibraryType.LIBRARY_MODULE -> {
                 val path = projectPath
                 if (path == null)
                     null

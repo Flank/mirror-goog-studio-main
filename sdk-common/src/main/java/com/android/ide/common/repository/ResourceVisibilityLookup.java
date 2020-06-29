@@ -625,7 +625,7 @@ public abstract class ResourceVisibilityLookup {
         @VisibleForTesting
         @NonNull
         Multimap<String, ResourceType> getSymbols(@NonNull IdeLibrary library) {
-            if (library.getType() != IdeLibrary.LIBRARY_ANDROID) {
+            if (library.getType() != IdeLibrary.LibraryType.LIBRARY_ANDROID) {
                 return ImmutableListMultimap.of();
             }
 
