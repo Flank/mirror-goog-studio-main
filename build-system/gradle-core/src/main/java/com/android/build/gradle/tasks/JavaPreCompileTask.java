@@ -19,10 +19,8 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
-import static com.android.build.gradle.tasks.JavaCompileUtils.KOTLIN_KAPT_PLUGIN_ID;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -32,7 +30,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +40,6 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -54,9 +49,9 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
 
     @NonNull private RegularFileProperty processorListFile;
 
-    @Nullable private ArtifactCollection annotationProcessorConfiguration;
+    private ArtifactCollection annotationProcessorConfiguration;
 
-    @Nullable private List<String> apOptionClassNames;
+    @NonNull private List<String> apOptionClassNames;
 
     @Inject
     public JavaPreCompileTask(ObjectFactory objectFactory) {
@@ -77,18 +72,9 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         return processorListFile;
     }
 
-    @Optional
     @Classpath
     public FileCollection getAnnotationProcessorConfiguration() {
-        return annotationProcessorConfiguration != null
-                ? annotationProcessorConfiguration.getArtifactFiles()
-                : null;
-    }
-
-    @Optional
-    @Input
-    public List<String> getAPOptionClassNames() {
-        return apOptionClassNames;
+        return annotationProcessorConfiguration.getArtifactFiles();
     }
 
     @Override
@@ -98,10 +84,8 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
                     PreCompileRunnable.class,
                     new PreCompileParams(
                             processorListFile.get().getAsFile(),
-                            annotationProcessorConfiguration != null
-                                    ? toSerializable(annotationProcessorConfiguration)
-                                    : new ArrayList<>(),
-                            apOptionClassNames != null ? apOptionClassNames : new ArrayList<>()));
+                            toSerializable(annotationProcessorConfiguration),
+                            apOptionClassNames));
         }
     }
 
@@ -181,18 +165,15 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         public void configure(@NonNull JavaPreCompileTask task) {
             super.configure(task);
 
-            // Resolve annotation processor classpath only when Kapt is not used (bug 159050744)
-            if (!task.getProject().getPluginManager().hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
-                task.init(
-                        creationConfig
-                                .getVariantDependencies()
-                                .getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
-                        creationConfig
-                                .getVariantDslInfo()
-                                .getJavaCompileOptions()
-                                .getAnnotationProcessorOptions()
-                                .getClassNames());
-            }
+            task.init(
+                    creationConfig
+                            .getVariantDependencies()
+                            .getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
+                    creationConfig
+                            .getVariantDslInfo()
+                            .getJavaCompileOptions()
+                            .getAnnotationProcessorOptions()
+                            .getClassNames());
         }
     }
 }
