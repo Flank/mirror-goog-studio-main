@@ -27,15 +27,15 @@ import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCH
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -48,7 +48,10 @@ import com.android.build.gradle.internal.testing.OnDeviceOrchestratorTestRunner;
 import com.android.build.gradle.internal.testing.ShardedTestRunner;
 import com.android.build.gradle.internal.testing.SimpleTestRunnable;
 import com.android.build.gradle.internal.testing.SimpleTestRunner;
+import com.android.build.gradle.internal.testing.StaticTestData;
 import com.android.build.gradle.internal.testing.TestRunner;
+import com.android.build.gradle.internal.testing.utp.UtpDependencies;
+import com.android.build.gradle.internal.testing.utp.UtpDependency;
 import com.android.build.gradle.internal.testing.utp.UtpDependencyUtilsKt;
 import com.android.build.gradle.internal.testing.utp.UtpTestRunner;
 import com.android.build.gradle.options.BooleanOption;
@@ -58,12 +61,10 @@ import com.android.builder.model.TestOptions;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.ide.common.process.JavaProcessExecutor;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -77,23 +78,23 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -101,7 +102,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
 import org.gradle.process.ExecOperations;
-import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
 public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTask
@@ -110,29 +110,97 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     private static final Predicate<File> IS_APK =
             file -> SdkConstants.EXT_ANDROID_PACKAGE.equals(Files.getFileExtension(file.getName()));
 
-    private interface TestRunnerFactory {
-        TestRunner build(
-                @Nullable File splitSelectExec,
-                @NonNull ProcessExecutor processExecutor,
-                @NonNull JavaProcessExecutor javaProcessExecutor);
+    public abstract static class TestRunnerFactory {
+        @Input
+        public abstract Property<Boolean> getUnifiedTestPlatform();
+
+        @Input
+        public abstract Property<Boolean> getUsesRetention();
+
+        @Input
+        public abstract Property<Boolean> getShardBetweenDevices();
+
+        @Input
+        @Optional
+        public abstract Property<Integer> getNumShards();
+
+        @Input
+        public abstract Property<TestOptions.Execution> getExecutionEnum();
+
+        @Internal
+        public abstract Property<SdkComponentsBuildService> getSdkBuildService();
+
+        @Nested
+        public abstract UtpDependencies getUtpDependencies();
+
+        @Inject
+        public ExecOperations getExecOperations() {
+            throw new UnsupportedOperationException("Injected by Gradle.");
+        }
+
+        @InputFile
+        @PathSensitive(PathSensitivity.NONE)
+        public Provider<File> getSplitSelectExec() {
+            return getSdkBuildService()
+                    .flatMap(SdkComponentsBuildService::getSplitSelectExecutableProvider);
+        }
+
+        TestRunner createTestRunner(ExecutorServiceAdapter executorServiceAdapter) {
+            GradleProcessExecutor gradleProcessExecutor =
+                    new GradleProcessExecutor(getExecOperations()::exec);
+            JavaProcessExecutor javaProcessExecutor =
+                    new GradleJavaProcessExecutor(getExecOperations()::javaexec);
+
+            if (getUnifiedTestPlatform().get()) {
+                return new UtpTestRunner(
+                        getSplitSelectExec().getOrNull(),
+                        gradleProcessExecutor,
+                        javaProcessExecutor,
+                        executorServiceAdapter,
+                        getUtpDependencies(),
+                        getSdkBuildService().get(),
+                        getUsesRetention().get());
+            } else {
+                switch (getExecutionEnum().get()) {
+                    case ANDROID_TEST_ORCHESTRATOR:
+                    case ANDROIDX_TEST_ORCHESTRATOR:
+                        Preconditions.checkArgument(
+                                !getShardBetweenDevices().get(),
+                                "Sharding is not supported with Android Test Orchestrator.");
+
+                        return new OnDeviceOrchestratorTestRunner(
+                                getSplitSelectExec().getOrNull(),
+                                gradleProcessExecutor,
+                                getExecutionEnum().get(),
+                                executorServiceAdapter);
+                    case HOST:
+                        if (getShardBetweenDevices().get()) {
+
+                            return new ShardedTestRunner(
+                                    getSplitSelectExec().getOrNull(),
+                                    gradleProcessExecutor,
+                                    getNumShards().get(),
+                                    executorServiceAdapter);
+                        } else {
+
+                            return new SimpleTestRunner(
+                                    getSplitSelectExec().getOrNull(),
+                                    gradleProcessExecutor,
+                                    executorServiceAdapter);
+                        }
+                    default:
+                        throw new AssertionError("Unknown value " + getExecutionEnum().get());
+                }
+            }
+        }
     }
 
     private DeviceProvider deviceProvider;
-    private File reportsDir;
-    private FileCollection buddyApks;
-    private ProcessExecutor processExecutor;
-    private String flavorName;
-    private Provider<File> splitSelectExecProvider;
-    private AbstractTestDataImpl testData;
-    private TestRunnerFactory testRunnerFactory;
     private boolean ignoreFailures;
     private boolean testFailed;
 
     // For analytics only
-    private boolean codeCoverageEnabled;
-    private TestOptions.Execution testExecution;
-    private Configuration dependencies;
-    @NonNull private final ExecOperations execOperations;
+    private ArtifactCollection dependencies;
 
     /**
      * The workers object is of type ExecutorServiceAdapter instead of WorkerExecutorFacade to
@@ -145,20 +213,14 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         return Workers.INSTANCE.withThreads(getProjectName(), getPath());
     }
 
-    @Nullable private Collection<String> installOptions;
-
-    @Inject
-    public DeviceProviderInstrumentTestTask(
-            ObjectFactory objectFactory, @NonNull ExecOperations execOperations) {
-        this.execOperations = execOperations;
-    }
-
     @Override
-    protected void doTaskAction()
-            throws DeviceException, IOException, ParserConfigurationException, SAXException,
-                    ExecutionException {
+    protected void doTaskAction() throws DeviceException, IOException, ExecutionException {
+        if (!deviceProvider.isConfigured()) {
+            setDidWork(false);
+            return;
+        }
         checkForNonApks(
-                buddyApks.getFiles(),
+                getBuddyApks().getFiles(),
                 message -> {
                     throw new InvalidUserDataException(message);
                 });
@@ -187,28 +249,21 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
-            GradleProcessExecutor gradleProcessExecutor =
-                    new GradleProcessExecutor(execOperations::exec);
-            JavaProcessExecutor javaProcessExecutor =
-                    new GradleJavaProcessExecutor(execOperations::javaexec);
             success =
                     deviceProvider.use(
                             () -> {
                                 TestRunner testRunner =
-                                        testRunnerFactory.build(
-                                                getSplitSelectExec().get(),
-                                                gradleProcessExecutor,
-                                                javaProcessExecutor);
+                                        getTestRunnerFactory()
+                                                .createTestRunner(getExecutorServiceAdapter());
                                 Collection<String> extraArgs =
-                                        installOptions == null || installOptions.isEmpty()
-                                                ? ImmutableList.of()
-                                                : installOptions;
+                                        getInstallOptions().getOrElse(ImmutableList.of());
+                                ;
                                 try {
                                     return testRunner.runTests(
                                             getProjectName(),
-                                            getFlavorName(),
-                                            testData.get(),
-                                            buddyApks.getFiles(),
+                                            getFlavorName().get(),
+                                            getStaticTestData().get(),
+                                            getBuddyApks().getFiles(),
                                             deviceProvider.getDevices(),
                                             deviceProvider.getTimeoutInMs(),
                                             extraArgs,
@@ -219,21 +274,26 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                             new LoggerWrapper(getLogger()));
                                 } catch (Exception e) {
                                     InstrumentationTestAnalytics.recordCrashedTestRun(
-                                            dependencies, testExecution, codeCoverageEnabled);
+                                            dependencies,
+                                            getTestRunnerFactory().getExecutionEnum().get(),
+                                            getCodeCoverageEnabled().get());
                                     throw e;
                                 }
                             });
         }
 
         // run the report from the results.
-        File reportOutDir = getReportsDir();
+        File reportOutDir = getReportsDir().getAsFile().get();
         FileUtils.cleanOutputDir(reportOutDir);
 
         TestReport report = new TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir);
         CompositeTestResults results = report.generateReport();
 
         InstrumentationTestAnalytics.recordOkTestRun(
-                dependencies, testExecution, codeCoverageEnabled, results.getTestCount());
+                dependencies,
+                getTestRunnerFactory().getExecutionEnum().get(),
+                getCodeCoverageEnabled().get(),
+                results.getTestCount());
 
         if (!success) {
             testFailed = true;
@@ -280,13 +340,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     }
 
     @OutputDirectory
-    public File getReportsDir() {
-        return reportsDir;
-    }
-
-    public void setReportsDir(File reportsDir) {
-        this.reportsDir = reportsDir;
-    }
+    public abstract DirectoryProperty getReportsDir();
 
     @Override
     @OutputDirectory
@@ -299,41 +353,21 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @OutputDirectory
     public abstract DirectoryProperty getCoverageDirectory();
 
-    @Deprecated
-    @Internal
-    public File getCoverageDir() {
-        return getCoverageDirectory().get().getAsFile();
-    }
-
-    @Deprecated
-    public void setCoverageDir(File coverageDir) {
-        getLogger()
-                .info(
-                        "DeviceProviderInstrumentTestTask.setCoverageDir is deprecated and has no"
-                                + " effect.");
-    }
+    @Input
+    public abstract Property<Boolean> getCodeCoverageEnabled();
 
     @Internal
-    public String getFlavorName() {
-        return flavorName;
-    }
-
-    public void setFlavorName(String flavorName) {
-        this.flavorName = flavorName;
-    }
+    public abstract Property<String> getFlavorName();
 
     @Input
     public abstract Property<Boolean> getAdditionalTestOutputEnabled();
 
+    @Input
+    public abstract Property<Integer> getTimeOutInMs();
+
     @Optional
     @Input
-    public Collection<String> getInstallOptions() {
-        return installOptions;
-    }
-
-    public void setInstallOptions(Collection<String> installOptions) {
-        this.installOptions = installOptions;
-    }
+    public abstract ListProperty<String> getInstallOptions();
 
     @Internal
     public DeviceProvider getDeviceProvider() {
@@ -345,19 +379,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     }
 
     @Internal
-    public AbstractTestDataImpl getTestData() {
-        return testData;
-    }
+    public abstract Property<StaticTestData> getStaticTestData();
 
-    public void setTestData(@NonNull AbstractTestDataImpl testData) {
-        this.testData = testData;
-    }
-
-    @InputFile
-    @PathSensitive(PathSensitivity.NONE)
-    public Provider<File> getSplitSelectExec() {
-        return splitSelectExecProvider;
-    }
+    @Nested
+    public abstract TestRunnerFactory getTestRunnerFactory();
 
     @Override
     public boolean getIgnoreFailures() {
@@ -377,29 +402,21 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getBuddyApks() {
-        return buddyApks;
-    }
+    public abstract ConfigurableFileCollection getBuddyApks();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public Provider<Directory> getTestApkDir() {
-        return testData.getTestApkDir();
-    }
+    public abstract DirectoryProperty getTestApkDir();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
-    public FileCollection getTestedApksDir() {
-        return testData.getTestedApksDir();
-    }
+    public abstract ConfigurableFileCollection getTestedApksDir();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
-    public FileCollection getTestedApksFromBundle() {
-        return testData.getTestedApksFromBundle();
-    }
+    public abstract ConfigurableFileCollection getTestedApksFromBundle();
 
     @Internal
     public abstract ConfigurableFileCollection getTestDirectories();
@@ -507,12 +524,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         }
 
         @Override
-        public void configure(
-                @NonNull DeviceProviderInstrumentTestTask task) {
+        public void configure(@NonNull DeviceProviderInstrumentTestTask task) {
             super.configure(task);
 
-            GlobalScope globalScope = creationConfig.getGlobalScope();
-            Project project = globalScope.getProject();
+            BaseExtension extension = creationConfig.getGlobalScope().getExtension();
+            Project project = task.getProject();
             ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
 
             // this can be null for test plugin
@@ -536,15 +552,36 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     .set(projectOptions.get(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT));
 
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-            task.setTestData(testData);
-            task.setFlavorName(testData.getFlavorName());
+            task.getTestedApksDir().from(testData.getTestedApksDir());
+            task.getTestApkDir().set(testData.getTestApkDir());
+            task.getTestedApksFromBundle().from(testData.getTestedApksFromBundle());
+            task.getStaticTestData().set(project.provider(testData::get));
+            task.getFlavorName().set(testData.getFlavorName());
             task.setDeviceProvider(deviceProvider);
-            task.setInstallOptions(globalScope.getExtension().getAdbOptions().getInstallOptions());
+            task.getTimeOutInMs().set(extension.getAdbOptions().getTimeOutInMs());
+            task.getInstallOptions().set(extension.getAdbOptions().getInstallOptions());
+            task.getTestRunnerFactory()
+                    .getShardBetweenDevices()
+                    .set(projectOptions.getProvider(BooleanOption.ENABLE_TEST_SHARDING));
+            task.getTestRunnerFactory()
+                    .getNumShards()
+                    .set(projectOptions.getProvider(IntegerOption.ANDROID_TEST_SHARD_COUNT));
+            task.getTestRunnerFactory()
+                    .getSdkBuildService()
+                    .set(
+                            BuildServicesKt.getBuildService(
+                                    creationConfig.getServices().getBuildServiceRegistry(),
+                                    SdkComponentsBuildService.class));
+            task.getTestRunnerFactory()
+                    .getUsesRetention()
+                    .set(projectOptions.getProvider(BooleanOption.ANDROID_TEST_USES_RETENTION));
 
-            final TestOptions.Execution executionEnum =
-                    globalScope.getExtension().getTestOptions().getExecutionEnum();
-            task.testExecution = executionEnum;
-            if (projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+            TestOptions.Execution executionEnum = extension.getTestOptions().getExecutionEnum();
+            task.getTestRunnerFactory().getExecutionEnum().set(executionEnum);
+            boolean useUtp =
+                    projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM);
+            task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
+            if (useUtp) {
                 Preconditions.checkArgument(
                         executionEnum == ANDROIDX_TEST_ORCHESTRATOR,
                         "Unified Test Platform only supports Android Test Orchestrator. "
@@ -553,66 +590,54 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 + BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM
                                         .getPropertyName());
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
-                SdkComponentsBuildService sdkBuildService =
-                        BuildServicesKt.getBuildService(
-                                        creationConfig.getServices().getBuildServiceRegistry(),
-                                        SdkComponentsBuildService.class)
-                                .get();
-                // TODO(b/155306123): move the project options into task input.
-                task.testRunnerFactory =
-                        (splitSelectExec, processExecutor, javaProcessExecutor) ->
-                                new UtpTestRunner(
-                                        splitSelectExec,
-                                        processExecutor,
-                                        javaProcessExecutor,
-                                        task.getExecutorServiceAdapter(),
-                                        project.getConfigurations(),
-                                        sdkBuildService,
-                                        projectOptions.get(
-                                                BooleanOption.ANDROID_TEST_USES_RETENTION));
-            } else {
-                boolean shardBetweenDevices =
-                        projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
-                switch (executionEnum) {
-                    case ANDROID_TEST_ORCHESTRATOR:
-                    case ANDROIDX_TEST_ORCHESTRATOR:
-                        Preconditions.checkArgument(
-                                !shardBetweenDevices,
-                                "Sharding is not supported with Android Test Orchestrator.");
-                        task.testRunnerFactory =
-                                (splitSelect, processExecutor, javaProcessExecutor) ->
-                                        new OnDeviceOrchestratorTestRunner(
-                                                splitSelect,
-                                                processExecutor,
-                                                executionEnum,
-                                                task.getExecutorServiceAdapter());
-                        break;
-                    case HOST:
-                        if (shardBetweenDevices) {
-                            Integer numShards =
-                                    projectOptions.get(IntegerOption.ANDROID_TEST_SHARD_COUNT);
-                            task.testRunnerFactory =
-                                    (splitSelect, processExecutor, javaProcessExecutor) ->
-                                            new ShardedTestRunner(
-                                                    splitSelect,
-                                                    processExecutor,
-                                                    numShards,
-                                                    task.getExecutorServiceAdapter());
-                        } else {
-                            task.testRunnerFactory =
-                                    (splitSelect, processExecutor, javaProcessExecutor) ->
-                                            new SimpleTestRunner(
-                                                    splitSelect,
-                                                    processExecutor,
-                                                    task.getExecutorServiceAdapter());
-                        }
-                        break;
-                    default:
-                        throw new AssertionError("Unknown value " + executionEnum);
-                }
+                ConfigurationContainer configurations = task.getProject().getConfigurations();
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getLauncher()
+                        .from(configurations.getByName(UtpDependency.LAUNCHER.name()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getCore()
+                        .from(configurations.getByName(UtpDependency.CORE.name()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getDeviceProviderLocal()
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL.name()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getDeviceControllerAdb()
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB.name()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getDriverInstrumentation()
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.ANDROID_DRIVER_INSTRUMENTATION.name()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getTestPlugin()
+                        .from(configurations.getByName(UtpDependency.ANDROID_TEST_PLUGIN.name()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getTestPluginHostRetention()
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION.name()));
             }
-            task.codeCoverageEnabled = creationConfig.getVariantDslInfo().isTestCoverageEnabled();
-            task.dependencies = creationConfig.getVariantDependencies().getRuntimeClasspath();
+
+            task.getCodeCoverageEnabled()
+                    .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());
+            task.dependencies =
+                    creationConfig
+                            .getVariantDependencies()
+                            .getArtifactCollection(
+                                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                                    AndroidArtifacts.ArtifactScope.EXTERNAL,
+                                    AndroidArtifacts.ArtifactType.CLASSES_JAR);
 
             String flavorFolder = testData.getFlavorName();
             if (!flavorFolder.isEmpty()) {
@@ -624,35 +649,26 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            task.splitSelectExecProvider =
-                    globalScope
-                            .getSdkComponents()
-                            .flatMap(SdkComponentsBuildService::getSplitSelectExecutableProvider);
-
-            String rootLocation = globalScope.getExtension().getTestOptions().getResultsDir();
+            String rootLocation = extension.getTestOptions().getResultsDir();
             if (rootLocation == null) {
-                rootLocation =
-                        globalScope.getBuildDir() + "/" + FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
+                rootLocation = project.getBuildDir() + "/" + FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
             }
             task.getResultsDir().set(new File(rootLocation + subFolder));
 
-            rootLocation = globalScope.getExtension().getTestOptions().getReportDir();
+            rootLocation = extension.getTestOptions().getReportDir();
             if (rootLocation == null) {
-                rootLocation =
-                        globalScope.getBuildDir() + "/" + FD_REPORTS + "/" + FD_ANDROID_TESTS;
+                rootLocation = project.getBuildDir() + "/" + FD_REPORTS + "/" + FD_ANDROID_TESTS;
             }
-            task.reportsDir = project.file(rootLocation + subFolder);
+            task.getReportsDir().set(project.file(rootLocation + subFolder));
 
             // The configuration is not created by the experimental plugin, so just create an empty
             // FileCollection in this case.
-            task.buddyApks =
-                    MoreObjects.firstNonNull(
-                            project.getConfigurations()
-                                    .findByName(
-                                            SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION),
-                            project.files());
-
-            task.setEnabled(deviceProvider.isConfigured());
+            Configuration androidTestUtil =
+                    project.getConfigurations()
+                            .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
+            if (androidTestUtil != null) {
+                task.getBuddyApks().from(androidTestUtil);
+            }
 
             // This task should not be UP-TO-DATE as we don't model the device state as input yet.
             task.getOutputs().upToDateWhen(it -> false);

@@ -15,13 +15,10 @@
  */
 package com.android.build.gradle.internal.testing
 
-import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.ide.common.process.ProcessException
 import com.android.sdklib.AndroidVersion
-import com.android.utils.ILogger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import java.io.File
 
 /**
@@ -69,10 +66,7 @@ interface TestData {
      * @return the file to install or null if non is compatible.
      */
     @Throws(ProcessException::class)
-    fun getTestedApks(
-        deviceConfigProvider: DeviceConfigProvider,
-        logger: ILogger
-    ): List<File?>
+    fun getTestedApkFinder(): TestApkFinder
 
     /**
      * Returns the flavor name being test.

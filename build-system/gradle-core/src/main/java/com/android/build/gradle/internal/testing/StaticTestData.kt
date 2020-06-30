@@ -19,10 +19,9 @@ package com.android.build.gradle.internal.testing
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
-import com.google.common.collect.ImmutableList
 import java.io.File
 
-data class StaticTestData (
+data class StaticTestData(
     val applicationId: String,
 
     val testedApplicationId: String?,
@@ -45,5 +44,9 @@ data class StaticTestData (
 
     val testDirectories: List<File?>,
 
-    val testedApks: (deviceConfigProvider: DeviceConfigProvider, logger: ILogger) -> List<File>
+    val testedApks: TestApkFinder
 )
+
+interface TestApkFinder {
+    fun findTestedApks(deviceConfigProvider: DeviceConfigProvider, logger: ILogger): List<File>
+}

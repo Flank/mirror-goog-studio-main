@@ -18,9 +18,8 @@ package com.android.build.gradle.internal.test
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.testing.TestApkFinder
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -44,8 +43,13 @@ class TestApplicationTestData constructor(
     override val isLibrary: Boolean
         get() = false
 
-    override fun getTestedApks(
-        deviceConfigProvider: DeviceConfigProvider, logger: ILogger
+    override fun getTestedApkFinder() = TestApplicationTestApkFinder(testedApksDir)
+}
+
+class TestApplicationTestApkFinder(private val testedApksDir: FileCollection?) : TestApkFinder {
+    override fun findTestedApks(
+        deviceConfigProvider: DeviceConfigProvider,
+        logger: ILogger
     ): List<File> {
         if (testedApksDir == null) {
             return ImmutableList.of()

@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal.test
 
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.tasks.getApkFiles
+import com.android.build.gradle.internal.testing.TestApkFinder
 import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.testing.api.DeviceConfigProvider
@@ -51,10 +50,17 @@ internal class BundleTestDataImpl constructor(
     override val isLibrary: Boolean
         get() = false
 
-    override fun getTestedApks(
+    override fun getTestedApksFromBundle(): FileCollection? = apkBundle
+
+    override fun getTestedApkFinder(): TestApkFinder = BundleTestApkFinder(moduleName, apkBundle)
+}
+
+class BundleTestApkFinder(private val moduleName: String?, private val apkBundle: FileCollection) :
+    TestApkFinder {
+    override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger
-    ): ImmutableList<File> {
+    ): List<File> {
         if (moduleName != null && deviceConfigProvider.apiLevel < 21) {
             // Bundle tool fuses APKs below 21, requesting a module will return an error even if that
             // module is fused.
@@ -62,9 +68,10 @@ internal class BundleTestDataImpl constructor(
             logger.warning("Testing dynamic features on devices API < 21 is not currently supported.")
             return ImmutableList.of<File>()
         }
-        return getApkFiles(apkBundle.singleFile.toPath(), deviceConfigProvider, moduleName).map{it.toFile()}.toImmutableList()
+        return getApkFiles(
+            apkBundle.singleFile.toPath(),
+            deviceConfigProvider,
+            moduleName
+        ).map { it.toFile() }.toImmutableList()
     }
-
-    override fun getTestedApksFromBundle(): FileCollection? = apkBundle
-
 }

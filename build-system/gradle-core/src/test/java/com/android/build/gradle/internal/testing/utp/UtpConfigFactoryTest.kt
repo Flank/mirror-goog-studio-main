@@ -17,16 +17,18 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.build.gradle.internal.testing.TestApkFinder
+import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
+import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.junit.Before
@@ -34,18 +36,18 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import java.io.File
+import java.nio.file.Paths
 
 /**
  * Unit tests for [UtpConfigFactory].
  */
 class UtpConfigFactoryTest {
     @get:Rule var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
-    @Mock lateinit var mockConfigurationContainer: ConfigurationContainer
     @Mock lateinit var mockSdkComponents: SdkComponentsBuildService
     @Mock
     lateinit var mockAppApk: File
@@ -87,26 +89,30 @@ class UtpConfigFactoryTest {
         flavorName = "",
         testApk = File(""),
         testDirectories = emptyList(),
-        testedApks = {_, _ -> emptyList<File>() }
+        testedApks = object: TestApkFinder{
+            override fun findTestedApks(
+                deviceConfigProvider: DeviceConfigProvider,
+                logger: ILogger
+            ) = emptyList<File>()
+        }
     )
+    private val utpDependencies = object: UtpDependencies() {
+        private fun mockFile(absolutePath: String): File = mock(File::class.java).also {
+            `when`(it.absolutePath).thenReturn(absolutePath)
+        }
+
+        override val launcher = FakeConfigurableFileCollection(File(""))
+        override val core = FakeConfigurableFileCollection(File(""))
+        override val deviceProviderLocal = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"))
+        override val deviceControllerAdb = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_CONTROLLER_ADB.jar"))
+        override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
+        override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
+        override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
+    }
 
     @Before
     fun setupMocks() {
         `when`(mockDevice.serialNumber).thenReturn("mockDeviceSerialNumber")
-        `when`(mockConfigurationContainer.getByName(ArgumentMatchers.anyString())).then {
-            val configName = it.getArgument<String>(0)
-            UtpDependency.values()
-                    .filter { it.configurationName == configName }
-                    .map {
-                        val mockJar = Mockito.mock(File::class.java)
-                        `when`(mockJar.absolutePath).thenReturn("pathTo${it.name}.jar")
-                        val mockConfig = Mockito.mock(Configuration::class.java)
-                        `when`(mockConfig.files).thenReturn(setOf(mockJar))
-                        `when`(mockConfig.singleFile).thenReturn(mockJar)
-                        mockConfig
-                    }
-                    .firstOrNull()
-        }
         `when`(mockOutputDir.absolutePath).thenReturn("mockOutputDirPath")
         `when`(mockTmpDir.absolutePath).thenReturn("mockTmpDirPath")
         `when`(mockTestLogDir.absolutePath).thenReturn("mockTestLogDirPath")
@@ -142,7 +148,7 @@ class UtpConfigFactoryTest {
             mockDevice,
             testData,
             listOf(mockAppApk, mockTestApk, mockHelperApk),
-            mockConfigurationContainer,
+            utpDependencies,
             mockSdkComponents,
             mockOutputDir,
             mockTmpDir,
@@ -270,7 +276,7 @@ class UtpConfigFactoryTest {
             mockDevice,
             testData,
             listOf(mockAppApk, mockTestApk, mockHelperApk),
-            mockConfigurationContainer,
+            utpDependencies,
             mockSdkComponents,
             mockOutputDir,
             mockTmpDir,

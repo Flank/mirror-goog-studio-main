@@ -17,7 +17,10 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.build.gradle.internal.testing.TestApkFinder
+import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.JavaProcessInfo
@@ -35,8 +38,6 @@ import com.google.protobuf.TextFormat
 import com.google.test.platform.config.v1.proto.RunnerConfigProto
 import com.google.test.platform.core.proto.TestSuiteResultProto
 import com.google.test.platform.server.proto.ServerConfigProto.ServerConfig
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ConfigurationContainer
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -44,7 +45,6 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyIterable
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -63,7 +63,6 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockProcessExecutor: ProcessExecutor
     @Mock lateinit var mockJavaProcessExecutor: JavaProcessExecutor
     @Mock lateinit var mockExecutorServiceAdapter: ExecutorServiceAdapter
-    @Mock lateinit var mockConfigurationContainer: ConfigurationContainer
     @Mock lateinit var mockSdkComponents: SdkComponentsBuildService
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
@@ -74,35 +73,35 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
 
+    private val utpDependencies = object: UtpDependencies() {
+        override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
+        override val core = FakeConfigurableFileCollection(File("/pathToCORE.jar"))
+        override val deviceProviderLocal = FakeConfigurableFileCollection(File(""))
+        override val deviceControllerAdb = FakeConfigurableFileCollection(File(""))
+        override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
+        override val testPlugin = FakeConfigurableFileCollection(File(""))
+        override val testPluginHostRetention = FakeConfigurableFileCollection(File(""))
+    }
+
     @Before
     fun setupMocks() {
         `when`(mockDevice.apiLevel).thenReturn(28)
         `when`(mockDevice.name).thenReturn("mockDeviceName")
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersion(28))
         `when`(mockTestData.testApk).thenReturn(mockTestApk)
-        `when`(mockTestData.testedApks).thenReturn { _, _ -> listOf(mockAppApk) }
-
-        `when`(mockConfigurationContainer.getByName(anyString())).then {
-            val configName = it.getArgument<String>(0)
-            UtpDependency.values()
-                    .filter { it.configurationName == configName }
-                    .map {
-                        val mockJar = mock(File::class.java)
-                        `when`(mockJar.absolutePath).thenReturn("pathTo${it.name}.jar")
-                        val mockConfig = mock(Configuration::class.java)
-                        `when`(mockConfig.files).thenReturn(setOf(mockJar))
-                        `when`(mockConfig.singleFile).thenReturn(mockJar)
-                        mockConfig
-                    }
-                    .firstOrNull()
-        }
+        `when`(mockTestData.testedApks).thenReturn(object : TestApkFinder {
+            override fun findTestedApks(
+                deviceConfigProvider: DeviceConfigProvider,
+                logger: ILogger
+            ) = listOf(mockAppApk)
+        })
 
         var utpOutputDir: File? = null
         `when`(mockUtpConfigFactory.createRunnerConfigProto(
                 any(DeviceConnector::class.java),
                 any(StaticTestData::class.java),
                 anyIterable(),
-                any(ConfigurationContainer::class.java),
+                any(UtpDependencies::class.java),
                 any(SdkComponentsBuildService::class.java),
                 any(File::class.java),
                 any(File::class.java),
@@ -156,7 +155,7 @@ class UtpTestRunnerTest {
                 mockProcessExecutor,
                 mockJavaProcessExecutor,
                 mockExecutorServiceAdapter,
-                mockConfigurationContainer,
+                utpDependencies,
                 mockSdkComponents,
                 false,
                 mockUtpConfigFactory)
@@ -177,12 +176,12 @@ class UtpTestRunnerTest {
 
         val captor = ArgumentCaptor.forClass(JavaProcessInfo::class.java)
         verify(mockJavaProcessExecutor).execute(captor.capture(), any(ProcessOutputHandler::class.java))
-        assertThat(captor.value.classpath).isEqualTo("pathToLAUNCHER.jar")
+        assertThat(captor.value.classpath).isEqualTo(utpDependencies.launcher.singleFile.absolutePath)
         assertThat(captor.value.mainClass).isEqualTo(UtpDependency.LAUNCHER.mainClass)
         assertThat(captor.value.jvmArgs).hasSize(1)
         assertThat(captor.value.jvmArgs[0]).startsWith("-Djava.util.logging.config.file=")
         assertThat(captor.value.args).hasSize(3)
-        assertThat(captor.value.args[0]).isEqualTo("pathToCORE.jar")
+        assertThat(captor.value.args[0]).isEqualTo(utpDependencies.core.singleFile.absolutePath)
         assertThat(captor.value.args[1]).startsWith("--proto_config=")
         assertThat(captor.value.args[2]).startsWith("--proto_server_config=")
 

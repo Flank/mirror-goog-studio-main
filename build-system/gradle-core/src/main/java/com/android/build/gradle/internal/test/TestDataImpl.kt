@@ -19,10 +19,8 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher.computeBestOutput
+import com.android.build.gradle.internal.testing.TestApkFinder
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -35,7 +33,7 @@ import java.io.File
  * Implementation of [TestData] on top of a [AndroidTestCreationConfig]
  */
 class TestDataImpl(
-    private val testConfig:  AndroidTestCreationConfig,
+    private val testConfig: AndroidTestCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
@@ -60,27 +58,26 @@ class TestDataImpl(
     override val isLibrary: Boolean
         get() = testConfig.testedConfig.variantType.isAar
 
-    override fun getTestedApks(
-        deviceConfigProvider: DeviceConfigProvider, logger: ILogger
-    ): ImmutableList<File> {
-        val testedConfig = testConfig.testedConfig
-        val apks =
-            ImmutableList.builder<File>()
-        val builtArtifacts = BuiltArtifactsLoaderImpl()
-            .load(
-                testedConfig
-                    .artifacts
-                    .get(ArtifactType.APK)
-                    .get()
-            )
-            ?: return ImmutableList.of()
-        apks.addAll(
-            computeBestOutput(
-                deviceConfigProvider,
-                builtArtifacts,
-                testedConfig.variantDslInfo.supportedAbis
-            )
+    override fun getTestedApkFinder(): TestApkFinder {
+        return AndroidTestTestApkFinder(
+            testConfig.testedConfig.artifacts.get(ArtifactType.APK),
+            testConfig.testedConfig.variantDslInfo.supportedAbis
         )
+    }
+}
+
+class AndroidTestTestApkFinder(
+    private val testedApks: Provider<Directory>,
+    private val supportedAbis: Set<String>
+) : TestApkFinder {
+    override fun findTestedApks(
+        deviceConfigProvider: DeviceConfigProvider,
+        logger: ILogger
+    ): List<File> {
+        val apks = ImmutableList.builder<File>()
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(testedApks.get())
+            ?: return ImmutableList.of()
+        apks.addAll(computeBestOutput(deviceConfigProvider, builtArtifacts, supportedAbis))
         return apks.build()
     }
 }

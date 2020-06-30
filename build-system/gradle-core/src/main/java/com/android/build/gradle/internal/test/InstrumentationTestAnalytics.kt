@@ -27,11 +27,12 @@ import com.android.tools.analytics.recordTestLibrary
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.TestLibraries
 import com.google.wireless.android.sdk.stats.TestRun
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 
 fun recordOkTestRun(
-    dependencies: Configuration,
+    dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
     coverageEnabled: Boolean,
     testCount: Int
@@ -46,7 +47,7 @@ fun recordOkTestRun(
 }
 
 fun recordCrashedTestRun(
-    dependencies: Configuration,
+    dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
     coverageEnabled: Boolean
 ) {
@@ -60,7 +61,7 @@ fun recordCrashedTestRun(
 }
 
 private fun recordTestRun(
-    dependencies: Configuration,
+    dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
     coverageEnabled: Boolean,
     testCount: Int,
@@ -89,10 +90,10 @@ private fun recordTestRun(
     )
 }
 
-private fun gatherTestLibraries(dependencies: Configuration): TestLibraries {
+private fun gatherTestLibraries(dependencies: ArtifactCollection): TestLibraries {
     return TestLibraries.newBuilder().also { testLibraries ->
-        dependencies.incoming.resolutionResult.allComponents { resolvedComponentResult ->
-            val id = resolvedComponentResult.id
+        dependencies.artifacts.forEach { resolvedArtifact ->
+            val id = resolvedArtifact.id.componentIdentifier
             if (id is ModuleComponentIdentifier) {
                 testLibraries.recordTestLibrary(id.group, id.module, id.version)
             }

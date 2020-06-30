@@ -110,10 +110,6 @@ abstract class AbstractTestDataImpl(
             return File(testApkOutputs.elements.iterator().next().outputFile)
         }
 
-    abstract override fun getTestedApks(
-        deviceConfigProvider: DeviceConfigProvider,
-        logger: ILogger): List<File>
-
     override fun get(): StaticTestData {
         return StaticTestData(
             applicationId.get(),
@@ -127,7 +123,7 @@ abstract class AbstractTestDataImpl(
             flavorName,
             testApk,
             testDirectories,
-            this::getTestedApks
+            getTestedApkFinder()
         )
     }
 }
