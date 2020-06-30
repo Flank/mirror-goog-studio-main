@@ -42,7 +42,10 @@ def main():
     env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':
     args.insert(0, '--watchfs')
-    env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
+    if not os.path.exists('/Library/Developer/CommandLineTools'):
+      print('/Library/Developer/CommandLineTools does not exist. Please install it with '
+            'xcode-select --install')
+      sys.exit(1)
   elif sys.platform == 'win32':
     define_env(env, 'BAZEL_SH', 'C:\\tools\\msys64\\usr\\bin\\bash.exe',
         '***NOTE***: Bazel for Windows currently hardcodes "C:\\tools\\msys64", but we\n' +
