@@ -418,4 +418,31 @@ public final class AvdInfo implements Comparable<AvdInfo> {
 
         return imageDiff;
     }
+
+    @NonNull
+    public String toDebugString() {
+        String separator = System.lineSeparator();
+
+        return "mName = "
+                + mName
+                + separator
+                + "mIniFile = "
+                + mIniFile
+                + separator
+                + "mFolderPath = "
+                + mFolderPath
+                + separator
+                + "mProperties = "
+                + mProperties
+                + separator
+                + "mStatus = "
+                + mStatus
+                + separator
+                + "mSystemImage = "
+                + mSystemImage
+                + separator
+                + "mHasPlayStore = "
+                + mHasPlayStore
+                + separator;
+    }
 }
