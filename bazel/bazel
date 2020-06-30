@@ -49,6 +49,17 @@ def main():
     # This is needed for bazel to set itself up, even though we aren't using gcc.
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
   elif sys.platform == 'win32':
+    # We don't need the tools to be installed locally if you're building remotely.
+    # This isn't really the correct check, since --config=remote is just an alias for a bunch of other
+    # settings. But in practice that's how you get into remote mode, so it should be good enough for now
+    # at least.
+    if (not '--config=remote' in args and not '--config=dynamic' in args):
+      if (not os.path.exists('C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.26.28801') or
+              not os.path.exists('C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0')):
+        print('You must have MSVC Buildtools version 14.26.28801 and Windows SDK 10.0.18362.0 installed.\n'
+              'An installer for these is available at go/studio-msvc-tools.')
+        sys.exit(1)
+
     define_env(env, 'BAZEL_SH', 'C:\\tools\\msys64\\usr\\bin\\bash.exe',
         '***NOTE***: Bazel for Windows currently hardcodes "C:\\tools\\msys64", but we\n' +
         'could not find an installation of msys at this path on your machine.\n' +
