@@ -70,11 +70,17 @@ import ${getMaterialComponentName("android.support.design.widget.Snackbar", useA
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
 import android.view.View;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
 $newProjectImportBlock
 $applicationPackageBlock
 
 public class ${activityClass} extends AppCompatActivity {
+
+    private AppBarConfiguration appBarConfiguration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +89,11 @@ public class ${activityClass} extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-       FloatingActionButton fab = findViewById(R.id.fab);
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,6 +103,13 @@ public class ${activityClass} extends AppCompatActivity {
         });
     }
 $newProjectBlock2
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
 }
 """
 }

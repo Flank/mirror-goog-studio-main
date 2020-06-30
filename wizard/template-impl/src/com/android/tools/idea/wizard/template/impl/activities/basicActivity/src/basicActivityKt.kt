@@ -63,15 +63,25 @@ import android.os.Bundle
 import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
 $newProjectImportBlock
 $applicationPackageBlock
 
 class $activityClass : AppCompatActivity() {
 
+    private lateinit var appBarConfiguration: AppBarConfiguration
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.$layoutName)
         setSupportActionBar(findViewById(R.id.toolbar))
+
+        val navController = findNavController(R.id.nav_host_fragment)
+        appBarConfiguration = AppBarConfiguration(navController.graph)
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -79,6 +89,12 @@ class $activityClass : AppCompatActivity() {
         }
     }
 $newProjectBlock2
+
+    override fun onSupportNavigateUp(): Boolean {
+    val navController = findNavController(R.id.nav_host_fragment)
+    return navController.navigateUp(appBarConfiguration)
+            || super.onSupportNavigateUp()
+    }
 }
 """
 }
