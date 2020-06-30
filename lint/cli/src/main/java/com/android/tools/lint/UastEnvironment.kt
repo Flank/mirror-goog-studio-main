@@ -29,6 +29,8 @@ import com.intellij.core.CoreJavaFileManager
 import com.intellij.lang.MetaLanguage
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.diagnostic.DefaultLogger
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.Extensions
 import com.intellij.openapi.extensions.ExtensionsArea
 import com.intellij.openapi.fileTypes.FileTypeExtensionPoint
@@ -292,6 +294,9 @@ class UastEnvironment private constructor(
             System.setProperty("idea.use.native.fs.for.win", "false")
             synchronized(APPLICATION_LOCK) {
                 if (ourApplicationEnvironment == null) {
+                    if (!Logger.isInitialized()) {
+                        Logger.setFactory(::IdeaLoggerForLint)
+                    }
                     Registry.getInstance().markAsLoaded()
                     System.setProperty("idea.plugins.compatible.build", "201.7223.91")
                     val disposable = Disposer.newDisposable()
@@ -446,6 +451,19 @@ class UastEnvironment private constructor(
                     .registerExtension(KotlinEvaluatorExtension(), disposable)
                 getExtensionPoint(UastLanguagePlugin.extensionPointName)
                     .registerExtension(KotlinUastLanguagePlugin(), disposable)
+            }
+        }
+
+        // Most Logger.error() calls exist to trigger bug reports but are
+        // otherwise recoverable. E.g. see commit 3260e41111 in the Kotlin compiler.
+        // Thus we want to log errors to stderr but not throw exceptions (similar to the IDE).
+        class IdeaLoggerForLint(category: String) : DefaultLogger(category) {
+            override fun error(message: String?, t: Throwable?, vararg details: String?) {
+                if (DEBUGGING) {
+                    throw AssertionError(message, t)
+                } else {
+                    dumpExceptionsToStderr(message + attachmentsToString(t), t, *details)
+                }
             }
         }
     }
