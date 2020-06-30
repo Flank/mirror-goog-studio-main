@@ -85,6 +85,9 @@ class JetifierTest(private val withKotlin: Boolean) {
         // It's enough to test without Kotlin (to save test execution time)
         assumeFalse(withKotlin)
 
+        // Add this check as regression test for bug 156449751
+        `check lazy dependency resolution`()
+
         // Build the project with Jetifier disabled
         project.executor().with(BooleanOption.ENABLE_JETIFIER, false).run("assembleDebug")
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
@@ -105,7 +108,7 @@ class JetifierTest(private val withKotlin: Boolean) {
         prepareProjectForAndroidX()
 
         // Add this check as regression test for bug 156449751
-        addCheckThatDependenciesAreNotResolvedBeforeTaskExecutionPhase()
+        `check lazy dependency resolution`()
 
         // Build the project with Jetifier enabled and AndroidX enabled
         project.executor()
@@ -235,8 +238,12 @@ class JetifierTest(private val withKotlin: Boolean) {
             .run("assembleDebug")
     }
 
-    private fun addCheckThatDependenciesAreNotResolvedBeforeTaskExecutionPhase() {
-        // This configuration is resolved before task execution phase, so we ignore it for now.
+    /**
+     * Adds a check that dependencies are resolved lazily during the task execution phase and not
+     * during the configuration or task graph creation phase.
+     */
+    private fun `check lazy dependency resolution`() {
+        // This configuration is resolved during task graph creation, ignore it for now.
         val kotlinCompilerClasspath = "kotlinCompilerClasspath"
 
         project.buildFile.appendText(
