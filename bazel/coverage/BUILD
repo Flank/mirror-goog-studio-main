@@ -80,7 +80,7 @@ coverage_report(
         "tools/vendor/google/android-apk",
     ],
     tests = [
-        "//tools/vendor/google/android-apk:android-apk_tests",
+        "//tools/vendor/google/android-apk:android-apk.tests_tests",
     ],
 )
 
@@ -662,7 +662,7 @@ coverage_report(
         "//tools/data-binding:studio.compilerCommon_tests",
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
-        "//tools/vendor/google/android-apk:android-apk_tests",
+        "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
     ],
 )
