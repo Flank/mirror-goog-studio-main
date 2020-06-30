@@ -135,9 +135,9 @@ interface LintModelModuleLoaderProvider {
  * A provider which loads modules given various keys
  */
 interface LintModelModuleLoader {
-    /** Loads a module from a file */
-    fun getModule(file: File): LintModelModule {
-        return LintModelSerialization.readModule(file)
+    /** Loads a module from a folder */
+    fun getModule(folder: File): LintModelModule {
+        return LintModelSerialization.readModule(folder)
     }
 
     /** Loads a module from a dependency in a dependency graph */
@@ -174,6 +174,6 @@ class DefaultLintModelModule(
 /**
  * Writes this module model to the given file
  */
-fun LintModelModule.writeModule(xmlFile: File, createdBy: String? = null) {
-    LintModelSerialization.writeModule(this, destination = xmlFile, createdBy = createdBy)
+fun LintModelModule.writeModule(destination: File, createdBy: String? = null) {
+    LintModelSerialization.writeModule(this, destination = destination, createdBy = createdBy)
 }

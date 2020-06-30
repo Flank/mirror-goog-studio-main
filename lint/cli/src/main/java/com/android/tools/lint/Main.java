@@ -1009,12 +1009,12 @@ public class Main {
                         System.err.println("Lint model " + input + " does not exist.");
                         exit(ERRNO_INVALID_ARGS);
                     }
-                    if (!input.isFile()) {
+                    if (!input.isDirectory()) {
                         System.err.println(
                                 "Lint model "
                                         + input
-                                        + " should be an XML descriptor file"
-                                        + (input.isDirectory() ? ", not a directory" : ""));
+                                        + " should be a folder containing the XML descriptor files"
+                                        + (input.isDirectory() ? ", not a file" : ""));
                         exit(ERRNO_INVALID_ARGS);
                     }
                     try {

@@ -1069,7 +1069,7 @@ class LintModelSerializationTest {
         val pathVariables: MutableList<Pair<String, File>> = mutableListOf()
         pathVariables.add(Pair("SDK", folder1))
         pathVariables.add(Pair("GRADLE", folder2))
-        val adapter = LintModelSerializationFileAdapter(moduleFile, pathVariables)
+        val adapter = LintModelSerializationFileAdapter(root, pathVariables)
 
         assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
         assertEquals("\$SDK/file1", adapter.toPathString(file1, root))

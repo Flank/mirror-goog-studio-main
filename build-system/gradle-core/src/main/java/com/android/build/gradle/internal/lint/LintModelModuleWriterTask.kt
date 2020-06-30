@@ -166,7 +166,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
 
         LintModelSerialization.writeModule(
             module = module,
-            destination = outputDirectory.file("modules.xml").get().asFile,
+            destination = outputDirectory.get().asFile,
             writeVariants = variantInputs.get().map {
                 it.convertToLintModelVariant(
                     module,

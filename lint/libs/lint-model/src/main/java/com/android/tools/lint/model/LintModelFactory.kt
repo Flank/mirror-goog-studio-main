@@ -61,10 +61,10 @@ class LintModelFactory : LintModelModuleLoader {
     var kotlinSourceFolderLookup: ((variantName: String) -> List<File>)? = null
 
     /**
-     * Factory from an XML file to a [LintModelModule].
-     * The file was previously saved by [LintModelSerialization.writeModule].
+     * Factory from an XML folder to a [LintModelModule].
+     * The files were previously saved by [LintModelSerialization.writeModule].
      */
-    fun create(xmlFile: File): LintModelModule = LintModelSerialization.readModule(xmlFile)
+    fun create(source: File): LintModelModule = LintModelSerialization.readModule(source)
 
     /**
      * Converter from the builder model library to lint's own model.
