@@ -3,7 +3,6 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 # Set 10.13 as the minimum OS supported version.
 # This impacts native/C++ compiling/linking.
 build --action_env=MACOSX_DEPLOYMENT_TARGET=10.13
-build --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
 
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections
