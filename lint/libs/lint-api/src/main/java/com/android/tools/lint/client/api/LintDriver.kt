@@ -184,7 +184,8 @@ class LintDriver
     /** The associated [LintClient] */
     val client: LintClient = LintClientWrapper(client)
 
-    private val projectRoots: Collection<Project>
+    /** The collection of project roots lint is analyzing */
+    val projectRoots: Collection<Project>
 
     init {
         projectRoots =
@@ -224,7 +225,7 @@ class LintDriver
 
     private var repeatingDetectors: MutableList<Detector>? = null
     private var repeatScope: EnumSet<Scope>? = null
-    private var currentProjects: Array<Project>? = null
+    private var currentProjects: List<Project>? = null
     private var currentProject: Project? = null
 
     /**
@@ -360,10 +361,7 @@ class LintDriver
      * @return the projects being analyzed
      */
     val projects: List<Project>
-        get() {
-            val p = currentProjects ?: return emptyList()
-            return Arrays.asList(*p)
-        }
+        get() = currentProjects ?: emptyList()
 
     /**
      * Analyze the given files (which can point to Android projects or directories
@@ -909,10 +907,10 @@ class LintDriver
         fireEvent(EventType.SCANNING_PROJECT, projectContext)
 
         val allLibraries = project.allLibraries
-        val allProjects = HashSet<Project>(allLibraries.size + 1)
+        val allProjects = LinkedHashSet<Project>(allLibraries.size + 1)
         allProjects.add(project)
         allProjects.addAll(allLibraries)
-        currentProjects = allProjects.toTypedArray()
+        currentProjects = allProjects.toList()
 
         currentProject = project
 
