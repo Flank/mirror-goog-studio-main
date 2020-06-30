@@ -92,10 +92,16 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     public static IdeAndroidProjectImpl create(
             @NonNull AndroidProject project,
+            @NonNull Map<String, String> stringDeduplicationMap,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
             @NotNull Collection<SyncIssue> syncIssues) {
-        return create(project, new ModelCache(), dependenciesFactory, variants, syncIssues);
+        return create(
+                project,
+                new ModelCache(stringDeduplicationMap),
+                dependenciesFactory,
+                variants,
+                syncIssues);
     }
 
     @VisibleForTesting

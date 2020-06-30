@@ -326,7 +326,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidProjectImpl.java"
-            line="190"/>
+            line="196"/>
     </issue>
 
     <issue
@@ -350,7 +350,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/level2/IdeLibraryFactory.kt"
-            line="125"/>
+            line="127"/>
     </issue>
 
     <issue
@@ -582,7 +582,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidProjectImpl.java"
-            line="726"/>
+            line="732"/>
     </issue>
 
     <issue
@@ -590,7 +590,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeBaseArtifactImpl.java"
-            line="264"/>
+            line="267"/>
     </issue>
 
     <issue
@@ -598,7 +598,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeBaseArtifactImpl.java"
-            line="266"/>
+            line="269"/>
     </issue>
 
     <issue
@@ -679,14 +679,6 @@
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeSigningConfig.java"
             line="125"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeSourceProvider.java"
-            line="178"/>
     </issue>
 
     <issue

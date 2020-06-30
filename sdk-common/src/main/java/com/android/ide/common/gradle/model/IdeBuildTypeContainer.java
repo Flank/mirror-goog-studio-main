@@ -51,7 +51,9 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
                         buildType -> new IdeBuildType(buildType, modelCache));
         mySourceProvider =
                 modelCache.computeIfAbsent(
-                        container.getSourceProvider(), provider -> new IdeSourceProvider(provider));
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProvider.create(provider, modelCache::deduplicateString));
         myExtraSourceProviders =
                 IdeModel.copy(
                         container.getExtraSourceProviders(),

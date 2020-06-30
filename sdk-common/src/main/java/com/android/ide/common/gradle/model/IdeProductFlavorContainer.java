@@ -52,7 +52,9 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
                         flavor -> new IdeProductFlavor(flavor, modelCache));
         mySourceProvider =
                 modelCache.computeIfAbsent(
-                        container.getSourceProvider(), provider -> new IdeSourceProvider(provider));
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProvider.create(provider, modelCache::deduplicateString));
         myExtraSourceProviders =
                 IdeModel.copy(
                         container.getExtraSourceProviders(),

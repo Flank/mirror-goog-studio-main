@@ -17,14 +17,11 @@ package com.android.ide.common.gradle.model;
 
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.gradle.model.stubs.SourceProviderStub;
-import com.android.testutils.Serialization;
 import java.io.File;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 import org.junit.Before;
@@ -37,19 +34,6 @@ public class IdeSourceProviderTest {
     @Before
     public void setUp() throws Exception {
         myModelCache = new ModelCache();
-    }
-
-    @Test
-    public void serializable() {
-        assertThat(IdeSourceProvider.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
-    public void serialization() throws Exception {
-        IdeSourceProvider sourceProvider = new IdeSourceProvider(new SourceProviderStub());
-        byte[] bytes = Serialization.serialize(sourceProvider);
-        Object o = Serialization.deserialize(bytes);
-        assertEquals(sourceProvider, o);
     }
 
     @Test
@@ -78,20 +62,7 @@ public class IdeSourceProviderTest {
                                 getJniLibsDirectories());
                     }
                 };
-        IdeSourceProvider sourceProvider = new IdeSourceProvider(original);
+        IdeSourceProvider sourceProvider = IdeSourceProvider.create(original);
         assertThat(sourceProvider.getShadersDirectories()).isEmpty();
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        SourceProvider original = new SourceProviderStub();
-        IdeSourceProvider copy = new IdeSourceProvider(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSourceProvider.class).verify();
     }
 }

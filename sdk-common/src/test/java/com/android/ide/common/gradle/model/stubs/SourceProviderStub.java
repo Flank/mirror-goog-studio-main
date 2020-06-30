@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -39,11 +38,11 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final Collection<File> myMlModelsDirectories;
 
     public SourceProviderStub() {
-        this("name", null, "manifest");
+        this("name", new File("/"), "manifest");
     }
 
     public SourceProviderStub(
-            @NonNull String name, @Nullable File rootDirectory, @NonNull String manifestFileName) {
+            @NonNull String name, @NonNull File rootDirectory, @NonNull String manifestFileName) {
         this(
                 name,
                 new File(rootDirectory, manifestFileName),

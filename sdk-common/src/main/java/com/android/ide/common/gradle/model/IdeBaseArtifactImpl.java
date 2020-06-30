@@ -139,7 +139,10 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     private static IdeSourceProvider createSourceProvider(
             @NonNull ModelCache modelCache, @Nullable SourceProvider original) {
         return original != null
-                ? modelCache.computeIfAbsent(original, provider -> new IdeSourceProvider(provider))
+                ? modelCache.computeIfAbsent(
+                        original,
+                        provider ->
+                                IdeSourceProvider.create(provider, modelCache::deduplicateString))
                 : null;
     }
 
