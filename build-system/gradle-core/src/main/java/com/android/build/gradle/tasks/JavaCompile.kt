@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.sdklib.AndroidTargetHash
 import org.gradle.api.JavaVersion
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
@@ -57,15 +56,6 @@ class JavaCompileCreationAction(
 
     private val dataBindingArtifactDir = globalScope.project.objects.directoryProperty()
     private val dataBindingExportClassListFile = globalScope.project.objects.fileProperty()
-
-    init {
-        val compileSdkVersion = globalScope.extension.compileSdkVersion
-        if (compileSdkVersion != null && isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
-            throw RuntimeException(
-                "compileSdkVersion '$compileSdkVersion' requires JDK 1.8 or later to compile."
-            )
-        }
-    }
 
     override val name: String
         get() = componentProperties.computeTaskName("compile", "JavaWithJavac")
@@ -226,11 +216,6 @@ private fun JavaCompile.recordAnnotationProcessors(
             annotationProcessors, projectPath, variantName
         )
     }
-}
-
-private fun isPostN(compileSdkVersion: String): Boolean {
-    val hash = AndroidTargetHash.getVersionFromHash(compileSdkVersion)
-    return hash != null && hash.apiLevel >= 24
 }
 
 private const val AP_GENERATED_SOURCES_DIR_NAME = "out"

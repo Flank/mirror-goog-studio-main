@@ -90,7 +90,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.LintBaseTask;
-import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -538,11 +537,6 @@ public abstract class BasePlugin<
 
         // Make sure unit tests set the required fields.
         checkState(extension.getCompileSdkVersion() != null, "compileSdkVersion is not specified.");
-        extension
-                .getCompileOptions()
-                .setDefaultJavaVersion(
-                        AbstractCompilesUtil.getDefaultJavaVersion(
-                                extension.getCompileSdkVersion()));
 
         // get current plugins and look for the default Java plugin.
         if (project.getPlugins().hasPlugin(JavaPlugin.class)) {
