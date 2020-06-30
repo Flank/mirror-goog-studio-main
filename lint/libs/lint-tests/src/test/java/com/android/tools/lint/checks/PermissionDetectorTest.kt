@@ -944,7 +944,10 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         "        Intent intent = new Intent(Intent.ACTION_CALL);\n" +
                         "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
                         "        // This one will only be flagged if we have framework metadata on Intent.ACTION_CALL\n" +
-                        "        activity./*Missing permissions required by intent Intent.ACTION_CALL: android.permission.CALL_PHONE*/startActivity(intent/**/);\n" +
+                        // This relies on the attached SDK having external annotations on Intent.ACTION_CALL;
+                        // it looks like this is not available on the SDK we're currently using:
+                        //"        activity./*Missing permissions required by intent Intent.ACTION_CALL: android.permission.CALL_PHONE*/startActivity(intent/**/);\n" +
+                        "        activity.startActivity(intent);\n" +
                         "    }\n" +
                         "\n" +
                         "    public static void activities2(Activity activity) {\n" +
