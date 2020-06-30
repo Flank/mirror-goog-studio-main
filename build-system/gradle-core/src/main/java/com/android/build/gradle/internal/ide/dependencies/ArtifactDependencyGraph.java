@@ -61,7 +61,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     @Override
     public void createDependencies(
             @NonNull DependencyModelBuilder<?> modelBuilder,
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ArtifactCollectionsInputs artifactCollectionsInputs,
             boolean withFullDependency,
             @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull IssueReporter issueReporter) {
@@ -71,7 +71,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =
                     ArtifactUtils.getAllArtifacts(
-                            componentProperties,
+                            artifactCollectionsInputs,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -81,13 +81,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // We'll match this to the component identifier of each artifact to find the lint.jar
             // that is coming via AARs.
             Set<ResolvedArtifactResult> dependenciesLintJars =
-                    componentProperties
-                            .getVariantDependencies()
-                            .getArtifactCollectionForToolingModel(
-                                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                                    AndroidArtifacts.ArtifactScope.ALL,
-                                    AndroidArtifacts.ArtifactType.LINT)
-                            .getArtifacts();
+                    artifactCollectionsInputs.getLintJars().getArtifacts();
 
             ImmutableMap.Builder<ComponentIdentifier, File> lintJarMapBuilder =
                     ImmutableMap.builder();
@@ -101,7 +95,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 // in this mode, we build the full list of runtime artifact in the model
                 Set<ResolvedArtifact> runtimeArtifacts =
                         ArtifactUtils.getAllArtifacts(
-                                componentProperties,
+                                artifactCollectionsInputs,
                                 RUNTIME_CLASSPATH,
                                 dependencyFailureHandler,
                                 buildMapping);
@@ -132,8 +126,11 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
 
                 // so we get the runtime artifact IDs in a faster way than getting the full list
                 // of ResolvedArtifact
+                Level1RuntimeArtifactCollections level1RuntimeArtifactCollections =
+                        artifactCollectionsInputs.getLevel1RuntimeArtifactCollections();
                 ImmutableSet<ComponentIdentifier> runtimeIds =
-                        getRuntimeComponentIdentifiers(componentProperties);
+                        getRuntimeComponentIdentifiers(
+                                level1RuntimeArtifactCollections.getRuntimeArtifacts());
 
                 for (ResolvedArtifact artifact : compileArtifacts) {
                     modelBuilder.addArtifact(
@@ -146,7 +143,9 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 if (modelBuilder.getNeedRuntimeOnlyClasspath()) {
                     modelBuilder.setRuntimeOnlyClasspath(
                             getRuntimeOnlyClasspath(
-                                    componentProperties, compileArtifacts, runtimeIds));
+                                    level1RuntimeArtifactCollections,
+                                    compileArtifacts,
+                                    runtimeIds));
                 }
             }
         } finally {
@@ -168,10 +167,13 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
         // FIXME change the way we compare dependencies b/64387392
 
         try {
+            ArtifactCollectionsInputs artifactCollectionsInputs =
+                    new ArtifactCollectionsInputs(
+                            componentProperties, ArtifactCollectionsInputs.RuntimeType.FULL);
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =
                     ArtifactUtils.getAllArtifacts(
-                            componentProperties,
+                            artifactCollectionsInputs,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -236,7 +238,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // get the runtime artifacts.
             Set<ResolvedArtifact> runtimeArtifacts =
                     ArtifactUtils.getAllArtifacts(
-                            componentProperties,
+                            artifactCollectionsInputs,
                             RUNTIME_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -280,17 +282,24 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
         // FIXME change the way we compare dependencies b/64387392
 
         try {
+            ArtifactCollectionsInputs artifactCollectionsInputs =
+                    new ArtifactCollectionsInputs(
+                            componentProperties, ArtifactCollectionsInputs.RuntimeType.PARTIAL);
+
             ImmutableList.Builder<Dependencies.ProjectIdentifier> projects =
                     ImmutableList.builder();
             ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
             ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
 
             ImmutableSet<ComponentIdentifier> runtimeIdentifiers =
-                    getRuntimeComponentIdentifiers(componentProperties);
+                    getRuntimeComponentIdentifiers(
+                            artifactCollectionsInputs
+                                    .getLevel1RuntimeArtifactCollections()
+                                    .getRuntimeArtifacts());
 
             Set<ResolvedArtifact> artifacts =
                     ArtifactUtils.getAllArtifacts(
-                            componentProperties,
+                            artifactCollectionsInputs,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -389,7 +398,10 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             }
 
             ImmutableList<File> runtimeOnlyClasspath =
-                    getRuntimeOnlyClasspath(componentProperties, artifacts, runtimeIdentifiers);
+                    getRuntimeOnlyClasspath(
+                            artifactCollectionsInputs.getLevel1RuntimeArtifactCollections(),
+                            artifacts,
+                            runtimeIdentifiers);
 
             return new DependenciesImpl(
                     androidLibraries.build(),
@@ -402,17 +414,10 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     }
 
     private static ImmutableSet<ComponentIdentifier> getRuntimeComponentIdentifiers(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ArtifactCollection runtimeArtifactCollection) {
         // get the runtime artifact. We only care about the ComponentIdentifier so we don't
         // need to call getAllArtifacts() which computes a lot more many things.
         // Instead just get all the jars to get all the dependencies.
-        ArtifactCollection runtimeArtifactCollection =
-                componentProperties
-                        .getVariantDependencies()
-                        .getArtifactCollectionForToolingModel(
-                                RUNTIME_CLASSPATH,
-                                AndroidArtifacts.ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.AAR_OR_JAR);
         // ImmutableSet also preserves order.
         ImmutableSet.Builder<ComponentIdentifier> runtimeIdentifiersBuilder =
                 ImmutableSet.builder();
@@ -423,7 +428,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     }
 
     private static ImmutableList<File> getRuntimeOnlyClasspath(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull Level1RuntimeArtifactCollections runtimeArtifactCollections,
             @NonNull Set<ResolvedArtifact> artifacts,
             @NonNull ImmutableSet<ComponentIdentifier> runtimeIdentifiers) {
         // get runtime-only jars by filtering out compile dependencies from runtime artifacts.
@@ -432,25 +437,13 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                         .map(ResolvedArtifact::getComponentIdentifier)
                         .collect(Collectors.toSet());
 
-        // Don't query jetified jars on project classes as for java libraries the artifact
-        // might not exist yet.
+        // Done separately to avoid querying jetified jars on project classes as for java libraries
+        // the artifact might not exist yet.
         ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> projectRuntime =
-                ArtifactUtils.asMultiMap(
-                        componentProperties
-                                .getVariantDependencies()
-                                .getArtifactCollectionForToolingModel(
-                                        RUNTIME_CLASSPATH,
-                                        AndroidArtifacts.ArtifactScope.PROJECT,
-                                        AndroidArtifacts.ArtifactType.JAR));
+                ArtifactUtils.asMultiMap(runtimeArtifactCollections.getRuntimeProjectJars());
 
         ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> externalRuntime =
-                ArtifactUtils.asMultiMap(
-                        componentProperties
-                                .getVariantDependencies()
-                                .getArtifactCollectionForToolingModel(
-                                        RUNTIME_CLASSPATH,
-                                        AndroidArtifacts.ArtifactScope.EXTERNAL,
-                                        AndroidArtifacts.ArtifactType.PROCESSED_JAR));
+                ArtifactUtils.asMultiMap(runtimeArtifactCollections.getRuntimeExternalJars());
 
         ImmutableList.Builder<File> runtimeOnlyClasspathBuilder = ImmutableList.builder();
         for (ComponentIdentifier runtimeIdentifier : runtimeIdentifiers) {

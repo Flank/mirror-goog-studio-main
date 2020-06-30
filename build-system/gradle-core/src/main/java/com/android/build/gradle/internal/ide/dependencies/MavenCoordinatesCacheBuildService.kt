@@ -18,7 +18,6 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.gradle.internal.dependency.ConstraintHandler
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.builder.dependency.MavenCoordinatesImpl

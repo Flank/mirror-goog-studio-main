@@ -26,8 +26,8 @@ import com.google.common.collect.ImmutableMap
 interface DependencyGraphBuilder {
 
     fun createDependencies(
-        handler: DependencyModelBuilder<*>,
-        componentProperties: ComponentPropertiesImpl,
+        modelBuilder: DependencyModelBuilder<*>,
+        artifactCollectionsProvider: ArtifactCollectionsInputs,
         withFullDependency: Boolean,
         buildMapping: ImmutableMap<String, String>,
         issueReporter: IssueReporter

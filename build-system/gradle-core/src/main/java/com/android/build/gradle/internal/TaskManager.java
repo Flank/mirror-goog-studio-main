@@ -85,6 +85,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.lint.LintModelDependenciesWriterTask;
 import com.android.build.gradle.internal.lint.LintModelModuleWriterTask;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -1865,6 +1866,7 @@ public abstract class TaskManager<
                         allVariants.stream()
                                 .map(ComponentInfo::getProperties)
                                 .collect(Collectors.toList())));
+        taskFactory.register(new LintModelDependenciesWriterTask.CreationAction(variantProperties));
     }
 
     /** Returns the full path of a task given its name. */

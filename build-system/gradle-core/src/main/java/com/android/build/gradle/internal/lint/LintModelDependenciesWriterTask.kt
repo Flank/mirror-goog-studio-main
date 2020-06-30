@@ -16,10 +16,26 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
+import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.errors.EvalIssueException
+import com.android.builder.errors.IssueReporter
 import com.android.tools.lint.model.LintModelDependencies
+import com.android.tools.lint.model.LintModelSerialization
+import com.google.common.collect.ImmutableMap
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 
 /**
@@ -30,24 +46,101 @@ import org.gradle.api.tasks.TaskProvider
  */
 abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
 
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+
+    @get:Internal
+    abstract val libraryDependencyCacheBuildService: Property<LibraryDependencyCacheBuildService>
+
+    @get:Nested
+    abstract val artifactCollectionsInputs: Property<ArtifactCollectionsInputs>
+
+    @get:Input
+    abstract val variantNameInput: Property<String>
+
     override fun doTaskAction() {
-     //   TODO("Not yet implemented")
+        val modelBuilder = LintDependencyModelBuilder(
+            libraryDependencyCacheBuildService.get().localJarCache,
+            artifactCollectionsInputs.get().mavenCoordinatesCache.get().cache
+        )
+        val graph = getDependencyGraphBuilder()
+        val issueReporter = object : IssueReporter() {
+            override fun reportIssue(
+                type: Type,
+                severity: Severity,
+                exception: EvalIssueException
+            ) {
+                if (severity == Severity.ERROR) {
+                    throw exception
+                }
+            }
+
+            override fun hasIssue(type: Type) = false
+        }
+
+        graph.createDependencies(
+            modelBuilder = modelBuilder,
+            artifactCollectionsProvider = artifactCollectionsInputs.get(),
+            withFullDependency = true,
+            buildMapping = ImmutableMap.of(),
+            issueReporter = issueReporter
+        )
+
+        val model: LintModelDependencies = modelBuilder.createModel()
+
+        val adapter =
+            LintModelSerialization.LintModelSerializationFileAdapter(
+                outputDirectory.get().asFile
+            )
+
+        LintModelSerialization.writeDependencies(model, adapter, variantNameInput.get())
+
+        LintModelSerialization.writeLibraries(
+            model.getLibraryResolver(),
+            adapter,
+            variantNameInput.get()
+        )
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<LintModelDependenciesWriterTask, BaseCreationConfig>(creationConfig) {
+    class CreationAction(
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<LintModelDependenciesWriterTask, VariantCreationConfig>(
+        creationConfig
+    ) {
 
         override val name: String
-            get() = "" //TODO("Not yet implemented")
+            get() = computeTaskName("generate", "DependenciesForLint")
         override val type: Class<LintModelDependenciesWriterTask>
             get() = LintModelDependenciesWriterTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<LintModelDependenciesWriterTask>) {
             super.handleProvider(taskProvider)
+            creationConfig.artifacts
+                .setInitialProvider(
+                    taskProvider,
+                    LintModelDependenciesWriterTask::outputDirectory
+                )
+                .on(InternalArtifactType.LINT_MODEL_DEPENDENCIES)
         }
 
         override fun configure(task: LintModelDependenciesWriterTask) {
             super.configure(task)
+            task.libraryDependencyCacheBuildService.setDisallowChanges(
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    LibraryDependencyCacheBuildService::class.java
+                )
+            )
+            task.artifactCollectionsInputs.set(
+                ArtifactCollectionsInputs(
+                    variantDependencies = creationConfig.variantDependencies,
+                    projectPath = creationConfig.globalScope.project.path,
+                    variantName = creationConfig.name,
+                    runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                    mavenCoordinatesCache = getBuildService(creationConfig.services.buildServiceRegistry)
+                )
+            )
+            task.variantNameInput.setDisallowChanges(creationConfig.name)
         }
     }
 }
