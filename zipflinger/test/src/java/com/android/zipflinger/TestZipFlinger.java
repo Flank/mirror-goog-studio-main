@@ -781,4 +781,36 @@ public class TestZipFlinger extends TestBase {
         Assert.assertEquals(
                 "Archive should not have been modified", lastModifiedTime, modifiedTime);
     }
+
+    @Test
+    public void testInvalidLFHName() throws Exception {
+        // Create a normal archive
+        File file = getTestFile("testInvalidLFHName.zip");
+        try (ZipArchive archive = new ZipArchive(file)) {
+            BytesSource src = new BytesSource(new byte[0], "a", Deflater.NO_COMPRESSION);
+            archive.add(src);
+        }
+
+        // Try to parse it. It should be fine
+        ZipMap.from(file, false);
+
+        // Make the LFH invalid by having the entry name length zero while the CD is left untouched
+        BytesSource zeroSrc = new BytesSource(new byte[0], "", Deflater.NO_COMPRESSION);
+        try (ZipWriter writer = new ZipWriter(file)) {
+            LocalFileHeader lfh = new LocalFileHeader(zeroSrc);
+            lfh.write(writer);
+        }
+
+        // Parsing should now fail
+        String message = "";
+        try {
+            ZipMap.from(file, false);
+        } catch (IllegalStateException e) {
+            message = e.getMessage();
+        }
+
+        int indexOfParameter = ZipMap.LFH_LENGTH_ERROR.indexOf('%');
+        String constantString = ZipMap.LFH_LENGTH_ERROR.substring(0, indexOfParameter);
+        Assert.assertTrue(message.startsWith(constantString));
+    }
 }

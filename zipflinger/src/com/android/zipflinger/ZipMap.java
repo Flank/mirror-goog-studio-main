@@ -41,6 +41,10 @@ public class ZipMap {
     private Location cdLocation;
     private Location eocdLocation;
 
+    static final String LFH_LENGTH_ERROR =
+            "The provided zip (%s) is invalid. Entry '%s' name field is %d bytes"
+                    + " in the Central Directory but %d in the Local File Header";
+
     private ZipMap(@NonNull File file, boolean accountDataDescriptors) {
         this.file = file;
         this.accountDataDescriptors = accountDataDescriptors;
@@ -252,10 +256,10 @@ public class ZipMap {
         int localPathLength = Ints.ushortToInt(localFieldBuffer.getShort());
         int localExtraLength = Ints.ushortToInt(localFieldBuffer.getShort());
         if (pathLength != localPathLength) {
-            String message =
-                    String.format(
-                            "Entry '%s' name differ (%d vs %d)",
-                            entry.getName(), localPathLength, pathLength);
+            String path = file.getAbsolutePath();
+            String entryName = entry.getName();
+            String msg = LFH_LENGTH_ERROR;
+            String message = String.format(msg, path, entryName, localPathLength, pathLength);
             throw new IllegalStateException(message);
         }
 
