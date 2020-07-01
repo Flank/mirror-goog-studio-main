@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
-import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
@@ -103,18 +102,7 @@ public class TestApplicationTaskManager
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
                 taskFactory.register(
                         new DeviceProviderInstrumentTestTask.CreationAction(
-                                testVariantProperties,
-                                new ConnectedDeviceProvider(
-                                        globalScope
-                                                .getSdkComponents()
-                                                .flatMap(
-                                                        SdkComponentsBuildService
-                                                                ::getAdbExecutableProvider),
-                                        extension.getAdbOptions().getTimeOutInMs(),
-                                        new LoggerWrapper(getLogger())),
-                                DeviceProviderInstrumentTestTask.CreationAction.Type
-                                        .INTERNAL_CONNECTED_DEVICE_PROVIDER,
-                                testData) {
+                                testVariantProperties, testData) {
                             @NonNull
                             @Override
                             public String getName() {

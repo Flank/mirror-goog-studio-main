@@ -41,7 +41,6 @@ import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import java.io.File
-import java.nio.file.Paths
 
 /**
  * Unit tests for [UtpConfigFactory].

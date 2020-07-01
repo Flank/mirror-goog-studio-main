@@ -27,6 +27,7 @@ import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCH
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -44,6 +45,7 @@ import com.android.build.gradle.internal.test.InstrumentationTestAnalytics;
 import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
+import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.testing.OnDeviceOrchestratorTestRunner;
 import com.android.build.gradle.internal.testing.ShardedTestRunner;
 import com.android.build.gradle.internal.testing.SimpleTestRunnable;
@@ -195,7 +197,25 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         }
     }
 
-    private DeviceProvider deviceProvider;
+    public abstract static class DeviceProviderFactory {
+        @Nullable private DeviceProvider deviceProvider;
+
+        @Input
+        public abstract Property<Integer> getTimeOutInMs();
+
+        public DeviceProvider getDeviceProvider(
+                @NonNull Provider<SdkComponentsBuildService> sdkBuildService) {
+            if (deviceProvider != null) {
+                return deviceProvider;
+            }
+            // Don't store it in the field, as it breaks configuration caching.
+            return new ConnectedDeviceProvider(
+                    sdkBuildService.flatMap(SdkComponentsBuildService::getAdbExecutableProvider),
+                    getTimeOutInMs().get(),
+                    LoggerWrapper.getLogger(DeviceProviderInstrumentTestTask.class));
+        }
+    }
+
     private boolean ignoreFailures;
     private boolean testFailed;
 
@@ -215,6 +235,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     @Override
     protected void doTaskAction() throws DeviceException, IOException, ExecutionException {
+        DeviceProvider deviceProvider =
+                getDeviceProviderFactory()
+                        .getDeviceProvider(getTestRunnerFactory().getSdkBuildService());
         if (!deviceProvider.isConfigured()) {
             setDidWork(false);
             return;
@@ -362,27 +385,18 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @Input
     public abstract Property<Boolean> getAdditionalTestOutputEnabled();
 
-    @Input
-    public abstract Property<Integer> getTimeOutInMs();
-
     @Optional
     @Input
     public abstract ListProperty<String> getInstallOptions();
-
-    @Internal
-    public DeviceProvider getDeviceProvider() {
-        return deviceProvider;
-    }
-
-    public void setDeviceProvider(DeviceProvider deviceProvider) {
-        this.deviceProvider = deviceProvider;
-    }
 
     @Internal
     public abstract Property<StaticTestData> getStaticTestData();
 
     @Nested
     public abstract TestRunnerFactory getTestRunnerFactory();
+
+    @Nested
+    public abstract DeviceProviderFactory getDeviceProviderFactory();
 
     @Override
     public boolean getIgnoreFailures() {
@@ -425,8 +439,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             extends VariantTaskCreationAction<
                     DeviceProviderInstrumentTestTask, ComponentPropertiesImpl> {
 
-        @NonNull
-        private final DeviceProvider deviceProvider;
+        private static final String CONNECTED_DEVICE_PROVIDER = "connected";
+
+        @NonNull private final String deviceProviderName;
+        @Nullable private final DeviceProvider deviceProvider;
         @NonNull private final Type type;
         @NonNull private final AbstractTestDataImpl testData;
 
@@ -435,13 +451,40 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             CUSTOM_DEVICE_PROVIDER,
         }
 
+        /** Creation action for AGP {@link ConnectedDeviceProvider} device providers. */
+        public CreationAction(
+                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull AbstractTestDataImpl testData) {
+            this(
+                    componentProperties,
+                    null,
+                    CONNECTED_DEVICE_PROVIDER,
+                    Type.INTERNAL_CONNECTED_DEVICE_PROVIDER,
+                    testData);
+        }
+
+        /** Creation action for custom (non-AGP) device providers. */
         public CreationAction(
                 @NonNull ComponentPropertiesImpl componentProperties,
                 @NonNull DeviceProvider deviceProvider,
+                @NonNull AbstractTestDataImpl testData) {
+            this(
+                    componentProperties,
+                    deviceProvider,
+                    deviceProvider.getName(),
+                    Type.CUSTOM_DEVICE_PROVIDER,
+                    testData);
+        }
+
+        private CreationAction(
+                @NonNull ComponentPropertiesImpl componentProperties,
+                @Nullable DeviceProvider deviceProvider,
+                @NonNull String deviceProviderName,
                 @NonNull Type type,
                 @NonNull AbstractTestDataImpl testData) {
             super(componentProperties);
             this.deviceProvider = deviceProvider;
+            this.deviceProviderName = deviceProviderName;
             this.type = type;
             this.testData = testData;
         }
@@ -449,7 +492,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         @NonNull
         @Override
         public String getName() {
-            return computeTaskName(deviceProvider.getName());
+            return computeTaskName(deviceProviderName);
         }
 
         @NonNull
@@ -476,7 +519,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             .setInitialProvider(
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir)
-                            .withName(deviceProvider.getName())
+                            .withName(deviceProviderName)
                             .on(
                                     InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
                                             .INSTANCE);
@@ -486,7 +529,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .setInitialProvider(
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDirectory)
-                        .withName(deviceProvider.getName())
+                        .withName(deviceProviderName)
                         .on(InternalArtifactType.CODE_COVERAGE.INSTANCE);
             } else {
                 // NOTE : This task will be created per device provider, assume several tasks instances
@@ -497,7 +540,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             .setInitialProvider(
                                     taskProvider,
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir)
-                            .withName(deviceProvider.getName())
+                            .withName(deviceProviderName)
                             .on(
                                     InternalArtifactType
                                             .DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT
@@ -508,7 +551,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .setInitialProvider(
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDirectory)
-                        .withName(deviceProvider.getName())
+                        .withName(deviceProviderName)
                         .on(InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE);
             }
 
@@ -545,7 +588,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 "Installs and runs the tests for "
                                         + variantName
                                         + " using provider: ",
-                                deviceProvider.getName()));
+                                deviceProviderName));
             }
 
             task.getAdditionalTestOutputEnabled()
@@ -557,8 +600,17 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.getTestedApksFromBundle().from(testData.getTestedApksFromBundle());
             task.getStaticTestData().set(project.provider(testData::get));
             task.getFlavorName().set(testData.getFlavorName());
-            task.setDeviceProvider(deviceProvider);
-            task.getTimeOutInMs().set(extension.getAdbOptions().getTimeOutInMs());
+            task.getDeviceProviderFactory()
+                    .getTimeOutInMs()
+                    .set(extension.getAdbOptions().getTimeOutInMs());
+            if (deviceProvider != null) {
+                Preconditions.checkState(
+                        type != Type.INTERNAL_CONNECTED_DEVICE_PROVIDER,
+                        "If using AGP device provider, no device provider should be "
+                                + "specified in order to make task compatible with configuration "
+                                + "caching (DeviceProvider is not serializable currently).");
+                task.getDeviceProviderFactory().deviceProvider = deviceProvider;
+            }
             task.getInstallOptions().set(extension.getAdbOptions().getInstallOptions());
             task.getTestRunnerFactory()
                     .getShardBetweenDevices()
@@ -646,7 +698,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             String providerFolder =
                     type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER
                             ? CONNECTED
-                            : DEVICE + "/" + deviceProvider.getName();
+                            : DEVICE + "/" + deviceProviderName;
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
             String rootLocation = extension.getTestOptions().getResultsDir();

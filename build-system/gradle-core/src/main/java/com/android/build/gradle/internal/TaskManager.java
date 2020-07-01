@@ -159,7 +159,6 @@ import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
-import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask;
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask;
@@ -2047,18 +2046,7 @@ public abstract class TaskManager<
         TaskProvider<DeviceProviderInstrumentTestTask> connectedTask =
                 taskFactory.register(
                         new DeviceProviderInstrumentTestTask.CreationAction(
-                                androidTestProperties,
-                                new ConnectedDeviceProvider(
-                                        globalScope
-                                                .getSdkComponents()
-                                                .flatMap(
-                                                        SdkComponentsBuildService
-                                                                ::getAdbExecutableProvider),
-                                        extension.getAdbOptions().getTimeOutInMs(),
-                                        new LoggerWrapper(logger)),
-                                DeviceProviderInstrumentTestTask.CreationAction.Type
-                                        .INTERNAL_CONNECTED_DEVICE_PROVIDER,
-                                testData));
+                                androidTestProperties, testData));
 
         taskFactory.configure(
                 CONNECTED_ANDROID_TEST,
@@ -2090,11 +2078,7 @@ public abstract class TaskManager<
             final TaskProvider<DeviceProviderInstrumentTestTask> providerTask =
                     taskFactory.register(
                             new DeviceProviderInstrumentTestTask.CreationAction(
-                                    androidTestProperties,
-                                    deviceProvider,
-                                    DeviceProviderInstrumentTestTask.CreationAction.Type
-                                            .CUSTOM_DEVICE_PROVIDER,
-                                    testData));
+                                    androidTestProperties, deviceProvider, testData));
 
             taskFactory.configure(
                     DEVICE_ANDROID_TEST,

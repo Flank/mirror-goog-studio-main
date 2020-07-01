@@ -120,7 +120,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.AndroidVariantTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setTestComponents",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setDeviceProvider",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.IncrementalTask::setIncrementalFolder",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setInstallOptions",
