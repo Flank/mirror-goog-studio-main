@@ -150,3 +150,53 @@ kotlin_test(
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.sdk-common",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.sdk-common.iml"],
+    lint_baseline = "lint_baseline.xml",
+    resources = ["src/main/resources"],
+    tags = [
+        "manual",
+        "unb",
+    ],
+    test_resources = ["src/test/resources"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = [
+        "//tools/base/layoutlib-api:unb.studio.android.sdktools.layoutlib-api",
+        "//tools/base/build-system/builder-model:unb.studio.android.sdktools.builder-model",
+        "//tools/base/common:unb.studio.android.sdktools.common",
+        "//tools/base/sdklib:unb.studio.android.sdktools.sdklib",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/base/layoutlib-api:unb.studio.android.sdktools.layoutlib-api[module]",
+        "//tools/base/build-system/builder-model:unb.studio.android.sdktools.builder-model[module]",
+        "//tools/base/common:unb.studio.android.sdktools.common[module]",
+        "//tools/base/sdklib:unb.studio.android.sdktools.sdklib[module]",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/base/build-system/builder-test-api:unb.studio.android.sdktools.builder-test-api[module]",
+        "//tools/adt/idea/.idea/libraries:unb.easymock[test]",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
+        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
+        "//tools/base/ddmlib:unb.studio.android.sdktools.ddmlib[module]",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//tools/adt/idea/.idea/libraries:unb.equalsverifier[test]",
+        "//tools/adt/idea/.idea/libraries:unb.javax-inject",
+        "//tools/adt/idea/.idea/libraries:unb.aapt-proto",
+        "//tools/adt/idea/.idea/libraries:unb.protobuf",
+        "//tools/adt/idea/.idea/libraries:unb.studio-analytics-proto",
+        "//tools/adt/idea/.idea/libraries:unb.aia-proto",
+        "//tools/adt/idea/.idea/libraries:unb.studio-proto",
+    ],
+)

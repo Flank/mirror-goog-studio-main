@@ -44,3 +44,27 @@ coverage_java_test(
         "//tools/base/third_party:junit_junit",
     ],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.binary-resources",
+    srcs = ["binary-resources/src/main/java"],
+    iml_files = ["binary-resources/android.sdktools.binary-resources.iml"],
+    lint_baseline = "lint_baseline.xml",
+    tags = [
+        "manual",
+        "unb",
+    ],
+    test_resources = ["binary-resources/src/test/resources"],
+    test_srcs = ["binary-resources/src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/adt/idea/.idea/libraries:unb.jsr305",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+    ],
+)
