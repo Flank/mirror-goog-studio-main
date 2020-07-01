@@ -752,7 +752,7 @@ public class MainTest extends AbstractCheckTest {
     public void testVersion() throws Exception {
         File project = getProjectDir(null, manifest().minSdk(1));
         checkDriver(
-                "lint: version " + Version.TOOLS_VERSION + "\n",
+                "lint: version " + Version.ANDROID_GRADLE_PLUGIN_VERSION + "\n",
                 "",
 
                 // Expected exit code
