@@ -19,7 +19,6 @@ import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
-import com.android.build.gradle.internal.testing.TestApkFinder
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -33,36 +32,27 @@ import java.util.stream.Collectors
 class TestApplicationTestData constructor(
     creationConfig: TestVariantCreationConfig,
     testApkDir: Provider<Directory>,
-    testedApksDir: FileCollection
+    testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
     creationConfig,
     creationConfig.variantSources,
     testApkDir,
-    testedApksDir) {
+    testedApksDir
+) {
 
-    override val isLibrary: Boolean
-        get() = false
+    override val libraryType = creationConfig.services.provider { false }
 
-    override fun getTestedApkFinder() = TestApplicationTestApkFinder(testedApksDir)
-}
-
-class TestApplicationTestApkFinder(private val testedApksDir: FileCollection?) : TestApkFinder {
     override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger
     ): List<File> {
-        if (testedApksDir == null) {
-            return ImmutableList.of()
-        }
+        testedApksDir ?: return emptyList()
+
         // retrieve all the published files.
         val builtArtifacts: BuiltArtifacts? = BuiltArtifactsLoaderImpl().load(testedApksDir)
         return if (builtArtifacts != null) builtArtifacts.elements.stream()
             .map(BuiltArtifact::outputFile)
-            .map { pathname: String? ->
-                File(
-                    pathname
-                )
-            }
+            .map { pathname: String -> File(pathname) }
             .collect(Collectors.toList()) else ImmutableList.of()
     }
 }

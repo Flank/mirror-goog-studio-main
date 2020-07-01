@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Objects;
+import java.io.Serializable;
 import java.util.regex.Pattern;
 
 /**
@@ -42,8 +43,7 @@ import java.util.regex.Pattern;
  * </p>
  * For generic UI display of the API version, {@link #getApiString()} is to be used.
  */
-public final class AndroidVersion implements Comparable<AndroidVersion> {
-
+public final class AndroidVersion implements Comparable<AndroidVersion>, Serializable {
     /**
      * SDK version codes mirroring ones found in Build#VERSION_CODES on Android.
      */
@@ -79,6 +79,8 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
         public static final int Q = 29;
         public static final int R = 30;
     }
+
+    private static final long serialVersionUID = 1L;
 
     private final int mApiLevel;
     @Nullable

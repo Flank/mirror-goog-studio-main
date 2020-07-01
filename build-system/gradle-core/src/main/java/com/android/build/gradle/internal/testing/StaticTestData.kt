@@ -21,6 +21,10 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
 import java.io.File
 
+/**
+ * Final values for the [TestData] that can be passed to test runners. This should not be used as
+ * task input.
+ */
 data class StaticTestData(
     val applicationId: String,
 
@@ -44,9 +48,9 @@ data class StaticTestData(
 
     val testDirectories: List<File?>,
 
-    val testedApks: TestApkFinder
+    /**
+     * Returns APK files to install based on given density and abis. If none match,
+     * empty list is returned.
+     */
+    val testedApkFinder: (DeviceConfigProvider, ILogger) -> List<File>
 )
-
-interface TestApkFinder {
-    fun findTestedApks(deviceConfigProvider: DeviceConfigProvider, logger: ILogger): List<File>
-}

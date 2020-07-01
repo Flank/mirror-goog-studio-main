@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.testing.OnDeviceOrchestratorTestRunner;
 import com.android.build.gradle.internal.testing.ShardedTestRunner;
 import com.android.build.gradle.internal.testing.SimpleTestRunnable;
 import com.android.build.gradle.internal.testing.SimpleTestRunner;
-import com.android.build.gradle.internal.testing.StaticTestData;
+import com.android.build.gradle.internal.testing.TestData;
 import com.android.build.gradle.internal.testing.TestRunner;
 import com.android.build.gradle.internal.testing.utp.UtpDependencies;
 import com.android.build.gradle.internal.testing.utp.UtpDependency;
@@ -284,8 +284,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 try {
                                     return testRunner.runTests(
                                             getProjectName(),
-                                            getFlavorName().get(),
-                                            getStaticTestData().get(),
+                                            getTestData().get().getFlavorName().get(),
+                                            getTestData().get().getAsStaticData(),
                                             getBuddyApks().getFiles(),
                                             deviceProvider.getDevices(),
                                             deviceProvider.getTimeoutInMs(),
@@ -359,7 +359,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         // For now we check if there are any test sources. We could inspect the test classes and
         // apply JUnit logic to see if there's something to run, but that would not catch the case
         // where user makes a typo in a test name or forgets to inherit from a JUnit class
-        return !getTestDirectories().getAsFileTree().isEmpty();
+        return !getTestData().get().getTestDirectories().getAsFileTree().isEmpty();
     }
 
     @OutputDirectory
@@ -379,9 +379,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @Input
     public abstract Property<Boolean> getCodeCoverageEnabled();
 
-    @Internal
-    public abstract Property<String> getFlavorName();
-
     @Input
     public abstract Property<Boolean> getAdditionalTestOutputEnabled();
 
@@ -389,8 +386,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @Input
     public abstract ListProperty<String> getInstallOptions();
 
-    @Internal
-    public abstract Property<StaticTestData> getStaticTestData();
+    @Nested
+    public abstract Property<TestData> getTestData();
 
     @Nested
     public abstract TestRunnerFactory getTestRunnerFactory();
@@ -417,23 +414,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getBuddyApks();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract DirectoryProperty getTestApkDir();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public abstract ConfigurableFileCollection getTestedApksDir();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public abstract ConfigurableFileCollection getTestedApksFromBundle();
-
-    @Internal
-    public abstract ConfigurableFileCollection getTestDirectories();
 
     public static class CreationAction
             extends VariantTaskCreationAction<
@@ -595,11 +575,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     .set(projectOptions.get(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT));
 
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-            task.getTestedApksDir().from(testData.getTestedApksDir());
-            task.getTestApkDir().set(testData.getTestApkDir());
-            task.getTestedApksFromBundle().from(testData.getTestedApksFromBundle());
-            task.getStaticTestData().set(project.provider(testData::get));
-            task.getFlavorName().set(testData.getFlavorName());
+
+            task.getTestData().set(testData);
             task.getDeviceProviderFactory()
                     .getTimeOutInMs()
                     .set(extension.getAdbOptions().getTimeOutInMs());
@@ -691,7 +668,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     AndroidArtifacts.ArtifactScope.EXTERNAL,
                                     AndroidArtifacts.ArtifactType.CLASSES_JAR);
 
-            String flavorFolder = testData.getFlavorName();
+            String flavorFolder = testData.getFlavorName().get();
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = FD_FLAVORS + "/" + flavorFolder;
             }
@@ -724,7 +701,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             // This task should not be UP-TO-DATE as we don't model the device state as input yet.
             task.getOutputs().upToDateWhen(it -> false);
-            task.getTestDirectories().from(project.files(testData.getTestDirectories()));
         }
     }
 }

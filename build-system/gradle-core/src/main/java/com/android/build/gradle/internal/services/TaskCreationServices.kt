@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Provider
 import java.io.File
 
 /**
@@ -35,4 +36,5 @@ interface TaskCreationServices: BaseServices {
     fun fileCollection(): ConfigurableFileCollection
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun initializeAapt2Input(aapt2Input: Aapt2Input)
+    fun <T> provider(callable: () -> T): Provider<T>
 }

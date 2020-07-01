@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.test
 
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.tasks.getApkFiles
-import com.android.build.gradle.internal.testing.TestApkFinder
 import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.testing.api.DeviceConfigProvider
@@ -27,6 +26,11 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import java.io.File
 
 /**
@@ -38,8 +42,13 @@ import java.io.File
 internal class BundleTestDataImpl constructor(
     creationConfig: AndroidTestCreationConfig,
     testApkDir: Provider<Directory>,
-    private val moduleName: String?,
-    private val apkBundle: FileCollection
+    @get:Input
+    @get:Optional
+    val moduleName: String?,
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    val apkBundle: FileCollection
 ) : AbstractTestDataImpl(
     creationConfig,
     creationConfig.variantSources,
@@ -47,16 +56,8 @@ internal class BundleTestDataImpl constructor(
     null
 ) {
 
-    override val isLibrary: Boolean
-        get() = false
+    override val libraryType = creationConfig.services.provider { false }
 
-    override fun getTestedApksFromBundle(): FileCollection? = apkBundle
-
-    override fun getTestedApkFinder(): TestApkFinder = BundleTestApkFinder(moduleName, apkBundle)
-}
-
-class BundleTestApkFinder(private val moduleName: String?, private val apkBundle: FileCollection) :
-    TestApkFinder {
     override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger

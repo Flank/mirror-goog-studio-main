@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.utils.fromDisallowChanges
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import java.io.File
 
 class TaskCreationServicesImpl(projectServices: ProjectServices) :
@@ -34,5 +34,9 @@ class TaskCreationServicesImpl(projectServices: ProjectServices) :
 
     override fun initializeAapt2Input(aapt2Input: Aapt2Input) {
         projectServices.initializeAapt2Input(aapt2Input)
+    }
+
+    override fun <T> provider(callable: () -> T): Provider<T> {
+        return projectServices.providerFactory.provider(callable)
     }
 }

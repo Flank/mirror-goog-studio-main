@@ -3373,7 +3373,10 @@ public abstract class TaskManager<
     protected void configureTestData(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull AbstractTestDataImpl testData) {
-        testData.setAnimationsDisabled(extension.getTestOptions().getAnimationsDisabled());
+        testData.setAnimationsDisabled(
+                componentProperties
+                        .getServices()
+                        .provider(extension.getTestOptions()::getAnimationsDisabled));
         testData.setExtraInstrumentationTestRunnerArgs(
                 componentProperties
                         .getServices()

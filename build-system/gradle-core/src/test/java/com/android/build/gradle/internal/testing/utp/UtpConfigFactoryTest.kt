@@ -21,12 +21,9 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.build.gradle.internal.testing.TestApkFinder
-import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
-import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat
 import org.gradle.api.file.RegularFile
@@ -88,12 +85,7 @@ class UtpConfigFactoryTest {
         flavorName = "",
         testApk = File(""),
         testDirectories = emptyList(),
-        testedApks = object: TestApkFinder{
-            override fun findTestedApks(
-                deviceConfigProvider: DeviceConfigProvider,
-                logger: ILogger
-            ) = emptyList<File>()
-        }
+        testedApkFinder = { _, _ -> emptyList() }
     )
     private val utpDependencies = object: UtpDependencies() {
         private fun mockFile(absolutePath: String): File = mock(File::class.java).also {
