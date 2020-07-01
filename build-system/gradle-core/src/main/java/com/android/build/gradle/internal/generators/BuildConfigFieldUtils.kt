@@ -50,7 +50,7 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: JavaWriter)
     if (comment != null) {
         writer.emitSingleLineComment(comment)
     }
-    val valueToWrite = value
+    val valueAsString = value.toString()
     // Hack (see IDEA-100046): We want to avoid reporting "condition is always
     // true" from the data flow inspection, so use a non-constant value.
     // However, that defeats the purpose of this flag (when not in debug mode,
@@ -59,30 +59,29 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: JavaWriter)
     // true, which is the most likely scenario while the user is looking
     // at source code. map.put(PH_DEBUG, Boolean.toString(mDebug));
     val emitValue = if (name == "DEBUG") {
-        if (value is Boolean && value == true) "Boolean.parseBoolean(\"true\")" else "false"
+        if (valueAsString == "true") "Boolean.parseBoolean(\"true\")" else "false"
     } else {
-        if (valueToWrite is String) {
-            if (valueToWrite.length > 2 && valueToWrite.first() == '"' && valueToWrite.last() == '"') {
-                valueToWrite
-            } else {
-                """"$valueToWrite""""
-            }
-        } else valueToWrite.toString()
+        when (type) {
+            "boolean" -> valueAsString
+            "int" -> valueAsString
+            "long" -> if (valueAsString.toLongOrNull() == null) valueAsString else valueAsString.ensureSuffix('L')
+            "float" -> if (valueAsString.toFloatOrNull() == null) valueAsString else valueAsString.ensureSuffix('f')
+            "String" -> valueAsString.ensureQuoted()
+            else -> valueAsString
+        }
     }
 
-    val formattedEmitValue = if (!type.contains("string", true)) {
-        val removedQuotes = emitValue.removeSurrounding('"'.toString())
-        when {
-            type.contains("long", true) && !removedQuotes.endsWith("L") -> {
-                removedQuotes.plus("L")
-            }
-            type.contains("float", true) && !removedQuotes.endsWith("f") -> {
-                removedQuotes.plus("f")
-            }
-            else -> removedQuotes
-        }
+    writer.emitField(type, name, publicStaticFinal, emitValue)
+}
+
+private fun String.ensureSuffix(suffix: Char): String {
+    return if (endsWith(suffix)) this else "$this$suffix"
+}
+
+private fun String.ensureQuoted(): String {
+    return if (length > 2 && first() == '"' && last() == '"') {
+        this
     } else {
-        emitValue
+        """"$this""""
     }
-    writer.emitField(type, name, publicStaticFinal, formattedEmitValue)
 }
