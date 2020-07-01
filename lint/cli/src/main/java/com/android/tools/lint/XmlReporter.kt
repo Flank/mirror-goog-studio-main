@@ -37,7 +37,6 @@ import kotlin.math.min
 /**
  * A reporter which emits lint results into an XML report.
  *
- *
  * **NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.**
  */
@@ -47,9 +46,7 @@ class XmlReporter
  * Constructs a new [XmlReporter]
  *
  * @param client the client
- *
  * @param output the output file
- *
  * @throws IOException if an error occurs
  */
 @Throws(IOException::class)
@@ -103,7 +100,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         writer.write("\n</issues>\n")
         writer.close()
 
-        if (!client.flags.isQuiet && (stats.errorCount > 0 || stats.warningCount > 0)) {
+        if (!client.flags.isQuiet && output != null && (stats.errorCount > 0 || stats.warningCount > 0)) {
             val url = SdkUtils.fileToUrlString(output.absoluteFile)
             println(String.format("Wrote XML report to %1\$s", url))
         }
@@ -157,7 +154,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             }
         }
 
-        if (warning.isVariantSpecific) {
+        if (warning.variantSpecific) {
             writeAttribute(
                 writer,
                 2,
@@ -173,20 +170,14 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         }
 
         if (!isIntendedForBaseline && includeFixes &&
-            (warning.quickfixData != null || hasAutoFix(issue))
+            (warning.fix != null || hasAutoFix(issue))
         ) {
             writeAttribute(writer, 2, "quickfix", "studio")
         }
 
-        assert(warning.file != null == (warning.location != null))
-
-        if (warning.file != null) {
-            assert(warning.location.file === warning.file)
-        }
-
         var hasChildren = false
 
-        val fixData = warning.quickfixData
+        val fixData = warning.fix
         if (includeFixes && fixData != null) {
             writer.write(">\n")
             emitFixes(warning, fixData)

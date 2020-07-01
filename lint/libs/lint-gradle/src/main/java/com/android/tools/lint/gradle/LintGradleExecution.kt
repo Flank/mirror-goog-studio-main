@@ -143,7 +143,10 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                 }
                 val flags = client.flags
                 flags.isExplainIssues = false
-                val reporter = Reporter.createTextReporter(client, flags, null, writer, false)
+                val reporter = Reporter.createTextReporter(
+                    client, flags, null, writer,
+                    close = false
+                )
                 try {
                     val stats = create(errors.size, 0)
                     reporter.setWriteStats(false)
@@ -209,7 +212,8 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
             // Set up some default reporters
             flags.reporters.add(
                 Reporter.createTextReporter(
-                    client, flags, null, PrintWriter(System.out, true), false
+                    client, flags, null, PrintWriter(System.out, true),
+                    close = false
                 )
             )
             if (!autoFixing) {
@@ -238,7 +242,10 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                     flags.reporters
                         .add(
                             Reporter.createXmlReporter(
-                                client, xml, false, flags.isIncludeXmlFixes
+                                client,
+                                xml,
+                                intendedForBaseline = false,
+                                includeFixes = flags.isIncludeXmlFixes
                             )
                         )
                 } catch (e: IOException) {
@@ -414,8 +421,8 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                     val reporter = Reporter.createXmlReporter(
                         client,
                         baselineFile,
-                        true,
-                        false
+                        intendedForBaseline = true,
+                        includeFixes = false
                     )
                     reporter.setBaselineAttributes(
                         client,
@@ -490,9 +497,9 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                     lineMap[warning.line] = new
                     new
                 }
-                val fileMap = columnMap[warning.offset] ?: run {
+                val fileMap = columnMap[warning.startOffset] ?: run {
                     val new: MutableMap<String, Warning> = mutableMapOf()
-                    columnMap[warning.offset] = new
+                    columnMap[warning.startOffset] = new
                     new
                 }
                 val file = warning.file

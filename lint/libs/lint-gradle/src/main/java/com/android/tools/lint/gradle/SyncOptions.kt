@@ -193,7 +193,10 @@ fun syncTo(
                 flags.reporters
                     .add(
                         Reporter.createXmlReporter(
-                            client, output, false, flags.isIncludeXmlFixes
+                            client,
+                            output,
+                            intendedForBaseline = false,
+                            includeFixes = flags.isIncludeXmlFixes
                         )
                     )
             } catch (e: IOException) {

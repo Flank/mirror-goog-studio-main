@@ -13,152 +13,141 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint
 
-package com.android.tools.lint;
-
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.Severity;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.android.tools.lint.LintFixPerformer.Companion.canAutoFix
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.Severity
+import com.google.common.collect.ComparisonChain
+import com.google.common.collect.Sets
+import java.io.File
+import java.util.Comparator
+import java.util.HashSet
 
 /**
- * A {@link Warning} represents a specific warning that a {@link LintClient} has been told about.
- * The context stores these as they are reported into a list of warnings such that it can sort them
- * all before presenting them all at the end.
+ * A [Warning] represents a specific warning that has been reported.
+ * The client stores these as they are reported into a list of warnings such that it can
+ * sort them all before presenting them all at the end.
  */
-public class Warning implements Comparable<Warning> {
-    public final Issue issue;
-    public final String message;
-    public final Severity severity;
-    public final Project project;
-    public Location location;
-    public File file;
-    public String path;
-    public int line = -1;
-    public int offset = -1;
-    public int endOffset = -1;
-    public String errorLine;
-    public CharSequence fileContents;
-    public Set<String> allVariants;
-    public Set<String> variants;
-    public LintFix quickfixData;
-    public boolean wasAutoFixed;
+class Warning(
+    client: LintCliClient,
+    val issue: Issue,
+    val message: String,
+    val severity: Severity,
+    val project: Project,
+    val location: Location,
+    val fileContents: CharSequence? = null,
+    val errorLine: String? = null,
+    val fix: LintFix? = null,
+    path: String? = null
+) : Comparable<Warning> {
+    val file: File = location.file
+    val displayPath: String = path ?: client.getDisplayPath(project, location.file) ?: file.path
+    val line: Int get() = location.start?.line ?: -1
+    val startOffset: Int get() = location.start?.offset ?: -1
+    val endOffset: Int get() = location.end?.offset ?: startOffset
 
-    public Warning(Issue issue, String message, Severity severity, Project project) {
-        this.issue = issue;
-        this.message = message;
-        this.severity = severity;
-        this.project = project;
-    }
+    var allVariants: Set<String>? = null
+    var variants: MutableSet<String>? = null
+    var wasAutoFixed = false
 
-    @Override
-    public int compareTo(@NonNull Warning o) {
-        String fileName1 = file != null ? file.getName() : null;
-        String fileName2 = o.file != null ? o.file.getName() : null;
-
-        Position start1 = location != null ? location.getStart() : null;
-        Position start2 = o.location != null ? o.location.getStart() : null;
-        Integer col1 = start1 != null ? start1.getColumn() : null;
-        Integer col2 = start2 != null ? start2.getColumn() : null;
-
-        Location secondary1 = location != null ? location.getSecondary() : null;
-        Location secondary2 = o.location != null ? o.location.getSecondary() : null;
-        File secondFile1 = secondary1 != null ? secondary1.getFile() : null;
-        File secondFile2 = secondary2 != null ? secondary2.getFile() : null;
-
+    override fun compareTo(other: Warning): Int {
+        val fileName1 = file.name
+        val fileName2 = other.file.name
+        val start1 = location.start
+        val start2 = other.location.start
+        val col1 = start1?.column
+        val col2 = start2?.column
+        val secondary1 = location.secondary
+        val secondary2 = other.location.secondary
+        val secondFile1 = secondary1?.file
+        val secondFile2 = secondary2?.file
         return ComparisonChain.start()
-                .compare(issue.getCategory(), o.issue.getCategory())
-                .compare(issue.getPriority(), o.issue.getPriority(), Comparator.reverseOrder())
-                .compare(issue.getId(), o.issue.getId())
-                .compare(fileName1, fileName2, Comparator.nullsLast(Comparator.naturalOrder()))
-                .compare(line, o.line)
-                .compare(message, o.message)
-                .compare(file, o.file, Comparator.nullsLast(Comparator.naturalOrder()))
-                // This handles the case where you have a huge XML document without newlines,
-                // such that all the errors end up on the same line.
-                .compare(col1, col2, Comparator.nullsLast(Comparator.naturalOrder()))
-                .compare(secondFile1, secondFile2, Comparator.nullsLast(Comparator.naturalOrder()))
-                .result();
+            .compare(issue.category, other.issue.category)
+            .compare(
+                issue.priority,
+                other.issue.priority,
+                Comparator.reverseOrder()
+            )
+            .compare(issue.id, other.issue.id)
+            .compare(
+                fileName1,
+                fileName2,
+                Comparator.nullsLast(Comparator.naturalOrder())
+            )
+            .compare(line, other.line)
+            .compare(message, other.message)
+            .compare(
+                file,
+                other.file,
+                Comparator.nullsLast(Comparator.naturalOrder())
+            ) // This handles the case where you have a huge XML document without newlines,
+            // such that all the errors end up on the same line.
+            .compare(
+                col1,
+                col2,
+                Comparator.nullsLast(Comparator.naturalOrder())
+            )
+            .compare(
+                secondFile1,
+                secondFile2,
+                Comparator.nullsLast(Comparator.naturalOrder())
+            )
+            .result()
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (other == null || getClass() != other.getClass()) {
-            return false;
+        return if (other == null || javaClass != other.javaClass) {
+            false
+        } else this.compareTo(other as Warning) == 0
+    }
+
+    override fun hashCode(): Int {
+        var result = message.hashCode()
+        result = 31 * result + file.hashCode()
+        return result
+    }
+
+    fun hasAutoFix(): Boolean {
+        val fixData = fix ?: return false
+        return canAutoFix(fixData)
+    }
+
+    val variantSpecific: Boolean
+        get() {
+            val variantSize = variants?.size ?: return false
+            val allVariantsSize = allVariants?.size ?: return false
+            return variantSize < allVariantsSize
         }
-        return this.compareTo((Warning) other) == 0;
+
+    fun includesMoreThanExcludes(): Boolean {
+        assert(variantSpecific)
+        val variantCount = variants!!.size
+        val allVariantCount = allVariants!!.size
+        return variantCount <= allVariantCount - variantCount
     }
 
-    @Override
-    public int hashCode() {
-        int result = message.hashCode();
-        result = 31 * result + (file != null ? file.hashCode() : 0);
-        return result;
-    }
-
-    public boolean hasAutoFix() {
-        return quickfixData != null && LintFixPerformer.Companion.canAutoFix(quickfixData);
-    }
-
-    public boolean isVariantSpecific() {
-        return variants != null && variants.size() < allVariants.size();
-    }
-
-    public boolean includesMoreThanExcludes() {
-        assert isVariantSpecific();
-        int variantCount = variants.size();
-        int allVariantCount = allVariants.size();
-        return variantCount <= allVariantCount - variantCount;
-    }
-
-    public List<String> getIncludedVariantNames() {
-        assert isVariantSpecific();
-        List<String> names = new ArrayList<>();
-        if (variants != null) {
-            names.addAll(variants);
+    val includedVariantNames: List<String>
+        get() {
+            assert(variantSpecific)
+            return variants?.asSequence()?.sorted()?.toList() ?: emptyList()
         }
-        Collections.sort(names);
-        return names;
-    }
 
-    public List<String> getExcludedVariantNames() {
-        assert isVariantSpecific();
-        Set<String> included = new HashSet<>(getIncludedVariantNames());
-        Set<String> excluded = Sets.difference(allVariants, included);
-        List<String> sorted = Lists.newArrayList(excluded);
-        Collections.sort(sorted);
-        return sorted;
-    }
+    val excludedVariantNames: List<String>
+        get() {
+            assert(variantSpecific)
+            val included: Set<String> = HashSet(includedVariantNames)
+            val excluded: Set<String> = Sets.difference(allVariants!!, included)
+            return excluded.asSequence().sorted().toList()
+        }
 
-    @Override
-    public String toString() {
-        return "Warning{"
-                + "issue="
-                + issue
-                + ", message='"
-                + message
-                + '\''
-                + ", file="
-                + file
-                + ", line="
-                + line
-                + '}';
+    override fun toString(): String {
+        return "Warning{issue=$issue, message='$message', file=$file, line=$line}"
     }
 }

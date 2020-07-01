@@ -156,7 +156,7 @@ public class LintFixVerifier {
                 String lineNumber = matcher.group(3);
                 String suffix = matcher.group(4);
                 sb.append(prefix);
-                sb.append(Integer.toString(Integer.parseInt(lineNumber) + 1));
+                sb.append((Integer.parseInt(lineNumber) + 1));
                 sb.append(suffix);
             } else {
                 sb.append(line);
@@ -187,7 +187,7 @@ public class LintFixVerifier {
         assertTrue(expectedFile != null || diffs != null);
         List<String> names = Lists.newArrayList();
         for (Warning warning : warnings) {
-            LintFix data = warning.quickfixData;
+            LintFix data = warning.getFix();
             if (robot && !data.robot) {
                 // Fix requires human intervention
                 continue;
@@ -206,7 +206,7 @@ public class LintFixVerifier {
             }
 
             for (LintFix lintFix : list) {
-                String targetPath = warning.path;
+                String targetPath = warning.getDisplayPath();
                 TestFile file = findTestFile(targetPath);
                 if (file == null) {
                     fail("Didn't find test file " + targetPath);
@@ -238,7 +238,7 @@ public class LintFixVerifier {
                 }
 
                 if (diffs != null) {
-                    if (reformat != null && reformat && warning.path.endsWith(DOT_XML)) {
+                    if (reformat != null && reformat && warning.getDisplayPath().endsWith(DOT_XML)) {
                         try {
                             before =
                                     XmlPrettyPrinter.prettyPrint(
@@ -305,7 +305,7 @@ public class LintFixVerifier {
 
     private static String checkSetAttribute(
             @NonNull SetAttribute setFix, @NonNull String contents, @NonNull Warning warning) {
-        Location location = setFix.range != null ? setFix.range : warning.location;
+        Location location = setFix.range != null ? setFix.range : warning.getLocation();
         Position start = location.getStart();
         Position end = location.getEnd();
         assert start != null;
@@ -334,7 +334,7 @@ public class LintFixVerifier {
                                 + start.getColumn()
                                 + 1
                                 + ") in "
-                                + warning.path
+                                + warning.getDisplayPath()
                                 + ":\n"
                                 + contents);
             }
@@ -406,7 +406,7 @@ public class LintFixVerifier {
             @NonNull ReplaceString replaceFix, @NonNull Warning warning, @NonNull String contents) {
         String oldPattern = replaceFix.oldPattern;
         String oldString = replaceFix.oldString;
-        Location location = replaceFix.range != null ? replaceFix.range : warning.location;
+        Location location = replaceFix.range != null ? replaceFix.range : warning.getLocation();
 
         Position start = location.getStart();
         Position end = location.getEnd();
@@ -606,11 +606,11 @@ public class LintFixVerifier {
             @NonNull StringBuilder diffs) {
         String diff = TestUtils.getDiff(before, after, diffWindow);
         if (!diff.isEmpty()) {
-            String targetPath = warning.path.replace(File.separatorChar, '/');
+            String targetPath = warning.getDisplayPath().replace(File.separatorChar, '/');
             diffs.append("Fix for ")
                     .append(targetPath)
                     .append(" line ")
-                    .append(warning.line + 1)
+                    .append(warning.getLine() + 1)
                     .append(": ");
             if (fixDescription != null) {
                 diffs.append(fixDescription).append(":\n");
@@ -621,11 +621,11 @@ public class LintFixVerifier {
 
     private static void appendDataMap(
             @NonNull Warning warning, @NonNull DataMap map, @NonNull StringBuilder diffs) {
-        String targetPath = warning.path;
+        String targetPath = warning.getDisplayPath();
         diffs.append("Data for ")
                 .append(targetPath.replace(File.separatorChar, '/'))
                 .append(" line ")
-                .append(warning.line + 1)
+                .append(warning.getLine() + 1)
                 .append(": ");
         String fixDescription = map.getDisplayName();
         if (fixDescription != null) {

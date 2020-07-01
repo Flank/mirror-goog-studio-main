@@ -13,351 +13,281 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint
 
-package com.android.tools.lint;
-
-import static com.android.tools.lint.detector.api.Lint.describeCounts;
-import static com.android.tools.lint.detector.api.TextFormat.RAW;
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
-import com.android.utils.SdkUtils;
-import com.google.common.annotations.Beta;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.List;
+import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.describeCounts
+import com.android.utils.SdkUtils
+import com.google.common.annotations.Beta
+import com.google.common.base.Joiner
+import com.google.common.base.Splitter
+import java.io.File
+import java.io.IOException
+import java.io.Writer
 
 /**
  * A reporter which emits lint warnings as plain text strings
  *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
+ *
+ * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.**
  */
 @Beta
-public class TextReporter extends Reporter {
-    private final Writer writer;
-    private final boolean close;
-    private final LintCliFlags flags;
-    private boolean forwardSlashPaths;
-    private boolean writeStats = true;
+class TextReporter(
+    client: LintCliClient,
+    private val flags: LintCliFlags,
+    file: File?,
+    private val writer: Writer,
+    private val close: Boolean
+) : Reporter(client, file) {
+    /**
+     * Whether the reporter should convert paths to forward slashes
+     */
+    var isForwardSlashPaths = false
+
+    private var writeStats = true
 
     /**
-     * Constructs a new {@link TextReporter}
+     * Constructs a new [TextReporter]
      *
      * @param client the client
      * @param flags the flags
      * @param writer the writer to write into
      * @param close whether the writer should be closed when done
      */
-    public TextReporter(
-            @NonNull LintCliClient client,
-            @NonNull LintCliFlags flags,
-            @NonNull Writer writer,
-            boolean close) {
-        this(client, flags, null, writer, close);
-    }
+    constructor(
+        client: LintCliClient,
+        flags: LintCliFlags,
+        writer: Writer,
+        close: Boolean
+    ) : this(client, flags, null, writer, close)
 
-    /**
-     * Constructs a new {@link TextReporter}
-     *
-     * @param client the client
-     * @param flags the flags
-     * @param file the file corresponding to the writer, if any
-     * @param writer the writer to write into
-     * @param close whether the writer should be closed when done
-     */
-    public TextReporter(
-            @NonNull LintCliClient client,
-            @NonNull LintCliFlags flags,
-            @Nullable File file,
-            @NonNull Writer writer,
-            boolean close) {
-        super(client, file);
-        this.flags = flags;
-        this.writer = writer;
-        this.close = close;
-    }
-
-    @Override
-    public void write(@NonNull LintStats stats, List<Warning> issues) throws IOException {
-        boolean abbreviate = !flags.isShowEverything();
-
-        StringBuilder output = new StringBuilder(issues.size() * 200);
+    @Throws(IOException::class)
+    override fun write(
+        stats: LintStats,
+        issues: List<Warning>
+    ) {
+        val abbreviate = !flags.isShowEverything
+        val output = StringBuilder(issues.size * 200)
         if (issues.isEmpty()) {
-            if (isDisplayEmpty() && writeStats) {
-                writer.write("No issues found");
-                if (stats.getBaselineErrorCount() > 0 || stats.getBaselineWarningCount() > 0) {
-                    File baselineFile = flags.getBaselineFile();
-                    assert baselineFile != null;
-                    writer.write(
-                            String.format(
-                                    " (%1$s filtered by baseline %2$s)",
-                                    describeCounts(
-                                            stats.getBaselineErrorCount(),
-                                            stats.getBaselineWarningCount(),
-                                            true,
-                                            true),
-                                    baselineFile.getName()));
+            if (isDisplayEmpty && writeStats) {
+                writer.write("No issues found")
+                if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                    val baselineFile = flags.baselineFile!!
+                    val counts = describeCounts(
+                        stats.baselineErrorCount,
+                        stats.baselineWarningCount,
+                        comma = true,
+                        capitalize = true
+                    )
+                    writer.write(" ($counts filtered by baseline ${baselineFile.name})")
                 }
-                writer.write('.');
-                writer.write('\n');
-                writer.flush();
+                writer.write('.'.toInt())
+                writer.write('\n'.toInt())
+                writer.flush()
             }
         } else {
-            Issue lastIssue = null;
-            for (Warning warning : issues) {
-                if (warning.issue != lastIssue) {
-                    explainIssue(output, lastIssue);
-                    lastIssue = warning.issue;
+            var lastIssue: Issue? = null
+            for (warning in issues) {
+                if (warning.issue !== lastIssue) {
+                    explainIssue(output, lastIssue)
+                    lastIssue = warning.issue
                 }
-                int startLength = output.length();
-
-                String p = warning.path;
-                if (p != null) {
-                    appendPath(output, p);
-                    output.append(':');
-
-                    if (warning.line >= 0) {
-                        output.append(Integer.toString(warning.line + 1));
-                        output.append(':');
-                    }
-                    if (startLength < output.length()) {
-                        output.append(' ');
-                    }
+                val startLength = output.length
+                val p = warning.displayPath
+                appendPath(output, p)
+                output.append(':')
+                if (warning.line >= 0) {
+                    output.append((warning.line + 1).toString())
+                    output.append(':')
                 }
-
-                Severity severity = warning.severity;
-                if (severity == Severity.FATAL) {
+                if (startLength < output.length) {
+                    output.append(' ')
+                }
+                var severity = warning.severity
+                if (severity === Severity.FATAL) {
                     // Treat the fatal error as an error such that we don't display
                     // both "Fatal:" and "Error:" etc in the error output.
-                    severity = Severity.ERROR;
+                    severity = Severity.ERROR
                 }
-                output.append(severity.getDescription());
-                output.append(':');
-                output.append(' ');
-
-                output.append(RAW.convertTo(warning.message, TEXT));
-
-                if (warning.issue != null) {
-                    output.append(' ').append('[');
-                    output.append(warning.issue.getId());
-                    output.append(']');
-                }
-
-                output.append('\n');
-
+                output.append(severity.description)
+                output.append(':')
+                output.append(' ')
+                output.append(
+                    TextFormat.RAW.convertTo(
+                        warning.message,
+                        TextFormat.TEXT
+                    )
+                )
+                output.append(' ').append('[')
+                output.append(warning.issue.id)
+                output.append(']')
+                output.append('\n')
                 if (warning.wasAutoFixed) {
-                    output.append("This issue has been automatically fixed.\n");
+                    output.append("This issue has been automatically fixed.\n")
                 }
-
-                if (warning.errorLine != null && !warning.errorLine.isEmpty()) {
-                    output.append(warning.errorLine);
+                if (warning.errorLine != null && warning.errorLine.isNotEmpty()) {
+                    output.append(warning.errorLine)
                 }
-
-                if (warning.location != null && warning.location.getSecondary() != null) {
-                    Location location = warning.location.getSecondary();
-                    boolean omitted = false;
+                if (warning.location.secondary != null) {
+                    var location = warning.location.secondary
+                    var omitted = false
                     while (location != null) {
-                        if (location.getMessage() != null && !location.getMessage().isEmpty()) {
-                            output.append("    ");
-                            String path =
-                                    client.getDisplayPath(warning.project, location.getFile());
-                            appendPath(output, path);
-
-                            Position start = location.getStart();
+                        val locationMessage = location.message
+                        if (locationMessage != null && locationMessage.isNotEmpty()) {
+                            output.append("    ")
+                            val path = client.getDisplayPath(warning.project, location.file)
+                            appendPath(output, path)
+                            val start = location.start
                             if (start != null) {
-                                int line = start.getLine();
+                                val line = start.line
                                 if (line >= 0) {
-                                    output.append(':');
-                                    output.append(Integer.toString(line + 1));
+                                    output.append(':')
+                                    output.append((line + 1).toString())
                                 }
                             }
-
-                            if (location.getMessage() != null && !location.getMessage().isEmpty()) {
-                                output.append(':');
-                                output.append(' ');
-                                output.append(RAW.convertTo(location.getMessage(), TEXT));
-                            }
-
-                            output.append('\n');
+                            output.append(':')
+                            output.append(' ')
+                            output.append(
+                                TextFormat.RAW.convertTo(
+                                    locationMessage,
+                                    TextFormat.TEXT
+                                )
+                            )
+                            output.append('\n')
                         } else {
-                            omitted = true;
+                            omitted = true
                         }
-
-                        location = location.getSecondary();
+                        location = location.secondary
                     }
-
                     if (!abbreviate && omitted) {
-                        location = warning.location.getSecondary();
-                        StringBuilder sb = new StringBuilder(100);
-                        sb.append("Also affects: ");
-                        int begin = sb.length();
+                        location = warning.location.secondary
+                        val sb = StringBuilder(100)
+                        sb.append("Also affects: ")
+                        val begin = sb.length
                         while (location != null) {
-                            if (location.getMessage() == null || location.getMessage().isEmpty()) {
-                                if (sb.length() > begin) {
-                                    sb.append(", ");
+                            val locationMessage = location.message
+                            if (locationMessage == null || locationMessage.isEmpty()) {
+                                if (sb.length > begin) {
+                                    sb.append(", ")
                                 }
-
-                                String path =
-                                        client.getDisplayPath(warning.project, location.getFile());
-                                appendPath(sb, path);
-
-                                Position start = location.getStart();
+                                val path = client.getDisplayPath(warning.project, location.file)
+                                appendPath(sb, path)
+                                val start = location.start
                                 if (start != null) {
-                                    int line = start.getLine();
+                                    val line = start.line
                                     if (line >= 0) {
-                                        sb.append(':');
-                                        sb.append(Integer.toString(line + 1));
+                                        sb.append(':')
+                                        sb.append((line + 1).toString())
                                     }
                                 }
                             }
-
-                            location = location.getSecondary();
+                            location = location.secondary
                         }
-                        String wrapped = Main.wrap(sb.toString(), Main.MAX_LINE_WIDTH, "     ");
-                        output.append(wrapped);
+                        val wrapped = Main.wrap(
+                            sb.toString(),
+                            Main.MAX_LINE_WIDTH,
+                            "     "
+                        )
+                        output.append(wrapped)
                     }
                 }
-
-                if (warning.isVariantSpecific()) {
-                    List<String> names;
-                    if (warning.includesMoreThanExcludes()) {
-                        output.append("Applies to variants: ");
-                        names = warning.getIncludedVariantNames();
+                if (warning.variantSpecific) {
+                    val names = if (warning.includesMoreThanExcludes()) {
+                        output.append("Applies to variants: ")
+                        warning.includedVariantNames
                     } else {
-                        output.append("Does not apply to variants: ");
-                        names = warning.getExcludedVariantNames();
+                        output.append("Does not apply to variants: ")
+                        warning.excludedVariantNames
                     }
-                    output.append(Joiner.on(", ").join(names));
-                    output.append('\n');
+                    output.append(Joiner.on(", ").join(names))
+                    output.append('\n')
                 }
             }
-            explainIssue(output, lastIssue);
-
-            writer.write(output.toString());
-
+            explainIssue(output, lastIssue)
+            writer.write(output.toString())
             if (writeStats) {
                 // TODO: Update to using describeCounts
-                writer.write(
-                        String.format(
-                                "%1$d errors, %2$d warnings",
-                                stats.getErrorCount(), stats.getWarningCount()));
-                if (stats.getBaselineErrorCount() > 0 || stats.getBaselineWarningCount() > 0) {
-                    File baselineFile = flags.getBaselineFile();
-                    assert baselineFile != null;
-                    writer.write(
-                            String.format(
-                                    " (%1$s filtered by baseline %2$s)",
-                                    describeCounts(
-                                            stats.getBaselineErrorCount(),
-                                            stats.getBaselineWarningCount(),
-                                            true,
-                                            true),
-                                    baselineFile.getName()));
+                writer.write("${stats.errorCount} errors, ${stats.warningCount} warnings")
+                if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                    val baselineFile = flags.baselineFile!!
+                    val counts = describeCounts(
+                        stats.baselineErrorCount,
+                        stats.baselineWarningCount,
+                        comma = true,
+                        capitalize = true
+                    )
+                    writer.write(" ($counts filtered by baseline ${baselineFile.name})")
                 }
             }
-            writer.write('\n');
-            writer.flush();
+            writer.write('\n'.toInt())
+            writer.flush()
             if (close) {
-                writer.close();
-
-                if (!client.getFlags().isQuiet() && this.output != null) {
-                    String path = convertPath(this.output.getAbsolutePath());
-                    System.out.println(String.format("Wrote text report to %1$s", path));
+                writer.close()
+                if (!client.flags.isQuiet && this.output != null) {
+                    val path = convertPath(this.output.absolutePath)
+                    println("Wrote text report to $path")
                 }
             }
         }
     }
 
-    private void appendPath(@NonNull StringBuilder sb, @NonNull String path) {
-        sb.append(convertPath(path));
+    private fun appendPath(sb: StringBuilder, path: String) {
+        sb.append(convertPath(path))
     }
 
-    @NonNull
-    private String convertPath(@NonNull String path) {
-        if (isForwardSlashPaths()) {
+    private fun convertPath(path: String): String {
+        return if (isForwardSlashPaths) {
             if (File.separatorChar == '/') {
-                return path;
-            }
-            return path.replace(File.separatorChar, '/');
-        }
-
-        return path;
+                path
+            } else path.replace(File.separatorChar, '/')
+        } else path
     }
 
-    private void explainIssue(@NonNull StringBuilder output, @Nullable Issue issue) {
-        if (issue == null
-                || !flags.isExplainIssues()
-                || issue == IssueRegistry.LINT_ERROR
-                || issue == IssueRegistry.BASELINE) {
-            return;
+    private fun explainIssue(
+        output: StringBuilder,
+        issue: Issue?
+    ) {
+        if (issue == null || !flags.isExplainIssues ||
+            issue === IssueRegistry.LINT_ERROR || issue === IssueRegistry.BASELINE
+        ) {
+            return
         }
-
-        String explanation = issue.getExplanation(TextFormat.TEXT);
-        if (explanation.trim().isEmpty()) {
-            return;
+        val explanation = issue.getExplanation(TextFormat.TEXT)
+        if (explanation.trim { it <= ' ' }.isEmpty()) {
+            return
         }
-
-        String indent = "   ";
-        String formatted = SdkUtils.wrap(explanation, Main.MAX_LINE_WIDTH - indent.length(), null);
-        output.append('\n');
-        output.append(indent);
-        output.append("Explanation for issues of type \"").append(issue.getId()).append("\":\n");
-        for (String line : Splitter.on('\n').split(formatted)) {
-            if (!line.isEmpty()) {
-                output.append(indent);
-                output.append(line);
+        val indent = "   "
+        val formatted = SdkUtils.wrap(explanation, Main.MAX_LINE_WIDTH - indent.length, null)
+        output.append('\n')
+        output.append(indent)
+        output.append("Explanation for issues of type \"").append(issue.id).append("\":\n")
+        for (line in Splitter.on('\n').split(formatted)) {
+            if (line.isNotEmpty()) {
+                output.append(indent)
+                output.append(line)
             }
-            output.append('\n');
+            output.append('\n')
         }
-        List<String> moreInfo = issue.getMoreInfo();
-        if (!moreInfo.isEmpty()) {
-            for (String url : moreInfo) {
+        val moreInfo = issue.moreInfo
+        if (moreInfo.isNotEmpty()) {
+            for (url in moreInfo) {
                 if (formatted.contains(url)) {
-                    continue;
+                    continue
                 }
-                output.append(indent);
-                output.append(url);
-                output.append('\n');
+                output.append(indent)
+                output.append(url)
+                output.append('\n')
             }
-            output.append('\n');
+            output.append('\n')
         }
     }
 
-    boolean isWriteToConsole() {
-        return output == null;
-    }
-
-    /**
-     * Gets whether the reporter should convert paths to forward slashes
-     *
-     * @return true if forcing paths to forward slashes
-     */
-    public boolean isForwardSlashPaths() {
-        return forwardSlashPaths;
-    }
-
-    /**
-     * Sets whether the reporter should convert paths to forward slashes
-     *
-     * @param forwardSlashPaths true to force paths to forward slashes
-     */
-    public void setForwardSlashPaths(boolean forwardSlashPaths) {
-        this.forwardSlashPaths = forwardSlashPaths;
-    }
-
-    /** Whether the report should include stats. Default is true. */
-    public void setWriteStats(boolean writeStats) {
-        this.writeStats = writeStats;
+    /** Whether the report should include stats. Default is true.  */
+    fun setWriteStats(writeStats: Boolean) {
+        this.writeStats = writeStats
     }
 }

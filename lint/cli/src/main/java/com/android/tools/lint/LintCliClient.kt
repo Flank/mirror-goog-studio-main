@@ -52,6 +52,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Position
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.Severity.Companion.min
@@ -296,7 +297,12 @@ open class LintCliClient : LintClient {
             if (!ok) {
                 System.err.println("Couldn't create baseline folder $dir")
             } else {
-                val reporter = Reporter.createXmlReporter(this, baselineFile, true, false)
+                val reporter = Reporter.createXmlReporter(
+                    this,
+                    baselineFile,
+                    intendedForBaseline = true,
+                    includeFixes = false
+                )
                 reporter.setBaselineAttributes(this, baselineVariantName)
                 reporter.write(stats, warnings)
                 System.err.println(getBaselineCreationMessage(baselineFile))
@@ -527,78 +533,92 @@ open class LintCliClient : LintClient {
         } else if (severity === Severity.WARNING) { // Don't count informational as a warning
             warningCount++
         }
+
+        val line = location.start?.line ?: -1
+        var errorLine: String? = null
+        val fileContents: CharSequence? =
+            if (line < 0) {
+                // E.g. binary files like icons
+                null
+            } else {
+                // noinspection FileComparisons
+                if (context.file === location.file) {
+                    context.getContents() ?: getContents(location.file)
+                } else {
+                    getContents(location.file)
+                }
+            }
+
+        val startPosition = location.start
+        if (startPosition != null) {
+            val endPosition = location.end
+            if (fileContents != null) {
+                errorLine = computeErrorLine(fileContents, startPosition, endPosition)
+            }
+        }
+
         // Store the message in the raw format internally such that we can
         // convert it to text for the text reporter, HTML for the HTML reporter
         // and so on.
         val rawMessage = format.convertTo(message, TextFormat.RAW)
-        val warning = Warning(issue, rawMessage, severity, context.project)
+        val warning = Warning(
+            this, issue, rawMessage, severity, context.project,
+            location, fileContents, errorLine, fix
+        )
         warnings.add(warning)
-        warning.location = location
-        val file = location.file
-        warning.file = file
-        warning.path = getDisplayPath(context.project, file)
-        warning.quickfixData = fix
-        val startPosition = location.start
-        if (startPosition != null) {
+    }
+
+    private fun computeErrorLine(
+        fileContents: CharSequence,
+        startPosition: Position,
+        endPosition: Position?
+    ): String {
+        if (flags.isShowSourceLines) {
+            // Compute error line contents
             val line = startPosition.line
-            warning.line = line
-            warning.offset = startPosition.offset
-            val endPosition = location.end
-            if (endPosition != null) {
-                warning.endOffset = endPosition.offset
-            }
-            if (line >= 0) {
-                if (context.file === location.file) {
-                    warning.fileContents = context.getContents()
-                }
-                if (warning.fileContents == null) {
-                    warning.fileContents = getContents(location.file)
-                }
-                if (flags.isShowSourceLines) {
-                    // Compute error line contents
-                    warning.errorLine = getLine(warning.fileContents, line)
-                    if (warning.errorLine != null) {
-                        // Replace tabs with spaces such that the column
-                        // marker (^) lines up properly:
-                        warning.errorLine = warning.errorLine.replace('\t', ' ')
-                        var column = startPosition.column
-                        if (column < 0) {
-                            column = 0
-                            var i = 0
-                            while (i < warning.errorLine.length) {
-                                if (!Character.isWhitespace(warning.errorLine[i])) {
-                                    break
-                                }
-                                i++
-                                column++
-                            }
+            var errorLine = getLine(fileContents, line)
+            if (errorLine != null) {
+                // Replace tabs with spaces such that the column
+                // marker (^) lines up properly:
+                errorLine = errorLine.replace('\t', ' ')
+                var column = startPosition.column
+                if (column < 0) {
+                    column = 0
+                    var i = 0
+                    while (i < errorLine.length) {
+                        if (!Character.isWhitespace(errorLine[i])) {
+                            break
                         }
-                        val sb = StringBuilder(100)
-                        sb.append(warning.errorLine)
-                        sb.append('\n')
-                        for (i in 0 until column) {
-                            sb.append(' ')
-                        }
-                        var displayCaret = true
-                        if (endPosition != null) {
-                            val endLine = endPosition.line
-                            val endColumn = endPosition.column
-                            if (endLine == line && endColumn > column) {
-                                for (i in column until endColumn) {
-                                    sb.append('~')
-                                }
-                                displayCaret = false
-                            }
-                        }
-                        if (displayCaret) {
-                            sb.append('^')
-                        }
-                        sb.append('\n')
-                        warning.errorLine = sb.toString()
+                        i++
+                        column++
                     }
                 }
+                val sb = StringBuilder(100)
+                sb.append(errorLine)
+                sb.append('\n')
+                for (i in 0 until column) {
+                    sb.append(' ')
+                }
+                var displayCaret = true
+                if (endPosition != null) {
+                    val endLine = endPosition.line
+                    val endColumn = endPosition.column
+                    if (endLine == line && endColumn > column) {
+                        for (i in column until endColumn) {
+                            sb.append('~')
+                        }
+                        displayCaret = false
+                    }
+                }
+                if (displayCaret) {
+                    sb.append('^')
+                }
+                sb.append('\n')
+                return sb.toString()
             }
         }
+
+        return ""
     }
 
     override fun readFile(file: File): CharSequence {
@@ -1324,6 +1344,7 @@ open class LintCliClient : LintClient {
                 .withFileStreamProvider(object : FileStreamProvider() {
                     @Throws(FileNotFoundException::class)
                     override fun getInputStream(file: File): InputStream {
+                        // noinspection FileComparisons
                         if (injectedFile == file) {
                             return CharSequences.getInputStream(injectedXml.toString())
                         }

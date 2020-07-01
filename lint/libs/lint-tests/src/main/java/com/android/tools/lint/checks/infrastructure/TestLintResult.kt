@@ -728,6 +728,6 @@ class TestLintResult internal constructor(
 
     companion object {
         private const val TRUNCATION_MARKER = "\u2026"
-        val comparator: Comparator<Warning> = Comparator { o1, o2 -> o2.offset - o1.offset }
+        val comparator: Comparator<Warning> = Comparator { o1, o2 -> o2.startOffset - o1.startOffset }
     }
 }

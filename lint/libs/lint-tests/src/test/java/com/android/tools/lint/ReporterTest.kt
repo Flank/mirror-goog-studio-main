@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint
 
-package com.android.tools.lint;
+import com.android.tools.lint.Reporter.Companion.encodeUrl
+import junit.framework.TestCase
 
-import static com.android.tools.lint.Reporter.encodeUrl;
-
-import junit.framework.TestCase;
-
-public class ReporterTest extends TestCase {
-    public void testEncodeUrl() {
-        assertEquals("a/b/c", encodeUrl("a/b/c"));
-        assertEquals("a/b/c", encodeUrl("a\\b\\c"));
-        assertEquals(
-                "a/b/c/%24%26%2B%2C%3A%3B%3D%3F%40/foo+bar%25/d",
-                encodeUrl("a/b/c/$&+,:;=?@/foo bar%/d"));
-        assertEquals("a/%28b%29/d", encodeUrl("a/(b)/d"));
-        assertEquals("a/b+c/d", encodeUrl("a/b c/d")); // + or %20
+class ReporterTest : TestCase() {
+    fun testEncodeUrl() {
+        assertEquals("a/b/c", encodeUrl("a/b/c"))
+        assertEquals("a/b/c", encodeUrl("a\\b\\c"))
+        assertEquals("a/b/c/%24%26%2B%2C%3A%3B%3D%3F%40/foo+bar%25/d", encodeUrl("a/b/c/$&+,:;=?@/foo bar%/d"))
+        assertEquals("a/%28b%29/d", encodeUrl("a/(b)/d"))
+        assertEquals("a/b+c/d", encodeUrl("a/b c/d")) // + or %20
     }
 }

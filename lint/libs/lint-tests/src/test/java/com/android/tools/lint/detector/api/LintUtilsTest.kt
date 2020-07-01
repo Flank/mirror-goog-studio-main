@@ -335,7 +335,6 @@ class LintUtilsTest : TestCase() {
         assertFalse(idReferencesMatch("@+id/foo1", "@id/foo"))
     }
 
-    @Throws(Exception::class)
     fun testGetEncodedString() {
         checkEncoding("utf-8", false /*bom*/, "\n")
         checkEncoding("UTF-8", false /*bom*/, "\n")
@@ -704,8 +703,6 @@ class LintUtilsTest : TestCase() {
     }
 
     companion object {
-
-        @Throws(Exception::class)
         private fun checkEncoding(encoding: String, writeBom: Boolean, lineEnding: String) {
             val sb = StringBuilder()
 
