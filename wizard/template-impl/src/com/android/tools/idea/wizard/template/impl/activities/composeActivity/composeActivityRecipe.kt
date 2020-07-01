@@ -64,7 +64,7 @@ fun RecipeExecutor.composeActivityRecipe(
   requireJavaVersion("1.8", true)
   setBuildFeature("compose", true)
   // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-  setComposeOptions(kotlinCompilerExtensionVersion = "\${$composeVersionVarName}", kotlinCompilerVersion = "1.3.70-dev-withExperimentalGoogleExtensions-20200424")
+  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName", kotlinCompilerVersion = "1.3.70-dev-withExperimentalGoogleExtensions-20200424")
 
   open(srcOut.resolve("${activityClass}.kt"))
 }
