@@ -43,11 +43,10 @@ class MultiProjectHtmlReporter(
         stats: LintStats,
         issues: List<Incident>
     ) {
-        val projectToIncidents: MutableMap<Project, MutableList<Incident>> =
-            HashMap()
+        val projectToIncidents: MutableMap<Project, MutableList<Incident>> = HashMap()
         for (incident in issues) {
-            val list =
-                projectToIncidents.computeIfAbsent(incident.project) { ArrayList() }
+            val project = incident.project ?: continue
+            val list = projectToIncidents.computeIfAbsent(project) { ArrayList() }
             list.add(incident)
         }
 

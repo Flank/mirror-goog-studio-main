@@ -161,17 +161,14 @@ class IncidentTest : AbstractCheckTest() {
                 )
             )
         val incident2 = Incident(
-            lintClient,
             incident1.issue,
             incident1.message,
-            incident1.severity,
-            incident1.project,
             location2,
-            incident1.fileContents,
-            incident1.errorLine,
-            incident1.fix,
-            incident1.displayPath
-        )
+            incident1.fix
+        ).apply {
+            this.project = incident1.project
+            this.severity = incident1.severity
+        }
 
         // Make position on same line but shifted one char to the right; should not equal!
         assertTrue(incident2.compareTo(incident1) > 0)

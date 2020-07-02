@@ -63,7 +63,8 @@ open class LintFixPerformer constructor(
         val location = getLocation(incident)
         val file = location.file
         return fileMap[file] ?: run {
-            val fileData = PendingEditFile(client, file, incident.fileContents.toString())
+            val source = client.getSourceText(incident.file)
+            val fileData = PendingEditFile(client, file, source.toString())
             fileMap[file] = fileData
             fileData
         }

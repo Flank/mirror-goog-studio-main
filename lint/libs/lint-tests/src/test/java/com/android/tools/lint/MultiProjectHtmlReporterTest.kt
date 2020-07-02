@@ -72,19 +72,16 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                     DefaultPosition(6, 42, 236)
                 )
             val incident1 = Incident(
-                client,
                 ManifestDetector.USES_SDK,
                 "<uses-sdk> tag should specify a target API level (the highest verified "
                         + "version; when running on later versions, compatibility behaviors may "
                         + "be enabled) with android:targetSdkVersion=\"?\"",
-                Severity.WARNING,
-                project,
                 location1,
-                "",
-                "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n",
-                null,
-                "AndroidManifest.xml"
-            )
+                null
+            ).apply {
+                this.project = project
+                severity = Severity.WARNING
+            }
             val location2 =
                 create(
                     File("/foo/bar/Foo/res/layout/main.xml"),
@@ -92,17 +89,14 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                     DefaultPosition(11, 27, 396)
                 )
             val incident2 = Incident(
-                client,
                 HardcodedValuesDetector.ISSUE,
                 "Hardcoded string \"Fooo\", should use @string resource",
-                Severity.WARNING,
-                project,
                 location2,
-                "",
-                " (java.lang.String)         android:text=\"Fooo\" />\n        ~~~~~~~~~~~~~~~~~~~\n",
-                null,
-                "res/layout/main.xml"
-            )
+                null
+            ).apply {
+                this.project = project
+                severity = Severity.WARNING
+            }
             val incidents: MutableList<Incident> = ArrayList()
             incidents.add(incident1)
             incidents.add(incident2)

@@ -18,6 +18,7 @@ package com.android.tools.lint
 
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.detector.api.Severity
+import kotlin.math.max
 
 /**
  * Value object passed to [Reporter] instances providing statistics to include in the
@@ -87,15 +88,15 @@ class LintStats constructor(
             var baselineErrorCount = 0
             var baselineWarningCount = 0
             var baselineFixedCount = 0
-            if (!baselines.isEmpty()) {
+            if (baselines.isNotEmpty()) {
                 // Figure out the actual overlap; later I could stash these into temporary
                 // objects to compare
                 // For now just combine them in a dumb way
                 for (baseline in baselines) {
-                    baselineErrorCount = Math.max(baselineErrorCount, baseline.foundErrorCount)
+                    baselineErrorCount = max(baselineErrorCount, baseline.foundErrorCount)
                     baselineWarningCount =
-                            Math.max(baselineWarningCount, baseline.foundWarningCount)
-                    baselineFixedCount = Math.max(baselineFixedCount, baseline.fixedCount)
+                            max(baselineWarningCount, baseline.foundWarningCount)
+                    baselineFixedCount = max(baselineFixedCount, baseline.fixedCount)
                 }
             }
 

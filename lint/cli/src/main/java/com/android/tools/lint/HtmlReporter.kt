@@ -255,10 +255,13 @@ class HtmlReporter(
                 }
 
                 // Insert surrounding code block window
-                if (incident.line >= 0 && incident.fileContents != null && incident.startOffset != -1 && incident.endOffset != -1) {
+                val fileContents = if (incident.line >= 0)
+                    client.getSourceText(incident.file)
+                else null
+                if (fileContents != null && incident.startOffset != -1 && incident.endOffset != -1) {
                     appendCodeBlock(
                         incident.file,
-                        incident.fileContents,
+                        fileContents,
                         incident.startOffset,
                         incident.endOffset,
                         incident.severity
@@ -341,13 +344,14 @@ class HtmlReporter(
                 if ((!addedImage && url != null) && incident.location.secondary != null) {
                     addImage(url, incident.file, incident.location)
                 }
-                if (incident.variantSpecific) {
+                val applicableVariants = incident.applicableVariants
+                if (applicableVariants != null && applicableVariants.variantSpecific) {
                     append("\n")
                     append("Applies to variants: ")
-                    append(Joiner.on(", ").join(incident.includedVariantNames))
+                    append(Joiner.on(", ").join(applicableVariants.includedVariantNames))
                     append("<br/>\n")
                     append("Does <b>not</b> apply to variants: ")
-                    append(Joiner.on(", ").join(incident.excludedVariantNames))
+                    append(Joiner.on(", ").join(applicableVariants.excludedVariantNames))
                     append("<br/>\n")
                 }
             }
@@ -548,7 +552,7 @@ document.getElementById(id).style.display = 'none';
         val projects: MutableSet<Project> = HashSet()
         val seen: MutableSet<Issue> = HashSet()
         for (incident in incidents) {
-            projects.add(incident.project)
+            incident.project?.let { projects.add(it) }
             seen.add(incident.issue)
         }
         val cliConfiguration = client.configuration

@@ -453,3 +453,95 @@ abstract class Reporter protected constructor(
         }
     }
 }
+
+/**
+ * Produces the source line containing this error, as well as a second line showing
+ * the error range using ~ characters. Suitable for text output.
+ */
+fun Incident.getErrorLines(textProvider: (File) -> CharSequence?): String? {
+    val startPosition = location.start
+    if (startPosition != null && startPosition.line >= 0) {
+        val source = textProvider(file)
+        if (source != null) {
+            val endPosition = location.end
+            // Compute error line contents
+            val line = startPosition.line
+            var errorLine = source.getLine(line)
+            if (errorLine != null) {
+                // Replace tabs with spaces such that the column
+                // marker (^) lines up properly:
+                errorLine = errorLine.replace('\t', ' ')
+                var column = startPosition.column
+                if (column < 0) {
+                    column = 0
+                    var i = 0
+                    while (i < errorLine.length) {
+                        if (!Character.isWhitespace(errorLine[i])) {
+                            break
+                        }
+                        i++
+                        column++
+                    }
+                }
+                val sb = StringBuilder(100)
+                sb.append(errorLine)
+                sb.append('\n')
+                for (i in 0 until column) {
+                    sb.append(' ')
+                }
+                var displayCaret = true
+                if (endPosition != null) {
+                    val endLine = endPosition.line
+                    val endColumn = endPosition.column
+                    if (endLine == line && endColumn > column) {
+                        for (i in column until endColumn) {
+                            sb.append('~')
+                        }
+                        displayCaret = false
+                    }
+                }
+                if (displayCaret) {
+                    sb.append('^')
+                }
+                sb.append('\n')
+                return sb.toString()
+            }
+        }
+    }
+
+    return null
+}
+
+/** Look up the contents of the given line */
+private fun CharSequence.getLine(line: Int): String? {
+    val index = getLineOffset(line)
+    return if (index != -1) {
+        getLineOfOffset(index)
+    } else {
+        null
+    }
+}
+
+/** Returns the line number for the given offset */
+private fun CharSequence.getLineOfOffset(offset: Int): String {
+    var end = indexOf('\n', offset)
+    if (end == -1) {
+        end = indexOf('\r', offset)
+    } else if (end > 0 && this[end - 1] == '\r') {
+        end--
+    }
+    return this.subSequence(offset, if (end != -1) end else this.length).toString()
+}
+
+/** Returns the offset of the given line number */
+private fun CharSequence.getLineOffset(line: Int): Int {
+    var index = 0
+    for (i in 0 until line) {
+        index = indexOf('\n', index)
+        if (index == -1) {
+            return -1
+        }
+        index++
+    }
+    return index
+}

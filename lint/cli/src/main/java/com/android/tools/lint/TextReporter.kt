@@ -129,8 +129,10 @@ class TextReporter(
                 if (incident.wasAutoFixed) {
                     output.append("This issue has been automatically fixed.\n")
                 }
-                if (incident.errorLine != null && incident.errorLine.isNotEmpty()) {
-                    output.append(incident.errorLine)
+                if (flags.isShowSourceLines) {
+                    incident.getErrorLines(textProvider = { client.getSourceText(it) })?.let {
+                        if (it.isNotEmpty()) output.append(it)
+                    }
                 }
                 if (incident.location.secondary != null) {
                     var location = incident.location.secondary
@@ -195,13 +197,14 @@ class TextReporter(
                         output.append(wrapped)
                     }
                 }
-                if (incident.variantSpecific) {
-                    val names = if (incident.includesMoreThanExcludes()) {
+                val applicableVariants = incident.applicableVariants
+                if (applicableVariants != null && applicableVariants.variantSpecific) {
+                    val names = if (applicableVariants.includesMoreThanExcludes()) {
                         output.append("Applies to variants: ")
-                        incident.includedVariantNames
+                        applicableVariants.includedVariantNames
                     } else {
                         output.append("Does not apply to variants: ")
-                        incident.excludedVariantNames
+                        applicableVariants.excludedVariantNames
                     }
                     output.append(Joiner.on(", ").join(names))
                     output.append('\n')

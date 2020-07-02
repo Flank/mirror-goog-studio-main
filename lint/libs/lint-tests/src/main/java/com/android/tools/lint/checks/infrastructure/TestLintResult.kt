@@ -35,6 +35,7 @@ import com.google.common.collect.Maps
 import com.google.common.io.Files
 import com.intellij.util.ArrayUtil
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -593,15 +594,10 @@ class TestLintResult internal constructor(
                 } else {
                     File.createTempFile(name, extension)
                 }
-            var client: TestLintClient? = null
-            if (incidents.isNotEmpty()) {
-                val testClient = incidents[0].project.client
-                if (testClient is TestLintClient) {
-                    client = testClient
-                }
+            val client = incidents.firstNotNullResult {
+                it.project?.client as? TestLintClient
             }
-            if (client == null) {
-                client = object : TestLintClient() {
+                ?: object : TestLintClient() {
                     override fun getClientRevision(): String? {
                         // HACK
                         if (registry == null) {
@@ -609,9 +605,9 @@ class TestLintResult internal constructor(
                         }
                         return super.getClientRevision()
                     }
+                }.apply {
+                    getClientRevision() // force registry initialization
                 }
-                client.getClientRevision() // force registry initialization
-            }
 
             val reporter = if (html)
                 Reporter.createHtmlReporter(client, file, client.flags)

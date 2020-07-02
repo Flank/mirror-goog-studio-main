@@ -734,8 +734,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @NonNull
         @Override
-        public String getDisplayPath(File file) {
-            return file.getPath().replace(File.separatorChar, '/'); // stable tests
+        public String getDisplayPath(
+                @NonNull File file, @Nullable Project project, @NonNull TextFormat format) {
+            String path = super.getDisplayPath(file, project, format);
+            return path.replace(File.separatorChar, '/'); // stable tests
         }
 
         @Nullable

@@ -57,9 +57,7 @@ import com.android.tools.lint.detector.api.endsWith
 import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.tools.lint.model.LintModelAndroidLibrary
-import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
-import com.android.tools.lint.model.LintModelModuleLibrary
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
@@ -1552,12 +1550,32 @@ abstract class LintClient {
     /**
      * Formats the given path
      * @param file the path to compute a display name for
+     * @param project the associated project, if any
+     * @param format the message format to format as; defaults to [TextFormat.RAW], e.g.
+     *     with backslashes and asterisks in the path escaped
      *
-     * @return a path formatted for user display, in [TextFormat.RAW] text format (e.g.
-     *      with backslashes, asterisks etc escaped)
+     * @return a path formatted for user display
      */
-    open fun getDisplayPath(file: File): String =
-        TextFormat.TEXT.convertTo(file.path, TextFormat.RAW)
+    open fun getDisplayPath(
+        file: File,
+        project: Project? = null,
+        format: TextFormat = TextFormat.RAW
+    ): String {
+        if (project != null) {
+            val path = file.path
+            val referencePath: String = project.referenceDir.path
+            if (path.startsWith(referencePath)) {
+                var length = referencePath.length
+                if (path.length > length && path[length] == separatorChar) {
+                    length++
+                }
+                val relative = path.substring(length)
+                return TextFormat.TEXT.convertTo(relative, format)
+            }
+        }
+
+        return TextFormat.TEXT.convertTo(file.path, format)
+    }
 
     /**
      * Returns true if this client supports project resource repository lookup via

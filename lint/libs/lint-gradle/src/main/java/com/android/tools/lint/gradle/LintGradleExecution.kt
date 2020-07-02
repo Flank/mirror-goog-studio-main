@@ -16,6 +16,7 @@
 package com.android.tools.lint.gradle
 
 import com.android.SdkConstants
+import com.android.tools.lint.ApplicableVariants
 import com.android.tools.lint.Incident
 import com.android.tools.lint.LintCliClient.Companion.continueAfterBaseLineCreated
 import com.android.tools.lint.LintCliFlags
@@ -503,32 +504,30 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                     new
                 }
                 val file = incident.file
-                val fileName = if (file != null) {
+                val fileName = run {
                     val parent = file.parentFile
                     if (parent != null) {
                         parent.name + "/" + file.name
                     } else {
                         file.name
                     }
-                } else {
-                    "<unknown>"
                 }
                 val canonical = fileMap[fileName] ?: run {
                     fileMap[fileName] = incident
-                    incident.variants = Sets.newHashSet()
-                    incident.allVariants = allVariants
+                    incident.applicableVariants = ApplicableVariants(allVariants)
                     merged.add(incident)
                     incident
                 }
-                canonical.variants!!.add(variantName)
+                canonical.applicableVariants!!.addVariant(variantName)
             }
         }
 
         // Clear out variants on any nodes that define all
         for (incident in merged) {
-            if (incident.variants != null && incident.variants?.size == allVariants.size) {
-                // If this error is present in all variants, just clear it out
-                incident.variants = null
+            val applicableVariants = incident.applicableVariants ?: continue
+            // If this error is present in all variants, just clear it out
+            if (!applicableVariants.variantSpecific) {
+                incident.applicableVariants = null
             }
         }
 

@@ -140,32 +140,35 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 writeAttribute(writer, 2, "urls", Joiner.on(',').join(issue.moreInfo))
             }
         }
-        if (incident.errorLine != null && incident.errorLine.isNotEmpty()) {
-            val line = incident.errorLine
-            val index1 = line.indexOf('\n')
-            if (index1 != -1) {
-                val index2 = line.indexOf('\n', index1 + 1)
-                if (index2 != -1) {
-                    val line1 = line.substring(0, index1)
-                    val line2 = line.substring(index1 + 1, index2)
-                    writeAttribute(writer, 2, "errorLine1", line1)
-                    writeAttribute(writer, 2, "errorLine2", line2)
+        if (client.flags.isShowSourceLines) {
+            val line = incident.getErrorLines(textProvider = { client.getSourceText(it) })
+            if (line != null && line.isNotEmpty()) {
+                val index1 = line.indexOf('\n')
+                if (index1 != -1) {
+                    val index2 = line.indexOf('\n', index1 + 1)
+                    if (index2 != -1) {
+                        val line1 = line.substring(0, index1)
+                        val line2 = line.substring(index1 + 1, index2)
+                        writeAttribute(writer, 2, "errorLine1", line1)
+                        writeAttribute(writer, 2, "errorLine2", line2)
+                    }
                 }
             }
         }
 
-        if (incident.variantSpecific) {
+        val applicableVariants = incident.applicableVariants
+        if (applicableVariants != null && applicableVariants.variantSpecific) {
             writeAttribute(
                 writer,
                 2,
                 "includedVariants",
-                Joiner.on(',').join(incident.includedVariantNames)
+                Joiner.on(',').join(applicableVariants.includedVariantNames)
             )
             writeAttribute(
                 writer,
                 2,
                 "excludedVariants",
-                Joiner.on(',').join(incident.excludedVariantNames)
+                Joiner.on(',').join(applicableVariants.excludedVariantNames)
             )
         }
 
