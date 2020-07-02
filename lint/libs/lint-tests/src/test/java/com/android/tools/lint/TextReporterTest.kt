@@ -50,7 +50,7 @@ class TextReporterTest : AbstractCheckTest() {
                     DefaultPosition(6, 4, 198),
                     DefaultPosition(6, 42, 236)
                 )
-            val warning1 = Warning(
+            val incident1 = Incident(
                 client,
                 ManifestDetector.USES_SDK,
                 "<uses-sdk> tag should specify a target API level (the highest verified "
@@ -65,19 +65,19 @@ class TextReporterTest : AbstractCheckTest() {
                 "AndroidManifest.xml"
             )
             var secondary = create(
-                warning1.file,
+                incident1.file,
                 DefaultPosition(7, 4, 198),
                 DefaultPosition(7, 42, 236)
             )
             secondary.message = "Secondary location"
-            warning1.location.secondary = secondary
+            incident1.location.secondary = secondary
             val location2 =
                 create(
                     File("/foo/bar/Foo/res/layout/main.xml"),
                     DefaultPosition(11, 8, 377),
                     DefaultPosition(11, 27, 396)
                 )
-            val warning2 = Warning(
+            val incident2 = Incident(
                 client,
                 HardcodedValuesDetector.ISSUE,
                 "Hardcoded string \"Fooo\", should use @string resource",
@@ -90,23 +90,23 @@ class TextReporterTest : AbstractCheckTest() {
                 "res/layout/main.xml"
             )
             secondary = create(
-                warning1.file,
+                incident1.file,
                 DefaultPosition(7, 4, 198),
                 DefaultPosition(7, 42, 236)
             )
             secondary.message = "Secondary location"
-            warning2.location.secondary = secondary
+            incident2.location.secondary = secondary
             val tertiary = create(
-                warning2.file,
+                incident2.file,
                 DefaultPosition(5, 4, 198),
                 DefaultPosition(5, 42, 236)
             )
             secondary.secondary = tertiary
-            val warnings: MutableList<Warning> = ArrayList()
-            warnings.add(warning1)
-            warnings.add(warning2)
-            Collections.sort(warnings)
-            reporter.write(create(0, 2), warnings)
+            val incidents: MutableList<Incident> = ArrayList()
+            incidents.add(incident1)
+            incidents.add(incident2)
+            Collections.sort(incidents)
+            reporter.write(create(0, 2), incidents)
             val report = file.readText()
             assertEquals(
                 """
@@ -152,7 +152,7 @@ class TextReporterTest : AbstractCheckTest() {
                     DefaultPosition(6, 4, 198),
                     DefaultPosition(6, 42, 236)
                 )
-            val warning1 = Warning(
+            val incident1 = Incident(
                 client,
                 ManifestDetector.USES_SDK,
                 "<uses-sdk> tag should specify a target API level (the highest verified "
@@ -168,19 +168,19 @@ class TextReporterTest : AbstractCheckTest() {
             )
             var secondary =
                 create(
-                    warning1.file,
+                    incident1.file,
                     DefaultPosition(7, 4, 198),
                     DefaultPosition(7, 42, 236)
                 )
             secondary.message = "Secondary location"
-            warning1.location.secondary = secondary
+            incident1.location.secondary = secondary
             val location2 =
                 create(
                     File("/foo/bar/Foo/res/layout/main.xml"),
                     DefaultPosition(11, 8, 377),
                     DefaultPosition(11, 27, 396)
                 )
-            val warning2 = Warning(
+            val incident2 = Incident(
                 client,
                 HardcodedValuesDetector.ISSUE,
                 "Hardcoded string \"Fooo\", should use @string resource",
@@ -193,15 +193,15 @@ class TextReporterTest : AbstractCheckTest() {
                 "res/layout/main.xml"
             )
             secondary = create(
-                warning1.file,
+                incident1.file,
                 DefaultPosition(7, 4, 198),
                 DefaultPosition(7, 42, 236)
             )
             secondary.message = "Secondary location"
-            warning2.location.secondary = secondary
+            incident2.location.secondary = secondary
             val tertiary =
                 create(
-                    warning2.file,
+                    incident2.file,
                     DefaultPosition(5, 4, 198),
                     DefaultPosition(5, 42, 236)
                 )
@@ -216,7 +216,7 @@ class TextReporterTest : AbstractCheckTest() {
                     DefaultPosition(8, 4, 198),
                     DefaultPosition(8, 42, 236)
                 )
-            val warning3 = Warning(
+            val incident3 = Incident(
                 client,
                 ManifestDetector.USES_SDK,
                 "<uses-sdk> tag should specify a target API level (the highest verified "
@@ -230,13 +230,12 @@ class TextReporterTest : AbstractCheckTest() {
                 null,
                 "AndroidManifest.xml"
             )
-            val warnings: MutableList<Warning> =
-                ArrayList()
-            warnings.add(warning1)
-            warnings.add(warning2)
-            warnings.add(warning3)
-            Collections.sort(warnings)
-            reporter.write(create(0, 3), warnings)
+            val incidents: MutableList<Incident> = ArrayList()
+            incidents.add(incident1)
+            incidents.add(incident2)
+            incidents.add(incident3)
+            Collections.sort(incidents)
+            reporter.write(create(0, 3), incidents)
             val report = file.readText()
             assertEquals(
                 """

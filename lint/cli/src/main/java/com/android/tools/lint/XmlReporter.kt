@@ -78,7 +78,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     @Throws(IOException::class)
-    override fun write(stats: LintStats, issues: List<Warning>) {
+    override fun write(stats: LintStats, issues: List<Incident>) {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         // Format 4: added urls= attribute with all more info links, comma separated
         writer.write("<issues format=\"5\"")
@@ -94,7 +94,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         writer.write(">\n")
 
         if (issues.isNotEmpty()) {
-            writeIssues(issues)
+            writeIncidents(issues)
         }
 
         writer.write("\n</issues>\n")
@@ -106,25 +106,25 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         }
     }
 
-    private fun writeIssues(issues: List<Warning>) {
-        for (warning in issues) {
-            writeIssue(warning)
+    private fun writeIncidents(issues: List<Incident>) {
+        for (incident in issues) {
+            writeIncident(incident)
         }
     }
 
-    private fun writeIssue(warning: Warning) {
+    private fun writeIncident(incident: Incident) {
         writer.write('\n'.toInt())
         indent(1)
         writer.write("<issue")
-        val issue = warning.issue
+        val issue = incident.issue
         writeAttribute(writer, 2, "id", issue.id)
         if (!isIntendedForBaseline) {
             writeAttribute(
                 writer, 2, "severity",
-                warning.severity.description
+                incident.severity.description
             )
         }
-        writeAttribute(writer, 2, "message", warning.message)
+        writeAttribute(writer, 2, "message", incident.message)
 
         if (!isIntendedForBaseline) {
             writeAttribute(writer, 2, "category", issue.category.fullName)
@@ -140,8 +140,8 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 writeAttribute(writer, 2, "urls", Joiner.on(',').join(issue.moreInfo))
             }
         }
-        if (warning.errorLine != null && warning.errorLine.isNotEmpty()) {
-            val line = warning.errorLine
+        if (incident.errorLine != null && incident.errorLine.isNotEmpty()) {
+            val line = incident.errorLine
             val index1 = line.indexOf('\n')
             if (index1 != -1) {
                 val index2 = line.indexOf('\n', index1 + 1)
@@ -154,37 +154,37 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             }
         }
 
-        if (warning.variantSpecific) {
+        if (incident.variantSpecific) {
             writeAttribute(
                 writer,
                 2,
                 "includedVariants",
-                Joiner.on(',').join(warning.includedVariantNames)
+                Joiner.on(',').join(incident.includedVariantNames)
             )
             writeAttribute(
                 writer,
                 2,
                 "excludedVariants",
-                Joiner.on(',').join(warning.excludedVariantNames)
+                Joiner.on(',').join(incident.excludedVariantNames)
             )
         }
 
         if (!isIntendedForBaseline && includeFixes &&
-            (warning.fix != null || hasAutoFix(issue))
+            (incident.fix != null || hasAutoFix(issue))
         ) {
             writeAttribute(writer, 2, "quickfix", "studio")
         }
 
         var hasChildren = false
 
-        val fixData = warning.fix
+        val fixData = incident.fix
         if (includeFixes && fixData != null) {
             writer.write(">\n")
-            emitFixes(warning, fixData)
+            emitFixes(incident, fixData)
             hasChildren = true
         }
 
-        var location: Location? = warning.location
+        var location: Location? = incident.location
         if (location != null) {
             if (!hasChildren) {
                 writer.write(">\n")
@@ -193,7 +193,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 indent(2)
                 writer.write("<location")
                 val path = client.getDisplayPath(
-                    warning.project,
+                    incident.project,
                     location.file,
                     // Don't use absolute paths in baseline files
                     client.flags.isFullPath && !isIntendedForBaseline
@@ -229,18 +229,18 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         }
     }
 
-    private fun emitFixes(warning: Warning, lintFix: LintFix) {
+    private fun emitFixes(incident: Incident, lintFix: LintFix) {
         val fixes = if (lintFix is LintFixGroup && lintFix.type == ALTERNATIVES) {
             lintFix.fixes
         } else {
             listOf(lintFix)
         }
         for (fix in fixes) {
-            emitFix(warning, fix)
+            emitFix(incident, fix)
         }
     }
 
-    private fun emitFix(warning: Warning, lintFix: LintFix) {
+    private fun emitFix(incident: Incident, lintFix: LintFix) {
         indent(2)
         writer.write("<fix")
         lintFix.displayName?.let {
@@ -254,7 +254,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         var haveChildren = false
 
         val performer = LintFixPerformer(client, false)
-        val files = performer.computeEdits(warning, lintFix)
+        val files = performer.computeEdits(incident, lintFix)
         if (files != null && files.isNotEmpty()) {
             haveChildren = true
             writer.write(">\n")
@@ -265,7 +265,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                     writer.write("<edit")
 
                     val path = client.getDisplayPath(
-                        warning.project,
+                        incident.project,
                         file.file,
                         // Don't use absolute paths in baseline files
                         client.flags.isFullPath && !isIntendedForBaseline

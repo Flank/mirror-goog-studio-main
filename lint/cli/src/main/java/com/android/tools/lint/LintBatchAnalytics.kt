@@ -40,7 +40,7 @@ class LintBatchAnalytics {
         flags: LintCliFlags,
         driver: LintDriver,
         projects: Collection<Project>,
-        warnings: List<Warning>
+        incidents: List<Incident>
     ) {
         assert(!projects.isEmpty())
 
@@ -55,7 +55,7 @@ class LintBatchAnalytics {
             abortOnError = flags.isSetExitCode
             ignoreWarnings = flags.isIgnoreWarnings
             warningsAsErrors = flags.isWarningsAsErrors
-            for (issueBuilder in computeIssueData(warnings, flags, registry).values) {
+            for (issueBuilder in computeIssueData(incidents, flags, registry).values) {
                 addIssueIds(issueBuilder)
             }
         }.build()
@@ -163,23 +163,23 @@ class LintBatchAnalytics {
         }
 
     private fun computeIssueData(
-        warnings: List<Warning>,
+        incidents: List<Incident>,
         flags: LintCliFlags,
         registry: IssueRegistry
     ): Map<String, LintIssueId.Builder> {
         val map = LinkedHashMap<String, LintIssueId.Builder>(BuiltinIssueRegistry.INITIAL_CAPACITY)
-        for (warning in warnings) {
-            val issue = warning.issue
+        for (incident in incidents) {
+            val issue = incident.issue
             val id = issue.id
             val issueBuilder = map[id] ?: run {
                 LintIssueId.newBuilder().apply {
                     map[id] = this
                     issueId = issue.id
                     severity =
-                            if (warning.severity == issue.defaultSeverity) {
+                            if (incident.severity == issue.defaultSeverity) {
                                 LintIssueId.LintSeverity.DEFAULT_SEVERITY
                             } else {
-                                warning.severity.toAnalyticsSeverity()
+                                incident.severity.toAnalyticsSeverity()
                             }
                 }
             }

@@ -27,7 +27,7 @@ import java.io.File
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicReference
 
-class WarningTest : AbstractCheckTest() {
+class IncidentTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
         return UnusedResourceDetector()
     }
@@ -38,7 +38,7 @@ class WarningTest : AbstractCheckTest() {
 
     fun testComparator() {
         val projectDir = getProjectDir(
-            null,  // Rename .txt files to .java
+            null, // Rename .txt files to .java
             java(
                 """
                 package my.pgk;
@@ -97,8 +97,7 @@ class WarningTest : AbstractCheckTest() {
                 """
             ).indented()
         )
-        val warningsHolder =
-            AtomicReference<List<Warning>>()
+        val holder = AtomicReference<List<Incident>>()
         val lintClient: TestLintClient = object : TestLintClient() {
             override fun analyze(files: List<File>): String {
                 val lintRequest = LintRequest(this, files)
@@ -110,43 +109,43 @@ class WarningTest : AbstractCheckTest() {
                 )
                 configureDriver(driver)
                 driver.analyze()
-                warningsHolder.set(warnings)
+                holder.set(incidents)
                 return "<unused>"
             }
         }
         val files = listOf(projectDir)
         lintClient.analyze(files)
-        val warnings = warningsHolder.get()
-        var prev: Warning? = null
-        for (warning in warnings) {
+        val incidents = holder.get()
+        var prev: Incident? = null
+        for (incident in incidents) {
             if (prev != null) {
-                val equals = warning.equals(prev)
-                assertEquals(equals, prev.equals(warning))
-                val compare = warning.compareTo(prev)
+                val equals = incident.equals(prev)
+                assertEquals(equals, prev.equals(incident))
+                val compare = incident.compareTo(prev)
                 assertEquals(equals, compare == 0)
-                assertEquals(-compare, prev.compareTo(warning))
+                assertEquals(-compare, prev.compareTo(incident))
             }
-            prev = warning
+            prev = incident
         }
-        Collections.sort(warnings)
+        Collections.sort(incidents)
         var prev2 = prev
         prev = null
-        for (warning in warnings) {
+        for (incident in incidents) {
             if (prev != null && prev2 != null) {
-                assertTrue(warning.compareTo(prev) > 0)
+                assertTrue(incident.compareTo(prev) > 0)
                 assertTrue(prev.compareTo(prev2) > 0)
-                assertTrue(warning.compareTo(prev2) > 0)
-                assertTrue(prev.compareTo(warning) < 0)
+                assertTrue(incident.compareTo(prev2) > 0)
+                assertTrue(prev.compareTo(incident) < 0)
                 assertTrue(prev2.compareTo(prev) < 0)
-                assertTrue(prev2.compareTo(warning) < 0)
+                assertTrue(prev2.compareTo(incident) < 0)
             }
             prev2 = prev
-            prev = warning
+            prev = incident
         }
 
         // Regression test for https://issuetracker.google.com/146824833
-        val warning1 = warnings[0]
-        val location1 = warning1.location
+        val incident1 = incidents[0]
+        val location1 = incident1.location
         val location2 =
             create(
                 location1.file,
@@ -161,22 +160,22 @@ class WarningTest : AbstractCheckTest() {
                     location1.end!!.offset + 1
                 )
             )
-        val warning2 = Warning(
+        val incident2 = Incident(
             lintClient,
-            warning1.issue,
-            warning1.message,
-            warning1.severity,
-            warning1.project,
+            incident1.issue,
+            incident1.message,
+            incident1.severity,
+            incident1.project,
             location2,
-            warning1.fileContents,
-            warning1.errorLine,
-            warning1.fix,
-            warning1.displayPath
+            incident1.fileContents,
+            incident1.errorLine,
+            incident1.fix,
+            incident1.displayPath
         )
 
         // Make position on same line but shifted one char to the right; should not equal!
-        assertTrue(warning2.compareTo(warning1) > 0)
-        assertTrue(warning1.compareTo(warning2) < 0)
+        assertTrue(incident2.compareTo(incident1) > 0)
+        assertTrue(incident1.compareTo(incident2) < 0)
         val secondary1 =
             create(
                 location1.file,
@@ -190,17 +189,17 @@ class WarningTest : AbstractCheckTest() {
                 location1.end
             )
         location1.secondary = secondary1
-        warning2.location.secondary = secondary2
-        assertTrue(warning2.compareTo(warning1) > 0)
-        assertTrue(warning1.compareTo(warning2) < 0)
+        incident2.location.secondary = secondary2
+        assertTrue(incident2.compareTo(incident1) > 0)
+        assertTrue(incident1.compareTo(incident2) < 0)
         secondary2 = create(
             File(location1.file.parentFile, "_before"),
             location1.start!!,
             location1.end
         )
-        warning2.location.secondary = secondary2
-        assertTrue(warning2.compareTo(warning1) > 0)
-        assertTrue(warning1.compareTo(warning2) < 0)
+        incident2.location.secondary = secondary2
+        assertTrue(incident2.compareTo(incident1) > 0)
+        assertTrue(incident1.compareTo(incident2) < 0)
     }
 
     override fun allowCompilationErrors(): Boolean {

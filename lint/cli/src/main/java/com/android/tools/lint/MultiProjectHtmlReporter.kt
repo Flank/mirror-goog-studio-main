@@ -41,14 +41,14 @@ class MultiProjectHtmlReporter(
     @Throws(IOException::class)
     override fun write(
         stats: LintStats,
-        issues: List<Warning>
+        issues: List<Incident>
     ) {
-        val projectToWarnings: MutableMap<Project, MutableList<Warning>> =
+        val projectToIncidents: MutableMap<Project, MutableList<Incident>> =
             HashMap()
-        for (warning in issues) {
+        for (incident in issues) {
             val list =
-                projectToWarnings.computeIfAbsent(warning.project) { ArrayList() }
-            list.add(warning)
+                projectToIncidents.computeIfAbsent(incident.project) { ArrayList() }
+            list.add(incident)
         }
 
         // Set of unique file names: lowercase names to avoid case conflicts in web environment
@@ -56,7 +56,7 @@ class MultiProjectHtmlReporter(
         unique.add(INDEX_NAME.toLowerCase(Locale.US))
         val projects: MutableList<ProjectEntry> =
             Lists.newArrayList()
-        for (project in projectToWarnings.keys) {
+        for (project in projectToIncidents.keys) {
             // TODO: Can I get the project name from the Android manifest file instead?
             val projectName = project.name
 
@@ -87,13 +87,13 @@ class MultiProjectHtmlReporter(
             }
             val reporter = createHtmlReporter(client, output, flags)
             reporter.urlMap = urlMap
-            val projectIssues = projectToWarnings[project] ?: continue
+            val projectIssues = projectToIncidents[project] ?: continue
             var projectErrorCount = 0
             var projectWarningCount = 0
-            for (warning in projectIssues) {
-                if (warning.severity.isError) {
+            for (incident in projectIssues) {
+                if (incident.severity.isError) {
                     projectErrorCount++
-                } else if (warning.severity === Severity.WARNING) {
+                } else if (incident.severity === Severity.WARNING) {
                     projectWarningCount++
                 }
             }

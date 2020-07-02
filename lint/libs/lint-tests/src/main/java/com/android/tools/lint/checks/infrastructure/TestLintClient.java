@@ -52,6 +52,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.support.AndroidxNameUtils;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.Incident;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCliXmlParser;
@@ -59,7 +60,6 @@ import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
-import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
@@ -262,7 +262,7 @@ public class TestLintClient extends LintCliClient {
         return null;
     }
 
-    protected Pair<String, List<Warning>> checkLint(List<File> files, List<Issue> issues)
+    protected Pair<String, List<Incident>> checkLint(List<File> files, List<Issue> issues)
             throws Exception {
         if (task.incrementalFileName != null) {
             boolean found = false;
@@ -308,14 +308,14 @@ public class TestLintClient extends LintCliClient {
         // Reset state here in case a client is reused for multiple runs
         output = new StringBuilder();
         writer.getBuffer().setLength(0);
-        List<Warning> warnings = getWarnings();
-        warnings.clear();
+        List<Incident> incidents = getIncidents();
+        incidents.clear();
         setErrorCount(0);
         setWarningCount(0);
 
         String result = analyze(files, issues);
 
-        return Pair.of(result, warnings);
+        return Pair.of(result, incidents);
     }
 
     private static List<File> getFilesRecursively(File root) {
@@ -527,41 +527,41 @@ public class TestLintClient extends LintCliClient {
         driver.analyze();
 
         // Check compare contract
-        Warning prev = null;
-        List<Warning> warnings = getWarnings();
-        for (Warning warning : warnings) {
+        Incident prev = null;
+        List<Incident> incidents = getIncidents();
+        for (Incident incident : incidents) {
             if (prev != null) {
-                boolean equals = warning.equals(prev);
-                assertEquals(equals, prev.equals(warning));
-                int compare = warning.compareTo(prev);
+                boolean equals = incident.equals(prev);
+                assertEquals(equals, prev.equals(incident));
+                int compare = incident.compareTo(prev);
                 assertEquals(equals, compare == 0);
-                assertEquals(-compare, prev.compareTo(warning));
+                assertEquals(-compare, prev.compareTo(incident));
             }
-            prev = warning;
+            prev = incident;
         }
 
-        Collections.sort(warnings);
+        Collections.sort(incidents);
 
         // Check compare contract and transitivity
-        Warning prev2 = prev;
+        Incident prev2 = prev;
         prev = null;
-        for (Warning warning : warnings) {
+        for (Incident incident : incidents) {
             if (prev != null && prev2 != null) {
-                assertTrue(warning.compareTo(prev) >= 0);
+                assertTrue(incident.compareTo(prev) >= 0);
                 assertTrue(prev.compareTo(prev2) >= 0);
-                assertTrue(warning.compareTo(prev2) >= 0);
+                assertTrue(incident.compareTo(prev2) >= 0);
 
-                assertTrue(prev.compareTo(warning) <= 0);
+                assertTrue(prev.compareTo(incident) <= 0);
                 assertTrue(prev2.compareTo(prev) <= 0);
-                assertTrue(prev2.compareTo(warning) <= 0);
+                assertTrue(prev2.compareTo(incident) <= 0);
             }
             prev2 = prev;
-            prev = warning;
+            prev = incident;
         }
 
         LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
         for (Reporter reporter : getFlags().getReporters()) {
-            reporter.write(stats, warnings);
+            reporter.write(stats, incidents);
         }
 
         output.append(writer.toString());
@@ -833,9 +833,9 @@ public class TestLintClient extends LintCliClient {
 
         // Make sure errors are unique! See documentation for #allowDuplicates.
         if (!task.allowDuplicates) {
-            Warning prev = null;
-            for (Warning warning : getWarnings()) {
-                assertNotSame(warning, prev);
+            Incident prev = null;
+            for (Incident incident : getIncidents()) {
+                assertNotSame(incident, prev);
                 assertNotEquals(
                         ""
                                 + "Warning (message, location) reported more than once; this "
@@ -846,10 +846,10 @@ public class TestLintClient extends LintCliClient {
                                 + "of methods or variables to make each message unique if overlapping "
                                 + "errors are expected. Identical error encountered at the same location "
                                 + "more  than once: "
-                                + warning,
-                        warning,
+                                + incident,
+                        incident,
                         prev);
-                prev = warning;
+                prev = incident;
             }
         }
 

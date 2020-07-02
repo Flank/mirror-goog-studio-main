@@ -39,9 +39,9 @@ class LintStats constructor(
     }
 
     companion object {
-        fun create(mergedWarnings: List<Warning>, baseline: LintBaseline?): LintStats {
+        fun create(mergedIncidents: List<Incident>, baseline: LintBaseline?): LintStats {
             return create(
-                mergedWarnings, if (baseline != null)
+                mergedIncidents, if (baseline != null)
                     listOf(baseline)
                 else
                     emptyList()
@@ -53,24 +53,24 @@ class LintStats constructor(
         }
 
         fun create(
-            warnings: List<Warning>,
+            incidents: List<Incident>,
             baselines: List<LintBaseline>
         ): LintStats {
             var errorCount = 0
             var warningCount = 0
             var autofixed = 0
             var hasAutoFixCount = 0
-            for (warning in warnings) {
-                if (warning.severity === Severity.ERROR || warning.severity === Severity.FATAL) {
+            for (incident in incidents) {
+                if (incident.severity === Severity.ERROR || incident.severity === Severity.FATAL) {
                     errorCount++
-                } else if (warning.severity === Severity.WARNING) {
+                } else if (incident.severity === Severity.WARNING) {
                     warningCount++
                 }
 
-                if (warning.wasAutoFixed) {
+                if (incident.wasAutoFixed) {
                     autofixed++
                 }
-                if (warning.hasAutoFix()) {
+                if (incident.hasAutoFix()) {
                     hasAutoFixCount++
                 }
             }

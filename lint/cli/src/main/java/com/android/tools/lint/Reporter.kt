@@ -125,7 +125,7 @@ abstract class Reporter protected constructor(
     @Throws(IOException::class)
     abstract fun write(
         stats: LintStats,
-        issues: List<Warning>
+        issues: List<Incident>
     )
 
     /**

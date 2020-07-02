@@ -78,7 +78,7 @@ class HtmlReporter(
 
     override fun write(
         stats: LintStats,
-        issues: List<Warning>
+        issues: List<Incident>
     ) {
         val missing = computeMissingIssues(issues)
         val related = computeIssueLists(issues)
@@ -164,8 +164,8 @@ class HtmlReporter(
         }
     }
 
-    private fun writeIssueCard(warnings: List<Warning>) {
-        val firstIssue = warnings[0].issue
+    private fun writeIssueCard(incidents: List<Incident>) {
+        val firstIssue = incidents[0].issue
         append(
             """
             <a name="${firstIssue.id}"></a>
@@ -178,13 +178,13 @@ class HtmlReporter(
             cardId = firstIssue.id + "Card",
             actions = listOf(Action("Explain", getExplanationId(firstIssue), "reveal"))
         ) {
-            val first = warnings[0]
+            val first = incidents[0]
             val issue = first.issue
             append("<div class=\"issue\">\n")
             append("<div class=\"warningslist\">\n")
-            val partialHide = warnings.size > SPLIT_LIMIT
+            val partialHide = incidents.size > SPLIT_LIMIT
             var count = 0
-            for (warning in warnings) {
+            for (incident in incidents) {
                 // Don't show thousands of matches for common errors; this just
                 // makes some reports huge and slow to render and nobody really wants to
                 // inspect 50+ individual reports of errors of the same type
@@ -192,7 +192,7 @@ class HtmlReporter(
                     if (count == 50) {
                         append(
                             "<br/><b>NOTE: " +
-                                (warnings.size - count).toString() +
+                                (incidents.size - count).toString() +
                                 " results omitted.</b><br/><br/>"
                         )
                     }
@@ -200,7 +200,7 @@ class HtmlReporter(
                     continue
                 }
                 if (partialHide && count == SHOWN_COUNT) {
-                    val id = warning.issue.id + "Div"
+                    val id = incident.issue.id + "Div"
                     append("<button")
                     append(" class=\"mdl-button mdl-js-button mdl-button--primary\"")
                     append(" id=\"")
@@ -211,7 +211,7 @@ class HtmlReporter(
                     append(
                         String.format(
                             "+ %1\$d More Occurrences...",
-                            warnings.size - SHOWN_COUNT
+                            incidents.size - SHOWN_COUNT
                         )
                     )
                     append("</button>\n")
@@ -220,7 +220,7 @@ class HtmlReporter(
                     append("\" style=\"display: none\">\n")
                 }
                 count++
-                val url = writeLocation(warning.file, warning.displayPath, warning.line)
+                val url = writeLocation(incident.file, incident.displayPath, incident.line)
                 append(':')
                 append(' ')
 
@@ -228,10 +228,10 @@ class HtmlReporter(
                 // of the error floating on the right. If there are multiple images,
                 // they will instead be placed in a horizontal box below the error
                 var addedImage = false
-                if (url != null && warning.location.secondary == null) {
-                    addedImage = addImage(url, warning.file, warning.location)
+                if (url != null && incident.location.secondary == null) {
+                    addedImage = addImage(url, incident.file, incident.location)
                 }
-                var rawMessage = warning.message
+                var rawMessage = incident.message
 
                 // Improve formatting of exception stacktraces
                 if (issue === IssueRegistry.LINT_ERROR && rawMessage.contains("\u2190")) {
@@ -250,24 +250,24 @@ class HtmlReporter(
                 } else {
                     append("<br />")
                 }
-                if (warning.wasAutoFixed) {
+                if (incident.wasAutoFixed) {
                     append("This issue has been automatically fixed.<br />")
                 }
 
                 // Insert surrounding code block window
-                if (warning.line >= 0 && warning.fileContents != null && warning.startOffset != -1 && warning.endOffset != -1) {
+                if (incident.line >= 0 && incident.fileContents != null && incident.startOffset != -1 && incident.endOffset != -1) {
                     appendCodeBlock(
-                        warning.file,
-                        warning.fileContents,
-                        warning.startOffset,
-                        warning.endOffset,
-                        warning.severity
+                        incident.file,
+                        incident.fileContents,
+                        incident.startOffset,
+                        incident.endOffset,
+                        incident.severity
                     )
                 }
                 append('\n')
-                if (warning.location.secondary != null) {
+                if (incident.location.secondary != null) {
                     append("<ul>")
-                    var l = warning.location.secondary
+                    var l = incident.location.secondary
                     var otherLocations = 0
                     var shownSnippetsCount = 0
                     while (l != null) {
@@ -275,7 +275,7 @@ class HtmlReporter(
                         if (message != null && message.isNotEmpty()) {
                             val start = l.start
                             val line = start?.line ?: -1
-                            val path = client.getDisplayPath(warning.project, l.file)
+                            val path = client.getDisplayPath(incident.project, l.file)
                             writeLocation(l.file, path, line)
                             append(':')
                             append(' ')
@@ -298,7 +298,7 @@ class HtmlReporter(
                                 val s = client.readFile(l.file)
                                 if (s.isNotEmpty()) {
                                     val offset = start?.offset ?: -1
-                                    appendCodeBlock(l.file, s, offset, -1, warning.severity)
+                                    appendCodeBlock(l.file, s, offset, -1, incident.severity)
                                 }
                                 shownSnippetsCount++
                             }
@@ -322,11 +322,11 @@ class HtmlReporter(
                         append("\" style=\"display: none\">\n")
                         append("Additional locations: ")
                         append("<ul>\n")
-                        l = warning.location.secondary
+                        l = incident.location.secondary
                         while (l != null) {
                             val start = l.start
                             val line = start?.line ?: -1
-                            val path = client.getDisplayPath(warning.project, l.file)
+                            val path = client.getDisplayPath(incident.project, l.file)
                             append("<li> ")
                             writeLocation(l.file, path, line)
                             append("\n")
@@ -338,16 +338,16 @@ class HtmlReporter(
                 }
 
                 // Place a block of images?
-                if ((!addedImage && url != null) && warning.location.secondary != null) {
-                    addImage(url, warning.file, warning.location)
+                if ((!addedImage && url != null) && incident.location.secondary != null) {
+                    addImage(url, incident.file, incident.location)
                 }
-                if (warning.variantSpecific) {
+                if (incident.variantSpecific) {
                     append("\n")
                     append("Applies to variants: ")
-                    append(Joiner.on(", ").join(warning.includedVariantNames))
+                    append(Joiner.on(", ").join(incident.includedVariantNames))
                     append("<br/>\n")
                     append("Does <b>not</b> apply to variants: ")
-                    append(Joiner.on(", ").join(warning.excludedVariantNames))
+                    append(Joiner.on(", ").join(incident.excludedVariantNames))
                     append("<br/>\n")
                 }
             }
@@ -544,12 +544,12 @@ document.getElementById(id).style.display = 'none';
         append("\n</div>\n") // class=explanation
     }
 
-    private fun computeMissingIssues(warnings: List<Warning>): Map<Issue, String> {
+    private fun computeMissingIssues(incidents: List<Incident>): Map<Issue, String> {
         val projects: MutableSet<Project> = HashSet()
         val seen: MutableSet<Issue> = HashSet()
-        for (warning in warnings) {
-            projects.add(warning.project)
-            seen.add(warning.issue)
+        for (incident in incidents) {
+            projects.add(incident.project)
+            seen.add(incident.issue)
         }
         val cliConfiguration = client.configuration
         val map: MutableMap<Issue, String> = Maps.newHashMap()
@@ -624,7 +624,7 @@ document.getElementById(id).style.display = 'none';
     }
 
     private fun writeOverview(
-        related: List<List<Warning>>,
+        related: List<List<Incident>>,
         missingCount: Int
     ) {
         // Write issue id summary
@@ -1356,18 +1356,18 @@ $CSS_SYNTAX_COLORS.overview {
          * Sorts the list of warnings into a list of lists where each list contains warnings for the
          * same base issue type
          */
-        private fun computeIssueLists(issues: List<Warning>): List<List<Warning>> {
+        private fun computeIssueLists(issues: List<Incident>): List<List<Incident>> {
             var previousIssue: Issue? = null
-            val related: MutableList<List<Warning>> = ArrayList()
+            val related: MutableList<List<Incident>> = ArrayList()
             if (issues.isNotEmpty()) {
-                var currentList: MutableList<Warning>? = null
-                for (warning in issues) {
-                    if (warning.issue !== previousIssue) {
-                        previousIssue = warning.issue
+                var currentList: MutableList<Incident>? = null
+                for (incident in issues) {
+                    if (incident.issue !== previousIssue) {
+                        previousIssue = incident.issue
                         currentList = ArrayList()
                         related.add(currentList)
                     }
-                    currentList?.add(warning)
+                    currentList?.add(incident)
                 }
             }
             return related

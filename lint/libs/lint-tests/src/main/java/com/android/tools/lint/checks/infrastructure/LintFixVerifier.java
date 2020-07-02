@@ -33,7 +33,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.Warning;
+import com.android.tools.lint.Incident;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintFix.DataMap;
 import com.android.tools.lint.detector.api.LintFix.GroupType;
@@ -64,14 +64,14 @@ import org.xml.sax.SAXException;
 /** Verifier which can simulate IDE quickfixes and check fix data */
 public class LintFixVerifier {
     private final TestLintTask task;
-    private final List<Warning> warnings;
+    private final List<Incident> incidents;
     private int diffWindow = 0;
     private Boolean reformat;
     private boolean robot = false;
 
-    LintFixVerifier(TestLintTask task, List<Warning> warnings) {
+    LintFixVerifier(TestLintTask task, List<Incident> incidents) {
         this.task = task;
-        this.warnings = warnings;
+        this.incidents = incidents;
     }
 
     /** Sets up 2 lines of context in the diffs */
@@ -186,8 +186,8 @@ public class LintFixVerifier {
             @Nullable StringBuilder diffs) {
         assertTrue(expectedFile != null || diffs != null);
         List<String> names = Lists.newArrayList();
-        for (Warning warning : warnings) {
-            LintFix data = warning.getFix();
+        for (Incident incident : incidents) {
+            LintFix data = incident.getFix();
             if (robot && !data.robot) {
                 // Fix requires human intervention
                 continue;
@@ -206,7 +206,7 @@ public class LintFixVerifier {
             }
 
             for (LintFix lintFix : list) {
-                String targetPath = warning.getDisplayPath();
+                String targetPath = incident.getDisplayPath();
                 TestFile file = findTestFile(targetPath);
                 if (file == null) {
                     fail("Didn't find test file " + targetPath);
@@ -217,12 +217,12 @@ public class LintFixVerifier {
                 if (lintFix instanceof DataMap && diffs != null) {
                     // Doesn't edit file, but include in diffs so fixes can verify the
                     // correct data is passed
-                    appendDataMap(warning, (DataMap) lintFix, diffs);
+                    appendDataMap(incident, (DataMap) lintFix, diffs);
                 }
 
                 String after;
                 Boolean reformat = this.reformat;
-                after = applyFix(warning, lintFix, before);
+                after = applyFix(incident, lintFix, before);
                 if (after == null) {
                     continue;
                 }
@@ -238,7 +238,7 @@ public class LintFixVerifier {
                 }
 
                 if (diffs != null) {
-                    if (reformat != null && reformat && warning.getDisplayPath().endsWith(DOT_XML)) {
+                    if (reformat != null && reformat && incident.getDisplayPath().endsWith(DOT_XML)) {
                         try {
                             before =
                                     XmlPrettyPrinter.prettyPrint(
@@ -251,7 +251,7 @@ public class LintFixVerifier {
                         }
                     }
 
-                    appendDiff(warning, lintFix.getDisplayName(), before, after, diffs);
+                    appendDiff(incident, lintFix.getDisplayName(), before, after, diffs);
                 }
 
                 String name = lintFix.getDisplayName();
@@ -268,17 +268,17 @@ public class LintFixVerifier {
 
     @Nullable
     private static String applyFix(
-            @NonNull Warning warning, @NonNull LintFix lintFix, @NonNull String before) {
+            @NonNull Incident incident, @NonNull LintFix lintFix, @NonNull String before) {
         if (lintFix instanceof ReplaceString) {
             ReplaceString replaceFix = (ReplaceString) lintFix;
-            return checkReplaceString(replaceFix, warning, before);
+            return checkReplaceString(replaceFix, incident, before);
         } else if (lintFix instanceof SetAttribute) {
             SetAttribute setFix = (SetAttribute) lintFix;
-            return checkSetAttribute(setFix, before, warning);
+            return checkSetAttribute(setFix, before, incident);
         } else if (lintFix instanceof LintFixGroup
                 && ((LintFixGroup) lintFix).type == GroupType.COMPOSITE) {
             for (LintFix nested : ((LintFixGroup) lintFix).fixes) {
-                String after = applyFix(warning, nested, before);
+                String after = applyFix(incident, nested, before);
                 if (after == null) {
                     return null;
                 }
@@ -304,8 +304,8 @@ public class LintFixVerifier {
     }
 
     private static String checkSetAttribute(
-            @NonNull SetAttribute setFix, @NonNull String contents, @NonNull Warning warning) {
-        Location location = setFix.range != null ? setFix.range : warning.getLocation();
+            @NonNull SetAttribute setFix, @NonNull String contents, @NonNull Incident incident) {
+        Location location = setFix.range != null ? setFix.range : incident.getLocation();
         Position start = location.getStart();
         Position end = location.getEnd();
         assert start != null;
@@ -334,7 +334,7 @@ public class LintFixVerifier {
                                 + start.getColumn()
                                 + 1
                                 + ") in "
-                                + warning.getDisplayPath()
+                                + incident.getDisplayPath()
                                 + ":\n"
                                 + contents);
             }
@@ -403,10 +403,10 @@ public class LintFixVerifier {
     }
 
     private static String checkReplaceString(
-            @NonNull ReplaceString replaceFix, @NonNull Warning warning, @NonNull String contents) {
+            @NonNull ReplaceString replaceFix, @NonNull Incident incident, @NonNull String contents) {
         String oldPattern = replaceFix.oldPattern;
         String oldString = replaceFix.oldString;
-        Location location = replaceFix.range != null ? replaceFix.range : warning.getLocation();
+        Location location = replaceFix.range != null ? replaceFix.range : incident.getLocation();
 
         Position start = location.getStart();
         Position end = location.getEnd();
@@ -599,18 +599,18 @@ public class LintFixVerifier {
     }
 
     private void appendDiff(
-            @NonNull Warning warning,
+            @NonNull Incident incident,
             @Nullable String fixDescription,
             @NonNull String before,
             @NonNull String after,
             @NonNull StringBuilder diffs) {
         String diff = TestUtils.getDiff(before, after, diffWindow);
         if (!diff.isEmpty()) {
-            String targetPath = warning.getDisplayPath().replace(File.separatorChar, '/');
+            String targetPath = incident.getDisplayPath().replace(File.separatorChar, '/');
             diffs.append("Fix for ")
                     .append(targetPath)
                     .append(" line ")
-                    .append(warning.getLine() + 1)
+                    .append(incident.getLine() + 1)
                     .append(": ");
             if (fixDescription != null) {
                 diffs.append(fixDescription).append(":\n");
@@ -620,12 +620,12 @@ public class LintFixVerifier {
     }
 
     private static void appendDataMap(
-            @NonNull Warning warning, @NonNull DataMap map, @NonNull StringBuilder diffs) {
-        String targetPath = warning.getDisplayPath();
+            @NonNull Incident incident, @NonNull DataMap map, @NonNull StringBuilder diffs) {
+        String targetPath = incident.getDisplayPath();
         diffs.append("Data for ")
                 .append(targetPath.replace(File.separatorChar, '/'))
                 .append(" line ")
-                .append(warning.getLine() + 1)
+                .append(incident.getLine() + 1)
                 .append(": ");
         String fixDescription = map.getDisplayName();
         if (fixDescription != null) {

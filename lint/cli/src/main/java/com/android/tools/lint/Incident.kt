@@ -28,11 +28,11 @@ import java.util.Comparator
 import java.util.HashSet
 
 /**
- * A [Warning] represents a specific warning that has been reported.
+ * A [Incident] represents a specific error or warning that has been found and reported.
  * The client stores these as they are reported into a list of warnings such that it can
  * sort them all before presenting them all at the end.
  */
-class Warning(
+class Incident(
     client: LintCliClient,
     val issue: Issue,
     val message: String,
@@ -43,7 +43,7 @@ class Warning(
     val errorLine: String? = null,
     val fix: LintFix? = null,
     path: String? = null
-) : Comparable<Warning> {
+) : Comparable<Incident> {
     val file: File = location.file
     val displayPath: String = path ?: client.getDisplayPath(project, location.file) ?: file.path
     val line: Int get() = location.start?.line ?: -1
@@ -54,7 +54,7 @@ class Warning(
     var variants: MutableSet<String>? = null
     var wasAutoFixed = false
 
-    override fun compareTo(other: Warning): Int {
+    override fun compareTo(other: Incident): Int {
         val fileName1 = file.name
         val fileName2 = other.file.name
         val start1 = location.start
@@ -105,7 +105,7 @@ class Warning(
         }
         return if (other == null || javaClass != other.javaClass) {
             false
-        } else this.compareTo(other as Warning) == 0
+        } else this.compareTo(other as Incident) == 0
     }
 
     override fun hashCode(): Int {

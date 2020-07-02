@@ -191,7 +191,7 @@ open class LintCliClient : LintClient {
     var ideaProject: com.intellij.openapi.project.Project? = null
         private set
     private var projectDisposer: Disposable? = null
-    protected val warnings: MutableList<Warning> = ArrayList()
+    protected val incidents: MutableList<Incident> = ArrayList()
     private var hasErrors = false
     protected var errorCount = 0
     protected var warningCount = 0
@@ -256,11 +256,11 @@ open class LintCliClient : LintClient {
         validateIssueIds()
         driver.analyze()
         kotlinPerformanceManager?.report(lintRequest)
-        warnings.sort()
+        incidents.sort()
         val baseline = driver.baseline
-        val stats = create(warnings, baseline)
+        val stats = create(incidents, baseline)
         for (reporter in flags.reporters) {
-            reporter.write(stats, warnings)
+            reporter.write(stats, incidents)
         }
         var projects: Collection<Project>? = lintRequest.getProjects()
         if (projects == null) {
@@ -268,12 +268,12 @@ open class LintCliClient : LintClient {
         }
         if (!projects.isEmpty()) {
             val analytics = LintBatchAnalytics()
-            analytics.logSession(registry, flags, driver, projects, warnings)
+            analytics.logSession(registry, flags, driver, projects, incidents)
         }
         if (flags.isAutoFix) {
             val statistics = !flags.isQuiet
             val performer = LintFixPerformer(this, statistics)
-            val fixed = performer.fix(warnings)
+            val fixed = performer.fix(incidents)
             if (fixed && isGradle) {
                 val message =
                     """
@@ -304,7 +304,7 @@ open class LintCliClient : LintClient {
                     includeFixes = false
                 )
                 reporter.setBaselineAttributes(this, baselineVariantName)
-                reporter.write(stats, warnings)
+                reporter.write(stats, incidents)
                 System.err.println(getBaselineCreationMessage(baselineFile))
                 return ERRNO_CREATED_BASELINE
             }
@@ -561,11 +561,11 @@ open class LintCliClient : LintClient {
         // convert it to text for the text reporter, HTML for the HTML reporter
         // and so on.
         val rawMessage = format.convertTo(message, TextFormat.RAW)
-        val warning = Warning(
+        val incident = Incident(
             this, issue, rawMessage, severity, context.project,
             location, fileContents, errorLine, fix
         )
-        warnings.add(warning)
+        incidents.add(incident)
     }
 
     private fun computeErrorLine(
@@ -1246,7 +1246,7 @@ open class LintCliClient : LintClient {
 
     @VisibleForTesting
     open fun reset() {
-        warnings.clear()
+        incidents.clear()
         errorCount = 0
         warningCount = 0
         projectDirs.clear()

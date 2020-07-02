@@ -68,7 +68,7 @@ class TextReporter(
     @Throws(IOException::class)
     override fun write(
         stats: LintStats,
-        issues: List<Warning>
+        issues: List<Incident>
     ) {
         val abbreviate = !flags.isShowEverything
         val output = StringBuilder(issues.size * 200)
@@ -91,23 +91,23 @@ class TextReporter(
             }
         } else {
             var lastIssue: Issue? = null
-            for (warning in issues) {
-                if (warning.issue !== lastIssue) {
+            for (incident in issues) {
+                if (incident.issue !== lastIssue) {
                     explainIssue(output, lastIssue)
-                    lastIssue = warning.issue
+                    lastIssue = incident.issue
                 }
                 val startLength = output.length
-                val p = warning.displayPath
+                val p = incident.displayPath
                 appendPath(output, p)
                 output.append(':')
-                if (warning.line >= 0) {
-                    output.append((warning.line + 1).toString())
+                if (incident.line >= 0) {
+                    output.append((incident.line + 1).toString())
                     output.append(':')
                 }
                 if (startLength < output.length) {
                     output.append(' ')
                 }
-                var severity = warning.severity
+                var severity = incident.severity
                 if (severity === Severity.FATAL) {
                     // Treat the fatal error as an error such that we don't display
                     // both "Fatal:" and "Error:" etc in the error output.
@@ -118,28 +118,28 @@ class TextReporter(
                 output.append(' ')
                 output.append(
                     TextFormat.RAW.convertTo(
-                        warning.message,
+                        incident.message,
                         TextFormat.TEXT
                     )
                 )
                 output.append(' ').append('[')
-                output.append(warning.issue.id)
+                output.append(incident.issue.id)
                 output.append(']')
                 output.append('\n')
-                if (warning.wasAutoFixed) {
+                if (incident.wasAutoFixed) {
                     output.append("This issue has been automatically fixed.\n")
                 }
-                if (warning.errorLine != null && warning.errorLine.isNotEmpty()) {
-                    output.append(warning.errorLine)
+                if (incident.errorLine != null && incident.errorLine.isNotEmpty()) {
+                    output.append(incident.errorLine)
                 }
-                if (warning.location.secondary != null) {
-                    var location = warning.location.secondary
+                if (incident.location.secondary != null) {
+                    var location = incident.location.secondary
                     var omitted = false
                     while (location != null) {
                         val locationMessage = location.message
                         if (locationMessage != null && locationMessage.isNotEmpty()) {
                             output.append("    ")
-                            val path = client.getDisplayPath(warning.project, location.file)
+                            val path = client.getDisplayPath(incident.project, location.file)
                             appendPath(output, path)
                             val start = location.start
                             if (start != null) {
@@ -164,7 +164,7 @@ class TextReporter(
                         location = location.secondary
                     }
                     if (!abbreviate && omitted) {
-                        location = warning.location.secondary
+                        location = incident.location.secondary
                         val sb = StringBuilder(100)
                         sb.append("Also affects: ")
                         val begin = sb.length
@@ -174,7 +174,7 @@ class TextReporter(
                                 if (sb.length > begin) {
                                     sb.append(", ")
                                 }
-                                val path = client.getDisplayPath(warning.project, location.file)
+                                val path = client.getDisplayPath(incident.project, location.file)
                                 appendPath(sb, path)
                                 val start = location.start
                                 if (start != null) {
@@ -195,13 +195,13 @@ class TextReporter(
                         output.append(wrapped)
                     }
                 }
-                if (warning.variantSpecific) {
-                    val names = if (warning.includesMoreThanExcludes()) {
+                if (incident.variantSpecific) {
+                    val names = if (incident.includesMoreThanExcludes()) {
                         output.append("Applies to variants: ")
-                        warning.includedVariantNames
+                        incident.includedVariantNames
                     } else {
                         output.append("Does not apply to variants: ")
-                        warning.excludedVariantNames
+                        incident.excludedVariantNames
                     }
                     output.append(Joiner.on(", ").join(names))
                     output.append('\n')

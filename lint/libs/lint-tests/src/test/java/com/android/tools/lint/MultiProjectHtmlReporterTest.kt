@@ -26,8 +26,6 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location.Companion.create
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import com.google.common.base.Charsets
-import com.google.common.io.Files
 import java.io.File
 import java.util.ArrayList
 
@@ -73,7 +71,7 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                     DefaultPosition(6, 4, 198),
                     DefaultPosition(6, 42, 236)
                 )
-            val warning1 = Warning(
+            val incident1 = Incident(
                 client,
                 ManifestDetector.USES_SDK,
                 "<uses-sdk> tag should specify a target API level (the highest verified "
@@ -93,7 +91,7 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                     DefaultPosition(11, 8, 377),
                     DefaultPosition(11, 27, 396)
                 )
-            val warning2 = Warning(
+            val incident2 = Incident(
                 client,
                 HardcodedValuesDetector.ISSUE,
                 "Hardcoded string \"Fooo\", should use @string resource",
@@ -105,15 +103,11 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                 null,
                 "res/layout/main.xml"
             )
-            val warnings: MutableList<Warning> =
-                ArrayList()
-            warnings.add(warning1)
-            warnings.add(warning2)
-            reporter.write(create(0, 2), warnings)
-            var report = Files.asCharSource(
-                File(dir, "index.html"),
-                Charsets.UTF_8
-            ).read()
+            val incidents: MutableList<Incident> = ArrayList()
+            incidents.add(incident1)
+            incidents.add(incident2)
+            reporter.write(create(0, 2), incidents)
+            var report = File(dir, "index.html").readText()
 
             // Replace the timestamp to make golden file comparison work
             val timestampPrefix = "Check performed at "

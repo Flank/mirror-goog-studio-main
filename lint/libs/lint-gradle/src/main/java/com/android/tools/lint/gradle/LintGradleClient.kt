@@ -17,10 +17,10 @@ package com.android.tools.lint.gradle
 
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.repository.Revision
+import com.android.tools.lint.Incident
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE
-import com.android.tools.lint.Warning
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.DefaultConfiguration
 import com.android.tools.lint.client.api.GradleVisitor
@@ -40,7 +40,6 @@ import com.android.tools.lint.gradle.api.VariantInputs
 import com.android.tools.lint.model.LintModelSeverity
 import com.android.utils.XmlUtils
 import com.google.common.io.Files
-import org.gradle.StartParameter
 import org.gradle.api.GradleException
 import org.w3c.dom.Document
 import java.io.File
@@ -251,7 +250,7 @@ class LintGradleClient(
      * Run lint with the given registry, optionally fix any warnings found and return the resulting
      * warnings
      */
-    fun run(registry: IssueRegistry): Pair<List<Warning>, LintBaseline?> {
+    fun run(registry: IssueRegistry): Pair<List<Incident>, LintBaseline?> {
         val exitCode = run(registry, emptyList())
         if (exitCode == ERRNO_CREATED_BASELINE) {
             if (continueAfterBaseLineCreated()) {
@@ -264,7 +263,7 @@ class LintGradleClient(
                 "Aborting build since sources were modified to apply quickfixes after compilation"
             )
         }
-        return Pair(warnings, driver.baseline)
+        return Pair(incidents, driver.baseline)
     }
 
     override fun addProgressPrinter() {
