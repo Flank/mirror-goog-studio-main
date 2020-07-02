@@ -16,6 +16,7 @@
 
 package com.android.aaptcompiler
 
+import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -45,6 +46,17 @@ class BlameLoggerTest {
         assertThat(loggedError.first).contains("bar.xml.rewritten:4:7: Failed to read file")
         assertThat(loggedError.second).isNull()
     }
+    
+    @Test
+    fun testsSourceWorksWithCustomPaths() {
+        val mockLogger = MockLogger()
+        val blameLogger = getMockBlameLogger(mockLogger)
+        blameLogger.error("Failed to read file",
+                BlameLogger.Source(File("foo/bar.xml"), 3, 5, "baz/bar.xml"))
+        assertThat(mockLogger.errors).hasSize(1)
+        val loggedError = mockLogger.errors.single()
+        assertThat(loggedError.first).contains(FileUtils.join("baz", "bar.xml"))
+    }
 
     class MockLogger: ILogger {
         val warnings: MutableList<String> = mutableListOf()
@@ -72,5 +84,5 @@ class BlameLoggerTest {
 
 fun getMockBlameLogger(mockLogger: BlameLoggerTest.MockLogger) = BlameLogger(mockLogger) {
     BlameLogger.Source(
-        File(it.file.absolutePath + ".rewritten"), it.line + 1, it.column + 2)
+        File(it.sourcePath + ".rewritten"), it.line + 1, it.column + 2)
 }

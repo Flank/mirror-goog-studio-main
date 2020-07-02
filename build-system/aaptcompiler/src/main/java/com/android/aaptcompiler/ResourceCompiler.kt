@@ -41,6 +41,7 @@ private const val PNG_EXTENSION = "png"
  * @param legacyMode Whether or not to error or warn on positional args not being specified in a
  *   translatable string with parameters.
  * @param verbose Whether or not to show verbose logs.
+ * @param sourcePath Specified source path to be written in the compiled resource.
  */
 data class ResourceCompilerOptions(
   val generateSymbolsPathData: ResourcePathData?= null,
@@ -48,7 +49,8 @@ data class ResourceCompilerOptions(
   val requirePngCrunching: Boolean = false,
   val pseudolocalize: Boolean = false,
   val legacyMode: Boolean = false,
-  val verbose: Boolean = false)
+  val verbose: Boolean = false,
+  val sourcePath: String? = null)
 
 /**
  * Shows whether the ResourceCompiler can compile the given Resource File.
@@ -108,7 +110,7 @@ fun compileResource(
   }
 
   // Extract resource type information from the full path.
-  val pathData = extractPathData(file)
+  val pathData = extractPathData(file, options.sourcePath ?: file.absolutePath)
   // Determine how to compile the file based on its type.
   val compileFunction = getCompileMethod(pathData, logger)
 

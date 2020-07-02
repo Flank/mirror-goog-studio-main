@@ -37,10 +37,15 @@ internal fun blameSource(
 
 class BlameLogger(val logger: ILogger, val blameMap: (Source) -> Source = { it }) {
 
-    data class Source(val file: File, val line: Int = -1, val column: Int = -1) {
+    data class Source(
+            val file: File,
+            val line: Int = -1,
+            val column: Int = -1,
+            val sourcePath: String = file.absolutePath
+    ) {
 
         override fun toString(): String {
-            var result = file.absolutePath
+            var result = sourcePath
             if (line != -1) {
                 result += ":$line"
                 if (column != -1) {

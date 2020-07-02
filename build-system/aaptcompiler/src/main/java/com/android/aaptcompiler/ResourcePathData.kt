@@ -47,7 +47,7 @@ data class ResourcePathData(
   }
 }
 
-fun extractPathData(file: File) : ResourcePathData {
+fun extractPathData(file: File, sourcePath: String = file.absolutePath) : ResourcePathData {
   val extension = if (file.name.toLowerCase().endsWith(".9.png")) {
     "9.png"
   } else {
@@ -58,7 +58,7 @@ fun extractPathData(file: File) : ResourcePathData {
   val resName =
     if (extension.isNotEmpty()) file.name.substringBefore(".$extension")
     else file.name
-  val source = Source(file.absolutePath)
+  val source = Source(sourcePath)
   // TODO(b/142481190): think about obfuscation
   val parentName = file.parentFile.name
   val type = parentName.substringBefore("-")
