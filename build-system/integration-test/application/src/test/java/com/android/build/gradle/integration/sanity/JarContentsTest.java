@@ -1115,7 +1115,6 @@ public class JarContentsTest {
                 "com/android/ide/common/rendering/",
                 "com/android/ide/common/rendering/api/",
                 "com/android/resources/",
-                "com/android/util/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
