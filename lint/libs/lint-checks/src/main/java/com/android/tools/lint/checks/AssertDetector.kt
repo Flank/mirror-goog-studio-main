@@ -33,6 +33,7 @@ import com.intellij.psi.PsiKeyword
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UBinaryExpression
+import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -55,6 +56,8 @@ import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.java.JavaUAssertExpression
+import org.jetbrains.uast.java.JavaUInstanceCheckExpression
+import org.jetbrains.uast.kotlin.KotlinUTypeCheckExpression
 import org.jetbrains.uast.toUElement
 
 /**
@@ -67,7 +70,8 @@ class AssertDetector : Detector(), SourceCodeScanner {
         val DISABLED = Issue.create(
             id = "Assert",
             briefDescription = "Ignored Assertions",
-            explanation = """
+            explanation =
+                """
                 Assertions will never be turned on in Android. (It was possible to enable \
                 it in Dalvik with `adb shell setprop debug.assert 1`, but it is not implemented \
                 in ART, the runtime for Android 5.0 and later.)
@@ -109,7 +113,8 @@ class AssertDetector : Detector(), SourceCodeScanner {
         val EXPENSIVE = Issue.create(
             id = "ExpensiveAssertion",
             briefDescription = "Expensive Assertions",
-            explanation = """
+            explanation =
+                """
                 In Kotlin, assertions are not handled the same way as from the Java programming \
                 language. In particular, they're just implemented as a library call, and inside \
                 the library call the error is only thrown if assertions are enabled.
@@ -220,8 +225,8 @@ class AssertDetector : Detector(), SourceCodeScanner {
             // to make statements to tools about known nullness properties. For example,
             // findViewById() may technically return null in some cases, but a developer
             // may know that it won't be when it's called correctly, so the assertion helps
-            // to clear nullness warnings.
-            if (isNullCheck(condition)) {
+            // to clear nullness warnings. (Ditto for instance of checks as well.)
+            if (isNullOrInstanceCheck(condition)) {
                 return
             }
         }
@@ -351,22 +356,24 @@ class AssertDetector : Detector(), SourceCodeScanner {
     /**
      * Checks whether the given expression is purely a non-null check, e.g. it will return
      * true for expressions like "a != null" and "a != null && b != null" and
-     * "b == null || c != null".
+     * "b == null || c != null". Similarly it will also return true for things like
+     * "a instanceof Foo".
      */
-    private fun isNullCheck(expression: UExpression): Boolean {
+    private fun isNullOrInstanceCheck(expression: UExpression): Boolean {
         if (expression is UParenthesizedExpression) {
-            return isNullCheck(expression.expression)
+            return isNullOrInstanceCheck(expression.expression)
         }
         return when (expression) {
+            is JavaUInstanceCheckExpression -> true
             is UBinaryExpression -> {
                 val lOperand = expression.leftOperand
                 val rOperand = expression.rightOperand
                 lOperand.isNullLiteral() || rOperand.isNullLiteral() ||
-                        isNullCheck(lOperand) && isNullCheck(rOperand)
+                    isNullOrInstanceCheck(lOperand) && isNullOrInstanceCheck(rOperand)
             }
             is UPolyadicExpression -> {
                 for (operand in expression.operands) {
-                    if (!isNullCheck(operand)) {
+                    if (!isNullOrInstanceCheck(operand)) {
                         return false
                     }
                 }
@@ -391,6 +398,13 @@ class AssertDetector : Detector(), SourceCodeScanner {
         }
         if (argument is ULiteralExpression || argument is UInstanceExpression) {
             return false
+        }
+        if (argument is UBinaryExpressionWithType) {
+            return if (argument is KotlinUTypeCheckExpression) {
+                false
+            } else {
+                isExpensive(argument.operand, depth + 1)
+            }
         }
         if (argument is UPolyadicExpression) {
             for (value in argument.operands) {

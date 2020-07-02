@@ -49,6 +49,7 @@ class AssertDetectorTest : AbstractCheckTest() {
                         assert (param2 != null);                   // OK
                         assert param != null && param2 != null && param3 != null;   // OK
                         assert param != param2 : "This is " + param2 + " and param3=" + param3;
+                        assert param2 instanceof String;           // OK
                     }
 
                     @SuppressLint("Assert")
@@ -214,6 +215,10 @@ class AssertDetectorTest : AbstractCheckTest() {
                 }
                 private fun cheap2(x: Int): Boolean = x < 10
                 private fun cheap3() = test.pkg.Utils.isDiagnosing()
+
+                fun castOkay(foo: Any) {
+                    assert(foo is String) // OK
+                }
                 """
             ).indented(),
             java(
