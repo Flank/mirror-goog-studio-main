@@ -624,7 +624,8 @@ public abstract class BasePlugin<
                         project, project.getName(), globalScope, variantInputModel, projectServices)
                 .configureDependencySubstitutions()
                 .configureGeneralTransforms()
-                .configureVariantTransforms(variants, variantManager.getTestComponents());
+                .configureVariantTransforms(variants, variantManager.getTestComponents())
+                .configureAttributeMatchingStrategies();
 
         // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =

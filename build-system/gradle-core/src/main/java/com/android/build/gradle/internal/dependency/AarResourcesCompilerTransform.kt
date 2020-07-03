@@ -29,7 +29,6 @@ import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
-import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
@@ -81,7 +80,7 @@ abstract class AarResourcesCompilerTransform :
             AndroidManifestParser.parse(it).`package`
         }
 
-    interface Parameters : TransformParameters {
+    interface Parameters : GenericTransformParameters {
         @get:Nested
         val aapt2: Aapt2Input
     }
