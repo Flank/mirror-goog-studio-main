@@ -45,7 +45,7 @@ class BuildConfigData private constructor(
 
         @JvmOverloads
         fun addStringField(name: String, value: String, comment: String? = null) = apply {
-            buildConfigFields[name] = BuildConfigField("String", value, comment)
+            buildConfigFields[name] = BuildConfigField("String", """"$value"""", comment)
         }
 
         @JvmOverloads

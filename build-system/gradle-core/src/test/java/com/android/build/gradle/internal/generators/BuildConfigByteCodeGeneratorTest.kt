@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.generators
 
-import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.apk.Zip
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -43,23 +42,27 @@ internal class BuildConfigByteCodeGeneratorTest {
         val buildConfigBytecodeFile = generator.generatedFilePath
 
         val urls = arrayOf<URL>(buildConfigBytecodeFile.toURI().toURL())
-        val urlClassLoader = URLClassLoader.newInstance(urls)
-        val loadedClass = urlClassLoader.loadClass("my.app.pkg.BuildConfig")
+        URLClassLoader.newInstance(urls).use { urlClassLoader ->
+            val loadedClass = urlClassLoader.loadClass("my.app.pkg.BuildConfig")
 
-        val listOfExpectedFields = listOf(
-                ClassFieldImpl("java.lang.String", "APPLICATION_ID", "my.app.pkg"),
-                ClassFieldImpl("java.lang.String", "BUILD_TYPE", "debug"),
-                ClassFieldImpl("int", "VERSION_CODE", "1"),
-                ClassFieldImpl("long", "TIME_STAMP", "123456789"),
-                ClassFieldImpl("java.lang.String", "VERSION_NAME", "1.0"),
-                ClassFieldImpl("boolean", "DEBUG", "false")
-        )
-        loadedClass.fields.forEachIndexed { index, field ->
-            assertThat(field.type.typeName).isEqualTo(listOfExpectedFields[index].type)
-            assertThat(field.name).isEqualTo(listOfExpectedFields[index].name)
-            assertThat(field.get(field).toString()).isEqualTo(listOfExpectedFields[index].value)
+            val expectedFields = listOf(
+                ExpectedField("java.lang.String", "APPLICATION_ID", "my.app.pkg"),
+                ExpectedField("java.lang.String", "BUILD_TYPE", "debug"),
+                ExpectedField("int", "VERSION_CODE", 1),
+                ExpectedField("long", "TIME_STAMP", 123456789L),
+                ExpectedField("java.lang.String", "VERSION_NAME", "1.0"),
+                ExpectedField("boolean", "DEBUG", false)
+            )
+            expectedFields.forEachIndexed { index, expected ->
+                val field = loadedClass.fields[index]
+                assertThat(field.type.typeName).isEqualTo(expected.typeName)
+                assertThat(field.name).isEqualTo(expected.name)
+                assertThat(field.get(null)).isEqualTo(expected.value)
+            }
         }
     }
+
+    private class ExpectedField(val typeName: String, val name: String, val value: Any)
 
     @Test
     fun `Check JAR contains expected classes`() {
