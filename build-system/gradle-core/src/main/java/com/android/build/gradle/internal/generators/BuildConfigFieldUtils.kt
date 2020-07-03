@@ -37,7 +37,7 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: ClassWriter
         "long" ->
             writer.visitField(pfsOpcodes, name, Type.getDescriptor(Long::class.java), null, value).visitEnd()
         "String" ->
-            writer.visitField(pfsOpcodes, name, Type.getDescriptor(String::class.java), null, value).visitEnd()
+            writer.visitField(pfsOpcodes, name, Type.getDescriptor(String::class.java), null, value.toString().removeSurrounding("\"")).visitEnd()
         else -> throw IllegalArgumentException(
             """BuildConfigField name: $name type: $type and value type: ${value.javaClass
                 .name} cannot be emitted.""".trimMargin())
@@ -62,11 +62,8 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: JavaWriter)
         if (valueAsString == "true") "Boolean.parseBoolean(\"true\")" else "false"
     } else {
         when (type) {
-            "boolean" -> valueAsString
-            "int" -> valueAsString
             "long" -> if (valueAsString.toLongOrNull() == null) valueAsString else valueAsString.ensureSuffix('L')
             "float" -> if (valueAsString.toFloatOrNull() == null) valueAsString else valueAsString.ensureSuffix('f')
-            "String" -> valueAsString.ensureQuoted()
             else -> valueAsString
         }
     }
@@ -76,12 +73,4 @@ fun <T: Serializable> BuildConfigField<T>.emit(name: String, writer: JavaWriter)
 
 private fun String.ensureSuffix(suffix: Char): String {
     return if (endsWith(suffix)) this else "$this$suffix"
-}
-
-private fun String.ensureQuoted(): String {
-    return if (length > 2 && first() == '"' && last() == '"') {
-        this
-    } else {
-        """"$this""""
-    }
 }

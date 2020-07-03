@@ -210,11 +210,8 @@ class BuildConfigGeneratorTest {
                 .addItem("DOUBLE2", BuildConfigField("double", 13.13, null))
                 .addItem("DOUBLE3", BuildConfigField("double", "14.14", null))
                 .addItem("DOUBLE4", BuildConfigField("double", "calculateDouble()", null))
-                .addItem("STRING_WITH_QUOTES", BuildConfigField("String", "\"String 1\"", null))
-                .addItem(
-                    "STRING_WITHOUT_QUOTES",
-                    BuildConfigField("String", "StringWithoutQuotes", null)
-                )
+                .addItem("STRING1", BuildConfigField("String", "\"String 1\"", null))
+                .addItem("STRING2", BuildConfigField("String", "calculateString()", null))
                 .addItem("STRING_ARRAY", BuildConfigField("String[]", "new String[]{}", null))
                 .build()
         val generator = BuildConfigGenerator(buildConfigData)
@@ -253,8 +250,8 @@ class BuildConfigGeneratorTest {
                   public static final double DOUBLE2 = 13.13;
                   public static final double DOUBLE3 = 14.14;
                   public static final double DOUBLE4 = calculateDouble();
-                  public static final String STRING_WITH_QUOTES = "String 1";
-                  public static final String STRING_WITHOUT_QUOTES = "StringWithoutQuotes";
+                  public static final String STRING1 = "String 1";
+                  public static final String STRING2 = calculateString();
                   public static final String[] STRING_ARRAY = new String[]{};
                 }
             """.trimIndent())
