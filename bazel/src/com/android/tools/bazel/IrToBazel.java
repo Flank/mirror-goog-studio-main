@@ -22,7 +22,6 @@ import com.android.tools.bazel.ir.IrNode;
 import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.ImlModule;
-import com.android.tools.bazel.model.ImlProject;
 import com.android.tools.bazel.model.JavaImport;
 import com.android.tools.bazel.model.JavaLibrary;
 import com.android.tools.bazel.model.Label;
@@ -238,12 +237,6 @@ public class IrToBazel {
                 }
             }
         }
-
-        Package projectPkg = bazel
-                .findPackage(workspace.relativize(projectDir.toPath()).toString());
-        ImlProject imlProject = new ImlProject(projectPkg, "android-studio");
-        rules.values().stream().filter(ImlModule::isExport).sorted(Comparator.comparing(BazelRule::getLabel))
-                .forEach(imlProject::addModule);
 
         logger.info("Updating BUILD files...");
         CountingListener listener = new CountingListener(logger, dryRun);

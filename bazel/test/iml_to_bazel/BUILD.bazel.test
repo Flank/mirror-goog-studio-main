@@ -136,33 +136,6 @@ iml_module(
     deps = ["//:compile_after_runtime[module]"],
 )
 
-load("//tools/base/bazel:bazel.bzl", "iml_project")
-
-# managed by go/iml_to_build
-iml_project(
-    name = "android-studio",
-    modules = [
-        "//:compile_after_runtime",
-        "//:compile_after_test",
-        "//:compile_runtime_cycle_end",
-        "//:compile_runtime_cycle_start",
-        "//:compile_test_cycle_end_and_others",
-        "//:depend_on_cycle",
-        "//:friends.impl",
-        "//:friends.tests",
-        "//:root",
-        "//:runtime",
-        "//:runtime_after_test",
-        "//:runtime_compile_cycle_end",
-        "//:runtime_compile_cycle_start",
-        "//:runtime_test_cycle_end",
-        "//:runtime_test_cycle_start",
-        "//:test",
-        "//:test_runtime_cycle_end",
-        "//:test_runtime_cycle_start",
-    ],
-)
-
 # managed by go/iml_to_build
 iml_module(
     name = "test_runtime_cycle_end",
