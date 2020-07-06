@@ -17,8 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import jdk.internal.org.objectweb.asm.Opcodes.ACC_PRIVATE
-import jdk.internal.org.objectweb.asm.Opcodes.ASM5
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Type
@@ -26,6 +24,8 @@ import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.Label
+import org.objectweb.asm.Opcodes.ACC_PRIVATE
+import org.objectweb.asm.Opcodes.ASM5
 import org.objectweb.asm.TypePath
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
