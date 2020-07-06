@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_DIR
@@ -64,12 +67,12 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
     val tmp = TemporaryFolder()
     lateinit var workers: WorkerExecutorFacade
 
-    private lateinit var output: File
+    private lateinit var outputFile: File
 
     @Before
     fun setUp() {
         workers = ExecutorServiceAdapter("test", ":test", MoreExecutors.newDirectExecutorService())
-        output = if (outputType == CLASSES_JAR) {
+        outputFile = if (outputType == CLASSES_JAR) {
             tmp.newFile("output.jar")
         } else {
             tmp.newFolder("outputDir")
@@ -113,23 +116,31 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                 }
             }
         )
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "",
-                toIgnore = listOf(),
-                output = output,
-                input = input,
-                incremental = false,
-                inputChanges = emptyList<FileChange>().toSerializable(),
-                packageRClass = false,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
-        assertContains(output, "A.class")
-        assertContains(output, "B.class")
-        assertContains(output, "sub/C.class")
-        assertContains(output, "META-INF/a.modules")
-        assertDoesNotContain(output, "res.txt")
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val packageName = FakeGradleProperty("")
+                    override val toIgnore =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(input)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges =
+                        FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(false)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+
+        assertContains(outputFile, "A.class")
+        assertContains(outputFile, "B.class")
+        assertContains(outputFile, "sub/C.class")
+        assertContains(outputFile, "META-INF/a.modules")
+        assertDoesNotContain(outputFile, "res.txt")
     }
 
     @Test
@@ -144,23 +155,31 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                 dir.resolve("com/example/Manifest\$nested.class").createNewFile()
             }
         )
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "com.example",
-                toIgnore = listOf(),
-                output = output,
-                input = input,
-                incremental = false,
-                inputChanges = emptyList<FileChange>().toSerializable(),
-                packageRClass = false,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
-        assertContains(output, "A.class")
-        assertDoesNotContain(output, "com/example/R.class")
-        assertDoesNotContain(output, "com/example/R\$string.class")
-        assertDoesNotContain(output, "com/example/Manifest.class")
-        assertDoesNotContain(output, "com/example/Manifest\$nested.class")
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val packageName = FakeGradleProperty("com.example")
+                    override val toIgnore =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(input)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges =
+                        FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(false)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+
+        assertContains(outputFile, "A.class")
+        assertDoesNotContain(outputFile, "com/example/R.class")
+        assertDoesNotContain(outputFile, "com/example/R\$string.class")
+        assertDoesNotContain(outputFile, "com/example/Manifest.class")
+        assertDoesNotContain(outputFile, "com/example/Manifest\$nested.class")
     }
 
     @Test
@@ -175,23 +194,30 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                 dir.resolve("com/example/Manifest\$nested.class").createNewFile()
             }
         )
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "com.example",
-                toIgnore = listOf(),
-                output = output,
-                input = input,
-                incremental = false,
-                inputChanges = emptyList<FileChange>().toSerializable(),
-                packageRClass = true,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
-        assertContains(output, "A.class")
-        assertContains(output, "com/example/R.class")
-        assertContains(output, "com/example/R\$string.class")
-        assertDoesNotContain(output, "com/example/Manifest.class")
-        assertDoesNotContain(output, "com/example/Manifest\$nested.class")
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val packageName = FakeGradleProperty("com.example")
+                    override val toIgnore =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(input)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges =
+                        FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(true)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+        assertContains(outputFile, "A.class")
+        assertContains(outputFile, "com/example/R.class")
+        assertContains(outputFile, "com/example/R\$string.class")
+        assertDoesNotContain(outputFile, "com/example/Manifest.class")
+        assertDoesNotContain(outputFile, "com/example/Manifest\$nested.class")
     }
 
     @Test
@@ -210,22 +236,29 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
             it.closeEntry()
         }
 
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "",
-                toIgnore = listOf(),
-                output = output,
-                input = setOf(inputJar),
-                incremental = false,
-                inputChanges = emptyList<FileChange>().toSerializable(),
-                packageRClass = false,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val packageName = FakeGradleProperty("")
+                    override val toIgnore =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(inputJar)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges =
+                        FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(false)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         val outputJar = if (outputType == CLASSES_JAR) {
-            output
+            outputFile
         } else {
-            output.resolve("classes.jar")
+            outputFile.resolve("classes.jar")
         }
         assertContains(outputJar, "A.class")
         assertContains(outputJar, "sub/B.class")
@@ -246,22 +279,30 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
             it.closeEntry()
         }
 
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "",
-                toIgnore = listOf(".*A\\.class$"),
-                output = output,
-                input = setOf(inputJar),
-                incremental = false,
-                inputChanges = emptyList<FileChange>().toSerializable(),
-                packageRClass = false,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val packageName = FakeGradleProperty("")
+                    override val toIgnore =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                            .value(listOf(".*A\\.class$"))
+                    override val input = FakeConfigurableFileCollection(inputJar)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges =
+                        FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(false)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         val outputJar = if (outputType == CLASSES_JAR) {
-            output
+            outputFile
         } else {
-            output.resolve("classes.jar")
+            outputFile.resolve("classes.jar")
         }
         assertDoesNotContain(outputJar, "A.class")
         assertContains(outputJar, "sub/B.class")
@@ -280,31 +321,36 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
             it.resolve("C.class").createNewFile()
         }
 
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "",
-                toIgnore = listOf(),
-                output = output,
-                input = setOf(inputDir),
-                incremental = false,
-                inputChanges = emptyList<FileChange>().toSerializable(),
-                packageRClass = false,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
-        assertContains(output, "dir1/A.class")
-        assertContains(output, "dir1/B.class")
-        assertContains(output, "dir2/C.class")
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val packageName = FakeGradleProperty("")
+                    override val toIgnore = FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(inputDir)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges = FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(false)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+        assertContains(outputFile, "dir1/A.class")
+        assertContains(outputFile, "dir1/B.class")
+        assertContains(outputFile, "dir2/C.class")
 
         val changedFileTimestampBefore = if (outputType == CLASSES_DIR) {
-            Files.getLastModifiedTime(output.resolve("dir1/B.class").toPath())
+            Files.getLastModifiedTime(outputFile.resolve("dir1/B.class").toPath())
         } else {
-            Files.getLastModifiedTime(output.toPath())
+            Files.getLastModifiedTime(outputFile.toPath())
         }
         val unchangedFileTimestampBefore = if (outputType == CLASSES_DIR) {
-            Files.getLastModifiedTime(output.resolve("dir2/C.class").toPath())
+            Files.getLastModifiedTime(outputFile.resolve("dir2/C.class").toPath())
         } else {
-            Files.getLastModifiedTime(output.toPath())
+            Files.getLastModifiedTime(outputFile.toPath())
         }
 
         TestUtils.waitForFileSystemTick()
@@ -312,50 +358,59 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         FileUtils.delete(inputDir.resolve("dir1/A.class"))
         inputDir.resolve("dir1/B.class").writeText("Changed")
         inputDir.resolve("dir2/D.class").writeText("Added")
-        BundleLibraryClassesRunnable(
-            BundleLibraryClassesRunnable.Params(
-                packageName = "",
-                toIgnore = listOf(),
-                output = output,
-                input = setOf(inputDir),
-                incremental = true,
-                inputChanges = SerializableFileChanges(
-                    listOf(
-                        SerializableChange(
-                            inputDir.resolve("dir1/A.class"),
-                            FileStatus.REMOVED,
-                            "dir1/A.class"
-                        ),
-                        SerializableChange(
-                            inputDir.resolve("dir1/B.class"),
-                            FileStatus.CHANGED,
-                            "dir1/B.class"
-                        ),
-                        SerializableChange(
-                            inputDir.resolve("dir2/D.class"),
-                            FileStatus.NEW,
-                            "dir2/D.class"
+
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val packageName = FakeGradleProperty("")
+                    override val toIgnore =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(inputDir)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(true)
+                    override val inputChanges = FakeGradleProperty(
+                        SerializableFileChanges(
+                            listOf(
+                                SerializableChange(
+                                    inputDir.resolve("dir1/A.class"),
+                                    FileStatus.REMOVED,
+                                    "dir1/A.class"
+                                ),
+                                SerializableChange(
+                                    inputDir.resolve("dir1/B.class"),
+                                    FileStatus.CHANGED,
+                                    "dir1/B.class"
+                                ),
+                                SerializableChange(
+                                    inputDir.resolve("dir2/D.class"),
+                                    FileStatus.NEW,
+                                    "dir2/D.class"
+                                )
+                            )
                         )
                     )
-                ),
-                packageRClass = false,
-                jarCreatorType = JarCreatorType.JAR_FLINGER
-            )
-        ).run()
-        assertDoesNotContain(output, "dir1/A.class")
-        assertContains(output, "dir1/B.class")
-        assertContains(output, "dir2/C.class")
-        assertContains(output, "dir2/D.class")
+                    override val packageRClass = FakeGradleProperty(false)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+        assertDoesNotContain(outputFile, "dir1/A.class")
+        assertContains(outputFile, "dir1/B.class")
+        assertContains(outputFile, "dir2/C.class")
+        assertContains(outputFile, "dir2/D.class")
 
         val changedFileTimestampAfter = if (outputType == CLASSES_DIR) {
-            Files.getLastModifiedTime(output.resolve("dir1/B.class").toPath())
+            Files.getLastModifiedTime(outputFile.resolve("dir1/B.class").toPath())
         } else {
-            Files.getLastModifiedTime(output.toPath())
+            Files.getLastModifiedTime(outputFile.toPath())
         }
         val unchangedFileTimestampAfter = if (outputType == CLASSES_DIR) {
-            Files.getLastModifiedTime(output.resolve("dir2/C.class").toPath())
+            Files.getLastModifiedTime(outputFile.resolve("dir2/C.class").toPath())
         } else {
-            Files.getLastModifiedTime(output.toPath())
+            Files.getLastModifiedTime(outputFile.toPath())
         }
         assertNotEquals(changedFileTimestampBefore, changedFileTimestampAfter)
         if (outputType == CLASSES_DIR) {
