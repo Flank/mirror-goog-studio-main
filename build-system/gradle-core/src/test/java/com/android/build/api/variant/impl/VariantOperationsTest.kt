@@ -91,7 +91,33 @@ class VariantOperationsTest {
         Truth.assertThat(counter.get()).isEqualTo(101)
     }
 
-    private fun <T: Variant<*>> createVariant(
+    @Test
+    fun actionsOrderTest() {
+        val orderList = mutableListOf<Int>()
+        val operations = VariantOperations<Variant<*>>()
+
+        operations.addFilteredAction(
+            FilteredComponentAction(
+                specificType = ApplicationVariant::class.java,
+                action = Action { orderList.add(1) }
+            )
+        )
+        operations.actions.add(Action { orderList.add(2) })
+
+        operations.addFilteredAction(
+            FilteredComponentAction(
+                specificType = ApplicationVariant::class.java,
+                action = Action { orderList.add(3) }
+            )
+        )
+
+        val variant = createVariant(ApplicationVariant::class.java)
+        operations.executeActions(variant)
+
+        Truth.assertThat(orderList).isEqualTo(listOf(1, 2, 3))
+    }
+
+    private fun <T : Variant<*>> createVariant(
         @Suppress("UNCHECKED_CAST") variantClass: Class<T> = Variant::class.java as Class<T>
     ): T {
         val variant = Mockito.mock(variantClass)
