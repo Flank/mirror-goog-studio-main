@@ -1,9 +1,7 @@
 package com.android.aaptcompiler
 
 import com.android.aapt.Resources
-import com.android.aaptcompiler.android.isTruthy
 import com.android.resources.ResourceVisibility
-import com.android.utils.ILogger
 import java.io.File
 import java.util.SortedMap
 import java.util.TreeMap
@@ -17,7 +15,7 @@ import java.util.TreeMap
  * names validated. While [addResourceMangled] and [addFileReferenceMangled] are used to add
  * resources from libraries and are not validated.
  */
-class ResourceTable(val validateResources: Boolean = false, val logger: ILogger? = null) {
+class ResourceTable(val validateResources: Boolean = false, val logger: BlameLogger? = null) {
   /**
    * The string pool used by this resource table. Values that reference strings must use
    * this pool to create their strings.
@@ -282,16 +280,18 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
     }
   }
 
-  private fun logError(formatMessage: String, vararg args: Any?) {
-    logger?.error(null, formatMessage, args)
+  private fun logError(source: BlameLogger.Source?, message: String) {
+    logger?.error(message, source)
   }
 
   private fun validateName(
     nameValidator: (String) -> String, name: ResourceName, source: Source): Boolean {
     val badCodePoint = nameValidator.invoke(name.entry!!)
     if (badCodePoint.isNotEmpty()) {
-      val errorMsg = "%s, Resource '%s' has invalid entry name '%s'. Invalid character '%s'."
-      logError(errorMsg, blameSource(source),  name, name.entry, badCodePoint)
+      logError(
+        blameSource(source),
+        "Resource '$name' has invalid entry name '${name.entry}'. " +
+                "Invalid character '$badCodePoint'.")
       return false
     }
     return true
@@ -315,15 +315,10 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
     val tablePackage = findOrCreatePackage(name.pck!!)
     val packageId = tablePackage.id
     if (id.isValidDynamicId() && packageId != null && id.getPackageId() != packageId) {
-      val errorMsg =
-        "%s, Failed to add resource '%s' with ID %s because package '%s' already has ID %s."
       logError(
-        errorMsg,
         blameSource(value.source),
-        name,
-        id.toString(16),
-        tablePackage.name,
-        packageId.toString(16))
+        "Failed to add resource '$name' with ID ${id.toString(16)} because " +
+                "package '${tablePackage.name}' already has ID ${packageId.toString(16)}.")
       return false
     }
 
@@ -334,15 +329,10 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
       tablePackage.findOrCreateGroup(name.type, if (useId) id.getTypeId() else null)
     val groupId = resourceGroup.id
     if (checkId && groupId != null && groupId != id.getTypeId()) {
-      val errorMsg =
-        "%s, Failed to add resource '%s' with ID %s because type '%s' already has ID %s."
       logError(
-        errorMsg,
         blameSource(value.source),
-        name,
-        id.toString(16),
-        resourceGroup.type.tagName,
-        groupId.toString(16))
+        "Failed to add resource '$name' with ID ${id.toString(16)} because type " +
+                "'${resourceGroup.type.tagName}' already has ID ${groupId.toString(16)}.")
       return false
     }
 
@@ -350,14 +340,10 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
       resourceGroup.findOrCreateEntry(name.entry!!, if (useId) id.getEntryId() else null)
     val entryId = resourceEntry.id
     if (checkId && entryId != null && id.getEntryId() != entryId) {
-      val errorMsg =
-        "%s, Failed to add resource '%s' with ID %s, because resource already has ID %s."
       logError(
-        errorMsg,
         blameSource(value.source),
-        name,
-        id.toString(16),
-        resourceIdFromParts(packageId!!, groupId!!, entryId).toString(16))
+        "Failed to add resource '$name' with ID ${id.toString(16)}, because resource already" +
+                " has ID ${resourceIdFromParts(packageId!!, groupId!!, entryId).toString(16)}.")
       return false
     }
 
@@ -370,16 +356,12 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
       when (conflictResolver.invoke(oldValue, value)) {
         CollisionResult.TAKE_NEW -> configValue.value = value
         CollisionResult.CONFLICT -> {
-          val errorMsg =
-            "%s, Duplicate value for resource '%s' with config '%s' and product '%s'. Resource " +
-                    "was previously defined here: %s."
+          val previousSource =
+            logger?.getOriginalSource(blameSource(oldValue.source)) ?: blameSource(oldValue.source)
           logError(
-            errorMsg,
             blameSource(value.source),
-            name,
-            config,
-            product,
-            blameSource(oldValue.source))
+            "Duplicate value for resource '$name' with config '$config' and product '$product'. " +
+                    "Resource was previously defined here: $previousSource.")
           return false
         }
         CollisionResult.KEEP_ORIGINAL -> {}
@@ -422,15 +404,10 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
     val tablePackage = findOrCreatePackage(name.pck!!)
     val packageId = tablePackage.id
     if (id.isValidDynamicId() && packageId != null && id.getPackageId() != packageId) {
-      val errorMsg =
-        "%s, Failed to add resource '%s' with ID %s because package '%s' already has ID %s."
       logError(
-        errorMsg,
         blameSource(source),
-        name,
-        id.toString(16),
-        tablePackage.name,
-        packageId.toString(16))
+        "Failed to add resource '$name' with ID ${id.toString(16)} because package " +
+                "'${tablePackage.name}' already has ID ${packageId.toString(16)}.")
       return false
     }
 
@@ -441,15 +418,10 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
       tablePackage.findOrCreateGroup(name.type, if(useId) id.getTypeId() else null)
     val groupId = resourceGroup.id
     if (checkId && groupId != null && groupId != id.getTypeId()) {
-      val errorMsg =
-        "%s, Failed to add resource '%s' with ID %s because type '%s' already has ID %s."
       logError(
-        errorMsg,
         blameSource(source),
-        name,
-        id.toString(16),
-        resourceGroup.type.tagName,
-        groupId.toString(16))
+        "Failed to add resource '$name' with ID ${id.toString(16)} because type " +
+                "'${resourceGroup.type.tagName}' already has ID ${groupId.toString(16)}.")
       return false
     }
 
@@ -457,14 +429,10 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
       resourceGroup.findOrCreateEntry(name.entry!!, if (useId) id.getEntryId() else null)
     val entryId = resourceEntry.id
     if (checkId && entryId != null && id.getEntryId() != entryId) {
-      val errorMsg =
-        "%s, Failed to add resource '%s' with ID %s, because resource already has ID %s."
       logError(
-        errorMsg,
         blameSource(source),
-        name,
-        id.toString(16),
-        resourceIdFromParts(packageId!!, groupId!!, entryId).toString(16))
+        "Failed to add resource '$name' with ID ${id.toString(16)}, because resource already " +
+                "has ID ${resourceIdFromParts(packageId!!, groupId!!, entryId).toString(16)}.")
       return false
     }
 
@@ -522,15 +490,12 @@ class ResourceTable(val validateResources: Boolean = false, val logger: ILogger?
 
     val oldEntry = entry.overlayable
     if (oldEntry != null) {
-      val errorMsg =
-        "%s, Failed to add overlayable declaration for resource '%s', because resource already " +
-                "has an overlayable defined here: %s."
+      val previousSource =
+        logger?.getOriginalSource(blameSource(oldEntry.source)) ?: blameSource(oldEntry.source)
       logError(
-        errorMsg,
         blameSource(overlayable.source),
-        name,
-        blameSource(oldEntry.source)
-      )
+        "Failed to add overlayable declaration for resource '$name', because resource already " +
+                "has an overlayable defined here: $previousSource.")
       return false
     }
     entry.overlayable = overlayable

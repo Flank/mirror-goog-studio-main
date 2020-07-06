@@ -89,7 +89,7 @@ fun rewriteCompileException(
         }
     }
     return rewriteException(e, errorFormatMode, true, logger) {
-        if (it.file.sourceFile.absolutePath == request.originalInputFile.absolutePath) {
+        if (it.file.sourceFile?.absolutePath == request.originalInputFile.absolutePath) {
             MergingLog.find(it.position, request.blameMap) ?: it
         } else {
             it
@@ -146,30 +146,24 @@ fun rewriteLinkException(
  *
  * @param request The request being sent through [ResourceCompilerRunnable].
  *
- * @param enableBlame whether file attribution is enabled.
- *
  * @param logger: Logger the logger for the [BlameLogger] to be wrapped around.
  *
  * @return A Blame Logger that can rewrite sources, to their correct locations pre-merge.
  */
 fun blameLoggerFor(
-    request: CompileResourceRequest, enableBlame: Boolean, logger: Logger) : ILogger {
+    request: CompileResourceRequest, logger: LoggerWrapper) : BlameLogger {
 
-    if (!enableBlame) {
-        return BlameLogger(LoggerWrapper(logger))
-    }
     if (request.blameMap.isEmpty()) {
         if (request.mergeBlameFolder != null) {
             val mergingLog = MergingLog(request.mergeBlameFolder!!)
-            return BlameLogger(LoggerWrapper(logger)) {
+            return BlameLogger(logger) {
                 val sourceFile = it.toSourceFilePosition()
                 BlameLogger.Source.fromSourceFilePosition(mergingLog.find(sourceFile))
             }
         }
-
-        return BlameLogger(LoggerWrapper(logger))
+        return BlameLogger(logger)
     }
-    return BlameLogger(LoggerWrapper(logger)) {
+    return BlameLogger(logger) {
         if (it.file.absolutePath == request.originalInputFile.absolutePath) {
             val sourceFile = it.toSourceFilePosition()
             val foundSource = MergingLog.find(sourceFile.position, request.blameMap)

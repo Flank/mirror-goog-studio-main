@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.services
 import com.android.aaptcompiler.ResourceCompilerOptions
 import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.aaptcompiler.compileResource
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.res.blameLoggerFor
 import com.android.builder.internal.aapt.AaptConvertConfig
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2
@@ -33,7 +35,8 @@ class PartialInProcessResourceProcessor (val delegate: Aapt2):
     override fun compile(request: CompileResourceRequest, logger: ILogger) {
         if (canCompileResourceInJvm(request.inputFile, request.isPngCrunching)) {
             val options = ResourceCompilerOptions(pseudolocalize = request.isPseudoLocalize, legacyMode = true)
-            compileResource(request.inputFile, request.outputDirectory, options, logger)
+            val blameLogger = blameLoggerFor(request, LoggerWrapper.getLogger(this::class.java))
+            compileResource(request.inputFile, request.outputDirectory, options, blameLogger)
         } else {
             delegate.compile(request, logger)
         }

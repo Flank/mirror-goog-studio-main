@@ -508,9 +508,9 @@ class ResourceCompilerTest {
         try {
             testPngFile(AaptResourceType.LAYOUT, input, isPatch9 = true)
             fail()
-        } catch (e: IllegalStateException) {
-            Truth.assertThat(e.message).contains("Patch 9 PNG processing")
-            Truth.assertThat(e.message).contains("support not yet implemented")
+        } catch (e: ResourceCompilationException) {
+            Truth.assertThat(e.cause!!.message).contains(
+                "Patch 9 PNG processing is not supported with the JVM Android resource compiler.")
             // expected
         }
     }
@@ -528,9 +528,9 @@ class ResourceCompilerTest {
                 input,
                 options = ResourceCompilerOptions(requirePngCrunching = true))
             fail()
-        } catch (e: IllegalStateException) {
-            Truth.assertThat(e.message).contains("PNG crunching")
-            Truth.assertThat(e.message).contains("support not yet implemented")
+        } catch (e: ResourceCompilationException) {
+            Truth.assertThat(e.cause!!.message).contains(
+                "PNG crunching is not supported with the JVM Android resource compiler.")
             // expected
         }
     }

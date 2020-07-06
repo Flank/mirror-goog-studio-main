@@ -23,19 +23,19 @@ import java.io.File
 import javax.xml.stream.Location
 
 internal fun blameSource(
-    source: com.android.aaptcompiler.Source,
+    source: Source,
     line: Int? = source.line,
     column: Int? = null
 ): BlameLogger.Source =
     BlameLogger.Source(File(source.path), line ?: -1, column ?: -1)
 
 internal fun blameSource(
-    source: com.android.aaptcompiler.Source,
+    source: Source,
     location: Location
 ): BlameLogger.Source =
     BlameLogger.Source(File(source.path), location.lineNumber, location.columnNumber)
 
-class BlameLogger(val logger: ILogger, val blameMap: (Source) -> Source = { it }): ILogger {
+class BlameLogger(val logger: ILogger, val blameMap: (Source) -> Source = { it }) {
 
     data class Source(val file: File, val line: Int = -1, val column: Int = -1) {
 
@@ -47,7 +47,7 @@ class BlameLogger(val logger: ILogger, val blameMap: (Source) -> Source = { it }
                     result += ":$column"
                 }
             }
-            return result
+            return "$result: "
         }
 
         fun toSourceFilePosition() =
@@ -61,36 +61,49 @@ class BlameLogger(val logger: ILogger, val blameMap: (Source) -> Source = { it }
         }
     }
 
-    override fun error(t: Throwable?, msgFormat: String?, vararg args: Any?) {
-        logger.error(t, msgFormat, *transformSources(args))
+    fun error(message: String, source: Source? = null, t: Throwable? = null) {
+        if (source != null)
+            logger.error(t, "${blameMap(source)}$message")
+        else
+            logger.error(t, message)
     }
 
-    override fun warning(msgFormat: String, vararg args: Any?) {
-        logger.warning(msgFormat, *transformSources(args))
+    fun warning(message: String, source: Source? = null) {
+        if (source != null)
+            logger.warning("${blameMap(source)}$message")
+        else
+            logger.warning(message)
     }
 
-    override fun info(msgFormat: String, vararg args: Any?) {
-        logger.info(msgFormat, *transformSources(args))
+    fun info(message: String, source: Source? = null) {
+        if (source != null)
+            logger.info("${blameMap(source)}$message")
+        else
+            logger.info(message)
     }
 
-    override fun lifecycle(msgFormat: String, vararg args: Any?) {
-        logger.lifecycle(msgFormat, *transformSources(args))
+    fun lifecycle(message: String, source: Source? = null) {
+        if (source != null)
+            logger.lifecycle("${blameMap(source)}$message")
+        else
+            logger.lifecycle(message)
     }
 
-    override fun quiet(msgFormat: String, vararg args: Any?) {
-        logger.quiet(msgFormat, *transformSources(args))
+    fun quiet(message: String, source: Source? = null) {
+        if (source != null)
+            logger.quiet("${blameMap(source)}$message")
+        else
+            logger.quiet(message)
     }
 
-    override fun verbose(msgFormat: String, vararg args: Any?) {
-        logger.verbose(msgFormat, *transformSources(args))
+    fun verbose(message: String, source: Source? = null) {
+        if (source != null)
+            logger.verbose("${blameMap(source)}$message")
+        else
+            logger.verbose(message)
     }
 
-    private fun transformSources(args: Array<out Any?>): Array<Any?> =
-        args.map {
-            if (it is Source) {
-                blameMap(it)
-            } else {
-                it
-            }
-        }.toTypedArray()
+    fun getOriginalSource(source: Source): Source {
+        return blameMap(source)
+    }
 }

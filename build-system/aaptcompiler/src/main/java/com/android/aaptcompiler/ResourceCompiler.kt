@@ -20,7 +20,6 @@ package com.android.aaptcompiler
 import com.android.aaptcompiler.proto.serializeTableToPb
 import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
-import com.android.utils.ILogger
 import java.io.File
 
 private const val VALUES_DIRECTORY_PREFIX = "values"
@@ -100,7 +99,8 @@ fun canCompileResourceInJvm(file: File, requirePngCrunching: Boolean): Boolean {
  * See [canCompileResourceInJvm] to see what is supported.
  */
 fun compileResource(
-  file: File, outputDirectory: File, options: ResourceCompilerOptions, logger: ILogger? = null) {
+  file: File, outputDirectory: File, options: ResourceCompilerOptions, logger: BlameLogger? = null) {
+
   // Skip hidden files.
   if (file.isHidden) {
     logger?.warning("Omitting file ${file.absolutePath} because it is hidden.")
@@ -109,15 +109,21 @@ fun compileResource(
 
   // Extract resource type information from the full path.
   val pathData = extractPathData(file)
-
   // Determine how to compile the file based on its type.
   val compileFunction = getCompileMethod(pathData, logger)
-  
-  compileFunction(pathData, outputDirectory, options, logger)
+
+  try {
+    compileFunction(pathData, outputDirectory, options, logger)
+  } catch (e: Exception) {
+    logger?.info("Failed to compile file", blameSource(pathData.source))
+    throw ResourceCompilationException("Resource compilation failed. Check logs for details.",
+      e
+    )
+  }
 }
 
-private fun getCompileMethod(pathData: ResourcePathData, logger: ILogger?):
-    (ResourcePathData, File, ResourceCompilerOptions, ILogger?) -> Unit {
+private fun getCompileMethod(pathData: ResourcePathData, logger: BlameLogger?):
+    (ResourcePathData, File, ResourceCompilerOptions, BlameLogger?) -> Unit {
   if (pathData.resourceDirectory == VALUES_DIRECTORY_PREFIX &&
       pathData.extension == XML_EXTENSION) {
     pathData.extension = RESOURCE_TABLE_EXTENSION
@@ -156,7 +162,7 @@ private fun compileTable(
     pathData: ResourcePathData,
     outputDirectory: File,
     options: ResourceCompilerOptions,
-    logger: ILogger?) {
+    logger: BlameLogger?) {
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   logger?.info("Compiling XML table ${pathData.file.absolutePath} to $outputFile")
 
@@ -171,8 +177,10 @@ private fun compileTable(
 
   pathData.file.inputStream().use {
     if (!tableExtractor.extract(it)) {
-      logger?.warning("Failed to extract resources for ${pathData.file.absolutePath}")
-      error("Failed to extract resources.")
+      // For merged values there's no need to re-write as we don't know which line failed. The
+      // actual error will be raised by the table extractor.
+      logger?.info("Failed to extract resources for ${pathData.file.absolutePath}")
+      error("Failed to compile values file.")
     }
 
     // Adds the fake locales: en-XA and ar-XB for each default-defined string resource. This is used
@@ -204,7 +212,7 @@ private fun compileFile(
     pathData: ResourcePathData,
     outputDirectory: File,
     options: ResourceCompilerOptions,
-    logger: ILogger?) {
+    logger: BlameLogger?) {
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   logger?.info("Compiling file ${pathData.file.absolutePath} to $outputFile")
   pathData.file.inputStream().use {
@@ -241,7 +249,7 @@ private fun compileXml(
     pathData: ResourcePathData,
     outputDirectory: File,
     options: ResourceCompilerOptions,
-    logger: ILogger?) {
+    logger: BlameLogger?) {
   val outputFile = File(outputDirectory, pathData.getIntermediateContainerFilename())
   logger?.info("Compiling xml file ${pathData.file.absolutePath} to $outputFile")
 
@@ -255,7 +263,7 @@ private fun compileXml(
   pathData.file.inputStream().use {
     val xmlProcessor = XmlProcessor(source = pathData.source, logger = logger)
     if (!xmlProcessor.process(fileToProcess, it)) {
-      logger?.warning("Failure to compile the resource file ${pathData.file.absolutePath}")
+      logger?.warning("Failure to compile the resource file.", blameSource(pathData.source))
       error("Failed to compile resource file.")
     }
 
@@ -288,13 +296,13 @@ private fun compilePng(
     pathData: ResourcePathData,
     outputDirectory: File,
     options: ResourceCompilerOptions,
-    logger: ILogger?) {
+    logger: BlameLogger?) {
   logger?.info("Compiling image file ${pathData.file.absolutePath}")
   if (pathData.extension == PATCH_9_EXTENSION) {
-    error("Patch 9 PNG processing support not yet implemented.")
+    error("Patch 9 PNG processing is not supported with the JVM Android resource compiler.")
   }
   if (options.requirePngCrunching) {
-    error("PNG crunching support not yet implemented")
+    error("PNG crunching is not supported with the JVM Android resource compiler.")
   }
   compileFile(pathData, outputDirectory, options, logger)
 }
