@@ -42,6 +42,10 @@ public abstract class BazelRule {
         return name;
     }
 
+    public Package getPackage() {
+        return pkg;
+    }
+
     public boolean isEmpty() {
         return false;
     }

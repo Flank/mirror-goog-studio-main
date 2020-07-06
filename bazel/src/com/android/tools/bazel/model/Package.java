@@ -46,13 +46,21 @@ public class Package {
 
     public Build getBuildFile() throws IOException {
         if (buildFile == null) {
-            File file = buildFile(getPackageDir());
+            File file = findBuildFile();
             Tokenizer tokenizer = new Tokenizer(file);
             BuildParser parser = new BuildParser(tokenizer);
             buildFile = parser.parse();
-            buildFile.hideManagedStatements();
         }
         return buildFile;
+    }
+
+    public Workspace getWorkspace() {
+        return workspace;
+    }
+
+    @NotNull
+    public File findBuildFile() {
+        return buildFile(getPackageDir());
     }
 
     @NotNull
@@ -88,6 +96,7 @@ public class Package {
         }
 
         if (buildFile != null) {
+            buildFile.hideNotUpdatedManagedStatements(workspace.id());
             File tmp = File.createTempFile("BUILD", "test");
             boolean keepFile = false;
             try {

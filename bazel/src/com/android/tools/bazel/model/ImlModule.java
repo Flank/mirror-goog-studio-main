@@ -81,7 +81,7 @@ public class ImlModule extends BazelRule {
         call.setDoNotSort("test_runtime_deps", reason);
         call.setDoNotSort("test_friends", reason);
 
-        statement.setIsManaged();
+        statement.setIsManaged(getPackage().getWorkspace().id());
     }
 
     private List<String> tagDependencies(Set<BazelRule> dependencies) {

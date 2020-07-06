@@ -110,6 +110,10 @@ public class ListExpression extends Expression {
         return expressions.size();
     }
 
+    public List<Expression> getExpressions() {
+        return expressions;
+    }
+
     public boolean contains(Expression e) {
         for (Expression expression : expressions) {
             if (expression.equals(e)) {

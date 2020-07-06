@@ -19,7 +19,6 @@ package com.android.tools.bazel.model;
 import com.android.tools.bazel.parser.ast.CallExpression;
 import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -41,7 +40,7 @@ public class JavaImport extends BazelRule {
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
-        statement.setIsManaged();
+        statement.setIsManaged(getPackage().getWorkspace().id());
     }
 
     public void addJar(String jar) {

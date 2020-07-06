@@ -113,17 +113,21 @@ public class Build extends Node {
     }
 
     /**
-     * Hides all the statements that are managed by this plugin. This plugin identifies
-     * managed rules by the tag "managed" present in the rule.
+     * Hides all the statements that are managed by this plugin. This plugin identifies managed
+     * rules by the tag "managed" present in the rule.
      */
-    public void hideManagedStatements() {
+    public void hideNotUpdatedManagedStatements(String owner) {
         for (Statement statement : statements) {
             if (statement instanceof CallStatement) {
                 CallStatement call = ((CallStatement)statement);
-                if (call.isManaged()) {
+                if (call.isManaged(owner) && !call.isUpdated()) {
                     statement.setHidden(true);
                 }
             }
         }
+    }
+
+    public List<Statement> getStatements() {
+        return statements;
     }
 }

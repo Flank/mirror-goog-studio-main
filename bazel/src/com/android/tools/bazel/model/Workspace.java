@@ -34,15 +34,21 @@ public class Workspace {
     private final File directory;
 
     private final Map<String, Package> packages = Maps.newLinkedHashMap();
+    private final String id;
 
-    public Workspace(File directory) {
+    public Workspace(File directory, String id) {
         this.directory = directory;
+        this.id = id;
     }
 
     public void generate(GenerationListener listener) throws IOException {
         for (Package pkg : packages.values()) {
             pkg.generate(listener);
         }
+    }
+
+    public String id() {
+        return this.id;
     }
 
     public Package getPackage(String name) {
@@ -89,12 +95,13 @@ public class Workspace {
         return result;
     }
 
-    private void loadAllPackages(File dir) {
+    public void loadAllPackages(File dir) {
         if (isBuildDirectory(dir)) {
             loadPackage(dir);
         }
         for (File file : dir.listFiles()) {
-            if (file.isDirectory() && !(dir == directory && file.getName().startsWith("bazel-"))) {
+            if (file.isDirectory()
+                    && !(dir.equals(directory) && file.getName().startsWith("bazel-"))) {
                 loadAllPackages(file);
             }
         }

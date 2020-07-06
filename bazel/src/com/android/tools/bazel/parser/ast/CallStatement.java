@@ -24,6 +24,7 @@ import java.util.List;
  */
 public class CallStatement extends Statement {
     private final CallExpression call;
+    private boolean updated;
 
     public CallStatement(CallExpression call) {
         super(call.getStart(), call.getEnd());
@@ -51,13 +52,26 @@ public class CallStatement extends Statement {
         return call;
     }
 
-    boolean isManaged() {
-        return preComments.stream().anyMatch(s -> s.toLowerCase().contains("managed by go/iml_to_build"));
+    public boolean isUpdated() {
+        return updated;
     }
 
-    public void setIsManaged() {
-        if (!isManaged()) {
-            preComments.add("# managed by go/iml_to_build\n");
+    boolean isManaged(String owner) {
+        return preComments.stream().anyMatch(s -> s.toLowerCase().equals(managedMark(owner)));
+    }
+
+    public void setIsManaged(String owner) {
+        if (!isManaged(owner)) {
+            preComments.add(managedMark(owner));
         }
+        updated = true;
+    }
+
+    private static String managedMark(String owner) {
+        String m = "managed by go/iml_to_build";
+        if (!owner.isEmpty()) {
+            m += " [" + owner + "]";
+        }
+        return "# " + m + "\n";
     }
 }
