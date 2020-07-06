@@ -102,12 +102,6 @@ public class RenderSession {
     }
 
     /** Returns the map of View Cookie → default style for all the views that have a view cookie. */
-    @Deprecated
-    public Map<Object, String> getDefaultStyles() {
-        return null;
-    }
-
-    /** Returns the map of View Cookie → default style for all the views that have a view cookie. */
     public Map<Object, ResourceReference> getDefaultNamespacedStyles() {
         return null;
     }
