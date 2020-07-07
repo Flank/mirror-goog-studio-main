@@ -667,7 +667,8 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
     A new test target is generated for each split_test_target, a test_suite containing all
     split targets, and a test target which does not perform any splitting. The non-split target is
     only to be used for local development with the bazel `--test_filter` flag, since this flag
-    does not work on split test targets.
+    does not work on split test targets. The test_suite will only contain split tests which do not
+    use the 'manual' tag.
 
     Args:
         name: The base name of the test.
@@ -687,11 +688,12 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
     split_tests = []
     for split_name in split_test_targets:
         test_name = name + "_tests__" + split_name
-        split_tests.append(test_name)
         split_target = split_test_targets[split_name]
         shard_count = split_target.get("shard_count")
         tags = split_target.get("tags", default = [])
         data = split_target.get("data", default = [])
+        if "manual" not in tags:
+            split_tests.append(test_name)
         if test_data:
             data += test_data
         if test_tags:
@@ -709,6 +711,7 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         )
     native.test_suite(
         name = name + "_tests",
+        tags = ["manual"] if "manual" in test_tags else [],
         tests = split_tests,
     )
 
