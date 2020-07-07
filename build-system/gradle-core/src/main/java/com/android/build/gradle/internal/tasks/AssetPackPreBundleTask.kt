@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarCreator
@@ -27,17 +28,17 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import java.nio.file.Paths
 import java.util.function.Predicate
 import java.util.zip.Deflater
-import javax.inject.Inject
 
 /**
  * Task that collects the processed manifest file for the asset pack and the asset files to be
@@ -67,17 +68,16 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
         for (manifestFile: File in manifestFiles.asFileTree.files) {
             val assetPackName = manifestFile.parentFile.name
             val packDir = outputDir.dir(assetPackName).get()
-            getWorkerFacadeWithWorkers().use {
-                it.submit(
-                    AssetPackPreBundleTaskRunnable::class.java,
-                    AssetPackPreBundleTaskRunnable.Params(
-                        packDir = packDir.asFile,
-                        packFile = packDir.file("${assetPackName}.zip").asFile,
-                        assetsFilesPath = assetsFiles.filter{assetPack -> assetPack.absolutePath.contains(
-                                                       assetPackName + File.separator + "src" + File.separator + "main" + File.separator + "assets")}.asPath,
-                        manifestFile = manifestFile
+            workerExecutor.noIsolation().submit(AssetPackPreBundleTaskRunnable::class.java) {
+                it.initializeFromAndroidVariantTask(this)
+                it.packDir.set(packDir)
+                it.packFile.set(packDir.file("${assetPackName}.zip"))
+                it.assetsFilesPath.set(assetsFiles.filter { assetPack ->
+                    assetPack.absolutePath.contains(
+                        assetPackName + File.separator + "src" + File.separator + "main" + File.separator + "assets"
                     )
-                )
+                }.asPath)
+                it.manifestFile.set(manifestFile)
             }
         }
     }
@@ -124,34 +124,35 @@ private class ManifestRelocator : JarCreator.Relocator {
     }
 }
 
-class AssetPackPreBundleTaskRunnable @Inject constructor(private val params: Params) : Runnable {
+abstract class AssetPackPreBundleTaskRunnable :
+    ProfileAwareWorkAction<AssetPackPreBundleTaskRunnable.Params>() {
     override fun run() {
-        params.packDir.mkdirs()
-        FileUtils.cleanOutputDir(params.packDir)
-        val jarCreator = JarCreatorFactory.make(jarFile = params.packFile.toPath())
+        parameters.packDir.asFile.get().mkdirs()
+        FileUtils.cleanOutputDir(parameters.packDir.asFile.get())
+        val jarCreator = JarCreatorFactory.make(jarFile = parameters.packFile.asFile.get().toPath())
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
         jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
 
         jarCreator.use {
-            if (params.assetsFilesPath.isNotEmpty()) {
+            if (parameters.assetsFilesPath.get().isNotEmpty()) {
                 it.addDirectory(
-                    Paths.get(params.assetsFilesPath),
+                    Paths.get(parameters.assetsFilesPath.get()),
                     null,
                     null,
                     AssetRelocator(FD_ASSETS)
                 )
             }
 
-            it.addJar(params.manifestFile.toPath(), Predicate { file -> file.endsWith(SdkConstants.FN_ANDROID_MANIFEST_XML) }, ManifestRelocator())
+            it.addJar(parameters.manifestFile.asFile.get().toPath(), Predicate { file -> file.endsWith(SdkConstants.FN_ANDROID_MANIFEST_XML) }, ManifestRelocator())
         }
     }
 
-    class Params(
-        val packDir: File,
-        val packFile: File,
-        val assetsFilesPath: String,
-        val manifestFile: File
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val packDir: DirectoryProperty
+        abstract val packFile: RegularFileProperty
+        abstract val assetsFilesPath: Property<String>
+        abstract val manifestFile: RegularFileProperty
+    }
 }
