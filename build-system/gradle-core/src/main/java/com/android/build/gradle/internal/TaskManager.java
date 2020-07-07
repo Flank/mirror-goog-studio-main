@@ -838,6 +838,7 @@ public abstract class TaskManager<
         // we start doing queries to fill the streams.
         handleJacocoDependencies(creationConfig);
 
+        creationConfig.configureAndLockAsmClassesVisitors(project.getObjects());
         TransformManager transformManager = creationConfig.getTransformManager();
 
         // This might be consumed by RecalculateFixedStackFrames if that's created
@@ -845,11 +846,9 @@ public abstract class TaskManager<
                 OriginalStream.builder("ext-libs-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
-                        .setArtifactCollection(
-                                creationConfig
-                                        .getVariantDependencies()
-                                        .getArtifactCollection(
-                                                RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR))
+                        .setFileCollection(
+                                creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
+                                        EXTERNAL))
                         .build());
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
@@ -873,11 +872,9 @@ public abstract class TaskManager<
                 OriginalStream.builder("sub-projects-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.SUB_PROJECTS)
-                        .setArtifactCollection(
-                                creationConfig
-                                        .getVariantDependencies()
-                                        .getArtifactCollection(
-                                                RUNTIME_CLASSPATH, PROJECT, CLASSES_JAR))
+                        .setFileCollection(
+                                creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
+                                        PROJECT))
                         .build());
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
@@ -927,15 +924,22 @@ public abstract class TaskManager<
 
         creationConfig.onTestedConfig(
                 testedConfig -> {
+                    FileCollection testedCodeDeps;
+                    if (testedConfig instanceof ComponentPropertiesImpl) {
+                        testedCodeDeps =
+                                testedConfig.getDependenciesClassesJarsPostAsmInstrumentation(ALL);
+                    } else {
+                        testedCodeDeps =
+                                testedConfig
+                                        .getVariantDependencies()
+                                        .getArtifactFileCollection(
+                                                RUNTIME_CLASSPATH, ALL, CLASSES_JAR);
+                    }
                     transformManager.addStream(
                             OriginalStream.builder("tested-code-deps")
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.TESTED_CODE)
-                                    .setArtifactCollection(
-                                            testedConfig
-                                                    .getVariantDependencies()
-                                                    .getArtifactCollection(
-                                                            RUNTIME_CLASSPATH, ALL, CLASSES_JAR))
+                                    .setFileCollection(testedCodeDeps)
                                     .build());
                     return null;
                 });
@@ -3354,8 +3358,6 @@ public abstract class TaskManager<
 
     protected void maybeCreateTransformClassesWithAsmTask(
             @NonNull ComponentCreationConfig creationConfig, boolean isTestCoverageEnabled) {
-        creationConfig.configureAndLockAsmClassesVisitors(project.getObjects());
-
         if (!creationConfig.getRegisteredProjectClassesVisitors().isEmpty()) {
             creationConfig
                     .getTransformManager()

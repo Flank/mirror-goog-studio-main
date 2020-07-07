@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
+import com.android.build.gradle.internal.dependency.AsmClassesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -641,8 +642,26 @@ abstract class ComponentPropertiesImpl(
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledComponentProperties
 
+    override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
+        return if (registeredDependenciesClassesVisitors.isNotEmpty()) {
+            variantDependencies.getArtifactFileCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                scope,
+                AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
+                AsmClassesTransform.getAttributesForConfig(this)
+            )
+        } else {
+            variantDependencies.getArtifactFileCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                scope,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR
+            )
+        }
+    }
+
     companion object {
         // String to
-        final val ENABLE_LEGACY_API: String = "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'"
+        final val ENABLE_LEGACY_API: String =
+            "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'"
     }
 }

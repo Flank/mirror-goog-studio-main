@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dependency.AarTransform
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.replaceOldSupportLibraries
+import com.android.build.gradle.internal.dependency.AsmClassesTransform.Companion.registerAsmTransformForComponent
 import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform
 import com.android.build.gradle.internal.dependency.EnumerateClassesTransform
 import com.android.build.gradle.internal.dependency.ExtractAarTransform
@@ -533,6 +534,15 @@ class DependencyConfigurator(
             (variants + testComponents).map { it.properties as ComponentCreationConfig }
 
         val dependencies = project.dependencies
+
+        for (component in allComponents) {
+            registerAsmTransformForComponent(
+                globalScope.project.name,
+                dependencies,
+                component
+            )
+        }
+
         if (globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
             for (artifactConfiguration in getDexingArtifactConfigurations(
                 allComponents

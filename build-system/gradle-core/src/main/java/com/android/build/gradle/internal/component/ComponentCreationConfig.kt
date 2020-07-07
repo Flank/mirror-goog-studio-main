@@ -41,6 +41,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -147,4 +148,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val javaSources: List<ConfigurableFileTree>
 
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
+
+    fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
 }
