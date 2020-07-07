@@ -76,7 +76,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
 
                 onVariantProperties {
                     val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{name}ManifestReader") { 
-                        mergedManifest.set(artifacts.get(ArtifactType.MERGED_MANIFEST))
+                        mergedManifest.set(artifacts.get(ArtifactType.APPLICATION_MANIFEST))
                     }
                     manifestPlaceholders.put("MyName", "MyRealName")
                 }
@@ -168,7 +168,7 @@ known at configuration time.
 
                 onVariantProperties {
                     val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{name}ManifestReader") { 
-                        mergedManifest.set(artifacts.get(ArtifactType.MERGED_MANIFEST))
+                        mergedManifest.set(artifacts.get(ArtifactType.APPLICATION_MANIFEST))
                     }
                     manifestPlaceholders.put("MyName", gitVersionProvider.map { task ->
                         "NameWithGit-" + task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)

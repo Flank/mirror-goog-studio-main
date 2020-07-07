@@ -59,7 +59,7 @@ class ManifestTransformerTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                         .wiredWithFiles(
                             { it.mergedManifest },
                             { it.updatedManifest })
-                        .toTransform(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                        .toTransform(ArtifactType.APPLICATION_MANIFEST.INSTANCE)
                 }
             }
             """.trimIndent()
