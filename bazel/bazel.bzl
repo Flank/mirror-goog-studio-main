@@ -353,7 +353,7 @@ _iml_module_ = rule(
             executable = True,
         ),
         "_bootclasspath": attr.label(
-            default = Label("//prebuilts/studio/jdk:bootclasspath"),
+            default = Label("@bazel_tools//tools/jdk:platformclasspath"),
             cfg = "host",
         ),
         "_kotlin": attr.label(
