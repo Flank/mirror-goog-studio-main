@@ -623,39 +623,47 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getLauncher()
-                        .from(configurations.getByName(UtpDependency.LAUNCHER.name()));
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.LAUNCHER.getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getCore()
-                        .from(configurations.getByName(UtpDependency.CORE.name()));
+                        .from(configurations.getByName(UtpDependency.CORE.getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getDeviceProviderLocal()
                         .from(
                                 configurations.getByName(
-                                        UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL.name()));
+                                        UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
+                                                .getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getDeviceControllerAdb()
                         .from(
                                 configurations.getByName(
-                                        UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB.name()));
+                                        UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB
+                                                .getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getDriverInstrumentation()
                         .from(
                                 configurations.getByName(
-                                        UtpDependency.ANDROID_DRIVER_INSTRUMENTATION.name()));
+                                        UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
+                                                .getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getTestPlugin()
-                        .from(configurations.getByName(UtpDependency.ANDROID_TEST_PLUGIN.name()));
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.ANDROID_TEST_PLUGIN.getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getTestPluginHostRetention()
                         .from(
                                 configurations.getByName(
-                                        UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION.name()));
+                                        UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
+                                                .getConfigurationName()));
             }
 
             task.getCodeCoverageEnabled()
