@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -42,8 +45,18 @@ class CopyDexOutputTest {
             }
         }
         val output = tmp.newFolder()
-        val params = CopyDexOutput.Params(listOf(inputA, inputB), output, null)
-        CopyDexOutput(params).run()
+        object: CopyDexOutput() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val inputDirs = FakeConfigurableFileCollection(inputA, inputB)
+                    override val outputDexDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val outputKeepRules = FakeObjectFactory.factory.directoryProperty()
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         assertThat(output.list()).asList().containsExactly("classes_ext_0.dex", "classes_ext_1.dex")
     }
 
@@ -59,8 +72,18 @@ class CopyDexOutputTest {
         }
         val outputDex = tmp.newFolder()
         val outputKeepRules = tmp.newFolder()
-        val params = CopyDexOutput.Params(listOf(inputA, inputB), outputDex, outputKeepRules)
-        CopyDexOutput(params).run()
+        object: CopyDexOutput() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val inputDirs = FakeConfigurableFileCollection(inputA, inputB)
+                    override val outputDexDir = FakeObjectFactory.factory.directoryProperty().fileValue(outputDex)
+                    override val outputKeepRules = FakeObjectFactory.factory.directoryProperty().fileValue(outputKeepRules)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         assertThat(outputDex.list()).asList().containsExactly("classes_ext_0.dex", "classes_ext_1.dex")
         assertThat(outputKeepRules.list()).asList().containsExactly("core_lib_keep_rules_0.txt")
     }

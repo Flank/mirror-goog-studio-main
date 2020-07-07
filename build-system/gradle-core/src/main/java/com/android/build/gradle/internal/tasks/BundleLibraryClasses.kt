@@ -55,7 +55,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
-import org.gradle.workers.WorkAction
 import java.io.File
 import java.util.function.Predicate
 import java.util.regex.Pattern
@@ -260,7 +259,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
 }
 
 /** Packages files to jar using the provided filter. */
-abstract class BundleLibraryClassesWorkAction : WorkAction<BundleLibraryClassesWorkAction.Params> {
+abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLibraryClassesWorkAction.Params>() {
     abstract class Params: ProfileAwareWorkAction.Parameters() {
         abstract val packageName: Property<String>
         abstract val toIgnore: ListProperty<String>
@@ -272,7 +271,7 @@ abstract class BundleLibraryClassesWorkAction : WorkAction<BundleLibraryClassesW
         abstract val jarCreatorType: Property<JarCreatorType>
     }
 
-    override fun execute() {
+    override fun run() {
         val ignorePatterns =
             (LibraryAarJarsTask.getDefaultExcludes(
                 packagePath = parameters.packageName.get().replace('.', '/'),
