@@ -17,17 +17,19 @@
 package com.android.build.gradle.internal.feature
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.build.gradle.internal.res.namespaced.JarRequest
-import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -75,36 +77,54 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         private set
 
     public override fun doTaskAction() {
-        val files = HashMap<String, File>()
-        val collector = object : ReproducibleFileVisitor {
-            override fun isReproducibleFileOrder() = true
-            override fun visitFile(fileVisitDetails: FileVisitDetails) {
-                addFile(fileVisitDetails.relativePath.pathString, fileVisitDetails.file)
-            }
-
-            override fun visitDir(fileVisitDetails: FileVisitDetails) {
-            }
-
-            fun addFile(path: String, file: File) {
-                files[path] = file
-            }
+        workerExecutor.noIsolation().submit(BundleAllClassesWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.inputDirs.from(javacClasses, preJavacClasses, postJavacClasses)
+            it.rClassesJar.set(rClassesJar)
+            it.jarCreatorType.set(jarCreatorType)
+            it.outputJar.set(outputJar)
         }
-        javacClasses.get().asFileTree.visit(collector)
-        preJavacClasses.asFileTree.visit(collector)
-        postJavacClasses.asFileTree.visit(collector)
+    }
 
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
+    abstract class BundleAllClassesWorkAction :
+        ProfileAwareWorkAction<BundleAllClassesWorkAction.Parameters>() {
+        abstract class Parameters : ProfileAwareWorkAction.Parameters() {
+            abstract val inputDirs: ConfigurableFileCollection
+            abstract val rClassesJar: RegularFileProperty
+            abstract val jarCreatorType: Property<JarCreatorType>
+            abstract val outputJar: RegularFileProperty
+        }
+
+        override fun run() {
+            val files = HashMap<String, File>()
+            val collector = object : ReproducibleFileVisitor {
+                override fun isReproducibleFileOrder() = true
+                override fun visitFile(fileVisitDetails: FileVisitDetails) {
+                    addFile(fileVisitDetails.relativePath.pathString, fileVisitDetails.file)
+                }
+
+                override fun visitDir(fileVisitDetails: FileVisitDetails) {
+                }
+
+                fun addFile(path: String, file: File) {
+                    files[path] = file
+                }
+            }
+            parameters.inputDirs.asFileTree.visit(collector)
+
+            JarCreatorFactory.make(
+                parameters.outputJar.asFile.get().toPath(),
+                null,
+                parameters.jarCreatorType.get()
+            ).use { out ->
                 // Don't compress because compressing takes extra time, and this jar doesn't go
                 // into any APKs or AARs.
-                JarWorkerRunnable::class.java, JarRequest(
-                    toFile = outputJar.get().asFile,
-                    jarCreatorType = jarCreatorType,
-                    fromJars = listOfNotNull(rClassesJar.orNull?.asFile),
-                    fromFiles = files,
-                    compressionLevel = Deflater.NO_COMPRESSION
-                )
-            )
+                out.setCompressionLevel(Deflater.NO_COMPRESSION)
+                files.forEach { (path, file) -> out.addFile(path, file.toPath()) }
+                parameters.rClassesJar.asFile.orNull?.let {
+                    out.addJar(it.toPath())
+                }
+            }
         }
     }
 

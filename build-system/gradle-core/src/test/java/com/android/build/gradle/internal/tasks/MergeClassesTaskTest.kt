@@ -16,14 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.TestInputsGenerator
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -36,13 +36,6 @@ class MergeClassesTaskTest {
 
     @get: Rule
     val temporaryFolder = TemporaryFolder()
-
-    private lateinit var workers: WorkerExecutorFacade
-
-    @Before
-    fun setUp() {
-        workers = testWorkers
-    }
 
     @Test
     fun `test basic`() {
@@ -70,22 +63,28 @@ class MergeClassesTaskTest {
         val inputFiles = listOf(jarFile1, jarFile2, inputDir)
         val outputFile = File(temporaryFolder.newFolder("outputDir"), "out.jar")
 
-        MergeClassesTask.MergeClassesDelegate(
-            inputFiles,
-            outputFile,
-            workers,
-            JarCreatorType.JAR_FLINGER
-        ).mergeClasses()
+        object : MergeClassesTask.MergeClassesWorkAction() {
+            override fun getParameters(): Parameters {
+                return object : Parameters() {
+                    override val inputFiles = FakeConfigurableFileCollection(inputFiles)
+                    override val outputFile = FakeObjectFactory.factory.fileProperty().fileValue(outputFile)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // outputFile should only contain classes, not java resources or .kotlin_module files
-        Zip(outputFile).use {
-            ZipFileSubject.assertThat(it).contains("Foo.class")
-            ZipFileSubject.assertThat(it).contains("Bar.class")
-            ZipFileSubject.assertThat(it).contains("Baz.class")
-            ZipFileSubject.assertThat(it).doesNotContain("foo.txt")
-            ZipFileSubject.assertThat(it).doesNotContain("bar.txt")
-            ZipFileSubject.assertThat(it).doesNotContain("baz.txt")
-            ZipFileSubject.assertThat(it).doesNotContain("META-INF/duplicate.kotlin_module")
+        ZipFileSubject.assertThat(outputFile) {
+            it.contains("Foo.class")
+            it.contains("Bar.class")
+            it.contains("Baz.class")
+            it.doesNotContain("foo.txt")
+            it.doesNotContain("bar.txt")
+            it.doesNotContain("baz.txt")
+            it.doesNotContain("META-INF/duplicate.kotlin_module")
         }
     }
 }
