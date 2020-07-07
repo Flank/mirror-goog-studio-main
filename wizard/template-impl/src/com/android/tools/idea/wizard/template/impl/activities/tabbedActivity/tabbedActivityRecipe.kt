@@ -90,8 +90,8 @@ fun RecipeExecutor.tabbedActivityRecipe(
   save(pageViewModel, srcOut.resolve("ui/main/PageViewModel.${ktOrJavaExt}"))
 
   val placeholderFragment = when (projectData.language) {
-    Language.Java -> placeholderFragmentJava(packageName, useAndroidX)
-    Language.Kotlin -> placeholderFragmentKt(packageName, useAndroidX)
+    Language.Java -> placeholderFragmentJava(fragmentLayoutName, packageName, useAndroidX)
+    Language.Kotlin -> placeholderFragmentKt(fragmentLayoutName, packageName, useAndroidX)
   }
   save(placeholderFragment, srcOut.resolve("ui/main/PlaceholderFragment.${ktOrJavaExt}"))
 

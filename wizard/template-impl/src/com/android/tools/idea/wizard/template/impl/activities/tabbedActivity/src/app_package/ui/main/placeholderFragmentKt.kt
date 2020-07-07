@@ -19,8 +19,10 @@ package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.sr
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun placeholderFragmentKt(
+  fragmentLayoutName: String,
   packageName: String,
-  useAndroidX: Boolean): String {
+  useAndroidX: Boolean
+): String {
 
   val viewModelInitializationBlock = if (useAndroidX) "pageViewModel = ViewModelProvider(this).get(PageViewModel::class.java)"
   else "pageViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(PageViewModel::class.java)"
@@ -55,7 +57,7 @@ class PlaceholderFragment : Fragment() {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        val root = inflater.inflate(R.layout.fragment_main, container, false)
+        val root = inflater.inflate(R.layout.${fragmentLayoutName}, container, false)
         val textView: TextView = root.findViewById(R.id.section_label)
         pageViewModel.text.observe(this, Observer<String> {
             textView.text = it
