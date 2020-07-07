@@ -98,6 +98,7 @@ class UtpConfigFactoryTest {
         override val deviceControllerAdb = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_CONTROLLER_ADB.jar"))
         override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
         override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
+        override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))
         override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
     }
 
@@ -153,21 +154,27 @@ class UtpConfigFactoryTest {
                 id: "mockDeviceSerialNumber"
               }
               controller {
-                controller_class: "com.google.test.platform.runtime.android.adb.controller.AdbDeviceController"
-                controller_jar {
+                label {
+                  label: "device_controller"
+                }
+                class_name: "com.google.testing.platform.runtime.android.adb.controller.AdbDeviceController"
+                jar {
                   path: "pathToANDROID_DEVICE_CONTROLLER_ADB.jar"
                 }
-                device_controller_config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.AdbDeviceController"
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AdbDeviceController"
                 }
               }
               provider {
-                provider_class: "com.google.test.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
-                provider_jar {
+                label {
+                  label: "local_android_device_provider"
+                }
+                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                jar {
                   path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
                 }
-                device_provider_config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.LocalAndroidDeviceProvider"
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
                   value: "\022\026mockDeviceSerialNumber"
                 }
               }
@@ -197,9 +204,21 @@ class UtpConfigFactoryTest {
                 }
               }
               host_plugin {
-                plugin_class: "com.google.test.platform.plugin.android.AndroidDevicePlugin"
-                plugin_jar {
+                label {
+                  label: "android_device_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
+                jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "android_test_device_info_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
               environment {
@@ -236,12 +255,12 @@ class UtpConfigFactoryTest {
                 label {
                   label: "ANDROID_DRIVER_INSTRUMENTATION"
                 }
-                class_name: "com.google.test.platform.runtime.android.driver.AndroidInstrumentationDriver"
+                class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
                   path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.AndroidInstrumentationDriver"
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
                   value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000"
                 }
               }
@@ -281,21 +300,27 @@ class UtpConfigFactoryTest {
                 id: "mockDeviceSerialNumber"
               }
               controller {
-                controller_class: "com.google.test.platform.runtime.android.adb.controller.AdbDeviceController"
-                controller_jar {
+                label {
+                  label: "device_controller"
+                }
+                class_name: "com.google.testing.platform.runtime.android.adb.controller.AdbDeviceController"
+                jar {
                   path: "pathToANDROID_DEVICE_CONTROLLER_ADB.jar"
                 }
-                device_controller_config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.AdbDeviceController"
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AdbDeviceController"
                 }
               }
               provider {
-                provider_class: "com.google.test.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
-                provider_jar {
+                label {
+                  label: "local_android_device_provider"
+                }
+                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                jar {
                   path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
                 }
-                device_provider_config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.LocalAndroidDeviceProvider"
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
                   value: "\022\026mockDeviceSerialNumber"
                 }
               }
@@ -325,19 +350,34 @@ class UtpConfigFactoryTest {
                 }
               }
               host_plugin {
-                plugin_class: "com.google.test.platform.plugin.android.icebox.host.IceboxPlugin"
-                plugin_jar {
+                label {
+                  label: "icebox_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin"
+                jar {
                   path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
                 }
-                plugin_config {
-                  type_url: "type.googleapis.com/com.google.test.platform.plugin.android.icebox.host.proto.IceboxPlugin"
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.icebox.host.proto.IceboxPlugin"
                   value: "\n\027com.example.application\022\tlocalhost\030\352B"
                 }
               }
               host_plugin {
-                plugin_class: "com.google.test.platform.plugin.android.AndroidDevicePlugin"
-                plugin_jar {
+                label {
+                  label: "android_device_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
+                jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "android_test_device_info_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
               environment {
@@ -374,12 +414,12 @@ class UtpConfigFactoryTest {
                 label {
                   label: "ANDROID_DRIVER_INSTRUMENTATION"
                 }
-                class_name: "com.google.test.platform.runtime.android.driver.AndroidInstrumentationDriver"
+                class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
                   path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/com.google.test.platform.config.v1.proto.AndroidInstrumentationDriver"
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
                   value: "\ns\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\017\022\r\n\005debug\022\004true"
                 }
               }

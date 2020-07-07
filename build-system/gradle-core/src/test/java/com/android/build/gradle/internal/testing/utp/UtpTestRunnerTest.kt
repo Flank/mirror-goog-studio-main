@@ -33,9 +33,9 @@ import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat
-import com.google.test.platform.config.v1.proto.RunnerConfigProto
-import com.google.test.platform.core.proto.TestSuiteResultProto
-import com.google.test.platform.server.proto.ServerConfigProto.ServerConfig
+import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import com.google.testing.platform.server.proto.ServerConfigProto.ServerConfig
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -77,6 +77,7 @@ class UtpTestRunnerTest {
         override val deviceProviderLocal = FakeConfigurableFileCollection(File(""))
         override val deviceControllerAdb = FakeConfigurableFileCollection(File(""))
         override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
+        override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))
         override val testPlugin = FakeConfigurableFileCollection(File(""))
         override val testPluginHostRetention = FakeConfigurableFileCollection(File(""))
     }

@@ -33,8 +33,8 @@ import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Files
 import com.google.protobuf.TextFormat
-import com.google.test.platform.core.proto.TestStatusProto
-import com.google.test.platform.core.proto.TestSuiteResultProto
+import com.google.testing.platform.proto.api.core.TestStatusProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
