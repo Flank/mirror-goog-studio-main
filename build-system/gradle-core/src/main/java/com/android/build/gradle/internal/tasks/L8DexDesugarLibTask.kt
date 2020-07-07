@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -29,9 +30,9 @@ import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
 import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
 import com.android.builder.model.CodeShrinker
-import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -45,9 +46,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import java.nio.file.Path
-import javax.inject.Inject
 
 /**
  * A task using L8 tool to dex and shrink (if needed) desugar library with keep rules.
@@ -82,20 +81,18 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     abstract val desugarLibDex: DirectoryProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                L8DexRunnable::class.java,
-                L8DexParams(
-                    desugarLibJar.files,
-                    desugarLibDex.get().asFile,
-                    libConfiguration.get(),
-                    androidJarInput.getAndroidJar().get(),
-                    minSdkVersion.get(),
-                    keepRulesFiles.files,
-                    keepRulesConfigurations.orNull,
-                    debuggable.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(
+            L8DexWorkAction::class.java
+        ) {
+            it.initializeFromAndroidVariantTask(this)
+            it.desugarLibJar.from(desugarLibJar)
+            it.desugarLibDex.set(desugarLibDex)
+            it.libConfiguration.set(libConfiguration)
+            it.androidJar.fileProvider(androidJarInput.getAndroidJar())
+            it.minSdkVersion.set(minSdkVersion)
+            it.keepRulesFiles.from(keepRulesFiles)
+            it.keepRulesConfigurations.set(keepRulesConfigurations)
+            it.debuggable.set(debuggable)
         }
     }
 
@@ -240,33 +237,31 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     }
 }
 
-@VisibleForTesting
-class L8DexParams(
-    val desugarLibJar: Collection<File>,
-    val desugarLibDex: File,
-    val libConfiguration: String,
-    val androidJar: File,
-    val minSdkVersion: Int,
-    val keepRulesFiles: Set<File>,
-    val keepRulesConfigurations: List<String>?,
-    val debuggable: Boolean
-) : Serializable
+abstract class L8DexWorkAction : ProfileAwareWorkAction<L8DexWorkAction.Params>() {
+    abstract class Params: ProfileAwareWorkAction.Parameters() {
+        abstract val desugarLibJar: ConfigurableFileCollection
+        abstract val desugarLibDex: DirectoryProperty
+        abstract val libConfiguration: Property<String>
+        abstract val androidJar: RegularFileProperty
+        abstract val minSdkVersion: Property<Int>
+        abstract val keepRulesFiles: ConfigurableFileCollection
+        abstract val keepRulesConfigurations: ListProperty<String>
+        abstract val debuggable: Property<Boolean>
+    }
 
-@VisibleForTesting
-class L8DexRunnable @Inject constructor(val params: L8DexParams) : Runnable {
     override fun run() {
-        params.desugarLibDex.mkdir()
-        val keepRulesConfig =
-            KeepRulesConfig(getAllFilesUnderDirectories(params.keepRulesFiles), params.keepRulesConfigurations ?: emptyList())
+        parameters.desugarLibDex.get().asFile.mkdir()
+        val keepRulesConfig = KeepRulesConfig(
+            getAllFilesUnderDirectories(parameters.keepRulesFiles.files),
+            parameters.keepRulesConfigurations.orNull ?: emptyList())
         runL8(
-            params.desugarLibJar.map { it.toPath() },
-            params.desugarLibDex.toPath(),
-            params.libConfiguration,
-            listOf(params.androidJar.toPath()),
-            params.minSdkVersion,
+            parameters.desugarLibJar.files.map { it.toPath() },
+            parameters.desugarLibDex.get().asFile.toPath(),
+            parameters.libConfiguration.get(),
+            listOf(parameters.androidJar.get().asFile.toPath()),
+            parameters.minSdkVersion.get(),
             keepRulesConfig,
-            params.debuggable
-        )
+            parameters.debuggable.get())
     }
 
     private fun getAllFilesUnderDirectories(dirs: Set<File>) : List<Path> {
