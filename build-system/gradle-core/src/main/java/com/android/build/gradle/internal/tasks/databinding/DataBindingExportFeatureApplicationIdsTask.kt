@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.FeatureInfoList
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarat
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -36,8 +38,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * This task collects the feature information and exports their ids into a file which can be
@@ -54,13 +54,10 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
         private set
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                ExportApplicationIdsRunnable::class.java, ExportApplicationIdsParams(
-                    featureDeclarations = featureDeclarations.asFileTree.files,
-                    packageListOutFolder = packageListOutFolder.get().asFile
-                )
-            )
+        workerExecutor.noIsolation().submit(ExportApplicationIdsRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.featureDeclarations.set(featureDeclarations.asFileTree.files)
+            it.packageListOutFolder.set(packageListOutFolder.get().asFile)
         }
     }
 
@@ -100,17 +97,15 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
     }
 }
 
-data class ExportApplicationIdsParams(
-    val featureDeclarations: Set<File>,
-    val packageListOutFolder: File
-) : Serializable
+abstract class ExportApplicationIdsParams : ProfileAwareWorkAction.Parameters() {
+    abstract val featureDeclarations: SetProperty<File>
+    abstract val packageListOutFolder: DirectoryProperty
+}
 
-class ExportApplicationIdsRunnable @Inject constructor(
-    val params: ExportApplicationIdsParams
-) : Runnable {
+abstract class ExportApplicationIdsRunnable: ProfileAwareWorkAction<ExportApplicationIdsParams>() {
     override fun run() {
         val packages = mutableSetOf<String>()
-        for (featureSplitDeclaration in params.featureDeclarations) {
+        for (featureSplitDeclaration in parameters.featureDeclarations.get()) {
             try {
                 val loaded = FeatureSplitDeclaration.load(featureSplitDeclaration)
                 packages.add(loaded.applicationId)
@@ -118,13 +113,14 @@ class ExportApplicationIdsRunnable @Inject constructor(
                 throw BuildException("Cannot read features split declaration file", e)
             }
         }
-        FileUtils.cleanOutputDir(params.packageListOutFolder)
-        params.packageListOutFolder.mkdirs()
+        val outputFolder = parameters.packageListOutFolder.get().asFile
+        FileUtils.cleanOutputDir(outputFolder)
+        outputFolder.mkdirs()
         // save the list.
         FeatureInfoList(packages).serialize(
                 File(
-                        params.packageListOutFolder,
-                        DataBindingBuilder.FEATURE_PACKAGE_LIST_FILE_NAME
+                    outputFolder,
+                    DataBindingBuilder.FEATURE_PACKAGE_LIST_FILE_NAME
                 )
         )
     }
