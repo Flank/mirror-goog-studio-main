@@ -161,8 +161,8 @@ class JavaCompileCreationAction(
             }
         }
 
-        task.logger.info(
-            "Configuring Java sources compilation with source level " +
+        task.logger.debug(
+            "Configuring Java sources compilation for '${task.name}' with source level " +
                     "${task.sourceCompatibility} and target level ${task.targetCompatibility}."
         )
     }

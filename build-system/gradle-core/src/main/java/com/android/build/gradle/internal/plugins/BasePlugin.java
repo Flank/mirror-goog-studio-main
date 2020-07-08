@@ -810,8 +810,8 @@ public abstract class BasePlugin<
     // Create the "special" configuration for test buddy APKs. It will be resolved by the test
     // running task, so that we can install all the found APKs before running tests.
     private void createAndroidTestUtilConfiguration() {
-        getLogger()
-                .info(
+        project.getLogger()
+                .debug(
                         "Creating configuration "
                                 + SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
         Configuration configuration =
