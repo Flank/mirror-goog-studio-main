@@ -19,25 +19,28 @@ package com.android.build.gradle.internal.tasks
 import android.databinding.tool.DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX
 import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BINDING_CLASSES_LIST_DIR
 import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BIN_AAR_DIR
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogDelegate
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogRunnable
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
-import java.io.File
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.TrueFileFilter
+import org.gradle.api.Project
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import java.util.concurrent.ForkJoinPool
+import java.io.File
 
 private fun getFileInDataBindingFolder(directory: String, inputDir: File, filename: String): File {
     val dataBindingFolder = File(inputDir, directory)
@@ -50,14 +53,18 @@ class DataBindingMergeBaseClassLogTest {
     val temporaryFolder = TemporaryFolder()
 
     private lateinit var expectedOutFolder: File
-    private val executor = ExecutorServiceAdapter("test", ":test", ForkJoinPool.commonPool())
     private lateinit var outputDir: Provider<Directory>
+    @Mock private lateinit var task: AndroidVariantTask
+    @Mock private lateinit var executor: WorkerExecutor
+    private lateinit var project: Project
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
+        project = ProjectBuilder.builder()
+            .withProjectDir(temporaryFolder.newFolder()).build()
         expectedOutFolder = temporaryFolder.newFolder()
-        outputDir = FakeGradleProvider(FakeGradleDirectory(expectedOutFolder))
+        outputDir = project.objects.directoryProperty().also { it.set(expectedOutFolder) }
     }
 
     @Test
@@ -69,7 +76,7 @@ class DataBindingMergeBaseClassLogTest {
             "blah",
             ImmutableList.of(classList1, classList2))
 
-        val delegate = DataBindingMergeBaseClassLogDelegate(FakeFileCollection(), FakeFileCollection(folder), outputDir)
+        val delegate = getDelegate(folder)
         delegate.doFullRun(executor)
 
         assertThat(collectOutputs()).containsExactly(classList1, classList2)
@@ -83,9 +90,9 @@ class DataBindingMergeBaseClassLogTest {
         val classList4 = "class_list_4$BINDING_CLASS_LIST_SUFFIX"
         val classList5 = "class_list_5$BINDING_CLASS_LIST_SUFFIX"
 
-        val classListInputDir = createFolder("blah", ImmutableList.of(classList1));
+        val classListInputDir = createFolder("blah", ImmutableList.of(classList1))
 
-        val delegate = DataBindingMergeBaseClassLogDelegate(FakeFileCollection(), FakeFileCollection(classListInputDir), outputDir)
+        val delegate = getDelegate(classListInputDir)
         delegate.doFullRun(executor)
 
         // now run another invocation w/ a new file in that folder
@@ -118,7 +125,7 @@ class DataBindingMergeBaseClassLogTest {
         assertThat(collectOutputs()).containsExactly(classList2)
 
         // introduce another folder
-        val classListInputDir2 = createFolder("foobar", ImmutableList.of("d.qq"));
+        val classListInputDir2 = createFolder("foobar", ImmutableList.of("d.qq"))
         val classListInput2 =
                 createInFolder(
                         INCREMENTAL_BINDING_CLASSES_LIST_DIR, classListInputDir2, classList3)
@@ -137,6 +144,33 @@ class DataBindingMergeBaseClassLogTest {
         delegate.doIncrementalRun(executor, mapOf(newInInput3 to FileStatus.NEW, newInInput4 to FileStatus.NEW))
 
         assertThat(collectOutputs()).containsExactly(classList2, classList3, classList4, classList5)
+    }
+
+    private fun getDelegate(folder: File) = object : DataBindingMergeBaseClassLogDelegate(task, project.objects.fileCollection(), project.objects.fileCollection().also { it.setFrom(folder)}, outputDir) {
+        override fun submit(workers: WorkerExecutor, file: File, status: FileStatus) {
+            object : DataBindingMergeBaseClassLogRunnable() {
+                override fun getParameters(): Params {
+                    return object : Params() {
+                        override val file: RegularFileProperty
+                            get() = project.objects.fileProperty().fileValue(file)
+                        override val outFolder: DirectoryProperty
+                            get() = project.objects.directoryProperty().also { it.set(outputDir) }
+                        override val status: Property<FileStatus>
+                            get() = project.objects.property(FileStatus::class.java)
+                                .also { it.set(status) }
+                        override val projectName: Property<String>
+                            get() = project.objects.property(String::class.java)
+                                .also { it.set("projectName") }
+                        override val taskOwner: Property<String>
+                            get() = project.objects.property(String::class.java)
+                                .also { it.set("taskOwner") }
+                        override val workerKey: Property<String>
+                            get() = project.objects.property(String::class.java)
+                                .also { it.set("workerKey") }
+                    }
+                }
+            }.execute()
+        }
     }
 
     private fun collectOutputs(): Set<String> {

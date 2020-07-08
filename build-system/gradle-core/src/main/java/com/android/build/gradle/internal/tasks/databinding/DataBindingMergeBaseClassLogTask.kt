@@ -57,11 +57,11 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
         get() = true
 
     override fun doFullTaskAction() {
-        delegate.doFullRun(getWorkerFacadeWithWorkers())
+        delegate.doFullRun(workerExecutor)
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        delegate.doIncrementalRun(getWorkerFacadeWithWorkers(), changedInputs)
+        delegate.doIncrementalRun(workerExecutor, changedInputs)
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
@@ -101,6 +101,7 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             )
 
             task.delegate = DataBindingMergeBaseClassLogDelegate(
+                task,
                 task.moduleClassLog,
                 task.externalClassLog,
                 task.outFolder)
