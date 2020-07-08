@@ -16,20 +16,21 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import org.gradle.api.file.RegularFileProperty
 
-class CreateNonNamespacedLibraryManifestRunnable @Inject constructor(
-    val params: CreateNonNamespacedLibraryManifestRequest) : Runnable {
+abstract class CreateNonNamespacedLibraryManifestRunnable :
+    ProfileAwareWorkAction<CreateNonNamespacedLibraryManifestRequest>() {
 
     override fun run() {
         NamespaceRemover.rewrite(
-            params.originalManifestFile.toPath(),
-            params.strippedManifestFile.toPath())
+            parameters.originalManifestFile.asFile.get().toPath(),
+            parameters.strippedManifestFile.asFile.get().toPath()
+        )
     }
 }
 
-data class CreateNonNamespacedLibraryManifestRequest(
-    val originalManifestFile: File,
-    val strippedManifestFile: File) : Serializable
+abstract class CreateNonNamespacedLibraryManifestRequest : ProfileAwareWorkAction.Parameters() {
+    abstract val originalManifestFile: RegularFileProperty
+    abstract val strippedManifestFile: RegularFileProperty
+}

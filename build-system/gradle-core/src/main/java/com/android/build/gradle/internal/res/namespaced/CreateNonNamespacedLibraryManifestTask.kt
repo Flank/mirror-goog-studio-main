@@ -46,13 +46,12 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
     abstract val libraryManifest: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                CreateNonNamespacedLibraryManifestRunnable::class.java,
-                CreateNonNamespacedLibraryManifestRequest(
-                    libraryManifest.get().asFile, outputStrippedManifestFile.get().asFile)
-            )
-        }
+        workerExecutor.noIsolation()
+            .submit(CreateNonNamespacedLibraryManifestRunnable::class.java) {
+                it.initializeFromAndroidVariantTask(this)
+                it.originalManifestFile.set(libraryManifest)
+                it.strippedManifestFile.set(outputStrippedManifestFile)
+            }
     }
 
     class CreationAction(
@@ -82,7 +81,8 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                ArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
+                ArtifactType.LIBRARY_MANIFEST, task.libraryManifest
+            )
         }
     }
 }
