@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.DesugarProcessArgs
 import com.android.builder.core.DesugarProcessBuilder
 import com.android.ide.common.repository.GradleVersion
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import com.google.common.collect.ArrayListMultimap
@@ -46,6 +45,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -87,24 +87,23 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     val enableBugFixForJacoco: Property<Boolean> = objectFactory.property(Boolean::class.java)
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use { executorFacade ->
-            val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
-            DesugarTaskDelegate(
-                projectClasses = projectClasses.files,
-                subProjectClasses = subProjectClasses.files,
-                externaLibsClasses = libs,
-                desugaringClasspath = desugaringClasspath.files,
-                projectOutput = projectOutput.asFile.get(),
-                subProjectOutput = subProjectOutput.asFile.get(),
-                externalLibsOutput = externalLibsOutput.asFile.get(),
-                tmpDir = tmpDir.asFile.get(),
-                bootClasspath = bootClasspath.files,
-                minSdk = minSdk.get(),
-                enableBugFixForJacoco = enableBugFixForJacoco.get(),
-                verbose = Logger.getLogger(DesugarTask::class.java).isDebugEnabled,
-                executorFacade = executorFacade
-            ).doProcess()
-        }
+        val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
+        DesugarTaskDelegate(
+            initiator = this,
+            projectClasses = projectClasses.files,
+            subProjectClasses = subProjectClasses.files,
+            externaLibsClasses = libs,
+            desugaringClasspath = desugaringClasspath.files,
+            projectOutput = projectOutput.asFile.get(),
+            subProjectOutput = subProjectOutput.asFile.get(),
+            externalLibsOutput = externalLibsOutput.asFile.get(),
+            tmpDir = tmpDir.asFile.get(),
+            bootClasspath = bootClasspath.files,
+            minSdk = minSdk.get(),
+            enableBugFixForJacoco = enableBugFixForJacoco.get(),
+            verbose = Logger.getLogger(DesugarTask::class.java).isDebugEnabled,
+            workerExecutor = workerExecutor
+        ).doProcess()
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
@@ -226,6 +225,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 }
 
 class DesugarTaskDelegate(
+    private val initiator: AndroidVariantTask,
     private val projectClasses: Set<File>,
     private val subProjectClasses: Set<File>,
     private val externaLibsClasses: List<File>,
@@ -238,7 +238,7 @@ class DesugarTaskDelegate(
     private val minSdk: Int,
     private val enableBugFixForJacoco: Boolean,
     private val verbose: Boolean,
-    private val executorFacade: WorkerExecutorFacade
+    private val workerExecutor: WorkerExecutor
 ) {
 
     fun doProcess() {
@@ -270,17 +270,17 @@ class DesugarTaskDelegate(
 
             loggerWrapper.info("Desugar process args: $desugarArgs")
 
-            executorFacade.submit(
-                DesugarWorkerItem.DesugarAction::class.java, WorkerExecutorFacade.Configuration(
-                    isolationMode = WorkerExecutorFacade.IsolationMode.PROCESS,
-                    classPath = setOf(desugarJar.value),
-                    parameter = DesugarWorkerItem.DesugarActionParams(desugarArgs),
-                    jvmArgs = listOf(
-                        "-Xmx64m",
-                        "-Djdk.internal.lambda.dumpProxyClasses=$lambdaDir"
-                    )
+
+            workerExecutor.processIsolation() {
+                it.classpath.setFrom(desugarJar.value)
+                it.forkOptions.jvmArgs = listOf(
+                    "-Xmx64m",
+                    "-Djdk.internal.lambda.dumpProxyClasses=$lambdaDir"
                 )
-            )
+            }.submit(DesugarWorkerItem.DesugarAction::class.java) {
+                it.initializeFromAndroidVariantTask(initiator)
+                it.args.set(desugarArgs)
+            }
         }
     }
 
