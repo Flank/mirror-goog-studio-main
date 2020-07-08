@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.getChangesInSerializableForm
@@ -32,6 +33,8 @@ import com.android.resources.ResourceFolderType
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -41,10 +44,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
-import java.io.Serializable
-import java.lang.RuntimeException
 import java.nio.file.Files
-import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
@@ -80,41 +80,40 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
         } else {
             emptyList()
         }
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-              GenerateProguardRulesRunnable::class.java,
-              GenerateProguardRulesParams(
-                manifestFile = File(manifest),
-                proguardOutputFile = proguardOutputFile.get().asFile,
-                inputResourcesDir = inputResourcesDir.get().asFile,
-                changedResources = changedResources,
-                isIncremental = isIncremental
-              ))
+        workerExecutor.noIsolation().submit(
+            GenerateProguardRulesWorkAction::class.java
+        ) {
+            it.initializeFromAndroidVariantTask(this)
+            it.manifestFile.set(File(manifest))
+            it.proguardOutputFile.set(proguardOutputFile)
+            it.inputResourcesDir.set(inputResourcesDir)
+            it.changedResources.set(changedResources)
+            it.incremental.set(inputChanges.isIncremental)
         }
     }
 
-    data class GenerateProguardRulesParams(
-        val manifestFile: File,
-        val proguardOutputFile: File,
-        val inputResourcesDir: File,
-        val changedResources: Collection<SerializableChange>,
-        val isIncremental: Boolean
-    ): Serializable
-
-    class GenerateProguardRulesRunnable @Inject constructor(
-        private val params: GenerateProguardRulesParams
-    ): Runnable {
-        override fun run() {
-            if (canBeProcessedIncrementally(params)) {
-                runIncrementalTask(params)
-                return
-            }
-            runFullTask(params)
+    abstract class GenerateProguardRulesWorkAction
+        : ProfileAwareWorkAction<GenerateProguardRulesWorkAction.Params>()
+    {
+        abstract class Params : ProfileAwareWorkAction.Parameters() {
+            abstract val manifestFile: RegularFileProperty
+            abstract val proguardOutputFile: RegularFileProperty
+            abstract val inputResourcesDir: DirectoryProperty
+            abstract val changedResources: ListProperty<SerializableChange>
+            abstract val incremental: Property<Boolean>
         }
 
-        private fun canBeProcessedIncrementally(params: GenerateProguardRulesParams): Boolean =
-            params.changedResources.all { canResourcesBeProcessedIncrementally(it) }
-            && params.isIncremental
+        override fun run() {
+            if (canBeProcessedIncrementally(parameters)) {
+                runIncrementalTask(parameters)
+                return
+            }
+            runFullTask(parameters)
+        }
+
+        private fun canBeProcessedIncrementally(params: Params): Boolean =
+            params.changedResources.get().all { canResourcesBeProcessedIncrementally(it) }
+                    && params.incremental.get()
     }
 
     class CreationAction(
@@ -162,24 +161,25 @@ internal fun canResourcesBeProcessedIncrementally(resourceChanges: SerializableC
       else -> false
   }
 
-internal fun runFullTask(params: GenerateLibraryProguardRulesTask.GenerateProguardRulesParams) {
+internal fun runFullTask(
+    params: GenerateLibraryProguardRulesTask.GenerateProguardRulesWorkAction.Params) {
     // Generate `aapt_rules.txt` containing keep rules for Proguard.
     Files.write(
-      params.proguardOutputFile.toPath(),
+      params.proguardOutputFile.get().asFile.toPath(),
       generateMinifyKeepRules(
-        parseManifest(params.manifestFile), params.inputResourcesDir)
+        parseManifest(params.manifestFile.get().asFile), params.inputResourcesDir.get().asFile)
     )
 }
 
 internal fun runIncrementalTask(
-  params: GenerateLibraryProguardRulesTask.GenerateProguardRulesParams) {
-    if (!params.proguardOutputFile.exists()) {
+  params: GenerateLibraryProguardRulesTask.GenerateProguardRulesWorkAction.Params) {
+    if (!params.proguardOutputFile.get().asFile.exists()) {
         Logging.getLogger(GenerateLibraryProguardRulesTask::class.java)
-          .warn("Cannot find file: ${params.proguardOutputFile.path}")
+          .warn("Cannot find file: ${params.proguardOutputFile.get().asFile.path}")
         runFullTask(params)
         return
     }
-    val addedLayoutFiles = params.changedResources
+    val addedLayoutFiles = params.changedResources.get()
       .filter {
           isLayoutFile(it.file) && it.fileStatus == FileStatus.NEW
       }
@@ -189,7 +189,7 @@ internal fun runIncrementalTask(
     if (addedLayoutFiles.none()) {
         return
     }
-    val currentKeepRules = parseMinifiedKeepRules(params.proguardOutputFile)
+    val currentKeepRules = parseMinifiedKeepRules(params.proguardOutputFile.get().asFile)
     val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
     addedLayoutFiles.forEach { addedLayoutFile ->
         generateKeepRulesFromLayoutXmlFile(
@@ -198,7 +198,7 @@ internal fun runIncrementalTask(
     val contentsToWrite =
       "# Generated by the gradle plugin\n${currentKeepRules.joinToString("\n")}"
         .toByteArray()
-    Files.write(params.proguardOutputFile.toPath(), contentsToWrite)
+    Files.write(params.proguardOutputFile.get().asFile.toPath(), contentsToWrite)
 }
 
 private fun isLayoutFile(file: File): Boolean =
