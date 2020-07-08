@@ -97,24 +97,17 @@ abstract class MergeNativeLibsTask
     abstract val unfilteredProjectNativeLibs: ConfigurableFileCollection
 
     override fun doFullTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeJavaResRunnable::class.java,
-                MergeJavaResRunnable.Params(
-                    unfilteredProjectNativeLibs.files,
-                    subProjectNativeLibs.files,
-                    externalLibNativeLibs.files,
-                    null,
-                    outputDir.get().asFile,
-                    packagingOptions,
-                    incrementalStateFile,
-                    false,
-                    cacheDir.get().asFile,
-                    null,
-                    NATIVE_LIBS,
-                    listOf()
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.projectJavaRes.from(unfilteredProjectNativeLibs)
+            it.subProjectJavaRes.from(subProjectNativeLibs)
+            it.externalLibJavaRes.from(externalLibNativeLibs)
+            it.outputDirectory.set(outputDir)
+            it.packagingOptions.set(packagingOptions)
+            it.incrementalStateFile.set(incrementalStateFile)
+            it.incremental.set(false)
+            it.cacheDir.set(cacheDir)
+            it.contentType.set(NATIVE_LIBS)
         }
     }
 
@@ -123,24 +116,18 @@ abstract class MergeNativeLibsTask
             doFullTaskAction()
             return
         }
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeJavaResRunnable::class.java,
-                MergeJavaResRunnable.Params(
-                    unfilteredProjectNativeLibs.files,
-                    subProjectNativeLibs.files,
-                    externalLibNativeLibs.files,
-                    null,
-                    outputDir.get().asFile,
-                    packagingOptions,
-                    incrementalStateFile,
-                    true,
-                    cacheDir.get().asFile,
-                    changedInputs,
-                    NATIVE_LIBS,
-                    listOf()
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.projectJavaRes.from(unfilteredProjectNativeLibs)
+            it.subProjectJavaRes.from(subProjectNativeLibs)
+            it.externalLibJavaRes.from(externalLibNativeLibs)
+            it.outputDirectory.set(outputDir)
+            it.packagingOptions.set(packagingOptions)
+            it.incrementalStateFile.set(incrementalStateFile)
+            it.incremental.set(true)
+            it.cacheDir.set(cacheDir)
+            it.changedInputs.set(changedInputs)
+            it.contentType.set(NATIVE_LIBS)
         }
     }
 

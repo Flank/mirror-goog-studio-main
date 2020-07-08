@@ -16,36 +16,24 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
-import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
-import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
-import com.android.build.api.transform.QualifiedContent.ScopeType
-import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.dsl.PackagingOptions
-import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
-import com.android.builder.files.IncrementalRelativeFileSets
-import com.android.builder.files.RelativeFile
-import com.android.builder.files.RelativeFiles
-import com.android.builder.files.ZipCentralDirectory
 import com.android.builder.merge.DuplicateRelativeFileException
-import com.android.builder.merge.IncrementalFileMergerInput
-import com.android.builder.merge.LazyIncrementalFileMergerInput
 import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.resources.FileStatus
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
-import com.android.tools.build.apkzlib.utils.CachedSupplier
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
-import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -55,24 +43,11 @@ import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import kotlin.test.assertFailsWith
 
-/** Test cases for [MergeJavaResourcesDelegate].  */
-class MergeJavaResourcesDelegateTest {
+/** Test cases for [MergeJavaResWorkAction].  */
+class MergeJavaResourceDelegateTest {
 
     @get:Rule
     var tmpDir = TemporaryFolder()
-
-    private lateinit var outputFile: File
-    private lateinit var outputDir: File
-    private lateinit var packagingOptions: PackagingOptions
-    private lateinit var incrementalStateFile: File
-
-    @Before
-    fun setUp() {
-        outputFile = File(tmpDir.root, "out.jar")
-        outputDir = File(tmpDir.root, "out")
-        packagingOptions = PackagingOptions()
-        incrementalStateFile = File(tmpDir.root, "merge-state")
-    }
 
     @Test
     fun testMergeResources() {
@@ -82,33 +57,52 @@ class MergeJavaResourcesDelegateTest {
             it.add("fileEndingWithDot.", ByteArrayInputStream(ByteArray(0)))
             it.add("fileNotEndingWithDot", ByteArrayInputStream(ByteArray(0)))
         }
-        val input1 = createIncrementalFilerMergerInputFromJar(jarFile1)
-
         // Create second jar file containing some resources to merge, and some to exclude
         val jarFile2 = File(tmpDir.root, "jarFile2.jar")
         ZFile(jarFile2).use {
             it.add("javaResFromJarFile2", ByteArrayInputStream(ByteArray(0)))
             it.add("LICENSE", ByteArrayInputStream(ByteArray(0)))
         }
-        val input2 = createIncrementalFilerMergerInputFromJar(jarFile2)
 
-        val contentMap = mutableMapOf(
-            Pair(input1, createQualifiedContent(jarFile1, PROJECT, RESOURCES)),
-            Pair(input2, createQualifiedContent(jarFile2, SUB_PROJECTS, RESOURCES))
-        )
-
-        val delegate = MergeJavaResourcesDelegate(
-            listOf(input1, input2),
-            outputFile,
-            contentMap,
-            ParsedPackagingOptions(packagingOptions),
-            RESOURCES,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
-
-        delegate.run()
+        val outputFile = File(tmpDir.root, "out.jar")
+        val packagingOptions = PackagingOptions()
+        val incrementalStateFile = File(tmpDir.root, "merge-state")
+        val cacheDir = File(tmpDir.root, "cacheDir")
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile1)
+                    override val subProjectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile2)
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile =
+                        FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
+                    override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(false)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        )
+                    override val contentType = FakeGradleProperty(RESOURCES as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
@@ -147,31 +141,53 @@ class MergeJavaResourcesDelegateTest {
             it.addEntry("from_jar.compress", ByteArrayInputStream(ByteArray(100)))
             it.addEntry("from_jar.no_compress", ByteArrayInputStream(ByteArray(100)))
         }
-        val jarInput = createIncrementalFilerMergerInputFromJar(jarFile)
 
         // Create directory containing java resources to be merged
         val dir = File(tmpDir.root, "dir")
         FileUtils.createFile(File(dir, "from_dir.compress"), "foo".repeat(100))
         FileUtils.createFile(File(dir, "from_dir.no_compress"), "foo".repeat(100))
-        val dirInput = createIncrementalFilerMergerInputFromDir(dir)
 
-        val contentMap = mutableMapOf(
-            Pair(jarInput, createQualifiedContent(jarFile, SUB_PROJECTS, RESOURCES)),
-            Pair(dirInput, createQualifiedContent(dir, PROJECT, RESOURCES))
-        )
-
-        val delegate = MergeJavaResourcesDelegate(
-            listOf(jarInput, dirInput),
-            outputFile,
-            contentMap,
-            ParsedPackagingOptions(packagingOptions),
-            RESOURCES,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf(".no_compress")
-        )
-
-        delegate.run()
+        val outputFile = File(tmpDir.root, "out.jar")
+        val packagingOptions = PackagingOptions()
+        val incrementalStateFile = File(tmpDir.root, "merge-state")
+        val cacheDir = File(tmpDir.root, "cacheDir")
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(dir)
+                    override val subProjectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile)
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile =
+                        FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
+                    override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(false)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        )
+                    override val contentType = FakeGradleProperty(RESOURCES as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java).also {
+                            it.add(".no_compress")
+                        }
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // Make sure the output is a jar with entries having the expected compression
         assertThat(outputFile).isFile()
@@ -190,34 +206,52 @@ class MergeJavaResourcesDelegateTest {
         FileUtils.createFile(File(dir1, "x86/foo.so"), "foo")
         FileUtils.createFile(File(dir1, "x86/bar.so"), "bar")
         FileUtils.createFile(File(dir1, "x86/notAnSoFile"), "ignore me")
-        val input1 = createIncrementalFilerMergerInputFromDir(dir1)
 
         // Create second dir containing native libs to be merged
         val dir2 = File(tmpDir.root, "dir2")
         FileUtils.createFile(File(dir2, "x86/baz.so"), "baz")
         FileUtils.createFile(File(dir2, "x86/exclude.so"), "exclude me")
-        val input2 = createIncrementalFilerMergerInputFromDir(dir2)
 
-        val contentMap = mutableMapOf(
-            Pair(input1, createQualifiedContent(dir1, PROJECT, NATIVE_LIBS)),
-            Pair(input2, createQualifiedContent(dir2, SUB_PROJECTS, NATIVE_LIBS))
-        )
-
+        val outputDir = File(tmpDir.root, "out")
         // edit packagingOptions to exclude exclude.so
-        packagingOptions.exclude("**/exclude.so")
-
-        val delegate = MergeJavaResourcesDelegate(
-            listOf(input1, input2),
-            outputDir,
-            contentMap,
-            ParsedPackagingOptions(packagingOptions),
-            NATIVE_LIBS,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
-
-        delegate.run()
+        val packagingOptions = PackagingOptions().also { it.exclude("**/exclude.so") }
+        val incrementalStateFile = File(tmpDir.root, "merge-state")
+        val cacheDir = File(tmpDir.root, "cacheDir")
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(dir1)
+                    override val subProjectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(dir2)
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile = FakeObjectFactory.factory.fileProperty()
+                    override val outputDirectory =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(false)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        )
+                    override val contentType = FakeGradleProperty(NATIVE_LIBS as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // Make sure the output is a dir with expected contents
         assertThat(outputDir).isDirectory()
@@ -235,26 +269,50 @@ class MergeJavaResourcesDelegateTest {
         ZFile(jarFile).use {
             it.add("javaRes1", ByteArrayInputStream(ByteArray(0)))
         }
-        val input = createIncrementalFilerMergerInputFromJar(jarFile)
 
-        val contentMap =
-            mutableMapOf(Pair(input, createQualifiedContent(jarFile, PROJECT, RESOURCES)))
-
-        val delegate = MergeJavaResourcesDelegate(
-            listOf(input),
-            outputFile,
-            contentMap,
-            ParsedPackagingOptions(packagingOptions),
-            RESOURCES,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
+        val outputFile = File(tmpDir.root, "out.jar")
+        val packagingOptions = PackagingOptions()
+        val incrementalStateFile = File(tmpDir.root, "merge-state")
+        val cacheDir = File(tmpDir.root, "cacheDir")
 
         // check that no incremental info saved before first merge
         assertThat(incrementalStateFile).doesNotExist()
 
-        delegate.run()
+        // The first time we execute, incremental is false and changedInputs is empty.
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile)
+                    override val subProjectJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile =
+                        FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
+                    override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(false)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        )
+                    override val contentType = FakeGradleProperty(RESOURCES as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // check that incremental info saved
         assertThat(incrementalStateFile).isFile()
@@ -270,33 +328,41 @@ class MergeJavaResourcesDelegateTest {
             it.add(BytesSource(ByteArray(0), "javaRes2", 0))
         }
 
-        val incrementalInput = LazyIncrementalFileMergerInput(
-            jarFile.absolutePath,
-            CachedSupplier {
-                ImmutableMap.of(RelativeFile(jarFile, "javaRes2"), FileStatus.NEW)
-            },
-            CachedSupplier { RelativeFiles.fromZip(ZipCentralDirectory(jarFile)) }
-        )
-
-        val incrementalContentMap = mutableMapOf(
-            Pair(
-                incrementalInput as IncrementalFileMergerInput,
-                createQualifiedContent(jarFile, PROJECT, RESOURCES)
-            )
-        )
-
-        val incrementalDelegate = MergeJavaResourcesDelegate(
-            listOf(incrementalInput),
-            outputFile,
-            incrementalContentMap,
-            ParsedPackagingOptions(packagingOptions),
-            RESOURCES,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
-
-        incrementalDelegate.run()
+        // The second time we execute, incremental is true and changedInputs is not empty.
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile)
+                    override val subProjectJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile =
+                        FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
+                    override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(true)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        ).also { it.put(jarFile, FileStatus.CHANGED) }
+                    override val contentType = FakeGradleProperty(RESOURCES as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
@@ -311,26 +377,50 @@ class MergeJavaResourcesDelegateTest {
         // Create first dir containing native libs to be merged
         val dir = File(tmpDir.root, "dir")
         FileUtils.createFile(File(dir, "x86/foo.so"), "foo")
-        val input = createIncrementalFilerMergerInputFromDir(dir)
 
-        val contentMap =
-            mutableMapOf(Pair(input, createQualifiedContent(dir, PROJECT, NATIVE_LIBS)))
-
-        val delegate = MergeJavaResourcesDelegate(
-            listOf(input),
-            outputDir,
-            contentMap,
-            ParsedPackagingOptions(packagingOptions),
-            NATIVE_LIBS,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
+        val outputDir = File(tmpDir.root, "out")
+        val packagingOptions = PackagingOptions()
+        val incrementalStateFile = File(tmpDir.root, "merge-state")
+        val cacheDir = File(tmpDir.root, "cacheDir")
 
         // check that no incremental info saved before first merge
         assertThat(incrementalStateFile).doesNotExist()
 
-        delegate.run()
+        // The first time we execute, incremental is false and changedInputs is empty.
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(dir)
+                    override val subProjectJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile = FakeObjectFactory.factory.fileProperty()
+                    override val outputDirectory =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(false)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        )
+                    override val contentType = FakeGradleProperty(NATIVE_LIBS as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // check that incremental info saved
         assertThat(incrementalStateFile).isFile()
@@ -340,35 +430,45 @@ class MergeJavaResourcesDelegateTest {
         assertThat(File(outputDir, "lib/x86/bar.so")).doesNotExist()
 
         // Now add a .so file to the dir and merge incrementally
-        FileUtils.createFile(File(dir, "x86/bar.so"), "bar")
+        val addedFile = File(dir, "x86/bar.so")
+        FileUtils.createFile(addedFile, "bar")
 
-        val incrementalInput = LazyIncrementalFileMergerInput(
-            dir.absolutePath,
-            CachedSupplier {
-                ImmutableMap.of(RelativeFile(dir, "x86/bar.so"), FileStatus.NEW)
-            },
-            CachedSupplier { RelativeFiles.fromDirectory(dir) }
-        )
 
-        val incrementalContentMap = mutableMapOf(
-            Pair(
-                incrementalInput as IncrementalFileMergerInput,
-                createQualifiedContent(dir, PROJECT, NATIVE_LIBS)
-            )
-        )
-
-        val incrementalDelegate = MergeJavaResourcesDelegate(
-            listOf(incrementalInput),
-            outputDir,
-            incrementalContentMap,
-            ParsedPackagingOptions(packagingOptions),
-            NATIVE_LIBS,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
-
-        incrementalDelegate.run()
+        // The second time we execute, incremental is true and changedInputs is not empty.
+        object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(dir)
+                    override val subProjectJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val outputFile = FakeObjectFactory.factory.fileProperty()
+                    override val outputDirectory =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(true)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        ).also { it.put(addedFile, FileStatus.NEW) }
+                    override val contentType = FakeGradleProperty(NATIVE_LIBS as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // Make sure the output is a dir with expected contents
         assertThat(outputDir).isDirectory()
@@ -381,72 +481,60 @@ class MergeJavaResourcesDelegateTest {
         // Create jar files from base module and feature with duplicate resources
         val jarFile1 = File(tmpDir.root, "jarFile1.jar")
         ZFile(jarFile1).use { it.add("duplicate", ByteArrayInputStream(ByteArray(0))) }
-        val input1 = createIncrementalFilerMergerInputFromJar(jarFile1, "jarFile1 name")
 
         val jarFile2 = File(tmpDir.root, "jarFile2.jar")
         ZFile(jarFile2).use { it.add("duplicate", ByteArrayInputStream(ByteArray(0))) }
-        val input2 = createIncrementalFilerMergerInputFromJar(jarFile2, "jarFile2 name")
 
-        val contentMap = mutableMapOf(
-            Pair(input1, createQualifiedContent(jarFile1, PROJECT, RESOURCES)),
-            Pair(input2, createQualifiedContent(jarFile2, FEATURES, RESOURCES))
-        )
+        val outputFile = File(tmpDir.root, "out.jar")
+        val packagingOptions = PackagingOptions()
+        val incrementalStateFile = File(tmpDir.root, "merge-state")
+        val cacheDir = File(tmpDir.root, "cacheDir")
+        val workAction = object : MergeJavaResWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val projectJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile1)
+                    override val subProjectJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val externalLibJavaRes = FakeObjectFactory.factory.fileCollection()
+                    override val featureJavaRes =
+                        FakeObjectFactory.factory.fileCollection().from(jarFile2)
+                    override val outputFile =
+                        FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
+                    override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
+                    override val packagingOptions =
+                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val incrementalStateFile =
+                        FakeObjectFactory.factory.fileProperty().also {
+                            it.set(incrementalStateFile)
+                        }
+                    override val incremental = FakeGradleProperty(false)
+                    override val cacheDir =
+                        FakeObjectFactory.factory.directoryProperty().also { it.set(cacheDir) }
+                    override val changedInputs =
+                        FakeObjectFactory.factory.mapProperty(
+                            File::class.java,
+                            FileStatus::class.java
+                        )
+                    override val contentType = FakeGradleProperty(RESOURCES as ContentType)
+                    override val noCompress =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }
 
-        val delegate = MergeJavaResourcesDelegate(
-            listOf(input1, input2),
-            outputFile,
-            contentMap,
-            ParsedPackagingOptions(packagingOptions),
-            RESOURCES,
-            incrementalStateFile,
-            isIncremental = true,
-            noCompress = listOf()
-        )
-
-        val e = assertFailsWith<DuplicateRelativeFileException> { delegate.run() }
+        val e = assertFailsWith<DuplicateRelativeFileException> { workAction.execute() }
         assertThat(e.message).isEqualTo(
             """
                 2 files found with path 'duplicate' from inputs:
-                 - jarFile1 name
-                 - jarFile2 name
+                 - ${jarFile1.absolutePath}
+                 - ${jarFile2.absolutePath}
                 Adding a packagingOptions block may help, please refer to
                 https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html
                 for more information
             """.trimIndent()
         )
-    }
-
-    private fun createIncrementalFilerMergerInputFromJar(
-        jar: File,
-        name: String = jar.absolutePath
-    ): IncrementalFileMergerInput {
-        assertThat(jar).isFile()
-        return LazyIncrementalFileMergerInput(
-            name,
-            CachedSupplier { IncrementalRelativeFileSets.fromZip(jar) },
-            CachedSupplier { RelativeFiles.fromZip(ZipCentralDirectory(jar)) }
-        )
-    }
-
-    private fun createIncrementalFilerMergerInputFromDir(dir: File): IncrementalFileMergerInput {
-        assertThat(dir).isDirectory()
-        return LazyIncrementalFileMergerInput(
-            dir.absolutePath,
-            CachedSupplier { IncrementalRelativeFileSets.fromDirectory(dir) },
-            CachedSupplier { RelativeFiles.fromDirectory(dir) }
-        )
-    }
-
-    private fun createQualifiedContent(
-        file: File,
-        scopeType: ScopeType,
-        contentType: ContentType
-    ): QualifiedContent {
-        return object: QualifiedContent {
-            override fun getName() = "foo"
-            override fun getFile() = file
-            override fun getContentTypes() = mutableSetOf(contentType)
-            override fun getScopes() = mutableSetOf(scopeType)
-        }
     }
 }

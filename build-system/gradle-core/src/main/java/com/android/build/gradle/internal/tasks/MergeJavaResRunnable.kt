@@ -24,76 +24,87 @@ import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.builder.files.KeyedFileCache
 import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
- * Runnable to merge java resources, whether regular java resources or native libs
+ * [ProfileAwareWorkAction] to merge java resources, whether regular java resources or native libs
  */
-class MergeJavaResRunnable @Inject constructor(val params: Params) : Runnable {
+abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkAction.Params>() {
     override fun run() {
-        if (!params.isIncremental) {
-            if (params.output.isDirectory) {
-                FileUtils.cleanOutputDir(params.output)
-            } else {
-                FileUtils.deleteIfExists(params.output)
-            }
+        val isIncremental = parameters.incremental.get()
+        val outputFile = parameters.outputFile.asFile.orNull
+        val outputDirectory = parameters.outputDirectory.asFile.orNull
+        val output: File =
+            outputFile
+                ?: outputDirectory
+                ?: throw RuntimeException("outputFile and outputDir cannot both be null")
+        if (!isIncremental) {
+            outputFile?.also { FileUtils.deleteIfExists(it) }
+            outputDirectory?.also { FileUtils.cleanOutputDir(it) }
         }
-        FileUtils.mkdirs(params.cacheDir)
+        val cacheDir = parameters.cacheDir.asFile.get().also { FileUtils.mkdirs(it) }
 
-        val zipCache = KeyedFileCache(params.cacheDir, KeyedFileCache::fileNameKey)
+        val zipCache = KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey)
         val cacheUpdates = mutableListOf<Runnable>()
         val contentMap = mutableMapOf<IncrementalFileMergerInput, QualifiedContent>()
 
         val inputMap = mutableMapOf<File, ScopeType>()
-        params.projectJavaRes.forEach { inputMap[it] = PROJECT}
-        params.subProjectJavaRes?.forEach { inputMap[it] = SUB_PROJECTS}
-        params.externalLibJavaRes?.forEach { inputMap[it] = EXTERNAL_LIBRARIES}
-        params.featureJavaRes?.forEach { inputMap[it] = InternalScope.FEATURES}
+        parameters.projectJavaRes.forEach { inputMap[it] = PROJECT}
+        parameters.subProjectJavaRes.forEach { inputMap[it] = SUB_PROJECTS}
+        parameters.externalLibJavaRes.forEach { inputMap[it] = EXTERNAL_LIBRARIES}
+        parameters.featureJavaRes.forEach { inputMap[it] = InternalScope.FEATURES}
 
+        val contentType = parameters.contentType.get()
         val inputs =
             toInputs(
                 inputMap,
-                params.changedInputs,
+                parameters.changedInputs.orNull,
                 zipCache,
                 cacheUpdates,
-                !params.isIncremental,
-                params.contentType,
+                !isIncremental,
+                contentType,
                 contentMap
             )
 
         val mergeJavaResDelegate =
             MergeJavaResourcesDelegate(
                 inputs,
-                params.output,
+                output,
                 contentMap,
-                ParsedPackagingOptions(params.packagingOptions),
-                params.contentType,
-                params.incrementalStateFile,
-                params.isIncremental,
-                params.noCompress
+                ParsedPackagingOptions(parameters.packagingOptions.get()),
+                contentType,
+                parameters.incrementalStateFile.asFile.get(),
+                isIncremental,
+                parameters.noCompress.get()
             )
         mergeJavaResDelegate.run()
         cacheUpdates.forEach(Runnable::run)
     }
 
-    class Params(
-        val projectJavaRes: Collection<File>,
-        val subProjectJavaRes: Collection<File>?,
-        val externalLibJavaRes: Collection<File>?,
-        val featureJavaRes: Collection<File>?,
-        val output: File,
-        val packagingOptions: SerializablePackagingOptions,
-        val incrementalStateFile: File,
-        val isIncremental: Boolean,
-        val cacheDir: File,
-        val changedInputs: Map<File, FileStatus>?,
-        val contentType: ContentType,
-        val noCompress: Collection<String>
-    ): Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val projectJavaRes: ConfigurableFileCollection
+        abstract val subProjectJavaRes: ConfigurableFileCollection
+        abstract val externalLibJavaRes: ConfigurableFileCollection
+        abstract val featureJavaRes: ConfigurableFileCollection
+        abstract val outputFile: RegularFileProperty
+        abstract val outputDirectory: DirectoryProperty
+        abstract val packagingOptions: Property<SerializablePackagingOptions>
+        abstract val incrementalStateFile: RegularFileProperty
+        abstract val incremental: Property<Boolean>
+        abstract val cacheDir: DirectoryProperty
+        abstract val changedInputs: MapProperty<File, FileStatus>
+        abstract val contentType: Property<ContentType>
+        abstract val noCompress: ListProperty<String>
+    }
 }

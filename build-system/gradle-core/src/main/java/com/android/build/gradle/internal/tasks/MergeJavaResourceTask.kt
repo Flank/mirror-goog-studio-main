@@ -123,24 +123,19 @@ abstract class MergeJavaResourceTask
     private lateinit var unfilteredProjectJavaRes: FileCollection
 
     override fun doFullTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeJavaResRunnable::class.java,
-                MergeJavaResRunnable.Params(
-                    unfilteredProjectJavaRes.files,
-                    subProjectJavaRes?.files,
-                    externalLibJavaRes?.files,
-                    featureJavaRes?.files,
-                    outputFile.get().asFile,
-                    packagingOptions,
-                    incrementalStateFile,
-                    false,
-                    cacheDir,
-                    null,
-                    RESOURCES,
-                    noCompress.orNull ?: listOf()
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.projectJavaRes.from(unfilteredProjectJavaRes)
+            it.subProjectJavaRes.from(subProjectJavaRes)
+            it.externalLibJavaRes.from(externalLibJavaRes)
+            it.featureJavaRes.from(featureJavaRes)
+            it.outputFile.set(outputFile)
+            it.packagingOptions.set(packagingOptions)
+            it.incrementalStateFile.set(incrementalStateFile)
+            it.incremental.set(false)
+            it.cacheDir.set(cacheDir)
+            it.contentType.set(RESOURCES)
+            it.noCompress.set(noCompress)
         }
     }
 
@@ -149,24 +144,20 @@ abstract class MergeJavaResourceTask
             doFullTaskAction()
             return
         }
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeJavaResRunnable::class.java,
-                MergeJavaResRunnable.Params(
-                    unfilteredProjectJavaRes.files,
-                    subProjectJavaRes?.files,
-                    externalLibJavaRes?.files,
-                    featureJavaRes?.files,
-                    outputFile.get().asFile,
-                    packagingOptions,
-                    incrementalStateFile,
-                    true,
-                    cacheDir,
-                    changedInputs,
-                    RESOURCES,
-                    noCompress.orNull ?: listOf()
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.projectJavaRes.from(unfilteredProjectJavaRes)
+            it.subProjectJavaRes.from(subProjectJavaRes)
+            it.externalLibJavaRes.from(externalLibJavaRes)
+            it.featureJavaRes.from(featureJavaRes)
+            it.outputFile.set(outputFile)
+            it.packagingOptions.set(packagingOptions)
+            it.incrementalStateFile.set(incrementalStateFile)
+            it.incremental.set(true)
+            it.cacheDir.set(cacheDir)
+            it.changedInputs.set(changedInputs)
+            it.contentType.set(RESOURCES)
+            it.noCompress.set(noCompress)
         }
     }
 
