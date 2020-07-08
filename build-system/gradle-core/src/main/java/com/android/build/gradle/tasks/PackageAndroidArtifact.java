@@ -90,7 +90,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -510,7 +509,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
     }
 
-    public abstract static class SplitterParams implements DecoratedWorkParameters, Serializable {
+    public abstract static class SplitterParams implements DecoratedWorkParameters {
         @NonNull
         public abstract Property<VariantOutputImpl.SerializedForm> getVariantOutput();
 

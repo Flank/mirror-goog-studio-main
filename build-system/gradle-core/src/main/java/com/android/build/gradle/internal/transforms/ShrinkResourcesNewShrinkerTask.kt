@@ -64,7 +64,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
 
 /**
@@ -223,7 +222,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
     }
 }
 
-abstract class ShrinkProtoResourcesParams : DecoratedWorkParameters, Serializable {
+abstract class ShrinkProtoResourcesParams : DecoratedWorkParameters {
     abstract val usePreciseShrinking: Property<Boolean>
     abstract val requiresInitialConversionToProto: Property<Boolean>
 
