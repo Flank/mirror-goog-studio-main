@@ -173,9 +173,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     @NonNull
     private static ResourceCompilationService getResourceProcessor(
-            String projectName,
-            String owner,
-            @NonNull WorkerExecutorFacade workerExecutor,
+            @NonNull MergeResources mergeResourcesTask,
             SyncOptions.ErrorFormatMode errorFormatMode,
             ImmutableSet<Flag> flags,
             boolean processResources,
@@ -196,9 +194,8 @@ public abstract class MergeResources extends ResourceAwareTask {
         Aapt2DaemonServiceKey aapt2ServiceKey = Aapt2Daemon.registerAaptService(aapt2Input);
 
         return new WorkerExecutorResourceCompilationService(
-                projectName,
-                owner,
-                workerExecutor,
+                mergeResourcesTask.parallelism,
+                mergeResourcesTask,
                 aapt2ServiceKey,
                 errorFormatMode,
                 useJvmResourceCompiler);
@@ -227,6 +224,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
 
     private SyncOptions.ErrorFormatMode errorFormatMode;
+    private int parallelism = getProject().getGradle().getStartParameter().getMaxWorkerCount();
 
     @Internal
     public abstract Property<String> getAaptEnv();
@@ -261,9 +259,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
                 ResourceCompilationService resourceCompiler =
                         getResourceProcessor(
-                                getProjectName(),
-                                getPath(),
-                                workerExecutorFacade,
+                                this,
                                 errorFormatMode,
                                 flags,
                                 processResources,
@@ -434,9 +430,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
                     ResourceCompilationService resourceCompiler =
                             getResourceProcessor(
-                                    getProjectName(),
-                                    getPath(),
-                                    workerExecutorFacade,
+                                    this,
                                     errorFormatMode,
                                     flags,
                                     processResources,
