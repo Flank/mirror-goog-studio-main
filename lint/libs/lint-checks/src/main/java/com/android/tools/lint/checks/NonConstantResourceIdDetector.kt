@@ -71,7 +71,8 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
                             NON_CONSTANT_RESOURCE_ID,
                             switchCase,
                             location,
-                            "Non-constant resource ID should not be used as switch case"
+                            "Resource IDs will be non-final in Android Gradle Plugin version 5.0, " +
+                                    "avoid using them in switch case statements"
                         )
                     }
                 }
@@ -87,7 +88,8 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
                         NON_CONSTANT_RESOURCE_ID,
                         attributeExpression,
                         location,
-                        "Non-constant resource ID should not be used as annotation attribute"
+                        "Resource IDs will be non-final in Android Gradle Plugin version 5.0, " +
+                                "avoid using them as annotation attributes"
                     )
                 }
             }
