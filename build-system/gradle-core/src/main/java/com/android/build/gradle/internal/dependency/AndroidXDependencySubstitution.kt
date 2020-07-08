@@ -83,26 +83,31 @@ object AndroidXDependencySubstitution {
             }
         }
 
+        // Create the reason string here to avoid too many strings being created in the rules below
+        // (as Gradle keeps these strings in memory).
         val becauseJetifierIsOn ="${BooleanOption.ENABLE_JETIFIER.propertyName}=true"
 
-        project.configurations.all { config ->
-            // Only consider resolvable configurations
-            if (!config.isCanBeResolved) {
+        project.configurations.all { configuration ->
+            // Apply the rules just before the configurations are resolved because too many rules
+            // could significantly impact memory usage and build speed. (Many configurations are not
+            // resolvable or resolvable but not actually resolved during a build.)
+            if (!configuration.isCanBeResolved) {
                 return@all
             }
-
-            val mappings = if (skipDataBindingBaseLibrarySubstitution(config)) {
-                androidXMappingsWithoutDataBindingBaseLibrary
-            } else {
-                androidXMappings
-            }
-            config.resolutionStrategy.dependencySubstitution {
-                for (entry in mappings) {
-                    // entry.key is in the form of "group:module" (without a version), and Gradle
-                    // accepts that form.
-                    it.substitute(it.module(entry.key))
-                        .because(becauseJetifierIsOn)
-                        .with(it.module(entry.value))
+            configuration.incoming.beforeResolve {
+                configuration.resolutionStrategy.dependencySubstitution {
+                    val mappings = if (skipDataBindingBaseLibrarySubstitution(configuration)) {
+                        androidXMappingsWithoutDataBindingBaseLibrary
+                    } else {
+                        androidXMappings
+                    }
+                    for (entry in mappings) {
+                        // entry.key is in the form of "group:module" (without a version), and
+                        // Gradle accepts that form.
+                        it.substitute(it.module(entry.key))
+                            .because(becauseJetifierIsOn)
+                            .with(it.module(entry.value))
+                    }
                 }
             }
         }
