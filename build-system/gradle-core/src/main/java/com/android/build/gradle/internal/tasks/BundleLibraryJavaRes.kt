@@ -22,9 +22,11 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -37,12 +39,9 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
-import java.io.Serializable
 import java.nio.file.Files
 import java.util.function.Predicate
 import java.util.zip.Deflater
-import javax.inject.Inject
 
 /** Bundle all library Java resources in a jar.  */
 @CacheableTask
@@ -81,16 +80,12 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     private lateinit var unfilteredResources: FileCollection
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                BundleLibraryJavaResRunnable::class.java,
-                BundleLibraryJavaResRunnable.Params(
-                    output = output!!.get().asFile,
-                    inputs = unfilteredResources.files,
-                    jarCreatorType = jarCreatorType,
-                    compressionLevel = if (debuggable.get()) Deflater.BEST_SPEED else null
-                )
-            )
+        workerExecutor.noIsolation().submit(BundleLibraryJavaResRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.output.set(output)
+            it.inputs.from(unfilteredResources)
+            it.jarCreatorType.set(jarCreatorType)
+            it.compressionLevel.set(if (debuggable.get()) Deflater.BEST_SPEED else null)
         }
     }
 
@@ -145,26 +140,28 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     }
 }
 
-class BundleLibraryJavaResRunnable @Inject constructor(val params: Params) : Runnable {
-    data class Params(
-        val output: File,
-        val inputs: Set<File>,
-        val jarCreatorType: JarCreatorType,
-        val compressionLevel: Int?
-    ) : Serializable
+abstract class BundleLibraryJavaResRunnable : ProfileAwareWorkAction<BundleLibraryJavaResRunnable.Params>() {
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val output: RegularFileProperty
+        abstract val inputs: ConfigurableFileCollection
+        abstract val jarCreatorType: Property<JarCreatorType>
+        abstract val compressionLevel: Property<Int>
+    }
 
     override fun run() {
-        Files.deleteIfExists(params.output.toPath())
-        params.output.parentFile.mkdirs()
+        with(parameters.output.asFile.get()) {
+            Files.deleteIfExists(toPath())
+            parentFile.mkdirs()
+        }
 
         val predicate = Predicate<String> { entry -> !entry.endsWith(SdkConstants.DOT_CLASS) }
         JarCreatorFactory.make(
-            params.output.toPath(),
+            parameters.output.asFile.get().toPath(),
             predicate,
-            params.jarCreatorType
+            parameters.jarCreatorType.get()
         ).use { jarCreator ->
-            params.compressionLevel?.let { jarCreator.setCompressionLevel(it) }
-            params.inputs.forEach { base ->
+            parameters.compressionLevel.orNull?.let { jarCreator.setCompressionLevel(it) }
+            parameters.inputs.forEach { base ->
                 if (base.isDirectory) {
                     jarCreator.addDirectory(base.toPath())
                 } else if (base.isFile && base.name.endsWith(SdkConstants.DOT_JAR)) {
