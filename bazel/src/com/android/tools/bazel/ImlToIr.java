@@ -93,7 +93,7 @@ public class ImlToIr {
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
     public IrProject convert(
-            Path workspace, String projectPath, String imlGraph, BazelToolsLogger logger)
+            Configuration config, Path workspace, String projectPath, BazelToolsLogger logger)
             throws IOException {
         String id = PROJECT_IDS.getOrDefault(projectPath, "");
         projectPath = workspace.resolve(projectPath).toString();
@@ -172,8 +172,15 @@ public class ImlToIr {
                         extension.getScope().equals(JpsJavaDependencyScope.TEST);
                 boolean isRuntime = (extension != null) &&
                         extension.getScope().equals(JpsJavaDependencyScope.RUNTIME);
+                boolean isProvided =
+                        (extension != null)
+                                && extension.getScope().equals(JpsJavaDependencyScope.PROVIDED);
                 boolean isExported = (extension != null) && !isRuntime && extension.isExported();
-                IrModule.Scope scope = isTest ? IrModule.Scope.TEST : isRuntime ? IrModule.Scope.RUNTIME : IrModule.Scope.COMPILE;
+                IrModule.Scope scope;
+                if (isTest) scope = IrModule.Scope.TEST;
+                else if (isRuntime) scope = IrModule.Scope.RUNTIME;
+                else if (isProvided) scope = IrModule.Scope.PROVIDED;
+                else scope = IrModule.Scope.COMPILE;
 
                 if (dependency instanceof JpsLibraryDependency) {
                     // A dependency to a jar file
@@ -326,8 +333,8 @@ public class ImlToIr {
             }
         }
 
-        if (imlGraph != null) {
-            dot.saveTo(new File(imlGraph));
+        if (config.imlGraph != null) {
+            dot.saveTo(new File(config.imlGraph));
         }
 
         return irProject;
@@ -380,6 +387,8 @@ public class ImlToIr {
             case TEST: return "green";
             case RUNTIME: return "blue";
             case TEST_RUNTIME: return "green:blue";
+            case PROVIDED:
+                return "red";
         }
         return "";
     }

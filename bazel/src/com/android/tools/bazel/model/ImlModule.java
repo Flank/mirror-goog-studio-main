@@ -43,6 +43,7 @@ public class ImlModule extends BazelRule {
     private Set<BazelRule> runtimeDeps = Sets.newLinkedHashSet();
     private Set<BazelRule> testRuntimeDeps = Sets.newLinkedHashSet();
     private Set<BazelRule> testFriends = Sets.newLinkedHashSet();
+    private Set<BazelRule> bundledDeps = Sets.newLinkedHashSet();
 
     public ImlModule(Package pkg, String name) {
         super(pkg, name);
@@ -68,6 +69,7 @@ public class ImlModule extends BazelRule {
         call.setArgument("runtime_deps", runtimeDeps);
         call.setArgument("test_runtime_deps", testRuntimeDeps);
         call.setArgument("test_friends", testFriends);
+        call.setArgument("bundled_deps", bundledDeps);
 
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
@@ -118,6 +120,10 @@ public class ImlModule extends BazelRule {
             tags.remove(Tag.TEST);
         }
         dependencyTags.put(rule, tags);
+    }
+
+    public void addBundledDep(BazelRule rule) {
+        bundledDeps.add(rule);
     }
 
     public void addTestFriend(BazelRule rule) {

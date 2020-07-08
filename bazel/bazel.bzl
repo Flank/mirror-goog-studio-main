@@ -298,6 +298,7 @@ def _iml_module_impl(ctx):
 
     return struct(
         module = struct(
+            bundled_deps = ctx.files.bundled_deps,
             module_jars = module_jars,
             module_runtime = module_runtime,
             transitive_data = transitive_data,
@@ -341,6 +342,7 @@ _iml_module_ = rule(
         "test_friends": attr.label_list(),
         "data": attr.label_list(allow_files = True),
         "test_data": attr.label_list(allow_files = True),
+        "bundled_deps": attr.label_list(allow_files = True),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_zipper": attr.label(
@@ -541,6 +543,7 @@ def iml_module(
         lint_baseline = None,
         lint_timeout = None,
         back_deps = [],
+        bundled_deps = [],
         exec_properties = {}):
     prod_deps = []
     test_deps = []
@@ -580,6 +583,7 @@ def iml_module(
         data = bundle_data,
         test_data = test_data,
         test_class = test_class,
+        bundled_deps = bundled_deps,
     )
 
     _iml_runtime(

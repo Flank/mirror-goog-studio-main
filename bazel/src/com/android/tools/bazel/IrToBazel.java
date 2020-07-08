@@ -24,7 +24,6 @@ import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.ImlModule;
 import com.android.tools.bazel.model.JavaImport;
 import com.android.tools.bazel.model.JavaLibrary;
-import com.android.tools.bazel.model.Label;
 import com.android.tools.bazel.model.Package;
 import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
@@ -41,15 +40,15 @@ import java.util.Map;
 
 public class IrToBazel {
 
-    private final boolean dryRun;
+    private final Configuration config;
     private final BazelToolsLogger logger;
 
-    public IrToBazel(BazelToolsLogger logger, boolean dryRun) {
-        this.dryRun = dryRun;
+    public IrToBazel(BazelToolsLogger logger, Configuration config) {
+        this.config = config;
         this.logger = logger;
     }
 
-    public int convert(IrProject bazelProject, Configuration config) throws IOException {
+    public int convert(IrProject bazelProject) throws IOException {
 
         File projectDir =
                 bazelProject.getBaseDir().toPath().resolve(bazelProject.getProjectPath()).toFile();
@@ -226,8 +225,14 @@ public class IrToBazel {
                             if (namedLib != null) {
                                 namedLib.addDependency(jarRule, true);
                             } else {
-                                rules.get(module)
-                                        .addDependency(jarRule, dependency.exported, scopes);
+                                ImlModule imlModule = rules.get(module);
+                                imlModule.addDependency(jarRule, dependency.exported, scopes);
+                                if (config.bundleDeps) {
+                                    if (!scopes.contains(ImlModule.Tag.TEST)
+                                            && !dependency.scope.equals(IrModule.Scope.PROVIDED)) {
+                                        imlModule.addBundledDep(jarRule);
+                                    }
+                                }
                             }
                         }
                     }
@@ -243,15 +248,6 @@ public class IrToBazel {
             }
         }
 
-        // Manually export some additional jars that we need
-        for (String s : config.getAdditionalImports()) {
-            Label label = new Label(s);
-            Package pkg = bazel.getPackage(label.pkg);
-            JavaImport imp = new JavaImport(pkg, label.target);
-            imp.addJar(label.target + ".jar");
-            imp.setExport();
-        }
-
         for (Package pkg : bazel.getPackages()) {
             for (BazelRule rule : pkg.getRules()) {
                 if (config.shouldSuppress(rule)) {
@@ -261,7 +257,7 @@ public class IrToBazel {
         }
 
         logger.info("Updating BUILD files...");
-        CountingListener listener = new CountingListener(logger, dryRun);
+        CountingListener listener = new CountingListener(logger, config.dryRun);
         bazel.generate(listener);
 
         logger.info("%d BUILD file(s) updated.", listener.getUpdatedPackages());
