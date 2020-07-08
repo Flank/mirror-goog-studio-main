@@ -1,3 +1,4 @@
+load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
 cc_binary(
@@ -36,5 +37,18 @@ android_cc_binary(
         "//conditions:default": ":transport_main.stripped",
     }),
     filename = "transport",
+    visibility = ["//visibility:public"],
+)
+
+studio_data(
+    name = "transport-bundle",
+    files = [
+        ":android",
+        "//tools/base/transport/native/agent:android",
+    ],
+    mappings = {
+        "tools/base/transport/android/": "transport/",
+        "tools/base/transport/native/agent/android/": "transport/native/agent/",
+    },
     visibility = ["//visibility:public"],
 )

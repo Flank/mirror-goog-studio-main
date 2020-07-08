@@ -1,4 +1,5 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary", "select_android")
+load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 
 # This is the one-and-only "version" rule (to rule them all).
 # Everything within the installer uses the hash value output here to
@@ -305,4 +306,11 @@ cc_test(
 cc_binary(
     name = "executor_test_helper",
     srcs = ["executor/executor_test_helper.cc"],
+)
+
+studio_data(
+    name = "android-installer-bundle",
+    files = [":android-installer"],
+    mappings = {"tools/base/deploy/installer/android-installer/": "installer/"},
+    visibility = ["//visibility:public"],
 )
