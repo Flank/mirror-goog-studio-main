@@ -44,7 +44,7 @@ import java.util.zip.ZipFile
 import kotlin.test.assertFailsWith
 
 /** Test cases for [MergeJavaResWorkAction].  */
-class MergeJavaResourceDelegateTest {
+class MergeJavaResWorkActionTest {
 
     @get:Rule
     var tmpDir = TemporaryFolder()
