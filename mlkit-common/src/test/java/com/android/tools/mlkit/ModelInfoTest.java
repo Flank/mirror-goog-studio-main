@@ -88,6 +88,20 @@ public class ModelInfoTest {
     }
 
     @Test
+    public void testImageClassificationModelWithMultipleLabelFiles()
+            throws TfliteModelException, IOException {
+        ModelInfo modelInfo =
+                ModelInfo.buildFrom(
+                        extractByteBufferFromModel(
+                                "prebuilts/tools/common/mlkit/testData/models/cropnet_classifier_multi_labels.tflite"));
+
+        assertTrue(modelInfo.isMetadataExisted());
+        assertEquals(1, modelInfo.getOutputs().size());
+        // It should select "probability-labels-en.txt", not "probability-labels.txt".
+        assertEquals("probability-labels-en.txt", modelInfo.getOutputs().get(0).getFileName());
+    }
+
+    @Test
     public void testObjectDetectionModelMetadataExtractedCorrectly()
             throws TfliteModelException, IOException {
         ModelInfo modelInfo =
