@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_RES
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.gradle.internal.res.Aapt2CompileRunnable
+import com.android.build.gradle.internal.res.runAapt2Compile
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
@@ -72,14 +72,8 @@ abstract class AarResourcesCompilerTransform :
         }
 
         val aapt2ServiceKey = parameters.aapt2.registerAaptService()
-
-        Aapt2CompileRunnable(
-            Aapt2CompileRunnable.Params(
-                aapt2ServiceKey,
-                requestList,
-                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
-            )
-        ).run()
+        // TODO(b/152323103) errorFormatMode should be implicit
+        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
     }
 
     private fun getPackage(manifest: Path): String =

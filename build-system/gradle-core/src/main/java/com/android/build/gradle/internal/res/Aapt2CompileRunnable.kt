@@ -31,22 +31,12 @@ class Aapt2CompileRunnable @Inject constructor(
 ) : Runnable {
 
     override fun run() {
-        val logger = Logging.getLogger(this::class.java)
-        useAaptDaemon(params.aapt2ServiceKey) { daemon ->
-            params.requests.forEach { request ->
-                try {
-                    daemon.compile(request, LoggerWrapper(logger))
-                } catch (exception: Aapt2Exception) {
-                    throw rewriteCompileException(
-                        exception,
-                        request,
-                        params.errorFormatMode,
-                        params.enableBlame,
-                        logger
-                    )
-                }
-            }
-        }
+        runAapt2Compile(
+            params.aapt2ServiceKey,
+            params.requests,
+            params.errorFormatMode,
+            params.enableBlame
+        )
     }
 
     class Params(
@@ -55,4 +45,28 @@ class Aapt2CompileRunnable @Inject constructor(
         val errorFormatMode: SyncOptions.ErrorFormatMode,
         val enableBlame: Boolean = false
     ) : Serializable
+}
+
+fun runAapt2Compile(
+    aapt2ServiceKey: Aapt2DaemonServiceKey,
+    requests: List<CompileResourceRequest>,
+    errorFormatMode: SyncOptions.ErrorFormatMode,
+    enableBlame: Boolean
+) {
+    val logger = Logging.getLogger(Aapt2CompileRunnable::class.java)
+    useAaptDaemon(aapt2ServiceKey) { daemon ->
+        requests.forEach { request ->
+            try {
+                daemon.compile(request, LoggerWrapper(logger))
+            } catch (exception: Aapt2Exception) {
+                throw rewriteCompileException(
+                    exception,
+                    request,
+                    errorFormatMode,
+                    enableBlame,
+                    logger
+                )
+            }
+        }
+    }
 }
