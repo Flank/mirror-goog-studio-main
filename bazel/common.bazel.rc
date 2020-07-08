@@ -80,10 +80,10 @@ build:release --strip=always
 build:remote_common --config=release
 
 # Use prebuilt JDK when doing local bazel build/test
-build --host_javabase=//prebuilts/studio/jdk:jdk_runtime
-build --javabase=//prebuilts/studio/jdk:jdk_runtime
-build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build --host_javabase=//prebuilts/studio/jdk:jdk11_runtime
+build --javabase=//prebuilts/studio/jdk:jdk11_runtime
+build --host_java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
+build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
 
 # Use prebuilt native toolchain
 build --crosstool_top=@native_toolchain//:toolchain
