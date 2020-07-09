@@ -23,26 +23,22 @@ import static com.android.SdkConstants.currentPlatform;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
  */
-public class ShaderProcessor implements DirectoryWalker.FileAction {
+public class ShaderProcessor {
 
     public static final String EXT_VERT = "vert";
     public static final String EXT_TESC = "tesc";
@@ -51,58 +47,19 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
     public static final String EXT_FRAG = "frag";
     public static final String EXT_COMP = "comp";
 
-    @Nullable private final WorkerExecutorFacade workers;
-    @NonNull private File mNdkLocation;
-    @NonNull
-    private File mSourceFolder;
-    @NonNull
-    private final File mOutputDir;
-
-    @NonNull
-    private List<String> mDefaultArgs;
-
-    @NonNull
-    private Map<String, List<String>> mScopedArgs;
-
-    @NonNull
-    private final ProcessExecutor mProcessExecutor;
-    @NonNull
-    private  final ProcessOutputHandler mProcessOutputHandler;
-
-    private File mGlslcLocation;
-
-    public ShaderProcessor(
-            @NonNull File ndkLocation,
-            @NonNull File sourceFolder,
-            @NonNull File outputDir,
-            @NonNull List<String> defaultArgs,
-            @NonNull Map<String, List<String>> scopedArgs,
-            @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @Nullable WorkerExecutorFacade workers) {
-        mNdkLocation = ndkLocation;
-        mSourceFolder = sourceFolder;
-        mOutputDir = new File(outputDir, "shaders");
-        mDefaultArgs = defaultArgs;
-        mScopedArgs = scopedArgs;
-        mProcessExecutor = processExecutor;
-        mProcessOutputHandler = processOutputHandler;
-        this.workers = workers;
-
-        init();
-    }
-
-    public void init() {
-        if (mNdkLocation == null) {
+    public static File getGlslcLocation(@NonNull File ndkLocation) {
+        if (ndkLocation == null) {
             throw new IllegalStateException("NDK location is missing. It is required to compile shaders.");
         }
 
-        if (mNdkLocation == null || !mNdkLocation.isDirectory()) {
-            throw new IllegalStateException("NDK location does not exist. It is required to compile shaders: " + mNdkLocation);
+        if (ndkLocation == null || !ndkLocation.isDirectory()) {
+            throw new IllegalStateException(
+                    "NDK location does not exist. It is required to compile shaders: "
+                            + ndkLocation);
         }
 
         // find the location of the compiler.
-        File glslcRootFolder = new File(mNdkLocation, SdkConstants.FD_SHADER_TOOLS);
+        File glslcRootFolder = new File(ndkLocation, SdkConstants.FD_SHADER_TOOLS);
 
         switch (currentPlatform()) {
             case PLATFORM_DARWIN:
@@ -125,42 +82,18 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
             throw new IllegalStateException("Missing NDK subfolder: " + glslcRootFolder);
         }
 
-        mGlslcLocation = new File(glslcRootFolder, SdkConstants.FN_GLSLC);
+        File glslcLocation = new File(glslcRootFolder, SdkConstants.FN_GLSLC);
 
-        if (!mGlslcLocation.isFile()) {
-            throw new IllegalStateException("glslc is missing: " + mGlslcLocation);
+        if (!glslcLocation.isFile()) {
+            throw new IllegalStateException("glslc is missing: " + glslcLocation);
         }
+        return glslcLocation;
     }
 
-    @Override
-    public void call(@NonNull Path start, @NonNull Path path) throws IOException {
-        ShaderProcessorParams params =
-                new ShaderProcessorParams(
-                        mSourceFolder,
-                        mOutputDir,
-                        mDefaultArgs,
-                        mScopedArgs,
-                        mProcessExecutor,
-                        mProcessOutputHandler,
-                        start,
-                        path,
-                        mGlslcLocation);
-        if (workers == null) {
-            try {
-                new ShaderProcessorRunnable(params).run();
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
-        } else {
-            workers.submit(ShaderProcessorRunnable.class, params);
-        }
-    }
-
-    private static class ShaderProcessorRunnable implements Runnable {
+    public static class ShaderProcessorRunnable implements Runnable {
         private final ShaderProcessorParams params;
 
-        @Inject
-        ShaderProcessorRunnable(ShaderProcessorParams params) {
+        public ShaderProcessorRunnable(ShaderProcessorParams params) {
             this.params = params;
         }
 
@@ -218,7 +151,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
         }
     }
 
-    private static class ShaderProcessorParams implements Serializable {
+    public static class ShaderProcessorParams implements Serializable {
         @NonNull private final File mSourceFolder;
         @NonNull private final File mOutputDir;
         @NonNull private final List<String> mDefaultArgs;
@@ -229,7 +162,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
         @NonNull private final Path path;
         @NonNull private final File mGlslcLocation;
 
-        ShaderProcessorParams(
+        public ShaderProcessorParams(
                 @NonNull File mSourceFolder,
                 @NonNull File mOutputDir,
                 @NonNull List<String> mDefaultArgs,

@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_SHADERS;
 import static com.android.build.gradle.internal.utils.HasConfigurableValuesKt.setDisallowChanges;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
@@ -26,6 +25,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -33,21 +33,23 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
@@ -64,11 +66,6 @@ import org.gradle.process.ExecOperations;
 
 /**
  * Task to compile Shaders.
- *
- * <p>TODO(b/124424292)
- *
- * <p>We can not use gradle worker in this task as we use {@link GradleProcessExecutor} for
- * compiling shader files, which should not be serialized.
  */
 @CacheableTask
 public abstract class ShaderCompile extends NonIncrementalTask {
@@ -104,12 +101,8 @@ public abstract class ShaderCompile extends NonIncrementalTask {
     private List<String> defaultArgs = ImmutableList.of();
     private Map<String, List<String>> scopedArgs = ImmutableMap.of();
 
-    @NonNull private final ExecOperations execOperations;
-
-    @Inject
-    public ShaderCompile(@NonNull ExecOperations execOperations) {
-        this.execOperations = execOperations;
-    }
+    private final int maxWorkerCount =
+            getProject().getGradle().getStartParameter().getMaxWorkerCount();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -123,57 +116,23 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         return src == null ? getProject().files().getAsFileTree() : src;
     }
 
+    /**
+     * Compiles all the shader files found in the given source folders by collecting all files to
+     * process first, and then launching worker actions.
+     */
     @Override
     protected void doTaskAction() throws IOException {
         // this is full run, clean the previous output
         File destinationDir = getOutputDir().get().getAsFile();
         FileUtils.cleanOutputDir(destinationDir);
 
-        try (WorkerExecutorFacade workers = getWorkerFacadeWithThreads(false)) {
-            compileAllShaderFiles(
-                    getSourceDir().get().getAsFile(),
-                    destinationDir,
-                    defaultArgs,
-                    scopedArgs,
-                    getSdkBuildService().get().getNdkDirectoryProvider().get().getAsFile(),
-                    new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
-                    workers);
-        }
-    }
-
-    /**
-     * Compiles all the shader files found in the given source folders.
-     *
-     * @param sourceFolder the source folder with the merged shaders
-     * @param outputDir the output dir in which to generate the output
-     * @throws IOException failed
-     */
-    private void compileAllShaderFiles(
-            @NonNull File sourceFolder,
-            @NonNull File outputDir,
-            @NonNull List<String> defaultArgs,
-            @NonNull Map<String, List<String>> scopedArgs,
-            @NonNull File ndkLocation,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull WorkerExecutorFacade workers)
-            throws IOException {
-        checkNotNull(sourceFolder, "sourceFolder cannot be null.");
-        checkNotNull(outputDir, "outputDir cannot be null.");
-
-        Supplier<ShaderProcessor> processor =
-                () ->
-                        new ShaderProcessor(
-                                ndkLocation,
-                                sourceFolder,
-                                outputDir,
-                                defaultArgs,
-                                scopedArgs,
-                                new GradleProcessExecutor(execOperations::exec),
-                                processOutputHandler,
-                                workers);
+        List<ProcessingRequest> processingRequests = new ArrayList<>();
+        DirectoryWalker.FileAction collector =
+                (root, file) ->
+                        processingRequests.add(new ProcessingRequest(root.toFile(), file.toFile()));
 
         DirectoryWalker.builder()
-                .root(sourceFolder.toPath())
+                .root(getSourceDir().getAsFile().get().toPath())
                 .extensions(
                         ShaderProcessor.EXT_VERT,
                         ShaderProcessor.EXT_TESC,
@@ -181,11 +140,93 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                         ShaderProcessor.EXT_GEOM,
                         ShaderProcessor.EXT_FRAG,
                         ShaderProcessor.EXT_COMP)
-                .action(processor)
+                .action(collector)
                 .build()
                 .walk();
+
+        if (!processingRequests.isEmpty()) {
+            File glslcLocation =
+                    ShaderProcessor.getGlslcLocation(
+                            getSdkBuildService().get().getNdkDirectoryProvider().get().getAsFile());
+
+            HashMap<Integer, List<ProcessingRequest>> buckets = new HashMap<>();
+            int ord = 0;
+            for (ProcessingRequest processingRequest : processingRequests) {
+                int bucketId = (ord++) % maxWorkerCount;
+                List<ProcessingRequest> bucket = buckets.getOrDefault(bucketId, new ArrayList<>());
+                bucket.add(processingRequest);
+                buckets.put(bucketId, bucket);
+            }
+
+            for (List<ProcessingRequest> bucket : buckets.values()) {
+                if (!bucket.isEmpty()) {
+                    getWorkerExecutor()
+                            .noIsolation()
+                            .submit(
+                                    WorkAction.class,
+                                    params -> {
+                                        params.initializeFromAndroidVariantTask(this);
+                                        params.getSourceFolder().set(getSourceDir());
+                                        params.getOutputFolder().set(getOutputDir().dir("shaders"));
+                                        params.getDefaultArgs().set(defaultArgs);
+                                        params.getScopedArgs().set(scopedArgs);
+                                        params.getGlslcLocation().set(glslcLocation);
+                                        params.getRequests().set(bucket);
+                                    });
+                }
+            }
+        }
     }
 
+    public static class ProcessingRequest implements Serializable {
+        public final File root;
+        public final File file;
+
+        public ProcessingRequest(File root, File file) {
+            this.root = root;
+            this.file = file;
+        }
+    }
+
+    public abstract static class WorkAction extends ProfileAwareWorkAction<WorkAction.Params> {
+        public abstract static class Params extends ProfileAwareWorkAction.Parameters {
+            public abstract DirectoryProperty getSourceFolder();
+
+            public abstract DirectoryProperty getOutputFolder();
+
+            public abstract Property<File> getGlslcLocation();
+
+            public abstract ListProperty<String> getDefaultArgs();
+
+            public abstract MapProperty<String, List<String>> getScopedArgs();
+
+            public abstract ListProperty<ProcessingRequest> getRequests();
+        }
+
+        @Inject
+        public ExecOperations getExecOperations() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void run() {
+            for (ProcessingRequest processingRequest : getParameters().getRequests().get()) {
+                new ShaderProcessor.ShaderProcessorRunnable(
+                                new ShaderProcessor.ShaderProcessorParams(
+                                        getParameters().getSourceFolder().getAsFile().get(),
+                                        getParameters().getOutputFolder().getAsFile().get(),
+                                        getParameters().getDefaultArgs().get(),
+                                        getParameters().getScopedArgs().get(),
+                                        new GradleProcessExecutor(getExecOperations()::exec),
+                                        new LoggedProcessOutputHandler(
+                                                LoggerWrapper.getLogger(WorkAction.class)),
+                                        processingRequest.root.toPath(),
+                                        processingRequest.file.toPath(),
+                                        getParameters().getGlslcLocation().get()))
+                        .run();
+            }
+        }
+    }
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
